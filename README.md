@@ -8,6 +8,10 @@ Download "Release (Standalone Executable)" if you just want to use the program; 
 
 
 
+I would recommend making a shortcut of the "EnchantCalculator.exe" file and putting it on your desktop.
+
+
+
 I made this program using C++23 and Qt Widgets. The code is quite messy, fair warning if you are going to look at the source lol. I plan to go back over it to make it cleanly formatted and commented at some point.
 
 
