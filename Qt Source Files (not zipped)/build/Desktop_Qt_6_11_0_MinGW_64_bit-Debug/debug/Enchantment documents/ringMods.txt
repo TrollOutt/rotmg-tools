@@ -1,0 +1,407 @@
+##[Modifier Name]
+##[Description]
+##[Weight]
+##[Tags]
+##[Incompatible Tags]
+##[RING]
+##[]
+##[0.35,0.30,0.20,0.15]
+##************
+##
+##
+[XP Loot Bonus]
+[Increases Loot Drop rate by (0.50-1.25)% and XP gain rate by (1.0-2.5)%]
+[200000]
+[REWARD,DUALREWARDBONUS,XP,LOOT,ROLLABLE,TIERED]
+[DUALREWARDBONUS]
+[RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Dust Loot Bonus]
+[Increases Loot Drop rate by (0.50-1.25)% and Dust drop rate by (1.0-2.5)%]
+[200000]
+[REWARD,DUALREWARDBONUS,DUST,LOOT,ROLLABLE,TIERED]
+[DUALREWARDBONUS]
+[RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[XP Dust Bonus]
+[Increases Dust Drop rate by (1.0-2.5)% and XP gain rate by (1.0-2.5)%]
+[200000]
+[REWARD,DUALREWARDBONUS,XP,DUST,ROLLABLE,TIERED]
+[DUALREWARDBONUS]
+[RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Lucky Streak]
+[Increases XP, Loot, and Dust Received by 3%]
+[2000]
+[REWARD,DUALREWARDBONUS,UNIQUE,ROLLABLE]
+[UNIQUE,DUALREWARDBONUS]
+[RING]
+[]
+[]
+************
+##
+##
+[Eternal Restoration]
+[Increases Life and Mana Regeneration by 8/s and 4/s respectively. Bonuses are doubled while out of combat.]
+[750]
+[RING,RECOVERY,MANAREGEN,FLATREGEN,ROLLABLE,LIFEREGEN,UNIQUE]
+[UNIQUE,MANAREGEN,LIFEREGEN]
+[RING]
+[]
+[]
+************
+##
+##
+[OnShoot Attack Boost]
+[3% Chance On Shoot to gain (3-6) Attack for 6 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[50000]
+[WEAPON,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,TIERED]
+[ONSHOOTSTAT,PROCATTACK]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnShoot Defense Boost]
+[3% Chance On Shoot to gain (7-10) Defense for 6 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[50000]
+[WEAPON,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,TIERED]
+[ONSHOOTSTAT,PROCDEFENSE]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnShoot Dexterity Boost]
+[3% Chance On Shoot to gain (5-8) Dexterity for 6 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[50000]
+[WEAPON,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,TIERED]
+[ONSHOOTSTAT,PROCDEXTERITY]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnShoot Vitality Boost]
+[3% Chance On Shoot to gain (7-10) Vitality for 6 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[50000]
+[WEAPON,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,TIERED]
+[ONSHOOTSTAT,PROCVITALITY]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnShoot Wisdom Boost]
+[3% Chance On Shoot to gain (7-10) Wisdom for 6 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[50000]
+[WEAPON,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,TIERED]
+[ONSHOOTSTAT,PROCWISDOM]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnShoot Heal]
+[3% Chance On Shoot while below 90% hp to Heal (20-50) hp, 15 second cooldown]
+[50000]
+[WEAPON,RING,RECOVERY,ONSHOOT,PROC,HEAL,ROLLABLE,TIERED]
+[HEAL]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnShoot Magic]
+[3% Chance On Shoot while below 90% MP to restore (20-50) MP, 15 second cooldown]
+[50000]
+[WEAPON,RING,RECOVERY,ONSHOOT,PROC,MAGIC,ROLLABLE,TIERED]
+[MAGIC]
+[WEAPON,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Attack Boost]
+[30% Chance On Ability use, gain (5-8) Attack for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCATTACK]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Defense Boost]
+[30% Chance On Ability use, gain (7-10) Defense for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCDEFENSE]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Dexterity Boost]
+[30% Chance On Ability use, gain (5-8) Dexterity for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCDEXTERITY]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Vitality Boost]
+[30% Chance On Ability use, gain (7-10) Vitality for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCVITALITY]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Wisdom Boost]
+[30% Chance On Ability use, gain (7-10) Wisdom for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCWISDOM]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Flat Mana Regeneration]
+[Increases Mana Regeneration by (2-5)/s. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,MANAREGEN,FLATREGEN,ROLLABLE,TIERED]
+[MANAREGEN]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Percentage Mana Regeneration]
+[Increases Mana Regeneration by (0.75-1.50)% of your maximum Mana per second. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,MANAREGEN,PERCENTAGEREGEN,ROLLABLE,TIERED]
+[MANAREGEN]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Heal]
+[30% chance On Ability use while below 90% HP, Heal (20-50) HP. Cooldown 15 Seconds]
+[50000]
+[ABILITY,RING,RECOVERY,ONABILITY,PROC,HEAL,ROLLABLE,TIERED]
+[HEAL]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Magic]
+[30% chance On Ability use while below 90% MP, Heal (20-50) MP. Cooldown 15 Seconds]
+[50000]
+[ABILITY,RING,RECOVERY,ONABILITY,PROC,MAGIC,ROLLABLE,TIERED]
+[MAGIC]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Flat Life Regeneration]
+[Increases Life Regeneration by (4-10)/s. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,LIFEREGEN,FLATREGEN,ROLLABLE,TIERED]
+[LIFEREGEN]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Percentage Life Regeneration]
+[Increases Life Regeneration by (0.50-1.25)% of your maximum Life per second. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,LIFEREGEN,PERCENTAGEREGEN,ROLLABLE,TIERED]
+[LIFEREGEN]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Attack Boost]
+[50% chance On Hit for at least 20 damage, gain (5-8) Attack for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,TIERED]
+[ONHITSTAT,PROCATTACK]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Defense Boost]
+[50% chance On Hit for at least 20 damage, gain (7-10) Defense for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,TIERED]
+[ONHITSTAT,PROCDEFENSE]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Dexterity Boost]
+[50% chance On Hit for at least 20 damage, gain (5-8) Dexterity for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,TIERED]
+[ONHITSTAT,PROCDEXTERITY]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Vitality Boost]
+[50% chance On Hit for at least 20 damage, gain (7-10) Vitality for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,TIERED]
+[ONHITSTAT,PROCVITALITY]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Wisdom Boost]
+[50% chance On Hit for at least 20 damage, gain (7-10) Wisdom for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,TIERED]
+[ONHITSTAT,PROCWISDOM]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Heal]
+[50% Chance On Hit for at least 20 damage while below 90% HP, Heal (20-50) HP. Cooldown 15 Seconds]
+[50000]
+[ARMOR,RECOVERY,RING,ONHIT,PROC,HEAL,ROLLABLE,TIERED]
+[HEAL]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Magic]
+[50% Chance On Hit for at least 20 damage while below 90% MP, Heal (20-50) MP. Cooldown 15 Seconds]
+[50000]
+[ARMOR,RECOVERY,RING,ONHIT,PROC,MAGIC,ROLLABLE,TIERED]
+[MAGIC]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Berserk]
+[On Hit for at least 20 damage (20-35)% chance to gain Berserk for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,ONHIT,PROC,BERSERK,ROLLABLE,TIERED]
+[BERSERK]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Armored]
+[On Hit for at least 20 damage (20-35)% chance to gain Armored for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,ONHIT,PROC,ARMORED,ROLLABLE,TIERED]
+[ARMORED]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Damaging]
+[On Hit for at least 20 damage (20-35)% chance to gain Damaging for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,ONHIT,PROC,DAMAGING,ROLLABLE,TIERED]
+[DAMAGING]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Energized]
+[On Hit for at least 20 damage (20-35)% chance to gain Energized for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,RECOVERY,ONHIT,PROC,ENERGIZED,ROLLABLE,TIERED]
+[ENERGIZED]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Healing]
+[On Hit for at least 20 damage (20-35)% chance to gain Healing for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RECOVERY,RING,ONHIT,PROC,HEALING,ROLLABLE,TIERED]
+[HEALING]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Retaliation]
+[(20-50)% chance to retaliate when hit for at least 20 damage. Retaliation projectile deals (950-1400) damage.  3 second cooldown.]
+[50000]
+[ARMOR,DAMAGE,RING,ONHIT,PROC,BULLETCREATE,ROLLABLE,TIERED]
+[BULLETCREATE]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##

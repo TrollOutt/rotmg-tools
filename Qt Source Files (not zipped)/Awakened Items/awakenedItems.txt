@@ -1,0 +1,110 @@
+##[Item Name,Awakened Tag]
+
+[Overclocking Amulet,Kogbold Spirit]
+
+[Queen's Stinger,Buzzing Bullets]
+
+[Beehemoth Armors,Living Hive]
+
+[Corsair Ring,The King's Treasure]
+
+[Crystal Bone Ring,El Dorado's Legacy]
+
+[Spider's Eye Ring,Eye of the Spider]
+
+[Snake Eye Ring,Draconic Gaze]
+
+[Bramble Bow,Thornswarm]
+
+[Poison Fang Dagger,Venom Coating]
+
+[Staff of the Crystal Serpent,Crystalline Channel]
+
+[Doom Bow,Soulful Mastery]
+
+[LoD Armors,Drake Warden]
+
+[Tomb Rings,Ancient's Blessing]
+
+[Staff of Extreme Prejudice,Artificial Core]
+
+[Leaf Bow,Swarm Tree's Wrath]
+
+[Pirate King's Cutlass,Molecular Blade]
+
+[Conducting Wand,High Voltage]
+
+[Doku no Ken,Apitoxin]
+
+[Snakeskin Armor,Ancient Artifacts]
+
+[Bone Dagger,Bone Claws]
+
+[Crystal Wand,Crystal Shards]
+
+[Crystal Sword,Fractured Blade]
+
+[Demon Blade,Hellfire Edge]
+
+[Berserker's Breastplate,Infernal Anger]
+
+[Robe of the Tlatoani,Masked God's Dance]
+
+[Ring of Skeletal Specters,Necrotic Knowledge]
+
+[Tlatoani's Shroud,Raijin's Dance]
+
+[AoO Weapons,Night's Strength]
+
+[AoO Abilities,Night's Wisdom]
+
+[AoO Armors,Night's Tenacity]
+
+[AoO Rings,Night's Soul]
+
+[The Right Hook,Bar Brawler]
+
+[Coral Bow,Coral Volley]
+
+[S.T.A.F.F.,N.O.V.A.]
+
+[Void Blade,Consuming Void]
+
+[Arcane Rapier,Spellsword Mastery]
+
+[Matrix Armors,Malogian Matrix Enhancement]
+
+[Matrix Armors,Untarian Matrix Enhancement]
+
+[Matrix Armors,Foraxian Matrix Enhancement]
+
+[Matrix Armors,Katalonian Matrix Enhancement]
+
+[Neo Matrix Armors,Malogian Matrix Enhancement]
+
+[Neo Matrix Armors,Untarian Matrix Enhancement]
+
+[Neo Matrix Armors,Foraxian Matrix Enhancement]
+
+[Neo Matrix Armors,Katalonian Matrix Enhancement]
+
+[Warlord Wand,Stinger Shards]
+
+[Neo Warlord Wand,Stinger Shards]
+
+[Acidic Slasher,Acid Guardian]
+
+[Neo Acidic Slasher,Acid Guardian (Neo)]
+
+[Sun's Judgement,Solar Mastery]
+
+[Neo Sun's Judgement,Solar Mastery (Neo)]
+
+[Dueling Daggers,Bubbling Scourge]
+
+[Neo Dueling Daggers,Bubbling Scourge]
+
+[Corruption Cutter,Corrupting Scourge]
+
+[Ancient Stone Sword,Stone Guardian]
+

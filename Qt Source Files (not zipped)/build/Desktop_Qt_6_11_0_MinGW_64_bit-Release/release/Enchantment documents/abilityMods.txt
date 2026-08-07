@@ -1,0 +1,179 @@
+##[Modifier Name]
+##[Description]
+##[Weight]
+##[Tags]
+##[Incompatible Tags]
+##[Base Tags]
+##
+##
+## CHECK DEFENSE-TO-(stat) MODS WHEN YOU CAN
+## DESCRIPTIONS ARE INCONSISTENT (some are 6-12%, others 7-16%)
+##
+## Check all documents for typos, some were missing ****** lines at the end of groups
+##
+[MP Cost Reduction]
+[Reduces MP Cost by (4-10)%]
+[200000]
+[ABILITY,CASTING,MPCOSTREDUCTION,ROLLABLE,TIERED]
+[MPCOSTREDUCTION,STATMODMULT]
+[ABILITY]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Stat Mod Multiplier]
+[Increases Stat Mod value for this ability by (6-15)%]
+[200000]
+[ABILITY,CASTING,STATMODMULT,ROLLABLE,TIERED]
+[MPCOSTREDUCTION,STATMODMULT]
+[ABILITY]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Attack Boost]
+[30% Chance On Ability use, gain (5-8) Attack for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCATTACK]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Defense Boost]
+[30% Chance On Ability use, gain (7-10) Defense for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCDEFENSE]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Dexterity Boost]
+[30% Chance On Ability use, gain (5-8) Dexterity for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCDEXTERITY]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Vitality Boost]
+[30% Chance On Ability use, gain (7-10) Vitality for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCVITALITY]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Wisdom Boost]
+[30% Chance On Ability use, gain (7-10) Wisdom for 8 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ABILITY,RING,ONABILITY,ONABILITYSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,TIERED]
+[ONABILITYSTAT,PROCWISDOM]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Flat Mana Regeneration]
+[Increases Mana Regeneration by (2-5)/s. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,MANAREGEN,FLATREGEN,ROLLABLE,TIERED]
+[MANAREGEN]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Percentage Mana Regeneration]
+[Increases Mana Regeneration by (0.75-1.50)% of your maximum Mana per second. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,MANAREGEN,PERCENTAGEREGEN,ROLLABLE,TIERED]
+[MANAREGEN]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Heal]
+[30% chance On Ability use while below 90% HP, Heal (20-50) HP. Cooldown 15 Seconds]
+[50000]
+[ABILITY,RING,RECOVERY,ONABILITY,PROC,HEAL,ROLLABLE,TIERED]
+[HEAL]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnAbility Magic]
+[30% chance On Ability use while below 90% MP, Heal (20-50) MP. Cooldown 15 Seconds]
+[50000]
+[ABILITY,RING,RECOVERY,ONABILITY,PROC,MAGIC,ROLLABLE,TIERED]
+[MAGIC]
+[ABILITY,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Ascension of Nut]
+[Gain +25 Max HP, +25 Max MP, +3 WIS]
+[1500]
+[ABILITY,STAT,DUALSTAT,FLATBONUS,UNIQUE,ROLLABLE]
+[DUALSTAT,UNIQUE]
+[ABILITY]
+[]
+[]
+************
+##
+##
+[Arcane Battery]
+[Gain +95 Max MP]
+[1500]
+[ABILITY,STAT,SINGLESTAT,MANA,FLATBONUS,ROLLABLE,UNIQUE]
+[SINGLESTAT,UNIQUE]
+[ABILITY]
+[]
+[]
+************
+##
+##
+[Permafrost Magic]
+[Increases Mana Regeneration by 3/s. Bonus doubled while out of combat. On ability use below 50% MP gain an energized effect that restores 75 MP per second for 2 Seconds. (20 Second Cooldown)]
+[750]
+[ARMOR,RECOVERY,MANAREGEN,FLATREGEN,ROLLABLE,ENERGIZED,UNIQUE]
+[UNIQUE,MANAREGEN,ENERGIZED]
+[ABILITY]
+[]
+[]
+************
+##
+##
+[Snow Golems]
+[Reduces MP Cost by 6% On ability use summon a snow golem that can be controlled and attacks nearby enemies dealing 100-150 damage and slowing them for 2 seconds. 6 second minion duration, 10 second cooldown.]
+[750]
+[ABILITY,MPCOSTREDUCTION,SUMMON,UNIQUE,ROLLABLE]
+[UNIQUE,MPCOSTREDUCTION,STATMODMULT,SUMMON]
+[ABILITY]
+[]
+[]
+************
+##
+##
+

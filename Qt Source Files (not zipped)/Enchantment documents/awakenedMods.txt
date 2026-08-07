@@ -1,0 +1,499 @@
+##[Name]
+##[Description]
+##[Weight]
+##[Tags]
+##[Incompatible Tags]
+##[Required Item Type(s)]
+##[Required Special Type(s)]
+##[Tiered Weight Distribution] 
+##************
+[Kogbold Spirit]
+[Decreases Defense by 5, On Shoot while above 90% hp gain 4 Att and 4 Dex for 1 second.]
+[7500]
+[AWAKENED,ROLLABLE,PROCATTACK,PROCDEXTERITY,OHSHOOTSTAT]
+[AWAKENED,ONSHOOTSTAT,PROCATTACK,PROCDEXTERITY]
+[RING]
+[]
+************
+##
+##
+[Buzzing Bullets]
+[Unleash the wrath of Bees with your attacks. Adding a burst of bee bullets that each deal 60 armor piercing damage.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONRANGE,WEAPONFIRERATE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Living Hive]
+[+60 HP and +5 SPD and release bees on when hit for more than 40 damage, cooldown 2 seconds.]
+[7500]
+[AWAKENED,ROLLABLE,DUALSTAT,SUMMON]
+[AWAKENED,DUALSTAT]
+[ARMOR]
+[]
+************
+##
+##
+[The King's Treasure]
+[Shooting below 25% HP will gain +80 Max HP, +8 ATT, +8 DEF for 8s.]
+[7500]
+[AWAKENED,ROLLABLE,ONSHOOTSTAT,PROCATTACK,PROCDEXTERITY]
+[AWAKENED,ONSHOOTSTAT,PROCATTACK,PROCDEXTERITY]
+[RING]
+[]
+************
+##
+##
+[El Dorado's Legacy]
+[Gain +120 Max MP, +2 DEX, +2 WIS. On hit, 50% chance to restore 25 MP every 2.5s.]
+[7500]
+[AWAKENED,ROLLABLE,DUALSTAT,MAGIC]
+[AWAKENED,DUALSTAT,MAGIC]
+[RING]
+[]
+************
+##
+##
+[Eye of the Spider]
+[Gain +50 Max HP, +5 DEX. On ability use, fire a massive web ball for 800 damage and 8s Slowed every 16s.]
+[7500]
+[AWAKENED,ROLLABLE,DAMAGE,BULLETCREATE,DUALSTAT]
+[AWAKENED,DUALSTAT,BULLETCREATE]
+[RING]
+[]
+************
+##
+##
+[Draconic Gaze]
+[Gain +60 Max MP, +3 ATT, +3 SPD. On ability use, gain Damaging for 1.6s every 5s.]
+[7500]
+[AWAKENED,ROLLABLE,DAMAGING,DUALSTAT]
+[AWAKENED,DAMAGING,DUALSTAT]
+[RING]
+[]
+************
+##
+##
+[Thornswarm]
+[Engulf enemies in a torrent of rapid armor-piercing thorns at 170% rate of fire.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Venom Coating]
+[Envenomed shots now inflict 4s of Bleeding for 12 damage per second.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Crystalline Channel]
+[Gain DEX from 66% of Bonus WIS, and gain WIS from 66% of Bonus DEX.]
+[7500]
+[AWAKENED,ROLLABLE,DUALSTAT,CONVERSIONBONUS]
+[AWAKENED,DUALSTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Soulful Mastery]
+[Soul arrows deal 1111 base damage at 18% rate of fire and travel further. gain ATT from 33% of bonus WIS and gain WIS from 33% of bonus ATT.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Drake Warden]
+[Increases Maximum Life by 40 and Attack by 2. On Ability use summon a random Drake follower, Cooldown 30 seconds.]
+[7500]
+[STAT,DUALSTAT,FLATBONUS,AWAKENED,ROLLABLE,SUMMON]
+[DUALSTAT,AWAKENED,SUMMON]
+[ARMOR]
+[]
+************
+##
+##
+[Ancient's Blessing]
+[Increases Maximum Life by 30, Dexterity by 3, and Defense by 3]
+[7500]
+[STAT,DUALSTAT,FLATBONUS,AWAKENED,ROLLABLE]
+[DUALSTAT,AWAKENED]
+[RING]
+[]
+************
+##
+##
+[Artificial Core]
+[Changes the weapon's attack to fire 4 bullets at 105% rate of fire, 2 of which deal 40-80 damage, and 2 of which armor pierce for 25-45 damage.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Swarm Tree's Wrath]
+[Adds a burst of insects to the sides of the main pattern, these bullets deal 25 armor piercing damage each.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Molecular Blade]
+[Changes the weapon attack to fire two Armor Piercing shots; one main shot dealing 180-235 shot at 100% fire rate, and another small shot dealing 30-55 damage at 150% fire rate.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[High Voltage]
+[Fires a lightning blast every second. This blast deals 200 damage to up to 2 targets, with the first target taking a shockblast for 40 damage. This blast scales off wisdom, gaining 5 total damage per wisdom and gaining a target every 30 wis over 50.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Apitoxin]
+[Fires a poison at your cursor every second, this poison does 350 damage over 3 seconds with a radius of 2.5. This poison scales off of wisdom, gaining 20 damage per wisdom, and 0.1 radius every 5 wisdom over 50.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Ancient Artifacts]
+[Increases Dexterity, Defense, and Speed by 3. Summon the artifacts of the Ancient Gods. Pyramid Artifact weakens nearby enemies, Nile artifact heals 20 hp/s, Sphinx artifact deals 275 Damage per second to nearby enemies.]
+[7500]
+[AWAKENED,ROLLABLE,SUMMON,DUALSTAT,SPEED,DEXTERITY,DEFENSE]
+[AWAKENED,SUMMON,DUALSTAT]
+[ARMOR]
+[]
+************
+##
+##
+[Bone Claws]
+[Changes the weapon attack to fire two bleeding shots at 70% rate of fire, the shots deal 70-105 damage and inflict a 30/s damage bleed for 3 seconds.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Crystal Shards]
+[20% Chance on Shoot to spawn a crystal shard that explodes after a delay. The shards explode into 3 armor piercing shots that each deal 300-400 Damage. Cooldown 0.8s]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SUMMON]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SUMMON]
+[WEAPON]
+[]
+************
+##
+##
+[Fractured Blade]
+[Changes the weapon attack to fire an additional two shots splitting from the main shot 3 tiles away. These shots armor pierce and deal 30-45 Damage. The main shot additionally gains piercing.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Hellfire Edge]
+[3 hellfire slashes fire in a much tighter cone for 105-125 damage. gain DEX from 33% of bonus VIT.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Infernal Anger]
+[Gain 6 Attack and take 5% less damage. On shoot while above 70% HP inflict bleeding and sickness on yourself. On shoot while at or below 70% HP gain an additional 20% Damage Resistance.]
+[7500]
+[AWAKENED,ROLLABLE,ATTACK,SINGLESTAT,DURABILITY,DAMAGERESISTANCE]
+[AWAKENED,SINGLESTAT,DAMAGERESISTANCE]
+[ARMOR]
+[]
+************
+##
+##
+[Masked God's Dance]
+[Gain +10 DEX.]
+[7500]
+[AWAKENED,ROLLABLE,STAT,SINGLESTAT,FLATBONUS,DEXTERITY]
+[AWAKENED,SINGLESTAT]
+[ARMOR]
+[]
+************
+##
+##
+[Necrotic Knowledge]
+[10% Ability Cost Reduction, and Increases Wisdom by 20% of Bonus Wisdom]
+[7500]
+[AWAKENED,ROLLABLE,WISDOM,SINGLESTAT,STAT,RELATIVEBONUS,CASTING,MPCOSTREDUCTION]
+[AWAKENED,SINGLESTAT]
+[RING]
+[]
+************
+##
+##
+[Raijin's Dance]
+[On ability use, call lightning dealing 450 damage across 3 targets.]
+[7500]
+[AWAKENED,ROLLABLE]
+[AWAKENED]
+[ARMOR]
+[]
+************
+##
+##
+[Night's Strength]
+[Gain +4.5% Weapon Damage and Fire Rate.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE]
+[WEAPON]
+[]
+************
+##
+##
+[Night's Wisdom]
+[Reduces MP cost by 10%. Gain 3 Wisdom and 3 Defense.]
+[7500]
+[AWAKENED,ROLLABLE,CASTING,MPCOSTREDUCTION,FLATBONUS,DUALSTAT,WISDOM,DEFENSE]
+[AWAKENED,DUALSTAT,MPCOSTREDUCTION,STATMODMULT]
+[ABILITY]
+[]
+************
+##
+##
+[Night's Tenacity]
+[Reduce incoming damage by 5%. Gain 20 Maximum Health.]
+[7500]
+[AWAKENED,ROLLABLE,DURABILITY,DAMAGERESISTANCE,SINGLESTAT,LIFE,FLATBONUS]
+[AWAKENED,SINGLESTAT,DAMAGERESISTANCE]
+[ARMOR]
+[]
+************
+##
+##
+[Night's Soul]
+[Gain 20 HP and MP and 2 of every other stat. Gain 2% Loot, Dust and XP Bonus.]
+[7500]
+[AWAKENED,ROLLABLE,DUALSTAT,FLATBONUS,DUALREWARDBONUS]
+[AWAKENED,DUALSTAT,DUALREWARDBONUS]
+[RING]
+[]
+************
+##
+##
+[Spellsword Mastery]
+[Gain 5 Wisdom and Dexterity equal to 10% of bonus Wisdom, the Rapier's Lunge now triggers every 3 shots instead of 5.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,DUALSTAT,CONVERSIONBONUS,WISDOM,DEXTERITY]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,DUALSTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Bar Brawler]
+[Gain Attack equal to 15% of bonus Vitality. Now fires a combo string of shots, with the main shots dealing 300-400 damage, increasing to 350-450 damage later in the combo, and the finisher dealing 975-1350 damage.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,CONVERSIONBONUS,SINGLESTAT,VITALITY,ATTACK]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Cursebearer]
+[Now always curses on ability use. When cursed gain 10 Def, 10 Wisdom, and a 20 hp/s healing buff on shoot. Additionally increases weapon damage by 5%.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,ONSHOOTSTAT,PROCDEFENSE,PROCWISDOM]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,ONSHOOTSTAT,PROCDEFENSE,PROCWISDOM]
+[WEAPON]
+[]
+************
+##
+##
+[Coral Volley]
+[Gain 5 Dexterity. Fire a varying volley of additional arrows that deal 10-20 armor piercing damage.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,SINGLESTAT,DEXTERITY]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Consuming Void]
+[Fires a massive slow moving shot at 15% rate of fire that pierces and deals 700-800 damage. Additionally fires two more shots that deal 50-60 damage.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[N.O.V.A.]
+[Gain 5 Wisdom. On Enemy Hit unleashes an energy blast, firing 10 shots that deal 40 damage plus 1 additional damage every 2 Wisdom over 50. Cooldown 1 second.]
+[7500]
+[AWAKENED,ROLLABLE,SINGLESTAT,WISDOM,BULLETCREATE]
+[AWAKENED,SINGLESTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Malogian Matrix Enhancement]
+[+6 VIT. Gain VIT from 33% of bonus DEF]
+[7500]
+[AWAKENED,ROLLABLE,STAT,SINGLESTAT,FLATBONUS,RELATIVEBONUS,VITALITY,ALIEN,NEO_ALIEN]
+[AWAKENED,SINGLESTAT]
+[ARMOR]
+[]
+************
+##
+##
+[Untarian Matrix Enhancement]
+[+6 WIS. Gain WIS from 33% of bonus DEF]
+[7500]
+[AWAKENED,ROLLABLE,STAT,SINGLESTAT,FLATBONUS,RELATIVEBONUS,WISDOM,ALIEN,NEO_ALIEN]
+[AWAKENED,SINGLESTAT]
+[ARMOR]
+[]
+************
+##
+##
+[Foraxian Matrix Enhancement]
+[+6 SPD. Gain SPD from 33% of bonus DEF]
+[7500]
+[AWAKENED,ROLLABLE,STAT,SINGLESTAT,FLATBONUS,RELATIVEBONUS,SPEED,ALIEN,NEO_ALIEN]
+[AWAKENED,SINGLESTAT]
+[ARMOR]
+[]
+************
+##
+##
+[Katalonian Matrix Enhancement]
+[+4 DEX. Gain DEX from 33% of bonus DEF]
+[7500]
+[AWAKENED,ROLLABLE,STAT,SINGLESTAT,FLATBONUS,RELATIVEBONUS,DEXTERITY,ALIEN,NEO_ALIEN]
+[AWAKENED,SINGLESTAT]
+[ARMOR]
+[]
+************
+##
+##
+[Stinger Shards]
+[20% Chance on Shoot to spawn a Nano Platinum Stinger that fires armor piercing shots that deal 75-100 Damage. The stinger explodes after a delay into 3 armor piercing shots that each deal 100-200 Damage. Cooldown 0.8s]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SUMMON]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SUMMON]
+[WEAPON]
+[]
+************
+##
+##
+[Acid Guardian]
+[Acid slashes deal 350-400 base damage at 66% rate of fire and travel further. +5 SPD. Gain ATT from 33% of bonus SPD]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT,SPEED,ATTACK,CONVERSIONBONUS,ALIEN]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Acid Guardian (Neo)]
+[Acid slashes deal 650-700 base damage at 44% rate of fire and travel further\n+5 SPD\nGain ATT from 33% of bonus SPD]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT,SPEED,ATTACK,CONVERSIONBONUS,ALIEN,NEO_ALIEN]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Solar Mastery]
+[Solar arrows deal 1111 base damage at 18% rate of fire and travel further. gain ATT from 33% of bonus VIT and gain VIT from 33% of bonus ATT.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,ALIEN]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Solar Mastery (Neo)]
+[Solar arrows deal 1111 base damage at 22% rate of fire and travel further. gain ATT from 33% of bonus VIT and gain VIT from 33% of bonus ATT.]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,ALIEN,NEO_ALIEN]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE]
+[WEAPON]
+[]
+************
+##
+##
+[Bubbling Scourge]
+[2% to summon Bubblarions on enemy hit that deal 50-70 (+3 for every WIS > 50) damage. (Cooldown: 0.8 seconds)\n+5 WIS -60 HP]
+[7500]
+[AWAKENED,ROLLABLE,TRADEOFF,DUALSTAT,SUMMON,WISDOM,LIFE,ALIEN]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,DUALSTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Stone Guardian]
+[Stone slashes deal 350-400 base damage at 66% rate of fire and travel further\n+5 DEF\nGain ATT from 25% of bonus DEF]
+[7500]
+[AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT,DEFENSE,ATTACK,CONVERSIONBONUS]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,SINGLESTAT]
+[WEAPON]
+[]
+************
+##
+##
+[Corrupting Scourge]
+[5% chance to summon Corruption Phantom Wisps on enemy hit that deal 40-50 (+1 for every VIT > 40) damage and curse enemies. (Cooldown: 0.8 seconds)\n+5 VIT -60 HP]
+[7500]
+[AWAKENED,ROLLABLE,TRADEOFF,DUALSTAT,SUMMON,VITALITY,LIFE]
+[AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE,DUALSTAT,SUMMON]
+[WEAPON]
+[]
+************
+##
+##

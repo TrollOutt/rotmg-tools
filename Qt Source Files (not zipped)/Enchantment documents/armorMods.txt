@@ -1,0 +1,231 @@
+##[Modifier Name]
+##[Description]
+##[Weight]
+##[Tags]
+##[Incompatible Tags]
+##[ARMOR]
+##[]
+##[]
+##************
+##
+##
+[Damage Resistance]
+[Reduces incoming damage by (2-5)%]
+[200000]
+[ARMOR,DURABILITY,DAMAGERESISTANCE,TIERED]
+[DAMAGERESISTANCE]
+[ARMOR]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Flat Life Regeneration]
+[Increases Life Regeneration by (4-10)/s. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,LIFEREGEN,FLATREGEN,ROLLABLE,TIERED]
+[LIFEREGEN]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Percentage Life Regeneration]
+[Increases Life Regeneration by (0.50-1.25)% of your maximum Life per second. Bonus doubled while out of combat.]
+[200000]
+[ARMOR,RECOVERY,LIFEREGEN,PERCENTAGEREGEN,ROLLABLE,TIERED]
+[LIFEREGEN]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Attack Boost]
+[50% chance On Hit for at least 20 damage, gain (5-8) Attack for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,TIERED]
+[ONHITSTAT,PROCATTACK]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Defense Boost]
+[50% chance On Hit for at least 20 damage, gain (7-10) Defense for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,TIERED]
+[ONHITSTAT,PROCDEFENSE]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Dexterity Boost]
+[50% chance On Hit for at least 20 damage, gain (5-8) Dexterity for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,TIERED]
+[ONHITSTAT,PROCDEXTERITY]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Vitality Boost]
+[50% chance On Hit for at least 20 damage, gain (7-10) Vitality for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,TIERED]
+[ONHITSTAT,PROCVITALITY]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Wisdom Boost]
+[50% chance On Hit for at least 20 damage, gain (7-10) Wisdom for 12 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[100000]
+[ARMOR,RING,ONHIT,ONHITSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,TIERED]
+[ONHITSTAT,PROCWISDOM]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Heal]
+[50% Chance On Hit for at least 20 damage while below 90% HP, Heal (20-50) HP. Cooldown 15 Seconds]
+[50000]
+[ARMOR,RECOVERY,RING,ONHIT,PROC,HEAL,ROLLABLE,TIERED]
+[HEAL]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Magic]
+[50% Chance On Hit for at least 20 damage while below 90% MP, Heal (20-50) MP. Cooldown 15 Seconds]
+[50000]
+[ARMOR,RECOVERY,RING,ONHIT,PROC,MAGIC,ROLLABLE,TIERED]
+[MAGIC]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Berserk]
+[On Hit for at least 20 damage (20-35)% chance to gain Berserk for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,ONHIT,PROC,BERSERK,ROLLABLE,TIERED]
+[BERSERK]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Armored]
+[On Hit for at least 20 damage (20-35)% chance to gain Armored for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,ONHIT,PROC,ARMORED,ROLLABLE,TIERED]
+[ARMORED]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Damaging]
+[On Hit for at least 20 damage (20-35)% chance to gain Damaging for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,ONHIT,PROC,DAMAGING,ROLLABLE,TIERED]
+[DAMAGING]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Energized]
+[On Hit for at least 20 damage (20-35)% chance to gain Energized for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RING,RECOVERY,ONHIT,PROC,ENERGIZED,ROLLABLE,TIERED]
+[ENERGIZED]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Healing]
+[On Hit for at least 20 damage (20-35)% chance to gain Healing for (4-7) seconds, Cooldown 20 seconds.]
+[50000]
+[ARMOR,RECOVERY,RING,ONHIT,PROC,HEALING,ROLLABLE,TIERED]
+[HEALING]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[OnHit Retaliation]
+[(20-50)% chance to retaliate when hit for at least 20 damage. Retaliation projectile deals (950-1400) damage.  3 second cooldown.]
+[50000]
+[ARMOR,DAMAGE,RING,ONHIT,PROC,BULLETCREATE,ROLLABLE,TIERED]
+[BULLETCREATE]
+[ARMOR,RING]
+[]
+[0.35,0.30,0.20,0.15]
+************
+##
+##
+[Ascension of Bes]
+[Gain +25 Max HP, +25 Max MP, +3 DEF]
+[1500]
+[ARMOR,STAT,DUALSTAT,FLATBONUS,UNIQUE,ROLLABLE]
+[DUALSTAT,UNIQUE]
+[ARMOR]
+[]
+[]
+************
+##
+##
+[Candy-Coated]
+[Gain +10 DEF. Lose -5 DEX.]
+[1500]
+[ARMOR,STAT,DUALSTAT,TRADEOFF,FLATBONUS,DEFENSE,ROLLABLE,UNIQUE]
+[DUALSTAT,UNIQUE]
+[ARMOR]
+[]
+[]
+************
+##
+##
+[Freezing Regeneration]
+[Increases Life Regeneration by 6/s. Bonus doubled while out of combat. When hit below 40% HP gain a healing effect that restores 85 HP per second for 2 Seconds. (20 Second Cooldown)]
+[750]
+[ARMOR,RECOVERY,LIFEREGEN,FLATREGEN,ROLLABLE,HEALING,UNIQUE]
+[UNIQUE,LIFEREGEN,HEALING]
+[ARMOR]
+[]
+[]
+************
+##
+##
+[Frost Barrier]
+[Reduces incoming damage by 3%. When hit below 80% HP gain the Armored effect and 5 Additional Defense for 4 seconds. (20 Second Cooldown)]
+[750]
+[ARMOR,UNIQUE,ROLLABLE,ARMORED,DURABILITY,DAMAGERESISTANCE]
+[UNIQUE,DAMAGERESISTANCE,ARMORED]
+[ARMOR]
+[]
+[]
+************
+##
+##

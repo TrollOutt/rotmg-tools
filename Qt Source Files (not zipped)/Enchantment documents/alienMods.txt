@@ -1,0 +1,75 @@
+[Alien OnShoot Attack Boost]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot to gain 10 Attack for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[15000]
+[WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,ALIEN]
+[ONSHOOTSTAT,PROCATTACK]
+[WEAPON,ARMOR,RING]
+[ALIEN]
+[]
+************
+##
+##
+[Alien OnShoot Defense Boost]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot to gain 12 Defense for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[15000]
+[WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,ALIEN]
+[ONSHOOTSTAT,PROCDEFENSE]
+[WEAPON,ARMOR,RING]
+[ALIEN]
+[]
+************
+##
+##
+[Alien OnShoot Dexterity Boost]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot to gain 10 Dexterity for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[15000]
+[WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,ALIEN]
+[ONSHOOTSTAT,PROCDEXTERITY]
+[WEAPON,ARMOR,RING]
+[ALIEN]
+[]
+************
+##
+##
+[Alien OnShoot Wisdom Boost]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot to gain 12 Wisdom for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[15000]
+[WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,ALIEN]
+[ONSHOOTSTAT,PROCWISDOM]
+[WEAPON,ARMOR,RING]
+[ALIEN]
+[]
+************
+##
+##
+[Alien OnShoot Vitality Boost]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot to gain 12 Vitality for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
+[15000]
+[WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,ALIEN]
+[ONSHOOTSTAT,PROCVITALITY]
+[WEAPON,ARMOR,RING]
+[ALIEN]
+[]
+************
+##
+##
+[Alien OnShoot Heal]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot while below 90% HP to restore 60 HP, 15 seconds cooldown.]
+[15000]
+[WEAPON,RING,RECOVERY,ONSHOOT,PROC,HEAL,ROLLABLE,ALIEN]
+[HEAL]
+[WEAPON,RING]
+[ALIEN]
+[]
+************
+##
+##
+[Alien OnShoot Magic]
+[When at least one Alien Gear is equipped - 5% Chance On Shoot while below 80% MP to restore 60 MP, 15 seconds cooldown.]
+[15000]
+[WEAPON,RING,RECOVERY,ONSHOOT,PROC,MAGIC,ROLLABLE,ALIEN]
+[MAGIC]
+[WEAPON,RING]
+[ALIEN]
+[]
+************

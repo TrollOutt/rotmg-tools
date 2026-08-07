@@ -1,0 +1,209 @@
+<RCC>
+    <qresource prefix="/Artifact Icons">
+        <file>GUI Files/Artifact Icons/Adamantine Ingot.png</file>
+        <file>GUI Files/Artifact Icons/Amber Honeycomb.png</file>
+        <file>GUI Files/Artifact Icons/Ascension Ankh.png</file>
+        <file>GUI Files/Artifact Icons/Death Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/Ivory Heart.png</file>
+        <file>GUI Files/Artifact Icons/Nightmatter Core.png</file>
+        <file>GUI Files/Artifact Icons/Precision Cog.png</file>
+        <file>GUI Files/Artifact Icons/Premium Diamond Card.png</file>
+        <file>GUI Files/Artifact Icons/Premium Gold Card.png</file>
+        <file>GUI Files/Artifact Icons/Spectral Arrowhead.png</file>
+        <file>GUI Files/Artifact Icons/The Chariot Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Devil Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Fool Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Magician Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Moon Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Sun Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Tower Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The Wheel of Fortune Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/The World Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/Premium Silver Tarot Card.png</file>
+        <file>GUI Files/Artifact Icons/Ascension Ankh-div2.png</file>
+        <file>GUI Files/Artifact Icons/Adamantine Ingot-div2.png</file>
+        <file>GUI Files/Artifact Icons/Amber Honeycomb-div2.png</file>
+        <file>GUI Files/Artifact Icons/Death Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/Ivory Heart-div2.png</file>
+        <file>GUI Files/Artifact Icons/Nightmatter Core-div2.png</file>
+        <file>GUI Files/Artifact Icons/Precision Cog-div2.png</file>
+        <file>GUI Files/Artifact Icons/Premium Diamond Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/Premium Gold Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/Premium Silver Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/Spectral Arrowhead-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Chariot Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Devil Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Fool Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Magician Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Moon Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Sun Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Tower Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The Wheel of Fortune Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/The World Tarot Card-div2.png</file>
+        <file>GUI Files/Artifact Icons/Forax Technology.png</file>
+        <file>GUI Files/Artifact Icons/Forax Technology-div2.png</file>
+        <file>GUI Files/Artifact Icons/Katalund Technology.png</file>
+        <file>GUI Files/Artifact Icons/Katalund Technology-div2.png</file>
+        <file>GUI Files/Artifact Icons/Malogia Technology.png</file>
+        <file>GUI Files/Artifact Icons/Malogia Technology-div2.png</file>
+        <file>GUI Files/Artifact Icons/Untaris Technology.png</file>
+        <file>GUI Files/Artifact Icons/Untaris Technology-div2.png</file>
+        <file>GUI Files/Artifact Icons/No Artifact.png</file>
+        <file>GUI Files/Artifact Icons/No Artifact-div2.png</file>
+    </qresource>
+    <qresource prefix="/Dust Types">
+        <file>GUI Files/Dust Types/Green.png</file>
+        <file>GUI Files/Dust Types/Purple.png</file>
+        <file>GUI Files/Dust Types/Red.png</file>
+        <file>GUI Files/Dust Types/Green-div2.png</file>
+        <file>GUI Files/Dust Types/Purple-div2.png</file>
+        <file>GUI Files/Dust Types/Red-div2.png</file>
+    </qresource>
+    <qresource prefix="/Item Rarities">
+        <file>GUI Files/Item Rarities/divine.png</file>
+        <file>GUI Files/Item Rarities/legendary.png</file>
+        <file>GUI Files/Item Rarities/rare.png</file>
+        <file>GUI Files/Item Rarities/uncommon.png</file>
+        <file>GUI Files/Item Rarities/divine_scaled_8x.png</file>
+        <file>GUI Files/Item Rarities/legendary_scaled_8x.png</file>
+        <file>GUI Files/Item Rarities/rare_scaled_8x.png</file>
+        <file>GUI Files/Item Rarities/uncommon_scaled_8x.png</file>
+    </qresource>
+    <qresource prefix="/font">
+        <file>GUI Files/chronotype/ChronoType.ttf</file>
+    </qresource>
+    <qresource prefix="/Awakenable Items">
+        <file>GUI Files/Awakenable Items/Arcane Rapier.png</file>
+        <file>GUI Files/Awakenable Items/Berserker's Breastplate.png</file>
+        <file>GUI Files/Awakenable Items/Bone Dagger.png</file>
+        <file>GUI Files/Awakenable Items/Bramble Bow.png</file>
+        <file>GUI Files/Awakenable Items/Conducting Wand.png</file>
+        <file>GUI Files/Awakenable Items/Coral Bow.png</file>
+        <file>GUI Files/Awakenable Items/Corsair Ring.png</file>
+        <file>GUI Files/Awakenable Items/Crystal Bone Ring.png</file>
+        <file>GUI Files/Awakenable Items/Crystal Sword.png</file>
+        <file>GUI Files/Awakenable Items/Crystal Wand.png</file>
+        <file>GUI Files/Awakenable Items/Demon Blade.png</file>
+        <file>GUI Files/Awakenable Items/Demon Lord's Skull.png</file>
+        <file>GUI Files/Awakenable Items/Doku no Ken.png</file>
+        <file>GUI Files/Awakenable Items/Doom Bow.png</file>
+        <file>GUI Files/Awakenable Items/Judge's Robe.png</file>
+        <file>GUI Files/Awakenable Items/Leaf Bow.png</file>
+        <file>GUI Files/Awakenable Items/Overclocking Amulet.png</file>
+        <file>GUI Files/Awakenable Items/Pirate King's Cutlass.png</file>
+        <file>GUI Files/Awakenable Items/Poison Fang Dagger.png</file>
+        <file>GUI Files/Awakenable Items/Predator Bow.png</file>
+        <file>GUI Files/Awakenable Items/Queen's Stinger.png</file>
+        <file>GUI Files/Awakenable Items/Ring of Skeletal Specters.png</file>
+        <file>GUI Files/Awakenable Items/Robe of the Tlatoani.png</file>
+        <file>GUI Files/Awakenable Items/S.T.A.F.F..png</file>
+        <file>GUI Files/Awakenable Items/Snake Eye Ring.png</file>
+        <file>GUI Files/Awakenable Items/Snakeskin Armor.png</file>
+        <file>GUI Files/Awakenable Items/Spider's Eye Ring.png</file>
+        <file>GUI Files/Awakenable Items/Staff of Extreme Prejudice.png</file>
+        <file>GUI Files/Awakenable Items/Staff of the Crystal Serpent.png</file>
+        <file>GUI Files/Awakenable Items/The Right Hook.png</file>
+        <file>GUI Files/Awakenable Items/Tlatoani's Shroud.png</file>
+        <file>GUI Files/Awakenable Items/Void Blade.png</file>
+        <file>GUI Files/Awakenable Items/Wand of Hidden Knowledge.png</file>
+        <file>GUI Files/Awakenable Items/AoO Abilities.png</file>
+        <file>GUI Files/Awakenable Items/AoO Armors.png</file>
+        <file>GUI Files/Awakenable Items/AoO Rings.png</file>
+        <file>GUI Files/Awakenable Items/AoO Weapons.png</file>
+        <file>GUI Files/Awakenable Items/Beehemoth Armors.png</file>
+        <file>GUI Files/Awakenable Items/Tomb Rings.png</file>
+        <file>GUI Files/Awakenable Items/LoD Armors.png</file>
+        <file>GUI Files/Awakenable Items/Acidic Slasher.png</file>
+        <file>GUI Files/Awakenable Items/Ancient Stone Sword.png</file>
+        <file>GUI Files/Awakenable Items/Corruption Cutter.png</file>
+        <file>GUI Files/Awakenable Items/Dueling Daggers.png</file>
+        <file>GUI Files/Awakenable Items/Matrix Armors.png</file>
+        <file>GUI Files/Awakenable Items/Neo Acidic Slasher.png</file>
+        <file>GUI Files/Awakenable Items/Neo Sun's Judgement.png</file>
+        <file>GUI Files/Awakenable Items/Sun's Judgement.png</file>
+        <file>GUI Files/Awakenable Items/Neo Dueling Daggers.png</file>
+        <file>GUI Files/Awakenable Items/Neo Warlord Wand.png</file>
+        <file>GUI Files/Awakenable Items/Warlord Wand.png</file>
+        <file>GUI Files/Awakenable Items/Neo Matrix Armors.png</file>
+    </qresource>
+    <qresource prefix="/Item Types">
+        <file>GUI Files/Item Types/ability.png</file>
+        <file>GUI Files/Item Types/armor.png</file>
+        <file>GUI Files/Item Types/ring.png</file>
+        <file>GUI Files/Item Types/weapon.png</file>
+        <file>GUI Files/Item Types/ALIEN.png</file>
+        <file>GUI Files/Item Types/SUMMONPOWERED.png</file>
+        <file>GUI Files/Item Types/NEO_ALIEN.png</file>
+    </qresource>
+    <qresource prefix="/Enchantment Icons">
+        <file>GUI Files/Enchantment Icons/Acid Guardian (Neo).png</file>
+        <file>GUI Files/Enchantment Icons/Acid Guardian.png</file>
+        <file>GUI Files/Enchantment Icons/ALIEN.png</file>
+        <file>GUI Files/Enchantment Icons/Ancient Artifacts.png</file>
+        <file>GUI Files/Enchantment Icons/Ancient's Blessing.png</file>
+        <file>GUI Files/Enchantment Icons/Apitoxin.png</file>
+        <file>GUI Files/Enchantment Icons/Artificial Core.png</file>
+        <file>GUI Files/Enchantment Icons/Bar Brawler.png</file>
+        <file>GUI Files/Enchantment Icons/Bone Claws.png</file>
+        <file>GUI Files/Enchantment Icons/Bubbling Scourge.png</file>
+        <file>GUI Files/Enchantment Icons/Buzzing Bullets.png</file>
+        <file>GUI Files/Enchantment Icons/CASTING.png</file>
+        <file>GUI Files/Enchantment Icons/Consuming Void.png</file>
+        <file>GUI Files/Enchantment Icons/Coral Volley.png</file>
+        <file>GUI Files/Enchantment Icons/Corrupting Scourge.png</file>
+        <file>GUI Files/Enchantment Icons/Crystal Shards.png</file>
+        <file>GUI Files/Enchantment Icons/Crystalline Channel.png</file>
+        <file>GUI Files/Enchantment Icons/Cursebearer.png</file>
+        <file>GUI Files/Enchantment Icons/DAMAGE.png</file>
+        <file>GUI Files/Enchantment Icons/DAMAGERESISTANCE.png</file>
+        <file>GUI Files/Enchantment Icons/Draconic Gaze.png</file>
+        <file>GUI Files/Enchantment Icons/Drake Warden.png</file>
+        <file>GUI Files/Enchantment Icons/DUALREWARDBONUS.png</file>
+        <file>GUI Files/Enchantment Icons/DUALSTAT.png</file>
+        <file>GUI Files/Enchantment Icons/El Dorado's Legacy.png</file>
+        <file>GUI Files/Enchantment Icons/Eye of the Spider.png</file>
+        <file>GUI Files/Enchantment Icons/Foraxian Matrix Enhancement.png</file>
+        <file>GUI Files/Enchantment Icons/Fractured Blade.png</file>
+        <file>GUI Files/Enchantment Icons/Hellfire Edge.png</file>
+        <file>GUI Files/Enchantment Icons/High Voltage.png</file>
+        <file>GUI Files/Enchantment Icons/Infernal Anger.png</file>
+        <file>GUI Files/Enchantment Icons/Katalonian Matrix Enhancement.png</file>
+        <file>GUI Files/Enchantment Icons/Kogbold Spirit.png</file>
+        <file>GUI Files/Enchantment Icons/LIFEREGEN.png</file>
+        <file>GUI Files/Enchantment Icons/Living Hive.png</file>
+        <file>GUI Files/Enchantment Icons/Malogian Matrix Enhancement.png</file>
+        <file>GUI Files/Enchantment Icons/MANAREGEN.png</file>
+        <file>GUI Files/Enchantment Icons/Masked God's Dance.png</file>
+        <file>GUI Files/Enchantment Icons/Molecular Blade.png</file>
+        <file>GUI Files/Enchantment Icons/N.O.V.A..png</file>
+        <file>GUI Files/Enchantment Icons/Necrotic Knowledge.png</file>
+        <file>GUI Files/Enchantment Icons/NEO_ALIEN.png</file>
+        <file>GUI Files/Enchantment Icons/Night's Soul.png</file>
+        <file>GUI Files/Enchantment Icons/Night's Strength.png</file>
+        <file>GUI Files/Enchantment Icons/Night's Tenacity.png</file>
+        <file>GUI Files/Enchantment Icons/Night's Wisdom.png</file>
+        <file>GUI Files/Enchantment Icons/PROC.png</file>
+        <file>GUI Files/Enchantment Icons/Raijin's Dance.png</file>
+        <file>GUI Files/Enchantment Icons/REWARDBONUS.png</file>
+        <file>GUI Files/Enchantment Icons/SINGLESTAT.png</file>
+        <file>GUI Files/Enchantment Icons/Solar Mastery (Neo).png</file>
+        <file>GUI Files/Enchantment Icons/Solar Mastery.png</file>
+        <file>GUI Files/Enchantment Icons/Soulful Mastery.png</file>
+        <file>GUI Files/Enchantment Icons/Spellsword Mastery.png</file>
+        <file>GUI Files/Enchantment Icons/Stinger Shards.png</file>
+        <file>GUI Files/Enchantment Icons/Stone Guardian.png</file>
+        <file>GUI Files/Enchantment Icons/Swarm Tree's Wrath.png</file>
+        <file>GUI Files/Enchantment Icons/The King's Treasure.png</file>
+        <file>GUI Files/Enchantment Icons/Thornswarm.png</file>
+        <file>GUI Files/Enchantment Icons/Un-awakenable.png</file>
+        <file>GUI Files/Enchantment Icons/UNIQUE.png</file>
+        <file>GUI Files/Enchantment Icons/UNIQUEFROZEN.png</file>
+        <file>GUI Files/Enchantment Icons/Untarian Matrix Enhancement.png</file>
+        <file>GUI Files/Enchantment Icons/Venom Coating.png</file>
+        <file>GUI Files/Enchantment Icons/WEAPONRANGE.png</file>
+    </qresource>
+    <qresource prefix="/App Icon">
+        <file>GUI Files/App Icon/Enchanter.png</file>
+        <file>GUI Files/App Icon/appicon.ico</file>
+    </qresource>
+</RCC>

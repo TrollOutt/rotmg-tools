@@ -1,0 +1,1230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1330</width>
+    <height>850</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTableWidget" name="resultsWidget">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>10</y>
+      <width>691</width>
+      <height>791</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QTableWidget
+{
+border: 1px solid rgb(29,29,29);
+	border-radius: 4px;
+background-color: rgb(40,40,40);
+}
+
+QWidget#tableViewport
+{
+border-bottom-left-radius: 4px ;
+border-bottom-right-radius: 4px ;
+border-top-left-radius: 4px;
+border-top-right-radius: 4px;
+}
+
+QHeaderView::section:horizontal {
+    border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+
+QTableWidget QScrollBar:vertical {
+    border: none;
+    background-color: rgb(40,40,40);
+    width: 12px;               
+    margin: 0px 0px 0px 0px;
+}</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::NoFrame</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Plain</enum>
+    </property>
+    <property name="lineWidth">
+     <number>0</number>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="sizeAdjustPolicy">
+     <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+    <property name="textElideMode">
+     <enum>Qt::TextElideMode::ElideNone</enum>
+    </property>
+    <property name="gridStyle">
+     <enum>Qt::PenStyle::DashDotLine</enum>
+    </property>
+    <attribute name="horizontalHeaderCascadingSectionResizes">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="horizontalHeaderDefaultSectionSize">
+     <number>110</number>
+    </attribute>
+    <attribute name="horizontalHeaderHighlightSections">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="horizontalHeaderStretchLastSection">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="verticalHeaderVisible">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="verticalHeaderCascadingSectionResizes">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="verticalHeaderDefaultSectionSize">
+     <number>45</number>
+    </attribute>
+    <column>
+     <property name="text">
+      <string>Artifact</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Odds</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Dust Cost</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Add. Cost</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Artifacts Used</string>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+      </font>
+     </property>
+    </column>
+   </widget>
+   <widget class="QPushButton" name="CalculateButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>290</y>
+      <width>131</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>24</pointsize>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton::Disabled
+{
+	background-color: rgba(169,250,124,80);
+}
+
+QPushButton::Enabled
+{
+	background-color: rgba(169,250,124,180);
+}
+
+QPushButton::hover
+{
+	background-color: rgba(169,250,124,220);
+}</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset theme="QIcon::ThemeIcon::MediaPlaybackStart"/>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>80</width>
+      <height>80</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="rarityWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>211</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>21</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="editable">
+     <bool>false</bool>
+    </property>
+    <property name="currentText">
+     <string/>
+    </property>
+    <property name="currentIndex">
+     <number>-1</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>32</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>&lt;rarity&gt;</string>
+    </property>
+    <property name="frame">
+     <bool>true</bool>
+    </property>
+    <item>
+     <property name="text">
+      <string> Uncommon</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Rarities/GUI Files/Item Rarities/uncommon_scaled_8x.png</normaloff>:/Item Rarities/GUI Files/Item Rarities/uncommon_scaled_8x.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string> Rare</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Rarities/GUI Files/Item Rarities/rare_scaled_8x.png</normaloff>:/Item Rarities/GUI Files/Item Rarities/rare_scaled_8x.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string> Legendary</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Rarities/GUI Files/Item Rarities/legendary_scaled_8x.png</normaloff>:/Item Rarities/GUI Files/Item Rarities/legendary_scaled_8x.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string> Divine</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Rarities/GUI Files/Item Rarities/divine_scaled_8x.png</normaloff>:/Item Rarities/GUI Files/Item Rarities/divine_scaled_8x.png</iconset>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="dustTypeWidget">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>10</y>
+      <width>191</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>21</pointsize>
+     </font>
+    </property>
+    <property name="currentIndex">
+     <number>-1</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>&lt;dust type&gt;</string>
+    </property>
+    <item>
+     <property name="text">
+      <string>Green</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Dust Types/GUI Files/Dust Types/Green.png</normaloff>:/Dust Types/GUI Files/Dust Types/Green.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Red</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Dust Types/GUI Files/Dust Types/Red.png</normaloff>:/Dust Types/GUI Files/Dust Types/Red.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Purple</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Dust Types/GUI Files/Dust Types/Purple.png</normaloff>:/Dust Types/GUI Files/Dust Types/Purple.png</iconset>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="itemTypeWidget">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>10</y>
+      <width>191</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>21</pointsize>
+     </font>
+    </property>
+    <property name="currentIndex">
+     <number>-1</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>&lt;item type&gt;</string>
+    </property>
+    <item>
+     <property name="text">
+      <string>WEAPON</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/weapon.png</normaloff>:/Item Types/GUI Files/Item Types/weapon.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ABILITY</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/ability.png</normaloff>:/Item Types/GUI Files/Item Types/ability.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ARMOR</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/armor.png</normaloff>:/Item Types/GUI Files/Item Types/armor.png</iconset>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RING</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/ring.png</normaloff>:/Item Types/GUI Files/Item Types/ring.png</iconset>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="awakenedItemWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>90</y>
+      <width>331</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QComboBox QAbstractItemView::item 
+{ max-height: 44px; }</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>&lt;awakens&gt;</string>
+    </property>
+    <property name="modelColumn">
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="desiredModWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>190</y>
+      <width>471</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QComboBox
+{
+	padding-left: 3px;
+	padding-right: 0px;
+}
+</string>
+    </property>
+    <property name="sizeAdjustPolicy">
+     <enum>QComboBox::SizeAdjustPolicy::AdjustToMinimumContentsLengthWithIcon</enum>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>54</width>
+      <height>54</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>&lt;desired mod&gt;</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="locked1Widget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>290</y>
+      <width>471</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QComboBox
+{
+	padding-left: 3px;
+	padding-right: 0px;
+}
+</string>
+    </property>
+    <property name="editable">
+     <bool>false</bool>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>54</width>
+      <height>54</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>~~</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="locked2Widget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>350</y>
+      <width>471</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QComboBox
+{
+	padding-left: 3px;
+	padding-right: 0px;
+}
+</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>54</width>
+      <height>54</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>~~</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="locked3Widget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>410</y>
+      <width>471</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QComboBox
+{
+	padding-left: 3px;
+	padding-right: 0px;
+}
+</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>54</width>
+      <height>54</height>
+     </size>
+    </property>
+    <property name="placeholderText">
+     <string>~~</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="clear1Widget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>290</y>
+      <width>20</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <bold>false</bold>
+      <hintingpreference>PreferDefaultHinting</hintingpreference>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton
+{
+background-color: rgba(130, 20, 20,110);
+color: white;
+border-style: outset;
+border-width: 1px;
+border-color: rgba(80,0,0,90);
+padding: 0px;
+border-radius: 4px;
+}
+QPushButton:pressed
+{
+background-color: rgba(100,10,10,180);
+border-style: inset;
+
+}
+QPushButton:Hover
+{
+background-color: rgba(200,30,30,180);
+}
+</string>
+    </property>
+    <property name="text">
+     <string>X</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="clear3Widget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>410</y>
+      <width>20</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton
+{
+background-color: rgba(130, 20, 20,110);
+color: white;
+border-style: outset;
+border-width: 1px;
+border-color: rgba(80,0,0,90);
+padding: 0px;
+border-radius: 4px;
+}
+QPushButton:pressed
+{
+background-color: rgba(100,10,10,180);
+border-style: inset;
+
+}
+QPushButton:Hover
+{
+background-color: rgba(200,30,30,180);
+}
+</string>
+    </property>
+    <property name="text">
+     <string>X</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="clear2Widget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>350</y>
+      <width>20</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton
+{
+background-color: rgba(130, 20, 20,110);
+color: white;
+border-style: outset;
+border-width: 1px;
+border-color: rgba(80,0,0,90);
+padding: 0px;
+border-radius: 4px;
+}
+QPushButton:pressed
+{
+background-color: rgba(100,10,10,180);
+border-style: inset;
+
+}
+QPushButton:Hover
+{
+background-color: rgba(200,30,30,180);
+}
+</string>
+    </property>
+    <property name="text">
+     <string>X</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tierWidget">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>190</y>
+      <width>131</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">
+QTableWidget 
+{
+    outline: 0;
+	border: 1px solid #333333;
+	border-radius: 4px;
+	background-clip: padding;
+}
+
+QTableWidget::item {
+    background-color: transparent; 
+}
+QTableWidget::item:hover {
+    background-color: transparent;
+}
+QTableWidget::item:selected {
+    background-color: transparent;
+    color: inherit;
+}
+QTableWidget::item:focus {
+    background-color: transparent;
+    border: none;
+}
+
+QAbstractItemView::indicator {
+    border-radius: 4px;
+}
+QAbstractItemView::indicator:unchecked
+{
+ border-radius: 4px;
+ background-color: rgb(59, 59, 59);
+}
+QAbstractItemView::indicator:unchecked:hover
+{
+    border-radius: 4px;
+background-color: rgb(79, 79, 79);
+}
+QAbstractItemView::indicator:checked:hover
+{
+border-radius: 4px;
+background-color: rgb(111, 205, 86); 
+}
+QAbstractItemView::indicator:checked
+{ 
+border: 1px solid rgb(21, 31, 15);
+background-color: rgb(141, 255, 116); 
+ }</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::NoFrame</enum>
+    </property>
+    <property name="verticalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="sizeAdjustPolicy">
+     <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustIgnored</enum>
+    </property>
+    <property name="autoScroll">
+     <bool>false</bool>
+    </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+    </property>
+    <property name="textElideMode">
+     <enum>Qt::TextElideMode::ElideNone</enum>
+    </property>
+    <property name="verticalScrollMode">
+     <enum>QAbstractItemView::ScrollMode::ScrollPerItem</enum>
+    </property>
+    <property name="showGrid">
+     <bool>true</bool>
+    </property>
+    <property name="gridStyle">
+     <enum>Qt::PenStyle::DotLine</enum>
+    </property>
+    <property name="supportedDragActions">
+     <set>Qt::DropAction::IgnoreAction</set>
+    </property>
+    <attribute name="horizontalHeaderVisible">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="horizontalHeaderCascadingSectionResizes">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="horizontalHeaderDefaultSectionSize">
+     <number>65</number>
+    </attribute>
+    <attribute name="verticalHeaderVisible">
+     <bool>false</bool>
+    </attribute>
+    <row>
+     <property name="text">
+      <string/>
+     </property>
+    </row>
+    <row>
+     <property name="text">
+      <string/>
+     </property>
+    </row>
+    <column>
+     <property name="text">
+      <string/>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string/>
+     </property>
+    </column>
+    <item row="0" column="0">
+     <property name="text">
+      <string>I</string>
+     </property>
+     <property name="checkState">
+      <enum>Checked</enum>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+    <item row="0" column="1">
+     <property name="text">
+      <string>II</string>
+     </property>
+     <property name="checkState">
+      <enum>Checked</enum>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+    <item row="1" column="0">
+     <property name="text">
+      <string>III</string>
+     </property>
+     <property name="checkState">
+      <enum>Checked</enum>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+    <item row="1" column="1">
+     <property name="text">
+      <string>IV</string>
+     </property>
+     <property name="checkState">
+      <enum>Checked</enum>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+   </widget>
+   <widget class="QPushButton" name="specialBaseButton">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>90</y>
+      <width>271</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>21</pointsize>
+     </font>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::FocusPolicy::NoFocus</enum>
+    </property>
+    <property name="contextMenuPolicy">
+     <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">text-align: left;
+padding-left: 6px;
+color: rgb(149, 149, 149)</string>
+    </property>
+    <property name="text">
+     <string>&lt;subtypes&gt;</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="specialBaseList">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>160</y>
+      <width>271</width>
+      <height>161</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QListWidget 
+{
+    outline: 0;
+}
+
+QListWidget::item {
+    background-color: transparent; 
+}
+QListWidget::item:hover {
+    background-color: transparent;
+}
+QListWidget::item:selected {
+    background-color: transparent;
+    color: inherit;
+}
+QListWidget::item:focus {
+    background-color: transparent;
+    border: none;
+}
+
+
+
+QAbstractItemView::indicator {
+    border-radius: 4px;
+}
+QAbstractItemView::indicator:unchecked
+{
+ border-radius: 4px;
+ background-color: rgb(59, 59, 59);
+}
+QAbstractItemView::indicator:unchecked:hover
+{
+    border-radius: 4px;
+background-color: rgb(79, 79, 79);
+}
+QAbstractItemView::indicator:checked:hover
+{
+border-radius: 4px;
+background-color: rgb(111, 205, 86); 
+}
+QAbstractItemView::indicator:checked
+{ 
+border: 1px solid rgb(21, 31, 15);
+background-color: rgb(141, 255, 116); 
+ }</string>
+    </property>
+    <property name="verticalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="autoScroll">
+     <bool>false</bool>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+    <property name="flow">
+     <enum>QListView::Flow::TopToBottom</enum>
+    </property>
+    <property name="viewMode">
+     <enum>QListView::ViewMode::ListMode</enum>
+    </property>
+    <property name="itemAlignment">
+     <set>Qt::AlignmentFlag::AlignLeading</set>
+    </property>
+    <item>
+     <property name="text">
+      <string>SUMMONPOWERED</string>
+     </property>
+     <property name="checkState">
+      <enum>Unchecked</enum>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/SUMMONPOWERED.png</normaloff>:/Item Types/GUI Files/Item Types/SUMMONPOWERED.png</iconset>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ALIEN</string>
+     </property>
+     <property name="checkState">
+      <enum>Unchecked</enum>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/ALIEN.png</normaloff>:/Item Types/GUI Files/Item Types/ALIEN.png</iconset>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>NEO_ALIEN</string>
+     </property>
+     <property name="checkState">
+      <enum>Unchecked</enum>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/Item Types/GUI Files/Item Types/NEO_ALIEN.png</normaloff>:/Item Types/GUI Files/Item Types/NEO_ALIEN.png</iconset>
+     </property>
+     <property name="flags">
+      <set>ItemIsEnabled</set>
+     </property>
+    </item>
+   </widget>
+   <widget class="QPushButton" name="clearDesiredWidget">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>190</y>
+      <width>20</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton
+{
+background-color: rgba(130, 20, 20,110);
+color: white;
+border-style: outset;
+border-width: 1px;
+border-color: rgba(80,0,0,90);
+padding: 0px;
+border-radius: 4px;
+}
+QPushButton:pressed
+{
+background-color: rgba(100,10,10,180);
+border-style: inset;
+
+}
+QPushButton:Hover
+{
+background-color: rgba(200,30,30,180);
+}
+</string>
+    </property>
+    <property name="text">
+     <string>X</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="specialIconWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>90</y>
+      <width>271</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="clearAwakenWidget">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>90</y>
+      <width>20</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton
+{
+background-color: rgba(130, 20, 20,110);
+color: white;
+border-style: outset;
+border-width: 1px;
+border-color: rgba(80,0,0,90);
+padding: 0px;
+border-radius: 4px;
+}
+QPushButton:pressed
+{
+background-color: rgba(100,10,10,180);
+border-style: inset;
+
+}
+QPushButton:Hover
+{
+background-color: rgba(200,30,30,180);
+}
+</string>
+    </property>
+    <property name="text">
+     <string>X</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="cacheButton">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>680</y>
+      <width>151</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Build Cache</string>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>470</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+   </widget>
+   <zorder>specialBaseButton</zorder>
+   <zorder>resultsWidget</zorder>
+   <zorder>CalculateButton</zorder>
+   <zorder>rarityWidget</zorder>
+   <zorder>dustTypeWidget</zorder>
+   <zorder>itemTypeWidget</zorder>
+   <zorder>awakenedItemWidget</zorder>
+   <zorder>desiredModWidget</zorder>
+   <zorder>locked1Widget</zorder>
+   <zorder>locked2Widget</zorder>
+   <zorder>locked3Widget</zorder>
+   <zorder>clear1Widget</zorder>
+   <zorder>clear3Widget</zorder>
+   <zorder>clear2Widget</zorder>
+   <zorder>tierWidget</zorder>
+   <zorder>clearDesiredWidget</zorder>
+   <zorder>specialBaseList</zorder>
+   <zorder>specialIconWidget</zorder>
+   <zorder>clearAwakenWidget</zorder>
+   <zorder>cacheButton</zorder>
+   <zorder>progressBar</zorder>
+  </widget>
+ </widget>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>
