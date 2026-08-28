@@ -1,0 +1,1615 @@
+/*
+ * Browser layer for the RotMG enchant calculator.
+ *
+ * Every probability, weight and cost comes from web/engine.js, which is also
+ * exercised by tests/engine.test.js. This file only loads the original data
+ * files, keeps the editor state and renders it.
+ */
+'use strict';
+
+const ROOT = '../Qt Source Files (not zipped)/';
+const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
+const SUBTYPES = ['SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN'];
+const RARITIES = ['uncommon', 'rare', 'legendary', 'divine'];
+const SAVE_KEY = 'rotmg-enchant-calculator/v1';
+const TABS_KEY = 'rotmg-enchant-calculator/tabs/v1';
+
+/*
+ * tools/build-standalone.js produces a single HTML file that carries the
+ * original data files and every sprite as inline data: URIs, under
+ * window.ROTMG_BUNDLE. That build opens straight from the file system, where
+ * fetch() is blocked. Without a bundle the app falls back to fetching the
+ * files from disk, which is what the local dev server serves.
+ */
+const BUNDLE = typeof window !== 'undefined' && window.ROTMG_BUNDLE ? window.ROTMG_BUNDLE : null;
+
+const $ = id => document.getElementById(id);
+const esc = value => encodeURI(String(value)).replace(/#/g, '%23');
+function asset(...parts) {
+  if (BUNDLE) {
+    const embedded = BUNDLE.assets[parts.join('/')];
+    // An asset missing from the bundle must not fall back to a relative path:
+    // the <img> onerror handler hides it, which is the intended behaviour.
+    return embedded || '';
+  }
+  return ROOT + parts.map(esc).join('/');
+}
+const html = value => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+
+const state = {
+  data: null,
+  ready: false,
+  slots: [1, 2, 3, 4].map(index => ({ index, name: '', locked: false })),
+  lastResults: null,
+  picker: null,
+  tabs: [],
+  itemSprites: {},
+  activeTab: null,
+  loadingTab: false,
+  lastCardItem: null
+};
+
+/* ------------------------------------------------------------------ *
+ * Formatting                                                          *
+ * ------------------------------------------------------------------ */
+
+function count(value) {
+  if (!Number.isFinite(value)) return '∞';
+  return Math.round(value).toLocaleString('en-US');
+}
+function percent(value) {
+  if (!(value > 0)) return '0%';
+  if (value < 0.0001) return '<0.0001%';
+  return `${value.toPrecision(4)}%`;
+}
+function plural(value, word) { return `${value} ${word}${value === 1 ? '' : 's'}`; }
+
+// Hand control back to the browser between chunks of work. A timer is used
+// rather than requestAnimationFrame, which never fires while the tab is hidden
+// and would leave a long calculation stuck at "Calculating…".
+const yieldToUi = () => new Promise(resolve => setTimeout(resolve, 0));
+
+/* ------------------------------------------------------------------ *
+ * Sprites                                                             *
+ * ------------------------------------------------------------------ */
+
+// Enchantment sprites are stored per awakened/unique name, otherwise per
+// Label family. Anything unmatched falls back to a neutral placeholder rather
+// than a broken image.
+function enchantIcon(mod) {
+  if (!mod) return null;
+  if (mod.tags.has('AWAKENED')) return mod.name;
+  if (mod.tags.has('UNIQUE')) return mod.weight === 750 ? 'UNIQUEFROZEN' : 'UNIQUE';
+  for (const tag of ['NEO_ALIEN', 'ALIEN', 'SINGLESTAT', 'DUALSTAT', 'PROC', 'REWARDBONUS', 'DAMAGE', 'WEAPONRANGE', 'CASTING', 'MANAREGEN', 'LIFEREGEN', 'DAMAGERESISTANCE', 'DUALREWARDBONUS']) {
+    if (mod.tags.has(tag)) return tag;
+  }
+  return null;
+}
+function enchantIconHtml(mod, className) {
+  const icon = enchantIcon(mod);
+  const src = icon ? asset('GUI Files', 'Enchantment Icons', `${icon}.png`) : '';
+  return `<img class="${className}${src ? '' : ' missing'}" ${src ? `src="${src}"` : ''} alt="" loading="lazy" onerror="this.classList.add('missing');this.removeAttribute('src')">`;
+}
+// Only known awakenable items have group artwork in the Qt assets. Guarding on
+// that stops a sprite request firing for every keystroke while typing.
+function itemSpriteName(item) {
+  if (!item || !state.data || !state.data.awakenings.has(item)) return null;
+  return state.data.spriteAlias[item] || item;
+}
+
+/*
+ * Artwork for an item, best source first:
+ *   1. the item's own sprite (web/assets/items, see tools/fetch-item-sprites.js)
+ *   2. the awakenable group artwork shipped with the Qt build
+ * Returns null when we have neither, and the caller falls back to a slot icon.
+ */
+function itemArtUrl(name, awokenKey) {
+  const own = state.itemSprites[name] || (awokenKey ? state.itemSprites[awokenKey] : null);
+  if (own) return own;
+  const group = itemSpriteName(awokenKey || name);
+  return group ? asset('GUI Files', 'Awakenable Items', `${group}.png`) : null;
+}
+
+/* ------------------------------------------------------------------ *
+ * What the item itself tells us                                       *
+ * ------------------------------------------------------------------ */
+
+/*
+ * Two independent sources, merged:
+ *   - web/items.js, from the wiki reroll tables, gives slot + dust;
+ *   - awakenedItems.txt gives the Awoken enchantment an item unlocks, and
+ *     through that enchantment's own labels, the slot and whether the base is
+ *     alien.
+ * The second covers items the first has never heard of (the AoO sets, the
+ * alien reskins), so between them most items resolve. Anything left over is
+ * simply filled in by hand, and the interface says which fields it could not
+ * work out.
+ */
+function resolveItem(name) {
+  if (!name || !state.data) return null;
+  const known = typeof EnchantItems !== 'undefined' ? EnchantItems.lookup(name) : null;
+
+  // Match the awakenable list case-insensitively too.
+  let awokenKey = state.data.awakenings.has(name) ? name : null;
+  if (!awokenKey) {
+    const target = name.trim().toLowerCase();
+    for (const key of state.data.awakenings.keys()) if (key.toLowerCase() === target) { awokenKey = key; break; }
+  }
+  const awoken = awokenKey ? state.data.awakenings.get(awokenKey) : null;
+  if (!known && !awoken) return null;
+
+  const resolved = {
+    name: known ? known.name : awokenKey,
+    awokenKey,
+    awoken: awoken || [],
+    type: known ? known.type : null,
+    dust: known ? known.dust : null,
+    tiered: Boolean(known && known.tiered),
+    note: known && known.note ? known.note : '',
+    special: null,
+    source: known ? (awoken ? 'both' : 'wiki') : 'awakened'
+  };
+
+  if (awoken && awoken.length) {
+    const mod = state.data.byName.get(awoken[0]);
+    if (mod) {
+      if (!resolved.type) resolved.type = [...mod.itemTags][0] || null;
+      // An awakened enchantment that carries ALIEN belongs to an alien base;
+      // the "Neo" reskins use the NEO_ALIEN pool.
+      if (mod.tags.has('ALIEN')) resolved.special = /\bneo\b/i.test(resolved.name) ? 'NEO_ALIEN' : 'ALIEN';
+    }
+  }
+  return resolved;
+}
+
+// Everything the item picker can offer: named gear, tiered placeholders and
+// every awakenable item, de-duplicated.
+function knownItemNames() {
+  const names = new Set();
+  if (typeof EnchantItems !== 'undefined') for (const name of EnchantItems.index.keys()) names.add(name);
+  if (state.data) for (const name of state.data.awakenings.keys()) names.add(name);
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+/* ------------------------------------------------------------------ *
+ * Configuration read from the editor                                  *
+ * ------------------------------------------------------------------ */
+
+function filledSlots() { return state.slots.filter(slot => slot.name); }
+
+function cfg() {
+  const filled = filledSlots();
+  const wanted = filled.filter(slot => !slot.locked).map(slot => slot.name);
+  return {
+    slots: Number($('rarity').value) || 0,
+    type: $('itemType').value,
+    dust: $('dustType').value,
+    item: $('awakenedItem').value.trim(),
+    subtypes: new Set([...document.querySelectorAll('#subtypePanel input:checked')].map(box => box.value)),
+    tiers: new Set([...document.querySelectorAll('#tiers input:checked')].map(box => Number(box.value))),
+    locks: filled.filter(slot => slot.locked).map(slot => slot.name),
+    virtualLabels: [],
+    desired: wanted[0] || '',
+    goals: wanted.slice(1)
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Which enchantments may be typed into a slot                         *
+ * ------------------------------------------------------------------ */
+
+// Item-level eligibility, ignoring what the other slots hold. The ALIEN
+// requirement is tolerated here because the alien technology artifacts open
+// that pool at calculation time.
+function eligibleForItem(mod, config) {
+  if (!config.type || !mod.itemTags.has(config.type)) return false;
+  if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return false;
+  for (const requirement of mod.special) {
+    if (requirement === 'ALIEN' || requirement === 'NEO_ALIEN') continue;
+    if (!config.subtypes.has(requirement)) return false;
+  }
+  return true;
+}
+
+// Directional rule: `candidate` survives after `prior` when none of the
+// candidate's Incompatible Labels appears among the prior's Labels.
+function follows(candidate, prior) {
+  for (const label of candidate.excludes) if (prior.tags.has(label)) return false;
+  return true;
+}
+
+/*
+ * Can `mod` sit in `slot` given everything else already chosen?
+ *  - against a locked slot the candidate must follow it;
+ *  - a locked candidate must be followable by the wanted ones;
+ *  - two wanted enchantments only need one workable rolling order, which the
+ *    build planner then works out.
+ */
+function conflictWith(mod, slot, others) {
+  for (const other of others) {
+    if (other.index === slot.index || !other.name) continue;
+    const otherMod = state.data.byName.get(other.name);
+    if (!otherMod) continue;
+    if (otherMod.name === mod.name) return { other: otherMod, reason: 'duplicate' };
+    if (other.locked && !follows(mod, otherMod)) return { other: otherMod, reason: 'after-lock' };
+    if (!other.locked && slot.locked && !follows(otherMod, mod)) return { other: otherMod, reason: 'before-wanted' };
+    if (!other.locked && !slot.locked && !follows(mod, otherMod) && !follows(otherMod, mod)) return { other: otherMod, reason: 'mutual' };
+  }
+  return null;
+}
+
+function candidatesFor(slot, config) {
+  const others = state.slots.filter(entry => entry.index !== slot.index);
+  return state.data.enchants
+    .filter(mod => eligibleForItem(mod, config))
+    .filter(mod => !conflictWith(mod, slot, others))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering: configuration                                            *
+ * ------------------------------------------------------------------ */
+
+function labelChips(mod) {
+  const blocking = state.data.blockingLabels;
+  const tags = [...mod.tags].filter(tag => blocking.has(tag));
+  const excludes = [...mod.excludes];
+  const parts = [];
+  // The two lists very often hold the same words, so each chip is prefixed:
+  // "+" for a Label this enchantment brings, "⊘" for one it refuses.
+  if (tags.length) parts.push(`<span class="chips" title="Labels this enchantment brings. They remove future candidates that refuse them.">${tags.map(tag => `<i class="chip give"><b>+</b>${html(tag)}</i>`).join('')}</span>`);
+  if (excludes.length) parts.push(`<span class="chips" title="Incompatible Labels: this enchantment cannot be rolled once any of these Labels is already on the item.">${excludes.map(tag => `<i class="chip refuse"><b>⊘</b>${html(tag)}</i>`).join('')}</span>`);
+  return parts.join('');
+}
+
+function renderSlots() {
+  const config = cfg();
+  const list = $('slotList');
+  const visible = config.slots;
+  const hint = $('slotHint');
+  hint.hidden = visible > 0;
+  hint.className = 'note';
+  hint.textContent = 'Choose a rarity to reveal the enchantment slots.';
+  list.replaceChildren();
+
+  for (let index = 1; index <= visible; index++) {
+    const slot = state.slots[index - 1];
+    const mod = state.data.byName.get(slot.name);
+    const card = document.createElement('div');
+    card.className = `slot-card ${!slot.name ? 'is-empty' : slot.locked ? 'is-locked' : 'is-wanted'}`;
+    card.dataset.slot = String(index);
+
+    const stateLabel = !slot.name ? 'Empty' : slot.locked ? 'On the item' : 'Wanted';
+    card.innerHTML = `
+      <div class="slot-index">${index}</div>
+      <div class="slot-body">
+        <button class="slot-pick" type="button" data-pick="${index}">
+          ${mod ? enchantIconHtml(mod, 'slot-icon') : '<span class="slot-icon empty">+</span>'}
+          <span class="slot-text">
+            <b>${mod ? html(mod.name) : 'Choose an enchantment'}</b>
+            <small>${mod ? html(mod.description) : 'Click to browse everything this item can roll'}</small>
+          </span>
+        </button>
+        ${mod ? `<div class="slot-labels">${labelChips(mod)}</div>` : ''}
+      </div>
+      <div class="slot-actions">
+        <span class="slot-state">${stateLabel}</span>
+        <div class="toggle" role="group" aria-label="Slot ${index} state">
+          <button type="button" data-mode="wanted" data-slot="${index}" class="${slot.name && !slot.locked ? 'on' : ''}" ${slot.name ? '' : 'disabled'} title="This enchantment is not on the item yet — you want to roll it.">🎯 Wanted</button>
+          <button type="button" data-mode="locked" data-slot="${index}" class="${slot.locked ? 'on' : ''}" ${slot.name ? '' : 'disabled'} title="This enchantment is already on the item and you keep it. It removes candidates, costs a slot and doubles every reroll.">🔒 On item</button>
+        </div>
+        ${slot.name ? `<button type="button" class="ghost-x" data-remove="${index}" aria-label="Clear slot ${index}">×</button>` : ''}
+      </div>`;
+    list.append(card);
+  }
+
+  const locked = config.locks.length;
+  const wanted = (config.desired ? 1 : 0) + config.goals.length;
+  $('slotSummary').textContent = visible ? `${plural(visible, 'slot')} · ${locked} locked · ${wanted} wanted · ${Math.max(0, visible - locked)} random` : '';
+}
+
+function renderSubtypes() {
+  const panel = $('subtypePanel');
+  const type = $('itemType').value;
+  if (!panel.childElementCount) {
+    for (const subtype of SUBTYPES) {
+      const label = document.createElement('label');
+      label.className = 'chip-toggle';
+      label.innerHTML = `<input type="checkbox" value="${subtype}"><img src="${asset('GUI Files', 'Item Types', `${subtype}.png`)}" alt="" onerror="this.remove()"><span>${subtype.replace('_', ' ')}</span>`;
+      panel.append(label);
+    }
+  }
+  for (const box of panel.querySelectorAll('input')) {
+    const allowed = box.value === 'SUMMONPOWERED' ? ['ABILITY', 'ARMOR'].includes(type) : type !== 'ABILITY';
+    box.disabled = !allowed;
+    if (!allowed) box.checked = false;
+    box.closest('label').classList.toggle('disabled', !allowed);
+    box.closest('label').classList.toggle('on', box.checked);
+  }
+}
+
+function renderHeaderIcons(config) {
+  // Only touch src when it actually changes: reassigning it on every refresh
+  // makes the browser re-request and re-decode the sprite, which flickers.
+  const set = (element, src) => {
+    if (src) {
+      if (element.getAttribute('src') !== src) element.src = src;
+      element.style.display = '';
+    } else {
+      element.removeAttribute('src');
+      element.style.display = 'none';
+    }
+  };
+  set($('rarityIcon'), config.slots ? asset('GUI Files', 'Item Rarities', `${RARITIES[config.slots - 1]}_scaled_8x.png`) : '');
+  set($('typeIcon'), config.type ? asset('GUI Files', 'Item Types', `${config.type.toLowerCase()}.png`) : '');
+  set($('dustIcon'), config.dust ? asset('GUI Files', 'Dust Types', `${config.dust}.png`) : '');
+  document.body.dataset.rarity = config.slots ? String(config.slots) : '';
+
+  renderItemCard(config);
+}
+
+const TYPE_LABEL = { WEAPON: 'Weapon', ABILITY: 'Ability', ARMOR: 'Armor', RING: 'Ring' };
+
+/*
+ * The item's own facts, shown instead of being asked for. The manual controls
+ * stay in the page but folded away; they open by themselves whenever the item
+ * could not settle something, so an unlisted item is never a dead end.
+ */
+function renderItemCard(config) {
+  const card = $('itemCard');
+  const status = $('awakenedStatus');
+  const override = $('manualOverride');
+  // Only take the panel open or shut when the item itself changed, so a user
+  // who opened it to look at something does not have it closed underneath them.
+  const itemChanged = state.lastCardItem !== config.item;
+  state.lastCardItem = config.item;
+
+  if (!config.item) {
+    // Nothing chosen: a single call to action, and none of the fields the
+    // item is going to answer for us.
+    card.hidden = true;
+    $('itemEmpty').hidden = false;
+    $('raritySection').hidden = true;
+    override.hidden = true;
+    status.hidden = true;
+    override.classList.remove('needed');
+    if (itemChanged) override.open = false;
+    return;
+  }
+  $('itemEmpty').hidden = true;
+  $('raritySection').hidden = false;
+  override.hidden = false;
+  status.hidden = false;
+
+  const resolved = resolveItem(config.item);
+  card.hidden = false;
+
+  if (!resolved) {
+    card.className = 'item-card unknown';
+    card.innerHTML = `
+      <div class="item-art"><span class="item-art-fallback">?</span></div>
+      <div class="item-facts">
+        <b>${html(config.item)}</b>
+        <span class="muted">Not in the item list — nothing could be filled in.</span>
+      </div>
+      <div class="item-actions">
+        <button type="button" class="browse" id="changeItem">Change</button>
+        <button type="button" class="ghost-x" id="clearItem" aria-label="Remove this item">×</button>
+      </div>`;
+    status.className = 'note warn';
+    status.textContent = 'Unknown item. Set the slot, dust and base by hand below; the calculation itself is unaffected.';
+    if (itemChanged) override.open = true;
+    override.classList.add('needed');
+    return;
+  }
+
+  const missing = [];
+  if (!resolved.type) missing.push('slot');
+  if (!resolved.dust) missing.push('dust');
+
+  const spriteSrc = itemArtUrl(resolved.name, resolved.awokenKey) || '';
+  const typeSrc = resolved.type ? asset('GUI Files', 'Item Types', `${resolved.type.toLowerCase()}.png`) : '';
+  const art = spriteSrc
+    ? `<img src="${spriteSrc}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'item-art-fallback',textContent:'?'}))">`
+    : typeSrc ? `<img class="as-type" src="${typeSrc}" alt="">` : '<span class="item-art-fallback">?</span>';
+
+  const facts = [];
+  if (resolved.type) facts.push(`<i class="fact type">${html(TYPE_LABEL[resolved.type] || resolved.type)}</i>`);
+  else facts.push('<i class="fact todo">slot unknown</i>');
+  if (resolved.dust) facts.push(`<i class="fact dust ${html(resolved.dust.toLowerCase())}">${dustIcon(resolved.dust)}${html(resolved.dust)} dust</i>`);
+  else facts.push('<i class="fact todo">dust unknown</i>');
+  if (resolved.special) facts.push(`<i class="fact special">${html(resolved.special.replace('_', ' '))}</i>`);
+  facts.push(`<i class="fact plain">${resolved.tiered ? 'Tiered' : 'Untiered'}</i>`);
+
+  const awoken = resolved.awoken;
+  card.className = `item-card${missing.length ? ' partial' : ''}`;
+  card.innerHTML = `
+    <div class="item-art">${art}</div>
+    <div class="item-facts">
+      <b>${html(resolved.name)}</b>
+      <span class="fact-row">${facts.join('')}</span>
+      <span class="item-awoken">${awoken.length
+        ? `Unlocks ${awoken.map(name => `${enchantIconHtml(state.data.byName.get(name), 'awoken-icon')}<b>${html(name)}</b>`).join(', ')} — and no other Awoken enchantment.`
+        : 'No Awoken enchantment on this item.'}</span>
+      ${resolved.note ? `<span class="muted">${html(resolved.note)}</span>` : ''}
+    </div>
+    <div class="item-actions">
+      <button type="button" class="browse" id="changeItem">Change</button>
+      <button type="button" class="ghost-x" id="clearItem" aria-label="Remove this item">×</button>
+    </div>`;
+
+  if (missing.length) {
+    status.className = 'note warn';
+    status.innerHTML = `The wiki's reroll tables do not cover this one yet, so the <b>${missing.join(' and ')}</b> could not be worked out. Set ${missing.length > 1 ? 'them' : 'it'} by hand below.`;
+    if (itemChanged) override.open = true;
+    override.classList.add('needed');
+  } else {
+    status.className = 'note good';
+    status.textContent = 'Slot, dust and base all come from the item. Only the rarity is left to you.';
+    override.classList.remove('needed');
+    if (itemChanged) override.open = false;
+  }
+}
+
+function refresh() {
+  if (!state.ready) return;
+  renderSubtypes();
+  let config = cfg();
+
+
+  // Drop any slot entry that the current item or the other slots invalidate,
+  // and tell the user which ones went, so a silent disappearance never puzzles.
+  const dropped = [];
+  for (let guard = 0; guard < 8; guard++) {
+    config = cfg();
+    const broken = state.slots.find(slot => {
+      if (!slot.name) return false;
+      const mod = state.data.byName.get(slot.name);
+      if (!mod) return true;
+      if (slot.index > config.slots) return true;
+      if (!eligibleForItem(mod, config)) return true;
+      return Boolean(conflictWith(mod, slot, state.slots.filter(other => other.index !== slot.index)));
+    });
+    if (!broken) break;
+    dropped.push(broken.name);
+    broken.name = '';
+    broken.locked = false;
+  }
+
+  config = cfg();
+  renderHeaderIcons(config);
+  renderSlots();
+  if (dropped.length) {
+    const hint = $('slotHint');
+    hint.hidden = false;
+    hint.className = 'note warn';
+    hint.textContent = `Removed from the slots — no longer possible with this configuration: ${dropped.join(', ')}.`;
+  }
+  renderTiers(config);
+  renderCalculateState(config);
+  saveSetup();
+}
+
+function renderTiers(config) {
+  const target = state.data.byName.get(config.desired);
+  const tiered = Boolean(target && target.tags.has('TIERED'));
+  $('tiers').hidden = !tiered;
+  $('tiers').disabled = !tiered;
+}
+
+function renderCalculateState(config) {
+  const missing = [];
+  // Slot and dust follow from the item, so asking for them before an item is
+  // chosen would send the user hunting for controls that are not even shown.
+  if (!config.item) missing.push('an item');
+  if (!config.slots) missing.push('a rarity');
+  if (config.item && !config.type) missing.push('an item type');
+  if (config.item && !config.dust) missing.push('a dust type');
+  if (!state.data.byName.has(config.desired)) missing.push('at least one wanted enchantment');
+  const overloaded = config.locks.length + 1 + config.goals.length > config.slots && state.data.byName.has(config.desired);
+  $('calculate').disabled = Boolean(missing.length) || overloaded;
+  $('calculateHint').textContent = overloaded
+    ? 'The locked and wanted enchantments together need more slots than the item has.'
+    : missing.length ? `Still missing: ${missing.join(', ')}.` : 'Ready.';
+  $('calculateHint').className = `note${overloaded ? ' warn' : missing.length ? '' : ' good'}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Enchantment picker                                                  *
+ * ------------------------------------------------------------------ */
+
+function openPicker(index) {
+  const slot = state.slots[index - 1];
+  const config = cfg();
+  const candidates = candidatesFor(slot, config);
+  const others = state.slots.filter(entry => entry.index !== index);
+  const blocked = state.data.enchants
+    .filter(mod => eligibleForItem(mod, config))
+    .map(mod => ({ mod, conflict: conflictWith(mod, slot, others) }))
+    .filter(entry => entry.conflict && entry.conflict.reason !== 'duplicate');
+
+  state.picker = { index, candidates, blocked };
+  $('pickerTitle').textContent = `Slot ${index}`;
+  $('pickerSub').textContent = `${candidates.length} available · ${blocked.length} removed by the other slots`;
+  $('pickerSearch').value = '';
+  $('pickerSearch').placeholder = 'Search by name, description or label…';
+  $('pickerBackdrop').hidden = false;
+  renderPickerList('');
+  $('pickerSearch').focus();
+}
+
+function renderPickerList(query) {
+  const term = query.trim().toLowerCase();
+  const matches = entry => !term || entry.name.toLowerCase().includes(term) || entry.description.toLowerCase().includes(term) || [...entry.tags].some(tag => tag.toLowerCase().includes(term));
+  const shown = state.picker.candidates.filter(matches);
+  const hidden = state.picker.blocked.filter(entry => matches(entry.mod));
+
+  const row = mod => `
+    <button type="button" class="picker-row" data-name="${html(mod.name)}">
+      ${enchantIconHtml(mod, 'picker-icon')}
+      <span class="picker-text">
+        <b>${html(mod.name)}</b>
+        <small>${html(mod.description)}</small>
+        <span class="slot-labels">${labelChips(mod)}</span>
+      </span>
+      <span class="picker-weight" title="Base roll weight before any artifact multiplier">${count(mod.weight)}</span>
+    </button>`;
+
+  const reason = conflict => ({
+    'after-lock': `blocked by the locked “${conflict.other.name}”`,
+    'before-wanted': `“${conflict.other.name}” could not be rolled after it`,
+    mutual: `no rolling order works with “${conflict.other.name}”`
+  })[conflict.reason] || 'incompatible';
+
+  $('pickerList').innerHTML = shown.length || hidden.length
+    ? shown.map(row).join('') + (hidden.length
+      ? `<div class="picker-section">Removed by the other slots</div>` + hidden.map(entry => `
+        <div class="picker-row disabled" title="${html(reason(entry.conflict))}">
+          ${enchantIconHtml(entry.mod, 'picker-icon')}
+          <span class="picker-text"><b>${html(entry.mod.name)}</b><small>${html(reason(entry.conflict))}</small></span>
+        </div>`).join('')
+      : '')
+    : '<div class="picker-empty">Nothing matches that search.</div>';
+  $('pickerFooter').textContent = `${shown.length} selectable`;
+}
+
+function closePicker() { $('pickerBackdrop').hidden = true; state.picker = null; }
+
+/* ------------------------------------------------------------------ *
+ * Item picker                                                         *
+ * ------------------------------------------------------------------ */
+
+// Sprite for an item row: its own artwork when we have it, otherwise the icon
+// for its slot so the list still reads at a glance.
+function itemArtHtml(resolved, name) {
+  const src = itemArtUrl(name, resolved && resolved.awokenKey);
+  if (src) return `<img class="picker-icon" src="${src}" alt="" loading="lazy" onerror="this.classList.add('missing')">`;
+  if (resolved && resolved.type) {
+    const src = asset('GUI Files', 'Item Types', `${resolved.type.toLowerCase()}.png`);
+    if (src) return `<img class="picker-icon as-type" src="${src}" alt="" loading="lazy" onerror="this.classList.add('missing')">`;
+  }
+  return '<span class="picker-icon empty">?</span>';
+}
+
+function openItemPicker() {
+  const entries = knownItemNames().map(name => ({ name, resolved: resolveItem(name) }));
+  state.picker = { kind: 'item', entries };
+  $('pickerTitle').textContent = 'Choose your item';
+  $('pickerSub').textContent = `${entries.length} items · slot, dust and base come with the choice`;
+  $('pickerSearch').value = '';
+  $('pickerSearch').placeholder = 'Search by name, slot or dust…';
+  $('pickerBackdrop').hidden = false;
+  renderItemPickerList('');
+  $('pickerSearch').focus();
+}
+
+function renderItemPickerList(query) {
+  const term = query.trim().toLowerCase();
+  const matches = entry => {
+    if (!term) return true;
+    const resolved = entry.resolved;
+    return entry.name.toLowerCase().includes(term)
+      || (resolved && resolved.type && resolved.type.toLowerCase().includes(term))
+      || (resolved && resolved.dust && resolved.dust.toLowerCase().includes(term))
+      || (resolved && resolved.awoken || []).some(name => name.toLowerCase().includes(term));
+  };
+  // Items with their own artwork first: they are the ones worth recognising.
+  const shown = state.picker.entries.filter(matches).sort((a, b) => {
+    const artA = itemArtUrl(a.name, a.resolved && a.resolved.awokenKey) ? 0 : 1;
+    const artB = itemArtUrl(b.name, b.resolved && b.resolved.awokenKey) ? 0 : 1;
+    return artA - artB || a.name.localeCompare(b.name);
+  }).slice(0, 400);
+
+  $('pickerList').innerHTML = shown.length ? shown.map(entry => {
+    const resolved = entry.resolved;
+    const bits = [];
+    if (resolved && resolved.type) bits.push(TYPE_LABEL[resolved.type] || resolved.type);
+    if (resolved && resolved.dust) bits.push(`${resolved.dust} dust`);
+    else bits.push('dust unknown');
+    if (resolved && resolved.special) bits.push(resolved.special.replace('_', ' '));
+    const awoken = resolved && resolved.awoken && resolved.awoken.length ? ` · unlocks ${html(resolved.awoken[0])}` : '';
+    return `<button type="button" class="picker-row" data-item="${html(entry.name)}">
+      ${itemArtHtml(resolved, entry.name)}
+      <span class="picker-text"><b>${html(entry.name)}</b><small>${html(bits.join(' · '))}${awoken}</small></span>
+    </button>`;
+  }).join('') : '<div class="picker-empty">Nothing matches that search.</div>';
+  $('pickerFooter').textContent = `${shown.length} shown${shown.length === 400 ? ' (refine to see more)' : ''}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Results                                                             *
+ * ------------------------------------------------------------------ */
+
+function dustIcon(type) {
+  if (!type || type === 'na') return '';
+  return `<img class="dust-icon" src="${asset('GUI Files', 'Dust Types', `${type}-div2.png`)}" alt="${type} dust">`;
+}
+
+function renderResults(rows, config) {
+  const body = $('results').tBodies[0];
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No artifact can roll this target.</td></tr>'; return; }
+  const cheapest = rows.filter(row => row.odds > 0).reduce((best, row) => !best || row.dust < best.dust ? row : best, null);
+
+  body.replaceChildren(...rows.map(row => {
+    const tr = document.createElement('tr');
+    if (!row.odds) tr.className = 'dead';
+    else if (row === cheapest) tr.className = 'best-cost';
+    const icon = asset('GUI Files', 'Artifact Icons', `${row.artifact.name}-div2.png`);
+    const approx = row.exact === false ? '≈ ' : '';
+    tr.innerHTML = `
+      <td class="artifact-cell" title="${html(row.artifact.description)}"><img class="artifact-icon" src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span>${html(row.artifact.name)}</span>${row === cheapest ? '<em class="tag">cheapest</em>' : ''}</td>
+      <td class="num" title="${row.exact === false ? `Sampled estimate over ${count(row.samples)} runs — the exact tree exceeded its budget.` : 'Exact weighted-tree calculation.'}">${approx}${percent(row.odds)}</td>
+      <td class="num">${row.odds ? count(row.rerolls) : '∞'}</td>
+      <td class="num strong">${row.odds ? `${dustIcon(config.dust)}${count(row.dust)}` : '∞'}</td>
+      <td class="num muted">${row.artifactDust ? `${dustIcon(row.artifactDustType)}${count(row.artifactDust)}` : '—'}</td>
+      <td class="num">${row.odds ? count(row.artifactsUsed) : '∞'}</td>`;
+    return tr;
+  }));
+}
+
+function renderSummary(rows, config) {
+  const panel = $('summary');
+  const viable = rows.filter(row => row.odds > 0);
+  if (!viable.length) {
+    panel.hidden = false;
+    panel.innerHTML = `<div class="summary-title bad">“${html(config.desired)}” cannot be rolled with this configuration.</div><p class="note">Check the locked slots: one of their Labels is probably in the target's Incompatible Labels.</p>`;
+    return;
+  }
+  const bestOdds = viable.reduce((best, row) => row.odds > best.odds ? row : best);
+  const bestDust = viable.reduce((best, row) => row.dust < best.dust ? row : best);
+  const rolls = EnchantEngine.rollsRemaining(config);
+  const pool = EnchantEngine.weightedPool(state.data, config, bestDust.artifact);
+  const target = state.data.byName.get(config.desired);
+  const perSlot = pool.total ? (pool.weights.get(target.id) || 0) / pool.total * 100 : 0;
+
+  panel.hidden = false;
+  panel.innerHTML = `
+    <div class="summary-title">Target: ${enchantIconHtml(target, 'inline-icon')} <b>${html(config.desired)}</b></div>
+    <div class="stat-row">
+      <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
+      <div class="stat"><span>${percent(perSlot)}</span><small>chance on a single slot<br>with ${html(bestDust.artifact.name)}</small></div>
+      <div class="stat highlight"><span>${percent(bestOdds.odds)}</span><small>best chance per reroll<br>${html(bestOdds.artifact.name)}</small></div>
+      <div class="stat highlight"><span>${count(bestDust.dust)}</span><small>lowest expected ${html(config.dust)} dust<br>${html(bestDust.artifact.name)}</small></div>
+      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier<br>${plural(config.locks.length, 'lock')}</small></div>
+    </div>
+    <div class="summary-actions">
+      <button id="showAudit" type="button" class="secondary">Explain these odds</button>
+      <span class="note">${html(EnchantEngine.NOTES.incompatibility)}</span>
+    </div>`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Audit                                                               *
+ * ------------------------------------------------------------------ */
+
+function showAudit() {
+  const config = cfg();
+  const rows = state.lastResults || [];
+  const viable = rows.filter(row => row.odds > 0);
+  const artifact = viable.length ? viable.reduce((best, row) => row.dust < best.dust ? row : best).artifact : state.data.byArtifact.get('No Artifact');
+  const target = state.data.byName.get(config.desired);
+  const card = $('auditCard');
+  card.hidden = false;
+
+  const pool = EnchantEngine.weightedPool(state.data, config, artifact);
+  const targetWeight = pool.weights.get(target.id) || 0;
+  if (!targetWeight) {
+    $('auditResult').innerHTML = '<p class="note warn">The target is not in the eligible pool for this configuration, so its chance is exactly 0.</p>';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+
+  const rolls = EnchantEngine.rollsRemaining(config);
+  const exact = EnchantEngine.oddsAny(state.data, config, artifact, [config.desired]);
+  const perSlot = targetWeight / pool.total * 100;
+  const naive = 100 * (1 - Math.pow(1 - perSlot / 100, rolls));
+  const cost = EnchantEngine.costFor(config, exact.odds, artifact, config.dust);
+
+  // What the locks removed, so the pool size is verifiable by hand.
+  const unlocked = Object.assign({}, config, { locks: [], virtualLabels: [] });
+  const openPool = EnchantEngine.eligiblePool(state.data, unlocked, artifact);
+  const present = new Set(pool.mods.map(mod => mod.id));
+  const removed = openPool.filter(mod => !present.has(mod.id));
+  const labels = [...EnchantEngine.lockedLabels(state.data, config)].filter(label => state.data.blockingLabels.has(label)).sort();
+
+  // Biggest single contributors, so the weighted pool is legible.
+  const heaviest = pool.mods.slice().sort((a, b) => pool.weights.get(b.id) - pool.weights.get(a.id)).slice(0, 8);
+
+  $('auditResult').innerHTML = `
+    <p class="note">Scenario: <b>${html(config.desired)}</b> on a ${config.slots}-slot ${html(config.type.toLowerCase())} with <b>${html(artifact.name)}</b>${config.item ? ` (${html(config.item)})` : ''}.</p>
+
+    <ol class="audit-steps">
+      <li>
+        <h3>Build the eligible pool</h3>
+        <p>Start from the ${openPool.length} enchantments this ${html(config.type.toLowerCase())} can roll${config.item ? ' with the selected item' : ''}, then remove what the ${plural(config.locks.length, 'lock')} forbid.</p>
+        <dl>
+          <dt>Labels carried by the locks</dt><dd>${labels.length ? `<span class="chips">${labels.map(label => `<i class="chip give">${html(label)}</i>`).join('')}</span>` : '<span class="muted">none</span>'}</dd>
+          <dt>Removed by those Labels or already locked</dt><dd>${removed.length}</dd>
+          <dt>Remaining candidates</dt><dd><b>${pool.mods.length}</b></dd>
+        </dl>
+        ${removed.length ? `<details><summary>${removed.length} removed candidates</summary><p class="removed-list">${removed.map(mod => html(mod.name)).join(' · ')}</p></details>` : ''}
+      </li>
+
+      <li>
+        <h3>Weight the pool for ${html(artifact.name)}</h3>
+        <p>Each candidate keeps its base weight unless the artifact multiplies it. The multiplier is the highest matching rule, truncated to an integer.</p>
+        <dl>
+          <dt>Total weight of the pool</dt><dd><b>${count(pool.total)}</b></dd>
+          <dt>${html(config.desired)}</dt><dd><b>${count(targetWeight)}</b>${targetWeight !== target.weight ? ` <span class="muted">(base ${count(target.weight)} × ${(targetWeight / target.weight).toFixed(2)})</span>` : ''}</dd>
+        </dl>
+        <details><summary>Heaviest candidates in the pool</summary><table class="mini"><tbody>${heaviest.map(mod => `<tr><td>${html(mod.name)}</td><td class="num">${count(pool.weights.get(mod.id))}</td><td class="num muted">${(pool.weights.get(mod.id) / pool.total * 100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></details>
+      </li>
+
+      <li>
+        <h3>One slot</h3>
+        <p class="formula">${count(targetWeight)} ÷ ${count(pool.total)} = <b>${percent(perSlot)}</b></p>
+      </li>
+
+      <li>
+        <h3>${plural(rolls, 'slot')} in one reroll</h3>
+        <p>The slots are not independent: whatever the first slot rolls adds its Labels, which removes every remaining candidate that refuses them, and the mod itself leaves the pool. The engine enumerates every weighted path.</p>
+        <dl>
+          <dt>Exact chance over ${plural(rolls, 'slot')}</dt><dd><b>${percent(exact.odds)}</b>${exact.exact === false ? ' <span class="muted">(sampled)</span>' : ''}</dd>
+          <dt>Naive 1 − (1 − p)<sup>${rolls}</sup></dt><dd class="muted">${percent(naive)} — ${naive > exact.odds ? 'too optimistic' : 'too pessimistic'}, because the pool shrinks between slots</dd>
+          <dt>Tree size</dt><dd class="muted">${count(exact.nodes)} states enumerated</dd>
+        </dl>
+      </li>
+
+      <li>
+        <h3>Turn it into dust</h3>
+        <p class="formula">
+          one reroll = ${count(EnchantEngine.BASE_COSTS[config.slots])} base × 2<sup>${config.locks.length}</sup> = <b>${count(cost.perReroll)}</b> ${html(config.dust)}<br>
+          mean rerolls = 100 ÷ ${exact.odds.toPrecision(4)} = <b>${count(cost.rerolls)}</b><br>
+          expected total = ${count(cost.perReroll)} × ${count(cost.rerolls)}${artifact.cost.dust === config.dust ? ` + ${count(artifact.cost.value * Math.pow(2, config.locks.length))} × ${count(cost.rerolls)}` : ''} = <b>${count(cost.dust)}</b> ${html(config.dust)}
+        </p>
+        <p class="note">Half of all players finish within ${count(cost.medianRerolls)} rerolls; the mean is higher than the median because the tail is long.${artifact.cost.dust !== 'na' && artifact.cost.dust !== config.dust ? ` This artifact also costs about ${count(cost.artifactDust)} ${html(artifact.cost.dust)} dust, billed separately.` : ''}</p>
+      </li>
+    </ol>
+
+    <details class="audit-assumptions">
+      <summary>Rules and known divergences from the Qt original</summary>
+      <ul>
+        <li>${html(EnchantEngine.NOTES.incompatibility)}</li>
+        <li>${html(EnchantEngine.NOTES.qtDivergence)}</li>
+        <li>${html(EnchantEngine.NOTES.duplicateRoll)}</li>
+        <li>${html(EnchantEngine.NOTES.artifactsUsed)}</li>
+      </ul>
+    </details>`;
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ------------------------------------------------------------------ *
+ * Build plan                                                          *
+ * ------------------------------------------------------------------ */
+
+async function renderBuildPlan(config) {
+  const card = $('planCard');
+  const output = $('buildPlan');
+  const goals = [config.desired, ...config.goals].filter(Boolean);
+  if (goals.length < 2) { card.hidden = true; return; }
+
+  card.hidden = false;
+  output.innerHTML = '<p class="note">Solving the cheapest lock order…</p>';
+  await yieldToUi();
+
+  const plan = EnchantEngine.planGoals(state.data, config, goals);
+  if (!plan || !plan.feasible) {
+    output.innerHTML = plan && plan.reason === 'slots'
+      ? '<p class="note warn">These enchantments need more slots than the item has.</p>'
+      : `<p class="note warn">No order can put all of these on the same item. At least one pair is mutually incompatible — compare their Labels and Incompatible Labels above.</p>`;
+    return;
+  }
+
+  const together = EnchantEngine.planSimultaneous(state.data, config, goals);
+  const steps = plan.path.map((step, index) => `
+    <li>
+      <div class="plan-head">
+        <span class="plan-step">${index + 1}</span>
+        <b>${step.pending.map(name => html(name)).join(' or ')}</b>
+        <span class="muted">${step.locked.length ? `with ${step.locked.map(name => html(name)).join(' + ')} locked` : 'nothing locked yet'}</span>
+      </div>
+      <div class="plan-stats">
+        <span title="Artifact that minimises the expected dust from this point on">${html(step.artifact.name)}</span>
+        <span title="Chance that this reroll produces something worth locking">${percent(step.progressChance)} useful / reroll</span>
+        <span title="Cost of one reroll at this point">${dustIcon(config.dust)}${count(step.perReroll)} per reroll</span>
+        <span title="Expected dust still to be spent from this state onwards">${count(step.expectedDustFromHere)} to finish</span>
+      </div>
+      <div class="plan-likely">Most likely next: <b>${step.likelyGain.map(name => html(name)).join(' + ') || '—'}</b> (${percent(step.likelyChance)})</div>
+      ${step.declined.length ? `<div class="plan-decline">Do <b>not</b> lock ${step.declined.map(entry => `${html(entry.name)} <span class="muted">(${percent(entry.chance)} of rerolls)</span>`).join(' or ')} if it comes up alone here — locking it would double every reroll of the harder hunt for less than it saves. Throw it back and reroll.</div>` : ''}
+      ${step.throwsBack ? '<div class="plan-decline">Some combined outcomes are worth locking only in part.</div>' : ''}
+    </li>`).join('');
+
+  output.innerHTML = `
+    <div class="plan-total">
+      <div class="stat highlight"><span>${dustIcon(config.dust)}${count(plan.dust)}</span><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></div>
+      <div class="stat"><span>${count(plan.rerolls)}</span><small>expected rerolls in total</small></div>
+      ${together ? `<div class="stat"><span>${count(together.dust)}</span><small>if instead you waited for all ${goals.length} to land in one single reroll<br>(${percent(together.odds)} per reroll)</small></div>` : ''}
+    </div>
+    <ol class="plan-steps">${steps}</ol>
+    <p class="note">${html(EnchantEngine.NOTES.plannerPolicy)}</p>`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Lock routes                                                         *
+ * ------------------------------------------------------------------ */
+
+async function analyzeRoutes() {
+  const button = $('analyzeRoutes');
+  const output = $('routeAnalysis');
+  const config = cfg();
+  if (EnchantEngine.rollsRemaining(config) < 2) {
+    output.innerHTML = '<p class="note">Only one random slot is left, so an extra lock would leave nothing to roll.</p>';
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Comparing…';
+
+  const baseline = state.lastResults && state.lastResults.length
+    ? state.lastResults.filter(row => row.odds > 0).reduce((best, row) => !best || row.dust < best.dust ? row : best, null)
+    : null;
+  const routes = EnchantEngine.lockRoutes(state.data, config);
+  const summaries = [];
+
+  for (let index = 0; index < routes.length; index++) {
+    if (index % 3 === 0) {
+      output.innerHTML = `<p class="note">Evaluating route ${index + 1} of ${routes.length}…</p>`;
+      await yieldToUi();
+    }
+    const route = routes[index];
+    const rows = EnchantEngine.evaluateAll(state.data, route.cfg).filter(row => row.odds > 0);
+    if (!rows.length) continue;
+    const best = rows.reduce((bestRow, row) => row.dust < bestRow.dust ? row : bestRow);
+    // How likely is the prerequisite itself? Any member of the group counts,
+    // since they all cull the pool identically.
+    const reach = state.data.artifacts
+      .map(artifact => EnchantEngine.oddsAny(state.data, config, artifact, route.members))
+      .reduce((bestReach, current) => !bestReach || current.odds > bestReach.odds ? current : bestReach, null);
+    summaries.push({ route, best, reach });
+  }
+
+  button.disabled = false;
+  button.textContent = 'Compare lock routes';
+
+  if (!summaries.length) {
+    output.innerHTML = '<p class="note">No compatible extra lock changes the pool for this target.</p>';
+    return;
+  }
+
+  // Many different enchantments end up with exactly the same effect. Merge
+  // rows that agree on pool size, chance and cost so the table stays readable.
+  const merged = new Map();
+  for (const entry of summaries) {
+    const key = `${entry.route.pool}|${entry.best.odds.toPrecision(8)}|${Math.round(entry.best.dust)}|${entry.best.artifact.name}`;
+    const group = merged.get(key);
+    if (group) {
+      group.names.push(...entry.route.members);
+      group.labelSets.push(entry.route.labels);
+      if (entry.reach && (!group.reach || entry.reach.odds > group.reach.odds)) group.reach = entry.reach;
+    } else {
+      merged.set(key, { entry, names: [...entry.route.members], labelSets: [entry.route.labels], reach: entry.reach });
+    }
+  }
+  const rows = [...merged.values()].sort((a, b) => a.entry.best.dust - b.entry.best.dust);
+  const shown = rows.slice(0, 8);
+  const improves = baseline ? rows.filter(row => row.entry.best.dust < baseline.dust) : [];
+
+  output.innerHTML = `
+    <div class="route-verdict ${improves.length ? 'good' : 'neutral'}">
+      ${baseline
+        ? improves.length
+          ? `<b>${improves.length} of ${rows.length} distinct lock effects beat doing nothing.</b> Best: lock <b>${html(improves[0].names[0])}</b> → ${count(improves[0].entry.best.dust)} ${html(config.dust)} instead of ${count(baseline.dust)}.`
+          : `<b>None of the ${rows.length} distinct lock effects is cheaper than rerolling as you are.</b> Each one raises the per-slot chance, but it also costs a random slot and doubles every reroll, and here that outweighs the smaller pool.`
+        : `<b>${rows.length} distinct lock effects evaluated.</b> Run the main calculation first to compare them against doing nothing.`}
+    </div>
+    <p class="note">Read this as a decision you make <em>after</em> a reroll: “this came up — should I lock it?”. The dust already spent getting there is sunk, so these totals cover only what is left to spend. The “shows up” column says how often the question will even arise.</p>
+    <div class="table-scroll">
+      <table class="route-table">
+        <thead><tr>
+          <th>Lock this</th>
+          <th title="Labels the lock puts on the item. Every candidate refusing one of them leaves the pool.">Labels applied</th>
+          <th title="How often any enchantment with this exact Label effect turns up during the remaining slots, with the artifact that maximises it.">Shows up</th>
+          <th title="Eligible candidates left after the lock.">Pool</th>
+          <th title="Random slots left after the lock.">Slots</th>
+          <th title="Best chance per reroll for the target once this lock is in place.">Target chance</th>
+          <th title="Expected dust still to spend on the target after this lock, at the doubled reroll cost.">Dust left</th>
+        </tr></thead>
+        <tbody>
+          ${baseline ? `<tr class="route-base"><td><b>Nothing — keep rerolling</b></td><td class="muted">—</td><td class="muted">—</td><td class="num">${EnchantEngine.eligiblePool(state.data, config, baseline.artifact).length}</td><td class="num">${EnchantEngine.rollsRemaining(config)}</td><td class="num">${percent(baseline.odds)}</td><td class="num strong">${dustIcon(config.dust)}${count(baseline.dust)}</td></tr>` : ''}
+          ${shown.map(row => {
+            const better = baseline && row.entry.best.dust < baseline.dust;
+            const extra = row.names.length > 1 ? ` <span class="muted">+ ${row.names.length - 1} more</span>` : '';
+            // The merged rows can carry different (but equally effective) Label
+            // sets, so only the first one is shown; the rest live in the tooltip.
+            const labels = row.labelSets[0];
+            const variants = row.labelSets.length > 1 ? ` Equivalent Label sets: ${row.labelSets.map(set => set.join('+') || 'none').join(' / ')}.` : '';
+            return `<tr class="${better ? 'route-better' : ''}">
+              <td title="${html(`Same effect: ${row.names.join(', ')}.${variants}`)}">${html(row.names[0])}${extra}</td>
+              <td title="${html(labels.join(', ') || 'none')}${variants ? html(variants) : ''}"><span class="chips">${labels.slice(0, 2).map(label => `<i class="chip give">${html(label)}</i>`).join('') || '<span class="muted">none</span>'}${labels.length > 2 ? `<i class="chip give">+${labels.length - 2}</i>` : ''}${row.labelSets.length > 1 ? '<i class="chip give">≈</i>' : ''}</span></td>
+              <td class="num muted">${row.reach ? percent(row.reach.odds) : '—'}</td>
+              <td class="num">${row.entry.route.pool} <span class="muted">(−${row.entry.route.removed})</span></td>
+              <td class="num">${EnchantEngine.rollsRemaining(row.entry.route.cfg)}</td>
+              <td class="num">${percent(row.entry.best.odds)} <span class="muted">${html(row.entry.best.artifact.name)}</span></td>
+              <td class="num strong">${dustIcon(config.dust)}${count(row.entry.best.dust)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${rows.length > shown.length ? `<p class="note">${rows.length - shown.length} further lock effects were evaluated and are all more expensive than the ones listed.</p>` : ''}
+    <p class="note">${html(EnchantEngine.NOTES.lockRoutes)}</p>`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Orchestration                                                       *
+ * ------------------------------------------------------------------ */
+
+async function runCalculation() {
+  const config = cfg();
+  if ($('calculate').disabled) return;
+  $('calculate').disabled = true;
+  $('status').textContent = 'Calculating…';
+
+  const rows = [];
+  for (let index = 0; index < state.data.artifacts.length; index++) {
+    await yieldToUi();
+    rows.push(EnchantEngine.evaluate(state.data, config, state.data.artifacts[index]));
+    $('progressBar').style.width = `${(index + 1) / state.data.artifacts.length * 100}%`;
+  }
+  rows.sort((a, b) => b.odds - a.odds);
+  state.lastResults = rows;
+
+  renderResults(rows, config);
+  renderSummary(rows, config);
+  $('routeCard').hidden = EnchantEngine.rollsRemaining(config) < 2;
+  $('routeAnalysis').innerHTML = '';
+  $('auditCard').hidden = true;
+  await renderBuildPlan(config);
+
+  $('progressBar').style.width = '0%';
+  $('status').textContent = `${rows.length} artifacts calculated${rows.some(row => row.exact === false) ? ' · some rows are sampled estimates' : ' · all rows exact'}`;
+  renderCalculateState(config);
+}
+
+/* ------------------------------------------------------------------ *
+ * Wiring                                                              *
+ * ------------------------------------------------------------------ */
+
+function bind() {
+  document.querySelectorAll('select, input[list]').forEach(element => {
+    element.addEventListener('change', () => onFieldChange(element));
+    // While typing, only react once the value is a complete item we recognise —
+    // that is what makes picking from the suggestion list apply straight away.
+    element.addEventListener('input', () => { if (element.id !== 'awakenedItem' || resolveItem(element.value)) onFieldChange(element); });
+  });
+  document.querySelectorAll('[data-clear]').forEach(button => button.addEventListener('click', () => { $(button.dataset.clear).value = ''; refresh(); }));
+  $('subtypePanel').addEventListener('change', event => {
+    // ALIEN and NEO_ALIEN are mutually exclusive bases.
+    if (event.target.checked && event.target.value !== 'SUMMONPOWERED') {
+      for (const box of $('subtypePanel').querySelectorAll('input')) if (box !== event.target && box.value !== 'SUMMONPOWERED') box.checked = false;
+    }
+    refresh();
+  });
+  $('tiers').addEventListener('change', () => { if (state.lastResults) runCalculation(); });
+
+  $('slotList').addEventListener('click', event => {
+    const pick = event.target.closest('[data-pick]');
+    if (pick) { openPicker(Number(pick.dataset.pick)); return; }
+    const remove = event.target.closest('[data-remove]');
+    if (remove) { const slot = state.slots[Number(remove.dataset.remove) - 1]; slot.name = ''; slot.locked = false; refresh(); return; }
+    const mode = event.target.closest('[data-mode]');
+    if (mode) {
+      const slot = state.slots[Number(mode.dataset.slot) - 1];
+      const wantLocked = mode.dataset.mode === 'locked';
+      if (slot.locked === wantLocked) return;
+      const previous = slot.locked;
+      slot.locked = wantLocked;
+      const mod = state.data.byName.get(slot.name);
+      if (mod && conflictWith(mod, slot, state.slots.filter(other => other.index !== slot.index))) slot.locked = previous;
+      refresh();
+    }
+  });
+
+  $('pickerBackdrop').addEventListener('click', event => { if (event.target === $('pickerBackdrop')) closePicker(); });
+  $('pickerClose').addEventListener('click', closePicker);
+  $('pickerSearch').addEventListener('input', event => {
+    if (state.picker && state.picker.kind === 'item') renderItemPickerList(event.target.value);
+    else renderPickerList(event.target.value);
+  });
+  $('pickerList').addEventListener('click', event => {
+    const itemRow = event.target.closest('.picker-row[data-item]');
+    if (itemRow) {
+      const field = $('awakenedItem');
+      field.value = itemRow.dataset.item;
+      closePicker();
+      onFieldChange(field);
+      return;
+    }
+    const row = event.target.closest('.picker-row[data-name]');
+    if (!row) return;
+    const slot = state.slots[state.picker.index - 1];
+    slot.name = row.dataset.name;
+    closePicker();
+    refresh();
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('pickerBackdrop').hidden) closePicker(); });
+
+  window.addEventListener('resize', handleAmbienceResize);
+  $('calculate').addEventListener('click', runCalculation);
+  $('reset').addEventListener('click', resetSetup);
+  $('itemEmpty').addEventListener('click', openItemPicker);
+  $('itemCard').addEventListener('click', event => {
+    if (event.target.closest('#changeItem')) { openItemPicker(); return; }
+    if (event.target.closest('#clearItem')) clearItem();
+  });
+  $('tabBar').addEventListener('click', event => {
+    const close = event.target.closest('[data-close]');
+    if (close) { event.stopPropagation(); closeTab(close.dataset.close); return; }
+    if (event.target.closest('#tabAdd')) { addTab(); return; }
+    const tab = event.target.closest('[data-tab]');
+    if (tab) switchTab(tab.dataset.tab);
+  });
+  $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
+  $('analyzeRoutes').addEventListener('click', analyzeRoutes);
+  $('summary').addEventListener('click', event => { if (event.target.id === 'showAudit') showAudit(); });
+}
+
+/* ------------------------------------------------------------------ *
+ * Ambience: drifting realms behind the interface                      *
+ * ------------------------------------------------------------------ */
+
+/*
+ * Each realm is one painting: a colour wash taken from the game's palette,
+ * a scatter of the very sprites the calculator already carries, and a vignette.
+ * Everything is blurred while it is drawn, so the browser stores a finished
+ * bitmap and never has to filter anything again — changing realm is nothing
+ * more than two opacities crossing, which the compositor does on the GPU.
+ *
+ * No new artwork is bundled: it is built from the sprites already embedded.
+ */
+const REALMS = [
+  { name: 'The Realm',       sky: ['#2c5130', '#0e1a13'], glow: '#5ac45a' },
+  { name: 'Undead Lair',     sky: ['#3d2758', '#140c1e'], glow: '#ca7aff' },
+  { name: 'Ocean Trench',    sky: ['#164257', '#08171f'], glow: '#79c5e8' },
+  { name: 'Abyss of Demons', sky: ['#552018', '#1c0a08'], glow: '#ff4542' },
+  { name: 'The Shatters',    sky: ['#2a2c4f', '#0d0d1a'], glow: '#8854f0' },
+  { name: 'Lost Halls',      sky: ['#443a1e', '#17120a'], glow: '#ffd026' },
+  { name: 'The Nexus',       sky: ['#2a2840', '#0d0c15'], glow: '#ffabf2' }
+];
+// The colour mix is re-weighted often and fades slowly, so it reads as a
+// continuous drift rather than a slideshow. The sprite scatter underneath is
+// repainted far less often, because that one is a real change of picture.
+const REALM_INTERVAL = 32 * 1000;
+const SCATTER_INTERVAL = 100 * 1000;
+const AMBIENCE_KEY = 'rotmg-enchant-calculator/ambience';
+
+const ambience = {
+  layers: [], front: 0, sprites: [], blobs: [],
+  timer: null, scatterTimer: null,
+  index: 0, enabled: true, canBlur: true, started: false, resizeTimer: null, labelTimer: null
+};
+
+// The scatter uses the enchantment icons: they are the most varied and the
+// most recognisable of the sprites already in memory.
+function ambienceSprites() {
+  const seen = new Set();
+  const sources = [];
+  for (const mod of state.data.enchants) {
+    const icon = enchantIcon(mod);
+    if (!icon || seen.has(icon)) continue;
+    seen.add(icon);
+    const src = asset('GUI Files', 'Enchantment Icons', `${icon}.png`);
+    if (src) sources.push(src);
+  }
+  return Promise.all(sources.map(src => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  }))).then(images => images.filter(Boolean));
+}
+
+function paintRealm(canvas, realm, seed) {
+  const width = canvas.width, height = canvas.height;
+  const ctx = canvas.getContext('2d');
+  // A fixed seed per realm keeps a given realm looking like itself between
+  // repaints, instead of reshuffling on every resize.
+  let value = seed >>> 0;
+  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
+
+  ctx.clearRect(0, 0, width, height);
+  const sky = ctx.createLinearGradient(0, 0, width * 0.3, height);
+  sky.addColorStop(0, realm.sky[0]);
+  sky.addColorStop(1, realm.sky[1]);
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, width, height);
+
+  // A couple of broad light pools, so the wash is not flat.
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 3; i++) {
+    const x = width * (0.15 + random() * 0.7);
+    const y = height * (0.1 + random() * 0.6);
+    const r = Math.min(width, height) * (0.3 + random() * 0.35);
+    const pool = ctx.createRadialGradient(x, y, 0, x, y, r);
+    pool.addColorStop(0, `${realm.glow}7a`);
+    pool.addColorStop(1, `${realm.glow}00`);
+    ctx.fillStyle = pool;
+    ctx.fillRect(0, 0, width, height);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+
+  if (ambience.sprites.length) {
+    if (ambience.canBlur) ctx.filter = 'blur(5px)';
+    ctx.globalAlpha = 0.5;
+    const count = 34;
+    for (let i = 0; i < count; i++) {
+      const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
+      const size = Math.min(width, height) * (0.07 + random() * 0.16);
+      const x = random() * width - size / 2;
+      const y = random() * height - size / 2;
+      ctx.save();
+      ctx.translate(x + size / 2, y + size / 2);
+      ctx.rotate((random() - 0.5) * 0.7);
+      ctx.globalAlpha = 0.34 + random() * 0.5;
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      ctx.restore();
+    }
+    ctx.filter = 'none';
+    ctx.globalAlpha = 1;
+  }
+
+  // Darken the edges so the panels always sit on something quiet.
+  const vignette = ctx.createRadialGradient(width / 2, height * 0.35, 0, width / 2, height * 0.5, Math.max(width, height) * 0.75);
+  vignette.addColorStop(0, 'rgba(13,12,19,0)');
+  vignette.addColorStop(1, 'rgba(13,12,19,0.42)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, width, height);
+}
+
+// One drifting blob per realm colour. They never stop moving; only their
+// weights change, so the colour field is always somewhere between two realms
+// rather than sitting on one.
+function buildAurora(host) {
+  const aurora = document.createElement('div');
+  aurora.className = 'aurora';
+  const paths = ['float-a', 'float-b', 'float-c', 'float-d'];
+  ambience.blobs = REALMS.map((realm, index) => {
+    const blob = document.createElement('span');
+    blob.style.setProperty('--c', realm.glow);
+    blob.style.left = `${(index * 137) % 70}%`;
+    blob.style.top = `${(index * 89) % 60}%`;
+    // Mismatched periods, so the combination never lands the same way twice.
+    blob.style.animation = `${paths[index % paths.length]} ${34 + index * 9}s ease-in-out ${-index * 7}s infinite`;
+    aurora.append(blob);
+    return blob;
+  });
+  host.append(aurora);
+}
+
+// Weight the blobs around the current realm: its own colour leads, the two
+// next to it stay faintly lit, everything else fades out.
+function weightAurora(index) {
+  const total = REALMS.length;
+  ambience.blobs.forEach((blob, i) => {
+    let distance = Math.abs(i - index);
+    distance = Math.min(distance, total - distance);
+    const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : distance === 2 ? 0.18 : 0;
+    blob.style.opacity = String(opacity);
+  });
+}
+
+function showRealm(index, announce) {
+  const realm = REALMS[index % REALMS.length];
+  weightAurora(index % REALMS.length);
+  if (announce) {
+    const label = $('realmName');
+    label.textContent = realm.name;
+    label.classList.add('show');
+    clearTimeout(ambience.labelTimer);
+    ambience.labelTimer = setTimeout(() => label.classList.remove('show'), 7000);
+  }
+}
+
+// The sprite scatter is a genuine change of picture, so it cross-fades.
+function repaintScatter(index) {
+  const back = ambience.layers[1 - ambience.front];
+  paintRealm(back, REALMS[index % REALMS.length], (index + 1) * 2654435761);
+  back.classList.add('on', 'drift');
+  ambience.layers[ambience.front].classList.remove('on');
+  ambience.front = 1 - ambience.front;
+}
+
+function startAmbience() {
+  const host = $('ambience');
+  // Half resolution: the whole thing is blurred, so nobody can tell, and it
+  // keeps the paint cheap on a laptop.
+  const width = Math.min(1280, Math.round(window.innerWidth * 0.6)) || 960;
+  const height = Math.min(800, Math.round(window.innerHeight * 0.6)) || 600;
+  host.replaceChildren();
+  ambience.layers = [0, 1].map(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    host.append(canvas);
+    return canvas;
+  });
+  const probe = ambience.layers[0].getContext('2d');
+  ambience.canBlur = typeof probe.filter === 'string';
+  host.classList.toggle('css-blur', !ambience.canBlur);
+  buildAurora(host);
+
+  ambience.front = 1;
+  repaintScatter(ambience.index);
+  weightAurora(ambience.index % REALMS.length);
+  showRealm(ambience.index, false);
+  ambience.started = true;
+
+  clearInterval(ambience.timer);
+  clearInterval(ambience.scatterTimer);
+  ambience.timer = setInterval(() => {
+    if (!ambience.enabled) return;
+    ambience.index = (ambience.index + 1) % REALMS.length;
+    showRealm(ambience.index, true);
+  }, REALM_INTERVAL);
+  ambience.scatterTimer = setInterval(() => {
+    if (!ambience.enabled) return;
+    repaintScatter(ambience.index);
+  }, SCATTER_INTERVAL);
+}
+
+// A canvas stretched by CSS distorts when the window changes shape.
+// object-fit keeps it honest while dragging; this repaints at the new size
+// once the dragging stops, so the resolution matches again.
+function handleAmbienceResize() {
+  clearTimeout(ambience.resizeTimer);
+  ambience.resizeTimer = setTimeout(() => {
+    if (!ambience.enabled || !ambience.started) return;
+    startAmbience();
+  }, 250);
+}
+
+function setAmbience(enabled) {
+  ambience.enabled = enabled;
+  $('ambience').hidden = !enabled;
+  $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
+  try { localStorage.setItem(AMBIENCE_KEY, enabled ? 'on' : 'off'); } catch (error) { /* not essential */ }
+  if (enabled && !ambience.started) startAmbience();
+}
+
+async function initAmbience() {
+  let enabled = true;
+  try { enabled = localStorage.getItem(AMBIENCE_KEY) !== 'off'; } catch (error) { /* default on */ }
+  $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
+  ambience.enabled = enabled;
+  $('ambience').hidden = !enabled;
+  if (!enabled) return;
+  // Start on a random realm so two visitors do not see the same one.
+  ambience.index = Math.floor(Math.random() * REALMS.length);
+  ambience.sprites = await ambienceSprites();
+  startAmbience();
+}
+
+/* ------------------------------------------------------------------ *
+ * Remembering the setup                                               *
+ * ------------------------------------------------------------------ */
+
+/*
+ * The whole editor is kept in this browser only. Every access is guarded:
+ * storage can be unavailable in a private window, and on some browsers it
+ * throws outright for pages opened from the file system.
+ */
+function captureSetup() {
+  return {
+    rarity: $('rarity').value,
+    type: $('itemType').value,
+    dust: $('dustType').value,
+    item: $('awakenedItem').value,
+    subtypes: [...document.querySelectorAll('#subtypePanel input:checked')].map(box => box.value),
+    tiers: [...document.querySelectorAll('#tiers input:checked')].map(box => box.value),
+    slots: state.slots.map(slot => ({ name: slot.name, locked: slot.locked }))
+  };
+}
+
+// Called on every edit: keep the active tab in step with the editor, then
+// write the whole set of tabs out.
+function saveSetup() {
+  if (!state.ready || state.loadingTab) return;
+  const tab = state.tabs.find(entry => entry.id === state.activeTab);
+  if (!tab) return;
+  tab.setup = captureSetup();
+  tab.label = labelForSetup(tab.setup);
+  persistTabs();
+  renderTabs();
+}
+
+function applySetup(saved) {
+  if (!saved || typeof saved !== 'object') saved = {};
+  $('rarity').value = saved.rarity || '';
+  $('itemType').value = saved.type || '';
+  $('dustType').value = saved.dust || '';
+  $('awakenedItem').value = saved.item || '';
+  renderSubtypes();
+  for (const box of document.querySelectorAll('#subtypePanel input')) box.checked = (saved.subtypes || []).includes(box.value);
+  for (const box of document.querySelectorAll('#tiers input')) box.checked = !saved.tiers || saved.tiers.includes(box.value);
+  state.slots.forEach(slot => { slot.name = ''; slot.locked = false; });
+  if (Array.isArray(saved.slots)) {
+    saved.slots.slice(0, 4).forEach((entry, index) => {
+      if (!entry || !state.data.byName.has(entry.name)) return;
+      state.slots[index].name = entry.name;
+      state.slots[index].locked = Boolean(entry.locked);
+    });
+  }
+  state.lastCardItem = saved.item || '';
+  // refresh() drops anything the restored combination no longer allows.
+}
+
+/* ------------------------------------------------------------------ *
+ * Setups, kept side by side like browser tabs                         *
+ * ------------------------------------------------------------------ */
+
+/*
+ * Each tab is one saved configuration, held in this browser only. Switching
+ * tabs writes the current editor into the tab you are leaving and loads the
+ * one you are going to, so nothing is ever lost by clicking away.
+ */
+function labelForSetup(setup) {
+  if (setup && setup.item) return setup.item;
+  const wanted = (setup && setup.slots || []).filter(slot => slot && slot.name);
+  if (wanted.length) return wanted[0].name;
+  return 'Empty setup';
+}
+
+const newTab = setup => ({ id: `t${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`, setup: setup || {}, label: labelForSetup(setup) });
+
+function persistTabs() {
+  try {
+    localStorage.setItem(TABS_KEY, JSON.stringify({ tabs: state.tabs, active: state.activeTab }));
+  } catch (error) { /* storage unavailable — the app still works, it just forgets */ }
+}
+
+function loadTabs() {
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem(TABS_KEY) || 'null'); } catch (error) { stored = null; }
+  if (stored && Array.isArray(stored.tabs) && stored.tabs.length) {
+    state.tabs = stored.tabs.filter(tab => tab && tab.id);
+    state.activeTab = state.tabs.some(tab => tab.id === stored.active) ? stored.active : state.tabs[0].id;
+    return;
+  }
+  // Carry over the single setup saved by earlier versions.
+  let legacy = null;
+  try { legacy = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (error) { legacy = null; }
+  state.tabs = [newTab(legacy || {})];
+  state.activeTab = state.tabs[0].id;
+}
+
+function renderTabs() {
+  const bar = $('tabBar');
+  bar.replaceChildren();
+  for (const tab of state.tabs) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `tab${tab.id === state.activeTab ? ' active' : ''}`;
+    button.dataset.tab = tab.id;
+    button.setAttribute('role', 'tab');
+    button.setAttribute('aria-selected', String(tab.id === state.activeTab));
+    button.title = tab.label;
+    button.innerHTML = `<span class="tab-label">${html(tab.label)}</span>${state.tabs.length > 1 ? `<span class="tab-close" data-close="${tab.id}" role="button" aria-label="Close ${html(tab.label)}">×</span>` : ''}`;
+    bar.append(button);
+  }
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'tab-add';
+  add.id = 'tabAdd';
+  add.title = 'Start another setup';
+  add.setAttribute('aria-label', 'New setup');
+  add.append('New');
+  bar.append(add);
+}
+
+function switchTab(id) {
+  if (id === state.activeTab) return;
+  const target = state.tabs.find(tab => tab.id === id);
+  if (!target) return;
+  saveSetup();                 // bank the tab we are leaving
+  state.activeTab = id;
+  state.loadingTab = true;     // stop applySetup's edits from writing back
+  applySetup(target.setup);
+  state.loadingTab = false;
+  clearResults();
+  refresh();
+  persistTabs();
+}
+
+function addTab() {
+  saveSetup();
+  const tab = newTab({});
+  state.tabs.push(tab);
+  state.activeTab = tab.id;
+  state.loadingTab = true;
+  applySetup({});
+  state.loadingTab = false;
+  clearResults();
+  refresh();
+  persistTabs();
+  $('awakenedItem').focus();
+}
+
+function closeTab(id) {
+  const index = state.tabs.findIndex(tab => tab.id === id);
+  if (index < 0 || state.tabs.length < 2) return;
+  const wasActive = state.tabs[index].id === state.activeTab;
+  state.tabs.splice(index, 1);
+  if (wasActive) {
+    const next = state.tabs[Math.min(index, state.tabs.length - 1)];
+    state.activeTab = next.id;
+    state.loadingTab = true;
+    applySetup(next.setup);
+    state.loadingTab = false;
+    clearResults();
+  }
+  refresh();
+  persistTabs();
+  renderTabs();
+}
+
+function clearItem() {
+  $('awakenedItem').value = '';
+  $('rarity').value = '';
+  $('itemType').value = '';
+  $('dustType').value = '';
+  for (const box of document.querySelectorAll('#subtypePanel input')) box.checked = false;
+  state.slots.forEach(slot => { slot.name = ''; slot.locked = false; });
+  state.lastCardItem = null;
+  clearResults();
+  refresh();
+}
+
+function clearResults() {
+  state.lastResults = null;
+  $('summary').hidden = true;
+  $('planCard').hidden = true;
+  $('routeCard').hidden = true;
+  $('auditCard').hidden = true;
+  $('routeAnalysis').innerHTML = '';
+  $('results').tBodies[0].innerHTML = '<tr><td colspan="6" class="empty">Fill in the configuration, then press Calculate.</td></tr>';
+}
+
+// Wipes every tab, not just the one on screen, and leaves no stored trace.
+function resetSetup() {
+  state.tabs = [newTab({})];
+  state.activeTab = state.tabs[0].id;
+  state.loadingTab = true;
+  applySetup({});
+  state.loadingTab = false;
+  clearResults();
+  renderTabs();
+  refresh();
+  try {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(TABS_KEY);
+  } catch (error) { /* nothing to clear */ }
+}
+
+function onFieldChange(element) {
+  // Naming the item settles its slot, its dust and its alien base. Whatever
+  // could not be worked out is left exactly as the user had it.
+  if (element.id === 'awakenedItem') {
+    const resolved = resolveItem(element.value);
+    // The number of slots belongs to the copy in your hands, not to the item,
+    // so carrying it over from the previous item would be a guess. Clear it.
+    if (element.value !== state.lastCardItem) $('rarity').value = '';
+    if (resolved) {
+      state.lastResolved = resolved;
+      if (resolved.name && resolved.name !== element.value) element.value = resolved.name;
+      // Fill in what the item settles, and clear what it does not: leaving a
+      // value from a previous item would look deduced when it is not.
+      $('itemType').value = resolved.type || '';
+      $('dustType').value = resolved.dust || '';
+      for (const box of $('subtypePanel').querySelectorAll('input')) {
+        if (box.value === 'SUMMONPOWERED') continue;
+        box.checked = resolved.special === box.value;
+      }
+    } else if (!element.value) {
+      state.lastResolved = null;
+    }
+  }
+  refresh();
+}
+
+async function loadItemCatalog() {
+  if (BUNDLE) return BUNDLE.itemCatalog || { items: {} };
+  try {
+    return await fetch('item-catalog.json').then(response => response.json());
+  } catch (error) {
+    return { items: {} };
+  }
+}
+
+async function loadItemSprites() {
+  if (BUNDLE) return BUNDLE.itemSprites || {};
+  try {
+    const index = await fetch('assets/items/index.json').then(response => response.json());
+    const map = {};
+    for (const [name, file] of Object.entries(index)) map[name] = 'assets/items/' + encodeURIComponent(file);
+    return map;
+  } catch (error) {
+    return {};   // sprites are decoration; the calculator does not need them
+  }
+}
+
+async function readSources() {
+  if (BUNDLE) return BUNDLE.sources;
+  const [modTexts, artifactText, awakenText] = await Promise.all([
+    Promise.all(MOD_FILES.map(file => fetch(ROOT + ['Enchantment documents', file].map(esc).join('/')).then(response => response.text()))),
+    fetch(ROOT + ['Artifacts', 'artifacts.txt'].map(esc).join('/')).then(response => response.text()),
+    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text())
+  ]);
+  return { modTexts, artifactText, awakenText };
+}
+
+/*
+ * When the page is being served (GitHub Pages, a local server), offer the
+ * single-file copy sitting next to it so visitors can keep it. Opened from
+ * disk there is nothing to offer: the file they have already is that copy.
+ */
+// GPL-3.0 §5(a) asks a modified work to carry a notice that it was changed and
+// "a relevant date". The date comes from the build; it identifies the version,
+// not the author — the licence never requires naming yourself.
+function renderModifiedDate() {
+  $('modifiedOn').textContent = BUNDLE && BUNDLE.built ? ` on ${BUNDLE.built}` : '';
+}
+
+function renderOfflineOffer() {
+  const note = $('offlineCopy');
+  if (!BUNDLE || !/^https?:$/.test(location.protocol)) { note.hidden = true; return; }
+  note.hidden = false;
+  note.innerHTML = '<a href="RotMG-Enchant-Calculator.html" download>Download this page</a> to keep it and use it offline — it is one self-contained file.';
+}
+
+async function load() {
+  try {
+    state.data = EnchantEngine.buildDataset(await readSources());
+    EnchantItems.load(await loadItemCatalog());
+    state.itemSprites = await loadItemSprites();
+    renderModifiedDate();
+    $('itemEmptyCount').textContent = `Search ${knownItemNames().length.toLocaleString('en-US')} items — the slot, dust and base come with it`;
+    initAmbience();
+    renderOfflineOffer();
+    state.ready = true;
+    $('status').textContent = `${state.data.enchants.length} enchantments · ${state.data.artifacts.length} artifacts loaded${BUNDLE ? ' · standalone build' : ''}`;
+    loadTabs();
+    renderTabs();
+    state.loadingTab = true;
+    applySetup((state.tabs.find(tab => tab.id === state.activeTab) || {}).setup);
+    state.loadingTab = false;
+    refresh();
+  } catch (error) {
+    console.error(error);
+    $('status').textContent = location.protocol === 'file:'
+      ? 'This copy of index.html needs the local server. Use the single-file build (RotMG-Enchant-Calculator.html) to open it straight from disk.'
+      : 'Could not read the original data files. Start the local server from the repository root (npm run dev).';
+    $('status').classList.add('bad');
+  }
+}
+
+bind();
+load();

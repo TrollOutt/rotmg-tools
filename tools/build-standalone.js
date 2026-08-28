@@ -1,0 +1,218 @@
+/*
+ * Builds a single self-contained HTML file that runs with no server and no
+ * install: download it, double-click it, done.
+ *
+ *   node tools/build-standalone.js        ->  dist/RotMG-Enchant-Calculator.html
+ *
+ * Everything is inlined, because a page opened through file:// is not allowed
+ * to fetch anything next to it:
+ *   - the original enchantment / artifact / awakened-item text files,
+ *   - every sprite the interface can ask for, as data: URIs,
+ *   - style.css, engine.js and app.js.
+ *
+ * The result is handed to the page as window.ROTMG_BUNDLE; web/app.js detects
+ * it and skips its fetch() path entirely.
+ */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+const web = path.join(root, 'web');
+const dataRoot = path.join(root, 'Qt Source Files (not zipped)');
+const gui = path.join(dataRoot, 'GUI Files');
+const outDir = path.join(root, 'dist');
+const outFile = path.join(outDir, 'RotMG-Enchant-Calculator.html');
+// GitHub Pages serves this folder. index.html is the same page under the name
+// a web server looks for, plus a copy under its download name so the "keep a
+// copy" link on the served page has something to point at.
+const pagesDir = path.join(root, 'docs');
+
+const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
+const readText = (...parts) => fs.readFileSync(path.join(dataRoot, ...parts), 'utf8');
+
+/* ---------------------------------------------------------------- *
+ * 1. Data                                                           *
+ * ---------------------------------------------------------------- */
+
+const sources = {
+  modTexts: MOD_FILES.map(file => readText('Enchantment documents', file)),
+  artifactText: readText('Artifacts', 'artifacts.txt'),
+  awakenText: readText('Awakened Items', 'awakenedItems.txt')
+};
+
+/* ---------------------------------------------------------------- *
+ * 2. Sprites                                                        *
+ * ---------------------------------------------------------------- */
+
+// Keyed exactly the way web/app.js builds a path with asset(), so the lookup
+// in the browser is a plain map hit.
+const assets = {};
+let assetBytes = 0;
+
+function embed(folder, file) {
+  const absolute = path.join(gui, folder, file);
+  if (!fs.existsSync(absolute)) return false;
+  const bytes = fs.readFileSync(absolute);
+  assetBytes += bytes.length;
+  assets[`GUI Files/${folder}/${file}`] = `data:image/png;base64,${bytes.toString('base64')}`;
+  return true;
+}
+
+function embedAll(folder, filter) {
+  let added = 0;
+  for (const file of fs.readdirSync(path.join(gui, folder))) {
+    if (!file.toLowerCase().endsWith('.png')) continue;
+    if (filter && !filter(file)) continue;
+    if (embed(folder, file)) added++;
+  }
+  return added;
+}
+
+const counts = {
+  // Artifact rows use the half-scale icons only.
+  'Artifact Icons': embedAll('Artifact Icons', file => file.endsWith('-div2.png')),
+  'Enchantment Icons': embedAll('Enchantment Icons'),
+  'Awakenable Items': embedAll('Awakenable Items'),
+  'Dust Types': embedAll('Dust Types'),
+  'Item Types': embedAll('Item Types'),
+  // Rarity uses the 8x upscales.
+  'Item Rarities': embedAll('Item Rarities', file => file.includes('_scaled_8x'))
+};
+
+/* ---------------------------------------------------------------- *
+ * 2b. Item sprites                                                  *
+ * ---------------------------------------------------------------- */
+
+// Downloaded once by tools/fetch-item-sprites.js. Optional: without them the
+// interface falls back to the slot icons, so a fresh clone still builds.
+const catalogPath = path.join(web, 'item-catalog.json');
+const itemCatalog = fs.existsSync(catalogPath) ? JSON.parse(fs.readFileSync(catalogPath, 'utf8')) : { items: {} };
+const itemSprites = {};
+let itemSpriteBytes = 0;
+const itemDir = path.join(web, 'assets', 'items');
+const itemIndexPath = path.join(itemDir, 'index.json');
+if (fs.existsSync(itemIndexPath)) {
+  const index = JSON.parse(fs.readFileSync(itemIndexPath, 'utf8'));
+  for (const [name, file] of Object.entries(index)) {
+    const absolute = path.join(itemDir, file);
+    if (!fs.existsSync(absolute)) continue;
+    const bytes = fs.readFileSync(absolute);
+    itemSpriteBytes += bytes.length;
+    const mime = path.extname(file).toLowerCase() === '.gif' ? 'image/gif' : 'image/png';
+    itemSprites[name] = `data:${mime};base64,${bytes.toString('base64')}`;
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * 3. Check the bundle covers everything the UI can ask for          *
+ * ---------------------------------------------------------------- */
+
+// Parsing with the real engine keeps this check honest: if a new enchantment
+// or artifact turns up in the data, a missing sprite fails the build.
+const engineSource = fs.readFileSync(path.join(web, 'engine.js'), 'utf8');
+const itemsSource = fs.readFileSync(path.join(web, 'items.js'), 'utf8');
+const engine = require(path.join(web, 'engine.js'));
+const dataset = engine.buildDataset(sources);
+
+function iconFor(mod) {
+  if (mod.tags.has('AWAKENED')) return mod.name;
+  if (mod.tags.has('UNIQUE')) return mod.weight === 750 ? 'UNIQUEFROZEN' : 'UNIQUE';
+  for (const tag of ['NEO_ALIEN', 'ALIEN', 'SINGLESTAT', 'DUALSTAT', 'PROC', 'REWARDBONUS', 'DAMAGE', 'WEAPONRANGE', 'CASTING', 'MANAREGEN', 'LIFEREGEN', 'DAMAGERESISTANCE', 'DUALREWARDBONUS']) {
+    if (mod.tags.has(tag)) return tag;
+  }
+  return null;
+}
+
+const required = new Set();
+for (const artifact of dataset.artifacts) required.add(`GUI Files/Artifact Icons/${artifact.name}-div2.png`);
+for (const mod of dataset.enchants) {
+  const icon = iconFor(mod);
+  if (icon) required.add(`GUI Files/Enchantment Icons/${icon}.png`);
+}
+for (const item of dataset.awakenings.keys()) required.add(`GUI Files/Awakenable Items/${dataset.spriteAlias[item] || item}.png`);
+for (const dust of ['Green', 'Red', 'Purple']) {
+  required.add(`GUI Files/Dust Types/${dust}.png`);
+  required.add(`GUI Files/Dust Types/${dust}-div2.png`);
+}
+for (const type of ['weapon', 'ability', 'armor', 'ring', 'SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN']) required.add(`GUI Files/Item Types/${type}.png`);
+for (const rarity of ['uncommon', 'rare', 'legendary', 'divine']) required.add(`GUI Files/Item Rarities/${rarity}_scaled_8x.png`);
+
+const missing = [...required].filter(key => !assets[key]);
+
+/* ---------------------------------------------------------------- *
+ * 4. Assemble                                                       *
+ * ---------------------------------------------------------------- */
+
+// A literal "</script" inside an inlined source would close the surrounding tag.
+const safe = text => text.replace(/<\/script/gi, '<\\/script');
+
+// In the JSON blob "<" is escaped so no "</script" can form at all. U+2028 and
+// U+2029 are legal inside a JSON string but are line terminators in JavaScript
+// source, so they have to be escaped too.
+const LINE_SEPARATORS = new RegExp('[\\u2028\\u2029]', 'g');
+const jsonForScript = value => JSON.stringify(value)
+  .replace(/</g, '\\u003c')
+  .replace(LINE_SEPARATORS, ch => ch.charCodeAt(0) === 0x2028 ? '\\u2028' : '\\u2029');
+
+const css = fs.readFileSync(path.join(web, 'style.css'), 'utf8');
+const appSource = fs.readFileSync(path.join(web, 'app.js'), 'utf8');
+let page = fs.readFileSync(path.join(web, 'index.html'), 'utf8');
+
+const styleTag = '<link rel="stylesheet" href="style.css">';
+const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n<script src="app.js"></script>';
+if (!page.includes(styleTag) || !page.includes(scriptTags)) {
+  console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
+  process.exit(1);
+}
+
+// The tab and the app-mode window title bar get the original Qt icon, inlined
+// like everything else so the file still depends on nothing.
+const iconBytes = fs.readFileSync(path.join(dataRoot, 'appicon.ico'));
+const faviconTag = `<link rel="icon" href="data:image/x-icon;base64,${iconBytes.toString('base64')}">`;
+
+const built = new Date().toISOString().slice(0, 10);
+page = page
+  .replace('</title>', `</title>\n  ${faviconTag}`)
+  .replace(styleTag, `<style>\n${css}\n</style>`)
+  .replace(scriptTags, [
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, sources, assets, itemSprites, itemCatalog })};</script>`,
+    `<script>\n${safe(engineSource)}\n</script>`,
+    `<script>\n${safe(itemsSource)}\n</script>`,
+    `<script>\n${safe(appSource)}\n</script>`
+  ].join('\n'))
+  .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);
+
+// Refuse before writing, so a failed build never leaves a broken artifact
+// behind for someone to pick up and ship.
+if (missing.length) {
+  console.error(`\nBuild failed: ${missing.length} sprite(s) the interface can request are not in the bundle:`);
+  for (const key of missing) console.error(`  - ${key}`);
+  console.error('\nNothing was written.\n');
+  process.exit(1);
+}
+
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(outFile, page, 'utf8');
+
+fs.mkdirSync(pagesDir, { recursive: true });
+fs.writeFileSync(path.join(pagesDir, 'index.html'), page, 'utf8');
+fs.writeFileSync(path.join(pagesDir, 'RotMG-Enchant-Calculator.html'), page, 'utf8');
+// Without this GitHub Pages runs Jekyll over the folder, which ignores files
+// and folders starting with an underscore and rewrites some content.
+fs.writeFileSync(path.join(pagesDir, '.nojekyll'), '');
+
+/* ---------------------------------------------------------------- *
+ * 5. Report                                                         *
+ * ---------------------------------------------------------------- */
+
+const kb = bytes => `${(bytes / 1024).toFixed(0)} KB`;
+console.log(`\nStandalone build -> ${path.relative(root, outFile)}\n`);
+for (const [folder, added] of Object.entries(counts)) console.log(`  ${String(added).padStart(3)} sprites  ${folder}`);
+console.log(`\n  ${dataset.enchants.length} enchantments - ${dataset.artifacts.length} artifacts - ${dataset.awakenings.size} awakenable items`);
+console.log(`  sprites ${kb(assetBytes)} raw -> ${kb(JSON.stringify(assets).length)} inlined`);
+console.log(`  catalog ${Object.keys(itemCatalog.items || {}).length} items`);
+console.log(`  items   ${Object.keys(itemSprites).length} sprites, ${kb(itemSpriteBytes)} raw -> ${kb(JSON.stringify(itemSprites).length)} inlined`);
+console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
+console.log('  every sprite the interface can request is embedded.');
+console.log(`\nGitHub Pages folder -> ${path.relative(root, pagesDir)}/  (index.html, RotMG-Enchant-Calculator.html, .nojekyll)\n`);

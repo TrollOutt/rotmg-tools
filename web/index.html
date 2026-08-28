@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RotMG Enchant Calculator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="ambience" class="ambience" aria-hidden="true"></div>
+<div id="realmName" class="realm-name" aria-hidden="true"></div>
+
+<div class="app">
+
+  <header class="masthead">
+    <h1>Enchant Calculator</h1>
+    <p>Describe the item you actually hold, mark what you keep and what you still want, then compare every artifact and every route.</p>
+    <div class="masthead-row">
+      <div id="status" class="status">Loading original data…</div>
+      <button id="ambienceToggle" type="button" class="ambience-toggle" aria-pressed="true" title="Turn the drifting realm background on or off">◐ Realm</button>
+    </div>
+  </header>
+
+  <div id="tabBar" class="tab-bar" role="tablist" aria-label="Saved setups"></div>
+
+  <main class="layout">
+
+    <!-- ------------------------------------------------------------ -->
+    <section class="column config" aria-label="Configuration">
+
+      <section class="card step" data-step="1">
+        <header><span class="step-badge">1</span><h2>The item</h2></header>
+
+        <!-- Nothing chosen yet: one call to action, nothing else to look at. -->
+        <button id="itemEmpty" type="button" class="item-empty">
+          <span class="item-empty-icon">⌕</span>
+          <span><b>Choose your item</b><small id="itemEmptyCount">Search the catalogue — the slot, dust and base come with it</small></span>
+        </button>
+
+        <input id="awakenedItem" type="hidden">
+
+        <!-- Everything the item settles on its own, shown rather than asked. -->
+        <div id="itemCard" class="item-card" hidden></div>
+
+        <div id="raritySection" hidden>
+          <label class="field rarity-field">
+            <span class="field-label">How many enchantment slots does <em>your copy</em> have?</span>
+            <span class="field-control tier">
+              <img id="rarityIcon" class="field-icon" alt="">
+              <select id="rarity">
+                <option value="">Choose a rarity…</option>
+                <option value="1">Uncommon — 1 slot</option>
+                <option value="2">Rare — 2 slots</option>
+                <option value="3">Legendary — 3 slots</option>
+                <option value="4">Divine — 4 slots</option>
+              </select>
+            </span>
+          </label>
+          <p class="note off">Rarity is rolled when the item drops, so it is the one thing the item's name cannot tell us.</p>
+        </div>
+
+        <details id="manualOverride" class="manual">
+          <summary>Set the slot, dust and base by hand</summary>
+          <div class="field-grid">
+            <label class="field">
+              <span class="field-label">Item type</span>
+              <span class="field-control">
+                <img id="typeIcon" class="field-icon" alt="">
+                <select id="itemType">
+                  <option value="">Choose a type…</option>
+                  <option value="WEAPON">Weapon</option>
+                  <option value="ABILITY">Ability</option>
+                  <option value="ARMOR">Armor</option>
+                  <option value="RING">Ring</option>
+                </select>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Dust</span>
+              <span class="field-control">
+                <img id="dustIcon" class="field-icon" alt="">
+                <select id="dustType">
+                  <option value="">Choose a dust…</option>
+                  <option>Green</option>
+                  <option>Red</option>
+                  <option>Purple</option>
+                </select>
+              </span>
+            </label>
+          </div>
+          <div class="subtypes">
+            <span class="field-label">Special base</span>
+            <div id="subtypePanel" class="chip-row"></div>
+          </div>
+        </details>
+
+        <p id="awakenedStatus" class="note off">Name the item and its slot, its dust and its special base are filled in for you.</p>
+      </section>
+
+      <section class="card step" data-step="2">
+        <header>
+          <span class="step-badge">2</span>
+          <h2>The slots</h2>
+          <span id="slotSummary" class="header-aside"></span>
+        </header>
+
+        <div class="legend">
+          <span class="legend-item locked"><i>🔒</i> On the item — kept, costs a slot, doubles every reroll</span>
+          <span class="legend-item wanted"><i>🎯</i> Wanted — still to be rolled</span>
+        </div>
+
+        <div id="slotList" class="slot-list"></div>
+        <p id="slotHint" class="note">Choose a rarity to reveal the enchantment slots.</p>
+
+        <fieldset id="tiers" class="tiers" hidden disabled>
+          <legend>Accepted tiers of the target</legend>
+          <label><input type="checkbox" value="1" checked><span>I</span></label>
+          <label><input type="checkbox" value="2" checked><span>II</span></label>
+          <label><input type="checkbox" value="3" checked><span>III</span></label>
+          <label><input type="checkbox" value="4" checked><span>IV</span></label>
+        </fieldset>
+      </section>
+
+      <section class="card step" data-step="3">
+        <header><span class="step-badge">3</span><h2>Run it</h2><button id="reset" type="button" class="link-button header-aside">Reset everything</button></header>
+        <button id="calculate" class="calculate" disabled>Calculate every artifact</button>
+        <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+        <p id="calculateHint" class="note">Rarity, item type, dust type and at least one wanted enchantment are required.</p>
+        <p id="offlineCopy" class="note" hidden></p>
+        <p class="source-note">
+          Web port of <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">brendanbrubacher/rotmg-enchant-calculator</a>,
+          modified<span id="modifiedOn"></span>. Licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>.
+          Everything runs in your browser; your setup is remembered locally and nothing is ever sent anywhere.
+        </p>
+      </section>
+    </section>
+
+    <!-- ------------------------------------------------------------ -->
+    <section class="column results" aria-label="Results">
+
+      <section id="summary" class="card summary" hidden aria-live="polite"></section>
+
+      <section class="card">
+        <header><h2>Artifacts</h2><span class="header-aside">sorted by chance</span></header>
+        <div class="table-scroll">
+          <table id="results">
+            <thead>
+              <tr>
+                <th>Artifact</th>
+                <th title="Chance that the target appears somewhere in the remaining random slots of one reroll.">Chance / reroll</th>
+                <th title="Mean number of rerolls until the target appears (1 / p).">Rerolls</th>
+                <th title="Mean total dust of the selected colour: reroll cost × 2^locks × expected rerolls.">Expected dust</th>
+                <th title="Artifact charges billed in a different dust colour than the one you selected.">Artifact dust</th>
+                <th title="Artifacts consumed on average — one per reroll. “No Artifact” consumes none.">Artifacts</th>
+              </tr>
+            </thead>
+            <tbody><tr><td colspan="6" class="empty">Fill in the configuration, then press Calculate.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="planCard" class="card" hidden>
+        <header><h2>Build plan</h2><span class="header-aside">two or more wanted enchantments</span></header>
+        <div id="buildPlan"></div>
+      </section>
+
+      <section id="routeCard" class="card" hidden>
+        <header><h2>Lock routes</h2><span class="header-aside">is an extra lock worth it?</span></header>
+        <button id="analyzeRoutes" type="button" class="secondary">Compare lock routes</button>
+        <div id="routeAnalysis"></div>
+      </section>
+
+      <section id="auditCard" class="card" hidden>
+        <header><h2>Odds audit</h2><span class="header-aside">check the numbers yourself</span></header>
+        <div id="auditResult"></div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<!-- Enchantment picker ------------------------------------------------ -->
+<div id="pickerBackdrop" class="picker-backdrop" hidden>
+  <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <header>
+      <div>
+        <strong id="pickerTitle">Choose an enchantment</strong>
+        <span id="pickerSub" class="header-aside"></span>
+      </div>
+      <button id="pickerClose" type="button" class="ghost-x" aria-label="Close">×</button>
+    </header>
+    <input id="pickerSearch" type="search" placeholder="Search by name, description or label…" autocomplete="off">
+    <div id="pickerList" class="picker-list"></div>
+    <footer id="pickerFooter"></footer>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script src="items.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

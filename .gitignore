@@ -1,0 +1,8 @@
+node_modules/
+
+# Personal working notes: these mention the account being anonymised, so they
+# must never end up in the public repository.
+ANONYMITY.md
+
+# Local tooling configuration, not part of the project.
+.claude/
