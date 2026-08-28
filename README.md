@@ -2,7 +2,7 @@
 
 Enchantment odds for Realm of the Mad God.
 
-**→ [trolloutt.github.io](https://trolloutt.github.io/)** — opens in your browser, nothing to install.
+**→ [trolloutt.github.io/rotmg-enchant](https://trolloutt.github.io/rotmg-enchant/)** — opens in your browser, nothing to install.
 
 Pick your item, mark what you want on it, and it gives you the chance per
 reroll, how many rerolls to expect, and what it will cost in dust.
