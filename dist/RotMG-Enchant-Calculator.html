@@ -638,6 +638,18 @@ table.mini td { padding: 3px 8px; border: 0; }
 .picker-empty { padding: 30px; text-align: center; color: var(--dim); font-size: 13px; }
 .picker > footer { padding: 9px 16px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--dim); flex: none; }
 
+/* Why an enchantment is absent, said in the picker rather than left to guess. */
+.picker-hint {
+  margin: 0;
+  padding: .55rem .8rem .7rem;
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--muted);
+  background: rgba(255, 208, 38, .06);
+  border-left: 2px solid var(--locked);
+}
+.picker-hint b { color: var(--text); font-weight: 600; }
+
 </style>
   <meta name="generator" content="rotmg-enchant-calculator standalone build 2026-08-28">
 </head>
@@ -982,20 +994,24 @@ var EnchantEngine = (function () {
   //   3. awakened-only enchantments belong to the selected awakenable item,
   //   4. none of its Incompatible Labels appears among the Labels carried by
   //      the locked enchantments,  Labels(lock) ∩ IncompatibleLabels(cand) = ∅
-  //   5. its special base requirement is satisfied by the item subtype or by
-  //      an artifact that opens that pool.
+  //   5. its special base requirement is satisfied by the item's own subtypes.
+  //
+  // On (5), see NOTES.alienBase: the Qt source lets an artifact's pool stand in
+  // for the requirement, which would put an alien enchantment on ordinary gear.
+  // Alien and Neo Alien are equipment families, and an enchantment of a family
+  // only goes on equipment of that same family, so the item is the only thing
+  // that can satisfy the requirement here.
   function eligiblePool(data, cfg, artifact) {
     const locked = new Set(cfg.locks);
     const labels = lockedLabels(data, cfg);
     const itemAwakenings = new Set(data.awakenings.get(cfg.item) || []);
-    const pools = artifact && artifact.pools ? artifact.pools : new Set();
     const subtypes = asSet(cfg.subtypes);
     return data.enchants.filter(mod => {
       if (locked.has(mod.name)) return false;
       if (!mod.itemTags.has(cfg.type)) return false;
       if (mod.excludes.has('AWAKENED') && !itemAwakenings.has(mod.name)) return false;
       for (const label of mod.excludes) if (labels.has(label)) return false;
-      for (const requirement of mod.special) if (!subtypes.has(requirement) && !pools.has(requirement)) return false;
+      for (const requirement of mod.special) if (!subtypes.has(requirement)) return false;
       return true;
     });
   }
@@ -1564,6 +1580,18 @@ var EnchantEngine = (function () {
       'DIVERGENCE from the Qt source: "artifacts used" is the mean number of rerolls ' +
       '(1 / p), one artifact per reroll. The Qt table shows ceil(0.5 / p), which is ' +
       'neither the mean nor the median.',
+    alienBase:
+      'DIVERGENCE from the Qt source: an enchantment that requires an ALIEN or ' +
+      'NEO_ALIEN base is offered only on an item of that same family. The Qt source ' +
+      'also accepts it when the selected artifact declares that pool, which is how the ' +
+      'four Technology artifacts are written, so there it can be rolled onto ordinary ' +
+      'gear. Alien and Neo Alien are equipment families and an enchantment of one ' +
+      'family only goes on equipment of that family, so the artifact cannot stand in ' +
+      'for the item. This affects the 7 Alien and 7 Neo Alien enchantments.',
+    alienUnknown:
+      'The catalogue does not record which items are Alien or Neo Alien bases, so no ' +
+      'item is recognised as one on its name alone. Until it does, set the base by ' +
+      'hand under "Set the slot, dust and base by hand" to reach those enchantments.',
     plannerPolicy:
       'The multi-goal plan is the exact optimum over this policy space: every reroll ' +
       'rerolls all unlocked slots, the artifact may change between rerolls, and after ' +
@@ -1914,17 +1942,32 @@ function cfg() {
  * Which enchantments may be typed into a slot                         *
  * ------------------------------------------------------------------ */
 
-// Item-level eligibility, ignoring what the other slots hold. The ALIEN
-// requirement is tolerated here because the alien technology artifacts open
-// that pool at calculation time.
+// Item-level eligibility, ignoring what the other slots hold. Alien and Neo
+// Alien are equipment families: an enchantment of one only goes on equipment of
+// that same family, and no artifact stands in for the item. See
+// EnchantEngine.NOTES.alienBase for how this parts company with the Qt source.
 function eligibleForItem(mod, config) {
   if (!config.type || !mod.itemTags.has(config.type)) return false;
   if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return false;
-  for (const requirement of mod.special) {
-    if (requirement === 'ALIEN' || requirement === 'NEO_ALIEN') continue;
-    if (!config.subtypes.has(requirement)) return false;
-  }
+  for (const requirement of mod.special) if (!config.subtypes.has(requirement)) return false;
   return true;
+}
+
+/*
+ * Enchantments this item type allows but this item's base family does not.
+ *
+ * Worth showing rather than silently dropping: the catalogue does not record
+ * which items are Alien or Neo Alien bases, so someone holding a genuine alien
+ * item would otherwise just find its own enchantments missing, with nothing to
+ * explain why or what to do about it.
+ */
+const BASE_LABEL = { ALIEN: 'Alien', NEO_ALIEN: 'Neo Alien', SUMMONPOWERED: 'summon-powered' };
+
+function missingBase(mod, config) {
+  if (!config.type || !mod.itemTags.has(config.type)) return null;
+  if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return null;
+  const missing = [...mod.special].filter(requirement => !config.subtypes.has(requirement));
+  return missing.length ? missing : null;
 }
 
 // Directional rule: `candidate` survives after `prior` when none of the
@@ -2244,9 +2287,14 @@ function openPicker(index) {
     .map(mod => ({ mod, conflict: conflictWith(mod, slot, others) }))
     .filter(entry => entry.conflict && entry.conflict.reason !== 'duplicate');
 
-  state.picker = { index, candidates, blocked };
+  const wrongBase = state.data.enchants
+    .map(mod => ({ mod, missing: missingBase(mod, config) }))
+    .filter(entry => entry.missing);
+
+  state.picker = { index, candidates, blocked, wrongBase };
   $('pickerTitle').textContent = `Slot ${index}`;
-  $('pickerSub').textContent = `${candidates.length} available · ${blocked.length} removed by the other slots`;
+  $('pickerSub').textContent = `${candidates.length} available · ${blocked.length} removed by the other slots`
+    + (wrongBase.length ? ` · ${wrongBase.length} need another base` : '');
   $('pickerSearch').value = '';
   $('pickerSearch').placeholder = 'Search by name, description or label…';
   $('pickerBackdrop').hidden = false;
@@ -2259,6 +2307,7 @@ function renderPickerList(query) {
   const matches = entry => !term || entry.name.toLowerCase().includes(term) || entry.description.toLowerCase().includes(term) || [...entry.tags].some(tag => tag.toLowerCase().includes(term));
   const shown = state.picker.candidates.filter(matches);
   const hidden = state.picker.blocked.filter(entry => matches(entry.mod));
+  const offBase = (state.picker.wrongBase || []).filter(entry => matches(entry.mod));
 
   const row = mod => `
     <button type="button" class="picker-row" data-name="${html(mod.name)}">
@@ -2277,14 +2326,27 @@ function renderPickerList(query) {
     mutual: `no rolling order works with “${conflict.other.name}”`
   })[conflict.reason] || 'incompatible';
 
-  $('pickerList').innerHTML = shown.length || hidden.length
+  const baseNames = missing => missing.map(key => BASE_LABEL[key] || key).join(' + ');
+
+  const offBaseHtml = offBase.length ? `
+    <div class="picker-section">Needs a different base</div>
+    <p class="picker-hint">An enchantment of the Alien or Neo Alien family only goes on
+      equipment of that same family. The catalogue does not know which items those are yet,
+      so if yours is one, tick its base under <b>Set the slot, dust and base by hand</b>.</p>
+    ` + offBase.map(entry => `
+      <div class="picker-row disabled" title="${html(baseNames(entry.missing))} base required">
+        ${enchantIconHtml(entry.mod, 'picker-icon')}
+        <span class="picker-text"><b>${html(entry.mod.name)}</b><small>${html(baseNames(entry.missing))} base required</small></span>
+      </div>`).join('') : '';
+
+  $('pickerList').innerHTML = shown.length || hidden.length || offBase.length
     ? shown.map(row).join('') + (hidden.length
       ? `<div class="picker-section">Removed by the other slots</div>` + hidden.map(entry => `
         <div class="picker-row disabled" title="${html(reason(entry.conflict))}">
           ${enchantIconHtml(entry.mod, 'picker-icon')}
           <span class="picker-text"><b>${html(entry.mod.name)}</b><small>${html(reason(entry.conflict))}</small></span>
         </div>`).join('')
-      : '')
+      : '') + offBaseHtml
     : '<div class="picker-empty">Nothing matches that search.</div>';
   $('pickerFooter').textContent = `${shown.length} selectable`;
 }

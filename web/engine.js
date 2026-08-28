@@ -148,20 +148,24 @@ var EnchantEngine = (function () {
   //   3. awakened-only enchantments belong to the selected awakenable item,
   //   4. none of its Incompatible Labels appears among the Labels carried by
   //      the locked enchantments,  Labels(lock) ∩ IncompatibleLabels(cand) = ∅
-  //   5. its special base requirement is satisfied by the item subtype or by
-  //      an artifact that opens that pool.
+  //   5. its special base requirement is satisfied by the item's own subtypes.
+  //
+  // On (5), see NOTES.alienBase: the Qt source lets an artifact's pool stand in
+  // for the requirement, which would put an alien enchantment on ordinary gear.
+  // Alien and Neo Alien are equipment families, and an enchantment of a family
+  // only goes on equipment of that same family, so the item is the only thing
+  // that can satisfy the requirement here.
   function eligiblePool(data, cfg, artifact) {
     const locked = new Set(cfg.locks);
     const labels = lockedLabels(data, cfg);
     const itemAwakenings = new Set(data.awakenings.get(cfg.item) || []);
-    const pools = artifact && artifact.pools ? artifact.pools : new Set();
     const subtypes = asSet(cfg.subtypes);
     return data.enchants.filter(mod => {
       if (locked.has(mod.name)) return false;
       if (!mod.itemTags.has(cfg.type)) return false;
       if (mod.excludes.has('AWAKENED') && !itemAwakenings.has(mod.name)) return false;
       for (const label of mod.excludes) if (labels.has(label)) return false;
-      for (const requirement of mod.special) if (!subtypes.has(requirement) && !pools.has(requirement)) return false;
+      for (const requirement of mod.special) if (!subtypes.has(requirement)) return false;
       return true;
     });
   }
@@ -730,6 +734,18 @@ var EnchantEngine = (function () {
       'DIVERGENCE from the Qt source: "artifacts used" is the mean number of rerolls ' +
       '(1 / p), one artifact per reroll. The Qt table shows ceil(0.5 / p), which is ' +
       'neither the mean nor the median.',
+    alienBase:
+      'DIVERGENCE from the Qt source: an enchantment that requires an ALIEN or ' +
+      'NEO_ALIEN base is offered only on an item of that same family. The Qt source ' +
+      'also accepts it when the selected artifact declares that pool, which is how the ' +
+      'four Technology artifacts are written, so there it can be rolled onto ordinary ' +
+      'gear. Alien and Neo Alien are equipment families and an enchantment of one ' +
+      'family only goes on equipment of that family, so the artifact cannot stand in ' +
+      'for the item. This affects the 7 Alien and 7 Neo Alien enchantments.',
+    alienUnknown:
+      'The catalogue does not record which items are Alien or Neo Alien bases, so no ' +
+      'item is recognised as one on its name alone. Until it does, set the base by ' +
+      'hand under "Set the slot, dust and base by hand" to reach those enchantments.',
     plannerPolicy:
       'The multi-goal plan is the exact optimum over this policy space: every reroll ' +
       'rerolls all unlocked slots, the artifact may change between rerolls, and after ' +

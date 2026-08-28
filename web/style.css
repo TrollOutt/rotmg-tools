@@ -629,3 +629,15 @@ table.mini td { padding: 3px 8px; border: 0; }
 }
 .picker-empty { padding: 30px; text-align: center; color: var(--dim); font-size: 13px; }
 .picker > footer { padding: 9px 16px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--dim); flex: none; }
+
+/* Why an enchantment is absent, said in the picker rather than left to guess. */
+.picker-hint {
+  margin: 0;
+  padding: .55rem .8rem .7rem;
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--muted);
+  background: rgba(255, 208, 38, .06);
+  border-left: 2px solid var(--locked);
+}
+.picker-hint b { color: var(--text); font-weight: 600; }

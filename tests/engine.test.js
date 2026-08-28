@@ -71,6 +71,54 @@ check('the four alien technologies are the only pool-opening artifacts',
   data.artifacts.filter(a => a.pools.size).map(a => a.name).join(',') === 'Malogia Technology,Untaris Technology,Katalund Technology,Forax Technology');
 
 /* ------------------------------------------------------------------ *
+ * 1b. Alien and Neo Alien are equipment families                      *
+ * ------------------------------------------------------------------ *
+ * An enchantment of a family only goes on equipment of that same
+ * family. Unlike the Qt source, an artifact declaring the pool does
+ * not stand in for the item: see NOTES.alienBase.
+ */
+section('1b. Alien and Neo Alien bases');
+
+const ALIEN_MODS = data.enchants.filter(m => m.special.has('ALIEN'));
+const NEO_MODS = data.enchants.filter(m => m.special.has('NEO_ALIEN'));
+// WEAPON, because the Heal and Magic variants are weapon/ring only: on ARMOR
+// their absence would prove nothing about the family rule.
+const inPool = (mod, subtypes, artifactName) =>
+  engine.eligiblePool(data, baseCfg({ type: 'WEAPON', subtypes: new Set(subtypes) }), artifact(artifactName))
+    .some(m => m.name === mod.name);
+
+check('7 enchantments require an Alien base', ALIEN_MODS.length === 7, `got ${ALIEN_MODS.length}`);
+check('all 14 are rollable on a weapon, so the checks below are meaningful',
+  [...ALIEN_MODS, ...NEO_MODS].every(m => m.itemTags.has('WEAPON')));
+check('7 enchantments require a Neo Alien base', NEO_MODS.length === 7, `got ${NEO_MODS.length}`);
+check('no enchantment requires both families at once',
+  data.enchants.every(m => !(m.special.has('ALIEN') && m.special.has('NEO_ALIEN'))));
+
+check('ordinary gear cannot take an Alien enchantment',
+  ALIEN_MODS.every(m => !inPool(m, [], 'No Artifact')));
+check('ordinary gear cannot take a Neo Alien enchantment',
+  NEO_MODS.every(m => !inPool(m, [], 'No Artifact')));
+
+// The regression this suite missed: the four Technology artifacts declare
+// pools=[ALIEN], and the Qt source lets that satisfy the requirement.
+check('a Technology artifact does not put an Alien enchantment on ordinary gear',
+  ['Malogia Technology', 'Untaris Technology', 'Katalund Technology', 'Forax Technology']
+    .every(name => ALIEN_MODS.every(m => !inPool(m, [], name))));
+
+check('an Alien base takes its own enchantments with no artifact at all',
+  ALIEN_MODS.every(m => inPool(m, ['ALIEN'], 'No Artifact')));
+check('a Neo Alien base takes its own enchantments with no artifact at all',
+  NEO_MODS.every(m => inPool(m, ['NEO_ALIEN'], 'No Artifact')));
+
+check('an Alien base refuses Neo Alien enchantments',
+  NEO_MODS.every(m => !inPool(m, ['ALIEN'], 'No Artifact')));
+check('a Neo Alien base refuses Alien enchantments',
+  ALIEN_MODS.every(m => !inPool(m, ['NEO_ALIEN'], 'No Artifact')));
+
+check('the divergence from the Qt source is written down',
+  /NEO_ALIEN/.test(engine.NOTES.alienBase) && /DIVERGENCE/.test(engine.NOTES.alienBase));
+
+/* ------------------------------------------------------------------ *
  * 2. Awoken rules                                                     *
  * ------------------------------------------------------------------ */
 section('2. Awoken enchantments are item-specific');
