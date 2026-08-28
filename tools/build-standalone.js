@@ -2,7 +2,7 @@
  * Builds a single self-contained HTML file that runs with no server and no
  * install: download it, double-click it, done.
  *
- *   node tools/build-standalone.js        ->  dist/RotMG-Enchant-Calculator.html
+ *   node tools/build-standalone.js        ->  docs/
  *
  * Everything is inlined, because a page opened through file:// is not allowed
  * to fetch anything next to it:
@@ -19,14 +19,14 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const web = path.join(root, 'web');
-const dataRoot = path.join(root, 'Qt Source Files (not zipped)');
+const dataRoot = path.join(root, 'data');
 const gui = path.join(dataRoot, 'GUI Files');
-const outDir = path.join(root, 'dist');
-const outFile = path.join(outDir, 'RotMG-Enchant-Calculator.html');
-// GitHub Pages serves this folder. index.html is the same page under the name
-// a web server looks for, plus a copy under its download name so the "keep a
-// copy" link on the served page has something to point at.
+// The only output. GitHub Pages serves this folder: index.html is the page
+// under the name a web server looks for, and the copy under its download name
+// is what the "keep a copy" link on the served page points at, so the offline
+// file is the very one being served rather than a second build of it.
 const pagesDir = path.join(root, 'docs');
+const outFile = path.join(pagesDir, 'index.html');
 
 const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
 /*
@@ -70,7 +70,10 @@ function embed(folder, file) {
 
 function embedAll(folder, filter) {
   let added = 0;
-  for (const file of fs.readdirSync(path.join(gui, folder))) {
+  // Sorted explicitly: NTFS hands readdirSync a case-insensitive order and
+  // ext4 does not, which put the same assets in a different order in the
+  // bundle and made two correct builds differ.
+  for (const file of fs.readdirSync(path.join(gui, folder)).sort()) {
     if (!file.toLowerCase().endsWith('.png')) continue;
     if (filter && !filter(file)) continue;
     if (embed(folder, file)) added++;
@@ -202,11 +205,8 @@ if (missing.length) {
   process.exit(1);
 }
 
-fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(outFile, page, 'utf8');
-
 fs.mkdirSync(pagesDir, { recursive: true });
-fs.writeFileSync(path.join(pagesDir, 'index.html'), page, 'utf8');
+fs.writeFileSync(outFile, page, 'utf8');
 fs.writeFileSync(path.join(pagesDir, 'RotMG-Enchant-Calculator.html'), page, 'utf8');
 // Without this GitHub Pages runs Jekyll over the folder, which ignores files
 // and folders starting with an underscore and rewrites some content.
@@ -217,7 +217,7 @@ fs.writeFileSync(path.join(pagesDir, '.nojekyll'), '');
  * ---------------------------------------------------------------- */
 
 const kb = bytes => `${(bytes / 1024).toFixed(0)} KB`;
-console.log(`\nStandalone build -> ${path.relative(root, outFile)}\n`);
+console.log(`\nStandalone build -> ${path.relative(root, pagesDir)}/\n`);
 for (const [folder, added] of Object.entries(counts)) console.log(`  ${String(added).padStart(3)} sprites  ${folder}`);
 console.log(`\n  ${dataset.enchants.length} enchantments - ${dataset.artifacts.length} artifacts - ${dataset.awakenings.size} awakenable items`);
 console.log(`  sprites ${kb(assetBytes)} raw -> ${kb(JSON.stringify(assets).length)} inlined`);
@@ -225,4 +225,4 @@ console.log(`  catalog ${Object.keys(itemCatalog.items || {}).length} items`);
 console.log(`  items   ${Object.keys(itemSprites).length} sprites, ${kb(itemSpriteBytes)} raw -> ${kb(JSON.stringify(itemSprites).length)} inlined`);
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');
-console.log(`\nGitHub Pages folder -> ${path.relative(root, pagesDir)}/  (index.html, RotMG-Enchant-Calculator.html, .nojekyll)\n`);
+console.log('  served as index.html, downloadable as RotMG-Enchant-Calculator.html\n');

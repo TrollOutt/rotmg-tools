@@ -5,7 +5,7 @@
  * suite (tests/engine.test.js) both load this file, so every rule below can be
  * verified without a browser.
  *
- * Reference implementation: "Qt Source Files (not zipped)/Classes+Functions.h"
+ * Reference implementation: the original Qt program (see the credit in README.md)
  * and mainwindow.cpp. Places where this port deliberately differs from the Qt
  * source are marked with "DIVERGENCE" and listed in engine.NOTES.
  */

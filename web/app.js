@@ -7,7 +7,7 @@
  */
 'use strict';
 
-const ROOT = '../Qt Source Files (not zipped)/';
+const ROOT = '../data/';
 const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
 const SUBTYPES = ['SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN'];
 const RARITIES = ['uncommon', 'rare', 'legendary', 'divine'];

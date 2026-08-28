@@ -18,14 +18,11 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repo = Split-Path -Parent $PSScriptRoot
-$page = Join-Path $repo 'dist\RotMG-Enchant-Calculator.html'
-$icon = Join-Path $repo 'dist\appicon.ico'
+$page = Join-Path $repo 'docs\RotMG-Enchant-Calculator.html'
+$icon = Join-Path $repo 'data\appicon.ico'
 
 if (-not (Test-Path $page)) {
     Write-Error "Not built yet: $page`nRun:  node tools\build-standalone.js"
-}
-if (-not (Test-Path $icon)) {
-    Copy-Item (Join-Path $repo 'Qt Source Files (not zipped)\appicon.ico') $icon
 }
 
 $browsers = @(

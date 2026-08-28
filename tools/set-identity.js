@@ -5,12 +5,14 @@
  *   node tools/set-identity.js "pseudo" "1234567+pseudo@users.noreply.github.com"
  *
  * Why this exists: the author name and email are copied into every commit and
- * pushed with it. Renaming a GitHub account afterwards does not rewrite them.
- * A single commit made under the wrong identity, once pushed to a public
- * repository, is effectively permanent — someone has already cloned it.
+ * are not rewritten afterwards, so a machine configured with a personal address
+ * will put it in a public history the first time you forget. Pinning the
+ * GitHub noreply address per repository makes that impossible rather than
+ * merely unlikely, and the hook fails closed: with nothing pinned it refuses
+ * every commit instead of guessing.
  *
  * The values are written to .git/config and .git/hooks/pre-commit, neither of
- * which is ever committed, so nothing here leaks into the published history.
+ * which is ever committed.
  */
 'use strict';
 const fs = require('fs');

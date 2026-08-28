@@ -7,7 +7,7 @@ Enchantment odds for Realm of the Mad God.
 Pick your item, mark what you want on it, and it gives you the chance per
 reroll, how many rerolls to expect, and what it will cost in dust.
 
-Want it offline? [`dist/RotMG-Enchant-Calculator.html`](dist/RotMG-Enchant-Calculator.html)
+Want it offline? [`docs/RotMG-Enchant-Calculator.html`](docs/RotMG-Enchant-Calculator.html)
 is a single file — download it, double-click it, done.
 
 ---
