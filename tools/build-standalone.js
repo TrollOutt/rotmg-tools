@@ -29,7 +29,16 @@ const outFile = path.join(outDir, 'RotMG-Enchant-Calculator.html');
 const pagesDir = path.join(root, 'docs');
 
 const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
-const readText = (...parts) => fs.readFileSync(path.join(dataRoot, ...parts), 'utf8');
+/*
+ * Line endings are normalised on the way in. These files are embedded verbatim
+ * in the bundle, and git hands them to a Windows checkout with CRLF and to the
+ * CI runner with LF — which produced two builds that behaved identically but
+ * differed by 7,670 bytes, so the published page could never be checked against
+ * a local one. The parser strips \r anyway; dropping it here makes the build
+ * depend on the repository rather than on the machine.
+ */
+const readText = (...parts) =>
+  fs.readFileSync(path.join(dataRoot, ...parts), 'utf8').replace(/\r\n/g, '\n');
 
 /* ---------------------------------------------------------------- *
  * 1. Data                                                           *
@@ -110,8 +119,9 @@ if (fs.existsSync(itemIndexPath)) {
 
 // Parsing with the real engine keeps this check honest: if a new enchantment
 // or artifact turns up in the data, a missing sprite fails the build.
-const engineSource = fs.readFileSync(path.join(web, 'engine.js'), 'utf8');
-const itemsSource = fs.readFileSync(path.join(web, 'items.js'), 'utf8');
+const readWeb = file => fs.readFileSync(path.join(web, file), 'utf8').replace(/\r\n/g, '\n');
+const engineSource = readWeb('engine.js');
+const itemsSource = readWeb('items.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
 
@@ -155,9 +165,9 @@ const jsonForScript = value => JSON.stringify(value)
   .replace(/</g, '\\u003c')
   .replace(LINE_SEPARATORS, ch => ch.charCodeAt(0) === 0x2028 ? '\\u2028' : '\\u2029');
 
-const css = fs.readFileSync(path.join(web, 'style.css'), 'utf8');
-const appSource = fs.readFileSync(path.join(web, 'app.js'), 'utf8');
-let page = fs.readFileSync(path.join(web, 'index.html'), 'utf8');
+const css = readWeb('style.css');
+const appSource = readWeb('app.js');
+let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
 const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n<script src="app.js"></script>';
