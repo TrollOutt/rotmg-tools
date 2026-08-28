@@ -1,0 +1,66 @@
+# Which items are Alien or Neo Alien bases.
+#
+# Alien and Neo Alien are equipment families. The seven Alien enchantments only
+# go on Alien equipment, the seven Neo Alien ones only on Neo Alien equipment,
+# and no artifact stands in for the item. Nothing in the equipment indexes says
+# which items those are, so the two family pages carry it:
+#
+#   https://www.realmeye.com/wiki/alien-gear
+#   https://www.realmeye.com/wiki/neo-alien-gear
+#
+# Those two pages sit behind the same interstitial as the item pages, so a plain
+# HTTP client gets HTTP 204 and this was read through a browser instead and
+# frozen here. The 23 Neo items are listed nowhere else the generator reads, so
+# this file is also what puts them in the catalogue: the slot and the sprite are
+# recorded for that reason. Their dust is in tools/item-dust.txt like any other
+# item, read from each item's own page.
+#
+# Format: Name|FAMILY|SLOT|sprite
+
+Sun's Judgement|ALIEN|WEAPON|L09wXL9.png
+Fire Blade|ALIEN|WEAPON|FPoFV8M.png
+Comet of Calamity|ALIEN|WEAPON|TaBAF5v.png
+Moonbeam Blade|ALIEN|WEAPON|rHFb2yZ.png
+Dueling Daggers|ALIEN|WEAPON|j02GzKq.png
+Snowblind Wand|ALIEN|WEAPON|uMVLXLF.png
+Foramite Staff|ALIEN|WEAPON|2OlTVYj.png
+Acidic Slasher|ALIEN|WEAPON|zy2z5qT.png
+Corrosion Cutter|ALIEN|WEAPON|NSAUa7q.png
+Warlord Wand|ALIEN|WEAPON|oHxRWib.png
+Gaseous Glaive|ALIEN|WEAPON|WpFzTRs.png
+Blazon Bow|ALIEN|WEAPON|xq24Gx6.png
+Laser Rifle|ALIEN|WEAPON|xXHRiDd.png
+Fitted Protective Matrix|ALIEN|ARMOR|tSc0AYr.png
+Magic Protective Matrix|ALIEN|ARMOR|jhyEalu.png
+Heavy Protective Matrix|ALIEN|ARMOR|Y1ZmjfQ.png
+Locked Reactor|ALIEN|RING|w6uXhF2.png
+Alien Core: Power|ALIEN|RING|xPLOjWl.png
+Alien Core: Corrosion|ALIEN|RING|KIM2GLf.png
+Alien Core: Dark Matter|ALIEN|RING|YWUuUxP.png
+Alien Core: Warp|ALIEN|RING|cl1y4Jh.png
+Loaded Core|ALIEN|RING|rtib4TN.png
+Entropy Reactor|ALIEN|RING|t08xwPz.png
+
+Neo Sun's Judgement|NEO_ALIEN|WEAPON|o4f3Oqy.png
+Neo Fire Blade|NEO_ALIEN|WEAPON|mutMCKR.png
+Neo Comet of Calamity|NEO_ALIEN|WEAPON|oTsCZmy.png
+Neo Moonbeam Blade|NEO_ALIEN|WEAPON|hrUTz7N.png
+Neo Dueling Daggers|NEO_ALIEN|WEAPON|eMEnFfi.png
+Neo Snowblind Wand|NEO_ALIEN|WEAPON|CXdi72x.png
+Neo Foramite Staff|NEO_ALIEN|WEAPON|AYeUbCU.png
+Neo Acidic Slasher|NEO_ALIEN|WEAPON|77GJ8EK.png
+Neo Corrosion Cutter|NEO_ALIEN|WEAPON|V8zWbRi.png
+Neo Warlord Wand|NEO_ALIEN|WEAPON|OwzU862.png
+Neo Gaseous Glaive|NEO_ALIEN|WEAPON|d6CA3No.png
+Neo Blazon Bow|NEO_ALIEN|WEAPON|W0z8eoh.png
+Neo Laser Rifle|NEO_ALIEN|WEAPON|BMgZICw.png
+Neo Fitted Protective Matrix|NEO_ALIEN|ARMOR|YpQpXMr.png
+Neo Magic Protective Matrix|NEO_ALIEN|ARMOR|5pyPNuN.png
+Neo Heavy Protective Matrix|NEO_ALIEN|ARMOR|2FiL4fA.png
+Neo Alien Core: Power|NEO_ALIEN|RING|Syh6DXt.png
+Neo Alien Core: Corrosion|NEO_ALIEN|RING|6HBvriE.png
+Neo Alien Core: Dark Matter|NEO_ALIEN|RING|7z6MVtH.png
+Neo Alien Core: Warp|NEO_ALIEN|RING|OfnMUVm.png
+Neo Loaded Core|NEO_ALIEN|RING|52QInXG.png
+Neo Entropy Reactor|NEO_ALIEN|RING|yew7Ecc.png
+Neo Reality Reactor|NEO_ALIEN|RING|MZz40bv.png

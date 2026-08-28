@@ -562,6 +562,83 @@ check('every sprite the index names is on disk', (() => {
   return Object.values(index).every(file => fs.existsSync(path.join(dir, file)));
 })());
 
+/* ------------------------------------------------------------------ *
+ * 13. The catalogue knows which items are Alien or Neo Alien          *
+ * ------------------------------------------------------------------ */
+section('13. Alien and Neo Alien bases reach the catalogue');
+
+const basesFile = fs.readFileSync(path.join(root, 'tools', 'item-bases.txt'), 'utf8')
+  .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+
+check('the base file is well formed and free of duplicates', (() => {
+  const seen = new Set();
+  for (const line of basesFile) {
+    if (!/^[^|]+\|(ALIEN|NEO_ALIEN)\|(WEAPON|ABILITY|ARMOR|RING)\|[A-Za-z0-9]+\.png$/.test(line)) return false;
+    const name = line.split('|')[0];
+    if (seen.has(name)) return false;
+    seen.add(name);
+  }
+  return seen.size === basesFile.length;
+})());
+
+check('every item in the base file is in the catalogue with that family', (() => {
+  for (const line of basesFile) {
+    const [name, family] = line.split('|');
+    const entry = catalogue.lookup(name);
+    if (!entry || entry.base !== family) return false;
+  }
+  return true;
+})());
+
+check('23 Alien and 23 Neo Alien items', (() => {
+  const all = [...catalogue.index.values()].filter(entry => entry.base);
+  const alien = all.filter(entry => entry.base === 'ALIEN').length;
+  const neo = all.filter(entry => entry.base === 'NEO_ALIEN').length;
+  return alien === 23 && neo === 23;
+})(), `${[...catalogue.index.values()].filter(e => e.base).length} in total`);
+
+check('no other item claims a base family', (() => {
+  const named = new Set(basesFile.map(line => line.split('|')[0]));
+  return [...catalogue.index.values()].every(entry => !entry.base || named.has(entry.name));
+})());
+
+check('every alien item carries a dust and a sprite, or it is unusable', (() => {
+  const all = [...catalogue.index.values()].filter(entry => entry.base);
+  return all.every(entry => entry.dust && entry.sprite);
+})());
+
+// The 23 Neo items appear on no index the generator reads; without
+// tools/item-bases.txt they would be missing and their seven enchantments
+// unreachable by anyone.
+check('the Neo items the base file injects really are in the catalogue',
+  ['Neo Sun\'s Judgement', 'Neo Laser Rifle', 'Neo Heavy Protective Matrix', 'Neo Alien Core: Warp', 'Neo Reality Reactor']
+    .every(name => { const e = catalogue.lookup(name); return e && e.type && e.dust === 'Purple'; }));
+
+check('Laser Rifle is Alien yet Purple, unlike the rest of its family', (() => {
+  const rifle = catalogue.lookup('Laser Rifle');
+  const others = [...catalogue.index.values()].filter(e => e.base === 'ALIEN' && e.name !== 'Laser Rifle');
+  return rifle && rifle.base === 'ALIEN' && rifle.dust === 'Purple' && others.every(e => e.dust === 'Red');
+})());
+
+check('a real Alien item can reach its own enchantments, with no artifact', (() => {
+  const armor = catalogue.lookup('Heavy Protective Matrix');
+  if (!armor || armor.base !== 'ALIEN') return false;
+  const pool = engine.eligiblePool(
+    data, baseCfg({ type: armor.type, subtypes: new Set([armor.base]) }), artifact('No Artifact'));
+  return data.enchants.filter(m => m.special.has('ALIEN') && m.itemTags.has(armor.type))
+    .every(m => pool.some(p => p.name === m.name));
+})());
+
+check('a real Neo Alien item reaches the Neo set and not the Alien one', (() => {
+  const item = catalogue.lookup('Neo Heavy Protective Matrix');
+  if (!item || item.base !== 'NEO_ALIEN') return false;
+  const pool = engine.eligiblePool(
+    data, baseCfg({ type: item.type, subtypes: new Set([item.base]) }), artifact('No Artifact'));
+  const has = name => pool.some(p => p.name === name);
+  return data.enchants.filter(m => m.special.has('NEO_ALIEN') && m.itemTags.has(item.type)).every(m => has(m.name))
+    && data.enchants.filter(m => m.special.has('ALIEN') && m.itemTags.has(item.type)).every(m => !has(m.name));
+})());
+
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
 if (failures.length) { for (const name of failures) console.log(`  - ${name}`); process.exit(1); }

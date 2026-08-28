@@ -1536,3 +1536,28 @@ Yellow Beehemoth Armor|P
 Yokai Amulet|R
 Yuki|R
 Zaarvox's Heart|R
+
+# Alien and Neo Alien gear absent above; dust read from each item page,
+# reached through a browser. See tools/item-bases.txt.
+Neo Sun's Judgement|P
+Neo Fire Blade|P
+Neo Comet of Calamity|P
+Neo Moonbeam Blade|P
+Neo Dueling Daggers|P
+Neo Snowblind Wand|P
+Neo Foramite Staff|P
+Neo Acidic Slasher|P
+Neo Corrosion Cutter|P
+Neo Warlord Wand|P
+Neo Gaseous Glaive|P
+Neo Blazon Bow|P
+Neo Laser Rifle|P
+Neo Fitted Protective Matrix|P
+Neo Magic Protective Matrix|P
+Neo Heavy Protective Matrix|P
+Neo Alien Core: Power|P
+Neo Alien Core: Corrosion|P
+Neo Alien Core: Dark Matter|P
+Neo Alien Core: Warp|P
+Neo Loaded Core|P
+Laser Rifle|P

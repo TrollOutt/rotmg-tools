@@ -265,6 +265,38 @@ async function main() {
   }
   if (extra) console.log(`  ${String(extra).padStart(4)} more items found only in the reroll tables`);
 
+  /*
+   * Alien and Neo Alien bases, frozen in tools/item-bases.txt.
+   *
+   * Two jobs. It flags the family on every item that has one, which is what
+   * lets the interface offer the family's enchantments without being asked.
+   * And it carries the 23 Neo items outright: they appear on no index the
+   * generator reads, so without this they would be missing from the catalogue
+   * and their seven enchantments unreachable by anyone.
+   */
+  const basesPath = path.join(root, 'tools', 'item-bases.txt');
+  let flagged = 0, injected = 0;
+  const missingDust = [];
+  if (fs.existsSync(basesPath)) {
+    for (const line of fs.readFileSync(basesPath, 'utf8').split('\n')) {
+      const text = line.trim();
+      if (!text || text.startsWith('#')) continue;
+      const [name, family, slot, sprite] = text.split('|');
+      if (!name || !family) continue;
+      if (!items[name]) {
+        if (!slot || !sprite) continue;
+        const dust = perItemDust[name];
+        if (!dust) { missingDust.push(name); continue; }
+        items[name] = { s: slot, f: sprite, d: dust };
+        injected++;
+      }
+      items[name].b = family;
+      flagged++;
+    }
+  }
+  console.log(`  ${String(flagged).padStart(4)} items carry an Alien or Neo Alien base (${injected} of them added by that file)`);
+  if (missingDust.length) console.log(`  skipped for want of a dust: ${missingDust.join(', ')}`);
+
   // Class names and group headers ride along in the same tables; they are not
   // items and must not reach the picker.
   const CLASSES = new Set(['Rogue', 'Archer', 'Wizard', 'Priest', 'Warrior', 'Knight', 'Paladin', 'Assassin', 'Necromancer', 'Huntress', 'Mystic', 'Trickster', 'Sorcerer', 'Ninja', 'Samurai', 'Bard', 'Summoner', 'Kensei', 'Druid']);
@@ -276,6 +308,7 @@ async function main() {
 
   const catalog = {
     _source: 'https://www.realmeye.com/wiki/{weapons,ability-items,armor,rings,enchanting}',
+    _bases: 'tools/item-bases.txt, from /wiki/{alien-gear,neo-alien-gear}',
     _generated: 'tools/fetch-items.js',
     _bands: BANDS,
     items

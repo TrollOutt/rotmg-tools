@@ -146,7 +146,8 @@ function resolveItem(name) {
     dust: known ? known.dust : null,
     tiered: Boolean(known && known.tiered),
     note: known && known.note ? known.note : '',
-    special: null,
+    // Alien or Neo Alien, straight from the catalogue when the item has one.
+    special: known && known.base ? known.base : null,
     source: known ? (awoken ? 'both' : 'wiki') : 'awakened'
   };
 
@@ -154,9 +155,10 @@ function resolveItem(name) {
     const mod = state.data.byName.get(awoken[0]);
     if (mod) {
       if (!resolved.type) resolved.type = [...mod.itemTags][0] || null;
-      // An awakened enchantment that carries ALIEN belongs to an alien base;
-      // the "Neo" reskins use the NEO_ALIEN pool.
-      if (mod.tags.has('ALIEN')) resolved.special = /\bneo\b/i.test(resolved.name) ? 'NEO_ALIEN' : 'ALIEN';
+      // Fallback for an awakenable item the catalogue does not carry: an
+      // awakened enchantment tagged ALIEN belongs to an alien base, and the
+      // "Neo" reskins use the NEO_ALIEN pool. The catalogue wins when it knows.
+      if (!resolved.special && mod.tags.has('ALIEN')) resolved.special = /\bneo\b/i.test(resolved.name) ? 'NEO_ALIEN' : 'ALIEN';
     }
   }
   return resolved;
