@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx --yes serve . -l 5173",
+    "test": "node tests/engine.test.js",
     "build": "node tools/build-standalone.js",
-    "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1"
+    "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
+    "release": "npm test && npm run build"
   }
 }

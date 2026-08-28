@@ -1,8 +1,9 @@
 # Publishes the calculator to GitHub Pages.
 #
 # The site is rebuilt from source on every push, so what visitors get can never
-# drift from what is in the repository. The build refuses to write if any sprite
-# the interface can request is missing, so that much still stops a deployment.
+# drift from what is in the repository. The test suite runs first: a wrong
+# probability does not crash, so this is the only thing that would catch one
+# before it is published.
 #
 # One-time setup in the repository: Settings -> Pages -> Source: GitHub Actions.
 name: Deploy to GitHub Pages
@@ -32,7 +33,11 @@ jobs:
         with:
           node-version: '20'
 
-      # No install step: the build is plain Node with no dependency at all.
+      # No install step: the tests and the build are plain Node, with no
+      # dependency at all.
+      - name: Verify the calculation engine
+        run: npm test
+
       - name: Build the page
         run: npm run build
 

@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>RotMG Enchant Calculator</title>
+<!--
+  A signpost, not the application. The page itself is docs/index.html.
+
+  Two deployments run on every push: this repository's workflow, which publishes
+  docs/ on its own, and GitHub's built-in branch build, which publishes the
+  whole repository. Whichever finishes last is what gets served, so the root has
+  to work under both. Under the workflow, docs/index.html *is* the root and this
+  file is never published at all. Under the branch build, the root is this
+  folder and would otherwise fall through to Jekyll's rendering of the README —
+  so it forwards to where the built page actually is.
+
+  Settings -> Pages -> Source: GitHub Actions ends the race, and then this file
+  and .nojekyll can both go.
+-->
+<meta http-equiv="refresh" content="0; url=./docs/">
+<link rel="canonical" href="https://trolloutt.github.io/rotmg-enchant/docs/">
+<style>
+  html { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-content: center; gap: .75rem;
+         text-align: center; background: #0d0c13; color: #d8d3e6;
+         font: 16px/1.6 system-ui, -apple-system, Segoe UI, sans-serif; }
+  a { color: #ca7aff; }
+</style>
+<p>Opening the calculator…</p>
+<p><a href="./docs/">Continue if nothing happens</a></p>
