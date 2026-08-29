@@ -12,11 +12,11 @@ const root = path.join(__dirname, '..');
 const dataRoot = path.join(root, 'data');
 const engine = require(path.join(root, 'web', 'engine.js'));
 
-const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
+const NEWLINE = new RegExp(String.fromCharCode(92) + 'r?' + String.fromCharCode(92) + 'n');
 const read = (...parts) => fs.readFileSync(path.join(dataRoot, ...parts), 'utf8');
 
 const data = engine.buildDataset({
-  modTexts: MOD_FILES.map(file => read('Enchantment documents', file)),
+  clientModText: read('Enchantment documents', 'client-enchantments.txt'),
   clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
   awakenText: read('Awakened Items', 'awakenedItems.txt'),
   awokenExtraText: read('Awakened Items', 'awoken-items.txt')
@@ -46,12 +46,14 @@ const baseCfg = extra => Object.assign({
  * 1. Data loading                                                     *
  * ------------------------------------------------------------------ */
 section('1. Data loading');
-// All 292 records are kept; which of them can be drawn is the pool's business.
-check('292 enchantments after de-duplicating shared documents', data.enchants.length === 292, `got ${data.enchants.length}`);
-check('291 of them are rollable, and the odd one out is Damage Resistance', (() => {
-  const no = data.enchants.filter(mod => !mod.tags.has('ROLLABLE'));
-  return data.enchants.length - no.length === 291 && no.length === 1 && no[0].name === 'Damage Resistance';
-})(), data.enchants.filter(mod => !mod.tags.has('ROLLABLE')).map(mod => mod.name).join(', '));
+// Everything the client defines is kept; which of it can be drawn is the
+// pool's business. 291 rollable, and 34 that are not — the seasonal
+// enchantments an engraving guarantees, the legacy ones, Crown, and Damage
+// Resistance. None of them can be drawn without an artifact that asks for it.
+check('325 enchantments', data.enchants.length === 325, `got ${data.enchants.length}`);
+check('291 of them are rollable', (() => {
+  return data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length === 291;
+})(), String(data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length));
 
 check('and no pool a player can reach lets it in', (() => {
   // Every pool the client defines requires ROLLABLE, including the default one
@@ -63,33 +65,48 @@ check('and no pool a player can reach lets it in', (() => {
 })(), data.artifacts.filter(art => engine.eligiblePool(data,
   baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' }), art)
   .some(mod => mod.name === 'Damage Resistance')).map(a => a.name).join(', '));
-// 51 playable ones in the client, plus the "No Artifact" row it has no record
-// for because in the game that is simply not using the enchanter's slot, less
-// the one that cannot be modelled until the enchantments come from the client.
-check('51 artifacts, and one held back', data.artifacts.length === 51 && data.heldArtifacts.length === 1,
+// 50 the client labels ARTIFACT, plus the "No Artifact" row it has no record
+// for, because in the game that is simply not using the enchanter's slot.
+check('51 artifacts, none held back', data.artifacts.length === 51 && data.heldArtifacts.length === 0,
   `${data.artifacts.length} ranked, held: ${data.heldArtifacts.map(a => a.name).join(', ')}`);
 
-check('the one held back is Night Prince Engraving, for want of Crown', (() => {
-  const held = data.heldArtifacts[0];
-  return held && held.name === 'Night Prince Engraving' && held.missing.join() === 'Crown';
-})(), JSON.stringify(data.heldArtifacts));
-check('duplicate records are identical, so de-duplication is lossless', (() => {
-  const seen = new Map();
-  for (const file of MOD_FILES) {
-    for (const mod of engine.parseMods(read('Enchantment documents', file))) {
-      const signature = JSON.stringify([mod.weight, [...mod.tags].sort(), [...mod.excludes].sort(), [...mod.itemTags].sort(), [...mod.special].sort(), mod.distribution]);
-      if (seen.has(mod.name) && seen.get(mod.name) !== signature) return false;
-      seen.set(mod.name, signature);
-    }
+check('the four the client does not label ARTIFACT are not ranked', (() => {
+  // Three developer test items and Night Prince Engraving, whose description
+  // says it can be used as an artifact but which the game does not label as
+  // one. All four cost nothing and are never consumed, and Night Prince also
+  // carries a x999 on UNIQUE and a x9999 on AWAKENED, which made it the
+  // answer to every question a player could ask.
+  const names = new Set(data.artifacts.map(a => a.name));
+  return !names.has('Night Prince Engraving') && !names.has('Unique Test Artifact')
+    && !names.has('Tier 4 Test Artifact') && !names.has('Awakened Test Artifact');
+})());
+check('where the client keeps two records under one name, the rollable one wins', (() => {
+  // The twins are not the same enchantment with a flag: Alien OnShoot Attack
+  // Boost is 15000 and requires Alien gear as the rollable record, 10000 and
+  // requires nothing as the other. Reading whichever came last in the file is
+  // what once had me report weights that were a third too low across the
+  // whole alien set.
+  const rows = read('Enchantment documents', 'client-enchantments.txt')
+    .split(NEWLINE).filter(line => line.startsWith('ench|')).map(line => line.split('|'));
+  for (const row of rows) {
+    if (!row[4].split(',').includes('ROLLABLE')) continue;
+    const mod = data.byName.get(row[1]);
+    if (!mod || mod.weight !== Number(row[2])) return false;
+    if ([...mod.special].join(',') !== row[7]) return false;
   }
   return true;
 })());
-check('no record was dropped for having too few fields', (() => {
-  let groups = 0;
-  for (const file of MOD_FILES) groups += engine.readBracketGroups(read('Enchantment documents', file)).length;
-  let parsed = 0;
-  for (const file of MOD_FILES) parsed += engine.parseMods(read('Enchantment documents', file)).length;
-  return groups === parsed;
+check('no rollable record was lost to the de-duplication', (() => {
+  // The client keeps a non-rollable twin of many enchantments under the same
+  // display name; they collapse to one record here and the rollable one wins.
+  // Keeping whichever came last is what once made 105 enchantments look as if
+  // they had gone from the game.
+  const rows = read('Enchantment documents', 'client-enchantments.txt')
+    .split(NEWLINE).filter(line => line.startsWith('ench|'));
+  const rollable = new Set(rows.filter(line => line.split('|')[4].split(',').includes('ROLLABLE'))
+    .map(line => line.split('|')[1]));
+  const kept = new Set(data.enchants.filter(mod => mod.tags.has('ROLLABLE')).map(mod => mod.name));
+  return rollable.size === kept.size && [...rollable].every(name => kept.has(name));
 })());
 check('Death Tarot Card cost parses despite the stray space', artifact('Death Tarot Card').cost.value === 25 && artifact('Death Tarot Card').cost.dust === 'Green');
 check('The Moon Tarot Card is billed in Green dust, not Red', artifact('The Moon Tarot Card').cost.dust === 'Green');
@@ -349,14 +366,6 @@ check('every tier split matches, to five decimals', (() => {
   return true;
 })());
 
-check('every set of Labels matches', (() => {
-  for (const row of decaComparable) {
-    if (!row.labels.length) continue;
-    if (withoutTiers([...data.byName.get(row.name).tags]) !== withoutTiers(row.labels)) return false;
-  }
-  return true;
-})());
-
 /*
  * One documented exception. The installed client gives Draconic Gaze
  * IncompatibleWithEnchantmentLabels = AWAKENED,DAMAGING,SINGLESTAT; the
@@ -366,6 +375,15 @@ check('every set of Labels matches', (() => {
  * here, so the divergence is named rather than re-frozen away.
  */
 const DECA_BEHIND = new Set(['Draconic Gaze']);
+
+check('every set of Labels matches, bar the one the client settles', (() => {
+  for (const row of decaComparable) {
+    if (!row.labels.length || DECA_BEHIND.has(row.name)) continue;
+    if (withoutTiers([...data.byName.get(row.name).tags]) !== withoutTiers(row.labels)) return false;
+  }
+  return true;
+})());
+
 
 check('every set of Incompatible Labels matches, bar the one the client settles', (() => {
   for (const row of decaComparable) {
@@ -1045,12 +1063,14 @@ check('the enchantments it records cover the rollable ones we ship',
     .map(mod => mod.name).slice(0, 5).join(', '));
 
 check('and we ship one for each of them', (() => {
-  // Records, not distinct names: two Alien/Neo pairs share a display name in
-  // the client, so 291 lines there collapse to 289 names. The snapshot records
-  // only the rollable ones, which is 291 of our 292.
-  const lines = snapshot.filter(line => line.startsWith('ench|')).length;
-  return lines === data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length;
-})(), `client ${snapshot.filter(line => line.startsWith('ench|')).length}, nous ${data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length}`);
+  // The snapshot is one line per client record, ours one per enchantment: the
+  // client keeps a non-rollable twin of many under the same display name, and
+  // those collapse here. Compare distinct names, which is what a player sees.
+  const shown = new Set(snapshot.filter(line => line.startsWith('ench|'))
+    .map(line => line.split('|')[2]));
+  const ours = new Set(data.enchants.map(mod => CLIENT_SPELLING[mod.name] || mod.name));
+  return shown.size === ours.size;
+})(), `client ${new Set(snapshot.filter(l => l.startsWith('ench|')).map(l => l.split('|')[2])).size}, nous ${new Set(data.enchants.map(m => CLIENT_SPELLING[m.name] || m.name)).size}`);
 
 check('and it records the artifacts, the pools and the items too',
   snapshot.some(line => line.startsWith('artifact|'))

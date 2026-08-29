@@ -110,11 +110,9 @@ for (const line of snapshot) {
   });
 }
 
-const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt',
-  'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
 const read = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
 const data = engine.buildDataset({
-  modTexts: MOD_FILES.map(file => read('Enchantment documents', file)),
+  clientModText: read('Enchantment documents', 'client-enchantments.txt'),
   clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
   awakenText: read('Awakened Items', 'awakenedItems.txt'),
   awokenExtraText: read('Awakened Items', 'awoken-items.txt')
@@ -123,28 +121,22 @@ const data = engine.buildDataset({
 // Tier rules are left out on both sides: they are a share of the enchantment's
 // own weight rather than a multiplier on all of it, and engine.tierMass has
 // them. tools/read-client.js is what checks those.
-function clientMultiplier(mod, rules, base) {
-  let out = 1;
+function clientWeight(mod, rules, artifact) {
+  let weight = mod.weight * engine.tierMass(mod, artifact);
   for (const rule of rules) {
     if (rule.labels && rule.labels.every(label => /^TIER[1-4]$/.test(label))) continue;
     let hit = false;
     if (rule.id) {
       hit = nameOf.get(rule.id) === (SPELLING[mod.name] || mod.name) || rule.id === mod.name;
-      if (hit && / \(Neo\)$/.test(mod.name) !== /NEO/.test(rule.id)) hit = false;
+      if (hit && / (Neo)$/.test(mod.name) !== /NEO/.test(rule.id)) hit = false;
     } else if (rule.labels) {
       hit = rule.labels.some(label => mod.tags.has(label));
     }
     if (!hit || rule.excludes.some(label => mod.tags.has(label))) continue;
-    if (rule.increment !== null && rule.increment !== undefined) out += rule.increment / base;
-    else out *= rule.mult;
+    if (rule.increment !== null && rule.increment !== undefined) weight += rule.increment;
+    else weight *= rule.mult;
   }
-  return out;
-}
-
-// No second copy of the rule here: ask the engine what it actually does.
-function ourMultiplier(mod, artifact) {
-  const whole = mod.weight * engine.tierMass(mod, artifact);
-  return whole > 0 ? engine.weightFor(mod, artifact) / whole : 0;
+  return Math.trunc(weight);
 }
 
 let compared = 0;
@@ -155,12 +147,12 @@ for (const artifact of data.artifacts) {
   if (!rules) { off.push(`${artifact.name}: the client has no pool by that name`); continue; }
   for (const mod of data.enchants) {
     compared++;
-    const ours = ourMultiplier(mod, artifact);
-    const theirs = clientMultiplier(mod, rules, mod.weight * engine.tierMass(mod, artifact));
-    // Loose, because weightFor truncates to an integer the way the game does
-    // and a fraction of a unit is not a disagreement about the rule.
-    if (Math.abs(ours - theirs) > 1e-3 * Math.max(1, theirs)) {
-      off.push(`${artifact.name} / ${mod.name}: ours x${ours}, client x${theirs}`);
+    // Absolute weights, not ratios: 34 enchantments carry a weight of zero —
+    // Crown and the legacy ones — and a ratio against zero says nothing.
+    const ours = engine.weightFor(mod, artifact);
+    const theirs = clientWeight(mod, rules, artifact);
+    if (Math.abs(ours - theirs) > 1) {
+      off.push(`${artifact.name} / ${mod.name}: ours ${ours}, client ${theirs}`);
     }
   }
 }

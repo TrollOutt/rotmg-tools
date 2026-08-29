@@ -160,10 +160,13 @@ function readClient(assets) {
 /*
  * Two rules, both learned by getting them wrong.
  *
- * Only ROLLABLE records count. The client keeps non-rollable twins under the
- * same display name — an "Alien OnShoot Attack Boost" of weight 15000 that can
- * be rolled and one of 10000 that cannot — and every pool filters on exactly
- * that label. Taking whichever came last invents differences by the hundred.
+ * Every record is kept, rollable or not, and each says which it is. The client
+ * holds non-rollable twins under the same display name — an "Alien OnShoot
+ * Attack Boost" of weight 15000 that can be rolled and one of 10000 that
+ * cannot — so reading whichever came last invents differences by the hundred;
+ * the id keeps them apart. Dropping the non-rollable ones instead, as this did,
+ * loses the enchantments an artifact can name outright: Crown, and the seasonal
+ * one behind every engraving.
  *
  * And tiers fold on the id, not on the roman numeral in the name: the client
  * itself displays Dexterity_Mana_Tradeoff_3 as "Dexterity -Mana Tradeoff II".
@@ -175,7 +178,6 @@ function enchantmentsFrom(xml) {
   while ((match = re.exec(xml))) {
     const [, attrs, body] = match;
     const labels = list(tag(body, 'EnchantmentLabels'));
-    if (!labels.includes('ROLLABLE')) continue;
     records.push({
       id: attr(attrs, 'id'),
       name: tag(body, 'DisplayId') || attr(attrs, 'id'),
@@ -225,11 +227,14 @@ function poolsFrom(xml) {
   while ((match = re.exec(xml))) {
     const rules = [];
     for (const rule of match[2].matchAll(/<(\w+)([^>]*)\/>/g)) {
+      // Every attribute, not a list of the ones we happen to know. A closed
+      // list drops whatever the game adds next without a word: "increment",
+      // which is how Night Prince Engraving guarantees its enchantment, was
+      // missing from this snapshot for exactly that reason.
       const bits = [rule[1]];
-      for (const name of ['id', 'includeLabelsOR', 'excludeLabelsOR', 'includeLabelsAND', 'excludeLabelsAND', 'mult']) {
-        const value = attr(rule[2], name);
-        if (value) bits.push(`${name}=${value}`);
-      }
+      const seen = [...rule[2].matchAll(/([A-Za-z0-9_.-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]);
+      seen.sort((a, b) => a[0].localeCompare(b[0]));
+      for (const [name, value] of seen) bits.push(`${name}=${value}`);
       rules.push(bits.join(' '));
     }
     out.push({ id: match[1], rules });

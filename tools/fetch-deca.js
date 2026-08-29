@@ -111,11 +111,9 @@ async function readSheet() {
 }
 
 function ourDataset() {
-  const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt',
-    'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
   const read = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
   return engine.buildDataset({
-    modTexts: MOD_FILES.map(file => read('Enchantment documents', file)),
+    clientModText: read('Enchantment documents', 'client-enchantments.txt'),
     clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
     awakenText: read('Awakened Items', 'awakenedItems.txt'),
     awokenExtraText: read('Awakened Items', 'awoken-items.txt')

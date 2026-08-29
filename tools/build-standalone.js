@@ -28,7 +28,6 @@ const gui = path.join(dataRoot, 'GUI Files');
 const pagesDir = path.join(root, 'docs');
 const outFile = path.join(pagesDir, 'index.html');
 
-const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
 /*
  * Line endings are normalised on the way in. These files are embedded verbatim
  * in the bundle, and git hands them to a Windows checkout with CRLF and to the
@@ -45,7 +44,7 @@ const readText = (...parts) =>
  * ---------------------------------------------------------------- */
 
 const sources = {
-  modTexts: MOD_FILES.map(file => readText('Enchantment documents', file)),
+  clientModText: readText('Enchantment documents', 'client-enchantments.txt'),
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
   awokenExtraText: readText('Awakened Items', 'awoken-items.txt')
@@ -154,9 +153,16 @@ for (const artifact of dataset.artifacts) {
   if (assets[key]) required.add(key);
   else if (artifact.name !== 'No Artifact') withoutArt.push(artifact.name);
 }
+// Same as the artifacts: artwork covers what the Qt assets covered, and the
+// client has since added enchantments that were never drawn here. They are
+// listed and shown without a picture rather than stopping the build.
+const enchantsWithoutArt = [];
 for (const mod of dataset.enchants) {
   const icon = iconFor(mod);
-  if (icon) required.add(`GUI Files/Enchantment Icons/${icon}.png`);
+  if (!icon) continue;
+  const key = `GUI Files/Enchantment Icons/${icon}.png`;
+  if (assets[key]) required.add(key);
+  else enchantsWithoutArt.push(mod.name);
 }
 // Group artwork exists only for the names the Qt file lists; the wiki mapping
 // adds a hundred items that carry their own sprite instead, and the interface
@@ -169,6 +175,9 @@ for (const dust of ['Green', 'Red', 'Purple']) {
 for (const type of ['weapon', 'ability', 'armor', 'ring', 'SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN']) required.add(`GUI Files/Item Types/${type}.png`);
 for (const rarity of ['uncommon', 'rare', 'legendary', 'divine']) required.add(`GUI Files/Item Rarities/${rarity}_scaled_8x.png`);
 
+if (enchantsWithoutArt.length) {
+  console.log(`  ${enchantsWithoutArt.length} enchantments have no artwork and render without one: ${enchantsWithoutArt.join(', ')}`);
+}
 if (withoutArt.length) {
   console.log(`  ${withoutArt.length} artifacts have no artwork in the Qt asset set and render without one:`);
   console.log(`    ${withoutArt.join(', ')}`);

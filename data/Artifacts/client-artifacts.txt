@@ -117,12 +117,6 @@ artifact|Nice Engraving|Nice Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGES
   entry|ROLLABLE,ORYXMAS2023|
   weight|LIFE,MANA||mult=9
   weight-name|Nice|mult=100000000
-artifact|Night Prince Engraving|Night Prince Engraving Pool|purpleDust|0|0|FORGESTORE|Can be used as an Artifact in the Enchanter or used directly to generate "Conqueror's Crown".
-  entry|ROLLABLE|TIER1,TIER2,TIER3
-  entry-name|Crown
-  weight|UNIQUE||mult=999
-  weight|AWAKENED||mult=9999
-  weight-name|Crown|increment=100000000
 artifact|Nightmatter Core|AOO Pool|redDust|25|0.5|ARTIFACT,FORGESTORE|Many small shards of nightmatter formed into a stable Core, the applications of this material are still largely unknown but maybe the enchanter can do something with it.
   entry|ROLLABLE|
   weight|ATTACK,DEXTERITY||mult=7

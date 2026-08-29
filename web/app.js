@@ -8,7 +8,6 @@
 'use strict';
 
 const ROOT = '../data/';
-const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt', 'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
 const SUBTYPES = ['SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN'];
 const RARITIES = ['uncommon', 'rare', 'legendary', 'divine'];
 const SAVE_KEY = 'rotmg-enchant-calculator/v1';
@@ -870,7 +869,9 @@ function allowedArtifacts() {
 }
 
 function artifactFilterHtml() {
-  const counts = { tarot: 0, special: 0, premium: 0 };
+  // Keyed off KIND_LABEL so a new family cannot be counted as NaN.
+  const counts = {};
+  for (const kind of Object.keys(KIND_LABEL)) counts[kind] = 0;
   for (const artifact of state.data.artifacts) {
     const kind = artifactKind(artifact);
     if (kind !== 'none') counts[kind]++;
@@ -1989,13 +1990,13 @@ function renderClientNews(reading) {
 }
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
-  const [modTexts, clientArtifactText, awakenText, awokenExtraText] = await Promise.all([
-    Promise.all(MOD_FILES.map(file => fetch(ROOT + ['Enchantment documents', file].map(esc).join('/')).then(response => response.text()))),
+  const [clientModText, clientArtifactText, awakenText, awokenExtraText] = await Promise.all([
+    fetch(ROOT + ['Enchantment documents', 'client-enchantments.txt'].map(esc).join('/')).then(response => response.text()),
     fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.text()),
     fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text()),
     fetch(ROOT + ['Awakened Items', 'awoken-items.txt'].map(esc).join('/')).then(response => response.text())
   ]);
-  return { modTexts, clientArtifactText, awakenText, awokenExtraText };
+  return { clientModText, clientArtifactText, awakenText, awokenExtraText };
 }
 
 /*

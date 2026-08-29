@@ -155,16 +155,19 @@ const lines = [
 ];
 
 /*
- * Three of the 54 are developer items — Awakened, Tier 4 and Unique Test
- * Artifact — and they are left out. Not by name: the client marks them, in
- * that they are the only ones carrying no item Labels at all, where every
- * artifact a player can hold carries ARTIFACT or at least FORGESTORE. That
- * distinction matters because all three cost nothing and are never consumed,
- * so a ranking that included them would put a free artifact at the top of
- * every table for an enchantment no player can reach that way.
+ * Four of the 54 are not artifacts a player uses in the enchanter, and the
+ * client says which: an artifact carries the ARTIFACT item label. Three are
+ * developer test items — Awakened, Tier 4 and Unique Test Artifact — and the
+ * fourth is Night Prince Engraving, whose own description says it "can be used
+ * as an Artifact" but which the game does not label as one.
+ *
+ * All four cost nothing and are never consumed, so ranking them puts a free,
+ * strictly better artifact at the top of every table. Night Prince also carries
+ * a x999 on UNIQUE and a x9999 on AWAKENED, which made it the answer to every
+ * question a player could ask.
  */
-const playable = [...artifacts.values()].filter(a => a.labels.length);
-const dropped = [...artifacts.values()].filter(a => !a.labels.length);
+const playable = [...artifacts.values()].filter(a => a.labels.includes('ARTIFACT'));
+const dropped = [...artifacts.values()].filter(a => !a.labels.includes('ARTIFACT'));
 const sorted = playable.sort((a, b) => a.name.localeCompare(b.name));
 let ruleCount = 0;
 let unknown = 0;
@@ -183,7 +186,7 @@ fs.writeFileSync(OUT, lines.join('\n') + '\n', 'utf8');
 
 console.log('\n  ' + sorted.length + ' artifacts, ' + ruleCount + ' rules -> ' + path.relative(root, OUT));
 if (dropped.length) {
-  console.log('  ' + dropped.length + ' developer test artifacts left out: '
+  console.log('  ' + dropped.length + ' artifacts the client does not label ARTIFACT, left out: '
     + dropped.map(a => a.name).join(', '));
 }
 const poolless = sorted.filter(a => !pools.has(a.pool));

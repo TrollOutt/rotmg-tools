@@ -82,11 +82,9 @@ function parseTable(html) {
 }
 
 async function main() {
-  const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt',
-    'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
   const readData = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
   const data = engine.buildDataset({
-    modTexts: MOD_FILES.map(file => readData('Enchantment documents', file)),
+    clientModText: readData('Enchantment documents', 'client-enchantments.txt'),
     clientArtifactText: readData('Artifacts', 'client-artifacts.txt'),
     awakenText: readData('Awakened Items', 'awakenedItems.txt')
   });
