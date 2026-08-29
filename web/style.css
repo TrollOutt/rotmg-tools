@@ -982,8 +982,15 @@ table.mini td { padding: 3px 8px; border: 0; }
 
 /* The status pill is a disclosure: it opens what the game client last said. */
 .status { font: inherit; cursor: pointer; }
+.status::after { content: ' ▾'; font-size: 9px; vertical-align: 1px; opacity: .6; }
 .status:hover { color: var(--text); border-color: var(--accent); }
 .status[aria-expanded="true"] { color: var(--text); border-color: var(--accent); }
+.status[aria-expanded="true"]::after { content: ' ▴'; }
+/* Something moved in the game since the last reading — worth being found. */
+.status.has-news { color: var(--text); border-color: var(--accent); }
+/* A failed load takes the pill over; it has nothing to open. */
+.status.bad { cursor: default; }
+.status.bad::after { content: ''; }
 
 .client-news {
   /* Hangs from the button that opens it, at the right of the masthead. The

@@ -1261,7 +1261,6 @@ async function runCalculation() {
   const config = cfg();
   if (!whatIsMissing(config).ready) return;
   const generation = ++state.runId;
-  $('status').textContent = 'Calculating…';
   beginResultSwap(config);
 
   const rows = [];
@@ -1284,8 +1283,12 @@ async function runCalculation() {
   await renderBuildPlan(config);
   if (state.runId !== generation) return;
 
+  // No line about how many artifacts were counted or whether the rows are
+  // exact: the progress bar already showed the work, and a sampled row says so
+  // on the row itself, with a ≈ and the sample count in its tooltip. The pill
+  // in the masthead answers the question a player actually has — whether these
+  // numbers still match the game.
   $('progressBar').style.width = '0%';
-  $('status').textContent = `${rows.length} artifacts calculated${rows.some(row => row.exact === false) ? ' · some rows are sampled estimates' : ' · all rows exact'}`;
 }
 
 // Everything a finished run put on screen, taken back down.
@@ -1958,7 +1961,42 @@ function newsLineHtml(line) {
     + `<span class="news-what">${html(tail.join(':').trim())}</span></li>`;
 }
 
+// "2026-08-23" as a player would read it. The panel keeps the exact build id;
+// the pill only needs to say how old the reading is.
+function newsDate(iso) {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!parts) return iso;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${Number(parts[3])} ${months[Number(parts[2]) - 1]} ${parts[1]}`;
+}
+
+/*
+ * The pill in the masthead. It used to report how many artifacts had just been
+ * counted and whether the rows were exact, which is a developer's readout: the
+ * progress bar already shows the work, and a sampled row carries its own ≈.
+ * What a player cannot otherwise find out is whether these odds still match the
+ * game, so that is what it says now — and clicking it opens the detail.
+ */
+function renderNewsPill(entries) {
+  const pill = $('status');
+  if (!entries.length) {
+    pill.textContent = 'Game data';
+    pill.title = 'Where these numbers come from';
+    return;
+  }
+  const latest = entries[0];
+  const moved = !(latest.lines.length === 1 && latest.lines[0][0] === '=');
+  pill.textContent = moved
+    ? `Game data · ${latest.lines.length} change${latest.lines.length > 1 ? 's' : ''}`
+    : `Game data · checked ${newsDate(latest.date)}`;
+  pill.title = moved
+    ? 'What changed in the game since these numbers were last checked'
+    : `Checked against the game client of ${newsDate(latest.date)}`;
+  pill.classList.toggle('has-news', moved);
+}
+
 function renderClientNews(entries) {
+  renderNewsPill(entries);
   const panel = $('clientNews');
   if (!entries.length) {
     panel.innerHTML = '<p class="news-none">These numbers come from the enchantment documents. '
@@ -1968,7 +2006,7 @@ function renderClientNews(entries) {
   const latest = entries[0];
   const quiet = latest.lines.length === 1 && latest.lines[0][0] === '=';
   panel.innerHTML = `<p class="news-head">`
-    + `Checked against the game client of <b>${html(latest.date)}</b>`
+    + `Checked against the game client of <b>${html(newsDate(latest.date))}</b>`
     + `<span class="news-build">build ${html(latest.build.slice(0, 8))}</span></p>`
     + (quiet
       ? '<p class="news-none">Every weight, pool rule, artifact and item matched. These odds are current.</p>'
@@ -1980,6 +2018,8 @@ function renderClientNews(entries) {
 }
 
 function toggleClientNews() {
+  // A failed load takes the pill over to say so; there is nothing to open then.
+  if ($('status').classList.contains('bad')) return;
   const panel = $('clientNews');
   const open = panel.hidden;
   panel.hidden = !open;
@@ -2025,7 +2065,6 @@ async function load() {
     initAmbience();
     renderOfflineOffer();
     state.ready = true;
-    $('status').textContent = `${state.data.enchants.length} enchantments · ${state.data.artifacts.length} artifacts loaded${BUNDLE ? ' · standalone build' : ''}`;
     renderClientNews(parseChanges(await readChanges()));
     loadFilters();
     loadTabs();
