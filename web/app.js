@@ -119,10 +119,11 @@ function enchantIconHtml(mod, className) {
   const src = icon ? asset('GUI Files', 'Enchantment Icons', `${icon}.png`) : '';
   return `<img class="${className}${src ? '' : ' missing'}" ${src ? `src="${src}"` : ''} alt="" loading="lazy" onerror="this.classList.add('missing');this.removeAttribute('src')">`;
 }
-// Only known awakenable items have group artwork in the Qt assets. Guarding on
-// that stops a sprite request firing for every keystroke while typing.
+// Group artwork exists only for the names in the Qt file, not for the hundred
+// items the wiki mapping adds — those carry their own sprite. Guarding on that
+// stops a request firing for a picture that was never shipped.
 function itemSpriteName(item) {
-  if (!item || !state.data || !state.data.awakenings.has(item)) return null;
+  if (!item || !state.data || !state.data.awokenArt.has(item)) return null;
   return state.data.spriteAlias[item] || item;
 }
 
@@ -1913,12 +1914,13 @@ async function loadItemSprites() {
 
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
-  const [modTexts, artifactText, awakenText] = await Promise.all([
+  const [modTexts, artifactText, awakenText, awokenExtraText] = await Promise.all([
     Promise.all(MOD_FILES.map(file => fetch(ROOT + ['Enchantment documents', file].map(esc).join('/')).then(response => response.text()))),
     fetch(ROOT + ['Artifacts', 'artifacts.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text())
+    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text()),
+    fetch(ROOT + ['Awakened Items', 'awoken-items.txt'].map(esc).join('/')).then(response => response.text())
   ]);
-  return { modTexts, artifactText, awakenText };
+  return { modTexts, artifactText, awakenText, awokenExtraText };
 }
 
 /*

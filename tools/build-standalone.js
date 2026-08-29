@@ -47,7 +47,8 @@ const readText = (...parts) =>
 const sources = {
   modTexts: MOD_FILES.map(file => readText('Enchantment documents', file)),
   artifactText: readText('Artifacts', 'artifacts.txt'),
-  awakenText: readText('Awakened Items', 'awakenedItems.txt')
+  awakenText: readText('Awakened Items', 'awakenedItems.txt'),
+  awokenExtraText: readText('Awakened Items', 'awoken-items.txt')
 };
 
 /* ---------------------------------------------------------------- *
@@ -143,7 +144,10 @@ for (const mod of dataset.enchants) {
   const icon = iconFor(mod);
   if (icon) required.add(`GUI Files/Enchantment Icons/${icon}.png`);
 }
-for (const item of dataset.awakenings.keys()) required.add(`GUI Files/Awakenable Items/${dataset.spriteAlias[item] || item}.png`);
+// Group artwork exists only for the names the Qt file lists; the wiki mapping
+// adds a hundred items that carry their own sprite instead, and the interface
+// never asks for a group picture for those.
+for (const item of dataset.awokenArt) required.add(`GUI Files/Awakenable Items/${dataset.spriteAlias[item] || item}.png`);
 for (const dust of ['Green', 'Red', 'Purple']) {
   required.add(`GUI Files/Dust Types/${dust}.png`);
   required.add(`GUI Files/Dust Types/${dust}-div2.png`);

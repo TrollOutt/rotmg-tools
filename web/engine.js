@@ -91,6 +91,31 @@ var EnchantEngine = (function () {
   const EXTRA_AWAKENINGS = { 'Nightmatter Circlet': ["Night's Soul"] };
   const ITEM_SPRITE_ALIAS = { 'Nightmatter Circlet': 'AoO Rings' };
 
+  /*
+   * The Qt file names ten of its entries after a group rather than an item —
+   * "AoO Rings", "Matrix Armors", "Tomb Rings" — and the interface looks items
+   * up by their own name, so every real item behind one of those was offered
+   * nothing. data/Awakened Items/awoken-items.txt names them, read off the
+   * wiki's Awakened Enchantments table by tools/fetch-awoken.js.
+   *
+   * Merged, not substituted: a pair the Qt data knows and the wiki does not is
+   * kept, because silence is not disagreement.
+   */
+  function mergeAwakenings(map, text) {
+    for (const raw of String(text || '').replace(/\r/g, '').split('\n')) {
+      const line = raw.trim();
+      if (!line || line.startsWith('##')) continue;
+      const cut = line.lastIndexOf('|');
+      if (cut < 1) continue;
+      const item = line.slice(0, cut).trim();
+      const mod = line.slice(cut + 1).trim();
+      if (!item || !mod) continue;
+      if (!map.has(item)) map.set(item, []);
+      if (!map.get(item).includes(mod)) map.get(item).push(mod);
+    }
+    return map;
+  }
+
   function buildDataset(sources) {
     // The Qt source keys enchantments by name. Several documents repeat shared
     // modifiers (ability/ring regeneration, armor/ring on-hit procs), so they
@@ -101,13 +126,21 @@ var EnchantEngine = (function () {
     const byName = new Map(enchants.map(mod => [mod.name, mod]));
     const artifacts = parseArtifacts(sources.artifactText);
     const awakenings = parseAwakenings(sources.awakenText);
-    for (const [item, mods] of Object.entries(EXTRA_AWAKENINGS)) awakenings.set(item, mods.slice());
+    // Only these names have group artwork in the Qt assets; the wiki mapping
+    // brings in a hundred more items that carry their own sprite instead.
+    const awokenArt = new Set(awakenings.keys());
+    for (const [item, mods] of Object.entries(EXTRA_AWAKENINGS)) {
+      if (!awakenings.has(item)) awakenings.set(item, []);
+      for (const mod of mods) if (!awakenings.get(item).includes(mod)) awakenings.get(item).push(mod);
+    }
+    mergeAwakenings(awakenings, sources.awokenExtraText);
     return {
       enchants,
       byName,
       artifacts,
       byArtifact: new Map(artifacts.map(artifact => [artifact.name, artifact])),
       awakenings,
+      awokenArt,
       // Only labels that appear in at least one "Incompatible Labels" list can
       // ever remove a candidate; every other label is purely descriptive.
       blockingLabels: new Set(enchants.flatMap(mod => [...mod.excludes])),
@@ -704,7 +737,7 @@ var EnchantEngine = (function () {
   };
 
   const engine = {
-    readBracketGroups, splitSet, parseMods, parseArtifacts, parseAwakenings, buildDataset,
+    readBracketGroups, splitSet, parseMods, parseArtifacts, parseAwakenings, mergeAwakenings, buildDataset,
     lockCount, rollsRemaining, lockedLabels, eligiblePool, weightFor, weightedPool,
     goalDistribution, distributionFor, oddsAny, oddsAll, tierMultiplier,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,

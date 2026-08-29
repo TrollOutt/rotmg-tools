@@ -18,7 +18,8 @@ const read = (...parts) => fs.readFileSync(path.join(dataRoot, ...parts), 'utf8'
 const data = engine.buildDataset({
   modTexts: MOD_FILES.map(file => read('Enchantment documents', file)),
   artifactText: read('Artifacts', 'artifacts.txt'),
-  awakenText: read('Awakened Items', 'awakenedItems.txt')
+  awakenText: read('Awakened Items', 'awakenedItems.txt'),
+  awokenExtraText: read('Awakened Items', 'awoken-items.txt')
 });
 
 /* ------------------------------------------------------------------ */
@@ -140,6 +141,106 @@ check('choosing an item adds exactly its own awakened enchantments', (() => {
   const added = withItem.filter(name => !without.has(name));
   return added.length === 1 && added[0] === "Night's Soul";
 })());
+
+/* ------------------------------------------------------------------ *
+ * 2b. Every awakenable item, not just the ones named individually     *
+ * ------------------------------------------------------------------ *
+ * The Qt file names ten of its entries after a group — "AoO Rings",
+ * "Matrix Armors" — and the interface looks items up by their own
+ * name, so 39 of the catalogue's items were served and the rest of
+ * the Agents of Oryx and Protective Matrix gear got nothing.
+ */
+section('2b. The wiki mapping reaches the items behind the group names');
+
+const awokenPairs = read('Awakened Items', 'awoken-items.txt')
+  .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('##'));
+const catalogue2b = require(path.join(root, 'web', 'items.js'));
+catalogue2b.load(JSON.parse(fs.readFileSync(path.join(root, 'web', 'item-catalog.json'), 'utf8')));
+
+check('the mapping file is well formed and free of duplicates', (() => {
+  const seen = new Set();
+  for (const line of awokenPairs) {
+    if (!/^[^|]+\|[^|]+$/.test(line)) return false;
+    if (seen.has(line)) return false;
+    seen.add(line);
+  }
+  return awokenPairs.length > 140;
+})(), `${awokenPairs.length} pairs`);
+
+check('every item it names is in the catalogue', (() => {
+  for (const line of awokenPairs) {
+    const item = line.slice(0, line.indexOf('|'));
+    if (!catalogue2b.lookup(item)) return false;
+  }
+  return true;
+})());
+
+check('every enchantment it names exists in the mod files', (() => {
+  for (const line of awokenPairs) {
+    const mod = line.slice(line.indexOf('|') + 1);
+    if (!data.byName.has(mod)) return false;
+  }
+  return true;
+})());
+
+check('every enchantment it names is an awakened one', (() => {
+  for (const line of awokenPairs) {
+    const mod = data.byName.get(line.slice(line.indexOf('|') + 1));
+    if (!mod || !mod.excludes.has('AWAKENED')) return false;
+  }
+  return true;
+})());
+
+// The point of the whole exercise: a real item behind a group name.
+check('a Protective Matrix armor is offered its four Matrix enhancements', (() => {
+  const mods = data.awakenings.get('Fitted Protective Matrix') || [];
+  return ['Malogian', 'Untarian', 'Katalonian', 'Foraxian']
+    .every(planet => mods.some(name => name.startsWith(planet)));
+})(), (data.awakenings.get('Fitted Protective Matrix') || []).join(', '));
+
+check('an Agents of Oryx weapon is offered its awakened enchantment',
+  (data.awakenings.get('Legion Elite Bow') || []).includes("Night's Strength"));
+
+check('a Tomb ring is offered its awakened enchantment',
+  (data.awakenings.get('Ring of the Nile') || []).includes("Ancient's Blessing"));
+
+check('the Neo variant keeps its own enchantment, not the ordinary one', (() => {
+  const neo = data.awakenings.get('Neo Acidic Slasher') || [];
+  return neo.includes('Acid Guardian (Neo)') && !neo.includes('Acid Guardian');
+})(), (data.awakenings.get('Neo Acidic Slasher') || []).join(', '));
+
+check('130 catalogue items are offered their awakened enchantment', (() => {
+  const none = artifact('No Artifact');
+  let served = 0;
+  for (const [item, mods] of data.awakenings) {
+    const entry = catalogue2b.lookup(item);
+    if (!entry) continue;                       // a group name, unreachable by design
+    const cfg = baseCfg({ type: entry.type, item, subtypes: new Set(entry.base ? [entry.base] : []) });
+    const pool = engine.eligiblePool(data, cfg, none).map(mod => mod.name);
+    if (mods.every(mod => pool.includes(mod))) served++;
+  }
+  return served >= 130;
+})(), (() => {
+  let served = 0;
+  const none = artifact('No Artifact');
+  for (const [item, mods] of data.awakenings) {
+    const entry = catalogue2b.lookup(item);
+    if (!entry) continue;
+    const cfg = baseCfg({ type: entry.type, item, subtypes: new Set(entry.base ? [entry.base] : []) });
+    const pool = engine.eligiblePool(data, cfg, none).map(mod => mod.name);
+    if (mods.every(mod => pool.includes(mod))) served++;
+  }
+  return `${served} served`;
+})());
+
+// Group artwork exists only for the Qt names; asking for it for the rest would
+// be a request for a picture that was never shipped.
+check('group artwork is claimed only for the names the Qt file lists', (() => {
+  const qt = engine.parseAwakenings(read('Awakened Items', 'awakenedItems.txt'));
+  return data.awokenArt.size === qt.size
+    && [...data.awokenArt].every(name => qt.has(name))
+    && data.awokenArt.size < data.awakenings.size;
+})(), `${data.awokenArt.size} with artwork, ${data.awakenings.size} in total`);
 
 /* ------------------------------------------------------------------ *
  * 3. Incompatibility direction                                        *
