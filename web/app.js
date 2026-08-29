@@ -15,11 +15,6 @@ const SAVE_KEY = 'rotmg-enchant-calculator/v1';
 // A view preference, not part of a saved setup: it belongs to the reader,
 // not to the item being planned.
 const FILTER_KEY = 'rotmg-enchant-calculator/filters';
-
-// Lock routes are on hold: the results were disputed and the model needs a
-// second look. The engine still computes them and the panel is still here, so
-// turning this back to true is the whole of putting it back.
-const LOCK_ROUTES_ENABLED = false;
 const TABS_KEY = 'rotmg-enchant-calculator/tabs/v1';
 
 /*
@@ -223,7 +218,6 @@ function cfg() {
     subtypes: new Set([...document.querySelectorAll('#subtypePanel input:checked')].map(box => box.value)),
     tiers: new Set([...document.querySelectorAll('#tiers input:checked')].map(box => Number(box.value))),
     locks: filled.filter(slot => slot.locked).map(slot => slot.name),
-    virtualLabels: [],
     desired: wanted[0] || '',
     goals: wanted.slice(1)
   };
@@ -1007,7 +1001,7 @@ function showAudit() {
   const cost = EnchantEngine.costFor(config, exact.odds, artifact, config.dust);
 
   // What the locks removed, so the pool size is verifiable by hand.
-  const unlocked = Object.assign({}, config, { locks: [], virtualLabels: [] });
+  const unlocked = Object.assign({}, config, { locks: [] });
   const openPool = EnchantEngine.eligiblePool(state.data, unlocked, artifact);
   const present = new Set(pool.mods.map(mod => mod.id));
   const removed = openPool.filter(mod => !present.has(mod.id));
@@ -1165,116 +1159,6 @@ async function renderBuildPlan(config) {
 }
 
 /* ------------------------------------------------------------------ *
- * Lock routes                                                         *
- * ------------------------------------------------------------------ */
-
-async function analyzeRoutes() {
-  const button = $('analyzeRoutes');
-  const output = $('routeAnalysis');
-  const config = cfg();
-  if (EnchantEngine.rollsRemaining(config) < 2) {
-    output.innerHTML = '<p class="note">Only one random slot is left, so an extra lock would leave nothing to roll.</p>';
-    return;
-  }
-  button.disabled = true;
-  button.textContent = 'Comparing…';
-
-  const baseline = state.lastResults && state.lastResults.length
-    ? state.lastResults.filter(row => row.odds > 0).reduce((best, row) => !best || row.dust < best.dust ? row : best, null)
-    : null;
-  const routes = EnchantEngine.lockRoutes(state.data, config);
-  const summaries = [];
-
-  for (let index = 0; index < routes.length; index++) {
-    if (index % 3 === 0) {
-      output.innerHTML = `<p class="note">Evaluating route ${index + 1} of ${routes.length}…</p>`;
-      await yieldToUi();
-    }
-    const route = routes[index];
-    const rows = EnchantEngine.evaluateAll(state.data, route.cfg).filter(row => row.odds > 0);
-    if (!rows.length) continue;
-    const best = rows.reduce((bestRow, row) => row.dust < bestRow.dust ? row : bestRow);
-    // How likely is the prerequisite itself? Any member of the group counts,
-    // since they all cull the pool identically.
-    const reach = state.data.artifacts
-      .map(artifact => EnchantEngine.oddsAny(state.data, config, artifact, route.members))
-      .reduce((bestReach, current) => !bestReach || current.odds > bestReach.odds ? current : bestReach, null);
-    summaries.push({ route, best, reach });
-  }
-
-  button.disabled = false;
-  button.textContent = 'Compare lock routes';
-
-  if (!summaries.length) {
-    output.innerHTML = '<p class="note">No compatible extra lock changes the pool for this target.</p>';
-    return;
-  }
-
-  // Many different enchantments end up with exactly the same effect. Merge
-  // rows that agree on pool size, chance and cost so the table stays readable.
-  const merged = new Map();
-  for (const entry of summaries) {
-    const key = `${entry.route.pool}|${entry.best.odds.toPrecision(8)}|${Math.round(entry.best.dust)}|${entry.best.artifact.name}`;
-    const group = merged.get(key);
-    if (group) {
-      group.names.push(...entry.route.members);
-      group.labelSets.push(entry.route.labels);
-      if (entry.reach && (!group.reach || entry.reach.odds > group.reach.odds)) group.reach = entry.reach;
-    } else {
-      merged.set(key, { entry, names: [...entry.route.members], labelSets: [entry.route.labels], reach: entry.reach });
-    }
-  }
-  const rows = [...merged.values()].sort((a, b) => a.entry.best.dust - b.entry.best.dust);
-  const shown = rows.slice(0, 8);
-  const improves = baseline ? rows.filter(row => row.entry.best.dust < baseline.dust) : [];
-
-  output.innerHTML = `
-    <div class="route-verdict ${improves.length ? 'good' : 'neutral'}">
-      ${baseline
-        ? improves.length
-          ? `<b>${improves.length} of ${rows.length} distinct lock effects beat doing nothing.</b> Best: lock <b>${html(improves[0].names[0])}</b> → ${count(improves[0].entry.best.dust)} ${html(config.dust)} instead of ${count(baseline.dust)}.`
-          : `<b>None of the ${rows.length} distinct lock effects is cheaper than rerolling as you are.</b> Each one raises the per-slot chance, but it also costs a random slot and doubles every reroll, and here that outweighs the smaller pool.`
-        : `<b>${rows.length} distinct lock effects evaluated.</b> Run the main calculation first to compare them against doing nothing.`}
-    </div>
-    <p class="note">Read this as a decision you make <em>after</em> a reroll: “this came up — should I lock it?”. The dust already spent getting there is sunk, so these totals cover only what is left to spend. The “shows up” column says how often the question will even arise.</p>
-    <div class="table-scroll">
-      <table class="route-table">
-        <thead><tr>
-          <th>Lock this</th>
-          <th title="Labels the lock puts on the item. Every candidate refusing one of them leaves the pool.">Labels applied</th>
-          <th title="How often any enchantment with this exact Label effect turns up during the remaining slots, with the artifact that maximises it.">Shows up</th>
-          <th title="Eligible candidates left after the lock.">Pool</th>
-          <th title="Random slots left after the lock.">Slots</th>
-          <th title="Best chance per reroll for the target once this lock is in place.">Target chance</th>
-          <th title="Expected dust still to spend on the target after this lock, at the doubled reroll cost.">Dust left</th>
-        </tr></thead>
-        <tbody>
-          ${baseline ? `<tr class="route-base"><td><b>Nothing — keep rerolling</b></td><td class="muted">—</td><td class="muted">—</td><td class="num">${EnchantEngine.eligiblePool(state.data, config, baseline.artifact).length}</td><td class="num">${EnchantEngine.rollsRemaining(config)}</td><td class="num">${percent(baseline.odds)}</td><td class="num strong">${dustIcon(config.dust)}${count(baseline.dust)}</td></tr>` : ''}
-          ${shown.map(row => {
-            const better = baseline && row.entry.best.dust < baseline.dust;
-            const extra = row.names.length > 1 ? ` <span class="muted">+ ${row.names.length - 1} more</span>` : '';
-            // The merged rows can carry different (but equally effective) Label
-            // sets, so only the first one is shown; the rest live in the tooltip.
-            const labels = row.labelSets[0];
-            const variants = row.labelSets.length > 1 ? ` Equivalent Label sets: ${row.labelSets.map(set => set.join('+') || 'none').join(' / ')}.` : '';
-            return `<tr class="${better ? 'route-better' : ''}">
-              <td title="${html(`Same effect: ${row.names.join(', ')}.${variants}`)}">${html(row.names[0])}${extra}</td>
-              <td title="${html(labels.join(', ') || 'none')}${variants ? html(variants) : ''}"><span class="chips">${labels.slice(0, 2).map(label => `<i class="chip give">${html(label)}</i>`).join('') || '<span class="muted">none</span>'}${labels.length > 2 ? `<i class="chip give">+${labels.length - 2}</i>` : ''}${row.labelSets.length > 1 ? '<i class="chip give">≈</i>' : ''}</span></td>
-              <td class="num muted">${row.reach ? percent(row.reach.odds) : '—'}</td>
-              <td class="num">${row.entry.route.pool} <span class="muted">(−${row.entry.route.removed})</span></td>
-              <td class="num">${EnchantEngine.rollsRemaining(row.entry.route.cfg)}</td>
-              <td class="num">${percent(row.entry.best.odds)} <span class="muted">${html(row.entry.best.artifact.name)}</span></td>
-              <td class="num strong">${dustIcon(config.dust)}${count(row.entry.best.dust)}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-    ${rows.length > shown.length ? `<p class="note">${rows.length - shown.length} further lock effects were evaluated and are all more expensive than the ones listed.</p>` : ''}
-    <p class="note">${html(EnchantEngine.NOTES.lockRoutes)}</p>`;
-}
-
-/* ------------------------------------------------------------------ *
  * Orchestration                                                       *
  * ------------------------------------------------------------------ */
 
@@ -1392,8 +1276,6 @@ async function runCalculation() {
   const multi = goalCount(config) > 1;
   if (!multi) renderResults(rows, config);
   renderSummary(rows, config);
-  $('routeCard').hidden = !LOCK_ROUTES_ENABLED || EnchantEngine.rollsRemaining(config) < 2;
-  $('routeAnalysis').innerHTML = '';
   $('auditCard').hidden = true;
   await renderBuildPlan(config);
   if (state.runId !== generation) return;
@@ -1483,7 +1365,6 @@ function bind() {
     if (tab) switchTab(tab.dataset.tab);
   });
   $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
-  $('analyzeRoutes').addEventListener('click', analyzeRoutes);
   $('summary').addEventListener('click', event => { if (event.target.id === 'showAudit') toggleAudit(); });
   $('auditClose').addEventListener('click', hideAudit);
   // A greyed row is an invitation: clicking it adds its group to the selection.
@@ -1931,9 +1812,7 @@ function clearResults() {
   $('artifactCard').hidden = false;
   $('summary').hidden = true;
   $('planCard').hidden = true;
-  $('routeCard').hidden = true;
   $('auditCard').hidden = true;
-  $('routeAnalysis').innerHTML = '';
   $('progressBar').style.width = '0%';
   $('results').tBodies[0].innerHTML = '<tr><td colspan="6" class="empty">Choose an item, a rarity, and what you want on it.</td></tr>';
 }

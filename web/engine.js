@@ -122,10 +122,9 @@ var EnchantEngine = (function () {
   const asSet = value => value instanceof Set ? value : new Set(value || []);
 
   // A configuration describes the item in front of the player:
-  //   slots         total enchantment slots granted by the rarity
-  //   locks         enchantments already on the item and kept (real locks)
-  //   virtualLabels hypothetical label-only locks used by the route comparator
-  function lockCount(cfg) { return cfg.locks.length + (cfg.virtualLabels || []).length; }
+  //   slots   total enchantment slots granted by the rarity
+  //   locks   enchantments already on the item and kept
+  function lockCount(cfg) { return cfg.locks.length; }
   function rollsRemaining(cfg) { return Math.max(0, cfg.slots - lockCount(cfg)); }
 
   function lockedLabels(data, cfg) {
@@ -134,7 +133,6 @@ var EnchantEngine = (function () {
       const mod = data.byName.get(name);
       if (mod) for (const tag of mod.tags) labels.add(tag);
     }
-    for (const group of cfg.virtualLabels || []) for (const label of group) labels.add(label);
     return labels;
   }
 
@@ -517,7 +515,9 @@ var EnchantEngine = (function () {
    * solved from the most complete downwards, so every W(T) is already known.
    *
    * Not searched: locking an enchantment that was never asked for, in order to
-   * shrink the pool. The lock-route comparator covers that case separately.
+   * shrink the pool. That is a real strategy, and pricing it honestly means
+   * charging for the wait until the thing turns up — which the comparator that
+   * used to live here did not do, so it is gone rather than misleading.
    */
   function planGoals(data, cfg, goalNames, options) {
     const settings = options || {};
@@ -656,66 +656,6 @@ var EnchantEngine = (function () {
   }
 
   /* ------------------------------------------------------------------ *
-   * Lock-route comparison                                               *
-   * ------------------------------------------------------------------ */
-
-  /*
-   * "Should I lock something else first?" Locking a rolled enchantment removes
-   * every candidate that its Labels forbid, which raises the per-slot chance of
-   * the target — but it also costs one random slot and doubles every later
-   * reroll. Both effects are priced here.
-   *
-   * Candidates are grouped by the Labels they contribute, because two
-   * enchantments with the same blocking Labels have exactly the same effect on
-   * the pool. Each group is evaluated with a real named member so the reported
-   * pool also loses that enchantment, and the group's members are listed.
-   */
-  function lockRoutes(data, cfg, options) {
-    const settings = options || {};
-    const target = data.byName.get(cfg.desired);
-    if (!target) return [];
-    const plain = data.byArtifact.get('No Artifact');
-    const basePool = eligiblePool(data, cfg, plain);
-    const existing = new Set(cfg.locks);
-
-    const groups = new Map();
-    for (const mod of basePool) {
-      if (mod.name === target.name || existing.has(mod.name)) continue;
-      // Locking a mod whose Labels forbid the target makes the target
-      // unreachable: never suggest it.
-      let blocksTarget = false;
-      for (const label of target.excludes) if (mod.tags.has(label)) { blocksTarget = true; break; }
-      if (blocksTarget) continue;
-      const labels = [...mod.tags].filter(label => data.blockingLabels.has(label)).sort();
-      const key = labels.join('|');
-      let group = groups.get(key);
-      if (!group) { group = { labels, members: [], representative: mod }; groups.set(key, group); }
-      group.members.push(mod.name);
-      // Prefer the lightest member as the representative: it is the one whose
-      // removal from the pool distorts the remaining weights the least.
-      if (mod.weight < group.representative.weight) group.representative = mod;
-    }
-
-    const routes = [];
-    for (const group of groups.values()) {
-      const routeCfg = Object.assign({}, cfg, { locks: [...cfg.locks, group.representative.name] });
-      if (rollsRemaining(routeCfg) < 1) continue;
-      const pool = eligiblePool(data, cfg, plain).length;
-      const afterPool = eligiblePool(data, routeCfg, plain).length;
-      if (afterPool >= pool) continue; // this lock changes nothing
-      routes.push({
-        labels: group.labels,
-        members: group.members,
-        representative: group.representative,
-        cfg: routeCfg,
-        pool: afterPool,
-        removed: pool - afterPool
-      });
-    }
-    return routes.sort((a, b) => b.removed - a.removed || a.representative.name.localeCompare(b.representative.name));
-  }
-
-  /* ------------------------------------------------------------------ *
    * Notes surfaced in the UI                                            *
    * ------------------------------------------------------------------ */
 
@@ -759,13 +699,8 @@ var EnchantEngine = (function () {
       'rerolls all unlocked slots, the artifact may change between rerolls, and after ' +
       'each reroll any subset of the wanted enchantments that appeared may be locked — ' +
       'including none of them, because locking doubles every later reroll. It does not ' +
-      'consider locking an enchantment you never asked for; use the lock-route ' +
-      'comparator for that.',
-    lockRoutes:
-      'Lock routes are conditional: the suggested enchantment has to be rolled first, ' +
-      'and it is only worth locking if you keep it. Candidates carrying the same ' +
-      'blocking Labels are grouped because they cull the pool identically; the numbers ' +
-      'are computed with one real member of the group.'
+      'consider locking an enchantment you never asked for in order to shrink ' +
+      'the pool.'
   };
 
   const engine = {
@@ -773,7 +708,7 @@ var EnchantEngine = (function () {
     lockCount, rollsRemaining, lockedLabels, eligiblePool, weightFor, weightedPool,
     goalDistribution, distributionFor, oddsAny, oddsAll, tierMultiplier,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,
-    planGoals, planSimultaneous, lockRoutes,
+    planGoals, planSimultaneous,
     EXTRA_AWAKENINGS, ITEM_SPRITE_ALIAS, NOTES
   };
   return engine;

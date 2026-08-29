@@ -38,7 +38,7 @@ function section(title) { console.log(`\n${title}`); }
 const artifact = name => data.byArtifact.get(name);
 const baseCfg = extra => Object.assign({
   slots: 4, type: 'RING', dust: 'Red', item: '', subtypes: new Set(), tiers: new Set([1, 2, 3, 4]),
-  locks: [], virtualLabels: [], desired: '', goals: []
+  locks: [], desired: '', goals: []
 }, extra);
 
 /* ------------------------------------------------------------------ *
@@ -175,8 +175,6 @@ check('a locked enchantment is never offered again', (() => {
 section('4. Slots and the lock dust multiplier');
 const twoLocks = baseCfg({ item: 'Nightmatter Circlet', locks: ['Percentage Mana Regeneration', "Night's Soul"], desired: 'Mermaid Magic' });
 check('4 slots − 2 locks leaves 2 random rolls', engine.rollsRemaining(twoLocks) === 2);
-check('a virtual (hypothetical) lock also consumes a roll',
-  engine.rollsRemaining(Object.assign({}, twoLocks, { virtualLabels: [new Set(['SINGLESTAT'])] })) === 1);
 check('base reroll cost for a 4-slot item is 100 dust', engine.rerollCost(baseCfg({ locks: [] })) === 100);
 check('each lock doubles the reroll cost: 2 locks → 400', engine.rerollCost(twoLocks) === 400);
 check('3 locks → 800', engine.rerollCost(baseCfg({ locks: ['a', 'b', 'c'] })) === 800);
@@ -338,26 +336,6 @@ near('only tier IV → 0.15', engine.tierMultiplier(tiered, artifact('No Artifac
 near('a non-tiered mod is unaffected', engine.tierMultiplier(mermaid, moon, new Set([4])), 1, 1e-12);
 check('a TIER-boosting artifact exists to exercise the branch',
   data.artifacts.some(a => a.rules.some(r => [...r.keys].some(k => /^TIER[123]$/.test(k)))));
-
-/* ------------------------------------------------------------------ *
- * 9. Lock routes                                                      *
- * ------------------------------------------------------------------ */
-section('9. Lock-route candidates');
-const routes = engine.lockRoutes(data, twoLocks);
-check('every suggested lock actually shrinks the pool', routes.every(route => route.removed > 0));
-check('no suggested lock makes the target unreachable',
-  routes.every(route => engine.eligiblePool(data, route.cfg, artifact('No Artifact')).some(m => m.name === 'Mermaid Magic')));
-check('no suggested lock is already locked', routes.every(route => !twoLocks.locks.includes(route.representative.name)));
-check('each route leaves at least one random roll', routes.every(route => engine.rollsRemaining(route.cfg) >= 1));
-check('group members all share the route Labels',
-  routes.every(route => route.members.every(name => {
-    const labels = [...data.byName.get(name).tags].filter(label => data.blockingLabels.has(label)).sort();
-    return labels.join('|') === route.labels.join('|');
-  })));
-check('the ONABILITYSTAT/PROCATTACK route is found and removes 7 candidates', (() => {
-  const route = routes.find(r => r.labels.join('|') === 'ONABILITYSTAT|PROCATTACK');
-  return route && route.removed === 7;
-})(), JSON.stringify(routes.slice(0, 3).map(r => [r.labels.join('|'), r.removed])));
 
 /* ------------------------------------------------------------------ *
  * 10. Multi-goal planner                                              *

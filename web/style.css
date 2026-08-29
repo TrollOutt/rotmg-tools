@@ -582,8 +582,6 @@ table.mini td { padding: 3px 8px; border: 0; }
 .audit-assumptions ul { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
 .audit-assumptions li { margin-bottom: 6px; }
 
-/* ---------------- build plan ---------------- */
-
 /* ---------------- build plan ---------------- *
  * Read top to bottom as a set of instructions: what you are hunting, which
  * artifact to put in, what the numbers are, and what to do when something
@@ -640,17 +638,6 @@ table.mini td { padding: 3px 8px; border: 0; }
 /* The filter now sits in the summary, where both modes can reach it. */
 .filter-caption { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim); align-self: center; }
 .summary-actions .filter-chips { margin-left: auto; }
-
-/* ---------------- routes ---------------- */
-
-.route-verdict {
-  margin: 12px 0; padding: 10px 13px; border-radius: var(--radius-sm);
-  border: 1px solid var(--line); background: var(--bg); font-size: 13px; line-height: 1.55;
-}
-.route-verdict.good { border-color: rgba(110, 231, 160, .35); background: rgba(110, 231, 160, .06); }
-.route-table tr.route-base td { background: rgba(255, 255, 255, .04); }
-.route-table tr.route-better td { background: rgba(110, 231, 160, .07); }
-.route-table td:first-child { cursor: help; }
 
 /* ---------------- picker ---------------- */
 
