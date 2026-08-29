@@ -437,8 +437,8 @@ var EnchantEngine = (function () {
   function rerollCost(cfg) { return BASE_COSTS[cfg.slots] * Math.pow(2, lockCount(cfg)); }
 
   // A reroll has a 50 % chance of consuming the artifact rather than a certain
-  // one. Applied to every artifact: nothing in the source data marks the event
-  // artifacts that may behave differently. See NOTES.artifactsUsed.
+  // one, and that holds for all twenty-five — confirmed by the author of the
+  // original program, there is no exception. See NOTES.artifactsUsed.
   const ARTIFACT_CONSUMPTION = 0.5;
 
   /*
@@ -739,9 +739,9 @@ var EnchantEngine = (function () {
     artifactsUsed:
       'A reroll consumes the artifact half the time, so the mean number spent is ' +
       '0.5 / p — half the mean number of rerolls. This agrees with the Qt source, ' +
-      'which shows ceil(0.5 / p); only the rounding differs. The 50 % rate is applied ' +
-      'to every artifact, because nothing in the source data marks the event artifacts ' +
-      'that may not follow it.',
+      'which shows ceil(0.5 / p); only the rounding differs. The rate is the same for ' +
+      'all twenty-five artifacts, confirmed by the author of the original program: ' +
+      'there is no exception among them.',
     alienBase:
       'DIVERGENCE from the Qt source: an enchantment that requires an ALIEN or ' +
       'NEO_ALIEN base is offered only on an item of that same family. The Qt source ' +
