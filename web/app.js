@@ -243,6 +243,10 @@ function cfg() {
 // that same family, and no artifact stands in for the item. See
 // EnchantEngine.NOTES.alienBase for how this parts company with the Qt source.
 function eligibleForItem(mod, config) {
+  // Only what the game will actually roll. Every pool the client defines asks
+  // for ROLLABLE, including the default one; the handful that are not rollable
+  // exist so an artifact can name one outright, and none can be aimed at.
+  if (!mod.tags.has('ROLLABLE')) return false;
   if (!config.type || !mod.itemTags.has(config.type)) return false;
   if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return false;
   for (const requirement of mod.special) if (!config.subtypes.has(requirement)) return false;
@@ -252,10 +256,10 @@ function eligibleForItem(mod, config) {
 /*
  * Enchantments this item type allows but this item's base family does not.
  *
- * Worth showing rather than silently dropping: the catalogue does not record
- * which items are Alien or Neo Alien bases, so someone holding a genuine alien
- * item would otherwise just find its own enchantments missing, with nothing to
- * explain why or what to do about it.
+ * Worth showing rather than silently dropping: someone holding an item of the
+ * wrong family would otherwise just find those enchantments missing from the
+ * list, with nothing to say why. The catalogue does know each item's family
+ * now, so this only comes up when the slot, dust and base were set by hand.
  */
 const BASE_LABEL = { ALIEN: 'Alien', NEO_ALIEN: 'Neo Alien', SUMMONPOWERED: 'summon-powered' };
 
@@ -615,7 +619,10 @@ function openPicker(index) {
     .map(mod => ({ mod, missing: missingBase(mod, config) }))
     .filter(entry => entry.missing);
 
-  state.picker = { index, candidates, blocked, wrongBase };
+  // Cleared on every open: a filter left on from the last slot would look like
+  // an item that can suddenly roll almost nothing.
+  state.picker = { index, candidates, blocked, wrongBase, kinds: new Set() };
+  renderPickerKinds();
   $('pickerTitle').textContent = `Slot ${index}`;
   $('pickerSub').textContent = `${candidates.length} available · ${blocked.length} removed by the other slots`
     + (wrongBase.length ? ` · ${wrongBase.length} need another base` : '');
@@ -626,9 +633,48 @@ function openPicker(index) {
   $('pickerSearch').focus();
 }
 
+/*
+ * Two toggles over the list: Awoken and Unique.
+ *
+ * Those are the two kinds a player hunts on purpose — one is the item's own
+ * enchantment, the other the rare one worth spending a card on — and both are
+ * scattered through a list of a hundred stat bonuses. Neither is on to begin
+ * with, so the picker still opens on everything the item can roll, and turning
+ * both on shows either kind rather than nothing.
+ */
+function renderPickerKinds() {
+  const bar = $('pickerKinds');
+  const counts = { AWAKENED: 0, UNIQUE: 0 };
+  for (const mod of state.picker.candidates) {
+    for (const kind of Object.keys(counts)) if (mod.tags.has(kind)) counts[kind]++;
+  }
+  for (const button of bar.querySelectorAll('[data-kind]')) {
+    const kind = button.dataset.kind;
+    const on = state.picker.kinds.has(kind);
+    button.classList.toggle('on', on);
+    button.setAttribute('aria-pressed', String(on));
+    button.hidden = counts[kind] === 0;
+    button.innerHTML = `${kind === 'AWAKENED' ? 'Awoken' : 'Unique'} <b>${counts[kind]}</b>`;
+  }
+  bar.hidden = !bar.querySelector('[data-kind]:not([hidden])');
+}
+
+function togglePickerKind(kind) {
+  if (!state.picker) return;
+  if (state.picker.kinds.has(kind)) state.picker.kinds.delete(kind);
+  else state.picker.kinds.add(kind);
+  renderPickerKinds();
+  renderPickerList($('pickerSearch').value);
+}
+
 function renderPickerList(query) {
   const term = query.trim().toLowerCase();
-  const matches = entry => !term || entry.name.toLowerCase().includes(term) || entry.description.toLowerCase().includes(term) || [...entry.tags].some(tag => tag.toLowerCase().includes(term));
+  const kinds = state.picker.kinds;
+  const wanted = entry => !kinds.size || [...kinds].some(kind => entry.tags.has(kind));
+  const matches = entry => wanted(entry) && (!term
+    || entry.name.toLowerCase().includes(term)
+    || entry.description.toLowerCase().includes(term)
+    || [...entry.tags].some(tag => tag.toLowerCase().includes(term)));
   const shown = state.picker.candidates.filter(matches);
   const hidden = state.picker.blocked.filter(entry => matches(entry.mod));
   const offBase = (state.picker.wrongBase || []).filter(entry => matches(entry.mod));
@@ -655,8 +701,9 @@ function renderPickerList(query) {
   const offBaseHtml = offBase.length ? `
     <div class="picker-section">Needs a different base</div>
     <p class="picker-hint">An enchantment of the Alien or Neo Alien family only goes on
-      equipment of that same family. The catalogue does not know which items those are yet,
-      so if yours is one, tick its base under <b>Set the slot, dust and base by hand</b>.</p>
+      equipment of that same family. Pick your item by name and its family comes with it;
+      if you set the slot by hand instead, tick the base under
+      <b>Set the slot, dust and base by hand</b>.</p>
     ` + offBase.map(entry => `
       <div class="picker-row disabled" title="${html(baseNames(entry.missing))} base required">
         ${enchantIconHtml(entry.mod, 'picker-icon')}
@@ -696,6 +743,9 @@ function itemArtHtml(resolved, name) {
 function openItemPicker() {
   const entries = knownItemNames().map(name => ({ name, resolved: resolveItem(name) }));
   state.picker = { kind: 'item', entries };
+  // The dialog is shared with the enchantment picker; its two toggles mean
+  // nothing here.
+  $('pickerKinds').hidden = true;
   $('pickerTitle').textContent = 'Choose your item';
   $('pickerSub').textContent = `${entries.length} items · slot, dust and base come with the choice`;
   $('pickerSearch').value = '';
@@ -1370,6 +1420,10 @@ function bind() {
 
   $('pickerBackdrop').addEventListener('click', event => { if (event.target === $('pickerBackdrop')) closePicker(); });
   $('pickerClose').addEventListener('click', closePicker);
+  $('pickerKinds').addEventListener('click', event => {
+    const button = event.target.closest('[data-kind]');
+    if (button) togglePickerKind(button.dataset.kind);
+  });
   $('pickerSearch').addEventListener('input', event => {
     if (state.picker && state.picker.kind === 'item') renderItemPickerList(event.target.value);
     else renderPickerList(event.target.value);

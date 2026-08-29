@@ -190,6 +190,14 @@
       <button id="pickerClose" type="button" class="ghost-x" aria-label="Close">×</button>
     </header>
     <input id="pickerSearch" type="search" placeholder="Search by name, description or label…" autocomplete="off">
+    <!--
+      Narrow the list to the two kinds worth hunting on purpose. Neither is on
+      to begin with, so the list opens on everything the item can roll.
+    -->
+    <div id="pickerKinds" class="picker-kinds" role="group" aria-label="Show only certain enchantments">
+      <button type="button" class="filter-chip" data-kind="AWAKENED" aria-pressed="false">Awoken</button>
+      <button type="button" class="filter-chip" data-kind="UNIQUE" aria-pressed="false">Unique</button>
+    </div>
     <div id="pickerList" class="picker-list"></div>
     <footer id="pickerFooter"></footer>
   </div>

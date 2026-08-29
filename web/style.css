@@ -979,3 +979,7 @@ table.mini td { padding: 3px 8px; border: 0; }
   .layout.tab-leaving, .layout.tab-entering,
   #summary.entering, #summary.leaving { opacity: 1; transform: none; }
 }
+
+/* The Awoken / Unique toggles above the enchantment list. */
+.picker-kinds { display: flex; gap: 6px; margin: 8px 0 2px; }
+.picker-kinds .filter-chip { font-size: 12px; }
