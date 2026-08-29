@@ -55,7 +55,8 @@ const state = {
   filters: { tarot: true, special: false, premium: false },
   // Which run is the current one, and the timer that coalesces the next.
   runId: 0,
-  calcTimer: 0
+  calcTimer: 0,
+  tabTimer: 0
 };
 
 /* ------------------------------------------------------------------ *
@@ -916,44 +917,46 @@ function renderSummary(rows, config) {
   }
 
   const rolls = EnchantEngine.rollsRemaining(config);
-  const title = multi
-    ? `<div class="summary-title">Targets: <b>${goals.map(name => html(name)).join(' + ')}</b></div>`
-    : `<div class="summary-title">Target: ${enchantIconHtml(state.data.byName.get(config.desired), 'inline-icon')} <b>${html(config.desired)}</b></div>`;
+  // value + what it means, on one line each. Five tiles of nineteen-point type
+  // cost two hundred pixels, and with four slots that was enough to push the
+  // build plan off the screen — which is the one thing the layout is for.
+  const figure = (value, label, hint) =>
+    `<span class="figure"${hint ? ` title="${html(hint)}"` : ''}><b>${value}</b><small>${label}</small></span>`;
 
-  /*
-   * With several targets every per-artifact figure would name an artifact the
-   * plan is not allowed to use, and would describe the first goal only. The
-   * plan card below carries the dust and the rerolls; the summary is left with
-   * the facts that hold whatever the order turns out to be.
-   */
-  let stats;
+  let figures;
   if (multi) {
-    stats = `
-      <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
-      <div class="stat"><span>${goals.length}</span><small>wanted, rolled one at a time<br>each one locked as it lands</small></div>
-      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier now<br>doubling with every lock</small></div>`;
+    figures = [
+      figure(rolls, `random slot${rolls === 1 ? '' : 's'} per reroll`, `${config.slots} total, ${config.locks.length} locked`),
+      figure(goals.length, 'wanted, locked as they land'),
+      figure(`×${Math.pow(2, config.locks.length)}`, 'dust per reroll', 'Doubles with every lock')
+    ].join('');
   } else {
     const bestOdds = viable.reduce((best, row) => row.odds > best.odds ? row : best);
     const bestDust = viable.reduce((best, row) => row.dust < best.dust ? row : best);
     const pool = EnchantEngine.weightedPool(state.data, config, bestDust.artifact);
     const target = state.data.byName.get(config.desired);
     const perSlot = pool.total ? (pool.weights.get(target.id) || 0) / pool.total * 100 : 0;
-    stats = `
-      <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
-      <div class="stat"><span>${percent(perSlot)}</span><small>chance on a single slot<br>with ${html(bestDust.artifact.name)}</small></div>
-      <div class="stat highlight"><span>${percent(bestOdds.odds)}</span><small>best chance per reroll<br>${html(bestOdds.artifact.name)}</small></div>
-      <div class="stat highlight"><span>${count(bestDust.dust)}</span><small>lowest expected ${html(config.dust)} dust<br>${html(bestDust.artifact.name)}</small></div>
-      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier<br>${plural(config.locks.length, 'lock')}</small></div>`;
+    figures = [
+      figure(percent(bestOdds.odds), `best per reroll · ${html(bestOdds.artifact.name)}`),
+      figure(`${dustIcon(config.dust)}${count(bestDust.dust)}`, `cheapest · ${html(bestDust.artifact.name)}`),
+      figure(percent(perSlot), 'on a single slot'),
+      figure(rolls, `random slot${rolls === 1 ? '' : 's'} per reroll`, `${config.slots} total, ${config.locks.length} locked`),
+      figure(`×${Math.pow(2, config.locks.length)}`, 'dust per reroll', 'Doubles with every lock')
+    ].join('');
   }
 
-  panel.hidden = false;
+  const title = multi
+    ? `Targets: <b>${goals.map(name => html(name)).join(' + ')}</b>`
+    : `Target: ${enchantIconHtml(state.data.byName.get(config.desired), 'inline-icon')} <b>${html(config.desired)}</b>`;
+
   panel.innerHTML = `
-    ${title}
-    <div class="stat-row">${stats}</div>
-    <div class="summary-actions">
-      <button id="showAudit" type="button" class="secondary">Explain these odds</button>
+    <div class="summary-head">
+      <div class="summary-title">${title}</div>
+      <button id="showAudit" type="button" class="secondary">${$('auditCard').hidden ? 'Explain these odds' : 'Hide the explanation'}</button>
       ${artifactFilterHtml()}
-    </div>`;
+    </div>
+    <div class="summary-figures">${figures}</div>`;
+  revealResultCard(panel);
 }
 
 /* ------------------------------------------------------------------ *
@@ -1068,6 +1071,7 @@ function showAudit() {
         <li>${html(EnchantEngine.NOTES.qtDivergence)}</li>
         <li>${html(EnchantEngine.NOTES.duplicateRoll)}</li>
         <li>${html(EnchantEngine.NOTES.artifactsUsed)}</li>
+        <li>${html(EnchantEngine.NOTES.plannerPolicy)}</li>
       </ul>
     </details>`;
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1150,12 +1154,11 @@ async function renderBuildPlan(config) {
 
   output.innerHTML = `
     <div class="plan-total">
-      <div class="stat highlight"><span>${dust(plan.dust)}</span><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></div>
-      <div class="stat"><span>${count(plan.rerolls)}</span><small>expected rerolls in total</small></div>
+      <span class="figure strong"><b>${dust(plan.dust)}</b><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></span>
+      <span class="figure"><b>${count(plan.rerolls)}</b><small>rerolls in total</small></span>
     </div>
     ${comparison}
-    <ol class="plan-steps">${steps}</ol>
-    <p class="note">${html(EnchantEngine.NOTES.plannerPolicy)}</p>`;
+    <ol class="plan-steps">${steps}</ol>`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1743,18 +1746,46 @@ function renderTabs() {
   bar.append(add);
 }
 
+/*
+ * Switching tab replaces everything on screen at once, which without a
+ * transition is indistinguishable from a glitch. The work area steps aside in
+ * the direction of travel — a tab to the right leaves towards the left — and
+ * the new setup arrives from the other side.
+ *
+ * The swap itself is deferred until the old content has gone, for the same
+ * reason the artifact table and the build plan never share the layout: two
+ * states visible at once is what reads as broken.
+ */
+const TAB_SWAP_MS = 190;
+
 function switchTab(id) {
   if (id === state.activeTab) return;
   const target = state.tabs.find(tab => tab.id === id);
   if (!target) return;
+
+  const layout = document.querySelector('.layout');
+  const from = state.tabs.findIndex(tab => tab.id === state.activeTab);
+  const to = state.tabs.findIndex(tab => tab.id === id);
+  layout.style.setProperty('--dir', to > from ? '1' : '-1');
+
   saveSetup();                 // bank the tab we are leaving
   state.activeTab = id;
-  state.loadingTab = true;     // stop applySetup's edits from writing back
-  applySetup(target.setup);
-  state.loadingTab = false;
-  clearResults();
-  refresh();
-  persistTabs();
+  persistTabs();               // the tab strip highlights the new one at once
+  renderTabs();
+
+  clearTimeout(state.tabTimer);
+  layout.classList.remove('tab-entering');
+  layout.classList.add('tab-leaving');
+  state.tabTimer = setTimeout(() => {
+    state.loadingTab = true;   // stop applySetup's edits from writing back
+    applySetup(target.setup);
+    state.loadingTab = false;
+    clearResults();
+    refresh();
+    layout.classList.remove('tab-leaving');
+    layout.classList.add('tab-entering');
+    state.tabTimer = setTimeout(() => layout.classList.remove('tab-entering'), 30);
+  }, TAB_SWAP_MS);
 }
 
 function addTab() {

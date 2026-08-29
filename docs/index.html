@@ -487,8 +487,41 @@ select option { background: var(--panel); color: var(--text); }
 
 /* ---------------- summary ---------------- */
 
-.summary-title { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+/* ---------------- summary ---------------- *
+ * One line of identity, one line of numbers. It used to be a grid of tiles in
+ * nineteen-point type, about two hundred pixels tall, and on a four-slot item
+ * that was enough on its own to push the build plan below the fold.
+ */
+.summary-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
+.summary-title { font-size: 14px; display: flex; align-items: center; gap: 7px; min-width: 0; }
 .summary-title.bad { color: var(--bad); }
+.summary-head .secondary { margin-left: auto; padding: 4px 11px; font-size: 12px; }
+.summary-head .filter-chips { margin-left: 0; }
+
+.summary-figures { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.figure { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.figure > b {
+  font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+.figure > small { font-size: 11px; color: var(--dim); line-height: 1.3; }
+.figure[title] { cursor: help; }
+
+/* Each figure arrives a beat after the one before, so a recalculation reads as
+   the numbers being replaced rather than the panel blinking. */
+.summary-figures .figure { animation: figure-in .34s cubic-bezier(.16, .84, .32, 1) backwards; }
+.summary-figures .figure:nth-child(1) { animation-delay: 0s; }
+.summary-figures .figure:nth-child(2) { animation-delay: .035s; }
+.summary-figures .figure:nth-child(3) { animation-delay: .07s; }
+.summary-figures .figure:nth-child(4) { animation-delay: .105s; }
+.summary-figures .figure:nth-child(5) { animation-delay: .14s; }
+@keyframes figure-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .summary-figures .figure { animation: none; }
+}
 .inline-icon { width: 22px; height: 22px; object-fit: contain; }
 .inline-icon.missing { display: none; }
 
@@ -596,15 +629,17 @@ table.mini td { padding: 3px 8px; border: 0; }
  * lands. The figures are labelled rather than hidden behind tooltips — a
  * number you have to hover to understand is a number you will misread.
  */
-.plan-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 10px; }
-.plan-compare { margin: 0 0 14px; font-size: 12.5px; color: var(--muted); }
+.plan-total { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-bottom: 7px; }
+.plan-total .figure > b { font-size: 17px; }
+.figure.strong > b { color: var(--accent); }
+.plan-compare { margin: 0 0 11px; font-size: 12px; color: var(--muted); }
 .plan-compare b { color: var(--text); }
 
-.plan-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.plan-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .plan-steps > li {
   background: var(--bg); border: 1px solid var(--line-soft);
   border-left: 3px solid var(--accent-deep);
-  border-radius: var(--radius-sm); padding: 11px 13px;
+  border-radius: var(--radius-sm); padding: 9px 12px;
 }
 .plan-head { display: flex; align-items: flex-start; gap: 9px; }
 .plan-step {
@@ -619,7 +654,7 @@ table.mini td { padding: 3px 8px; border: 0; }
 /* The one thing you physically do at this step, so it gets its own line. */
 .plan-use {
   display: flex; align-items: center; gap: 8px;
-  margin: 9px 0 0 29px; padding: 6px 10px;
+  margin: 7px 0 0 29px; padding: 5px 10px;
   background: rgba(121, 197, 232, .07);
   border: 1px solid rgba(121, 197, 232, .2);
   border-radius: var(--radius-sm);
@@ -628,7 +663,7 @@ table.mini td { padding: 3px 8px; border: 0; }
 .plan-use img { width: 20px; height: 20px; object-fit: contain; flex: none; }
 .plan-use b { color: var(--text); font-weight: 650; }
 
-.plan-figures { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 9px 0 0 29px; }
+.plan-figures { display: flex; flex-wrap: wrap; gap: 5px 20px; margin: 7px 0 0 29px; }
 .plan-figures > div { min-width: 0; }
 .plan-figures dt { font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim); }
 .plan-figures dd {
@@ -636,7 +671,7 @@ table.mini td { padding: 3px 8px; border: 0; }
   display: flex; align-items: center; gap: 4px;
 }
 
-.plan-then { margin: 8px 0 0 29px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.plan-then { margin: 6px 0 0 29px; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .plan-then b { color: var(--text); }
 .plan-then.warn {
   color: var(--text); background: rgba(240, 180, 41, .09);
@@ -914,6 +949,43 @@ table.mini td { padding: 3px 8px; border: 0; }
   #artifactCard.entering, #planCard.entering,
   #artifactCard.leaving, #planCard.leaving { opacity: 1; transform: none; }
   #planCard .plan-steps > li { animation: none; }
+}
+
+/* ---------------- switching tab ---------------- *
+ * The whole work area steps aside in the direction of travel: pick a tab to
+ * the right and the current setup leaves towards the left, the new one arrives
+ * from the right. --dir is set to 1 or -1 by app.js before the class lands.
+ */
+.layout {
+  transition: opacity .19s cubic-bezier(.5, 0, .75, 0),
+              transform .19s cubic-bezier(.5, 0, .75, 0);
+}
+.layout.tab-leaving {
+  opacity: 0;
+  transform: translateX(calc(var(--dir, 1) * -18px));
+}
+.layout.tab-entering {
+  opacity: 0;
+  transform: translateX(calc(var(--dir, 1) * 18px));
+  transition: none;
+}
+.layout:not(.tab-leaving):not(.tab-entering) {
+  transition: opacity .3s cubic-bezier(.16, .84, .32, 1),
+              transform .3s cubic-bezier(.16, .84, .32, 1);
+}
+
+/* The summary appears and leaves on the same terms as the cards below it. */
+#summary {
+  transition: opacity .42s cubic-bezier(.16, .84, .32, 1),
+              transform .42s cubic-bezier(.16, .84, .32, 1);
+}
+#summary.entering { opacity: 0; transform: translateY(14px) scale(.985); transition: none; }
+#summary.leaving { opacity: 0; transform: translateY(-10px) scale(.99); }
+
+@media (prefers-reduced-motion: reduce) {
+  .layout, #summary { transition: none; }
+  .layout.tab-leaving, .layout.tab-entering,
+  #summary.entering, #summary.leaving { opacity: 1; transform: none; }
 }
 
 </style>
@@ -2013,7 +2085,8 @@ const state = {
   filters: { tarot: true, special: false, premium: false },
   // Which run is the current one, and the timer that coalesces the next.
   runId: 0,
-  calcTimer: 0
+  calcTimer: 0,
+  tabTimer: 0
 };
 
 /* ------------------------------------------------------------------ *
@@ -2874,44 +2947,46 @@ function renderSummary(rows, config) {
   }
 
   const rolls = EnchantEngine.rollsRemaining(config);
-  const title = multi
-    ? `<div class="summary-title">Targets: <b>${goals.map(name => html(name)).join(' + ')}</b></div>`
-    : `<div class="summary-title">Target: ${enchantIconHtml(state.data.byName.get(config.desired), 'inline-icon')} <b>${html(config.desired)}</b></div>`;
+  // value + what it means, on one line each. Five tiles of nineteen-point type
+  // cost two hundred pixels, and with four slots that was enough to push the
+  // build plan off the screen — which is the one thing the layout is for.
+  const figure = (value, label, hint) =>
+    `<span class="figure"${hint ? ` title="${html(hint)}"` : ''}><b>${value}</b><small>${label}</small></span>`;
 
-  /*
-   * With several targets every per-artifact figure would name an artifact the
-   * plan is not allowed to use, and would describe the first goal only. The
-   * plan card below carries the dust and the rerolls; the summary is left with
-   * the facts that hold whatever the order turns out to be.
-   */
-  let stats;
+  let figures;
   if (multi) {
-    stats = `
-      <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
-      <div class="stat"><span>${goals.length}</span><small>wanted, rolled one at a time<br>each one locked as it lands</small></div>
-      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier now<br>doubling with every lock</small></div>`;
+    figures = [
+      figure(rolls, `random slot${rolls === 1 ? '' : 's'} per reroll`, `${config.slots} total, ${config.locks.length} locked`),
+      figure(goals.length, 'wanted, locked as they land'),
+      figure(`×${Math.pow(2, config.locks.length)}`, 'dust per reroll', 'Doubles with every lock')
+    ].join('');
   } else {
     const bestOdds = viable.reduce((best, row) => row.odds > best.odds ? row : best);
     const bestDust = viable.reduce((best, row) => row.dust < best.dust ? row : best);
     const pool = EnchantEngine.weightedPool(state.data, config, bestDust.artifact);
     const target = state.data.byName.get(config.desired);
     const perSlot = pool.total ? (pool.weights.get(target.id) || 0) / pool.total * 100 : 0;
-    stats = `
-      <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
-      <div class="stat"><span>${percent(perSlot)}</span><small>chance on a single slot<br>with ${html(bestDust.artifact.name)}</small></div>
-      <div class="stat highlight"><span>${percent(bestOdds.odds)}</span><small>best chance per reroll<br>${html(bestOdds.artifact.name)}</small></div>
-      <div class="stat highlight"><span>${count(bestDust.dust)}</span><small>lowest expected ${html(config.dust)} dust<br>${html(bestDust.artifact.name)}</small></div>
-      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier<br>${plural(config.locks.length, 'lock')}</small></div>`;
+    figures = [
+      figure(percent(bestOdds.odds), `best per reroll · ${html(bestOdds.artifact.name)}`),
+      figure(`${dustIcon(config.dust)}${count(bestDust.dust)}`, `cheapest · ${html(bestDust.artifact.name)}`),
+      figure(percent(perSlot), 'on a single slot'),
+      figure(rolls, `random slot${rolls === 1 ? '' : 's'} per reroll`, `${config.slots} total, ${config.locks.length} locked`),
+      figure(`×${Math.pow(2, config.locks.length)}`, 'dust per reroll', 'Doubles with every lock')
+    ].join('');
   }
 
-  panel.hidden = false;
+  const title = multi
+    ? `Targets: <b>${goals.map(name => html(name)).join(' + ')}</b>`
+    : `Target: ${enchantIconHtml(state.data.byName.get(config.desired), 'inline-icon')} <b>${html(config.desired)}</b>`;
+
   panel.innerHTML = `
-    ${title}
-    <div class="stat-row">${stats}</div>
-    <div class="summary-actions">
-      <button id="showAudit" type="button" class="secondary">Explain these odds</button>
+    <div class="summary-head">
+      <div class="summary-title">${title}</div>
+      <button id="showAudit" type="button" class="secondary">${$('auditCard').hidden ? 'Explain these odds' : 'Hide the explanation'}</button>
       ${artifactFilterHtml()}
-    </div>`;
+    </div>
+    <div class="summary-figures">${figures}</div>`;
+  revealResultCard(panel);
 }
 
 /* ------------------------------------------------------------------ *
@@ -3026,6 +3101,7 @@ function showAudit() {
         <li>${html(EnchantEngine.NOTES.qtDivergence)}</li>
         <li>${html(EnchantEngine.NOTES.duplicateRoll)}</li>
         <li>${html(EnchantEngine.NOTES.artifactsUsed)}</li>
+        <li>${html(EnchantEngine.NOTES.plannerPolicy)}</li>
       </ul>
     </details>`;
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3108,12 +3184,11 @@ async function renderBuildPlan(config) {
 
   output.innerHTML = `
     <div class="plan-total">
-      <div class="stat highlight"><span>${dust(plan.dust)}</span><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></div>
-      <div class="stat"><span>${count(plan.rerolls)}</span><small>expected rerolls in total</small></div>
+      <span class="figure strong"><b>${dust(plan.dust)}</b><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></span>
+      <span class="figure"><b>${count(plan.rerolls)}</b><small>rerolls in total</small></span>
     </div>
     ${comparison}
-    <ol class="plan-steps">${steps}</ol>
-    <p class="note">${html(EnchantEngine.NOTES.plannerPolicy)}</p>`;
+    <ol class="plan-steps">${steps}</ol>`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -3701,18 +3776,46 @@ function renderTabs() {
   bar.append(add);
 }
 
+/*
+ * Switching tab replaces everything on screen at once, which without a
+ * transition is indistinguishable from a glitch. The work area steps aside in
+ * the direction of travel — a tab to the right leaves towards the left — and
+ * the new setup arrives from the other side.
+ *
+ * The swap itself is deferred until the old content has gone, for the same
+ * reason the artifact table and the build plan never share the layout: two
+ * states visible at once is what reads as broken.
+ */
+const TAB_SWAP_MS = 190;
+
 function switchTab(id) {
   if (id === state.activeTab) return;
   const target = state.tabs.find(tab => tab.id === id);
   if (!target) return;
+
+  const layout = document.querySelector('.layout');
+  const from = state.tabs.findIndex(tab => tab.id === state.activeTab);
+  const to = state.tabs.findIndex(tab => tab.id === id);
+  layout.style.setProperty('--dir', to > from ? '1' : '-1');
+
   saveSetup();                 // bank the tab we are leaving
   state.activeTab = id;
-  state.loadingTab = true;     // stop applySetup's edits from writing back
-  applySetup(target.setup);
-  state.loadingTab = false;
-  clearResults();
-  refresh();
-  persistTabs();
+  persistTabs();               // the tab strip highlights the new one at once
+  renderTabs();
+
+  clearTimeout(state.tabTimer);
+  layout.classList.remove('tab-entering');
+  layout.classList.add('tab-leaving');
+  state.tabTimer = setTimeout(() => {
+    state.loadingTab = true;   // stop applySetup's edits from writing back
+    applySetup(target.setup);
+    state.loadingTab = false;
+    clearResults();
+    refresh();
+    layout.classList.remove('tab-leaving');
+    layout.classList.add('tab-entering');
+    state.tabTimer = setTimeout(() => layout.classList.remove('tab-entering'), 30);
+  }, TAB_SWAP_MS);
 }
 
 function addTab() {
