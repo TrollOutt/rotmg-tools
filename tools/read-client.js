@@ -395,12 +395,24 @@ async function main() {
     for (const key of removed.slice(0, 20)) console.log(`      - ${key.replace('|', ': ')}`);
     if (removed.length > 20) console.log(`      … and ${removed.length - 20} more gone`);
 
-    if (flag('--news') && (changed.length || added.length || removed.length)) {
+    /*
+     * The changelog is written on every --news run, not only when something
+     * moved. A run that found nothing is the useful half of the answer: it
+     * says which build the shipped numbers were last checked against, and the
+     * page shows that to the player. Silence would be indistinguishable from
+     * never having looked.
+     */
+    if (flag('--news')) {
       const when = fs.statSync(client.assets).mtime.toISOString().slice(0, 10);
-      const entry = [`## ${when} — build ${build}`, ...changed.map(l => `~ ${l}`),
-        ...added.map(k => `+ ${k.replace('|', ': ')}`), ...removed.map(k => `- ${k.replace('|', ': ')}`), ''];
+      const quiet = !(changed.length || added.length || removed.length);
+      const body = quiet ? ['= nothing moved'] : [...changed.map(l => `~ ${l}`),
+        ...added.map(k => `+ ${k.replace('|', ': ')}`), ...removed.map(k => `- ${k.replace('|', ': ')}`)];
+      const entry = [`## ${when} — build ${build}`, ...body, ''];
+      // A run of consecutive "nothing moved" entries is noise, so a quiet run
+      // replaces the previous quiet one rather than stacking on top of it.
       const before = fs.existsSync(CHANGES) ? fs.readFileSync(CHANGES, 'utf8') : '';
-      fs.writeFileSync(CHANGES, `${entry.join('\n')}\n${before}`, 'utf8');
+      const keep = quiet ? before.replace(/^## [^\n]*\n= nothing moved\n\n/, '') : before;
+      fs.writeFileSync(CHANGES, `${entry.join('\n')}\n${keep}`, 'utf8');
       console.log(`\n  written to ${path.relative(root, CHANGES)}`);
     }
   }

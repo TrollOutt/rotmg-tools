@@ -189,11 +189,18 @@ const iconBytes = fs.readFileSync(path.join(dataRoot, 'appicon.ico'));
 const faviconTag = `<link rel="icon" href="data:image/x-icon;base64,${iconBytes.toString('base64')}">`;
 
 const built = new Date().toISOString().slice(0, 10);
+
+// What tools/read-client.js last saw in an installed game client. Carried into
+// the file so an offline copy can still say which build its numbers were
+// checked against; absent if nobody has run the reader yet.
+const changesPath = path.join(dataRoot, 'client-changes.txt');
+const changes = fs.existsSync(changesPath) ? fs.readFileSync(changesPath, 'utf8') : '';
+
 page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, sources, assets, itemSprites, itemCatalog })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, itemCatalog })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`

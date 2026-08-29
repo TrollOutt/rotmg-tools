@@ -1356,6 +1356,7 @@ function bind() {
 
   window.addEventListener('resize', handleAmbienceResize);
   $('reset').addEventListener('click', resetSetup);
+  $('status').addEventListener('click', toggleClientNews);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
     if (event.target.closest('#changeItem')) { openItemPicker(); return; }
@@ -1912,6 +1913,78 @@ async function loadItemSprites() {
   }
 }
 
+
+/* ------------------------------------------------------------------ *
+ * What the game client last said                                      *
+ * ------------------------------------------------------------------ *
+ * The numbers here are read out of an installed client by
+ * tools/read-client.js, which records what it saw and reports what
+ * moved on the next run. data/client-changes.txt is that report. It
+ * matters to a player for one reason: it says whether these odds have
+ * been checked against the game as it is now, or against the game as it
+ * was three updates ago.
+ */
+const NEWS_KINDS = { ench: 'enchantment', pool: 'pool', artifact: 'artifact', item: 'item' };
+
+async function readChanges() {
+  if (BUNDLE) return BUNDLE.changes || '';
+  try {
+    const response = await fetch(ROOT + 'client-changes.txt');
+    return response.ok ? await response.text() : '';
+  } catch (error) {
+    return '';   // opened from disk, or never recorded; the panel says so
+  }
+}
+
+// "## 2026-08-23 — build 9476…" followed by one line per fact.
+function parseChanges(text) {
+  const entries = [];
+  for (const line of text.split(/\r?\n/)) {
+    const head = /^##\s*(\S+)\s+—\s+build\s+(\S+)/.exec(line);
+    if (head) { entries.push({ date: head[1], build: head[2], lines: [] }); continue; }
+    if (line.trim() && entries.length) entries[entries.length - 1].lines.push(line.trim());
+  }
+  return entries;
+}
+
+function newsLineHtml(line) {
+  const mark = line[0];
+  const rest = line.slice(1).trim();
+  if (mark === '=') return `<li class="news-quiet">Nothing moved.</li>`;
+  const [kind, ...tail] = rest.split(':');
+  const what = NEWS_KINDS[kind.trim()] || kind.trim();
+  const verb = mark === '+' ? 'added' : mark === '-' ? 'gone' : 'changed';
+  return `<li class="news-${verb}"><span class="news-kind">${html(what)}</span>`
+    + `<span class="news-what">${html(tail.join(':').trim())}</span></li>`;
+}
+
+function renderClientNews(entries) {
+  const panel = $('clientNews');
+  if (!entries.length) {
+    panel.innerHTML = '<p class="news-none">These numbers come from the enchantment documents. '
+      + 'No game client has been read against them yet.</p>';
+    return;
+  }
+  const latest = entries[0];
+  const quiet = latest.lines.length === 1 && latest.lines[0][0] === '=';
+  panel.innerHTML = `<p class="news-head">`
+    + `Checked against the game client of <b>${html(latest.date)}</b>`
+    + `<span class="news-build">build ${html(latest.build.slice(0, 8))}</span></p>`
+    + (quiet
+      ? '<p class="news-none">Every weight, pool rule, artifact and item matched. These odds are current.</p>'
+      : `<ul class="news-list">${latest.lines.slice(0, 40).map(newsLineHtml).join('')}</ul>`
+        + (latest.lines.length > 40 ? `<p class="news-none">…and ${latest.lines.length - 40} more.</p>` : ''))
+    + (entries.length > 1
+      ? `<p class="news-none">${entries.length - 1} earlier reading${entries.length > 2 ? 's' : ''} on record.</p>`
+      : '');
+}
+
+function toggleClientNews() {
+  const panel = $('clientNews');
+  const open = panel.hidden;
+  panel.hidden = !open;
+  $('status').setAttribute('aria-expanded', String(open));
+}
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
   const [modTexts, artifactText, awakenText, awokenExtraText] = await Promise.all([
@@ -1953,6 +2026,7 @@ async function load() {
     renderOfflineOffer();
     state.ready = true;
     $('status').textContent = `${state.data.enchants.length} enchantments · ${state.data.artifacts.length} artifacts loaded${BUNDLE ? ' · standalone build' : ''}`;
+    renderClientNews(parseChanges(await readChanges()));
     loadFilters();
     loadTabs();
     renderTabs();
