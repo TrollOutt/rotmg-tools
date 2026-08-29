@@ -13,7 +13,9 @@ const RARITIES = ['uncommon', 'rare', 'legendary', 'divine'];
 const SAVE_KEY = 'rotmg-enchant-calculator/v1';
 // A view preference, not part of a saved setup: it belongs to the reader,
 // not to the item being planned.
-const FILTER_KEY = 'rotmg-enchant-calculator/filters';
+// Bumped when the defaults change, so a returning player sees the new ones
+// rather than a stored copy of the old.
+const FILTER_KEY = 'rotmg-enchant-calculator/filters/2';
 const TABS_KEY = 'rotmg-enchant-calculator/tabs/v1';
 
 /*
@@ -51,7 +53,15 @@ const state = {
   lastCardItem: null,
   // Which kinds of artifact the table lists. Tarot only by default: they are
   // the ones you actually find in game.
-  filters: { tarot: true, special: false, engraving: false, premium: false },
+  /*
+   * The two you can go and get are on; the two you cannot are off.
+   *
+   * Tarot cards drop all year and the Special artifacts drop in their own
+   * dungeons, so both are part of an ordinary plan. Engravings come from
+   * seasonal events and Premium cards are bought with money, so neither belongs
+   * in a default answer to "what should I use" — they stay one click away.
+   */
+  filters: { tarot: true, special: true, engraving: false, premium: false },
   // Which run is the current one, and the timer that coalesces the next.
   runId: 0,
   calcTimer: 0,
