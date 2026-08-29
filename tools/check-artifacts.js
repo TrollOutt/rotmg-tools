@@ -44,7 +44,6 @@ const SPELLING = {
   'Acid Guardian (Neo)': 'Acid Guardian',
   'Solar Mastery (Neo)': 'Solar Mastery'
 };
-const ARTIFACT_ALIAS = { 'Premium Silver Tarot Card': 'Premium Silver Card' };
 
 // The rule is the client's own attribute list, kept verbatim in the snapshot:
 // "ModifyEnchantmentWeightLabel includeLabelsOR=A,B excludeLabelsOR=C mult=2".
@@ -83,18 +82,31 @@ for (const line of snapshot) {
   const parts = line.split('|');
   const pool = parts[1].replace(/ #\d+$/, '');
   const rule = parts.slice(2).join('|');
-  if (!/^ModifyEnchantmentWeight/.test(rule)) continue;
   const fields = attributes(rule);
-  const mult = Number(fields.get('mult'));
-  if (!Number.isFinite(mult)) continue;
   const include = fields.get('includeLabelsOR');
   const exclude = fields.get('excludeLabelsOR');
   if (!pools.has(pool)) pools.set(pool, []);
+
+  // An entry rule that excludes TIER1..3 says the same thing as a weight rule
+  // that multiplies them by zero: only tier 4 of a tiered enchantment is in
+  // play. Night Prince Engraving states it the first way and every other
+  // artifact the second, so both are read as tier multipliers here — the
+  // engine unifies them the same way.
+  if (/^EnchantmentEntryLabel/.test(rule)) {
+    for (const label of (exclude || '').split(',').filter(Boolean)) {
+      if (/^TIER[1-4]$/.test(label)) pools.get(pool).push({ labels: [label], excludes: [], id: null, mult: 0 });
+    }
+    continue;
+  }
+  if (!/^ModifyEnchantmentWeight/.test(rule)) continue;
+  const mult = fields.has('mult') ? Number(fields.get('mult')) : null;
+  const increment = fields.has('increment') ? Number(fields.get('increment')) : null;
+  if (mult === null && increment === null) continue;
   pools.get(pool).push({
     labels: include ? include.split(',') : null,
     excludes: exclude ? exclude.split(',') : [],
     id: fields.get('id') || null,
-    mult
+    mult, increment
   });
 }
 
@@ -103,7 +115,7 @@ const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armor
 const read = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
 const data = engine.buildDataset({
   modTexts: MOD_FILES.map(file => read('Enchantment documents', file)),
-  artifactText: read('Artifacts', 'artifacts.txt'),
+  clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
   awakenText: read('Awakened Items', 'awakenedItems.txt'),
   awokenExtraText: read('Awakened Items', 'awoken-items.txt')
 });
@@ -111,7 +123,7 @@ const data = engine.buildDataset({
 // Tier rules are left out on both sides: they are a share of the enchantment's
 // own weight rather than a multiplier on all of it, and engine.tierMass has
 // them. tools/read-client.js is what checks those.
-function clientMultiplier(mod, rules) {
+function clientMultiplier(mod, rules, base) {
   let out = 1;
   for (const rule of rules) {
     if (rule.labels && rule.labels.every(label => /^TIER[1-4]$/.test(label))) continue;
@@ -123,7 +135,8 @@ function clientMultiplier(mod, rules) {
       hit = rule.labels.some(label => mod.tags.has(label));
     }
     if (!hit || rule.excludes.some(label => mod.tags.has(label))) continue;
-    out *= rule.mult;
+    if (rule.increment !== null && rule.increment !== undefined) out += rule.increment / base;
+    else out *= rule.mult;
   }
   return out;
 }
@@ -138,12 +151,12 @@ let compared = 0;
 const off = [];
 for (const artifact of data.artifacts) {
   if (artifact.name === 'No Artifact') continue;
-  const rules = pools.get(poolOf.get(ARTIFACT_ALIAS[artifact.name] || artifact.name));
+  const rules = pools.get(poolOf.get(artifact.name));
   if (!rules) { off.push(`${artifact.name}: the client has no pool by that name`); continue; }
   for (const mod of data.enchants) {
     compared++;
     const ours = ourMultiplier(mod, artifact);
-    const theirs = clientMultiplier(mod, rules);
+    const theirs = clientMultiplier(mod, rules, mod.weight * engine.tierMass(mod, artifact));
     // Loose, because weightFor truncates to an integer the way the game does
     // and a fraction of a unit is not a disagreement about the rule.
     if (Math.abs(ours - theirs) > 1e-3 * Math.max(1, theirs)) {
@@ -186,7 +199,7 @@ let tiersCompared = 0;
 const tiersOff = [];
 for (const artifact of data.artifacts) {
   if (artifact.name === 'No Artifact') continue;
-  const rules = pools.get(poolOf.get(ARTIFACT_ALIAS[artifact.name] || artifact.name));
+  const rules = pools.get(poolOf.get(artifact.name));
   if (!rules) continue;
   for (const mod of data.enchants) {
     if (!mod.tags.has('TIERED') || !mod.distribution.length) continue;

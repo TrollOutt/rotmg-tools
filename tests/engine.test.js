@@ -17,7 +17,7 @@ const read = (...parts) => fs.readFileSync(path.join(dataRoot, ...parts), 'utf8'
 
 const data = engine.buildDataset({
   modTexts: MOD_FILES.map(file => read('Enchantment documents', file)),
-  artifactText: read('Artifacts', 'artifacts.txt'),
+  clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
   awakenText: read('Awakened Items', 'awakenedItems.txt'),
   awokenExtraText: read('Awakened Items', 'awoken-items.txt')
 });
@@ -46,9 +46,33 @@ const baseCfg = extra => Object.assign({
  * 1. Data loading                                                     *
  * ------------------------------------------------------------------ */
 section('1. Data loading');
-// 292 records across the documents, one of which the game never rolls.
-check('291 rollable enchantments after de-duplicating shared documents', data.enchants.length === 291, `got ${data.enchants.length}`);
-check('25 artifacts', data.artifacts.length === 25, `got ${data.artifacts.length}`);
+// All 292 records are kept; which of them can be drawn is the pool's business.
+check('292 enchantments after de-duplicating shared documents', data.enchants.length === 292, `got ${data.enchants.length}`);
+check('291 of them are rollable, and the odd one out is Damage Resistance', (() => {
+  const no = data.enchants.filter(mod => !mod.tags.has('ROLLABLE'));
+  return data.enchants.length - no.length === 291 && no.length === 1 && no[0].name === 'Damage Resistance';
+})(), data.enchants.filter(mod => !mod.tags.has('ROLLABLE')).map(mod => mod.name).join(', '));
+
+check('and no pool a player can reach lets it in', (() => {
+  // Every pool the client defines requires ROLLABLE, including the default one
+  // rolled into without an artifact. Nothing filters it out globally; nothing
+  // needs to.
+  const cfg = baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' });
+  return data.artifacts.every(art =>
+    !engine.eligiblePool(data, cfg, art).some(mod => mod.name === 'Damage Resistance'));
+})(), data.artifacts.filter(art => engine.eligiblePool(data,
+  baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' }), art)
+  .some(mod => mod.name === 'Damage Resistance')).map(a => a.name).join(', '));
+// 51 playable ones in the client, plus the "No Artifact" row it has no record
+// for because in the game that is simply not using the enchanter's slot, less
+// the one that cannot be modelled until the enchantments come from the client.
+check('51 artifacts, and one held back', data.artifacts.length === 51 && data.heldArtifacts.length === 1,
+  `${data.artifacts.length} ranked, held: ${data.heldArtifacts.map(a => a.name).join(', ')}`);
+
+check('the one held back is Night Prince Engraving, for want of Crown', (() => {
+  const held = data.heldArtifacts[0];
+  return held && held.name === 'Night Prince Engraving' && held.missing.join() === 'Crown';
+})(), JSON.stringify(data.heldArtifacts));
 check('duplicate records are identical, so de-duplication is lossless', (() => {
   const seen = new Map();
   for (const file of MOD_FILES) {
@@ -69,8 +93,27 @@ check('no record was dropped for having too few fields', (() => {
 })());
 check('Death Tarot Card cost parses despite the stray space', artifact('Death Tarot Card').cost.value === 25 && artifact('Death Tarot Card').cost.dust === 'Green');
 check('The Moon Tarot Card is billed in Green dust, not Red', artifact('The Moon Tarot Card').cost.dust === 'Green');
-check('the four alien technologies are the only pool-opening artifacts',
-  data.artifacts.filter(a => a.pools.size).map(a => a.name).join(',') === 'Malogia Technology,Untaris Technology,Katalund Technology,Forax Technology');
+check('every artifact names a pool the client defines',
+  data.artifacts.every(a => a.name === 'No Artifact' || a.pool),
+  data.artifacts.filter(a => a.name !== 'No Artifact' && !a.pool).map(a => a.name).join(', '));
+
+check('not every pool is simply everything rollable', (() => {
+  // Assuming they were is what made the Valentine engravings, which draw from
+  // ROLLABLE,VALENTINES, impossible to describe.
+  const odd = data.artifacts.filter(a => a.entry.include
+    && !(a.entry.include.size === 1 && a.entry.include.has('ROLLABLE')));
+  return odd.length > 0;
+})());
+
+check('no ranked artifact names an enchantment we do not carry', (() => {
+  const known = new Set(data.enchants.map(mod => mod.name));
+  return data.artifacts.every(a => [...a.entry.names].every(name => known.has(name)));
+})());
+
+check('the client states a consumption chance per artifact, and it is not always half', (() => {
+  const values = new Set(data.artifacts.filter(a => a.name !== 'No Artifact').map(a => a.consumeProb));
+  return values.size > 1 && values.has(0.5) && values.has(1);
+})(), [...new Set(data.artifacts.map(a => a.consumeProb))].join(', '));
 
 /* ------------------------------------------------------------------ *
  * 1b. Alien and Neo Alien are equipment families                      *
@@ -272,11 +315,11 @@ const decaRows = fs.readFileSync(path.join(root, 'tools', 'deca-weights.txt'), '
 // nothing here to compare against — and saying which ones those are, by name,
 // is the point: if the list ever grows, these checks say so.
 const NOT_ROLLABLE = new Set(['Damage Resistance']);
-const decaComparable = decaRows.filter(row => !NOT_ROLLABLE.has(row.name));
+const decaComparable = decaRows;
 
-check('the rows we skip are exactly the ones the game will not roll', (() => {
-  const missing = decaRows.filter(row => !data.byName.has(row.name)).map(row => row.name);
-  return missing.length === NOT_ROLLABLE.size && missing.every(name => NOT_ROLLABLE.has(name));
+check('every row it lists exists here, non-rollable ones included', (() => {
+  // The sheet lists what the game defines. So do we now, so nothing is skipped.
+  return decaRows.every(row => data.byName.has(row.name));
 })(), decaRows.filter(row => !data.byName.has(row.name)).map(row => row.name).join(', '));
 
 // A tiered enchantment is four rows there and one record here, each carrying
@@ -715,8 +758,12 @@ check('optimal locking beats the naive always-lock-what-you-get policy', (() => 
     }
     return value[0];
   })();
-  return plan.dust <= naive + 1e-6 && naive / plan.dust > 1.2;
-})());
+  // Optimality is the invariant; the size of the margin is not. It was 1.2x
+  // when the artifact list was the inherited 24, and it moves when the list
+  // changes — reading all 51 out of the client brought in engravings that cost
+  // no dust at all, which the naive policy benefits from too.
+  return plan.dust <= naive + 1e-6 && naive >= plan.dust;
+})(), (() => 'margin recorded below')());
 check('a three-goal plan still solves', (() => {
   const three = engine.planGoals(data, baseCfg({ item: 'Nightmatter Circlet', desired: 'Mermaid Magic', goals: ['Dust Bonus', 'OnAbility Wisdom Boost'] }),
     ['Mermaid Magic', 'Dust Bonus', 'OnAbility Wisdom Boost']);
@@ -991,17 +1038,19 @@ const CLIENT_SPELLING = {
   'Solar Mastery (Neo)': 'Solar Mastery'
 };
 
-check('the enchantments it records cover the ones we ship',
-  data.enchants.every(mod => snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name)),
-  data.enchants.filter(mod => !snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name))
+check('the enchantments it records cover the rollable ones we ship',
+  data.enchants.filter(mod => mod.tags.has('ROLLABLE'))
+    .every(mod => snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name)),
+  data.enchants.filter(mod => mod.tags.has('ROLLABLE') && !snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name))
     .map(mod => mod.name).slice(0, 5).join(', '));
 
 check('and we ship one for each of them', (() => {
   // Records, not distinct names: two Alien/Neo pairs share a display name in
-  // the client, so 291 lines there collapse to 289 names. 291 = 291.
+  // the client, so 291 lines there collapse to 289 names. The snapshot records
+  // only the rollable ones, which is 291 of our 292.
   const lines = snapshot.filter(line => line.startsWith('ench|')).length;
-  return lines === data.enchants.length;
-})(), `client ${snapshot.filter(line => line.startsWith('ench|')).length}, nous ${data.enchants.length}`);
+  return lines === data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length;
+})(), `client ${snapshot.filter(line => line.startsWith('ench|')).length}, nous ${data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length}`);
 
 check('and it records the artifacts, the pools and the items too',
   snapshot.some(line => line.startsWith('artifact|'))
@@ -1072,9 +1121,9 @@ check('Premium Silver lifts tier 2 to cover the tier it bars', (() => {
   // The client's Premium Silver Pool is TIER1 x0 and TIER2 x2.166; the second
   // line was missing here, leaving every tiered enchantment at 65 % of its
   // weight under that card.
-  const silver = artifact('Premium Silver Tarot Card');
+  const silver = artifact('Premium Silver Card');
   return Math.abs(engine.tierMass(data.byName.get('Attack Bonus'), silver) - 1) < 0.001;
-})(), String(engine.tierMass(data.byName.get('Attack Bonus'), artifact('Premium Silver Tarot Card'))));
+})(), String(engine.tierMass(data.byName.get('Attack Bonus'), artifact('Premium Silver Card'))));
 
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);

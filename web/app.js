@@ -52,7 +52,7 @@ const state = {
   lastCardItem: null,
   // Which kinds of artifact the table lists. Tarot only by default: they are
   // the ones you actually find in game.
-  filters: { tarot: true, special: false, premium: false },
+  filters: { tarot: true, special: false, engraving: false, premium: false },
   // Which run is the current one, and the timer that coalesces the next.
   runId: 0,
   calcTimer: 0,
@@ -751,14 +751,38 @@ function goalCount(config) {
   return [config.desired, ...config.goals].filter(Boolean).length;
 }
 
-function artifactKind(name) {
+/*
+ * Which family an artifact belongs to, for the filter above the table.
+ *
+ * The engraving group comes from the client's own item labels rather than from
+ * the name: it marks twenty of the fifty-one, nearly all of them seasonal, and
+ * they behave differently enough to be worth separating — most cost no dust at
+ * all and every one of them is consumed on every reroll rather than half the
+ * time.
+ */
+function artifactKind(artifact) {
+  const name = typeof artifact === 'string' ? artifact : artifact.name;
+  const labels = typeof artifact === 'string' ? null : artifact.labels;
   if (name === 'No Artifact') return 'none';
   if (/premium/i.test(name)) return 'premium';
   if (/tarot/i.test(name)) return 'tarot';
+  if (labels && labels.has('ENGRAVING')) return 'engraving';
+  if (/engraving/i.test(name)) return 'engraving';
   return 'special';
 }
 
-const KIND_LABEL = { tarot: 'Tarot', special: 'Special', premium: 'Premium' };
+const KIND_LABEL = { tarot: 'Tarot', special: 'Special', engraving: 'Engraving', premium: 'Premium' };
+
+/*
+ * Artwork exists for the 25 artifacts the original Qt assets covered; the
+ * client defines 51. One of the 26 is only a rename — the client calls it
+ * Premium Silver Card where the assets are filed under the older name — and
+ * the rest simply have no picture here. They are ranked and priced like any
+ * other; the icon slot is left empty.
+ */
+const ARTIFACT_ART_ALIAS = { 'Premium Silver Card': 'Premium Silver Tarot Card' };
+const artifactIcon = name =>
+  asset('GUI Files', 'Artifact Icons', `${ARTIFACT_ART_ALIAS[name] || name}-div2.png`);
 
 /*
  * Which rows the table lists.
@@ -773,7 +797,7 @@ const KIND_LABEL = { tarot: 'Tarot', special: 'Special', premium: 'Premium' };
 const TABLE_ROWS = 10;
 
 function isAllowedRow(row) {
-  const kind = artifactKind(row.artifact.name);
+  const kind = artifactKind(row.artifact);
   return kind === 'none' || state.filters[kind];
 }
 
@@ -781,7 +805,7 @@ function tableRows(all) {
   const allowed = all.filter(isAllowedRow);
   const keep = new Set(allowed.slice(0, TABLE_ROWS));
 
-  const baseline = all.find(row => artifactKind(row.artifact.name) === 'none');
+  const baseline = all.find(row => artifactKind(row.artifact) === 'none');
   if (baseline) keep.add(baseline);
 
   const viable = all.filter(row => row.odds > 0);
@@ -789,7 +813,7 @@ function tableRows(all) {
   if (cheapest) keep.add(cheapest);
 
   for (const row of all.slice(0, 3)) {
-    if (artifactKind(row.artifact.name) === 'premium') keep.add(row);
+    if (artifactKind(row.artifact) === 'premium') keep.add(row);
   }
 
   // all is already sorted by chance, so filtering it keeps the order.
@@ -840,7 +864,7 @@ function enableKind(kind) {
 
 function allowedArtifacts() {
   return state.data.artifacts.filter(artifact => {
-    const kind = artifactKind(artifact.name);
+    const kind = artifactKind(artifact);
     return kind === 'none' || state.filters[kind];
   });
 }
@@ -848,7 +872,7 @@ function allowedArtifacts() {
 function artifactFilterHtml() {
   const counts = { tarot: 0, special: 0, premium: 0 };
   for (const artifact of state.data.artifacts) {
-    const kind = artifactKind(artifact.name);
+    const kind = artifactKind(artifact);
     if (kind !== 'none') counts[kind]++;
   }
   return `<div class="filter-chips" role="group" aria-label="Which artifacts you are willing to use">
@@ -868,7 +892,7 @@ function renderHiddenNote(all, shown) {
   note.hidden = false;
   note.className = 'note';
   note.textContent = `${hidden.length} not listed. Best of them: ${best.artifact.name} at ${percent(best.odds)} per reroll`
-    + (isAllowedRow(best) ? '.' : ` — a ${KIND_LABEL[artifactKind(best.artifact.name)]} artifact you have not selected.`);
+    + (isAllowedRow(best) ? '.' : ` — a ${KIND_LABEL[artifactKind(best.artifact)]} artifact you have not selected.`);
 }
 
 function renderResults(allRows, config) {
@@ -879,7 +903,7 @@ function renderResults(allRows, config) {
   renderHiddenNote(allRows, rows);
 
   body.replaceChildren(...rows.map(row => {
-    const kind = artifactKind(row.artifact.name);
+    const kind = artifactKind(row.artifact);
     const isOff = off.has(row);
     const tr = document.createElement('tr');
     tr.className = [!row.odds ? 'dead' : '', row === cheapest && !isOff ? 'best-cost' : '', isOff ? 'off-group' : ''].filter(Boolean).join(' ');
@@ -888,7 +912,7 @@ function renderResults(allRows, config) {
       tr.title = `${KIND_LABEL[kind]} artifacts are not in your selection — click to add them.`;
     }
 
-    const icon = asset('GUI Files', 'Artifact Icons', `${row.artifact.name}-div2.png`);
+    const icon = artifactIcon(row.artifact.name);
     const approx = row.exact === false ? '≈ ' : '';
     const badge = row === cheapest ? '<em class="tag">cheapest</em>'
       : row === cheapestMine ? '<em class="tag">cheapest of yours</em>' : '';
@@ -1108,7 +1132,7 @@ async function renderBuildPlan(config) {
 
   const steps = plan.path.map((step, index) => {
     const last = index === plan.path.length - 1;
-    const icon = asset('GUI Files', 'Artifact Icons', `${step.artifact.name}-div2.png`);
+    const icon = artifactIcon(step.artifact.name);
 
     // What to do when the reroll lands something. Phrased as the instruction it
     // is, rather than as a probability the reader has to interpret.
@@ -1965,13 +1989,13 @@ function renderClientNews(reading) {
 }
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
-  const [modTexts, artifactText, awakenText, awokenExtraText] = await Promise.all([
+  const [modTexts, clientArtifactText, awakenText, awokenExtraText] = await Promise.all([
     Promise.all(MOD_FILES.map(file => fetch(ROOT + ['Enchantment documents', file].map(esc).join('/')).then(response => response.text()))),
-    fetch(ROOT + ['Artifacts', 'artifacts.txt'].map(esc).join('/')).then(response => response.text()),
+    fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.text()),
     fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text()),
     fetch(ROOT + ['Awakened Items', 'awoken-items.txt'].map(esc).join('/')).then(response => response.text())
   ]);
-  return { modTexts, artifactText, awakenText, awokenExtraText };
+  return { modTexts, clientArtifactText, awakenText, awokenExtraText };
 }
 
 /*

@@ -1,0 +1,257 @@
+## Every artifact an installed RotMG client defines, and the rules of the
+## pool each one draws from.
+##
+## Written by tools/generate-artifacts.js. Do not edit by hand: run the
+## generator again after a game update and diff the result.
+##
+## artifact|name|pool|dustType|dustAmount|consumeProb|labels|description
+##   entry|includeLabelsOR|excludeLabelsOR      which enchantments the pool holds
+##   entry-name|<enchantment>                   one added by name
+##   weight|includeLabelsOR|excludeLabelsOR|mult=x or increment=n
+##   weight-name|<enchantment>|mult=x or increment=n
+##
+## Weight rules compound: each multiplies what the last one left.
+
+artifact|Adamantine Ingot|IAbyss Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|An unalloyed bar of pure adamantine forged by the craftsmen of the abyssal volcanoes.
+  entry|ROLLABLE|
+  weight|VITALITY,ATTACK||mult=7
+  weight-name|Hellfire Edge|mult=15
+  weight-name|Infernal Anger|mult=15
+artifact|Adonis' Shot Engraving|Adonis' Shot Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Adonis' Shot Engraving unlocker
+  entry|ROLLABLE,VALENTINES|
+  weight|LIFE,VIALITY||mult=9
+  weight|ADONIS||mult=100000000
+artifact|Amber Honeycomb|Nest Pool|purpleDust|35|0.5|ARTIFACT,FORGESTORE|A perfectly preserved honeycomb tainted with a sinister power.
+  entry|ROLLABLE|
+  weight|TIER1||mult=0
+  weight|TIER2||mult=2.166
+  weight|DEXTERITY||mult=9
+  weight|SUMMON||mult=4.5
+  weight-name|Living Hive|mult=15
+  weight-name|Buzzing Bullets|mult=15
+  weight-name|Swarm Tree's Wrath|mult=15
+  weight-name|Apitoxin|mult=15
+artifact|Aphrodite's Shot Engraving|Aphrodite's Shot Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Aphrodite's Shot Engraving unlocker
+  entry|ROLLABLE,VALENTINES|
+  weight|LIFE,VIALITY||mult=9
+  weight|APHRODITE||mult=100000000
+artifact|Ascension Ankh|Tomb Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A golden Ankh once used in a ritual to ascend to godhood.
+  entry|ROLLABLE|
+  weight|LIFE,DEXTERITY,DEFENSE||mult=7
+  weight|DUALSTAT||mult=3
+  weight-name|Ancient's Blessing|mult=15
+  weight-name|Ancient Artifacts|mult=15
+artifact|Cool Protection Engraving|Cool Protection Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Cool Protection Engraving unlocker
+  entry|ROLLABLE,FROST|
+  weight|DEFENSE,SPEED||mult=9
+  weight-name|Cool Protection|mult=100000000
+artifact|Death Tarot Card|Death Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|Death - Card XIII of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|DEFENSE|UNIQUE|mult=4.5
+  weight-name|Sandstone Resilience|mult=15
+artifact|Eggsposing Shot Engraving|Eggsposing Shot Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Eggsposing Shot Engraving unlocker
+  entry|ROLLABLE,EASTER|
+  weight|ATTACK,WISDOM,SPEED||mult=9
+  weight|EASTER||mult=100000000
+artifact|Forax Technology|AI Forax Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A piece of Vylarian technology found on the planet Forax. While it is too advanced to properly understand, it appears to be able to enhance equipment.
+  entry|ROLLABLE,ALIEN|
+  weight|SPEED,LIFE,HEAL||mult=7
+  weight|ALIEN|AWAKENED|mult=5
+  weight-name|Acid Guardian|mult=15
+  weight-name|Acid Guardian (Neo)|mult=15
+  weight-name|Foraxian Matrix Enhancement|mult=15
+artifact|Freezing Core|Freezing Core Pool|redDust|25|0.5|ARTIFACT,FORGESTORE|A large runestone that physically takes on the appearance and properties of ice, but is far more arcane in nature. Direct contact with the core is enough to instantaneously freeze most common substances.
+  entry|ROLLABLE|
+  weight|SPEED,DEXTERITY,BERSERK,WEAPONFIRERATE||mult=0
+  weight|DEFENSE,DAMAGERESISTANCE,ARMORED||mult=4
+  weight-name|Razor Shards|mult=45
+  weight-name|Frost Barrier|mult=45
+  weight-name|Snow Golems|mult=45
+artifact|Frozen Blast Engraving|Frozen Blast Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Frozen Blast Engraving unlocker
+  entry|ROLLABLE,FROST|
+  weight|DEFENSE,SPEED||mult=9
+  weight-name|Frozen Blast|mult=100000000
+artifact|Giver Engraving|Giver Pool|redDust|50|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Giver Engraving unlocker
+  entry|ROLLABLE,THANKSGIVING|
+  weight|ATTACK,VITALITY||mult=9
+  weight-name|Giver|mult=100000000
+artifact|Glorious Engraving|Glorious Pool|redDust|30|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Glorious Engraving unlocker
+  entry|ROLLABLE,GLORIOUS|
+  weight|ATTACK,DURABILITY||mult=9
+  weight|GLORIOUS||mult=100000000
+artifact|Hydroshock Engraving|Hydroshock Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Hydroshock Engraving unlocker
+  entry|ROLLABLE,HYDROFLOW|
+  weight|ATTACK,WISDOM||mult=9
+  weight|HYDROFLOW||mult=100000000
+artifact|Ice Rush Engraving|Ice Rush Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Ice Rush Engraving unlocker
+  entry|ROLLABLE,FROST|
+  weight|DEFENSE,SPEED||mult=9
+  weight-name|Ice Rush|mult=100000000
+artifact|Insightful Engraving|Insightful Pool|redDust|30|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Insightful Engraving unlocker
+  entry|ROLLABLE,INSIGHTFUL|
+  weight|WISDOM,CASTING||mult=9
+  weight|INSIGHTFUL||mult=100000000
+artifact|Ivory Heart|LOD Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|The heart of a great ivory wyvern.
+  entry|ROLLABLE|
+  weight|DAMAGE,DURABILITY,RECOVERY,CASTING||mult=7
+  weight-name|Drake Warden|mult=15
+  weight-name|Draconic Gaze|mult=15
+artifact|Katalund Technology|AI Katalund Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A piece of Vylarian technology found on the planet Katalund. While it is too advanced to properly understand, it appears to be able to enhance equipment.
+  entry|ROLLABLE,ALIEN|
+  weight|DEXTERITY,DEFENSE||mult=7
+  weight|ALIEN|AWAKENED|mult=5
+  weight-name|Stinger Shards|mult=15
+  weight-name|Katalonian Matrix Enhancement|mult=15
+artifact|Malogia Technology|AI Malogia Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A piece of Vylarian technology found on the planet Malogia. While it is too advanced to properly understand, it appears to be able to enhance equipment.
+  entry|ROLLABLE,ALIEN|
+  weight|VITALITY,ATTACK||mult=7
+  weight|ALIEN|AWAKENED|mult=5
+  weight-name|Solar Mastery|mult=15
+  weight-name|Solar Mastery (Neo)|mult=15
+  weight-name|Malogian Matrix Enhancement|mult=15
+artifact|Naughty Engraving|Naughty Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Naughty engraving to an Oryxmas weapon.
+  entry|ROLLABLE,ORYXMAS2023|
+  weight|LIFE,MANA||mult=9
+  weight-name|Naughty|mult=100000000
+artifact|Nice Engraving|Nice Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Nice engraving to an Oryxmas weapon.
+  entry|ROLLABLE,ORYXMAS2023|
+  weight|LIFE,MANA||mult=9
+  weight-name|Nice|mult=100000000
+artifact|Night Prince Engraving|Night Prince Engraving Pool|purpleDust|0|0|FORGESTORE|Can be used as an Artifact in the Enchanter or used directly to generate "Conqueror's Crown".
+  entry|ROLLABLE|TIER1,TIER2,TIER3
+  entry-name|Crown
+  weight|UNIQUE||mult=999
+  weight|AWAKENED||mult=9999
+  weight-name|Crown|increment=100000000
+artifact|Nightmatter Core|AOO Pool|redDust|25|0.5|ARTIFACT,FORGESTORE|Many small shards of nightmatter formed into a stable Core, the applications of this material are still largely unknown but maybe the enchanter can do something with it.
+  entry|ROLLABLE|
+  weight|ATTACK,DEXTERITY||mult=7
+  weight-name|Night's Soul|mult=60
+  weight-name|Night's Wisdom|mult=60
+  weight-name|Night's Strength|mult=60
+  weight-name|Night's Tenacity|mult=60
+artifact|Path of the Magus Engraving|Magus Pool|redDust|50|1|EQUIPMENT,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Path of the Magus Engraving to an Aspirant's Item or Ring of the Magus.
+  entry|ROLLABLE,MAGUS|
+  weight|WISDOM,MANA||mult=9
+  weight|MAGUS||mult=100000000
+artifact|Path of the Sniper Engraving|Sniper Pool|redDust|50|1|EQUIPMENT,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Path of the Sniper Engraving to an Aspirant's Item or Ring of the Sniper.
+  entry|ROLLABLE,SNIPER|
+  weight|ATTACK,VITALITY||mult=9
+  weight|SNIPER||mult=100000000
+artifact|Path of the Stalwart Engraving|Stalwart Pool|redDust|50|1|EQUIPMENT,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Path of the Stalwart Engraving to an Aspirant's Item or Ring of the Stalwart.
+  entry|ROLLABLE,STALWART|
+  weight|LIFE,DEFENSE||mult=9
+  weight|STALWART||mult=100000000
+artifact|Path of the Swiftblade Engraving|Swiftblade Pool|redDust|50|1|EQUIPMENT,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Path of the Swiftblade Engraving to an Aspirant's Item or Ring of the Swiftblade.
+  entry|ROLLABLE,SWIFTBLADE|
+  weight|DEXTERITY,SPEED||mult=9
+  weight|SWIFTBLADE||mult=100000000
+artifact|Permafrost Snowflake|Permafrost Snowflake Pool|redDust|25|0.5|ARTIFACT,FORGESTORE|An immaculately formed fractal of permafrost. An immense cold radiates from its center infinitely reforming the snowflake as it melts.
+  entry|ROLLABLE|
+  weight|LIFE,MANA||mult=0
+  weight|VITALITY,WISDOM,RECOVERY,ENERGIZED,HEALING||mult=4
+  weight-name|Freezing Regeneration|mult=45
+  weight-name|Permafrost Magic|mult=45
+  weight-name|Eternal Restoration|mult=45
+artifact|Polar Explorer Engraving|Polar Explorer Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Polar Explorer engraving to an Oryxmas ability.
+  entry|ROLLABLE,ORYXMAS2023|
+  weight|LIFE,MANA||mult=9
+  weight-name|Polar Explorer|mult=100000000
+artifact|Precision Cog|Kogbold Pool|purpleDust|35|0.5|ARTIFACT,FORGESTORE|A machined gear crafted down to immaculate levels of specificity.
+  entry|ROLLABLE|
+  weight|TIER1||mult=0
+  weight|TIER2||mult=2.166
+  weight|ATTACK||mult=9
+  weight|TRADEOFF||mult=4.5
+  weight-name|Kogbold Spirit|mult=15
+  weight-name|Molecular Blade|mult=15
+  weight-name|High Voltage|mult=15
+  weight-name|Artificial Core|mult=15
+artifact|Premium Diamond Card|Premium Diamond Pool|greenDust|0|0.5|ARTIFACT,FORGESTORE|A shining Diamond card with powerful magical capabilities, the enchanter could probably use this.
+  entry|ROLLABLE|
+  weight|TIER1,TIER2,TIER3||mult=0
+  weight|UNIQUE,AWAKENED||mult=3.4
+artifact|Premium Gold Card|Premium Gold Pool|greenDust|0|0.5|ARTIFACT,FORGESTORE|A shining gold card with powerful magical capabilities, the enchanter could probably use this.
+  entry|ROLLABLE|
+  weight|TIER1,TIER2||mult=0
+  weight|TIER3||mult=4.25
+  weight|UNIQUE,AWAKENED||mult=2.6
+artifact|Premium Silver Card|Premium Silver Pool|greenDust|0|0.5|ARTIFACT,FORGESTORE|A shining silver card with powerful magical capabilities, the enchanter could probably use this.
+  entry|ROLLABLE|
+  weight|TIER1||mult=0
+  weight|TIER2||mult=2.166
+  weight|UNIQUE,AWAKENED||mult=1.8
+artifact|Retrowinds Engraving|Retrowinds Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Engraving for Retrowinds Items.
+  entry|ROLLABLE,RETROWINDS|
+  weight|RETROWINDS||mult=100000000
+artifact|Rose Thorns Engraving|Rose Thorns Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Rose Thorns Engraving unlocker
+  entry|ROLLABLE,VALENTINES|
+  weight|LIFE,VIALITY||mult=9
+  weight|ROSETHORNS||mult=100000000
+artifact|Snowstorm Engraving|Snowstorm Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Snowstorm Engraving unlocker
+  entry|ROLLABLE,FROST|
+  weight|DEFENSE,SPEED||mult=9
+  weight-name|Snowstorm|mult=100000000
+artifact|Soul Collector Engraving|Soul Collector Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|The carving of a ghastly soul, etched into a grave-like stone tablet represents the elusive mark of the Soul Collector, used to empower its weapons for its dastardly purposes.
+  entry|ROLLABLE,SOULCOLLECTOR|
+  weight|WISDOM,ATTACK,DEXTERITY||mult=4.5
+  weight-name|Soul Collector|mult=100000000
+artifact|Spectral Arrowhead|HUDL Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|An ethereal arrowhead that is somehow both sharp and entirely incorporeal.
+  entry|ROLLABLE|
+  weight|WISDOM,DEXTERITY||mult=7
+  weight-name|Soulful Mastery|mult=15
+  weight-name|Necrotic Knowledge|mult=15
+artifact|Stellar Ascend Engraving|Stellar Pool|greenDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Stellar Ascend Artifact
+  entry|ROLLABLE,STELLARASCEND|
+  weight|ATTACK,WISDOM,SPEED||mult=9
+  weight-name|Stellar Ascend|mult=100000000
+artifact|Thankful Engraving|Thankful Pool|redDust|50|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Thankful Engraving unlocker
+  entry|ROLLABLE,THANKSGIVING|
+  weight|ATTACK,VITALITY||mult=9
+  weight-name|Thankful|mult=100000000
+artifact|The Chariot Tarot Card|Chariot Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Chariot - Card VII of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|SPEED|UNIQUE|mult=4.5
+  weight-name|Stheno's Swiftness|mult=15
+artifact|The Devil Tarot Card|Devil Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Devil - Card XV of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|ATTACK|UNIQUE|mult=4.5
+  weight-name|Shaitan's Might|mult=15
+artifact|The Fool Tarot Card|Fool Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Fool - Card 0 or XXII of the Major Arcana. The fool represents innocence, it is the beginning. When inverted, the fool represents recklessness.
+  entry|ROLLABLE|
+  weight|ATTACK,DEXTERITY,SPEED,LIFE,MANA,DEFENSE,WISDOM,VITALITY|UNIQUE|mult=0.2
+  weight-name|Jester's Trick|mult=15
+artifact|The Magician Tarot Card|Magician Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Magician - Card I of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|WISDOM|UNIQUE|mult=4.5
+  weight-name|Avalon's Intellect|mult=15
+artifact|The Moon Tarot Card|Moon Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Moon - Card XVIII of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|MANA|UNIQUE|mult=4.5
+  weight-name|Mermaid Magic|mult=15
+artifact|The Sun Tarot Card|Sun Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Sun - Card XIX of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|DEXTERITY|UNIQUE|mult=4.5
+  weight-name|Pirate's Expertise|mult=15
+artifact|The Tower Tarot Card|Tower Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Tower - Card XVI of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|LIFE|UNIQUE|mult=4.5
+  weight-name|Vampiric Lifeforce|mult=15
+artifact|The Wheel of Fortune Tarot Card|Lucky Pool|greenDust|30|0.5|ARTIFACT,FORGESTORE|The Wheel of Fortune - Card X of the Major Arcana.
+  entry|ROLLABLE|
+  weight|REWARD|UNIQUE|mult=4.5
+  weight-name|Lucky Streak|mult=15
+artifact|The World Tarot Card|World Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The World - Card XXI of the Major Arcana.\n\nSprite Credits: Dappertron
+  entry|ROLLABLE|
+  weight|VITALITY|UNIQUE|mult=4.5
+  weight-name|Crystalline Vigor|mult=15
+artifact|Untaris Technology|AI Untaris Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A piece of Vylarian technology found on the remains of the planet Untaris. While it is too advanced to properly understand, it appears to be able to enhance equipment.
+  entry|ROLLABLE,ALIEN|
+  weight|WISDOM,MANA,MAGIC||mult=7
+  weight|ALIEN|AWAKENED|mult=5
+  weight-name|Bubbling Scourge|mult=15
+  weight-name|Untarian Matrix Enhancement|mult=15
+artifact|Warm and Cozy Engraving|Warm and Cozy Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Use at the enchanter to apply the Warm and Cozy engraving to an Oryxmas ability.
+  entry|ROLLABLE,ORYXMAS2023|
+  weight|LIFE,MANA||mult=9
+  weight-name|Warm and Cozy|mult=100000000

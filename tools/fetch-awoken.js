@@ -87,7 +87,7 @@ async function main() {
   const readData = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
   const data = engine.buildDataset({
     modTexts: MOD_FILES.map(file => readData('Enchantment documents', file)),
-    artifactText: readData('Artifacts', 'artifacts.txt'),
+    clientArtifactText: readData('Artifacts', 'client-artifacts.txt'),
     awakenText: readData('Awakened Items', 'awakenedItems.txt')
   });
   const catalog = JSON.parse(fs.readFileSync(path.join(root, 'web', 'item-catalog.json'), 'utf8')).items;

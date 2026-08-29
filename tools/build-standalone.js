@@ -46,7 +46,7 @@ const readText = (...parts) =>
 
 const sources = {
   modTexts: MOD_FILES.map(file => readText('Enchantment documents', file)),
-  artifactText: readText('Artifacts', 'artifacts.txt'),
+  clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
   awokenExtraText: readText('Awakened Items', 'awoken-items.txt')
 };
@@ -139,7 +139,21 @@ function iconFor(mod) {
 }
 
 const required = new Set();
-for (const artifact of dataset.artifacts) required.add(`GUI Files/Artifact Icons/${artifact.name}-div2.png`);
+
+/*
+ * Artwork only exists for the 25 artifacts the original Qt assets covered. The
+ * client defines 51, and the 26 it does not draw are still ranked, priced and
+ * explained — the table simply shows them without a picture. Requiring an icon
+ * for those would stop the build over something cosmetic, so they are listed
+ * instead, and the interface leaves the space empty rather than breaking.
+ */
+const ARTIFACT_ART_ALIAS = { 'Premium Silver Card': 'Premium Silver Tarot Card' };
+const withoutArt = [];
+for (const artifact of dataset.artifacts) {
+  const key = `GUI Files/Artifact Icons/${ARTIFACT_ART_ALIAS[artifact.name] || artifact.name}-div2.png`;
+  if (assets[key]) required.add(key);
+  else if (artifact.name !== 'No Artifact') withoutArt.push(artifact.name);
+}
 for (const mod of dataset.enchants) {
   const icon = iconFor(mod);
   if (icon) required.add(`GUI Files/Enchantment Icons/${icon}.png`);
@@ -154,6 +168,11 @@ for (const dust of ['Green', 'Red', 'Purple']) {
 }
 for (const type of ['weapon', 'ability', 'armor', 'ring', 'SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN']) required.add(`GUI Files/Item Types/${type}.png`);
 for (const rarity of ['uncommon', 'rare', 'legendary', 'divine']) required.add(`GUI Files/Item Rarities/${rarity}_scaled_8x.png`);
+
+if (withoutArt.length) {
+  console.log(`  ${withoutArt.length} artifacts have no artwork in the Qt asset set and render without one:`);
+  console.log(`    ${withoutArt.join(', ')}`);
+}
 
 const missing = [...required].filter(key => !assets[key]);
 
