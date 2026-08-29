@@ -1,6 +1,10 @@
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Attack Boost]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot to gain 12 Attack for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
-[15000]
+[10000]
 [WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,ATTACK,PROCATTACK,ROLLABLE,ALIEN,NEO_ALIEN]
 [ONSHOOTSTAT,PROCATTACK]
 [WEAPON,ARMOR,RING]
@@ -9,9 +13,13 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Defense Boost]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot to gain 14 Defense for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
-[15000]
+[10000]
 [WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,DEFENSE,PROCDEFENSE,ROLLABLE,ALIEN,NEO_ALIEN]
 [ONSHOOTSTAT,PROCDEFENSE]
 [WEAPON,ARMOR,RING]
@@ -20,9 +28,13 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Dexterity Boost]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot to gain 12 Dexterity for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
-[15000]
+[10000]
 [WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,DEXTERITY,PROCDEXTERITY,ROLLABLE,ALIEN,NEO_ALIEN]
 [ONSHOOTSTAT,PROCDEXTERITY]
 [WEAPON,ARMOR,RING]
@@ -31,9 +43,13 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Wisdom Boost]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot to gain 14 Wisdom for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
-[15000]
+[10000]
 [WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,WISDOM,PROCWISDOM,ROLLABLE,ALIEN,NEO_ALIEN]
 [ONSHOOTSTAT,PROCWISDOM]
 [WEAPON,ARMOR,RING]
@@ -42,9 +58,13 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Vitality Boost]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot to gain 14 Vitality for 7 seconds. 15 Second Cooldown. Does not stack with other Enchantment procs of the same stat.]
-[15000]
+[10000]
 [WEAPON,ARMOR,RING,ONSHOOT,ONSHOOTSTAT,PROC,STATBOOST,VITALITY,PROCVITALITY,ROLLABLE,ALIEN,NEO_ALIEN]
 [ONSHOOTSTAT,PROCVITALITY]
 [WEAPON,ARMOR,RING]
@@ -53,9 +73,13 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Heal]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot while below 90% HP to restore 70 HP, 15 seconds cooldown.]
-[15000]
+[10000]
 [WEAPON,RING,RECOVERY,ONSHOOT,PROC,HEAL,ROLLABLE,ALIEN,NEO_ALIEN]
 [HEAL]
 [WEAPON,RING]
@@ -64,9 +88,13 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client
+## (RotMG Exalt_Data/resources.assets): the Neo variants weigh 10000, not the
+## 15000 their ordinary Alien counterparts carry. The Alien seven are 15000
+## and were already right.
 [Neo Alien OnShoot Magic]
 [When at least one Neo Alien Gear is equipped - 5% Chance On Shoot while below 80% MP to restore 70 MP, 15 seconds cooldown.]
-[15000]
+[10000]
 [WEAPON,RING,RECOVERY,ONSHOOT,PROC,MAGIC,ROLLABLE,ALIEN,NEO_ALIEN]
 [MAGIC]
 [WEAPON,RING]

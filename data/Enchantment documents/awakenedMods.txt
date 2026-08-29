@@ -67,11 +67,15 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, read from an installed client: the client gives
+## Draconic Gaze IncompatibleWithEnchantmentLabels = AWAKENED,DAMAGING,
+## SINGLESTAT. It carries SINGLESTAT itself, so it excludes its own kind,
+## which is the usual shape. DUALSTAT here was wrong.
 [Draconic Gaze]
 [Gain +60 Max MP, +3 ATT, +3 SPD. On ability use, gain Damaging for 1.6s every 5s.]
 [7500]
 [AWAKENED,ROLLABLE,DAMAGING,DUALSTAT]
-[AWAKENED,DAMAGING,DUALSTAT]
+[AWAKENED,DAMAGING,SINGLESTAT]
 [RING]
 []
 ************

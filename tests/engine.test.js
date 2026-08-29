@@ -301,14 +301,31 @@ check('every set of Labels matches', (() => {
   return true;
 })());
 
-check('every set of Incompatible Labels matches', (() => {
+/*
+ * One documented exception. The installed client gives Draconic Gaze
+ * IncompatibleWithEnchantmentLabels = AWAKENED,DAMAGING,SINGLESTAT; the
+ * spreadsheet says DUALSTAT. The client is the game that is running, and
+ * Draconic Gaze carries SINGLESTAT itself, which is the shape every other
+ * record follows — an enchantment excludes its own kind. The sheet is behind
+ * here, so the divergence is named rather than re-frozen away.
+ */
+const DECA_BEHIND = new Set(['Draconic Gaze']);
+
+check('every set of Incompatible Labels matches, bar the one the client settles', (() => {
   for (const row of decaRows) {
-    if (!row.incompatible.length) continue;
+    if (!row.incompatible.length || DECA_BEHIND.has(row.name)) continue;
     const ours = [...data.byName.get(row.name).excludes].sort().join(',');
     if (ours !== row.incompatible.sort().join(',')) return false;
   }
   return true;
 })());
+
+check('and that exception is still the only one', (() => {
+  const off = decaRows.filter(row => row.incompatible.length
+    && [...data.byName.get(row.name).excludes].sort().join(',') !== row.incompatible.slice().sort().join(','));
+  return off.length === DECA_BEHIND.size && off.every(row => DECA_BEHIND.has(row.name));
+})(), decaRows.filter(row => row.incompatible.length
+  && [...data.byName.get(row.name).excludes].sort().join(',') !== row.incompatible.slice().sort().join(',')).map(r => r.name).join(', '));
 
 // The three faults this comparison found, kept as named regressions.
 check("DECA confirms Jester's Trick clashes with DUALSTAT, not SINGLESTAT", (() => {

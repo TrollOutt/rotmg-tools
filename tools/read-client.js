@@ -169,25 +169,46 @@ async function main() {
   for (const [name, xml] of docs) console.log(`  <${name}> ${(xml.length / 1024).toFixed(0)} KB`);
   if (!docs.has('Enchantments')) { console.error('\n  no <Enchantments> document in this client\n'); process.exit(1); }
 
-  /* ---- enchantments ---- */
+  /*
+   * Enchantments.
+   *
+   * Two rules, both learned by getting them wrong first.
+   *
+   * Only ROLLABLE records count. The client keeps non-rollable twins under the
+   * same display name — an "Alien OnShoot Attack Boost" of weight 15000 that
+   * can be rolled, and one of 10000 that cannot — and every pool filters on
+   * exactly that label: <EnchantmentEntryLabel includeLabelsOR="ROLLABLE" />.
+   * Taking whichever came last made a hundred imaginary differences.
+   *
+   * And tiers are folded on the id, not on the roman numeral in the name. The
+   * client itself mislabels several tier III records as "II"
+   * (Dexterity_Mana_Tradeoff_3 displays as "Dexterity -Mana Tradeoff II"),
+   * so the name cannot be trusted to say which tier a record is.
+   */
   const enchantments = elements(docs.get('Enchantments'), 'Enchantment').map(node => ({
     id: node.attrs.id,
     name: textOf(node.body, 'DisplayId') || node.attrs.id,
     weight: Number(textOf(node.body, 'Weight')) || 0,
     itemLabels: list(textOf(node.body, 'CompatibleWithItemLabels')),
+    refusedItemLabels: list(textOf(node.body, 'IncompatibleWithItemLabels')),
     labels: list(textOf(node.body, 'EnchantmentLabels')),
-    incompatible: list(textOf(node.body, 'IncompatibleWithEnchantmentLabels'))
+    refuses: list(textOf(node.body, 'IncompatibleWithEnchantmentLabels'))
   }));
-  console.log(`\n  ${enchantments.length} enchantments defined in the client`);
+  const rollable = enchantments.filter(e => e.labels.includes('ROLLABLE'));
+  console.log(`\n  ${enchantments.length} enchantments defined, ${rollable.length} of them rollable`);
 
-  /* ---- pools ---- */
-  const pools = docs.has('EnchantmentLists')
-    ? elements(docs.get('EnchantmentLists'), 'EnchantmentList').map(node => ({
-      id: node.attrs.id,
-      rules: children(node.body).map(rule => ({ kind: rule.name, ...rule.attrs }))
-    }))
-    : [];
-  console.log(`  ${pools.length} enchantment pools`);
+  const folded = new Map();
+  for (const e of rollable) {
+    const tier = e.labels.find(label => /^TIER[1-4]$/.test(label));
+    if (!tier) { folded.set(e.id, { name: e.name, tiers: null, one: e }); continue; }
+    const stem = e.id.replace(/_[1-4]$/, '');
+    if (!folded.has(stem)) folded.set(stem, { name: e.name.replace(/ (I{1,3}|IV)$/, ''), tiers: [], one: e });
+    folded.get(stem).tiers[Number(tier.slice(4)) - 1] = e;
+  }
+  const weightOf = group => group.tiers
+    ? group.tiers.filter(Boolean).reduce((sum, tier) => sum + tier.weight, 0)
+    : group.one.weight;
+  console.log(`  ${folded.size} once the four tiers of each are folded into one`);
 
   if (flag('--save')) {
     const out = path.join(root, 'client-data');
@@ -208,35 +229,51 @@ async function main() {
     awokenExtraText: read('Awakened Items', 'awoken-items.txt')
   });
 
-  const norm = s => String(s).toLowerCase().replace(/[‘’ʼ]/g, "'").replace(/\s+/g, ' ').trim();
-  const clientByName = new Map(enchantments.map(e => [norm(e.name), e]));
-  const ROMAN = ['i', 'ii', 'iii', 'iv'];
+  const norm = value => String(value).toLowerCase().replace(/[‘’ʼ]/g, "'").replace(/\s+/g, ' ').trim();
+  const byName = new Map();
+  for (const group of folded.values()) if (!byName.has(norm(group.name))) byName.set(norm(group.name), group);
 
-  let matched = 0, agree = 0;
-  const differ = [], missing = [];
+  const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  let matched = 0, weightSame = 0, splitSame = 0, refusesSame = 0;
+  const weightDiff = [], splitDiff = [], refusesDiff = [], absent = [];
+
   for (const mod of ours.enchants) {
-    const direct = clientByName.get(norm(mod.name));
-    const tiers = ROMAN.map(t => clientByName.get(`${norm(mod.name)} ${t}`)).filter(Boolean);
-    if (!direct && tiers.length !== 4) { missing.push(mod.name); continue; }
+    const group = byName.get(norm(mod.name));
+    if (!group) { absent.push(mod.name); continue; }
     matched++;
-    const weight = direct ? direct.weight : tiers.reduce((sum, t) => sum + t.weight, 0);
-    if (weight === mod.weight) agree++;
-    else differ.push(`${mod.name}: ${mod.weight} here, ${weight} in the client`);
+
+    const weight = weightOf(group);
+    if (weight === mod.weight) weightSame++;
+    else weightDiff.push(`${mod.name}: ${mod.weight} here, ${weight} in the client`);
+
+    if (group.tiers && group.tiers.filter(Boolean).length === 4) {
+      const share = group.tiers.map(tier => tier.weight / weight);
+      if (share.every((value, index) => Math.abs(value - (mod.distribution[index] || 0)) < 0.0005)) splitSame++;
+      else splitDiff.push(`${mod.name}: [${mod.distribution}] here, [${share.map(v => v.toFixed(5))}] in the client`);
+    }
+
+    const refuses = (group.tiers ? group.tiers.find(Boolean) : group.one).refuses;
+    if (same(refuses, [...mod.excludes])) refusesSame++;
+    else refusesDiff.push(`${mod.name}: [${[...mod.excludes]}] here, [${refuses}] in the client`);
   }
 
-  console.log(`\n  of our ${ours.enchants.length} enchantments:`);
-  console.log(`    found in the client : ${matched}`);
-  console.log(`    same weight         : ${agree}`);
-  console.log(`    different weight    : ${differ.length}`);
-  console.log(`    not in the client   : ${missing.length}`);
-  for (const line of differ.slice(0, 20)) console.log(`      - ${line}`);
-  if (missing.length) console.log(`      not found: ${missing.slice(0, 12).join(', ')}${missing.length > 12 ? ' …' : ''}`);
+  const report = (title, same_, list, limit) => {
+    console.log(`    ${title}: ${same_} the same, ${list.length} different`);
+    for (const line of list.slice(0, limit)) console.log(`      - ${line}`);
+    if (list.length > limit) console.log(`      … and ${list.length - limit} more`);
+  };
 
-  const known = new Set(ours.enchants.map(m => norm(m.name)));
-  const extra = enchantments.filter(e => !known.has(norm(e.name)) && !ROMAN.some(t => known.has(norm(e.name).replace(new RegExp(` ${t}$`), ''))));
-  console.log(`\n  in the client but not here: ${extra.length}`);
-  for (const e of extra.slice(0, 15)) console.log(`      + ${e.name} (weight ${e.weight})`);
-  if (extra.length > 15) console.log(`      … and ${extra.length - 15} more`);
+  console.log(`\n  of our ${ours.enchants.length} enchantments, ${matched} matched by name:`);
+  report('weight', weightSame, weightDiff, 15);
+  report('tier split', splitSame, splitDiff, 10);
+  report('Incompatible Labels', refusesSame, refusesDiff, 10);
+  if (absent.length) console.log(`    not matched: ${absent.join(', ')}`);
+
+  const known = new Set(ours.enchants.map(mod => norm(mod.name)));
+  const extra = [...byName.values()].filter(group => !known.has(norm(group.name)));
+  console.log(`\n  rollable in the client and not here: ${extra.length}`);
+  for (const group of extra.slice(0, 20)) console.log(`      + ${group.name} (weight ${weightOf(group)})`);
+  if (extra.length > 20) console.log(`      … and ${extra.length - 20} more`);
   console.log('');
 }
 
