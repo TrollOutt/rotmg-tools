@@ -158,9 +158,25 @@ const unreachable = awakened.filter(a => !items.some(item => item.awoken.include
  * "Long Sword NRarity" test swords that carry no dust at all. A player picking
  * an item by name wants one row, and the ordinary copy is the one to show.
  */
+/*
+ * The five items the game's own developers left in. Nothing in the client marks
+ * them — SUBTYPE and BASETYPE both cover dozens of real items — so they are
+ * named here, and a tripwire below catches any new one rather than letting it
+ * through silently. Four are rarity templates carrying no dust at all; the
+ * fifth has complete data and only its name gives it away.
+ */
+const DEVELOPER_ITEMS = new Set([
+  'Long Sword 1Rarity', 'Long Sword 2Rarity', 'Long Sword 3Rarity', 'Long Sword 4Rarity',
+  'Def Test Flail'
+]);
+const DEVELOPER_NAME = new RegExp('\\b(test|debug|dummy|placeholder|temp|dev|sample|unused|deprecated|wip|todo)\\b|[0-9]Rarity$', 'i');
+const unlisted = items
+  .filter(item => !DEVELOPER_ITEMS.has(item.name) && DEVELOPER_NAME.test(item.name + ' ' + item.id))
+  .map(item => item.name);
+
 const byName = new Map();
 for (const item of items) {
-  if (/[0-9]Rarity$/.test(item.id)) continue;
+  if (DEVELOPER_ITEMS.has(item.name)) continue;
   const seen = byName.get(item.name);
   if (!seen) { byName.set(item.name, item); continue; }
   const shiny = item.labels.includes('SHINY');
@@ -194,6 +210,11 @@ fs.writeFileSync(OUT, lines.join('\n') + '\n', 'utf8');
 const withAwoken = items.filter(i => i.awoken.length);
 console.log('\n  ' + items.length + ' enchantable items -> ' + path.relative(root, OUT));
 console.log('  ' + withAwoken.length + ' of them unlock an awakened enchantment');
+console.log('  ' + dropped + ' shiny copies folded away, and ' + DEVELOPER_ITEMS.size
+  + ' developer items left out: ' + [...DEVELOPER_ITEMS].join(', '));
+if (unlisted.length) {
+  console.log('  NEW developer-looking names, not in that list — check them: ' + unlisted.join(', '));
+}
 const odd = items.filter(i => i.pool && i.pool !== 'Default Enchantment Pool');
 if (odd.length) console.log('  ' + odd.length + ' draw from a pool of their own: ' + odd.map(i => `${i.name} (${i.pool})`).join(', '));
 if (unreachable.length) {
