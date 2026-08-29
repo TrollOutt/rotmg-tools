@@ -990,6 +990,20 @@ function renderResults(allRows, config) {
   }));
 }
 
+/*
+ * What a goal weighs in one draw. A family weighs what its members weigh
+ * together: the family itself is never in the pool, so asking for its own id
+ * would say nought per cent for a goal that is in fact the easiest of its kind.
+ */
+function goalWeightIn(pool, name) {
+  let total = 0;
+  for (const member of EnchantEngine.membersOf(state.data, name)) {
+    const mod = state.data.byName.get(member);
+    if (mod) total += pool.weights.get(mod.id) || 0;
+  }
+  return total;
+}
+
 function renderSummary(rows, config) {
   const panel = $('summary');
   const goals = [config.desired, ...config.goals].filter(Boolean);
@@ -1020,8 +1034,7 @@ function renderSummary(rows, config) {
     const bestOdds = viable.reduce((best, row) => row.odds > best.odds ? row : best);
     const bestDust = viable.reduce((best, row) => row.dust < best.dust ? row : best);
     const pool = EnchantEngine.weightedPool(state.data, config, bestDust.artifact);
-    const target = state.data.byName.get(config.desired);
-    const perSlot = pool.total ? (pool.weights.get(target.id) || 0) / pool.total * 100 : 0;
+    const perSlot = pool.total ? goalWeightIn(pool, config.desired) / pool.total * 100 : 0;
     figures = [
       figure(percent(bestOdds.odds), `best per reroll · ${html(bestOdds.artifact.name)}`),
       figure(`${dustIcon(config.dust)}${count(bestDust.dust)}`, `cheapest · ${html(bestDust.artifact.name)}`),
@@ -1076,7 +1089,7 @@ function showAudit() {
   if (button) button.textContent = 'Hide the explanation';
 
   const pool = EnchantEngine.weightedPool(state.data, config, artifact);
-  const targetWeight = pool.weights.get(target.id) || 0;
+  const targetWeight = goalWeightIn(pool, config.desired);
   if (!targetWeight) {
     $('auditResult').innerHTML = '<p class="note warn">The target is not in the eligible pool for this configuration, so its chance is exactly 0.</p>';
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1116,7 +1129,7 @@ function showAudit() {
 
       <li>
         <h3>Weight the pool for ${html(artifact.name)}</h3>
-        <p>Each candidate keeps its base weight unless the artifact multiplies it. The multiplier is the highest matching rule, truncated to an integer.</p>
+        <p>Each candidate keeps its base weight unless the artifact multiplies it. An artifact states several rules and every one that matches applies in turn, so two matching rules compound rather than compete. The result is truncated to an integer, as the game does.</p>
         <dl>
           <dt>Total weight of the pool</dt><dd><b>${count(pool.total)}</b></dd>
           <dt>${html(config.desired)}</dt><dd><b>${count(targetWeight)}</b>${targetWeight !== target.weight ? ` <span class="muted">(base ${count(target.weight)} × ${(targetWeight / target.weight).toFixed(2)})</span>` : ''}</dd>

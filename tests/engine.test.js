@@ -50,10 +50,14 @@ section('1. Data loading');
 // pool's business. 291 rollable, and 34 that are not — the seasonal
 // enchantments an engraving guarantees, the legacy ones, Crown, and Damage
 // Resistance. None of them can be drawn without an artifact that asks for it.
-check('325 enchantments', data.enchants.length === 325, `got ${data.enchants.length}`);
+// Everything the client defines, plus eight family goals of our own — see
+// section 2c. "fromClient" is the former, which is what the client is compared
+// against; a family is a way of asking, not something the game rolls.
+const fromClient = data.enchants.filter(mod => !mod.members);
+check('325 enchantments from the client', fromClient.length === 325, `got ${fromClient.length}`);
 check('291 of them are rollable', (() => {
-  return data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length === 291;
-})(), String(data.enchants.filter(mod => mod.tags.has('ROLLABLE')).length));
+  return fromClient.filter(mod => mod.tags.has('ROLLABLE')).length === 291;
+})(), String(fromClient.filter(mod => mod.tags.has('ROLLABLE')).length));
 
 check('and no pool a player can reach lets it in', (() => {
   // Every pool the client defines requires ROLLABLE, including the default one
@@ -105,7 +109,7 @@ check('no rollable record was lost to the de-duplication', (() => {
     .split(NEWLINE).filter(line => line.startsWith('ench|'));
   const rollable = new Set(rows.filter(line => line.split('|')[4].split(',').includes('ROLLABLE'))
     .map(line => line.split('|')[1]));
-  const kept = new Set(data.enchants.filter(mod => mod.tags.has('ROLLABLE')).map(mod => mod.name));
+  const kept = new Set(fromClient.filter(mod => mod.tags.has('ROLLABLE')).map(mod => mod.name));
   return rollable.size === kept.size && [...rollable].every(name => kept.has(name));
 })());
 check('Death Tarot Card cost parses despite the stray space', artifact('Death Tarot Card').cost.value === 25 && artifact('Death Tarot Card').cost.dust === 'Green');
@@ -369,6 +373,83 @@ check('no enchantment is left rollable on no item type at all', (() => {
   const orphans = data.enchants.filter(mod => mod.itemTags.size === 0);
   return orphans.length === 0;
 })(), data.enchants.filter(mod => mod.itemTags.size === 0).map(mod => mod.name).join(', '));
+
+/* ------------------------------------------------------------------ *
+ * 2d. Asking for a family rather than a name                          *
+ * ------------------------------------------------------------------ *
+ * "Mana -Defense Tradeoff" and its six siblings all give the same Mana
+ * and differ only in what they cost. Someone after the Mana does not
+ * care which, so the family is one goal. "Defense to Attack Bonus" is
+ * not grouped: there both stats are the point.
+ */
+section('2d. Tradeoff families as a single goal');
+
+const families = data.enchants.filter(mod => mod.members);
+
+check('eight families, of seven each', (() => {
+  return families.length === 8 && families.every(f => f.members.length === 7);
+})(), families.map(f => `${f.name} (${f.members.length})`).join(', '));
+
+check('only the "A -B Tradeoff" shape is grouped', (() => {
+  // Nothing with "to" or "and" in its name, where both stats matter.
+  return families.every(f => f.members.every(name => / -.+ Tradeoff$/.test(name)));
+})());
+
+check('a family is never in a pool', (() => {
+  const cfg = baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' });
+  return data.artifacts.every(art =>
+    !engine.eligiblePool(data, cfg, art).some(mod => mod.members));
+})());
+
+check('every member exists and is rollable', (() => {
+  return families.every(f => f.members.every(name => {
+    const mod = data.byName.get(name);
+    return mod && mod.tags.has('ROLLABLE');
+  }));
+})());
+
+check('a family weighs what its members weigh together', (() => {
+  return families.every(f =>
+    f.weight === f.members.reduce((total, name) => total + data.byName.get(name).weight, 0));
+})());
+
+check('asking for the family is worth all seven', (() => {
+  // The seven are interchangeable here, so the family should come out at
+  // seven times one of them. That is a property of this data, not a rule:
+  // what the check is really for is that the goal resolves to the set at all.
+  const one = baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -Defense Tradeoff' });
+  const any = baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -any Tradeoff' });
+  const single = engine.evaluate(data, one, artifact('No Artifact')).odds;
+  const family = engine.evaluate(data, any, artifact('No Artifact')).odds;
+  return Math.abs(family / single - 7) < 0.05;
+})(), (() => {
+  const one = baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -Defense Tradeoff' });
+  const any = baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -any Tradeoff' });
+  return `${engine.evaluate(data, any, artifact('No Artifact')).odds.toFixed(4)}% against ${engine.evaluate(data, one, artifact('No Artifact')).odds.toFixed(4)}%`;
+})());
+
+check('the accepted tiers mean the same thing for a family', (() => {
+  // The family carries TIERED from its members, so it needs a tier split of
+  // its own — left empty, the checkboxes would silently do nothing to it.
+  const family = data.byName.get('Mana -any Tradeoff');
+  const member = data.byName.get('Mana -Attack Tradeoff');
+  if (!family.distribution.length) return false;
+  const at4 = tiers => {
+    const any = engine.evaluate(data, baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -any Tradeoff', tiers: new Set(tiers) }), artifact('No Artifact')).odds;
+    const one = engine.evaluate(data, baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -Attack Tradeoff', tiers: new Set(tiers) }), artifact('No Artifact')).odds;
+    return any / one;
+  };
+  return Math.abs(at4([4]) - 7) < 0.05 && Math.abs(at4([3, 4]) - 7) < 0.05
+    && family.distribution.every((share, i) => Math.abs(share - member.distribution[i]) < 1e-9);
+})());
+
+check('and it can be planned alongside another goal', (() => {
+  const plan = engine.planGoals(data,
+    baseCfg({ type: 'ARMOR', item: '', desired: 'Mana -any Tradeoff', goals: ['Attack Bonus'] }),
+    ['Mana -any Tradeoff', 'Attack Bonus']);
+  return plan && plan.feasible === true && Number.isFinite(plan.dust);
+})());
+
 
 /* ------------------------------------------------------------------ *
  * 3. Incompatibility direction                                        *
@@ -928,10 +1009,11 @@ const CLIENT_SPELLING = {
   'Solar Mastery (Neo)': 'Solar Mastery'
 };
 
+const clientSide = data.enchants.filter(mod => !mod.members);
 check('the enchantments it records cover the rollable ones we ship',
-  data.enchants.filter(mod => mod.tags.has('ROLLABLE'))
+  clientSide.filter(mod => mod.tags.has('ROLLABLE'))
     .every(mod => snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name)),
-  data.enchants.filter(mod => mod.tags.has('ROLLABLE') && !snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name))
+  clientSide.filter(mod => mod.tags.has('ROLLABLE') && !snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name))
     .map(mod => mod.name).slice(0, 5).join(', '));
 
 check('and we ship one for each of them', (() => {
@@ -940,9 +1022,9 @@ check('and we ship one for each of them', (() => {
   // those collapse here. Compare distinct names, which is what a player sees.
   const shown = new Set(snapshot.filter(line => line.startsWith('ench|'))
     .map(line => line.split('|')[2]));
-  const ours = new Set(data.enchants.map(mod => CLIENT_SPELLING[mod.name] || mod.name));
+  const ours = new Set(clientSide.map(mod => CLIENT_SPELLING[mod.name] || mod.name));
   return shown.size === ours.size;
-})(), `client ${new Set(snapshot.filter(l => l.startsWith('ench|')).map(l => l.split('|')[2])).size}, nous ${new Set(data.enchants.map(m => CLIENT_SPELLING[m.name] || m.name)).size}`);
+})(), `client ${new Set(snapshot.filter(l => l.startsWith('ench|')).map(l => l.split('|')[2])).size}, nous ${new Set(clientSide.map(m => CLIENT_SPELLING[m.name] || m.name)).size}`);
 
 check('and it records the artifacts, the pools and the items too',
   snapshot.some(line => line.startsWith('artifact|'))
