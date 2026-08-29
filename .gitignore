@@ -6,3 +6,8 @@ ANONYMITY.md
 
 # Local tooling configuration, not part of the project.
 .claude/
+
+# Game data lifted out of an installed client by tools/read-client.js. It is
+# DECA's, it is large, and it is reproducible from any client in seconds, so it
+# is read where it sits rather than copied into a public repository.
+client-data/
