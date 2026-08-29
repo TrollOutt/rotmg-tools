@@ -45,9 +45,9 @@ const readText = (...parts) =>
 
 const sources = {
   clientModText: readText('Enchantment documents', 'client-enchantments.txt'),
+  clientItemText: readText('Items', 'client-items.txt'),
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
-  awokenExtraText: readText('Awakened Items', 'awoken-items.txt')
 };
 
 /* ---------------------------------------------------------------- *
@@ -98,8 +98,6 @@ const counts = {
 
 // Downloaded once by tools/fetch-item-sprites.js. Optional: without them the
 // interface falls back to the slot icons, so a fresh clone still builds.
-const catalogPath = path.join(web, 'item-catalog.json');
-const itemCatalog = fs.existsSync(catalogPath) ? JSON.parse(fs.readFileSync(catalogPath, 'utf8')) : { items: {} };
 const itemSprites = {};
 let itemSpriteBytes = 0;
 const itemDir = path.join(web, 'assets', 'items');
@@ -228,7 +226,7 @@ page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, itemCatalog })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
@@ -260,7 +258,6 @@ console.log(`\nStandalone build -> ${path.relative(root, pagesDir)}/\n`);
 for (const [folder, added] of Object.entries(counts)) console.log(`  ${String(added).padStart(3)} sprites  ${folder}`);
 console.log(`\n  ${dataset.enchants.length} enchantments - ${dataset.artifacts.length} artifacts - ${dataset.awakenings.size} awakenable items`);
 console.log(`  sprites ${kb(assetBytes)} raw -> ${kb(JSON.stringify(assets).length)} inlined`);
-console.log(`  catalog ${Object.keys(itemCatalog.items || {}).length} items`);
 console.log(`  items   ${Object.keys(itemSprites).length} sprites, ${kb(itemSpriteBytes)} raw -> ${kb(JSON.stringify(itemSprites).length)} inlined`);
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');

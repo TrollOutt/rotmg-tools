@@ -1919,14 +1919,6 @@ function onFieldChange(element) {
   refresh();
 }
 
-async function loadItemCatalog() {
-  if (BUNDLE) return BUNDLE.itemCatalog || { items: {} };
-  try {
-    return await fetch('item-catalog.json').then(response => response.json());
-  } catch (error) {
-    return { items: {} };
-  }
-}
 
 async function loadItemSprites() {
   if (BUNDLE) return BUNDLE.itemSprites || {};
@@ -1990,13 +1982,13 @@ function renderClientNews(reading) {
 }
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
-  const [clientModText, clientArtifactText, awakenText, awokenExtraText] = await Promise.all([
+  const [clientModText, clientArtifactText, clientItemText, awakenText] = await Promise.all([
     fetch(ROOT + ['Enchantment documents', 'client-enchantments.txt'].map(esc).join('/')).then(response => response.text()),
     fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Awakened Items', 'awoken-items.txt'].map(esc).join('/')).then(response => response.text())
+    fetch(ROOT + ['Items', 'client-items.txt'].map(esc).join('/')).then(response => response.text()),
+    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text())
   ]);
-  return { clientModText, clientArtifactText, awakenText, awokenExtraText };
+  return { clientModText, clientArtifactText, clientItemText, awakenText };
 }
 
 /*
@@ -2020,8 +2012,9 @@ function renderOfflineOffer() {
 
 async function load() {
   try {
-    state.data = EnchantEngine.buildDataset(await readSources());
-    EnchantItems.load(await loadItemCatalog());
+    const sources = await readSources();
+    state.data = EnchantEngine.buildDataset(sources);
+    EnchantItems.loadClient(sources.clientItemText);
     state.itemSprites = await loadItemSprites();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${knownItemNames().length.toLocaleString('en-US')} items — the slot, dust and base come with it`;

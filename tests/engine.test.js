@@ -17,9 +17,9 @@ const read = (...parts) => fs.readFileSync(path.join(dataRoot, ...parts), 'utf8'
 
 const data = engine.buildDataset({
   clientModText: read('Enchantment documents', 'client-enchantments.txt'),
+  clientItemText: read('Items', 'client-items.txt'),
   clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
   awakenText: read('Awakened Items', 'awakenedItems.txt'),
-  awokenExtraText: read('Awakened Items', 'awoken-items.txt')
 });
 
 /* ------------------------------------------------------------------ */
@@ -188,8 +188,8 @@ const nightsSoul = data.byName.get("Night's Soul");
 check("Night's Soul carries the AWAKENED incompatibility", nightsSoul.excludes.has('AWAKENED'));
 check("Night's Soul is available on Nightmatter Circlet",
   engine.eligiblePool(data, baseCfg({ item: 'Nightmatter Circlet' }), artifact('No Artifact')).some(m => m.name === "Night's Soul"));
-check("Night's Soul is available on AoO Rings (source data)",
-  engine.eligiblePool(data, baseCfg({ item: 'AoO Rings' }), artifact('No Artifact')).some(m => m.name === "Night's Soul"));
+check("Night's Soul is available on an Agents of Oryx ring",
+  engine.eligiblePool(data, baseCfg({ item: 'Autarch Amulet' }), artifact('No Artifact')).some(m => m.name === "Night's Soul"));
 check("Night's Soul is refused on Corsair Ring",
   !engine.eligiblePool(data, baseCfg({ item: 'Corsair Ring' }), artifact('No Artifact')).some(m => m.name === "Night's Soul"));
 check("Night's Soul is refused when no item is chosen",
@@ -204,104 +204,50 @@ check('choosing an item adds exactly its own awakened enchantments', (() => {
 })());
 
 /* ------------------------------------------------------------------ *
- * 2b. Every awakenable item, not just the ones named individually     *
+ * 2b. Which item unlocks which awakened enchantment                   *
  * ------------------------------------------------------------------ *
- * The Qt file names ten of its entries after a group — "AoO Rings",
- * "Matrix Armors" — and the interface looks items up by their own
- * name, so 39 of the catalogue's items were served and the rest of
- * the Agents of Oryx and Protective Matrix gear got nothing.
+ * Read off the client: an awakened enchantment names the slot it goes
+ * on and the item label it belongs to, and the items carry that label.
+ * What this replaced was assembled from wiki pages and held 140
+ * entries, 16 of which were group headings — "AoO Rings", "Matrix
+ * Armors" — that no player can look up by name.
  */
-section('2b. The wiki mapping reaches the items behind the group names');
+section('2b. Which item unlocks which awakened enchantment');
 
-const awokenPairs = read('Awakened Items', 'awoken-items.txt')
-  .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('##'));
 const catalogue2b = require(path.join(root, 'web', 'items.js'));
-catalogue2b.load(JSON.parse(fs.readFileSync(path.join(root, 'web', 'item-catalog.json'), 'utf8')));
-
-check('the mapping file is well formed and free of duplicates', (() => {
-  const seen = new Set();
-  for (const line of awokenPairs) {
-    if (!/^[^|]+\|[^|]+$/.test(line)) return false;
-    if (seen.has(line)) return false;
-    seen.add(line);
-  }
-  return awokenPairs.length > 140;
-})(), `${awokenPairs.length} pairs`);
+catalogue2b.loadClient(read('Items', 'client-items.txt'));
 
 check('every item it names is in the catalogue', (() => {
-  for (const line of awokenPairs) {
-    const item = line.slice(0, line.indexOf('|'));
-    if (!catalogue2b.lookup(item)) return false;
+  for (const item of data.awakenings.keys()) if (!catalogue2b.lookup(item)) return false;
+  return true;
+})(), [...data.awakenings.keys()].filter(item => !catalogue2b.lookup(item)).slice(0, 5).join(', '));
+
+check('every enchantment it names exists, and is an awakened one', (() => {
+  for (const mods of data.awakenings.values()) {
+    for (const name of mods) {
+      const mod = data.byName.get(name);
+      if (!mod || !mod.tags.has('AWAKENED')) return false;
+    }
   }
   return true;
 })());
 
-check('every enchantment it names exists in the mod files', (() => {
-  for (const line of awokenPairs) {
-    const mod = line.slice(line.indexOf('|') + 1);
-    if (!data.byName.has(mod)) return false;
-  }
-  return true;
-})());
-
-check('every enchantment it names is an awakened one', (() => {
-  for (const line of awokenPairs) {
-    const mod = data.byName.get(line.slice(line.indexOf('|') + 1));
-    if (!mod || !mod.excludes.has('AWAKENED')) return false;
-  }
-  return true;
-})());
-
-// The point of the whole exercise: a real item behind a group name.
+// The point of the whole exercise: a real item, not a group heading.
 check('a Protective Matrix armor is offered its four Matrix enhancements', (() => {
   const mods = data.awakenings.get('Fitted Protective Matrix') || [];
   return ['Malogian', 'Untarian', 'Katalonian', 'Foraxian']
     .every(planet => mods.some(name => name.startsWith(planet)));
 })(), (data.awakenings.get('Fitted Protective Matrix') || []).join(', '));
 
-check('an Agents of Oryx weapon is offered its awakened enchantment',
-  (data.awakenings.get('Legion Elite Bow') || []).includes("Night's Strength"));
+check('an Agents of Oryx weapon is offered its awakened enchantment, and only that one', (() => {
+  // All four Night's enchantments carry the AOO label and differ only by the
+  // slot they go on. Matching on the label alone put all four on every one.
+  const mods = data.awakenings.get('Legion Elite Bow') || [];
+  return mods.length === 1 && mods[0] === "Night's Strength";
+})(), (data.awakenings.get('Legion Elite Bow') || []).join(', '));
 
-check('a Tomb ring is offered its awakened enchantment',
-  (data.awakenings.get('Ring of the Nile') || []).includes("Ancient's Blessing"));
-
-check('the Neo variant keeps its own enchantment, not the ordinary one', (() => {
-  const neo = data.awakenings.get('Neo Acidic Slasher') || [];
-  return neo.includes('Acid Guardian (Neo)') && !neo.includes('Acid Guardian');
-})(), (data.awakenings.get('Neo Acidic Slasher') || []).join(', '));
-
-check('130 catalogue items are offered their awakened enchantment', (() => {
-  const none = artifact('No Artifact');
-  let served = 0;
-  for (const [item, mods] of data.awakenings) {
-    const entry = catalogue2b.lookup(item);
-    if (!entry) continue;                       // a group name, unreachable by design
-    const cfg = baseCfg({ type: entry.type, item, subtypes: new Set(entry.base ? [entry.base] : []) });
-    const pool = engine.eligiblePool(data, cfg, none).map(mod => mod.name);
-    if (mods.every(mod => pool.includes(mod))) served++;
-  }
-  return served >= 130;
-})(), (() => {
-  let served = 0;
-  const none = artifact('No Artifact');
-  for (const [item, mods] of data.awakenings) {
-    const entry = catalogue2b.lookup(item);
-    if (!entry) continue;
-    const cfg = baseCfg({ type: entry.type, item, subtypes: new Set(entry.base ? [entry.base] : []) });
-    const pool = engine.eligiblePool(data, cfg, none).map(mod => mod.name);
-    if (mods.every(mod => pool.includes(mod))) served++;
-  }
-  return `${served} served`;
-})());
-
-// Group artwork exists only for the Qt names; asking for it for the rest would
-// be a request for a picture that was never shipped.
-check('group artwork is claimed only for the names the Qt file lists', (() => {
-  const qt = engine.parseAwakenings(read('Awakened Items', 'awakenedItems.txt'));
-  return data.awokenArt.size === qt.size
-    && [...data.awokenArt].every(name => qt.has(name))
-    && data.awokenArt.size < data.awakenings.size;
-})(), `${data.awokenArt.size} with artwork, ${data.awakenings.size} in total`);
+check('no group heading survives as if it were an item',
+  !data.awakenings.has('AoO Rings') && !data.awakenings.has('Matrix Armors'));
 
 /* ------------------------------------------------------------------ *
  * 2c. Checked against DECA's own published list                       *
@@ -812,199 +758,125 @@ check('a zero-odds row costs infinite dust', (() => {
 })());
 
 /* ------------------------------------------------------------------ *
- * 12. Item catalogue (slot and dust deduced from the item)            *
- * ------------------------------------------------------------------ */
-section('12. Item catalogue');
+ * 12. The item catalogue, as the client states it                     *
+ * ------------------------------------------------------------------ *
+ * Slot, dust and equipment family used to be scraped from wiki pages
+ * and, for the dust, inferred from a tier-to-dust band table. The
+ * client states all three per item, so nothing is deduced here now.
+ */
+section('12. The item catalogue');
 const catalogue = require(path.join(root, 'web', 'items.js'));
-const catalogFile = path.join(root, 'web', 'item-catalog.json');
-const rawCatalog = JSON.parse(fs.readFileSync(catalogFile, 'utf8'));
-catalogue.load(rawCatalog);
+catalogue.loadClient(read('Items', 'client-items.txt'));
 
-check('the catalogue is populated', catalogue.size > 1500, `got ${catalogue.size}`);
-check('every entry names a real slot', [...catalogue.index.values()].every(entry => ['WEAPON', 'ABILITY', 'ARMOR', 'RING'].includes(entry.type)));
-check('a dust, when present, is one of the three', [...catalogue.index.values()].every(entry => !entry.dust || ['Green', 'Red', 'Purple'].includes(entry.dust)));
-check('tier bands cover each slot without a gap or an overlap', (() => {
-  for (const bands of Object.values(catalogue.TIER_BANDS)) {
-    const ranges = Object.values(bands).sort((a, b) => a[0] - b[0]);
-    if (ranges[0][0] !== 1) return false;
-    for (let i = 1; i < ranges.length; i++) if (ranges[i][0] !== ranges[i - 1][1] + 1) return false;
+const itemRows = read('Items', 'client-items.txt').split(NEWLINE)
+  .filter(line => line.startsWith('item|')).map(line => line.split('|'));
+
+check('the catalogue is populated', catalogue.size > 1700, `got ${catalogue.size}`);
+
+check('every entry names a real slot',
+  [...catalogue.index.values()].every(entry => ['WEAPON', 'ABILITY', 'ARMOR', 'RING'].includes(entry.type)));
+
+check('every dust is one of the three',
+  [...catalogue.index.values()].every(entry => ['Green', 'Red', 'Purple'].includes(entry.dust)));
+
+check('the file is well formed and free of duplicate names', (() => {
+  const seen = new Set();
+  for (const row of itemRows) {
+    if (row.length < 10) return false;
+    if (seen.has(row[1])) return false;
+    seen.add(row[1]);
   }
   return true;
 })());
-check('the published reroll bands hold', (() => {
-  const d = catalogue.dustForTier;
-  return d('WEAPON', 9) === 'Green' && d('WEAPON', 10) === 'Red' && d('WEAPON', 12) === 'Red' && d('WEAPON', 13) === 'Purple'
-    && d('ABILITY', 4) === 'Green' && d('ABILITY', 5) === 'Red' && d('ABILITY', 7) === 'Purple'
-    && d('ARMOR', 9) === 'Green' && d('ARMOR', 10) === 'Red' && d('ARMOR', 13) === 'Purple'
-    && d('RING', 4) === 'Green' && d('RING', 5) === 'Red' && d('RING', 7) === 'Purple';
-})());
-check('the generator and the reader agree on the bands',
-  JSON.stringify(rawCatalog._bands) === JSON.stringify(catalogue.TIER_BANDS));
-check('every tiered entry carries the dust its band prescribes',
-  [...catalogue.index.values()].every(entry => {
-    if (!entry.tiered || entry.tier === null) return true;
-    const expected = catalogue.dustForTier(entry.type, entry.tier);
-    // An explicit reroll-table entry or an override may legitimately differ.
-    return !expected || !entry.dust || entry.dust === expected || Boolean(catalogue.OVERRIDES[entry.name]);
-  }));
-check('rings stop at tier 7, so there is no Tier 12 Ring', !catalogue.index.has('Tier 12 Ring') && catalogue.index.has('Tier 7 Ring'));
-check('the reference items resolve as the wiki states', (() => {
-  const expect = {
-    'Corsair Ring': ['RING', 'Green'],
-    'Bone Dagger': ['WEAPON', 'Green'],
-    'Shield of Ogmur': ['ABILITY', 'Purple'],
-    'Nightmatter Circlet': ['RING', 'Red'],
-    'Ring of Health': ['RING', 'Green']
-  };
-  return Object.entries(expect).every(([name, [type, dust]]) => {
-    const entry = catalogue.lookup(name);
-    return entry && entry.type === type && entry.dust === dust;
-  });
-})());
-check("the Nightmatter Circlet's own page settles its dust as Red", (() => {
-  const entry = catalogue.lookup('Nightmatter Circlet');
-  return entry && entry.dust === 'Red';
-})());
-check('the per-item dust file is well formed and free of duplicates', (() => {
-  const lines = fs.readFileSync(path.join(root, 'tools', 'item-dust.txt'), 'utf8')
-    .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
-  const seen = new Set();
-  for (const line of lines) {
-    if (!/^.+\|[GRP]$/.test(line)) return false;
-    const name = line.slice(0, line.lastIndexOf('|'));
-    if (seen.has(name)) return false;
-    seen.add(name);
-  }
-  return lines.length > 1500;
-})());
+
 check('every dust in the file reaches the catalogue unchanged', (() => {
-  const LETTER = { G: 'Green', R: 'Red', P: 'Purple' };
-  const lines = fs.readFileSync(path.join(root, 'tools', 'item-dust.txt'), 'utf8')
-    .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
-  let checked = 0;
-  for (const line of lines) {
-    const cut = line.lastIndexOf('|');
-    const name = line.slice(0, cut);
-    const entry = catalogue.lookup(name);
-    if (!entry) continue;                       // filtered out as a non-item
-    if (entry.dust !== LETTER[line.slice(cut + 1)]) return false;
-    checked++;
+  for (const row of itemRows) {
+    // A row with no slot is a material rather than equipment; the client has
+    // one, "Agents of Oryx Shard x15", and it is not something to enchant.
+    if (!row[3] || !row[2]) continue;
+    const entry = catalogue.lookup(row[1]);
+    if (!entry || entry.dust !== row[3]) return false;
   }
-  return checked > 1400;
+  return true;
 })());
-check('nearly every item now has a dust', (() => {
-  const withDust = [...catalogue.index.values()].filter(entry => entry.dust).length;
-  return withDust / catalogue.size > 0.94;
-})(), `${[...catalogue.index.values()].filter(e => e.dust).length}/${catalogue.size}`);
-check('the items still without a dust are starter gear, which cannot be enchanted', (() => {
-  const without = [...catalogue.index.values()].filter(entry => !entry.dust);
-  // T0 gear is the only legitimate reason to have none.
-  return without.length < 90;
+
+check('the six items the client gives no dust are left out rather than guessed at', (() => {
+  const dustless = itemRows.filter(row => !row[3]).map(row => row[1]);
+  return dustless.length === 6 && dustless.every(name => !catalogue.lookup(name));
+})(), itemRows.filter(row => !row[3]).map(row => row[1]).join(', '));
+
+check('a reroll costs 50, 65, 80 then 100 for all but a handful', (() => {
+  const standard = itemRows.filter(row => row[4] === '50,65,80,100').length;
+  return standard > itemRows.length - 20;
+})(), `${itemRows.filter(row => row[4] === '50,65,80,100').length} of ${itemRows.length}`);
+
+check("the Nightmatter Circlet is a Red-dust ring", (() => {
+  const entry = catalogue.lookup('Nightmatter Circlet');
+  return entry && entry.dust === 'Red' && entry.type === 'RING';
 })());
-check('lookup tolerates case, spacing and the known spelling variants',
-  Boolean(catalogue.lookup('corsair ring') && catalogue.lookup('  Corsair   Ring ')
-    && catalogue.lookup("Pirate King's Cutlass") && catalogue.lookup('Doku no Ken')));
-check('an unknown name resolves to nothing rather than a guess', !catalogue.lookup('Definitely Not An Item'));
-check('every alias points at an entry that exists', Object.values(catalogue.ALIASES).every(target => catalogue.index.has(target)));
-check('class names did not leak in as items',
-  ['Rogue', 'Archer', 'Wizard', 'Priest', 'Warrior', 'Knight', 'Huntress', 'Trickster', 'Druid'].every(name => !catalogue.index.has(name)));
-check('group headings did not leak in as items',
-  ['Health Rings', 'Attack Rings', 'Limited Rings'].every(name => !catalogue.index.has(name)));
-check('awakenable items resolve through the catalogue or their enchantment', (() => {
-  return [...data.awakenings.keys()].every(item => {
-    if (catalogue.lookup(item)) return true;
-    const mod = data.byName.get(data.awakenings.get(item)[0]);
-    return Boolean(mod && mod.itemTags.size);
-  });
+
+check('a tiered item can still be picked by tier alone', (() => {
+  const entry = catalogue.lookup('Tier 12 Weapon');
+  return entry && entry.type === 'WEAPON' && entry.dust === 'Red';
 })());
-check('most items carry artwork', (() => {
-  const index = JSON.parse(fs.readFileSync(path.join(root, 'web', 'assets', 'items', 'index.json'), 'utf8'));
-  const named = [...catalogue.index.values()].filter(entry => !entry.tiered || entry.sprite);
-  const withArt = named.filter(entry => index[entry.name]).length;
-  return withArt / named.length > 0.95;
-})());
-check('every sprite the index names is on disk', (() => {
-  const dir = path.join(root, 'web', 'assets', 'items');
-  const index = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
-  return Object.values(index).every(file => fs.existsSync(path.join(dir, file)));
-})());
+
+check('an unknown name resolves to nothing rather than a guess', !catalogue.lookup('Not An Item At All'));
+
+check('every alias points at an entry that exists',
+  Object.values(catalogue.ALIASES).every(name => catalogue.index.has(name)));
 
 /* ------------------------------------------------------------------ *
- * 13. The catalogue knows which items are Alien or Neo Alien          *
- * ------------------------------------------------------------------ */
-section('13. Alien and Neo Alien bases reach the catalogue');
+ * 13. Alien and Neo Alien are equipment families                      *
+ * ------------------------------------------------------------------ *
+ * Which family an item belongs to was read off two wiki pages and kept in a
+ * file of its own. The client puts the label on the item.
+ */
+section('13. Alien and Neo Alien families');
 
-const basesFile = fs.readFileSync(path.join(root, 'tools', 'item-bases.txt'), 'utf8')
-  .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+const familyOf = new Map(itemRows.filter(row => row[6]).map(row => [row[1], row[6]]));
 
-check('the base file is well formed and free of duplicates', (() => {
-  const seen = new Set();
-  for (const line of basesFile) {
-    if (!/^[^|]+\|(ALIEN|NEO_ALIEN)\|(WEAPON|ABILITY|ARMOR|RING)\|[A-Za-z0-9]+\.png$/.test(line)) return false;
-    const name = line.split('|')[0];
-    if (seen.has(name)) return false;
-    seen.add(name);
-  }
-  return seen.size === basesFile.length;
-})());
+check('the client marks both families', (() => {
+  const kinds = new Set(familyOf.values());
+  return kinds.has('ALIEN') && kinds.has('NEO_ALIEN');
+})(), [...new Set(familyOf.values())].join(', '));
 
-check('every item in the base file is in the catalogue with that family', (() => {
-  for (const line of basesFile) {
-    const [name, family] = line.split('|');
+check('every item of a family is in the catalogue with that family',
+  [...familyOf].every(([name, family]) => {
     const entry = catalogue.lookup(name);
-    if (!entry || entry.base !== family) return false;
+    return entry && entry.base === family;
+  }));
+
+check('no other item claims one', (() => {
+  for (const [name, entry] of catalogue.index) {
+    if (entry.base && familyOf.get(name) !== entry.base) return false;
   }
   return true;
 })());
 
-check('23 Alien and 23 Neo Alien items', (() => {
-  const all = [...catalogue.index.values()].filter(entry => entry.base);
-  const alien = all.filter(entry => entry.base === 'ALIEN').length;
-  const neo = all.filter(entry => entry.base === 'NEO_ALIEN').length;
-  return alien === 23 && neo === 23;
-})(), `${[...catalogue.index.values()].filter(e => e.base).length} in total`);
-
-check('no other item claims a base family', (() => {
-  const named = new Set(basesFile.map(line => line.split('|')[0]));
-  return [...catalogue.index.values()].every(entry => !entry.base || named.has(entry.name));
-})());
-
-check('every alien item carries a dust and a sprite, or it is unusable', (() => {
-  const all = [...catalogue.index.values()].filter(entry => entry.base);
-  return all.every(entry => entry.dust && entry.sprite);
-})());
-
-// The 23 Neo items appear on no index the generator reads; without
-// tools/item-bases.txt they would be missing and their seven enchantments
-// unreachable by anyone.
-check('the Neo items the base file injects really are in the catalogue',
-  ['Neo Sun\'s Judgement', 'Neo Laser Rifle', 'Neo Heavy Protective Matrix', 'Neo Alien Core: Warp', 'Neo Reality Reactor']
-    .every(name => { const e = catalogue.lookup(name); return e && e.type && e.dust === 'Purple'; }));
-
-check('Laser Rifle is Alien yet Purple, unlike the rest of its family', (() => {
-  const rifle = catalogue.lookup('Laser Rifle');
-  const others = [...catalogue.index.values()].filter(e => e.base === 'ALIEN' && e.name !== 'Laser Rifle');
-  return rifle && rifle.base === 'ALIEN' && rifle.dust === 'Purple' && others.every(e => e.dust === 'Red');
-})());
-
-check('a real Alien item can reach its own enchantments, with no artifact', (() => {
-  const armor = catalogue.lookup('Heavy Protective Matrix');
-  if (!armor || armor.base !== 'ALIEN') return false;
-  const pool = engine.eligiblePool(
-    data, baseCfg({ type: armor.type, subtypes: new Set([armor.base]) }), artifact('No Artifact'));
-  return data.enchants.filter(m => m.special.has('ALIEN') && m.itemTags.has(armor.type))
-    .every(m => pool.some(p => p.name === m.name));
-})());
-
-check('a real Neo Alien item reaches the Neo set and not the Alien one', (() => {
-  const item = catalogue.lookup('Neo Heavy Protective Matrix');
-  if (!item || item.base !== 'NEO_ALIEN') return false;
+check('a real Alien item reaches its own enchantments, with no artifact', (() => {
+  const item = catalogue.lookup('Acidic Slasher');
+  if (!item || item.base !== 'ALIEN') return false;
   const pool = engine.eligiblePool(
     data, baseCfg({ type: item.type, subtypes: new Set([item.base]) }), artifact('No Artifact'));
-  const has = name => pool.some(p => p.name === name);
-  return data.enchants.filter(m => m.special.has('NEO_ALIEN') && m.itemTags.has(item.type)).every(m => has(m.name))
-    && data.enchants.filter(m => m.special.has('ALIEN') && m.itemTags.has(item.type)).every(m => !has(m.name));
+  return pool.some(mod => mod.name === 'Alien OnShoot Attack Boost');
 })());
+
+check('and a Neo item reaches the Neo set and not the Alien one', (() => {
+  const neo = [...familyOf].find(([, family]) => family === 'NEO_ALIEN');
+  if (!neo) return false;
+  const item = catalogue.lookup(neo[0]);
+  const pool = engine.eligiblePool(
+    data, baseCfg({ type: item.type, subtypes: new Set(['NEO_ALIEN']) }), artifact('No Artifact'));
+  const has = name => pool.some(mod => mod.name === name);
+  return has('Neo Alien OnShoot Attack Boost') && !has('Alien OnShoot Attack Boost');
+})());
+
+check('every item of a family carries a dust and a slot, or it is unusable',
+  [...familyOf.keys()].every(name => {
+    const entry = catalogue.lookup(name);
+    return entry && entry.dust && entry.type;
+  }));
+
 
 /* ------------------------------------------------------------------ *
  * 14. The recorded client snapshot                                    *

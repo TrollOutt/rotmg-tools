@@ -113,9 +113,9 @@ for (const line of snapshot) {
 const read = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
 const data = engine.buildDataset({
   clientModText: read('Enchantment documents', 'client-enchantments.txt'),
+  clientItemText: read('Items', 'client-items.txt'),
   clientArtifactText: read('Artifacts', 'client-artifacts.txt'),
   awakenText: read('Awakened Items', 'awakenedItems.txt'),
-  awokenExtraText: read('Awakened Items', 'awoken-items.txt')
 });
 
 // Tier rules are left out on both sides: they are a share of the enchantment's
