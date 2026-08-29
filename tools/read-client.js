@@ -1,32 +1,35 @@
 /*
- * Reads the enchantment data straight out of an installed RotMG client.
+ * Reads the enchantment data out of an installed RotMG client, and says what
+ * changed since the last time it looked.
  *
- *   node tools/read-client.js                 read, report, compare
- *   node tools/read-client.js --save          also write the XML to client-data/
- *   node tools/read-client.js --client <dir>  a client somewhere else
+ *   node tools/read-client.js                  compare, and report
+ *   node tools/read-client.js --snapshot       record this client as the new baseline
+ *   node tools/read-client.js --news           write the report into the changelog
+ *   node tools/read-client.js --save           also dump the raw XML to client-data/
+ *   node tools/read-client.js --client <dir>   a client installed somewhere else
  *
- * Why this is worth doing. Everything the calculator knows about enchantments
- * came from a snapshot of someone else's program, and a snapshot is only ever
- * right about the day it was taken. The client on this machine is the game
- * itself: whatever it says is, by definition, what the game does.
+ * Why this exists. Everything the calculator knows came from a snapshot of
+ * someone else's program, and a snapshot is only right about the day it was
+ * taken. The client on this machine is the game: whatever it says is, by
+ * definition, what the game does. After an update, run this and it will name
+ * every weight, pool rule, artifact and item dust that moved.
  *
- * The data turns out to be plain XML, uncompressed, sitting inside
- * resources.assets as Unity TextAssets. No asset parser is needed — the
- * documents are contiguous and can be lifted out by their own tags:
+ * No Unity asset parser is needed. The data is plain, uncompressed XML sitting
+ * inside resources.assets as TextAssets, and the documents can be lifted out
+ * by their own tags. The whole read takes well under a second.
  *
  *   <Enchantments>      one <Enchantment> per tier, with Weight, the item
- *                       labels it is compatible with, its own labels, and the
- *                       enchantment labels it refuses to sit beside
+ *                       labels it needs, its own labels, and the enchantment
+ *                       labels it refuses to sit beside
  *   <EnchantmentLists>  the pools, as generic rules:
  *                       <ModifyEnchantmentWeightLabel includeLabelsOR="..."
  *                         excludeLabelsOR="UNIQUE" mult="0.2" />
- *   <Objects>           every item, with its <Labels> and
- *                       <EnchantmentSlots slotChance="..." enchantmentList="..." />
- *                       and, for artifacts,
- *                       <Artifact list="..." consumeProb="..." dustType="..." />
+ *   <Objects>           every item with its <EnchantmentSlots slotChance="..."
+ *                       dustType="..." dustAmounts="..." />, and artifacts with
+ *                       <Artifact list="..." consumeProb="..." />
  *
- * Nothing here is downloaded and nothing is sent anywhere: it reads a file
- * already on the machine.
+ * Nothing is downloaded and nothing is sent anywhere: it reads a file already
+ * on the machine.
  */
 'use strict';
 const fs = require('fs');
@@ -37,243 +40,376 @@ const args = process.argv.slice(2);
 const flag = name => args.includes(name);
 const option = name => { const at = args.indexOf(name); return at >= 0 ? args[at + 1] : null; };
 
+const SNAPSHOT = path.join(root, 'data', 'client-snapshot.txt');
+const CHANGES = path.join(root, 'data', 'client-changes.txt');
+
 const DEFAULT_CLIENTS = [
-  'C:/Users/' + (process.env.USERNAME || '') + '/AppData/Local/RealmOfTheMadGod/Production',
+  path.join(process.env.LOCALAPPDATA || '', 'RealmOfTheMadGod', 'Production'),
   'C:/Program Files (x86)/Steam/steamapps/common/Realm of the Mad God Exalt'
 ];
 
-function findAssets() {
+function findClient() {
   const given = option('--client');
-  const candidates = given ? [given] : DEFAULT_CLIENTS;
-  for (const base of candidates) {
+  for (const base of given ? [given] : DEFAULT_CLIENTS) {
+    if (!base) continue;
     for (const folder of ['RotMG Exalt_Data', 'Realm of the Mad God Exalt_Data', '']) {
-      const file = path.join(base, folder, 'resources.assets');
-      if (fs.existsSync(file)) return file;
+      const assets = path.join(base, folder, 'resources.assets');
+      if (fs.existsSync(assets)) return { base, dataDir: path.join(base, folder), assets };
     }
   }
   return null;
 }
 
-/*
- * Pulls every embedded XML document out of the asset file.
- *
- * Streamed with a sliding window rather than read whole: the file is several
- * hundred megabytes and only a fraction of it is text.
- */
-function extractDocuments(file, wanted) {
-  return new Promise((resolve, reject) => {
-    const found = new Map();
-    const open = wanted.map(name => ({ name, start: `<${name}>`, end: `</${name}>` }));
-    let tail = '';
-    let offset = 0;
-    const OVERLAP = 4096;
-
-    const stream = fs.createReadStream(file, { highWaterMark: 8 * 1024 * 1024 });
-    stream.on('data', chunk => {
-      const text = tail + chunk.toString('latin1');
-      for (const doc of open) {
-        if (found.has(doc.name)) continue;
-        const from = text.indexOf(doc.start);
-        if (from < 0) continue;
-        const to = text.indexOf(doc.end, from);
-        if (to < 0) continue;                       // spans further than this window
-        // Take the declaration with it when it is right in front.
-        const decl = text.lastIndexOf('<?xml', from);
-        const begin = decl >= 0 && from - decl < 80 ? decl : from;
-        found.set(doc.name, text.slice(begin, to + doc.end.length));
-      }
-      if (found.size === open.length) { stream.destroy(); return; }
-      tail = text.slice(-OVERLAP);
-      offset += chunk.length;
-    });
-    stream.on('error', reject);
-    stream.on('close', () => resolve(found));
-    stream.on('end', () => resolve(found));
-  });
+// Unity writes a stable identifier per build; it is what tells two reads apart.
+function buildId(dataDir) {
+  try {
+    const boot = fs.readFileSync(path.join(dataDir, 'boot.config'), 'utf8');
+    const match = boot.match(/build-guid=([0-9a-f]+)/i);
+    if (match) return match[1];
+  } catch (error) { /* not every build ships one */ }
+  return 'unknown';
 }
 
-/* --------------------------------------------------------------- *
- * A deliberately small XML reader: these documents are flat and     *
- * machine-written, so the shapes below are all that occur.          *
- * --------------------------------------------------------------- */
+/* ---------------------------------------------------------------- *
+ * Reading                                                           *
+ * ---------------------------------------------------------------- */
 
 const unescape = text => String(text)
   .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
   .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
-  .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+  .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
   .replace(/&amp;/g, '&');
 
-function attributes(tag) {
-  const out = {};
-  for (const match of tag.matchAll(/([\w:-]+)\s*=\s*"([^"]*)"/g)) out[match[1]] = unescape(match[2]);
-  return out;
-}
-
-// Every <Name>…</Name> and <Name /> directly inside one element's body.
-function children(body) {
-  const out = [];
-  const re = /<([\w:-]+)([^>]*?)(\/)?>/g;
-  let match;
-  while ((match = re.exec(body))) {
-    const [full, name, attrs, selfClosing] = match;
-    if (selfClosing) { out.push({ name, attrs: attributes(attrs), text: '' }); continue; }
-    const close = `</${name}>`;
-    const end = body.indexOf(close, re.lastIndex);
-    if (end < 0) continue;
-    out.push({ name, attrs: attributes(attrs), text: body.slice(re.lastIndex, end), inner: body.slice(re.lastIndex, end) });
-    re.lastIndex = end + close.length;
-  }
-  return out;
-}
-
-function elements(xml, name) {
-  const out = [];
-  const openRe = new RegExp(`<${name}(\\s[^>]*?)?(/)?>`, 'g');
-  let match;
-  while ((match = openRe.exec(xml))) {
-    const attrs = attributes(match[1] || '');
-    if (match[2]) { out.push({ attrs, body: '' }); continue; }
-    const close = `</${name}>`;
-    const end = xml.indexOf(close, openRe.lastIndex);
-    if (end < 0) break;
-    out.push({ attrs, body: xml.slice(openRe.lastIndex, end) });
-    openRe.lastIndex = end + close.length;
-  }
-  return out;
-}
-
-const textOf = (body, name) => {
+const attr = (text, name) => {
+  const match = text && text.match(new RegExp(`${name}\\s*=\\s*"([^"]*)"`));
+  return match ? unescape(match[1]) : '';
+};
+const tag = (body, name) => {
   const match = body.match(new RegExp(`<${name}\\s*>([\\s\\S]*?)</${name}>`));
   return match ? unescape(match[1]).trim() : '';
 };
-const list = value => value.split(',').map(s => s.trim()).filter(Boolean);
+const list = value => value.split(',').map(part => part.trim()).filter(Boolean);
 
-/* --------------------------------------------------------------- */
+/*
+ * One pass over the asset file. The enchantments and the pools each live in a
+ * single document; the items are spread over dozens of them, so objects are
+ * harvested as they go by rather than by finding a document boundary.
+ */
+function readClient(assets) {
+  return new Promise((resolve, reject) => {
+    const docs = new Map();
+    const objects = new Map();
+    const wanted = ['Enchantments', 'EnchantmentLists'];
+    let tail = '';
+
+    const harvestObjects = text => {
+      const re = /<Object\s([^>]*)>([\s\S]*?)<\/Object>/g;
+      let match;
+      while ((match = re.exec(text))) {
+        const [, attrs, body] = match;
+        const slots = body.match(/<EnchantmentSlots([^>]*)\/>/);
+        const artifact = body.match(/<Artifact([^>]*)\/>/);
+        if (!slots && !artifact) continue;
+        const id = attr(attrs, 'id');
+        if (!id || objects.has(id)) continue;
+        objects.set(id, {
+          id,
+          display: tag(body, 'DisplayId') || id,
+          labels: list(tag(body, 'Labels')),
+          slots: slots ? {
+            slotChance: attr(slots[1], 'slotChance'),
+            dustType: attr(slots[1], 'dustType'),
+            dustAmounts: attr(slots[1], 'dustAmounts'),
+            pool: attr(slots[1], 'enchantmentList'),
+            seasonal: attr(slots[1], 'seasonalSlotMod'),
+            forge: attr(slots[1], 'forgeSlotMod')
+          } : null,
+          artifact: artifact ? {
+            pool: attr(artifact[1], 'list'),
+            consumeProb: attr(artifact[1], 'consumeProb'),
+            dustType: attr(artifact[1], 'dustType'),
+            dustAmount: attr(artifact[1], 'dustAmount')
+          } : null
+        });
+      }
+    };
+
+    const stream = fs.createReadStream(assets, { highWaterMark: 8 * 1024 * 1024 });
+    stream.on('data', chunk => {
+      const text = tail + chunk.toString('latin1');
+      for (const name of wanted) {
+        if (docs.has(name)) continue;
+        const from = text.indexOf(`<${name}>`);
+        if (from < 0) continue;
+        const to = text.indexOf(`</${name}>`, from);
+        if (to < 0) continue;
+        docs.set(name, text.slice(from, to + name.length + 3));
+      }
+      harvestObjects(text);
+      tail = text.slice(-32768);
+    });
+    stream.on('error', reject);
+    stream.on('end', () => resolve({ docs, objects }));
+  });
+}
+
+/* ---------------------------------------------------------------- *
+ * Normalising                                                       *
+ * ---------------------------------------------------------------- */
+
+/*
+ * Two rules, both learned by getting them wrong.
+ *
+ * Only ROLLABLE records count. The client keeps non-rollable twins under the
+ * same display name — an "Alien OnShoot Attack Boost" of weight 15000 that can
+ * be rolled and one of 10000 that cannot — and every pool filters on exactly
+ * that label. Taking whichever came last invents differences by the hundred.
+ *
+ * And tiers fold on the id, not on the roman numeral in the name: the client
+ * itself displays Dexterity_Mana_Tradeoff_3 as "Dexterity -Mana Tradeoff II".
+ */
+function enchantmentsFrom(xml) {
+  const records = [];
+  const re = /<Enchantment\s+([^>]*)>([\s\S]*?)<\/Enchantment>/g;
+  let match;
+  while ((match = re.exec(xml))) {
+    const [, attrs, body] = match;
+    const labels = list(tag(body, 'EnchantmentLabels'));
+    if (!labels.includes('ROLLABLE')) continue;
+    records.push({
+      id: attr(attrs, 'id'),
+      name: tag(body, 'DisplayId') || attr(attrs, 'id'),
+      weight: Number(tag(body, 'Weight')) || 0,
+      labels,
+      refuses: list(tag(body, 'IncompatibleWithEnchantmentLabels')),
+      itemLabels: list(tag(body, 'CompatibleWithItemLabels')),
+      refusedItemLabels: list(tag(body, 'IncompatibleWithItemLabels'))
+    });
+  }
+
+  const folded = new Map();
+  for (const record of records) {
+    const tier = record.labels.find(label => /^TIER[1-4]$/.test(label));
+    if (!tier) { folded.set(record.id, { id: record.id, name: record.name, tiers: null, one: record }); continue; }
+    const stem = record.id.replace(/_[1-4]$/, '');
+    if (!folded.has(stem)) folded.set(stem, { id: stem, name: record.name.replace(/ (I{1,3}|IV)$/, ''), tiers: [], one: record });
+    folded.get(stem).tiers[Number(tier.slice(4)) - 1] = record;
+  }
+
+  const out = [];
+  for (const group of folded.values()) {
+    const present = group.tiers ? group.tiers.filter(Boolean) : [group.one];
+    const weight = present.reduce((sum, record) => sum + record.weight, 0);
+    const split = group.tiers && present.length === 4
+      ? group.tiers.map(record => (record.weight / weight).toFixed(5)).join(' ')
+      : '';
+    const sample = present[0];
+    out.push({
+      id: group.id,
+      name: group.name,
+      weight,
+      split,
+      labels: sample.labels.filter(label => !/^TIER[1-4]$/.test(label)).sort(),
+      refuses: sample.refuses.slice().sort(),
+      itemLabels: sample.itemLabels.slice().sort(),
+      refusedItemLabels: sample.refusedItemLabels.slice().sort()
+    });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function poolsFrom(xml) {
+  const out = [];
+  const re = /<EnchantmentList[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/EnchantmentList>/g;
+  let match;
+  while ((match = re.exec(xml))) {
+    const rules = [];
+    for (const rule of match[2].matchAll(/<(\w+)([^>]*)\/>/g)) {
+      const bits = [rule[1]];
+      for (const name of ['id', 'includeLabelsOR', 'excludeLabelsOR', 'includeLabelsAND', 'excludeLabelsAND', 'mult']) {
+        const value = attr(rule[2], name);
+        if (value) bits.push(`${name}=${value}`);
+      }
+      rules.push(bits.join(' '));
+    }
+    out.push({ id: match[1], rules });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/* ---------------------------------------------------------------- *
+ * The snapshot: one sorted line per fact, so git can diff it too    *
+ * ---------------------------------------------------------------- */
+
+function buildSnapshot(state) {
+  const lines = [];
+  lines.push(`build|${state.build}`);
+  // Keyed on the id, not the display name: the client gives two different
+  // enchantments the name "Acid Guardian" and separates them only by id, so a
+  // name-keyed line would hide one of them from every future comparison.
+  for (const e of state.enchantments) {
+    lines.push(['ench', e.id, e.name, e.weight, e.split, e.labels.join(','), e.refuses.join(','),
+      e.itemLabels.join(','), e.refusedItemLabels.join(',')].join('|'));
+  }
+  // Numbered, because a pool has several rules and they would otherwise share
+  // one key: a changed multiplier would vanish instead of being reported.
+  for (const p of state.pools) {
+    p.rules.forEach((rule, index) => lines.push(['pool', `${p.id} #${index + 1}`, rule].join('|')));
+  }
+  for (const a of state.artifacts) {
+    lines.push(['artifact', a.name, a.pool, a.consumeProb, a.dustType, a.dustAmount].join('|'));
+  }
+  for (const i of state.items) {
+    lines.push(['item', i.name, i.dustType, i.slotChance, i.dustAmounts, i.pool].join('|'));
+  }
+  return lines;
+}
+
+function parseSnapshot(text) {
+  const map = new Map();
+  let build = 'unknown';
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('##')) continue;
+    if (line.startsWith('build|')) { build = line.slice(6); continue; }
+    const cut = line.indexOf('|', line.indexOf('|') + 1);
+    map.set(line.slice(0, cut), line.slice(cut + 1));
+  }
+  return { build, map };
+}
+
+// What moved, said the way a person would say it.
+function describe(kind, name, before, after) {
+  const FIELDS = {
+    ench: ['name', 'weight', 'tier split', 'Labels', 'Incompatible Labels', 'item labels', 'refused item labels'],
+    artifact: ['pool', 'consume chance', 'dust', 'dust cost'],
+    item: ['dust', 'slot chances', 'reroll costs', 'pool'],
+    pool: ['rule']
+  };
+  const names = FIELDS[kind] || [];
+  const from = before.split('|');
+  const to = after.split('|');
+  const parts = [];
+  for (let index = 0; index < Math.max(from.length, to.length); index++) {
+    if ((from[index] || '') === (to[index] || '')) continue;
+    const label = names[index] || `field ${index + 1}`;
+    parts.push(`${label} ${from[index] || '(none)'} -> ${to[index] || '(none)'}`);
+  }
+  return parts.length ? `${name}: ${parts.join(', ')}` : null;
+}
+
+function compare(previous, current) {
+  const added = [], removed = [], changed = [];
+  for (const [key, value] of current) {
+    if (!previous.has(key)) { added.push(key); continue; }
+    if (previous.get(key) !== value) {
+      const [kind, id] = key.split('|');
+      // For enchantments the readable name is the first field, not the key.
+      const name = kind === 'ench' ? `${value.split('|')[0]} [${id}]` : id;
+      const line = describe(kind, name, previous.get(key), value);
+      if (line) changed.push(`${kind}: ${line}`);
+    }
+  }
+  for (const key of previous.keys()) if (!current.has(key)) removed.push(key);
+  return { added, removed, changed };
+}
+
+/* ---------------------------------------------------------------- */
 
 async function main() {
-  const file = findAssets();
-  if (!file) {
+  const client = findClient();
+  if (!client) {
     console.error('\n  No RotMG client found. Looked in:');
     for (const base of DEFAULT_CLIENTS) console.error(`    ${base}`);
     console.error('  Point at one with:  node tools/read-client.js --client <folder>\n');
     process.exit(1);
   }
-  const size = fs.statSync(file).size;
-  console.log(`\n  client: ${file}`);
-  console.log(`  ${(size / 1024 / 1024).toFixed(0)} MB, last written ${fs.statSync(file).mtime.toISOString().slice(0, 10)}`);
 
   const started = Date.now();
-  const docs = await extractDocuments(file, ['Enchantments', 'EnchantmentLists']);
-  console.log(`  read in ${((Date.now() - started) / 1000).toFixed(1)} s\n`);
-
-  for (const [name, xml] of docs) console.log(`  <${name}> ${(xml.length / 1024).toFixed(0)} KB`);
+  const { docs, objects } = await readClient(client.assets);
   if (!docs.has('Enchantments')) { console.error('\n  no <Enchantments> document in this client\n'); process.exit(1); }
 
-  /*
-   * Enchantments.
-   *
-   * Two rules, both learned by getting them wrong first.
-   *
-   * Only ROLLABLE records count. The client keeps non-rollable twins under the
-   * same display name — an "Alien OnShoot Attack Boost" of weight 15000 that
-   * can be rolled, and one of 10000 that cannot — and every pool filters on
-   * exactly that label: <EnchantmentEntryLabel includeLabelsOR="ROLLABLE" />.
-   * Taking whichever came last made a hundred imaginary differences.
-   *
-   * And tiers are folded on the id, not on the roman numeral in the name. The
-   * client itself mislabels several tier III records as "II"
-   * (Dexterity_Mana_Tradeoff_3 displays as "Dexterity -Mana Tradeoff II"),
-   * so the name cannot be trusted to say which tier a record is.
-   */
-  const enchantments = elements(docs.get('Enchantments'), 'Enchantment').map(node => ({
-    id: node.attrs.id,
-    name: textOf(node.body, 'DisplayId') || node.attrs.id,
-    weight: Number(textOf(node.body, 'Weight')) || 0,
-    itemLabels: list(textOf(node.body, 'CompatibleWithItemLabels')),
-    refusedItemLabels: list(textOf(node.body, 'IncompatibleWithItemLabels')),
-    labels: list(textOf(node.body, 'EnchantmentLabels')),
-    refuses: list(textOf(node.body, 'IncompatibleWithEnchantmentLabels'))
-  }));
-  const rollable = enchantments.filter(e => e.labels.includes('ROLLABLE'));
-  console.log(`\n  ${enchantments.length} enchantments defined, ${rollable.length} of them rollable`);
+  const build = buildId(client.dataDir);
+  const enchantments = enchantmentsFrom(docs.get('Enchantments'));
+  const pools = docs.has('EnchantmentLists') ? poolsFrom(docs.get('EnchantmentLists')) : [];
 
-  const folded = new Map();
-  for (const e of rollable) {
-    const tier = e.labels.find(label => /^TIER[1-4]$/.test(label));
-    if (!tier) { folded.set(e.id, { name: e.name, tiers: null, one: e }); continue; }
-    const stem = e.id.replace(/_[1-4]$/, '');
-    if (!folded.has(stem)) folded.set(stem, { name: e.name.replace(/ (I{1,3}|IV)$/, ''), tiers: [], one: e });
-    folded.get(stem).tiers[Number(tier.slice(4)) - 1] = e;
+  const artifacts = [];
+  const seenArtifact = new Set();
+  const items = [];
+  for (const object of objects.values()) {
+    if (object.artifact && object.artifact.pool) {
+      // One object per stack size: "The Fool Tarot Card x7".
+      const name = object.display.replace(/\s*x\d+$/, '').trim();
+      if (!seenArtifact.has(name)) {
+        seenArtifact.add(name);
+        artifacts.push({ name, ...object.artifact });
+      }
+    }
+    if (object.slots && object.slots.slotChance) {
+      items.push({ name: object.id, ...object.slots });
+    }
   }
-  const weightOf = group => group.tiers
-    ? group.tiers.filter(Boolean).reduce((sum, tier) => sum + tier.weight, 0)
-    : group.one.weight;
-  console.log(`  ${folded.size} once the four tiers of each are folded into one`);
+  artifacts.sort((a, b) => a.name.localeCompare(b.name));
+  items.sort((a, b) => a.name.localeCompare(b.name));
+
+  console.log(`\n  client : ${client.assets}`);
+  console.log(`  build  : ${build}`);
+  console.log(`  read in ${((Date.now() - started) / 1000).toFixed(1)} s`);
+  console.log(`\n  ${enchantments.length} rollable enchantments, ${pools.length} pools, ${artifacts.length} artifacts, ${items.length} enchantable items`);
 
   if (flag('--save')) {
     const out = path.join(root, 'client-data');
     fs.mkdirSync(out, { recursive: true });
     for (const [name, xml] of docs) fs.writeFileSync(path.join(out, `${name}.xml`), xml, 'utf8');
-    console.log(`\n  XML written to ${path.relative(root, out)}/`);
+    console.log(`\n  raw XML -> ${path.relative(root, out)}/`);
   }
 
-  /* ---- what we hold, for comparison ---- */
-  const engine = require(path.join(root, 'web', 'engine.js'));
-  const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armorMods.txt',
-    'ringMods.txt', 'alienMods.txt', 'neoAlienMods.txt', 'summonPoweredMods.txt', 'awakenedMods.txt'];
-  const read = (...parts) => fs.readFileSync(path.join(root, 'data', ...parts), 'utf8');
-  const ours = engine.buildDataset({
-    modTexts: MOD_FILES.map(f => read('Enchantment documents', f)),
-    artifactText: read('Artifacts', 'artifacts.txt'),
-    awakenText: read('Awakened Items', 'awakenedItems.txt'),
-    awokenExtraText: read('Awakened Items', 'awoken-items.txt')
-  });
+  const lines = buildSnapshot({ build, enchantments, pools, artifacts, items });
+  const current = parseSnapshot(lines.join('\n'));
 
-  const norm = value => String(value).toLowerCase().replace(/[‘’ʼ]/g, "'").replace(/\s+/g, ' ').trim();
-  const byName = new Map();
-  for (const group of folded.values()) if (!byName.has(norm(group.name))) byName.set(norm(group.name), group);
+  const header = `## What an installed RotMG client says about enchanting, as of the build below.
+##
+## Written by tools/read-client.js --snapshot. Its only purpose is to be
+## compared against the next read: run the tool after a game update and it will
+## name every weight, pool rule, artifact and item that moved.
+##
+## One sorted line per fact, so git can diff it as well.
+## Format: kind|name|fields…
+`;
 
-  const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
-  let matched = 0, weightSame = 0, splitSame = 0, refusesSame = 0;
-  const weightDiff = [], splitDiff = [], refusesDiff = [], absent = [];
-
-  for (const mod of ours.enchants) {
-    const group = byName.get(norm(mod.name));
-    if (!group) { absent.push(mod.name); continue; }
-    matched++;
-
-    const weight = weightOf(group);
-    if (weight === mod.weight) weightSame++;
-    else weightDiff.push(`${mod.name}: ${mod.weight} here, ${weight} in the client`);
-
-    if (group.tiers && group.tiers.filter(Boolean).length === 4) {
-      const share = group.tiers.map(tier => tier.weight / weight);
-      if (share.every((value, index) => Math.abs(value - (mod.distribution[index] || 0)) < 0.0005)) splitSame++;
-      else splitDiff.push(`${mod.name}: [${mod.distribution}] here, [${share.map(v => v.toFixed(5))}] in the client`);
+  if (!fs.existsSync(SNAPSHOT)) {
+    if (!flag('--snapshot')) {
+      console.log(`\n  no baseline yet. Record this client as one with:\n    node tools/read-client.js --snapshot\n`);
+      return;
     }
+  } else {
+    const previous = parseSnapshot(fs.readFileSync(SNAPSHOT, 'utf8'));
+    const { added, removed, changed } = compare(previous.map, current.map);
+    console.log(`\n  against the recorded build ${previous.build}:`);
+    if (previous.build === build) console.log('    same build — nothing can have changed');
+    console.log(`    ${changed.length} changed, ${added.length} added, ${removed.length} gone`);
+    for (const line of changed.slice(0, 40)) console.log(`      ~ ${line}`);
+    if (changed.length > 40) console.log(`      … and ${changed.length - 40} more`);
+    for (const key of added.slice(0, 20)) console.log(`      + ${key.replace('|', ': ')}`);
+    if (added.length > 20) console.log(`      … and ${added.length - 20} more added`);
+    for (const key of removed.slice(0, 20)) console.log(`      - ${key.replace('|', ': ')}`);
+    if (removed.length > 20) console.log(`      … and ${removed.length - 20} more gone`);
 
-    const refuses = (group.tiers ? group.tiers.find(Boolean) : group.one).refuses;
-    if (same(refuses, [...mod.excludes])) refusesSame++;
-    else refusesDiff.push(`${mod.name}: [${[...mod.excludes]}] here, [${refuses}] in the client`);
+    if (flag('--news') && (changed.length || added.length || removed.length)) {
+      const when = fs.statSync(client.assets).mtime.toISOString().slice(0, 10);
+      const entry = [`## ${when} — build ${build}`, ...changed.map(l => `~ ${l}`),
+        ...added.map(k => `+ ${k.replace('|', ': ')}`), ...removed.map(k => `- ${k.replace('|', ': ')}`), ''];
+      const before = fs.existsSync(CHANGES) ? fs.readFileSync(CHANGES, 'utf8') : '';
+      fs.writeFileSync(CHANGES, `${entry.join('\n')}\n${before}`, 'utf8');
+      console.log(`\n  written to ${path.relative(root, CHANGES)}`);
+    }
   }
 
-  const report = (title, same_, list, limit) => {
-    console.log(`    ${title}: ${same_} the same, ${list.length} different`);
-    for (const line of list.slice(0, limit)) console.log(`      - ${line}`);
-    if (list.length > limit) console.log(`      … and ${list.length - limit} more`);
-  };
-
-  console.log(`\n  of our ${ours.enchants.length} enchantments, ${matched} matched by name:`);
-  report('weight', weightSame, weightDiff, 15);
-  report('tier split', splitSame, splitDiff, 10);
-  report('Incompatible Labels', refusesSame, refusesDiff, 10);
-  if (absent.length) console.log(`    not matched: ${absent.join(', ')}`);
-
-  const known = new Set(ours.enchants.map(mod => norm(mod.name)));
-  const extra = [...byName.values()].filter(group => !known.has(norm(group.name)));
-  console.log(`\n  rollable in the client and not here: ${extra.length}`);
-  for (const group of extra.slice(0, 20)) console.log(`      + ${group.name} (weight ${weightOf(group)})`);
-  if (extra.length > 20) console.log(`      … and ${extra.length - 20} more`);
+  if (flag('--snapshot')) {
+    fs.mkdirSync(path.dirname(SNAPSHOT), { recursive: true });
+    fs.writeFileSync(SNAPSHOT, `${header}\n${lines.join('\n')}\n`, 'utf8');
+    console.log(`\n  ${lines.length} lines -> ${path.relative(root, SNAPSHOT)}`);
+  }
   console.log('');
 }
 
