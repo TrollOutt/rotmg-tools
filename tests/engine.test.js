@@ -1008,6 +1008,74 @@ check('and it records the artifacts, the pools and the items too',
   && snapshot.some(line => line.startsWith('pool|'))
   && snapshot.filter(line => line.startsWith('item|')).length > 1000);
 
+/* ------------------------------------------------------------------ *
+ * 15. An artifact's rules compound                                    *
+ * ------------------------------------------------------------------ *
+ * Read off the installed client: a pool is a list of weight rules that
+ * each multiply what the previous one left. This used to take the
+ * largest matching rule instead, which is the same answer whenever only
+ * one rule matches and wrong whenever two do.
+ */
+section('15. An artifact rules compound');
+
+const ankh = artifact('Ascension Ankh');
+const fool = artifact('The Fool Tarot Card');
+
+check('two matching rules multiply rather than compete', (() => {
+  // Tomb Pool is LIFE,DEXTERITY,DEFENSE x7 and DUALSTAT x3; Attack and Defense
+  // Bonus is both, so the game gives it x21.
+  const mod = data.byName.get('Attack and Defense Bonus');
+  return engine.weightFor(mod, ankh) === Math.trunc(mod.weight * 21 * engine.tierMass(mod, ankh));
+})(), (() => {
+  const mod = data.byName.get('Attack and Defense Bonus');
+  return `${engine.weightFor(mod, ankh)} for weight ${mod.weight}`;
+})());
+
+check('one matching rule is unchanged by that', (() => {
+  // Life Bonus is LIFE and not DUALSTAT: x7, exactly as before.
+  const mod = data.byName.get('Flat Life Bonus') || data.byName.get('Life Bonus');
+  return !mod || engine.weightFor(mod, ankh) === Math.trunc(mod.weight * 7 * engine.tierMass(mod, ankh));
+})());
+
+check('an enchantment no rule names keeps its weight', (() => {
+  const mod = data.enchants.find(m => !m.tags.has('LIFE') && !m.tags.has('DEXTERITY')
+    && !m.tags.has('DEFENSE') && !m.tags.has('DUALSTAT') && !m.tags.has('TIERED')
+    && m.name !== "Ancient's Blessing" && m.name !== 'Ancient Artifacts');
+  return mod && engine.weightFor(mod, ankh) === mod.weight;
+})());
+
+check('The Fool reduces the proc stat boosts, which STAT never reached', (() => {
+  // The client names the eight stat labels; OnShoot Attack Boost carries
+  // ATTACK but not STAT, so writing the rule as STAT missed all 25 of them.
+  const mod = data.byName.get('OnShoot Attack Boost');
+  return mod && mod.tags.has('ATTACK') && !mod.tags.has('STAT')
+    && engine.weightFor(mod, fool) === Math.trunc(mod.weight * 0.2 * engine.tierMass(mod, fool));
+})());
+
+check('and leaves alone what carries STAT but none of the eight', (() => {
+  const mod = data.byName.get('Summon Power -StatMod Mult Tradeoff');
+  return mod && mod.tags.has('STAT')
+    && engine.weightFor(mod, fool) === Math.trunc(mod.weight * engine.tierMass(mod, fool));
+})());
+
+check('a UNIQUE stat enchantment is exempt, as the rule says', (() => {
+  // Jester's Trick is STAT and UNIQUE: excluded from the x0.2, then named
+  // outright at x15. It must come out at x15, not x3.
+  const mod = data.byName.get("Jester's Trick");
+  return engine.weightFor(mod, fool) === Math.trunc(mod.weight * 15 * engine.tierMass(mod, fool));
+})(), (() => {
+  const mod = data.byName.get("Jester's Trick");
+  return `${engine.weightFor(mod, fool)} for weight ${mod.weight}`;
+})());
+
+check('Premium Silver lifts tier 2 to cover the tier it bars', (() => {
+  // The client's Premium Silver Pool is TIER1 x0 and TIER2 x2.166; the second
+  // line was missing here, leaving every tiered enchantment at 65 % of its
+  // weight under that card.
+  const silver = artifact('Premium Silver Tarot Card');
+  return Math.abs(engine.tierMass(data.byName.get('Attack Bonus'), silver) - 1) < 0.001;
+})(), String(engine.tierMass(data.byName.get('Attack Bonus'), artifact('Premium Silver Tarot Card'))));
+
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
 if (failures.length) { for (const name of failures) console.log(`  - ${name}`); process.exit(1); }

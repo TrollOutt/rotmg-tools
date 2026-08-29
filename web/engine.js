@@ -224,18 +224,37 @@ var EnchantEngine = (function () {
   // one of its keys matches a Label or the enchantment name, and no excluded
   // Label is present. The highest matching multiplier wins; the product is
   // truncated exactly like static_cast<int>.
+  /*
+   * An artifact's rules compound; they do not compete.
+   *
+   * The client states them as a list of ModifyEnchantmentWeight entries that
+   * each multiply the running weight in turn. The Ascension Ankh, for one, is
+   * "LIFE,DEXTERITY,DEFENSE x7" and "DUALSTAT x3", so Attack and Defense Bonus
+   * — which is both — comes out at x21. Taking the largest matching rule
+   * instead, as this did, left it at x7 and made every dual-stat bonus three
+   * times rarer under that artifact than the game makes it. The same held for
+   * Precision Cog, Amber Honeycomb, the four alien Technologies, Spectral
+   * Arrowhead and Adamantine Ingot.
+   *
+   * Tier rules are deliberately not part of this: they are a share of the
+   * enchantment's own weight rather than a multiplier on the whole of it, and
+   * tierMass accounts for them.
+   */
   function weightFor(mod, artifact) {
     if (!artifact || artifact.name === 'No Artifact') return mod.weight;
-    let best = -1;
+    let multiplier = 1;
     for (const rule of artifact.rules) {
+      let onlyTiers = true;
+      for (const key of rule.keys) if (!/^TIER[1-4]$/.test(key)) { onlyTiers = false; break; }
+      if (onlyTiers) continue;
       let matches = false;
       for (const key of rule.keys) if (mod.tags.has(key) || mod.name === key) { matches = true; break; }
       if (!matches) continue;
       let excluded = false;
       for (const label of rule.excludes) if (mod.tags.has(label)) { excluded = true; break; }
-      if (!excluded && rule.multiplier > best) best = rule.multiplier;
+      if (!excluded) multiplier *= rule.multiplier;
     }
-    return Math.trunc(mod.weight * (best < 0 ? 1 : best) * tierMass(mod, artifact));
+    return Math.trunc(mod.weight * multiplier * tierMass(mod, artifact));
   }
 
   function weightedPool(data, cfg, artifact) {

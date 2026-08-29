@@ -7,7 +7,13 @@
 [The Fool - Card 0 or XXII of the Major Arcana. The fool represents innocence, it is the beginning. When inverted, the fool represents recklessness.]
 [Green,25]
 []
-[STAT,0.2,UNIQUE]
+##Was [STAT,0.2,UNIQUE]. The installed client names the eight stat labels one
+##by one instead, and STAT is not the same set: the proc bonuses (OnShoot,
+##OnAbility and OnHit Attack/Defense/Dexterity/Vitality/Wisdom Boost, and their
+##Alien and Neo forms) carry ATTACK but not STAT, so the reduction missed all
+##25 of them; Summon Power -StatMod Mult Tradeoff carries STAT but none of the
+##eight, so it was reduced when the game leaves it alone.
+[ATTACK,DEXTERITY,SPEED,LIFE,MANA,DEFENSE,WISDOM,VITALITY,0.2,UNIQUE]
 [Jester's Trick,15]
 ************
 [The Devil Tarot Card]
@@ -120,6 +126,11 @@
 [na,0]
 []
 [TIER1,0]
+##[TIER2,2.166] added from the installed client: Premium Silver Pool bars TIER1
+##and lifts TIER2 by 2.166, which is (0.35+0.30)/0.30 on the standard split —
+##the barred tier's weight moved onto the next one, total unchanged. Without
+##this line a tiered enchantment kept only 65 % of its weight under this card.
+[TIER2,2.166]
 [UNIQUE,AWAKENED,1.8]
 ************
 [Premium Gold Card]
