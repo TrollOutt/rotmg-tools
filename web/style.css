@@ -162,6 +162,7 @@ img { image-rendering: pixelated; }
 }
 .masthead p { margin: 4px 0 10px; color: var(--muted); max-width: 78ch; text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
 .masthead-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.masthead-row .link-button { font-size: 12px; }
 .status {
   display: inline-block; font-size: 12.5px; color: var(--muted);
   background: rgba(26, 24, 36, .85); border: 1px solid var(--line);
@@ -323,28 +324,28 @@ select option { background: var(--panel); color: var(--text); }
 .item-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; align-self: start; }
 
 .item-card {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: center;
   background: rgba(13, 12, 19, .55);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  padding: 8px 11px;
 }
 .item-card.partial { border-left-color: var(--locked); }
 .item-card.unknown { border-left-color: var(--bad); }
 
 .item-art {
-  width: 72px; height: 72px; flex: none;
+  width: 46px; height: 46px; flex: none;
   display: grid; place-items: center;
   background: rgba(0, 0, 0, .3);
   border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
 }
-.item-art img { width: 60px; height: 60px; object-fit: contain; }
-.item-art img.as-type { width: 40px; height: 40px; opacity: .8; }
-.item-art-fallback { font-size: 26px; color: var(--dim); }
+.item-art img { width: 38px; height: 38px; object-fit: contain; }
+.item-art img.as-type { width: 26px; height: 26px; opacity: .8; }
+.item-art-fallback { font-size: 20px; color: var(--dim); }
 
-.item-facts { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.item-facts > b { font-size: 15px; line-height: 1.25; }
+.item-facts { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.item-facts > b { font-size: 14px; line-height: 1.2; }
 .fact-row { display: flex; flex-wrap: wrap; gap: 5px; }
 .fact {
   font-style: normal; font-size: 11px; font-weight: 650; letter-spacing: .3px;
@@ -458,14 +459,6 @@ select option { background: var(--panel); color: var(--text); }
 
 /* ---------------- buttons ---------------- */
 
-.calculate {
-  width: 100%; padding: 12px; border: 0; border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, #4aa3e8, #2f7fc2); color: #04121e;
-  font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer;
-}
-.calculate:hover:not(:disabled) { filter: brightness(1.1); }
-.calculate:disabled { background: var(--panel-2); color: var(--dim); cursor: not-allowed; }
-
 .secondary {
   background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
   font: inherit; font-size: 13px; padding: 8px 14px; border-radius: var(--radius-sm); cursor: pointer;
@@ -479,7 +472,9 @@ select option { background: var(--panel); color: var(--text); }
 }
 .link-button:hover { color: var(--bad); }
 
-.progress { height: 3px; background: var(--line-soft); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+ /* The only sign a calculation is running now that nothing is pressed: a
+    hairline under the tabs. Invisible at rest, so it never reads as chrome. */
+.progress { height: 2px; background: transparent; overflow: hidden; margin-bottom: 8px; }
 .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
 
 /* ---------------- summary ---------------- */
@@ -498,30 +493,61 @@ select option { background: var(--panel); color: var(--text); }
 .stat > span { display: flex; align-items: center; gap: 5px; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .stat > small { display: block; margin-top: 3px; font-size: 11px; color: var(--dim); line-height: 1.35; }
 
-.summary-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.summary-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
 .summary-actions .note { margin: 0; flex: 1; min-width: 240px; }
 
 /* ---------------- tables ---------------- */
 
-.table-scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead th {
-  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .7px;
-  color: var(--dim); font-weight: 650; padding: 0 10px 8px; white-space: nowrap;
-  border-bottom: 1px solid var(--line); cursor: help;
-}
-tbody td { padding: 7px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
-tbody tr:last-child td { border-bottom: 0; }
-tbody tr:hover td { background: rgba(255, 255, 255, .022); }
-.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-td.empty { text-align: center; color: var(--dim); padding: 26px 10px; }
+/* ---------------- results table ---------------- *
+ * The header used to sit flush against the card edge in a band of its own,
+ * which read as a misaligned strip rather than as column titles. It is now
+ * inset to the same rhythm as the rows, given room to breathe, and it stays
+ * put while the body scrolls.
+ */
+.table-scroll { overflow-x: auto; margin: 0 -4px; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
 
-.artifact-cell { display: flex; align-items: center; gap: 8px; }
-.artifact-icon { width: 24px; height: 24px; object-fit: contain; flex: none; }
+thead th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px;
+  color: var(--muted); font-weight: 700; white-space: nowrap; cursor: help;
+  padding: 9px 12px; background: rgba(38, 34, 51, .55);
+  border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line);
+}
+thead th:first-child { border-left: 1px solid var(--line-soft); border-radius: var(--radius-sm) 0 0 0; padding-left: 14px; }
+thead th:last-child { border-right: 1px solid var(--line-soft); border-radius: 0 var(--radius-sm) 0 0; padding-right: 14px; }
+thead th.num { text-align: right; }
+
+tbody td { padding: 9px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+tbody td:first-child { padding-left: 14px; }
+tbody td:last-child { padding-right: 14px; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: rgba(255, 255, 255, .03); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.empty { text-align: center; color: var(--dim); padding: 30px 12px; }
+
+/* The first column carries the identity of the row, so it gets the weight. */
+.artifact-cell { display: flex; align-items: center; gap: 9px; font-weight: 550; }
+.artifact-icon { width: 26px; height: 26px; object-fit: contain; flex: none; }
 .dust-icon { width: 14px; height: 14px; object-fit: contain; vertical-align: -2px; margin-right: 4px; }
 
 tr.best-cost td { background: rgba(110, 231, 160, .07); }
+tr.best-cost td:first-child { box-shadow: inset 3px 0 0 var(--good); }
 tr.dead td { color: var(--dim); }
+
+/*
+ * A row from a group you have not selected, shown because it is the cheapest
+ * anyway or because it is among the three best. Greyed to say it is not part
+ * of your selection, and clickable to make it part of it.
+ */
+tr.off-group td { color: var(--dim); background: rgba(255, 255, 255, .015); cursor: pointer; }
+tr.off-group td:first-child { box-shadow: inset 3px 0 0 var(--line); }
+tr.off-group:hover td { background: rgba(121, 197, 232, .07); color: var(--muted); }
+tr.off-group .artifact-icon { filter: grayscale(1); opacity: .65; }
+tr.off-group:hover .artifact-icon { filter: none; opacity: 1; }
+.tag.locked-group {
+  background: rgba(121, 197, 232, .14); color: var(--accent);
+  text-transform: none; letter-spacing: .2px; font-size: 9.5px;
+}
 .tag {
   font-style: normal; font-size: 9.5px; text-transform: uppercase; letter-spacing: .6px;
   background: rgba(110, 231, 160, .16); color: var(--good); padding: 2px 6px; border-radius: 4px;
@@ -558,22 +584,62 @@ table.mini td { padding: 3px 8px; border: 0; }
 
 /* ---------------- build plan ---------------- */
 
-.plan-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+/* ---------------- build plan ---------------- *
+ * Read top to bottom as a set of instructions: what you are hunting, which
+ * artifact to put in, what the numbers are, and what to do when something
+ * lands. The figures are labelled rather than hidden behind tooltips — a
+ * number you have to hover to understand is a number you will misread.
+ */
+.plan-total { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.plan-compare { margin: 0 0 14px; font-size: 12.5px; color: var(--muted); }
+.plan-compare b { color: var(--text); }
+
 .plan-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.plan-steps > li { background: var(--bg); border: 1px solid var(--line-soft); border-radius: var(--radius-sm); padding: 11px 13px; }
-.plan-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; }
+.plan-steps > li {
+  background: var(--bg); border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--accent-deep);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+}
+.plan-head { display: flex; align-items: flex-start; gap: 9px; }
 .plan-step {
   width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
   background: var(--panel-2); color: var(--accent); font-size: 11px; font-weight: 700; flex: none;
+  margin-top: 1px;
 }
-.plan-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 7px; font-size: 12px; color: var(--muted); }
-.plan-stats span { cursor: help; }
-.plan-likely { margin-top: 6px; font-size: 12px; color: var(--dim); }
-.plan-decline {
-  margin-top: 7px; font-size: 12px; line-height: 1.5; color: var(--text);
-  background: rgba(240, 180, 41, .09); border-left: 2px solid var(--locked);
-  border-radius: 0 6px 6px 0; padding: 7px 10px;
+.plan-goal { min-width: 0; }
+.plan-goal b { display: block; font-size: 13.5px; line-height: 1.3; }
+.plan-goal small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--dim); }
+
+/* The one thing you physically do at this step, so it gets its own line. */
+.plan-use {
+  display: flex; align-items: center; gap: 8px;
+  margin: 9px 0 0 29px; padding: 6px 10px;
+  background: rgba(121, 197, 232, .07);
+  border: 1px solid rgba(121, 197, 232, .2);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px; color: var(--muted);
 }
+.plan-use img { width: 20px; height: 20px; object-fit: contain; flex: none; }
+.plan-use b { color: var(--text); font-weight: 650; }
+
+.plan-figures { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 9px 0 0 29px; }
+.plan-figures > div { min-width: 0; }
+.plan-figures dt { font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim); }
+.plan-figures dd {
+  margin: 1px 0 0; font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; gap: 4px;
+}
+
+.plan-then { margin: 8px 0 0 29px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.plan-then b { color: var(--text); }
+.plan-then.warn {
+  color: var(--text); background: rgba(240, 180, 41, .09);
+  border-left: 2px solid var(--locked); border-radius: 0 6px 6px 0; padding: 7px 10px;
+}
+
+/* The filter now sits in the summary, where both modes can reach it. */
+.filter-caption { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim); align-self: center; }
+.summary-actions .filter-chips { margin-left: auto; }
 
 /* ---------------- routes ---------------- */
 
@@ -641,3 +707,216 @@ table.mini td { padding: 3px 8px; border: 0; }
   border-left: 2px solid var(--locked);
 }
 .picker-hint b { color: var(--text); font-weight: 600; }
+
+.app-foot {
+  margin-top: 18px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+.app-foot a { color: var(--accent); }
+
+/* ------------------------------------------------------------------ *
+ * Desk mode: the whole tool on one screen                             *
+ * ------------------------------------------------------------------ *
+ * With four slots and twenty-five artifacts the page ran 626 px past a
+ * 940 px window, which put Calculate below the fold exactly when you
+ * wanted it. So above this size the app stops being a document and
+ * becomes a fixed-height shell: the masthead and the tabs hold still,
+ * each column scrolls inside itself, and the artifact table — the one
+ * genuinely long thing here — keeps its header row in view while it
+ * scrolls. Under it, nothing changes: the page scrolls as a page.
+ */
+@media (min-width: 1041px) and (min-height: 700px) {
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+
+  .app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  /* Title, one-line summary, status and the realm toggle on a single row:
+     125 px of masthead becomes about 40, and nothing is dropped. */
+  .masthead { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+  .masthead h1 { font-size: 21px; flex: none; }
+  .masthead p {
+    margin: 0; flex: 1; min-width: 0; max-width: none; font-size: 12.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .masthead-row { flex: none; }
+
+  .tab-bar { margin-bottom: 10px; }
+
+  .layout { flex: 1; min-height: 0; align-items: stretch; }
+  .column {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 6px;
+    gap: 12px;
+  }
+  .card { padding: 13px 15px 14px; }
+  .card > header { margin-bottom: 10px; }
+
+  /* The left column never scrolls as a whole: scrolling it would push the
+     slots out of sight, and the slots are the point. Instead the slot list
+     itself takes the leftover height and scrolls inside, so the item, the
+     three headings and Calculate are always on screen together. */
+  /* The column is bounded, never scrolled: scrolling it would take the item or
+     Calculate off screen, which is the whole thing being fixed. The slot list
+     absorbs the difference and scrolls inside itself instead. */
+  .column.config { overflow: hidden; }
+  .column.config > .card.step[data-step="2"] {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .column.config #slotList {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+  }
+
+  /* Under about 830 px the slot list is down to a sliver, so the decoration
+     goes: the step badges, and the headings shrink. The headings themselves
+     stay, because two of them carry the slot summary and Reset everything. */
+  @media (max-height: 830px) {
+    .column.config .step-badge { display: none; }
+    .column.config > .card > header { margin-bottom: 6px; }
+    .column.config > .card > header h2 { font-size: 13.5px; }
+    .column.config .card { padding: 10px 13px 11px; }
+    .slot-card { padding: 7px 12px; }
+    .slot-text small { display: none; }
+  }
+  .column.config > .card.step[data-step="1"] { flex: none; }
+
+  /* An empty slot is a placeholder, not information: it says its number and
+     invites a click. Its second line of prose and its disabled Wanted/On item
+     toggle were costing the filled slots thirty pixels each. */
+  .slot-card.is-empty { padding: 6px 12px; }
+  .slot-card.is-empty .slot-text small,
+  .slot-card.is-empty .slot-actions { display: none; }
+  .slot-card.is-empty .slot-icon.empty { width: 22px; height: 22px; font-size: 14px; }
+
+  .app-foot {
+    flex: none;
+    margin-top: 8px;
+    font-size: 10.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Two lines that explain something you read once, and that cost exactly the
+     room the fourth slot card needs. The rarity sentence moves to the field's
+     own tooltip; the other only repeats the chips already on the item card. */
+  #raritySection .note,
+  #awakenedStatus { display: none; }
+
+  /* A scrolled table whose header has left the screen is unreadable. */
+  /* Opaque, because the rows scroll underneath it. */
+  #results thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #221e2e;
+  }
+
+  /* The prose earns less room than the controls do once the screen is the
+     constraint: notes, legend and the licence line all tighten. */
+  .note { margin-top: 7px; font-size: 11.5px; }
+  .source-note { margin-top: 9px; font-size: 10.5px; line-height: 1.45; }
+  .legend { gap: 4px 14px; margin-bottom: 9px; font-size: 11.5px; }
+  .slot-list { gap: 8px; }
+
+  /* Thin, unobtrusive scrollbars: two of them are on screen at once. */
+  .column::-webkit-scrollbar, #slotList::-webkit-scrollbar { width: 9px; height: 9px; }
+  .column::-webkit-scrollbar-thumb, #slotList::-webkit-scrollbar-thumb {
+    background: rgba(236, 231, 220, .14); border-radius: 999px;
+  }
+  .column::-webkit-scrollbar-thumb:hover, #slotList::-webkit-scrollbar-thumb:hover {
+    background: rgba(236, 231, 220, .26);
+  }
+  .column, #slotList { scrollbar-width: thin; scrollbar-color: rgba(236, 231, 220, .18) transparent; }
+}
+
+/* ---------------- artifact filter ---------------- *
+ * Three kinds of artifact, and only the ordinary tarot cards are listed by
+ * default. The counts sit on the chips so the size of what is hidden is
+ * visible before you click.
+ */
+.filter-chips { display: flex; gap: 6px; margin-left: 12px; }
+.filter-chip {
+  font: inherit; font-size: 11px; letter-spacing: .3px;
+  padding: 3px 9px; border-radius: 999px; cursor: pointer;
+  background: transparent; border: 1px solid var(--line-soft); color: var(--dim);
+  transition: color .12s, border-color .12s, background .12s;
+}
+.filter-chip b { font-weight: 700; opacity: .6; margin-left: 3px; }
+.filter-chip:hover { color: var(--text); border-color: var(--line); }
+.filter-chip.on {
+  color: var(--accent); border-color: rgba(121, 197, 232, .45);
+  background: rgba(121, 197, 232, .10);
+}
+.filter-chip.on b { opacity: .8; }
+#artifactHidden { margin-top: 8px; }
+
+/* ---------------- swapping the two result modes ---------------- *
+ * One wanted enchantment shows the artifact table, several show the build
+ * plan. The change used to happen between two frames; now the card leaving
+ * drops away while the calculation runs, and the one arriving rises into
+ * place when it finishes.
+ */
+/*
+ * Two different curves, because the two halves are not the same gesture. The
+ * card leaving accelerates away — ease-in, nothing to read there. The card
+ * arriving decelerates into place with a slight overshoot in the easing, which
+ * is what makes it feel like it settles rather than appears.
+ * Durations must match SWAP_OUT and SWAP_IN in app.js.
+ */
+#artifactCard, #planCard {
+  transition: opacity .42s cubic-bezier(.16, .84, .32, 1),
+              transform .42s cubic-bezier(.16, .84, .32, 1);
+  will-change: opacity, transform;
+}
+#artifactCard.entering, #planCard.entering {
+  opacity: 0;
+  transform: translateY(14px) scale(.985);
+  transition: none;                     /* the starting state must not animate */
+}
+#artifactCard.leaving, #planCard.leaving {
+  opacity: 0;
+  transform: translateY(-10px) scale(.99);
+  transition: opacity .3s cubic-bezier(.5, 0, .75, 0),
+              transform .3s cubic-bezier(.5, 0, .75, 0);
+}
+
+/*
+ * The plan's steps arrive a beat apart. Reading a plan is sequential, and a
+ * list that lands all at once gives the eye nowhere to start.
+ */
+#planCard:not(.entering):not(.leaving) .plan-steps > li {
+  animation: step-in .44s cubic-bezier(.16, .84, .32, 1) backwards;
+}
+#planCard .plan-steps > li:nth-child(1) { animation-delay: .04s; }
+#planCard .plan-steps > li:nth-child(2) { animation-delay: .11s; }
+#planCard .plan-steps > li:nth-child(3) { animation-delay: .18s; }
+#planCard .plan-steps > li:nth-child(4) { animation-delay: .25s; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #artifactCard, #planCard { transition: none; }
+  #artifactCard.entering, #planCard.entering,
+  #artifactCard.leaving, #planCard.leaving { opacity: 1; transform: none; }
+  #planCard .plan-steps > li { animation: none; }
+}

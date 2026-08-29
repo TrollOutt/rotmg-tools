@@ -1834,11 +1834,15 @@
 []
 []
 ************
+## Correction, 2026-08-29, from the author of the original program: the
+## incompatibility below read SINGLESTAT and should read DUALSTAT. Jester's
+## Trick raises every stat, so it clashes with the other multi-stat bonuses,
+## not with the single-stat ones.
 [Jester's Trick]
 [Increases Maximum Life and Mana by (10-25), and all other stats by 1]
 [2000]
 [STAT,DUALSTAT,FLATBONUS,UNIQUE,ROLLABLE]
-[SINGLESTAT,UNIQUE]
+[DUALSTAT,UNIQUE]
 [WEAPON,ABILITY,ARMOR,RING]
 []
 []

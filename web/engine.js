@@ -436,6 +436,11 @@ var EnchantEngine = (function () {
   // Cost of one reroll of every unlocked slot. Each locked slot doubles it.
   function rerollCost(cfg) { return BASE_COSTS[cfg.slots] * Math.pow(2, lockCount(cfg)); }
 
+  // A reroll has a 50 % chance of consuming the artifact rather than a certain
+  // one. Applied to every artifact: nothing in the source data marks the event
+  // artifacts that may behave differently. See NOTES.artifactsUsed.
+  const ARTIFACT_CONSUMPTION = 0.5;
+
   /*
    * Expected totals for "reroll until the target appears".
    * Rerolls follow a geometric law, so the mean number of attempts is 1/p and
@@ -459,8 +464,9 @@ var EnchantEngine = (function () {
       dust: perReroll * rerolls + (artifact.cost.dust === dustType ? artifactTotal : 0),
       artifactDust: artifact.cost.dust === 'na' || artifact.cost.dust === dustType ? 0 : artifactTotal,
       artifactDustType: artifact.cost.dust,
-      // One artifact is consumed per reroll; "No Artifact" consumes none.
-      artifactsUsed: artifact.name === 'No Artifact' ? 0 : rerolls,
+      // A reroll consumes the artifact half the time, so the mean number spent
+      // is half the mean number of rerolls. "No Artifact" consumes none.
+      artifactsUsed: artifact.name === 'No Artifact' ? 0 : rerolls * ARTIFACT_CONSUMPTION,
       // 50 % of players finish within this many rerolls.
       medianRerolls: Math.log(0.5) / Math.log(1 - Math.min(probability, 1 - 1e-15))
     };
@@ -731,9 +737,11 @@ var EnchantEngine = (function () {
       'duplicate but keeps its weight in the denominator, which loses a little ' +
       'probability mass on every branch.',
     artifactsUsed:
-      'DIVERGENCE from the Qt source: "artifacts used" is the mean number of rerolls ' +
-      '(1 / p), one artifact per reroll. The Qt table shows ceil(0.5 / p), which is ' +
-      'neither the mean nor the median.',
+      'A reroll consumes the artifact half the time, so the mean number spent is ' +
+      '0.5 / p — half the mean number of rerolls. This agrees with the Qt source, ' +
+      'which shows ceil(0.5 / p); only the rounding differs. The 50 % rate is applied ' +
+      'to every artifact, because nothing in the source data marks the event artifacts ' +
+      'that may not follow it.',
     alienBase:
       'DIVERGENCE from the Qt source: an enchantment that requires an ALIEN or ' +
       'NEO_ALIEN base is offered only on an item of that same family. The Qt source ' +

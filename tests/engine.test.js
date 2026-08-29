@@ -147,10 +147,15 @@ check('choosing an item adds exactly its own awakened enchantments', (() => {
 section('3. Incompatibility is directional: Labels(prior) ∩ Incompatible(candidate)');
 const jester = data.byName.get("Jester's Trick");
 const attackBonus = data.byName.get('Attack Bonus');
-check("Jester's Trick has DUALSTAT among its Labels and SINGLESTAT among its Incompatible Labels",
-  jester.tags.has('DUALSTAT') && jester.excludes.has('SINGLESTAT') && !jester.tags.has('SINGLESTAT'));
-check("locking Attack Bonus (SINGLESTAT) removes Jester's Trick",
-  !engine.eligiblePool(data, baseCfg({ locks: ['Attack Bonus'] }), artifact('No Artifact')).some(m => m.name === "Jester's Trick"));
+// Corrected in globalMods.txt on 2026-08-29 by the author of the original
+// program: the incompatibility read SINGLESTAT and should read DUALSTAT.
+// Jester's Trick raises every stat, so it clashes with the multi-stat bonuses.
+check("Jester's Trick carries DUALSTAT and is incompatible with DUALSTAT",
+  jester.tags.has('DUALSTAT') && jester.excludes.has('DUALSTAT') && !jester.excludes.has('SINGLESTAT'));
+check("locking Attack Bonus (SINGLESTAT only) leaves Jester's Trick in the pool",
+  engine.eligiblePool(data, baseCfg({ locks: ['Attack Bonus'] }), artifact('No Artifact')).some(m => m.name === "Jester's Trick"));
+check("locking a DUALSTAT bonus removes Jester's Trick",
+  !engine.eligiblePool(data, baseCfg({ locks: ['Attack and Defense Bonus'] }), artifact('No Artifact')).some(m => m.name === "Jester's Trick"));
 check("locking Jester's Trick does NOT remove Attack Bonus (the relation is not symmetric here)",
   engine.eligiblePool(data, baseCfg({ locks: ["Jester's Trick"] }), artifact('No Artifact')).some(m => m.name === 'Attack Bonus'));
 check("locking Jester's Trick removes the other DUALSTAT bonuses",
@@ -187,7 +192,13 @@ check('a matching-dust artifact is folded into the total', (() => {
   return Math.abs(cost.dust - (400 + 25 * 4) * 100) < 1e-9 && cost.artifactDust === 0;
 })());
 check('No Artifact consumes zero artifacts', engine.costFor(twoLocks, 1, artifact('No Artifact'), 'Red').artifactsUsed === 0);
-near('artifacts used equals the mean reroll count', engine.costFor(twoLocks, 2, artifact('The Moon Tarot Card'), 'Red').artifactsUsed, 50, 1e-9);
+// A reroll consumes the artifact half the time, so 2 % odds means 50 expected
+// rerolls and 25 artifacts, not 50. This agrees with the Qt table's ceil(0.5/p).
+const moonCost = engine.costFor(twoLocks, 2, artifact('The Moon Tarot Card'), 'Red');
+near('artifacts used is half the mean reroll count', moonCost.artifactsUsed, 25, 1e-9);
+near('the mean reroll count itself is unchanged', moonCost.rerolls, 50, 1e-9);
+check('an impossible target still consumes an unbounded number',
+  engine.costFor(twoLocks, 0, artifact('The Moon Tarot Card'), 'Red').artifactsUsed === Infinity);
 
 /* ------------------------------------------------------------------ *
  * 5. Reference scenario from the handoff document                     *
@@ -196,15 +207,22 @@ section('5. Nightmatter Circlet reference scenario');
 const moon = artifact('The Moon Tarot Card');
 const scenarioPool = engine.weightedPool(data, twoLocks, moon);
 const mermaid = data.byName.get('Mermaid Magic');
-check('112 candidates in the pool', scenarioPool.mods.length === 112, `got ${scenarioPool.mods.length}`);
-check('total weighted pool is 5,575,000', scenarioPool.total === 5575000, `got ${scenarioPool.total}`);
+// 111, not the 112 the Qt program reports: Night's Soul carries DUALSTAT, so
+// the corrected Jester's Trick (weight 2,000) is now culled from this pool.
+// The Qt program still offers that incompatible pair, hence every figure in
+// this section sits a little above its output.
+check('111 candidates in the pool', scenarioPool.mods.length === 111, `got ${scenarioPool.mods.length}`);
+check('total weighted pool is 5,573,000', scenarioPool.total === 5573000, `got ${scenarioPool.total}`);
+check("the missing candidate is Jester's Trick, culled by Night's Soul",
+  !scenarioPool.mods.some(m => m.name === "Jester's Trick")
+  && data.byName.get("Night's Soul").tags.has('DUALSTAT'));
 check('Mermaid Magic weighs 30,000 under the Moon card', scenarioPool.weights.get(mermaid.id) === 30000, `got ${scenarioPool.weights.get(mermaid.id)}`);
-near('chance on the next slot is 0.5381 %', scenarioPool.weights.get(mermaid.id) / scenarioPool.total * 100, 0.5381, 0.0001);
+near('chance on the next slot is 0.5383 %', scenarioPool.weights.get(mermaid.id) / scenarioPool.total * 100, 0.5383, 0.0001);
 const scenarioOdds = engine.oddsAny(data, twoLocks, moon, ['Mermaid Magic']);
-near('exact chance over the 2 remaining slots is 0.8391 %', scenarioOdds.odds, 0.8391, 0.0001);
+near('exact chance over the 2 remaining slots is 0.8395 %', scenarioOdds.odds, 0.8395, 0.0001);
 check('the 2-slot result is exact, not sampled', scenarioOdds.exact === true);
 const scenarioRow = engine.evaluate(data, twoLocks, moon);
-near('expected Red dust is 47,670', scenarioRow.dust, 47670, 5);
+near('expected Red dust is 47,646', scenarioRow.dust, 47646, 5);
 check('two slots beat one slot for the same target', (() => {
   const oneSlot = engine.oddsAny(data, Object.assign({}, twoLocks, { locks: [...twoLocks.locks, 'Attack Bonus'] }), moon, ['Mermaid Magic']);
   return oneSlot.odds < scenarioOdds.odds;
@@ -215,12 +233,12 @@ const lockedCfg = Object.assign({}, twoLocks, { locks: [...twoLocks.locks, 'OnAb
 const lockedPool = engine.weightedPool(data, lockedCfg, moon);
 check('OnAbility Attack Boost carries ONABILITYSTAT and PROCATTACK',
   data.byName.get('OnAbility Attack Boost').tags.has('ONABILITYSTAT') && data.byName.get('OnAbility Attack Boost').tags.has('PROCATTACK'));
-check('pool 112 → 105', lockedPool.mods.length === 105, `got ${lockedPool.mods.length}`);
-check('total weight 5,575,000 → 4,925,000', lockedPool.total === 4925000, `got ${lockedPool.total}`);
+check('pool 111 → 104', lockedPool.mods.length === 104, `got ${lockedPool.mods.length}`);
+check('total weight 5,573,000 → 4,923,000', lockedPool.total === 4923000, `got ${lockedPool.total}`);
 check('Mermaid Magic weight is unchanged', lockedPool.weights.get(mermaid.id) === 30000);
-near('per-slot chance rises to 0.6091 %', lockedPool.weights.get(mermaid.id) / lockedPool.total * 100, 0.6091, 0.0001);
+near('per-slot chance rises to 0.6094 %', lockedPool.weights.get(mermaid.id) / lockedPool.total * 100, 0.6094, 0.0001);
 const lockedOdds = engine.oddsAny(data, lockedCfg, moon, ['Mermaid Magic']);
-near('but the single remaining slot only gives 0.6091 %', lockedOdds.odds, 0.6091, 0.0001);
+near('but the single remaining slot only gives 0.6094 %', lockedOdds.odds, 0.6094, 0.0001);
 check('so the extra lock lowers the total chance', lockedOdds.odds < scenarioOdds.odds);
 check('and it raises the expected dust', engine.evaluate(data, lockedCfg, moon).dust > scenarioRow.dust);
 

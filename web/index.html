@@ -17,11 +17,13 @@
     <p>Describe the item you actually hold, mark what you keep and what you still want, then compare every artifact and every route.</p>
     <div class="masthead-row">
       <div id="status" class="status">Loading original data…</div>
+      <button id="reset" type="button" class="link-button">Reset everything</button>
       <button id="ambienceToggle" type="button" class="ambience-toggle" aria-pressed="true" title="Turn the drifting realm background on or off">◐ Realm</button>
     </div>
   </header>
 
   <div id="tabBar" class="tab-bar" role="tablist" aria-label="Saved setups"></div>
+  <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
 
   <main class="layout">
 
@@ -43,7 +45,7 @@
         <div id="itemCard" class="item-card" hidden></div>
 
         <div id="raritySection" hidden>
-          <label class="field rarity-field">
+          <label class="field rarity-field" title="Rarity is rolled when the item drops, so it is the one thing the item's name cannot tell us.">
             <span class="field-label">How many enchantment slots does <em>your copy</em> have?</span>
             <span class="field-control tier">
               <img id="rarityIcon" class="field-icon" alt="">
@@ -111,6 +113,7 @@
 
         <div id="slotList" class="slot-list"></div>
         <p id="slotHint" class="note">Choose a rarity to reveal the enchantment slots.</p>
+        <p id="calculateHint" class="note">Rarity, item type, dust type and at least one wanted enchantment are required.</p>
 
         <fieldset id="tiers" class="tiers" hidden disabled>
           <legend>Accepted tiers of the target</legend>
@@ -121,19 +124,6 @@
         </fieldset>
       </section>
 
-      <section class="card step" data-step="3">
-        <header><span class="step-badge">3</span><h2>Run it</h2><button id="reset" type="button" class="link-button header-aside">Reset everything</button></header>
-        <button id="calculate" class="calculate" disabled>Calculate every artifact</button>
-        <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
-        <p id="calculateHint" class="note">Rarity, item type, dust type and at least one wanted enchantment are required.</p>
-        <p id="offlineCopy" class="note" hidden></p>
-        <p class="source-note">
-          Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
-          by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
-          <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOn"></span>.
-          Everything runs in your browser; your setup is remembered locally and nothing is ever sent anywhere.
-        </p>
-      </section>
     </section>
 
     <!-- ------------------------------------------------------------ -->
@@ -141,27 +131,28 @@
 
       <section id="summary" class="card summary" hidden aria-live="polite"></section>
 
-      <section class="card">
+      <section id="artifactCard" class="card">
         <header><h2>Artifacts</h2><span class="header-aside">sorted by chance</span></header>
         <div class="table-scroll">
           <table id="results">
             <thead>
               <tr>
                 <th>Artifact</th>
-                <th title="Chance that the target appears somewhere in the remaining random slots of one reroll.">Chance / reroll</th>
-                <th title="Mean number of rerolls until the target appears (1 / p).">Rerolls</th>
-                <th title="Mean total dust of the selected colour: reroll cost × 2^locks × expected rerolls.">Expected dust</th>
-                <th title="Artifact charges billed in a different dust colour than the one you selected.">Artifact dust</th>
-                <th title="Artifacts consumed on average — one per reroll. “No Artifact” consumes none.">Artifacts</th>
+                <th class="num" title="Chance that the target appears somewhere in the remaining random slots of one reroll.">Chance / reroll</th>
+                <th class="num" title="Mean number of rerolls until the target appears (1 / p).">Rerolls</th>
+                <th class="num" title="Mean total dust of the selected colour: reroll cost × 2^locks × expected rerolls.">Expected dust</th>
+                <th class="num" title="Artifact charges billed in a different dust colour than the one you selected.">Artifact dust</th>
+                <th class="num" title="Artifacts consumed on average: half the rerolls, since a reroll consumes the artifact half the time. “No Artifact” consumes none.">Artifacts</th>
               </tr>
             </thead>
-            <tbody><tr><td colspan="6" class="empty">Fill in the configuration, then press Calculate.</td></tr></tbody>
+            <tbody><tr><td colspan="6" class="empty">Choose an item, a rarity, and what you want on it.</td></tr></tbody>
           </table>
         </div>
+        <p id="artifactHidden" class="note" hidden></p>
       </section>
 
       <section id="planCard" class="card" hidden>
-        <header><h2>Build plan</h2><span class="header-aside">two or more wanted enchantments</span></header>
+        <header><h2>Build plan</h2><span class="header-aside">the cheapest order to roll them in</span></header>
         <div id="buildPlan"></div>
       </section>
 
@@ -172,11 +163,26 @@
       </section>
 
       <section id="auditCard" class="card" hidden>
-        <header><h2>Odds audit</h2><span class="header-aside">check the numbers yourself</span></header>
+        <header>
+          <h2>Odds audit</h2>
+          <span id="auditFor" class="header-aside"></span>
+          <button id="auditClose" type="button" class="ghost-x" aria-label="Hide the explanation">×</button>
+        </header>
         <div id="auditResult"></div>
       </section>
     </section>
   </main>
+
+  <!-- Out of the control column and along the bottom of the shell: it is a
+       credit and a licence notice, not something you act on, and in the column
+       it was costing the slot list fifty pixels it needed more. -->
+  <footer class="app-foot">
+    Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
+    by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOn"></span>.
+    Everything runs in your browser; your setup is remembered locally and nothing is ever sent anywhere.
+    <span id="offlineCopy" hidden></span>
+  </footer>
 </div>
 
 <!-- Enchantment picker ------------------------------------------------ -->

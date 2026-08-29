@@ -12,6 +12,14 @@ const MOD_FILES = ['globalMods.txt', 'weaponMods.txt', 'abilityMods.txt', 'armor
 const SUBTYPES = ['SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN'];
 const RARITIES = ['uncommon', 'rare', 'legendary', 'divine'];
 const SAVE_KEY = 'rotmg-enchant-calculator/v1';
+// A view preference, not part of a saved setup: it belongs to the reader,
+// not to the item being planned.
+const FILTER_KEY = 'rotmg-enchant-calculator/filters';
+
+// Lock routes are on hold: the results were disputed and the model needs a
+// second look. The engine still computes them and the panel is still here, so
+// turning this back to true is the whole of putting it back.
+const LOCK_ROUTES_ENABLED = false;
 const TABS_KEY = 'rotmg-enchant-calculator/tabs/v1';
 
 /*
@@ -46,7 +54,13 @@ const state = {
   itemSprites: {},
   activeTab: null,
   loadingTab: false,
-  lastCardItem: null
+  lastCardItem: null,
+  // Which kinds of artifact the table lists. Tarot only by default: they are
+  // the ones you actually find in game.
+  filters: { tarot: true, special: false, premium: false },
+  // Which run is the current one, and the timer that coalesces the next.
+  runId: 0,
+  calcTimer: 0
 };
 
 /* ------------------------------------------------------------------ *
@@ -68,6 +82,25 @@ function plural(value, word) { return `${value} ${word}${value === 1 ? '' : 's'}
 // rather than requestAnimationFrame, which never fires while the tab is hidden
 // and would leave a long calculation stuck at "Calculating…".
 const yieldToUi = () => new Promise(resolve => setTimeout(resolve, 0));
+
+/*
+ * Yield only when the frame budget is spent.
+ *
+ * The artifact loop used to hand control back after every one of the 25
+ * artifacts. That made sense when a single one could take a moment; the whole
+ * table now takes about 40 ms, and a browser clamps setTimeout(0) to some
+ * milliseconds, so the yielding cost an order of magnitude more than the work
+ * and the table took half a second to appear. Yielding on a time budget keeps
+ * the interface responsive if the work ever grows, and costs one pause today.
+ */
+function budgetedYield(budgetMs) {
+  let since = performance.now();
+  return async () => {
+    if (performance.now() - since < budgetMs) return;
+    await yieldToUi();
+    since = performance.now();
+  };
+}
 
 /* ------------------------------------------------------------------ *
  * Sprites                                                             *
@@ -503,8 +536,24 @@ function refresh() {
     hint.textContent = `Removed from the slots — no longer possible with this configuration: ${dropped.join(', ')}.`;
   }
   renderTiers(config);
-  renderCalculateState(config);
+  const ready = renderCalculateState(config);
   saveSetup();
+
+  // Every change re-runs the whole table. It costs a few hundred milliseconds
+  // at worst, which is less than the round trip to a button and back.
+  if (ready) { beginResultSwap(config); scheduleCalculation(); }
+  else if (state.lastResults) { state.runId++; clearResults(); }
+}
+
+/*
+ * Runs are coalesced and versioned. Clicking through slots fires refresh()
+ * several times in a row, and a run yields to the interface between artifacts,
+ * so without a generation counter an older run could finish last and paint
+ * results for a configuration that no longer exists.
+ */
+function scheduleCalculation() {
+  clearTimeout(state.calcTimer);
+  state.calcTimer = setTimeout(() => { runCalculation(); }, 90);
 }
 
 function renderTiers(config) {
@@ -514,7 +563,11 @@ function renderTiers(config) {
   $('tiers').disabled = !tiered;
 }
 
-function renderCalculateState(config) {
+/*
+ * What is still missing before the odds mean anything. Returns the list, so
+ * the same answer drives both the hint and whether a run may start.
+ */
+function whatIsMissing(config) {
   const missing = [];
   // Slot and dust follow from the item, so asking for them before an item is
   // chosen would send the user hunting for controls that are not even shown.
@@ -524,11 +577,19 @@ function renderCalculateState(config) {
   if (config.item && !config.dust) missing.push('a dust type');
   if (!state.data.byName.has(config.desired)) missing.push('at least one wanted enchantment');
   const overloaded = config.locks.length + 1 + config.goals.length > config.slots && state.data.byName.has(config.desired);
-  $('calculate').disabled = Boolean(missing.length) || overloaded;
-  $('calculateHint').textContent = overloaded
+  return { missing, overloaded, ready: !missing.length && !overloaded };
+}
+
+function renderCalculateState(config) {
+  const { missing, overloaded, ready } = whatIsMissing(config);
+  const hint = $('calculateHint');
+  // Nothing to say once it is running on its own and the answer is on screen.
+  hint.hidden = ready;
+  hint.textContent = overloaded
     ? 'The locked and wanted enchantments together need more slots than the item has.'
-    : missing.length ? `Still missing: ${missing.join(', ')}.` : 'Ready.';
-  $('calculateHint').className = `note${overloaded ? ' warn' : missing.length ? '' : ' good'}`;
+    : `Still missing: ${missing.join(', ')}.`;
+  hint.className = `note${overloaded ? ' warn' : ''}`;
+  return ready;
 }
 
 /* ------------------------------------------------------------------ *
@@ -681,19 +742,164 @@ function dustIcon(type) {
   return `<img class="dust-icon" src="${asset('GUI Files', 'Dust Types', `${type}-div2.png`)}" alt="${type} dust">`;
 }
 
-function renderResults(rows, config) {
+/*
+ * Artifacts fall into three kinds, plus the baseline.
+ *   none     "No Artifact" — always listed, everything else is judged against it
+ *   premium  bought with real money: "Premium" in the name
+ *   tarot    the ordinary tarot cards, found in game
+ *   special  the rest: technologies, cores, cogs, ingots
+ */
+// How many enchantments the user is hunting: one is a question about which
+// artifact, several is a question about what order.
+function goalCount(config) {
+  return [config.desired, ...config.goals].filter(Boolean).length;
+}
+
+function artifactKind(name) {
+  if (name === 'No Artifact') return 'none';
+  if (/premium/i.test(name)) return 'premium';
+  if (/tarot/i.test(name)) return 'tarot';
+  return 'special';
+}
+
+const KIND_LABEL = { tarot: 'Tarot', special: 'Special', premium: 'Premium' };
+
+/*
+ * Which rows the table lists.
+ *
+ * Ten is enough: past that the chances are an order of magnitude apart and the
+ * rows are scenery. On top of the ten come the ones you need to see whether or
+ * not you asked for them — the baseline, the genuinely cheapest artifact, and
+ * a Premium good enough to reach the top three. Any of those coming from a
+ * group you have not selected is greyed rather than dropped, and clicking it
+ * selects that group.
+ */
+const TABLE_ROWS = 10;
+
+function isAllowedRow(row) {
+  const kind = artifactKind(row.artifact.name);
+  return kind === 'none' || state.filters[kind];
+}
+
+function tableRows(all) {
+  const allowed = all.filter(isAllowedRow);
+  const keep = new Set(allowed.slice(0, TABLE_ROWS));
+
+  const baseline = all.find(row => artifactKind(row.artifact.name) === 'none');
+  if (baseline) keep.add(baseline);
+
+  const viable = all.filter(row => row.odds > 0);
+  const cheapest = viable.length ? viable.reduce((a, b) => b.dust < a.dust ? b : a) : null;
+  if (cheapest) keep.add(cheapest);
+
+  for (const row of all.slice(0, 3)) {
+    if (artifactKind(row.artifact.name) === 'premium') keep.add(row);
+  }
+
+  // all is already sorted by chance, so filtering it keeps the order.
+  const rows = all.filter(row => keep.has(row));
+  const off = new Set(rows.filter(row => !isAllowedRow(row)));
+
+  // When the cheapest is out of reach, the cheapest one you can actually use
+  // still deserves to be pointed at.
+  const affordable = viable.filter(isAllowedRow);
+  const cheapestMine = cheapest && off.has(cheapest) && affordable.length
+    ? affordable.reduce((a, b) => b.dust < a.dust ? b : a)
+    : null;
+
+  return { rows, off, cheapest, cheapestMine };
+}
+
+/*
+ * The artifacts you are willing to use. "No Artifact" is always among them:
+ * it is the baseline, and a plan that may not decline an artifact is not a
+ * plan. With several wanted enchantments this is a constraint on the search,
+ * not a filter over an answer already computed.
+ */
+/*
+ * Turning a group on or off. With one goal the table is already computed and
+ * only its rows change; with several, the plan has to be searched again over
+ * the new set, so the whole calculation runs.
+ */
+function applyFilterChange() {
+  try { localStorage.setItem(FILTER_KEY, JSON.stringify(state.filters)); } catch (error) { /* private mode */ }
+  const config = cfg();
+  const auditOpen = !$('auditCard').hidden;
+  if (goalCount(config) > 1) runCalculation();
+  else if (state.lastResults) { renderResults(state.lastResults, config); renderSummary(state.lastResults, config); }
+  // An open explanation follows the selection rather than going stale.
+  if (auditOpen && goalCount(config) === 1) showAudit();
+}
+
+function toggleKind(kind) {
+  state.filters[kind] = !state.filters[kind];
+  applyFilterChange();
+}
+
+function enableKind(kind) {
+  if (state.filters[kind]) return;
+  state.filters[kind] = true;
+  applyFilterChange();
+}
+
+function allowedArtifacts() {
+  return state.data.artifacts.filter(artifact => {
+    const kind = artifactKind(artifact.name);
+    return kind === 'none' || state.filters[kind];
+  });
+}
+
+function artifactFilterHtml() {
+  const counts = { tarot: 0, special: 0, premium: 0 };
+  for (const artifact of state.data.artifacts) {
+    const kind = artifactKind(artifact.name);
+    if (kind !== 'none') counts[kind]++;
+  }
+  return `<div class="filter-chips" role="group" aria-label="Which artifacts you are willing to use">
+    <span class="filter-caption">Artifacts</span>
+    ${Object.keys(KIND_LABEL).map(kind => `
+      <button type="button" class="filter-chip${state.filters[kind] ? ' on' : ''}" data-kind="${kind}"
+        aria-pressed="${state.filters[kind]}">${KIND_LABEL[kind]} <b>${counts[kind]}</b></button>`).join('')}
+  </div>`;
+}
+
+// What the ten-row cut left out, and whether anything better is among it.
+function renderHiddenNote(all, shown) {
+  const note = $('artifactHidden');
+  const hidden = all.filter(row => !shown.includes(row));
+  if (!hidden.length) { note.hidden = true; return; }
+  const best = hidden.reduce((a, b) => b.odds > a.odds ? b : a);
+  note.hidden = false;
+  note.className = 'note';
+  note.textContent = `${hidden.length} not listed. Best of them: ${best.artifact.name} at ${percent(best.odds)} per reroll`
+    + (isAllowedRow(best) ? '.' : ` — a ${KIND_LABEL[artifactKind(best.artifact.name)]} artifact you have not selected.`);
+}
+
+function renderResults(allRows, config) {
   const body = $('results').tBodies[0];
-  if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No artifact can roll this target.</td></tr>'; return; }
-  const cheapest = rows.filter(row => row.odds > 0).reduce((best, row) => !best || row.dust < best.dust ? row : best, null);
+  if (!allRows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No artifact can roll this target.</td></tr>'; return; }
+
+  const { rows, off, cheapest, cheapestMine } = tableRows(allRows);
+  renderHiddenNote(allRows, rows);
 
   body.replaceChildren(...rows.map(row => {
+    const kind = artifactKind(row.artifact.name);
+    const isOff = off.has(row);
     const tr = document.createElement('tr');
-    if (!row.odds) tr.className = 'dead';
-    else if (row === cheapest) tr.className = 'best-cost';
+    tr.className = [!row.odds ? 'dead' : '', row === cheapest && !isOff ? 'best-cost' : '', isOff ? 'off-group' : ''].filter(Boolean).join(' ');
+    if (isOff) {
+      tr.dataset.kind = kind;
+      tr.title = `${KIND_LABEL[kind]} artifacts are not in your selection — click to add them.`;
+    }
+
     const icon = asset('GUI Files', 'Artifact Icons', `${row.artifact.name}-div2.png`);
     const approx = row.exact === false ? '≈ ' : '';
+    const badge = row === cheapest ? '<em class="tag">cheapest</em>'
+      : row === cheapestMine ? '<em class="tag">cheapest of yours</em>' : '';
+    const groupTag = isOff ? `<em class="tag locked-group">+ ${html(KIND_LABEL[kind])}</em>` : '';
+
     tr.innerHTML = `
-      <td class="artifact-cell" title="${html(row.artifact.description)}"><img class="artifact-icon" src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span>${html(row.artifact.name)}</span>${row === cheapest ? '<em class="tag">cheapest</em>' : ''}</td>
+      <td class="artifact-cell"><img class="artifact-icon" src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span>${html(row.artifact.name)}</span>${badge}${groupTag}</td>
       <td class="num" title="${row.exact === false ? `Sampled estimate over ${count(row.samples)} runs — the exact tree exceeded its budget.` : 'Exact weighted-tree calculation.'}">${approx}${percent(row.odds)}</td>
       <td class="num">${row.odds ? count(row.rerolls) : '∞'}</td>
       <td class="num strong">${row.odds ? `${dustIcon(config.dust)}${count(row.dust)}` : '∞'}</td>
@@ -705,32 +911,54 @@ function renderResults(rows, config) {
 
 function renderSummary(rows, config) {
   const panel = $('summary');
+  const goals = [config.desired, ...config.goals].filter(Boolean);
+  const multi = goals.length > 1;
   const viable = rows.filter(row => row.odds > 0);
-  if (!viable.length) {
+
+  if (!viable.length && !multi) {
     panel.hidden = false;
     panel.innerHTML = `<div class="summary-title bad">“${html(config.desired)}” cannot be rolled with this configuration.</div><p class="note">Check the locked slots: one of their Labels is probably in the target's Incompatible Labels.</p>`;
     return;
   }
-  const bestOdds = viable.reduce((best, row) => row.odds > best.odds ? row : best);
-  const bestDust = viable.reduce((best, row) => row.dust < best.dust ? row : best);
-  const rolls = EnchantEngine.rollsRemaining(config);
-  const pool = EnchantEngine.weightedPool(state.data, config, bestDust.artifact);
-  const target = state.data.byName.get(config.desired);
-  const perSlot = pool.total ? (pool.weights.get(target.id) || 0) / pool.total * 100 : 0;
 
-  panel.hidden = false;
-  panel.innerHTML = `
-    <div class="summary-title">Target: ${enchantIconHtml(target, 'inline-icon')} <b>${html(config.desired)}</b></div>
-    <div class="stat-row">
+  const rolls = EnchantEngine.rollsRemaining(config);
+  const title = multi
+    ? `<div class="summary-title">Targets: <b>${goals.map(name => html(name)).join(' + ')}</b></div>`
+    : `<div class="summary-title">Target: ${enchantIconHtml(state.data.byName.get(config.desired), 'inline-icon')} <b>${html(config.desired)}</b></div>`;
+
+  /*
+   * With several targets every per-artifact figure would name an artifact the
+   * plan is not allowed to use, and would describe the first goal only. The
+   * plan card below carries the dust and the rerolls; the summary is left with
+   * the facts that hold whatever the order turns out to be.
+   */
+  let stats;
+  if (multi) {
+    stats = `
+      <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
+      <div class="stat"><span>${goals.length}</span><small>wanted, rolled one at a time<br>each one locked as it lands</small></div>
+      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier now<br>doubling with every lock</small></div>`;
+  } else {
+    const bestOdds = viable.reduce((best, row) => row.odds > best.odds ? row : best);
+    const bestDust = viable.reduce((best, row) => row.dust < best.dust ? row : best);
+    const pool = EnchantEngine.weightedPool(state.data, config, bestDust.artifact);
+    const target = state.data.byName.get(config.desired);
+    const perSlot = pool.total ? (pool.weights.get(target.id) || 0) / pool.total * 100 : 0;
+    stats = `
       <div class="stat"><span>${rolls}</span><small>random slot${rolls === 1 ? '' : 's'} per reroll<br>${config.slots} total − ${config.locks.length} locked</small></div>
       <div class="stat"><span>${percent(perSlot)}</span><small>chance on a single slot<br>with ${html(bestDust.artifact.name)}</small></div>
       <div class="stat highlight"><span>${percent(bestOdds.odds)}</span><small>best chance per reroll<br>${html(bestOdds.artifact.name)}</small></div>
       <div class="stat highlight"><span>${count(bestDust.dust)}</span><small>lowest expected ${html(config.dust)} dust<br>${html(bestDust.artifact.name)}</small></div>
-      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier<br>${plural(config.locks.length, 'lock')}</small></div>
-    </div>
+      <div class="stat"><span>×${Math.pow(2, config.locks.length)}</span><small>dust multiplier<br>${plural(config.locks.length, 'lock')}</small></div>`;
+  }
+
+  panel.hidden = false;
+  panel.innerHTML = `
+    ${title}
+    <div class="stat-row">${stats}</div>
     <div class="summary-actions">
       <button id="showAudit" type="button" class="secondary">Explain these odds</button>
-      <span class="note">${html(EnchantEngine.NOTES.incompatibility)}</span>
+      ${artifactFilterHtml()}
     </div>`;
 }
 
@@ -738,14 +966,31 @@ function renderSummary(rows, config) {
  * Audit                                                               *
  * ------------------------------------------------------------------ */
 
+// The button opens and closes it; the × in its header does the same.
+function toggleAudit() {
+  if ($('auditCard').hidden) showAudit();
+  else hideAudit();
+}
+
+function hideAudit() {
+  $('auditCard').hidden = true;
+  const button = $('showAudit');
+  if (button) button.textContent = 'Explain these odds';
+}
+
 function showAudit() {
   const config = cfg();
   const rows = state.lastResults || [];
-  const viable = rows.filter(row => row.odds > 0);
+  // The explanation must describe an artifact you would actually use, so it
+  // follows the same selection the table and the plan follow.
+  const viable = rows.filter(row => row.odds > 0 && isAllowedRow(row));
   const artifact = viable.length ? viable.reduce((best, row) => row.dust < best.dust ? row : best).artifact : state.data.byArtifact.get('No Artifact');
   const target = state.data.byName.get(config.desired);
   const card = $('auditCard');
   card.hidden = false;
+  $('auditFor').textContent = `worked through with ${artifact.name}`;
+  const button = $('showAudit');
+  if (button) button.textContent = 'Hide the explanation';
 
   const pool = EnchantEngine.weightedPool(state.data, config, artifact);
   const targetWeight = pool.weights.get(target.id) || 0;
@@ -842,45 +1087,79 @@ async function renderBuildPlan(config) {
   const card = $('planCard');
   const output = $('buildPlan');
   const goals = [config.desired, ...config.goals].filter(Boolean);
-  if (goals.length < 2) { card.hidden = true; return; }
+  if (goals.length < 2) return;
 
-  card.hidden = false;
-  output.innerHTML = '<p class="note">Solving the cheapest lock order…</p>';
+  if (!output.textContent.trim()) output.innerHTML = '<p class="note">Solving the cheapest lock order…</p>';
   await yieldToUi();
 
-  const plan = EnchantEngine.planGoals(state.data, config, goals);
+  // The plan may only use artifacts you said you would use. Unlike the single
+  // target table, this is a constraint on the search: a cheaper order that
+  // needs a card you do not have is not an answer.
+  const artifacts = allowedArtifacts();
+  const plan = EnchantEngine.planGoals(state.data, config, goals, { artifacts });
   if (!plan || !plan.feasible) {
     output.innerHTML = plan && plan.reason === 'slots'
       ? '<p class="note warn">These enchantments need more slots than the item has.</p>'
-      : `<p class="note warn">No order can put all of these on the same item. At least one pair is mutually incompatible — compare their Labels and Incompatible Labels above.</p>`;
+      : '<p class="note warn">No order can put all of these on the same item. At least one pair is mutually incompatible — open “Explain these odds” and compare their Labels against their Incompatible Labels.</p>';
     return;
   }
 
-  const together = EnchantEngine.planSimultaneous(state.data, config, goals);
-  const steps = plan.path.map((step, index) => `
-    <li>
-      <div class="plan-head">
-        <span class="plan-step">${index + 1}</span>
-        <b>${step.pending.map(name => html(name)).join(' or ')}</b>
-        <span class="muted">${step.locked.length ? `with ${step.locked.map(name => html(name)).join(' + ')} locked` : 'nothing locked yet'}</span>
-      </div>
-      <div class="plan-stats">
-        <span title="Artifact that minimises the expected dust from this point on">${html(step.artifact.name)}</span>
-        <span title="Chance that this reroll produces something worth locking">${percent(step.progressChance)} useful / reroll</span>
-        <span title="Cost of one reroll at this point">${dustIcon(config.dust)}${count(step.perReroll)} per reroll</span>
-        <span title="Expected dust still to be spent from this state onwards">${count(step.expectedDustFromHere)} to finish</span>
-      </div>
-      <div class="plan-likely">Most likely next: <b>${step.likelyGain.map(name => html(name)).join(' + ') || '—'}</b> (${percent(step.likelyChance)})</div>
-      ${step.declined.length ? `<div class="plan-decline">Do <b>not</b> lock ${step.declined.map(entry => `${html(entry.name)} <span class="muted">(${percent(entry.chance)} of rerolls)</span>`).join(' or ')} if it comes up alone here — locking it would double every reroll of the harder hunt for less than it saves. Throw it back and reroll.</div>` : ''}
-      ${step.throwsBack ? '<div class="plan-decline">Some combined outcomes are worth locking only in part.</div>' : ''}
-    </li>`).join('');
+  const together = EnchantEngine.planSimultaneous(state.data, config, goals, { artifacts });
+  const dust = amount => `${dustIcon(config.dust)}${count(amount)}`;
+
+  const steps = plan.path.map((step, index) => {
+    const last = index === plan.path.length - 1;
+    const icon = asset('GUI Files', 'Artifact Icons', `${step.artifact.name}-div2.png`);
+
+    // What to do when the reroll lands something. Phrased as the instruction it
+    // is, rather than as a probability the reader has to interpret.
+    const outcome = step.likelyGain && step.likelyGain.length
+      ? `<p class="plan-then"><b>When ${step.likelyGain.map(name => html(name)).join(' + ')} turns up</b> — the most likely useful result, ${percent(step.likelyChance)} of rerolls — lock it${last ? ' and you are done.' : ` and move to step ${index + 2}.`}</p>`
+      : '';
+
+    const decline = step.declined.length
+      ? `<p class="plan-then warn"><b>Do not lock ${step.declined.map(entry => html(entry.name)).join(' or ')}</b> if it comes up alone here (${step.declined.map(entry => percent(entry.chance)).join(', ')} of rerolls). Locking it would double every reroll of the harder hunt for less than it saves. Throw it back and reroll.</p>`
+      : '';
+
+    const partial = step.throwsBack
+      ? '<p class="plan-then">Some combined results are worth locking only in part — keep what the step is hunting, throw the rest back.</p>'
+      : '';
+
+    return `
+      <li>
+        <div class="plan-head">
+          <span class="plan-step">${index + 1}</span>
+          <div class="plan-goal">
+            <b>Roll for ${step.pending.map(name => html(name)).join(' or ')}</b>
+            <small>${step.locked.length ? `${step.locked.map(name => html(name)).join(' + ')} locked by now` : 'nothing locked yet'}</small>
+          </div>
+        </div>
+        <div class="plan-use">
+          <img src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+          <span>Use <b>${html(step.artifact.name)}</b></span>
+        </div>
+        <dl class="plan-figures">
+          <div><dt>Useful reroll</dt><dd>${percent(step.progressChance)}</dd></div>
+          <div><dt>Each reroll</dt><dd>${dust(step.perReroll)}</dd></div>
+          <div><dt>Left to finish</dt><dd>${dust(step.expectedDustFromHere)}</dd></div>
+        </dl>
+        ${outcome}${decline}${partial}
+      </li>`;
+  }).join('');
+
+  // Two honest ways to read the comparison: one at a time, or hold out for the
+  // lot in a single reroll. The second is almost always worse, and saying by
+  // how much is more useful than not mentioning it.
+  const comparison = together
+    ? `<p class="plan-compare">Holding out for all ${goals.length} in a single reroll instead: <b>${dust(together.dust)}</b> at ${percent(together.odds)} per reroll — ${together.dust > plan.dust ? `${count(together.dust - plan.dust)} more` : `${count(plan.dust - together.dust)} less`}.</p>`
+    : '';
 
   output.innerHTML = `
     <div class="plan-total">
-      <div class="stat highlight"><span>${dustIcon(config.dust)}${count(plan.dust)}</span><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></div>
+      <div class="stat highlight"><span>${dust(plan.dust)}</span><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></div>
       <div class="stat"><span>${count(plan.rerolls)}</span><small>expected rerolls in total</small></div>
-      ${together ? `<div class="stat"><span>${count(together.dust)}</span><small>if instead you waited for all ${goals.length} to land in one single reroll<br>(${percent(together.odds)} per reroll)</small></div>` : ''}
     </div>
+    ${comparison}
     <ol class="plan-steps">${steps}</ol>
     <p class="note">${html(EnchantEngine.NOTES.plannerPolicy)}</p>`;
 }
@@ -999,32 +1278,132 @@ async function analyzeRoutes() {
  * Orchestration                                                       *
  * ------------------------------------------------------------------ */
 
+/*
+ * Swapping the artifact table for the build plan.
+ *
+ * Two rules, both learned by getting them wrong. The cards never share the
+ * layout: cross-fading them left one sitting under the other for a sixth of a
+ * second, and the column snapped upwards the moment the first was removed —
+ * which is what read as abrupt, not the speed. And the leaving card settles
+ * backwards while the arriving one rises, so the two halves feel like one
+ * movement rather than two cuts.
+ *
+ * setTimeout rather than requestAnimationFrame throughout: a background tab
+ * never paints, so a class removed on the next frame would never be removed at
+ * all and the card would come back invisible.
+ */
+const SWAP_OUT = 300;   // must match the leaving transition in style.css
+const SWAP_IN = 420;    // and the entering one
+const RESULT_CARDS = ['artifactCard', 'planCard'];
+
+function hideResultCard(card) {
+  if (card.hidden) return false;
+  clearTimeout(card.swapTimer);
+  card.classList.remove('entering');
+  card.classList.add('leaving');
+  card.leaveStartedAt = Date.now();
+  card.swapTimer = setTimeout(() => {
+    card.hidden = true;
+    card.classList.remove('leaving');
+  }, SWAP_OUT);
+  return true;
+}
+
+/*
+ * Brings a card in once whatever is leaving has finished leaving.
+ *
+ * Deliberately not tied to the calculation finishing. The plan search can hold
+ * the main thread for a second or more, and hanging the reveal off the end of
+ * it left the screen with neither card on it for most of that time. The card
+ * arrives with its waiting message instead, and fills in when the numbers do.
+ */
+function scheduleReveal(id) {
+  const card = $(id);
+  if (!card.hidden && !card.classList.contains('leaving')) return;
+  const leaving = RESULT_CARDS.map($).filter(other => other !== card && other.classList.contains('leaving'));
+  const wait = leaving.reduce((most, other) =>
+    Math.max(most, SWAP_OUT - (Date.now() - (other.leaveStartedAt || 0))), 0);
+  clearTimeout(card.revealTimer);
+  card.revealTimer = setTimeout(() => {
+    for (const other of leaving) {
+      clearTimeout(other.swapTimer);
+      other.hidden = true;
+      other.classList.remove('leaving');
+    }
+    revealResultCard(card);
+  }, Math.max(0, wait));
+}
+
+function revealResultCard(card) {
+  if (!card.hidden && !card.classList.contains('leaving')) return;
+  clearTimeout(card.swapTimer);
+  // The starting state has to be in place before the card enters the layout,
+  // or it flashes at full opacity for one frame.
+  card.classList.remove('leaving');
+  card.classList.add('entering');
+  card.hidden = false;
+  card.swapTimer = setTimeout(() => card.classList.remove('entering'), 30);
+}
+
+// Takes away whatever is not `id`. Bringing `id` in is the caller's business,
+// because only the caller knows when its content is ready to be looked at.
+function hideOtherResultCards(id) {
+  for (const other of RESULT_CARDS) if (other !== id) hideResultCard($(other));
+}
+
+/*
+ * Starts the swap, if one is due. Called the moment the configuration changes
+ * rather than when the calculation starts: waiting for the debounce and the
+ * first artifacts meant three quarters of a second passed between the click
+ * and anything moving, which is most of what made the change feel abrupt —
+ * nothing, nothing, nothing, then everything at once.
+ *
+ * Idempotent, so calling it again from the calculation costs nothing.
+ */
+function beginResultSwap(config) {
+  const incoming = goalCount(config) > 1 ? 'planCard' : 'artifactCard';
+  const card = $(incoming);
+  if (!card.hidden && !card.classList.contains('leaving')) return;
+  hideOtherResultCards(incoming);
+  if (incoming === 'planCard') $('buildPlan').innerHTML = '<p class="note">Solving the cheapest lock order…</p>';
+  scheduleReveal(incoming);
+}
+
 async function runCalculation() {
   const config = cfg();
-  if ($('calculate').disabled) return;
-  $('calculate').disabled = true;
+  if (!whatIsMissing(config).ready) return;
+  const generation = ++state.runId;
   $('status').textContent = 'Calculating…';
+  beginResultSwap(config);
 
   const rows = [];
+  const breathe = budgetedYield(12);
   for (let index = 0; index < state.data.artifacts.length; index++) {
-    await yieldToUi();
+    await breathe();
+    if (state.runId !== generation) return;          // a newer change won
     rows.push(EnchantEngine.evaluate(state.data, config, state.data.artifacts[index]));
     $('progressBar').style.width = `${(index + 1) / state.data.artifacts.length * 100}%`;
   }
   rows.sort((a, b) => b.odds - a.odds);
   state.lastResults = rows;
 
-  renderResults(rows, config);
+  // One wanted enchantment is a question about artifacts; several is a
+  // question about order. Showing both at once only made each harder to read.
+  const multi = goalCount(config) > 1;
+  if (!multi) renderResults(rows, config);
   renderSummary(rows, config);
-  $('routeCard').hidden = EnchantEngine.rollsRemaining(config) < 2;
+  $('routeCard').hidden = !LOCK_ROUTES_ENABLED || EnchantEngine.rollsRemaining(config) < 2;
   $('routeAnalysis').innerHTML = '';
   $('auditCard').hidden = true;
   await renderBuildPlan(config);
+  if (state.runId !== generation) return;
 
   $('progressBar').style.width = '0%';
   $('status').textContent = `${rows.length} artifacts calculated${rows.some(row => row.exact === false) ? ' · some rows are sampled estimates' : ' · all rows exact'}`;
-  renderCalculateState(config);
 }
+
+// Everything a finished run put on screen, taken back down.
+
 
 /* ------------------------------------------------------------------ *
  * Wiring                                                              *
@@ -1090,7 +1469,6 @@ function bind() {
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('pickerBackdrop').hidden) closePicker(); });
 
   window.addEventListener('resize', handleAmbienceResize);
-  $('calculate').addEventListener('click', runCalculation);
   $('reset').addEventListener('click', resetSetup);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
@@ -1106,7 +1484,19 @@ function bind() {
   });
   $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
   $('analyzeRoutes').addEventListener('click', analyzeRoutes);
-  $('summary').addEventListener('click', event => { if (event.target.id === 'showAudit') showAudit(); });
+  $('summary').addEventListener('click', event => { if (event.target.id === 'showAudit') toggleAudit(); });
+  $('auditClose').addEventListener('click', hideAudit);
+  // A greyed row is an invitation: clicking it adds its group to the selection.
+  $('results').addEventListener('click', event => {
+    const row = event.target.closest('tr.off-group');
+    if (row) enableKind(row.dataset.kind);
+  });
+  $('summary').addEventListener('click', event => {
+    const chip = event.target.closest('[data-kind]');
+    if (!chip) return;
+    toggleKind(chip.dataset.kind);
+  });
+
 }
 
 /* ------------------------------------------------------------------ *
@@ -1437,6 +1827,17 @@ function loadTabs() {
   state.activeTab = state.tabs[0].id;
 }
 
+// The filter is a reading preference and survives a reload, but a stored value
+// that has gone stale must never switch a kind on that the user did not ask for.
+function loadFilters() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(FILTER_KEY) || 'null'); } catch (error) { saved = null; }
+  if (!saved) return;
+  for (const kind of Object.keys(state.filters)) {
+    if (typeof saved[kind] === 'boolean') state.filters[kind] = saved[kind];
+  }
+}
+
 function renderTabs() {
   const bar = $('tabBar');
   bar.replaceChildren();
@@ -1520,13 +1921,21 @@ function clearItem() {
 }
 
 function clearResults() {
+  clearTimeout(state.calcTimer);
   state.lastResults = null;
+  for (const id of RESULT_CARDS) {
+    const card = $(id);
+    clearTimeout(card.swapTimer);
+    card.classList.remove('entering', 'leaving');
+  }
+  $('artifactCard').hidden = false;
   $('summary').hidden = true;
   $('planCard').hidden = true;
   $('routeCard').hidden = true;
   $('auditCard').hidden = true;
   $('routeAnalysis').innerHTML = '';
-  $('results').tBodies[0].innerHTML = '<tr><td colspan="6" class="empty">Fill in the configuration, then press Calculate.</td></tr>';
+  $('progressBar').style.width = '0%';
+  $('results').tBodies[0].innerHTML = '<tr><td colspan="6" class="empty">Choose an item, a rarity, and what you want on it.</td></tr>';
 }
 
 // Wipes every tab, not just the one on screen, and leaves no stored trace.
@@ -1632,6 +2041,7 @@ async function load() {
     renderOfflineOffer();
     state.ready = true;
     $('status').textContent = `${state.data.enchants.length} enchantments · ${state.data.artifacts.length} artifacts loaded${BUNDLE ? ' · standalone build' : ''}`;
+    loadFilters();
     loadTabs();
     renderTabs();
     state.loadingTab = true;
