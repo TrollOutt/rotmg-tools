@@ -243,6 +243,97 @@ check('group artwork is claimed only for the names the Qt file lists', (() => {
 })(), `${data.awokenArt.size} with artwork, ${data.awakenings.size} in total`);
 
 /* ------------------------------------------------------------------ *
+ * 2c. Checked against DECA's own published list                       *
+ * ------------------------------------------------------------------ *
+ * The weights come from a snapshot of the Qt program, and a snapshot
+ * goes stale the moment DECA changes anything. DECA publishes the
+ * "Equipment Rarity Public List"; tools/fetch-deca.js reads it and
+ * freezes the comparison into tools/deca-weights.txt so this can run
+ * with no network. It found three real faults on its first run.
+ */
+section("2c. Agreement with DECA's Equipment Rarity Public List");
+
+const decaRows = fs.readFileSync(path.join(root, 'tools', 'deca-weights.txt'), 'utf8')
+  .split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('##'))
+  .map(line => {
+    const [name, weight, split, labels, incompatible] = line.split('|');
+    return {
+      name,
+      weight: Number(weight),
+      split: split ? split.split(' ').map(Number) : null,
+      labels: labels ? labels.split(',') : [],
+      incompatible: incompatible ? incompatible.split(',') : []
+    };
+  });
+
+// A tiered enchantment is four rows there and one record here, each carrying
+// its own tier label. That is a difference of description, not of substance.
+const withoutTiers = list => list.filter(label => !/^TIER([1-4]|ED)$/.test(label)).sort().join(',');
+
+check('the frozen DECA comparison covers most of the enchantments',
+  decaRows.length >= 240, `${decaRows.length} of ${data.enchants.length}`);
+
+check('every enchantment it names still exists here',
+  decaRows.every(row => data.byName.has(row.name)));
+
+check('every weight matches what DECA publishes', (() => {
+  const off = decaRows.filter(row => data.byName.get(row.name).weight !== row.weight);
+  return off.length === 0;
+})(), (() => {
+  const off = decaRows.filter(row => data.byName.get(row.name) && data.byName.get(row.name).weight !== row.weight);
+  return off.slice(0, 3).map(row => `${row.name}: ${data.byName.get(row.name).weight} vs ${row.weight}`).join(' ; ');
+})());
+
+check('every tier split matches, to five decimals', (() => {
+  for (const row of decaRows) {
+    if (!row.split) continue;
+    const ours = data.byName.get(row.name).distribution;
+    if (row.split.some((share, index) => Math.abs(share - (ours[index] || 0)) > 0.0005)) return false;
+  }
+  return true;
+})());
+
+check('every set of Labels matches', (() => {
+  for (const row of decaRows) {
+    if (!row.labels.length) continue;
+    if (withoutTiers([...data.byName.get(row.name).tags]) !== withoutTiers(row.labels)) return false;
+  }
+  return true;
+})());
+
+check('every set of Incompatible Labels matches', (() => {
+  for (const row of decaRows) {
+    if (!row.incompatible.length) continue;
+    const ours = [...data.byName.get(row.name).excludes].sort().join(',');
+    if (ours !== row.incompatible.sort().join(',')) return false;
+  }
+  return true;
+})());
+
+// The three faults this comparison found, kept as named regressions.
+check("DECA confirms Jester's Trick clashes with DUALSTAT, not SINGLESTAT", (() => {
+  const row = decaRows.find(entry => entry.name === "Jester's Trick");
+  return row && row.incompatible.includes('DUALSTAT') && !row.incompatible.includes('SINGLESTAT');
+})());
+
+check('the Relative bonuses weigh 52,000 on their own tier split', (() => {
+  const row = decaRows.find(entry => entry.name === 'Relative Attack Bonus');
+  return row && row.weight === 52000 && Math.abs(row.split[0] - 0.33654) < 0.0001;
+})());
+
+// It was missing its item-types line, so it parsed one field short and was
+// rollable on nothing at all.
+check('Vitality to Attack Bonus is rollable again, on all four item types', (() => {
+  const mod = data.byName.get('Vitality to Attack Bonus');
+  return mod && ['WEAPON', 'ABILITY', 'ARMOR', 'RING'].every(type => mod.itemTags.has(type));
+})());
+
+check('no enchantment is left rollable on no item type at all', (() => {
+  const orphans = data.enchants.filter(mod => mod.itemTags.size === 0);
+  return orphans.length === 0;
+})(), data.enchants.filter(mod => mod.itemTags.size === 0).map(mod => mod.name).join(', '));
+
+/* ------------------------------------------------------------------ *
  * 3. Incompatibility direction                                        *
  * ------------------------------------------------------------------ */
 section('3. Incompatibility is directional: Labels(prior) ∩ Incompatible(candidate)');
@@ -306,22 +397,23 @@ section('5. Nightmatter Circlet reference scenario');
 const moon = artifact('The Moon Tarot Card');
 const scenarioPool = engine.weightedPool(data, twoLocks, moon);
 const mermaid = data.byName.get('Mermaid Magic');
-// 111, not the 112 the Qt program reports: Night's Soul carries DUALSTAT, so
-// the corrected Jester's Trick (weight 2,000) is now culled from this pool.
-// The Qt program still offers that incompatible pair, hence every figure in
-// this section sits a little above its output.
-check('111 candidates in the pool', scenarioPool.mods.length === 111, `got ${scenarioPool.mods.length}`);
-check('total weighted pool is 5,573,000', scenarioPool.total === 5573000, `got ${scenarioPool.total}`);
+// Two data corrections move this scenario away from the Qt program's own
+// output, in opposite directions. The corrected Jester's Trick is culled by
+// Night's Soul (DUALSTAT), taking 2,000 out; and Vitality to Attack Bonus,
+// whose record was missing its item-types line and so was rollable nowhere,
+// comes back in with 12,000. See the ## notes in globalMods.txt.
+check('112 candidates in the pool', scenarioPool.mods.length === 112, `got ${scenarioPool.mods.length}`);
+check('total weighted pool is 5,608,000', scenarioPool.total === 5608000, `got ${scenarioPool.total}`);
 check("the missing candidate is Jester's Trick, culled by Night's Soul",
   !scenarioPool.mods.some(m => m.name === "Jester's Trick")
   && data.byName.get("Night's Soul").tags.has('DUALSTAT'));
 check('Mermaid Magic weighs 30,000 under the Moon card', scenarioPool.weights.get(mermaid.id) === 30000, `got ${scenarioPool.weights.get(mermaid.id)}`);
-near('chance on the next slot is 0.5383 %', scenarioPool.weights.get(mermaid.id) / scenarioPool.total * 100, 0.5383, 0.0001);
+near('chance on the next slot is 0.5350 %', scenarioPool.weights.get(mermaid.id) / scenarioPool.total * 100, 0.5350, 0.0001);
 const scenarioOdds = engine.oddsAny(data, twoLocks, moon, ['Mermaid Magic']);
-near('exact chance over the 2 remaining slots is 0.8395 %', scenarioOdds.odds, 0.8395, 0.0001);
+near('exact chance over the 2 remaining slots is 0.8322 %', scenarioOdds.odds, 0.8322, 0.0001);
 check('the 2-slot result is exact, not sampled', scenarioOdds.exact === true);
 const scenarioRow = engine.evaluate(data, twoLocks, moon);
-near('expected Red dust is 47,646', scenarioRow.dust, 47646, 5);
+near('expected Red dust is 48,064', scenarioRow.dust, 48064, 5);
 check('two slots beat one slot for the same target', (() => {
   const oneSlot = engine.oddsAny(data, Object.assign({}, twoLocks, { locks: [...twoLocks.locks, 'Attack Bonus'] }), moon, ['Mermaid Magic']);
   return oneSlot.odds < scenarioOdds.odds;
@@ -332,12 +424,12 @@ const lockedCfg = Object.assign({}, twoLocks, { locks: [...twoLocks.locks, 'OnAb
 const lockedPool = engine.weightedPool(data, lockedCfg, moon);
 check('OnAbility Attack Boost carries ONABILITYSTAT and PROCATTACK',
   data.byName.get('OnAbility Attack Boost').tags.has('ONABILITYSTAT') && data.byName.get('OnAbility Attack Boost').tags.has('PROCATTACK'));
-check('pool 111 → 104', lockedPool.mods.length === 104, `got ${lockedPool.mods.length}`);
-check('total weight 5,573,000 → 4,923,000', lockedPool.total === 4923000, `got ${lockedPool.total}`);
+check('pool 112 → 105', lockedPool.mods.length === 105, `got ${lockedPool.mods.length}`);
+check('total weight 5,608,000 → 4,958,000', lockedPool.total === 4958000, `got ${lockedPool.total}`);
 check('Mermaid Magic weight is unchanged', lockedPool.weights.get(mermaid.id) === 30000);
-near('per-slot chance rises to 0.6094 %', lockedPool.weights.get(mermaid.id) / lockedPool.total * 100, 0.6094, 0.0001);
+near('per-slot chance rises to 0.6051 %', lockedPool.weights.get(mermaid.id) / lockedPool.total * 100, 0.6051, 0.0001);
 const lockedOdds = engine.oddsAny(data, lockedCfg, moon, ['Mermaid Magic']);
-near('but the single remaining slot only gives 0.6094 %', lockedOdds.odds, 0.6094, 0.0001);
+near('but the single remaining slot only gives 0.6051 %', lockedOdds.odds, 0.6051, 0.0001);
 check('so the extra lock lowers the total chance', lockedOdds.odds < scenarioOdds.odds);
 check('and it raises the expected dust', engine.evaluate(data, lockedCfg, moon).dust > scenarioRow.dust);
 

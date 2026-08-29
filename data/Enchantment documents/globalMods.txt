@@ -102,91 +102,123 @@
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Attack Bonus]
 [Increases Attack by (7-16)% of Bonus Attack]
-[50000]
+[52000]
 [STAT,SINGLESTAT,ATTACK,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Defense Bonus]
 [Increases Defense by (6-12)% of Bonus Defense]
-[50000]
+[52000]
 [STAT,SINGLESTAT,DEFENSE,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Dexterity Bonus]
 [Increases Dexterity by (7-16)% of Bonus Dexterity]
-[50000]
+[52000]
 [STAT,SINGLESTAT,DEXTERITY,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Mana Bonus]
 [Increases Maximum Mana by (6-12)% of Bonus Mana]
-[50000]
+[52000]
 [STAT,SINGLESTAT,MANA,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Life Bonus]
 [Increases Maximum Life by (6-12)% of Bonus Life]
-[50000]
+[52000]
 [STAT,SINGLESTAT,LIFE,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Speed Bonus]
 [Increases Speed by (7-16)% of Bonus Speed]
-[50000]
+[52000]
 [STAT,SINGLESTAT,SPEED,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Vitality Bonus]
 [Increases Vitality by (7-16)% of Bonus Vitality]
-[50000]
+[52000]
 [STAT,SINGLESTAT,VITALITY,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
+## Correction, 2026-08-29, against DECA's own Equipment Rarity Public List:
+## this family is not on the standard 0.35/0.30/0.20/0.15 tier split. DECA
+## publishes its four tiers as 17500 / 17000 / 10000 / 7500, which totals
+## 52000 rather than 50000 and gives a different shape.
 [Relative Wisdom Bonus]
 [Increases Wisdom by (7-16)% of Bonus Wisdom]
-[50000]
+[52000]
 [STAT,SINGLESTAT,WISDOM,RELATIVEBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
 [WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.33654,0.32692,0.19231,0.14423]
 ************
 ##
 ##
@@ -245,13 +277,20 @@
 ************
 ##
 ##
+## Correction, 2026-08-29. Two faults, both found against DECA's Equipment
+## Rarity Public List:
+##   - the item-types line was missing entirely, so this record parsed one
+##     field short and ended up rollable on no item type at all. Fifty-five
+##     of its fifty-six siblings read [WEAPON,ABILITY,ARMOR,RING].
+##   - its tiers are 4375 / 3750 / 2500 / 1375, not the standard split.
 [Vitality to Attack Bonus]
 [Increases Attack by (7-16)% of Bonus Vitality]
 [12000]
 [STAT,SINGLESTAT,ATTACK,CONVERSIONBONUS,ROLLABLE,TIERED]
 [SINGLESTAT]
+[WEAPON,ABILITY,ARMOR,RING]
 []
-[0.35,0.30,0.20,0.15]
+[0.36458,0.31250,0.20833,0.11458]
 ************
 ##
 ##
