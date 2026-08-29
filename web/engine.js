@@ -129,7 +129,15 @@ var EnchantEngine = (function () {
     // must exist once rather than being counted twice in a weighted pool.
     const unique = new Map();
     for (const text of sources.modTexts) for (const mod of parseMods(text)) unique.set(mod.name, mod);
-    const enchants = [...unique.values()].map((mod, index) => Object.assign({}, mod, { id: index }));
+    // A modifier the game will not roll must not compete for a slot, and must
+    // not be offered as something to aim at. Exactly one is in this state:
+    // Damage Resistance, which carries 200000 weight and so was taking three
+    // to seven per cent of every armor draw for an outcome that cannot occur.
+    // The installed client agrees — it marks 291 enchantments ROLLABLE, which
+    // is what is left here once this one is dropped.
+    const enchants = [...unique.values()]
+      .filter(mod => mod.tags.has('ROLLABLE'))
+      .map((mod, index) => Object.assign({}, mod, { id: index }));
     const byName = new Map(enchants.map(mod => [mod.name, mod]));
     const artifacts = parseArtifacts(sources.artifactText);
     const awakenings = parseAwakenings(sources.awakenText);

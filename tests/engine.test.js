@@ -46,7 +46,8 @@ const baseCfg = extra => Object.assign({
  * 1. Data loading                                                     *
  * ------------------------------------------------------------------ */
 section('1. Data loading');
-check('292 unique enchantments after de-duplicating shared documents', data.enchants.length === 292, `got ${data.enchants.length}`);
+// 292 records across the documents, one of which the game never rolls.
+check('291 rollable enchantments after de-duplicating shared documents', data.enchants.length === 291, `got ${data.enchants.length}`);
 check('25 artifacts', data.artifacts.length === 25, `got ${data.artifacts.length}`);
 check('duplicate records are identical, so de-duplication is lossless', (() => {
   const seen = new Map();
@@ -266,6 +267,18 @@ const decaRows = fs.readFileSync(path.join(root, 'tools', 'deca-weights.txt'), '
     };
   });
 
+// DECA's sheet lists what the game defines, including what it never rolls.
+// We ship only the rollable ones, so a row for a non-rollable enchantment has
+// nothing here to compare against — and saying which ones those are, by name,
+// is the point: if the list ever grows, these checks say so.
+const NOT_ROLLABLE = new Set(['Damage Resistance']);
+const decaComparable = decaRows.filter(row => !NOT_ROLLABLE.has(row.name));
+
+check('the rows we skip are exactly the ones the game will not roll', (() => {
+  const missing = decaRows.filter(row => !data.byName.has(row.name)).map(row => row.name);
+  return missing.length === NOT_ROLLABLE.size && missing.every(name => NOT_ROLLABLE.has(name));
+})(), decaRows.filter(row => !data.byName.has(row.name)).map(row => row.name).join(', '));
+
 // A tiered enchantment is four rows there and one record here, each carrying
 // its own tier label. That is a difference of description, not of substance.
 const withoutTiers = list => list.filter(label => !/^TIER([1-4]|ED)$/.test(label)).sort().join(',');
@@ -274,18 +287,18 @@ check('the frozen DECA comparison covers most of the enchantments',
   decaRows.length >= 240, `${decaRows.length} of ${data.enchants.length}`);
 
 check('every enchantment it names still exists here',
-  decaRows.every(row => data.byName.has(row.name)));
+  decaComparable.every(row => data.byName.has(row.name)));
 
 check('every weight matches what DECA publishes', (() => {
-  const off = decaRows.filter(row => data.byName.get(row.name).weight !== row.weight);
+  const off = decaComparable.filter(row => data.byName.get(row.name).weight !== row.weight);
   return off.length === 0;
 })(), (() => {
-  const off = decaRows.filter(row => data.byName.get(row.name) && data.byName.get(row.name).weight !== row.weight);
+  const off = decaComparable.filter(row => data.byName.get(row.name) && data.byName.get(row.name).weight !== row.weight);
   return off.slice(0, 3).map(row => `${row.name}: ${data.byName.get(row.name).weight} vs ${row.weight}`).join(' ; ');
 })());
 
 check('every tier split matches, to five decimals', (() => {
-  for (const row of decaRows) {
+  for (const row of decaComparable) {
     if (!row.split) continue;
     const ours = data.byName.get(row.name).distribution;
     if (row.split.some((share, index) => Math.abs(share - (ours[index] || 0)) > 0.0005)) return false;
@@ -294,7 +307,7 @@ check('every tier split matches, to five decimals', (() => {
 })());
 
 check('every set of Labels matches', (() => {
-  for (const row of decaRows) {
+  for (const row of decaComparable) {
     if (!row.labels.length) continue;
     if (withoutTiers([...data.byName.get(row.name).tags]) !== withoutTiers(row.labels)) return false;
   }
@@ -312,7 +325,7 @@ check('every set of Labels matches', (() => {
 const DECA_BEHIND = new Set(['Draconic Gaze']);
 
 check('every set of Incompatible Labels matches, bar the one the client settles', (() => {
-  for (const row of decaRows) {
+  for (const row of decaComparable) {
     if (!row.incompatible.length || DECA_BEHIND.has(row.name)) continue;
     const ours = [...data.byName.get(row.name).excludes].sort().join(',');
     if (ours !== row.incompatible.sort().join(',')) return false;
@@ -321,10 +334,10 @@ check('every set of Incompatible Labels matches, bar the one the client settles'
 })());
 
 check('and that exception is still the only one', (() => {
-  const off = decaRows.filter(row => row.incompatible.length
+  const off = decaComparable.filter(row => row.incompatible.length
     && [...data.byName.get(row.name).excludes].sort().join(',') !== row.incompatible.slice().sort().join(','));
   return off.length === DECA_BEHIND.size && off.every(row => DECA_BEHIND.has(row.name));
-})(), decaRows.filter(row => row.incompatible.length
+})(), decaComparable.filter(row => row.incompatible.length
   && [...data.byName.get(row.name).excludes].sort().join(',') !== row.incompatible.slice().sort().join(',')).map(r => r.name).join(', '));
 
 // The three faults this comparison found, kept as named regressions.
@@ -927,6 +940,73 @@ check('a real Neo Alien item reaches the Neo set and not the Alien one', (() => 
   return data.enchants.filter(m => m.special.has('NEO_ALIEN') && m.itemTags.has(item.type)).every(m => has(m.name))
     && data.enchants.filter(m => m.special.has('ALIEN') && m.itemTags.has(item.type)).every(m => !has(m.name));
 })());
+
+/* ------------------------------------------------------------------ *
+ * 14. The recorded client snapshot                                    *
+ * ------------------------------------------------------------------ *
+ * data/client-snapshot.txt is what an installed game client said about
+ * enchanting on the day it was read. Its whole job is to be compared
+ * against the next read, so the property that matters is that no two
+ * facts share a key. A collision does not fail loudly — it silently
+ * drops one fact from every future comparison. Not hypothetical: the
+ * client gives two different enchantments the name "Acid Guardian",
+ * and a pool carries several rules apiece.
+ */
+section('14. The recorded client snapshot');
+
+const snapshot = fs.readFileSync(path.join(dataRoot, 'client-snapshot.txt'), 'utf8')
+  .split(/\r?\n/).filter(line => line && !line.startsWith('##'));
+const snapEnch = new Set(snapshot.filter(line => line.startsWith('ench|')).map(line => line.split('|')[2]));
+const collisions = (() => {
+  const seen = new Set(), clash = [];
+  for (const line of snapshot) {
+    const parts = line.split('|');
+    const key = `${parts[0]}|${parts[1]}`;
+    if (seen.has(key)) clash.push(key); else seen.add(key);
+  }
+  return clash;
+})();
+
+check('it names the build it was read from',
+  snapshot.filter(line => line.startsWith('build|')).length === 1);
+
+check('every line is kind|name|fields',
+  snapshot.every(line => line.split('|').length >= 2 && line.split('|')[1] !== ''));
+
+check('no two facts share a key', collisions.length === 0, collisions.slice(0, 3).join(', '));
+
+/*
+ * The client's own display names, verbatim. Four are its typos — a missing
+ * space, a missing apostrophe, a dropped letter, a lowercase initialism. The
+ * last two are ours: the client gives the Alien and Neo Alien versions of
+ * Acid Guardian and Solar Mastery the same name apiece, and we separate them
+ * so a player can tell which one they are aiming at.
+ */
+const CLIENT_SPELLING = {
+  'Mana -Attack Tradeoff': 'Mana -AttackTradeoff',
+  "Pirate's Expertise": 'Pirates Expertise',
+  'Vampiric Lifeforce': 'Vampric Lifeforce',
+  'MP Cost Reduction': 'Mp Cost Reduction',
+  'Acid Guardian (Neo)': 'Acid Guardian',
+  'Solar Mastery (Neo)': 'Solar Mastery'
+};
+
+check('the enchantments it records cover the ones we ship',
+  data.enchants.every(mod => snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name)),
+  data.enchants.filter(mod => !snapEnch.has(CLIENT_SPELLING[mod.name] || mod.name))
+    .map(mod => mod.name).slice(0, 5).join(', '));
+
+check('and we ship one for each of them', (() => {
+  // Records, not distinct names: two Alien/Neo pairs share a display name in
+  // the client, so 291 lines there collapse to 289 names. 291 = 291.
+  const lines = snapshot.filter(line => line.startsWith('ench|')).length;
+  return lines === data.enchants.length;
+})(), `client ${snapshot.filter(line => line.startsWith('ench|')).length}, nous ${data.enchants.length}`);
+
+check('and it records the artifacts, the pools and the items too',
+  snapshot.some(line => line.startsWith('artifact|'))
+  && snapshot.some(line => line.startsWith('pool|'))
+  && snapshot.filter(line => line.startsWith('item|')).length > 1000);
 
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
