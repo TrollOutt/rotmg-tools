@@ -1359,7 +1359,6 @@ function bind() {
 
   window.addEventListener('resize', handleAmbienceResize);
   $('reset').addEventListener('click', resetSetup);
-  $('status').addEventListener('click', toggleClientNews);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
     if (event.target.closest('#changeItem')) { openItemPicker(); return; }
@@ -1918,51 +1917,35 @@ async function loadItemSprites() {
 
 
 /* ------------------------------------------------------------------ *
- * What the game client last said                                      *
+ * Which client these numbers came from                                *
  * ------------------------------------------------------------------ *
- * The numbers here are read out of an installed client by
- * tools/read-client.js, which records what it saw and reports what
- * moved on the next run. data/client-changes.txt is that report. It
- * matters to a player for one reason: it says whether these odds have
- * been checked against the game as it is now, or against the game as it
- * was three updates ago.
+ * tools/read-client.js reads an installed game client and writes what
+ * it found to data/client-changes.txt, newest reading first. All the
+ * page takes from it is the head of that first line: when the client
+ * was last read, and which build it was. That is the whole of what a
+ * player needs — how old these odds are, and against what.
+ *
+ * There is no friendlier version number to show. DECA ships the client
+ * with Unity's application version left empty, so the build id is the
+ * only thing that names one build apart from another.
  */
-const NEWS_KINDS = { ench: 'enchantment', pool: 'pool', artifact: 'artifact', item: 'item' };
-
 async function readChanges() {
   if (BUNDLE) return BUNDLE.changes || '';
   try {
     const response = await fetch(ROOT + 'client-changes.txt');
     return response.ok ? await response.text() : '';
   } catch (error) {
-    return '';   // opened from disk, or never recorded; the panel says so
+    return '';   // opened from disk, or never recorded; the line says so
   }
 }
 
-// "## 2026-08-23 — build 9476…" followed by one line per fact.
+// "## 2026-08-23 — build 9476…"
 function parseChanges(text) {
-  const entries = [];
-  for (const line of text.split(/\r?\n/)) {
-    const head = /^##\s*(\S+)\s+—\s+build\s+(\S+)/.exec(line);
-    if (head) { entries.push({ date: head[1], build: head[2], lines: [] }); continue; }
-    if (line.trim() && entries.length) entries[entries.length - 1].lines.push(line.trim());
-  }
-  return entries;
+  const head = /^##\s*(\S+)\s+—\s+build\s+(\S+)/m.exec(text || '');
+  return head ? { date: head[1], build: head[2] } : null;
 }
 
-function newsLineHtml(line) {
-  const mark = line[0];
-  const rest = line.slice(1).trim();
-  if (mark === '=') return `<li class="news-quiet">Nothing moved.</li>`;
-  const [kind, ...tail] = rest.split(':');
-  const what = NEWS_KINDS[kind.trim()] || kind.trim();
-  const verb = mark === '+' ? 'added' : mark === '-' ? 'gone' : 'changed';
-  return `<li class="news-${verb}"><span class="news-kind">${html(what)}</span>`
-    + `<span class="news-what">${html(tail.join(':').trim())}</span></li>`;
-}
-
-// "2026-08-23" as a player would read it. The panel keeps the exact build id;
-// the pill only needs to say how old the reading is.
+// "2026-08-23" as a player would read it.
 function newsDate(iso) {
   const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!parts) return iso;
@@ -1970,60 +1953,15 @@ function newsDate(iso) {
   return `${Number(parts[3])} ${months[Number(parts[2]) - 1]} ${parts[1]}`;
 }
 
-/*
- * The pill in the masthead. It used to report how many artifacts had just been
- * counted and whether the rows were exact, which is a developer's readout: the
- * progress bar already shows the work, and a sampled row carries its own ≈.
- * What a player cannot otherwise find out is whether these odds still match the
- * game, so that is what it says now — and clicking it opens the detail.
- */
-function renderNewsPill(entries) {
-  const pill = $('status');
-  if (!entries.length) {
-    pill.textContent = 'Game data';
-    pill.title = 'Where these numbers come from';
+function renderClientNews(reading) {
+  const line = $('status');
+  if (!reading) {
+    line.textContent = 'Game data from the enchantment documents';
+    line.title = 'No game client has been read against these numbers yet.';
     return;
   }
-  const latest = entries[0];
-  const moved = !(latest.lines.length === 1 && latest.lines[0][0] === '=');
-  pill.textContent = moved
-    ? `Game data · ${latest.lines.length} change${latest.lines.length > 1 ? 's' : ''}`
-    : `Game data · checked ${newsDate(latest.date)}`;
-  pill.title = moved
-    ? 'What changed in the game since these numbers were last checked'
-    : `Checked against the game client of ${newsDate(latest.date)}`;
-  pill.classList.toggle('has-news', moved);
-}
-
-function renderClientNews(entries) {
-  renderNewsPill(entries);
-  const panel = $('clientNews');
-  if (!entries.length) {
-    panel.innerHTML = '<p class="news-none">These numbers come from the enchantment documents. '
-      + 'No game client has been read against them yet.</p>';
-    return;
-  }
-  const latest = entries[0];
-  const quiet = latest.lines.length === 1 && latest.lines[0][0] === '=';
-  panel.innerHTML = `<p class="news-head">`
-    + `Checked against the game client of <b>${html(newsDate(latest.date))}</b>`
-    + `<span class="news-build">build ${html(latest.build.slice(0, 8))}</span></p>`
-    + (quiet
-      ? '<p class="news-none">Every weight, pool rule, artifact and item matched. These odds are current.</p>'
-      : `<ul class="news-list">${latest.lines.slice(0, 40).map(newsLineHtml).join('')}</ul>`
-        + (latest.lines.length > 40 ? `<p class="news-none">…and ${latest.lines.length - 40} more.</p>` : ''))
-    + (entries.length > 1
-      ? `<p class="news-none">${entries.length - 1} earlier reading${entries.length > 2 ? 's' : ''} on record.</p>`
-      : '');
-}
-
-function toggleClientNews() {
-  // A failed load takes the pill over to say so; there is nothing to open then.
-  if ($('status').classList.contains('bad')) return;
-  const panel = $('clientNews');
-  const open = panel.hidden;
-  panel.hidden = !open;
-  $('status').setAttribute('aria-expanded', String(open));
+  line.textContent = `Game data · client of ${newsDate(reading.date)} · build ${reading.build.slice(0, 8)}`;
+  line.title = `Read from an installed RotMG client, build ${reading.build}.`;
 }
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
