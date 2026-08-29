@@ -58,7 +58,14 @@ var EnchantEngine = (function () {
         const parts = line.split(',').map(part => part.trim());
         let at = parts.findIndex(part => /^\d+(\.\d+)?$/.test(part));
         if (at < 0) at = parts.length;
-        return { keys: new Set(parts.slice(0, at)), multiplier: Number(parts[at]) || 1, excludes: new Set(parts.slice(at + 1)) };
+        // Number(x) || 1 would turn a multiplier of 0 into 1, and "x0" is
+        // exactly how an artifact bars a tier outright.
+        const multiplier = Number(parts[at]);
+        return {
+          keys: new Set(parts.slice(0, at)),
+          multiplier: Number.isFinite(multiplier) ? multiplier : 1,
+          excludes: new Set(parts.slice(at + 1))
+        };
       });
       return {
         name: group[0],
@@ -220,7 +227,7 @@ var EnchantEngine = (function () {
       for (const label of rule.excludes) if (mod.tags.has(label)) { excluded = true; break; }
       if (!excluded && rule.multiplier > best) best = rule.multiplier;
     }
-    return Math.trunc(mod.weight * (best < 0 ? 1 : best));
+    return Math.trunc(mod.weight * (best < 0 ? 1 : best) * tierMass(mod, artifact));
   }
 
   function weightedPool(data, cfg, artifact) {
@@ -439,23 +446,84 @@ var EnchantEngine = (function () {
 
   // Port of the tieredMult block in populateResultsList(). Artifacts carrying
   // a TIER key push the roll into the higher tiers of the distribution.
+/*
+ * The multiplier an artifact puts on each of the four tiers. Premium Gold is
+ * TIER1,TIER2 x0 and TIER3 x4.25; most artifacts say nothing and leave all
+ * four at 1.
+ */
+  function tierRules(artifact) {
+    let perTier = null;
+    for (const rule of artifact.rules) {
+      for (const key of rule.keys) {
+        const match = /^TIER([1-4])$/.exec(key);
+        if (!match) continue;
+        if (!perTier) perTier = [1, 1, 1, 1];
+        perTier[Number(match[1]) - 1] = rule.multiplier;
+      }
+    }
+    return perTier;                       // null when the artifact says nothing
+  }
+
+  /*
+   * What fraction of a tiered enchantment's weight the artifact leaves it.
+   *
+   * This belongs in the pool, not only on the target. Premium Diamond bars
+   * tiers one to three and restores nothing, so in the game a tiered
+   * enchantment carries fifteen per cent of its weight into the draw — which
+   * is the entire reason that card is the one you use to hunt a unique. Left
+   * out of the denominator, every tiered competitor kept its full weight and
+   * the card looked far weaker than it is.
+   */
+  function tierMass(mod, artifact) {
+    if (!mod || !mod.tags.has('TIERED') || !mod.distribution.length) return 1;
+    const perTier = tierRules(artifact);
+    // No tier rule means the whole of it survives. Saying so exactly matters:
+    // 0.35 + 0.30 + 0.20 + 0.15 is 0.9999999999999999 in binary floating
+    // point, and the truncation below would quietly shave a unit off every
+    // tiered enchantment in the pool.
+    if (!perTier) return 1;
+    let total = 0;
+    for (let index = 0; index < mod.distribution.length; index++) {
+      total += (mod.distribution[index] || 0) * (perTier[index] === undefined ? 1 : perTier[index]);
+    }
+    return total;
+  }
+
+  /*
+   * How much of a tiered enchantment's weight survives, given the artifact and
+   * the tiers the player will accept.
+   *
+   * An artifact states this per tier: Premium Gold is TIER1,TIER2 x0 and
+   * TIER3 x4.25; Precision Cog is TIER1 x0 and TIER2 x2.166. So the answer is
+   * simply the accepted tiers' shares, each scaled by its own multiplier.
+   *
+   * This used to be a bespoke redistribution — the weight of a barred tier was
+   * handed to the next surviving one — which is exactly right whenever the
+   * multiplier restores the total, and 4.25 is (0.35+0.30+0.20)/0.20 on the
+   * standard split, so it was right for most of them. It was wrong twice.
+   * On Premium Diamond, which bars three tiers and restores nothing, the game
+   * leaves a tiered enchantment 15 % of its weight while the old rule left it
+   * all of it. And on the families that are not on the standard split — the
+   * Relative bonuses, the Summon Power tradeoff — the restoring constants no
+   * longer restore, so the totals drifted. Reading the multipliers off the
+   * artifact settles both.
+   */
   function tierMultiplier(mod, artifact, tiers) {
     if (!mod || !mod.tags.has('TIERED')) return 1;
     const distribution = mod.distribution;
     if (!distribution.length) return 1;
-    const keys = new Set(artifact.rules.flatMap(rule => [...rule.keys]));
-    let result = 0;
+
+    const perTier = tierRules(artifact) || [1, 1, 1, 1];
+    let accepted = 0;
     for (const tier of asSet(tiers)) {
-      if (keys.has('TIER3')) { if (tier === 4) result = 1; }
-      else if (keys.has('TIER2')) {
-        if (tier === 3) result += (distribution[0] || 0) + (distribution[1] || 0) + (distribution[2] || 0);
-        else if (tier === 4) result += distribution[3] || 0;
-      } else if (keys.has('TIER1')) {
-        if (tier === 2) result += (distribution[0] || 0) + (distribution[1] || 0);
-        else if (tier > 2) result += distribution[tier - 1] || 0;
-      } else result += distribution[tier - 1] || 0;
+      const index = tier - 1;
+      if (index < 0 || index >= distribution.length) continue;
+      accepted += (distribution[index] || 0) * perTier[index];
     }
-    return result;
+    // The pool weight already carries the whole tier mass, so what is left to
+    // say here is the share of it the player will settle for.
+    const whole = tierMass(mod, artifact);
+    return whole > 0 ? accepted / whole : 0;
   }
 
   /* ------------------------------------------------------------------ *
@@ -739,7 +807,7 @@ var EnchantEngine = (function () {
   const engine = {
     readBracketGroups, splitSet, parseMods, parseArtifacts, parseAwakenings, mergeAwakenings, buildDataset,
     lockCount, rollsRemaining, lockedLabels, eligiblePool, weightFor, weightedPool,
-    goalDistribution, distributionFor, oddsAny, oddsAll, tierMultiplier,
+    goalDistribution, distributionFor, oddsAny, oddsAll, tierMultiplier, tierMass, tierRules,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,
     planGoals, planSimultaneous,
     EXTRA_AWAKENINGS, ITEM_SPRITE_ALIAS, NOTES

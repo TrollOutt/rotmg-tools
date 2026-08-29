@@ -100,6 +100,7 @@
 [Purple,35]
 []
 [TIER1,0]
+[TIER2,2.166]
 [ATTACK,9]
 [TRADEOFF,4.5]
 [Kogbold Spirit,High Voltage,Molecular Blade,Artificial Core,15]
@@ -109,6 +110,7 @@
 [Purple,35]
 []
 [TIER1,0]
+[TIER2,2.166]
 [DEXTERITY,9]
 [SUMMON,4.5]
 [Living Hive,Buzzing Bullets,Apitoxin,Swarm Tree's Wrath,15]
@@ -125,6 +127,7 @@
 [na,0]
 []
 [TIER1,TIER2,0]
+[TIER3,4.25]
 [UNIQUE,AWAKENED,2.6]
 ************
 [Premium Diamond Card]

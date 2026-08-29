@@ -548,6 +548,89 @@ check('a TIER-boosting artifact exists to exercise the branch',
   data.artifacts.some(a => a.rules.some(r => [...r.keys].some(k => /^TIER[123]$/.test(k)))));
 
 /* ------------------------------------------------------------------ *
+ * 8b. A barred tier costs weight in the pool, not just on the target  *
+ * ------------------------------------------------------------------ *
+ * Read off the installed client: an artifact states a multiplier per
+ * tier, and Premium Diamond bars three of the four while restoring
+ * nothing. So in the game a tiered enchantment carries fifteen per
+ * cent of its weight into that draw — which is the whole reason the
+ * card is the one you use to hunt a unique.
+ */
+section('8b. Tier multipliers belong to the pool');
+
+const diamond = artifact('Premium Diamond Card');
+const gold = artifact('Premium Gold Card');
+const cog = artifact('Precision Cog');
+const plainCard = artifact('The Moon Tarot Card');
+const standardTier = data.byName.get('Attack Bonus');
+const relativeTier = data.byName.get('Relative Attack Bonus');
+
+check('an artifact with no tier rule leaves the whole of it, exactly', (() => {
+  // 0.35 + 0.30 + 0.20 + 0.15 is 0.9999999999999999 in binary floating point;
+  // the pool truncates, so "about one" would shave a unit off every tiered
+  // enchantment and move the reference totals.
+  return engine.tierMass(standardTier, plainCard) === 1
+    && engine.weightFor(standardTier, plainCard) === standardTier.weight;
+})());
+
+check('Premium Diamond leaves a standard tiered enchantment 15 % of its weight',
+  Math.abs(engine.tierMass(standardTier, diamond) - 0.15) < 1e-9,
+  String(engine.tierMass(standardTier, diamond)));
+
+check('Premium Gold restores it to the whole on the standard split', (() => {
+  // TIER1,TIER2 x0 and TIER3 x4.25, and 4.25 is (0.35+0.30+0.20)/0.20.
+  return Math.abs(engine.tierMass(standardTier, gold) - 1) < 1e-9;
+})(), String(engine.tierMass(standardTier, gold)));
+
+check('but not on the families that are not on that split', (() => {
+  // The Relative bonuses run 0.33654/0.32692/0.19231/0.14423, so the same
+  // 4.25 leaves 0.96155 rather than 1. The old bespoke redistribution could
+  // not express that at all.
+  return Math.abs(engine.tierMass(relativeTier, gold) - 0.96155) < 0.0005;
+})(), String(engine.tierMass(relativeTier, gold)));
+
+check('Precision Cog bars tier 1 and lifts tier 2 to cover it',
+  Math.abs(engine.tierMass(standardTier, cog) - 1) < 0.002,
+  String(engine.tierMass(standardTier, cog)));
+
+check('a barred tier really shrinks the pool it competes in', (() => {
+  const cfg = baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' });
+  const plain = engine.weightedPool(data, cfg, artifact('No Artifact')).total;
+  const barred = engine.weightedPool(data, cfg, diamond).total;
+  return barred < plain / 4;
+})());
+
+check('and that is what makes Premium Diamond the card for a unique', (() => {
+  const cfg = baseCfg({ type: 'ARMOR', dust: 'Green', item: 'Candy-Coated Armor', desired: 'Candy-Coated' });
+  const withCard = engine.evaluate(data, cfg, diamond).odds;
+  const without = engine.evaluate(data, cfg, artifact('No Artifact')).odds;
+  return withCard > without * 10;
+})(), (() => {
+  const cfg = baseCfg({ type: 'ARMOR', dust: 'Green', item: 'Candy-Coated Armor', desired: 'Candy-Coated' });
+  return `${engine.evaluate(data, cfg, diamond).odds.toFixed(4)}% against ${engine.evaluate(data, cfg, artifact('No Artifact')).odds.toFixed(4)}%`;
+})());
+
+check('the accepted-tier figure is a share of what survives, never more than all', (() => {
+  for (const mod of data.enchants) {
+    if (!mod.tags.has('TIERED') || !mod.distribution.length) continue;
+    for (const card of [diamond, gold, cog, plainCard]) {
+      const whole = engine.tierMultiplier(mod, card, new Set([1, 2, 3, 4]));
+      if (whole > 1.000001 || whole < 0) return false;
+      const some = engine.tierMultiplier(mod, card, new Set([4]));
+      if (some > whole + 1e-9) return false;
+    }
+  }
+  return true;
+})());
+
+check('a multiplier of zero survives parsing as zero', (() => {
+  // Number(x) || 1 turned "x0" into "x1", which is how a barred tier came back
+  // to life. Every artifact that bars a tier writes it as 0.
+  const rule = diamond.rules.find(r => [...r.keys].some(k => /^TIER[1-3]$/.test(k)));
+  return rule && rule.multiplier === 0;
+})());
+
+/* ------------------------------------------------------------------ *
  * 10. Multi-goal planner                                              *
  * ------------------------------------------------------------------ */
 section('10. Multi-goal planner');
