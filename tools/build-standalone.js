@@ -51,6 +51,7 @@ const sources = {
   overrideText: readText('Fame', 'availability-overrides.txt'),
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
+  realmTerrain: readText('Realm', 'realm-terrain.txt'),
 };
 
 /* ---------------------------------------------------------------- *
