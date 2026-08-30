@@ -52,6 +52,7 @@ const sources = {
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
   realmTerrain: readText('Realm', 'realm-terrain.txt'),
+  realmBeacons: readText('Realm', 'realm-beacons.txt'),
 };
 
 /* ---------------------------------------------------------------- *

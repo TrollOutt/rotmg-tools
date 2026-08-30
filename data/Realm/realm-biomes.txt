@@ -1,0 +1,45 @@
+## Which biome each colour of the realm map is.
+##
+## The one thing neither source can answer. The map says what colour a stretch
+## of ground is; the client says which creatures live in which biome; nothing
+## joins the two. This file is the join, and it is a player's reading of the
+## map rather than a fact read out of a file — so it says who said so and when,
+## the same way data/Fame/availability-overrides.txt does.
+##
+## colour|biome|when|who
+##
+## Named by the project's owner on 2026-08-30, from the annotated realm map.
+
+#434a52|Deep Sea Abyss|2026-08-30|owner
+#5b6945|Carboniferous|2026-08-30|owner
+#799831|Floral Escape|2026-08-30|owner
+#231843|Haunted Hallows|2026-08-30|owner
+#a0bde4|Runic Tundra|2026-08-30|owner
+#31051e|Sanguine Forest|2026-08-30|owner
+#d2c69f|Coral Reefs|2026-08-30|owner
+#704e1c|Dead Church|2026-08-30|owner
+#2c352f|Shipwreck Cove|2026-08-30|owner
+#87675b|Abandoned City|2026-08-30|owner
+#946e36|High Plains|2026-08-30|owner
+#300f10|Risen Hell|2026-08-30|owner
+#fdd5a2|Desert|2026-08-30|owner
+#3a421c|Mid Forest|2026-08-30|owner
+#373d5b|Undead Forest|2026-08-30|owner
+#235f24|Mid Plains|2026-08-30|owner
+#d1bc99|Beach|2026-08-30|owner
+#2d3a1b|High Forest|2026-08-30|owner
+#69a453|Abandoned City|2026-08-30|owner
+#aa9177|Abandoned City|2026-08-30|owner
+#795d63|Abandoned City|2026-08-30|owner
+#424b6d|Sprite Forest|2026-08-30|owner
+
+## Still unnamed, and drawn as plain ground until they are. Several are second
+## shades of a biome already named above — the map paints most regions in two
+## or three tones — but which belongs to which has not been said, and guessing
+## is what this file exists to stop.
+##
+##   #404a6d  #1f283d  #888a1d  #45455b  #b79679  #a88e7f  #2f0f17
+##   #60170f  #5f415b  #402662  #9e908f  #706f8d  #585759  #695754  #323242
+##
+## #757c72 is the road network and #375ca6 the sea ring; both are drawn as
+## themselves rather than as ground.

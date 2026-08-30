@@ -1,0 +1,50 @@
+## Where the beacons are, in cells of realm-terrain.txt.
+##
+## Written by tools/trace-realm-map.js. Do not edit by hand.
+##
+## Found as the marker squares drawn on the annotated map: red is rare on
+## it outside them, so a red clump is a marker. All 39 came out the
+## same size (15x15 pixels), which is the check that these are markers
+## and not something red in the scenery.
+##
+## col|row
+
+113|8
+121|30
+191|32
+98|47
+76|58
+137|61
+110|69
+33|82
+189|87
+92|98
+31|106
+167|108
+101|118
+120|118
+17|118
+224|127
+143|130
+106|135
+73|136
+202|137
+40|139
+163|153
+220|159
+240|160
+80|161
+198|163
+176|176
+150|179
+127|179
+58|185
+107|186
+151|198
+195|200
+111|202
+70|204
+222|208
+192|216
+108|219
+84|221
