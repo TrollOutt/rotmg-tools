@@ -60,13 +60,16 @@ var FamePage = (function () {
    * window with every dungeon showing — the grid scrolls as it used to, which
    * is better than tiles too small to read.
    */
-  const TILE_MAX = 104;
+  const TILE_MAX = 132;
   const TILE_MIN = 54;
   function fitGrid() {
     const grid = $('fameGrid');
     if (!grid.firstElementChild) return;
-    const room = parseFloat(getComputedStyle(grid).maxHeight);
-    if (!room) return;                            // no ceiling: nothing to fit into
+    // On a wide screen the grid is given the height left in its column, and
+    // clientHeight is that height whatever is in it. Where it is capped
+    // instead — a short window, a narrow one — the cap is the room there is.
+    const room = Math.max(grid.clientHeight, parseFloat(getComputedStyle(grid).maxHeight) || 0);
+    if (!room) return;
 
     // Measured with the overflow off, for browsers that do not reserve the
     // scrollbar gutter: a bar that comes and goes narrows the box, and the
@@ -404,13 +407,10 @@ var FamePage = (function () {
       return `
         <button type="button" class="fame-tile${on ? ' is-done' : ''}${needed ? ' is-wanted' : ''}${
           dimmed ? ' is-dim' : ''}" data-dungeon="${html(dungeon.name)}" style="--i:${index}"
-          aria-pressed="${on}" title="${html(dungeon.name)}">
+          aria-pressed="${on}" title="${html(dungeon.name)} — ${
+            count(EnchantFame.firstCompletion(dungeon))} fame the first time${difficultyOf(dungeon.name)
+            ? `, rated ${difficultyOf(dungeon.name)} out of 10` : ''}">
           ${tile(dungeon.name, 'fame-tile-art')}
-          <span class="fame-tile-name">${html(dungeon.name)}</span>
-          <span class="fame-tile-fame">+${count(EnchantFame.firstCompletion(dungeon))}</span>
-          ${difficultyOf(dungeon.name)
-            ? `<span class="fame-tile-diff" title="The game rates this dungeon ${difficultyOf(dungeon.name)} out of 10">${difficultyOf(dungeon.name)}</span>`
-            : ''}
           <span class="fame-tile-check">✓</span>
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>', signature);

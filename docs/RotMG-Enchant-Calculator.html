@@ -1175,27 +1175,29 @@ table.mini td { padding: 3px 8px; border: 0; }
   font: inherit; color: var(--text); cursor: pointer; text-align: center;
   background: rgba(19, 18, 27, .6); border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: calc(var(--tile, 104px) * .087) 6px calc(var(--tile, 104px) * .067);
+  padding: calc(var(--tile, 104px) * .07);
   /* Picking a collection moves the highlight across a grid that stays put, so
      the glow arrives and leaves rather than being redrawn. */
   transition: border-color .26s ease, box-shadow .26s ease, background .26s ease,
               opacity .26s ease, filter .26s ease;
 }
 .fame-tile:hover { border-color: var(--accent); background: rgba(38, 34, 51, .8); }
+/*
+ * The portal, and nothing else.
+ *
+ * The name and the fame were both printed here once, and both had to go: the
+ * name made every tile as tall as its longest word could wrap — "Cave of A
+ * Thousand Treasures" over three lines — so rows grew as fast as tiles shrank
+ * and the grid could never be made to fit. What is left is the thing a player
+ * actually recognises, at nearly the full width of its tile. The name, the
+ * fame and the rating are all on the tile's title, and the search box still
+ * takes a name.
+ */
 .fame-tile-art {
-  width: calc(var(--tile, 104px) * .385); height: calc(var(--tile, 104px) * .385);
+  width: calc(var(--tile, 104px) * .76); height: calc(var(--tile, 104px) * .76);
   object-fit: contain; image-rendering: pixelated;
 }
 .fame-tile-art.no-art { background: rgba(255, 255, 255, .05); border-radius: 6px; }
-/* Floors, so a grid squeezed hard stays readable rather than becoming a
-   pattern of coloured squares. */
-.fame-tile-name {
-  font-size: max(9px, calc(var(--tile, 104px) * .111)); line-height: 1.2; color: var(--muted);
-}
-.fame-tile-fame {
-  font-size: max(8.5px, calc(var(--tile, 104px) * .106));
-  color: var(--dim); font-variant-numeric: tabular-nums;
-}
 /* Always in the markup, shown only when it is true: a tick that is added to
    the page cannot fade in, and this one is on a tile that is not rebuilt. */
 .fame-tile-check {
@@ -1212,7 +1214,6 @@ table.mini td { padding: 3px 8px; border: 0; }
   border-color: var(--locked); box-shadow: 0 0 0 1px var(--locked) inset;
   background: var(--locked-soft);
 }
-.fame-tile.is-wanted .fame-tile-name { color: var(--text); }
 .fame-tile.is-dim { opacity: .3; }
 .fame-tile.is-dim:hover { opacity: .75; }
 
@@ -1283,12 +1284,6 @@ table.mini td { padding: 3px 8px; border: 0; }
 .fame-tally .is-total th { border-top: 2px solid var(--line); padding-top: 6px; }
 
 /* The game's own difficulty rating, in the corner of the portal. */
-.fame-tile-diff {
-  position: absolute; top: 4px; left: 6px; font-size: 10px; line-height: 1;
-  padding: 2px 4px; border-radius: 4px; color: var(--dim);
-  background: rgba(0, 0, 0, .45); font-variant-numeric: tabular-nums;
-}
-.fame-tile.is-wanted .fame-tile-diff { color: var(--locked); }
 
 /* ------------------------------------------------------------------ *
  * The controls you are meant to notice                                *
@@ -1357,6 +1352,27 @@ table.mini td { padding: 3px 8px; border: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ambience-dom img { animation: none; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Fame Sweep, on a screen with room to spare                          *
+ * ------------------------------------------------------------------ *
+ * The dungeon grid takes whatever height is left in its column rather
+ * than stopping at a fixed fraction of the window and leaving the
+ * bottom of the screen empty. fitGrid() then makes the tiles as large
+ * as that space allows, so a tall window shows bigger dungeons rather
+ * than the same ones with a gap underneath.
+ *
+ * And the sum drops to the floor of its own column, which is where a
+ * sum belongs and uses the space the two cards above it do not want.
+ */
+@media (min-width: 1041px) and (min-height: 700px) {
+  #pageFame .column.results { overflow: hidden; }
+  #pageFame .column.results > .card {
+    flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+  }
+  #pageFame .fame-grid { flex: 1 1 auto; min-height: 0; max-height: none; }
+  #pageFame .column.config > .fame-tally { margin-top: auto; }
 }
 
 /* ---------------- things arriving ---------------- *
@@ -3314,13 +3330,16 @@ var FamePage = (function () {
    * window with every dungeon showing — the grid scrolls as it used to, which
    * is better than tiles too small to read.
    */
-  const TILE_MAX = 104;
+  const TILE_MAX = 132;
   const TILE_MIN = 54;
   function fitGrid() {
     const grid = $('fameGrid');
     if (!grid.firstElementChild) return;
-    const room = parseFloat(getComputedStyle(grid).maxHeight);
-    if (!room) return;                            // no ceiling: nothing to fit into
+    // On a wide screen the grid is given the height left in its column, and
+    // clientHeight is that height whatever is in it. Where it is capped
+    // instead — a short window, a narrow one — the cap is the room there is.
+    const room = Math.max(grid.clientHeight, parseFloat(getComputedStyle(grid).maxHeight) || 0);
+    if (!room) return;
 
     // Measured with the overflow off, for browsers that do not reserve the
     // scrollbar gutter: a bar that comes and goes narrows the box, and the
@@ -3658,13 +3677,10 @@ var FamePage = (function () {
       return `
         <button type="button" class="fame-tile${on ? ' is-done' : ''}${needed ? ' is-wanted' : ''}${
           dimmed ? ' is-dim' : ''}" data-dungeon="${html(dungeon.name)}" style="--i:${index}"
-          aria-pressed="${on}" title="${html(dungeon.name)}">
+          aria-pressed="${on}" title="${html(dungeon.name)} — ${
+            count(EnchantFame.firstCompletion(dungeon))} fame the first time${difficultyOf(dungeon.name)
+            ? `, rated ${difficultyOf(dungeon.name)} out of 10` : ''}">
           ${tile(dungeon.name, 'fame-tile-art')}
-          <span class="fame-tile-name">${html(dungeon.name)}</span>
-          <span class="fame-tile-fame">+${count(EnchantFame.firstCompletion(dungeon))}</span>
-          ${difficultyOf(dungeon.name)
-            ? `<span class="fame-tile-diff" title="The game rates this dungeon ${difficultyOf(dungeon.name)} out of 10">${difficultyOf(dungeon.name)}</span>`
-            : ''}
           <span class="fame-tile-check">✓</span>
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>', signature);
