@@ -1074,21 +1074,48 @@ table.mini td { padding: 3px 8px; border: 0; }
    lit. Neither: dimmed, so the ones to go for are the only bright thing. */
 .fame-tile.is-done { opacity: .42; filter: grayscale(1); }
 .fame-tile.is-done:hover { opacity: .7; filter: grayscale(.4); }
-.fame-tile.is-wanted { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: rgba(90, 120, 255, .1); }
+.fame-tile.is-wanted {
+  border-color: var(--locked); box-shadow: 0 0 0 1px var(--locked) inset;
+  background: var(--locked-soft);
+}
+.fame-tile.is-wanted .fame-tile-name { color: var(--text); }
 .fame-tile.is-dim { opacity: .3; }
 .fame-tile.is-dim:hover { opacity: .75; }
 
-.fame-collections { display: grid; gap: 6px; }
-.fame-collection {
-  display: grid; gap: 4px; width: 100%; text-align: left; font: inherit; cursor: pointer;
-  color: var(--text); background: rgba(19, 18, 27, .5);
-  border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px;
+.fame-collections { display: grid; gap: 2px; }
+
+/*
+ * One line per collection. The progress is the row's own background, filled
+ * from the left, which is the game's own way of showing a bar and costs no
+ * height at all — thirteen of them now sit in what four used to take.
+ */
+.fame-coll {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline;
+  width: 100%; text-align: left; font: inherit; font-size: 12.5px; cursor: pointer;
+  color: var(--muted); padding: 5px 9px; border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(to right, rgba(121, 197, 232, .16) var(--fill, 0%), transparent var(--fill, 0%)),
+    rgba(19, 18, 27, .55);
 }
-.fame-collection:hover { border-color: var(--accent); }
-.fame-collection.is-focus { border-color: var(--accent); background: rgba(90, 120, 255, .12); }
-.fame-collection.is-done { opacity: .55; }
-.fame-collection-head, .fame-collection-foot { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-.fame-collection-worth { font-size: 12px; color: var(--muted); }
+.fame-coll:hover { color: var(--text); border-color: var(--line); }
+.fame-coll-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fame-coll-worth { color: var(--divine); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+.fame-coll-left {
+  min-width: 22px; text-align: right; color: var(--dim);
+  font-variant-numeric: tabular-nums; font-size: 11.5px;
+}
+
+/* Picked: the gold the game uses for what you are holding on to. */
+.fame-coll.is-focus {
+  color: var(--text); border-color: var(--locked);
+  background:
+    linear-gradient(to right, var(--locked-soft) var(--fill, 0%), transparent var(--fill, 0%)),
+    rgba(38, 34, 51, .8);
+}
+.fame-coll.is-focus .fame-coll-name { font-weight: 600; }
+.fame-coll.is-done { opacity: .45; }
+.fame-coll.is-done .fame-coll-left { color: var(--wanted); }
 
 .fame-next-row { grid-template-columns: auto 1fr auto; align-items: center; }
 .fame-next-icon { width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; }

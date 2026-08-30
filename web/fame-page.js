@@ -81,22 +81,23 @@ var FamePage = (function () {
       if (a.done !== b.done) return a.done ? 1 : -1;
       return a.missing.length - b.missing.length || b.value - a.value;
     });
-    $('fameCollections').innerHTML = rows.map(entry => `
-      <button type="button" class="fame-collection${entry.done ? ' is-done' : ''}${
+    // One line each. The progress is the row itself, filled from the left,
+    // so thirteen collections fit in the space four used to take.
+    $('fameCollections').innerHTML = rows.map(entry => {
+      const pct = Math.round(entry.have / entry.wanted.length * 100);
+      return `
+      <button type="button" class="fame-coll${entry.done ? ' is-done' : ''}${
         state.focus === entry.id ? ' is-focus' : ''}" data-collection="${html(entry.id)}"
-        aria-pressed="${state.focus === entry.id}">
-        <span class="fame-collection-head">
-          <b>${html(entry.name)}</b>
-          <span class="fame-collection-worth">${
-            view.base ? count(entry.value) : `${count(entry.absolute)} + ${entry.relative}%`}</span>
-        </span>
-        <span class="fame-bar"><span style="width:${Math.round(entry.have / entry.wanted.length * 100)}%"></span></span>
-        <span class="fame-collection-foot">
-          <small>${entry.have}/${entry.wanted.length}</small>
-          ${entry.done ? '<small class="fame-got">done</small>'
-            : `<small class="fame-missing">${entry.missing.length} left</small>`}
-        </span>
-      </button>`).join('');
+        aria-pressed="${state.focus === entry.id}"
+        style="--fill:${pct}%"
+        title="${html(entry.name)} — ${entry.have} of ${entry.wanted.length} done, worth ${
+          count(entry.absolute)} plus ${entry.relative}% of your base fame">
+        <span class="fame-coll-name">${html(entry.name)}</span>
+        <span class="fame-coll-worth">${
+          view.base ? count(entry.value) : `${count(entry.absolute)}+${entry.relative}%`}</span>
+        <span class="fame-coll-left">${entry.done ? '✓' : entry.missing.length}</span>
+      </button>`;
+    }).join('');
   }
 
   function renderNext(view) {
