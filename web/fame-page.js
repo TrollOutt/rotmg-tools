@@ -163,33 +163,44 @@ var FamePage = (function () {
    * The collections, one of which you can be going for                *
    * ---------------------------------------------------------------- */
   function renderCollections(view) {
-    const rows = view.collections
-      .filter(entry => !entry.seasonal || state.avail.has('seasonal'))
-      .sort((a, b) => {
-      if (a.done !== b.done) return a.done ? 1 : -1;
-      return a.missing.length - b.missing.length || b.value - a.value;
-    });
+    const rows = view.collections.filter(entry => !entry.seasonal || state.avail.has('seasonal'));
+
     /*
-     * The same treatment as the grid: picking a collection moves a highlight,
-     * it does not make a new list. Clicking three of them in a row should feel
-     * like ticking three boxes, not like the panel reloading three times, so
-     * the list is rebuilt only when its order changes — a collection finished,
-     * or seasonal ones brought into view.
+     * This list holds still. Nothing you do on this page rebuilds it.
+     *
+     * It is keyed on which collections are in it, not on the order they are
+     * in, so ticking a dungeon — which changes how many each one is missing,
+     * and would otherwise re-sort the whole column under the cursor — only
+     * moves the numbers and the bars on the rows already there. The order is
+     * decided once, when the list is built: on the first paint, and again
+     * only when the set changes, which is the seasonal or event chips.
+     *
+     * A collection finished mid-session therefore stays where it is rather
+     * than dropping to the bottom. It greys out and takes a tick, which says
+     * the same thing without moving anything you were about to click.
      */
-    const signature = rows.map(entry => entry.id).join('|');
+    const signature = rows.map(entry => entry.id).sort().join('|');
     const list = $('fameCollections');
     if (rows.length && alreadyShowing('fameCollections', signature)) {
-      rows.forEach((entry, index) => {
-        const row = list.children[index];
-        if (!row || row.dataset.collection !== entry.id) return;
+      const byId = new Map(rows.map(entry => [entry.id, entry]));
+      for (const row of list.children) {
+        const entry = byId.get(row.dataset.collection);
+        if (!entry) continue;
         row.classList.toggle('is-done', entry.done);
         row.classList.toggle('is-focus', state.focus.has(entry.id));
         row.setAttribute('aria-pressed', String(state.focus.has(entry.id)));
         row.style.setProperty('--fill', Math.round(entry.have / entry.wanted.length * 100) + '%');
         row.lastElementChild.textContent = entry.done ? '✓' : entry.missing.length;
-      });
+      }
       return;
     }
+
+    // Sorted only here, where the list is actually being built: what is
+    // nearly finished first, what is finished last.
+    rows.sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return a.missing.length - b.missing.length || b.value - a.value;
+    });
 
     // One line each. The progress is the row itself, filled from the left,
     // so thirteen collections fit in the space four used to take.
