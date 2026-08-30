@@ -290,7 +290,19 @@ var FamePage = (function () {
   }
 
   function renderNext(view) {
-    const best = EnchantFame.nextBest(state.data, state.done, state.base, 4, state.avail, state.skipped);
+    /*
+     * No goal, no advice.
+     *
+     * This panel answers "of the collections I picked, which run gets me the
+     * furthest", and with nothing picked there is no question to answer. The
+     * card goes away rather than standing there full of suggestions about a
+     * goal the player has not set.
+     */
+    const card = $('fameNextCard');
+    const best = EnchantFame.nextBest(state.data, state.done, state.base, 4,
+      state.avail, state.skipped, state.focus);
+    card.hidden = !state.focus.size;
+    if (card.hidden) return;
 
     /*
      * The ones set aside. A dungeon nobody intends to run is worse than
@@ -304,8 +316,8 @@ var FamePage = (function () {
 
     if (!best.length) {
       paint('fameNext', `<p class="note">${state.skipped.size
-        ? 'Nothing left that you have not set aside.'
-        : 'Every dungeon is ticked. There is nothing left to sweep.'}</p>${aside}`,
+        ? 'Nothing left in these that you have not set aside.'
+        : 'Everything these collections want is ticked.'}</p>${aside}`,
       'none' + state.skipped.size);
       return;
     }
@@ -330,8 +342,7 @@ var FamePage = (function () {
           <span class="fame-next-gain">${count(entry.first)}<small>fame</small></span>
           <small class="fame-next-why">${entry.unlocks.length
             ? `finishes ${names(entry.unlocks)}`
-            : entry.towards.length ? `counts towards ${names(entry.towards)}`
-            : 'in no collection'}</small>
+            : `ticks ${entry.ticks === 1 ? 'a box in' : `${entry.ticks} boxes:`} ${names(entry.towards)}`}</small>
         </button>
         <button type="button" class="fame-next-skip" data-skip="${html(entry.name)}"
           title="Not this one — take it off the list" aria-label="Take ${html(entry.name)} off the list">✕</button>

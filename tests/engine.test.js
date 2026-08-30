@@ -1183,32 +1183,56 @@ check('what is earned and what is left always add up to everything', (() => {
   return true;
 })());
 
-check('the last dungeon of a collection comes first and carries it', (() => {
-  // Its reward is its own completion plus the whole of Tunnel Rat, and a
-  // share of every other collection it is still outstanding from — so at
-  // least the collection, and more.
-  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
-  const done = tr.needs.map(need => need.what);
-  const last = done.pop();
-  const top = fameLib.nextBest(fame, done, 12000, 5)[0];
-  return top.name === last
-    && top.unlocks.some(entry => entry.name === 'Tunnel Rat')
-    && top.gain >= top.first + 3000 + 12000 * 0.075;
-})(), (() => {
-  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
-  const done = tr.needs.map(need => need.what);
-  done.pop();
-  const top = fameLib.nextBest(fame, done, 12000, 1)[0];
-  return `${top.name}, ${Math.round(top.gain)} fame`;
+/*
+ * What to do next, given what you said you were going for.
+ *
+ * The question is not "what is the best use of an evening" — that would rank
+ * an easy dungeon in no collection above a hard one that finishes a set. It
+ * is "of the collections I picked, which single run gets me the furthest",
+ * so a dungeon three of them want beats one that only one of them wants.
+ */
+const collectionId = name => fame.collections.find(entry => entry.name === name).id;
+const picking = (...names) => new Set(names.map(collectionId));
+const ALL_YEAR = new Set(['standard']);
+
+check('nothing picked, nothing suggested', (() => {
+  // No goal, no question to answer. The page puts the panel away.
+  return fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR, null, new Set()).length === 0
+    && fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR).length === 0;
 })());
 
-check('and otherwise the best value for the effort leads', (() => {
-  // Nothing done: Pirate Cave is five minutes and advances four collections,
-  // which beats anything that pays more but takes an evening.
-  const best = fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']));
-  return best[0].name === 'Pirate Cave' && best[0].value > best[1].value;
-})(), fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))
-  .map(entry => `${entry.name} ${Math.round(entry.value)}x`).join(', '));
+check('and nothing outside the picked collections is ever offered', (() => {
+  const tunnelRat = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  const members = new Set(tunnelRat.needs.map(need => need.what));
+  const best = fameLib.nextBest(fame, [], 12000, 6, ALL_YEAR, null, picking('Tunnel Rat'));
+  return best.length > 0 && best.every(entry => members.has(entry.name));
+})(), fameLib.nextBest(fame, [], 12000, 6, ALL_YEAR, null, picking('Tunnel Rat'))
+  .map(entry => entry.name).join(', '));
+
+check('a dungeon that ticks two boxes beats one that ticks a cheaper one', (() => {
+  // Pirate Cave is in both Tunnel Rat and First Steps; Forest Maze is in
+  // First Steps alone and costs exactly the same two fame. Two boxes wins,
+  // and among equals the shorter evening does.
+  const best = fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR, null,
+    picking('Tunnel Rat', 'First Steps', 'Epic Battles'));
+  const cave = best.find(entry => entry.name === 'Pirate Cave');
+  const maze = best.find(entry => entry.name === 'Forest Maze');
+  return best[0].name === 'Pirate Cave' && cave.ticks === 2
+    && maze.ticks === 1 && best.indexOf(cave) < best.indexOf(maze)
+    && best[0].first <= best[1].first;
+})(), fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR, null,
+  picking('Tunnel Rat', 'First Steps', 'Epic Battles'))
+  .map(entry => `${entry.name} ${entry.ticks}x`).join(', '));
+
+check('and the last dungeon of a collection comes first whatever it costs', (() => {
+  // Wine Cellar is 200 fame against Pirate Cave's 2, and it is the twelfth of
+  // Tunnel Rat: the whole collection lands the moment you walk out.
+  const tunnelRat = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  const done = tunnelRat.needs.slice(0, 11).map(need => need.what);
+  const top = fameLib.nextBest(fame, done, 12000, 5, ALL_YEAR, null, picking('Tunnel Rat'))[0];
+  return top.name === tunnelRat.needs[11].what
+    && top.unlocks.some(entry => entry.name === 'Tunnel Rat');
+})());
 
 check('the client says which dungeons are in the realm all year', (() => {
   const kinds = new Map();
@@ -1282,35 +1306,41 @@ check('a higher base fame makes the percentages matter more', (() => {
 
 
 /*
- * The fame shown against a suggestion is the fame the game pays.
- *
- * "gain" is what orders the list: a dungeon's own first completion plus a
- * share of the collections it would move along. That share is a claim on
- * prizes not yet won, and printing it against Pirate Cave — 636 — read as a
- * promise the dungeon does not keep. Pirate Cave pays 2.
+ * The fame shown against a suggestion is the fame the game pays: the Scout
+ * bonus, the one number handed over on the way out. Pirate Cave pays 2. What
+ * earns it its place is said in words instead — how many of your collections
+ * it moves — because that is a claim on prizes not yet won.
  */
-check('the suggestion carries the dungeon own first completion, not its score', (() => {
-  for (const entry of fameLib.nextBest(fame, [], 12000, 8, new Set(['standard']))) {
+check('the suggestion carries the dungeon own first completion', (() => {
+  const best = fameLib.nextBest(fame, [], 12000, 8, ALL_YEAR, null,
+    picking('Tunnel Rat', 'First Steps'));
+  if (!best.length) return false;
+  for (const entry of best) {
     if (entry.first !== fameLib.firstCompletion(fame.byName.get(entry.name))) return false;
-    if (entry.gain < entry.first) return false;     // the score includes it
   }
-  const cave = fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))[0];
-  return cave.name === 'Pirate Cave' && cave.first === 2 && Math.round(cave.gain) > 2;
-})(), (() => {
-  const cave = fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))[0];
-  return `${cave.name} pays ${cave.first}, scores ${Math.round(cave.gain)}`;
+  return best[0].name === 'Pirate Cave' && best[0].first === 2;
+})(), fameLib.nextBest(fame, [], 12000, 3, ALL_YEAR, null, picking('Tunnel Rat', 'First Steps'))
+  .map(entry => `${entry.name} pays ${entry.first}`).join(', '));
+
+check('and a collection it finishes is not also one it moves along', (() => {
+  const tunnelRat = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  const done = tunnelRat.needs.slice(0, 11).map(need => need.what);
+  const last = fameLib.nextBest(fame, done, 12000, 1, ALL_YEAR, null, picking('Tunnel Rat'))[0];
+  if (!last.unlocks.some(entry => entry.name === 'Tunnel Rat')) return false;
+  if (last.towards.some(entry => entry.name === 'Tunnel Rat')) return false;
+  // ticks counts each collection once, however it is counted.
+  return last.ticks === last.unlocks.length + last.towards.length;
 })());
 
-check('and every collection it would move is named, finished ones aside', (() => {
-  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
-  const done = tr.needs.slice(0, 11).map(need => need.what);
-  const last = fameLib.nextBest(fame, done, 12000, 1)[0];
-  // The twelfth finishes Tunnel Rat, so it is an unlock rather than a step
-  // towards one, and it must not be counted as both.
-  if (!last.unlocks.some(entry => entry.name === 'Tunnel Rat')) return false;
-  return !last.towards.some(entry => entry.name === 'Tunnel Rat')
-    && fameLib.nextBest(fame, [], 12000, 5).every(entry =>
-      entry.towards.every(collection => !collection.done));
+check('a collection already finished is not suggested towards', (() => {
+  // Every dungeon of First Steps done, and it picked as a goal: it has
+  // nothing left to want, so it contributes nothing to anybody's count.
+  const firstSteps = fame.collections.find(entry => entry.name === 'First Steps');
+  const done = firstSteps.needs.map(need => need.what);
+  const best = fameLib.nextBest(fame, done, 12000, 5, ALL_YEAR, null,
+    picking('First Steps', 'Tunnel Rat'));
+  return best.every(entry => entry.towards.every(collection => collection.name !== 'First Steps')
+    && entry.unlocks.every(collection => collection.name !== 'First Steps'));
 })());
 
 /*
@@ -1320,9 +1350,10 @@ check('and every collection it would move is named, finished ones aside', (() =>
  * earned, no collection moves, and the dungeon behind it comes forward.
  */
 check('a dungeon set aside leaves the list without paying anything', (() => {
-  const plain = fameLib.nextBest(fame, [], 12000, 4, new Set(['standard']));
-  const skipped = fameLib.nextBest(fame, [], 12000, 4, new Set(['standard']),
-    new Set([plain[0].name]));
+  const goal = picking('Tunnel Rat', 'First Steps', 'Epic Battles');
+  const plain = fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR, null, goal);
+  const skipped = fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR,
+    new Set([plain[0].name]), goal);
   if (skipped.some(entry => entry.name === plain[0].name)) return false;
   if (skipped.length !== plain.length) return false;
   // Everything simply moves up a place.
@@ -1331,7 +1362,8 @@ check('a dungeon set aside leaves the list without paying anything', (() => {
   const before = fameLib.summarise(fame, [], 12000);
   return fameLib.summarise(fame, [], 12000).total === before.total;
 })(), (() => {
-  const plain = fameLib.nextBest(fame, [], 12000, 4, new Set(['standard']));
+  const plain = fameLib.nextBest(fame, [], 12000, 4, ALL_YEAR, null,
+    picking('Tunnel Rat', 'First Steps', 'Epic Battles'));
   return `set aside ${plain[0].name}, ${plain[1].name} comes forward`;
 })());
 

@@ -230,64 +230,70 @@ var EnchantFame = (function () {
   }
 
   /*
-   * The dungeons worth doing next, best value for the effort first.
+   * The dungeons to do next, for the collections you picked.
    *
-   * Reward is what one completion actually brings: the dungeon's own first
-   * completion, plus a fair share of every unfinished collection it counts
-   * towards — the whole collection if it is the last one missing, a twelfth
-   * of it if eleven others are also outstanding.
+   * This answers one question and not another. Not "what is the best use of
+   * an evening in the realm" — that is a different tool and it would rank an
+   * easy dungeon in no collection above a hard one that finishes a set. It
+   * is "of the things I have said I want, which single run gets me the
+   * furthest", so a dungeon that appears in three of the collections you
+   * picked beats one that appears in a single one, however cheap.
    *
-   * Effort is the fame the game itself pays for a first completion, which is
-   * its own ranking of how hard a dungeon is: 2 for Pirate Cave, 500 for
-   * Oryx's Sanctuary. Dividing one by the other answers the question a
-   * player actually asks — not "what pays most", which is always the hardest
-   * thing on the list, but "what pays most for the trouble".
+   * Nothing outside the picked collections is offered at all. A dungeon that
+   * none of them wants is not an answer to this question, whatever it pays.
+   * And with nothing picked there is no question: the list is empty, and the
+   * page puts the panel away rather than filling it with advice about a goal
+   * the player has not set.
+   *
+   * Order: whatever finishes a collection first, because the last dungeon of
+   * a set is worth the whole set the moment you walk out. Then the number of
+   * picked collections a run moves along. Then the cheapest, the game's own
+   * first-completion fame standing in for how hard it is — two dungeons that
+   * tick the same boxes are separated by which is the shorter evening.
    *
    * "skip" is the dungeons a player has said they are not doing. They are not
    * ticked — refusing one earns nothing — they are simply not offered, and
    * everything behind them moves up.
-   *
-   * "gain" orders the list and is not worth showing: it is a share of prizes
-   * not yet won, and printing 636 next to Pirate Cave reads as a promise the
-   * dungeon does not keep. "first" is the fame the game actually pays for
-   * walking out of it the first time, which is 2.
    */
-  function nextBest(data, done, baseFame, limit, allow, skip) {
+  function nextBest(data, done, baseFame, limit, allow, skip, focus) {
+    const picked = focus instanceof Set ? focus : new Set(focus || []);
+    if (!picked.size) return [];
+
     const ticked = done instanceof Set ? done : new Set(done || []);
     const state = summarise(data, ticked, baseFame);
-    const byId = new Map(state.collections.map(entry => [entry.id, entry]));
+    const byId = new Map(state.collections
+      .filter(entry => picked.has(entry.id) && !entry.done)
+      .map(entry => [entry.id, entry]));
+    if (!byId.size) return [];
 
     return data.dungeons
       .filter(dungeon => !ticked.has(dungeon.name))
       .filter(dungeon => !skip || !skip.has(dungeon.name))
       .filter(dungeon => !allow || allow.has(dungeon.availability))
       .map(dungeon => {
-        const first = firstCompletion(dungeon);
         const unlocks = [];
         const towards = [];
-        let gain = first;
         for (const id of dungeon.collections) {
           const collection = byId.get(id);
-          if (!collection || collection.done) continue;
-          gain += collection.value / collection.missing.length;
+          if (!collection) continue;
           if (collection.missing.length === 1) unlocks.push(collection);
           else towards.push(collection);
         }
-        // Effort of at least one, so a dungeon the game pays nothing for
-        // cannot divide by zero and float to the top.
-        const value = gain / Math.max(first, 1);
-        return { name: dungeon.name, gain, value, unlocks, towards, first, availability: dungeon.availability };
+        return {
+          name: dungeon.name,
+          first: firstCompletion(dungeon),
+          unlocks,
+          towards,
+          ticks: unlocks.length + towards.length,
+          availability: dungeon.availability
+        };
       })
-      /*
-       * Value for effort orders the list, with one exception: a dungeon that
-       * finishes a collection goes first whatever its ratio. Finishing one
-       * pays a lump sum the moment you walk out, and by the ratio alone it is
-       * beaten by any five-minute dungeon that merely inches four collections
-       * forward — which is true per unit of effort and useless as advice.
-       */
+      .filter(entry => entry.ticks > 0)
       .sort((a, b) => (b.unlocks.length ? 1 : 0) - (a.unlocks.length ? 1 : 0)
-        || (a.unlocks.length ? b.gain - a.gain : b.value - a.value)
-        || b.gain - a.gain || a.name.localeCompare(b.name))
+        || b.unlocks.length - a.unlocks.length
+        || b.ticks - a.ticks
+        || a.first - b.first
+        || a.name.localeCompare(b.name))
       .slice(0, limit || 5);
   }
 
