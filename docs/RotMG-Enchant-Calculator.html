@@ -4009,10 +4009,17 @@ var RealmMap = (function () {
    * among it do the ordinary monsters of a biome appear. The client sorts
    * them into exactly these three, so the ladder is its own, not invented.
    */
+  /*
+   * "screen" is how big a creature is drawn on the glass, not on the map. A
+   * portrait that scaled with the terrain was a speck from any height worth
+   * looking at the realm from — so instead it holds its size as you pull
+   * back, which is to say it grows against the ground it stands on, and
+   * settles into scale as you come down to it.
+   */
   const TIERS = [
-    { key: 'encounters', from: 0.5, world: 15, cap: 3 },
-    { key: 'heroes', from: 1.7, world: 11, cap: 3 },
-    { key: 'regular', from: 3.4, world: 8, cap: 6 }
+    { key: 'encounters', from: 0.5, screen: 34, cap: 3 },
+    { key: 'heroes', from: 1.7, screen: 26, cap: 3 },
+    { key: 'regular', from: 3.4, screen: 19, cap: 6 }
   ];
 
   const html = value => String(value || '').replace(/[&<>"']/g, char =>
@@ -4492,7 +4499,9 @@ var RealmMap = (function () {
         const x = being.x + Math.sin(time / being.period + being.phase) * being.drift;
         const y = being.y + Math.cos(time / (being.period * 1.28) + being.phase) * being.drift * 0.7;
         const spot = screenPoint(x, y);
-        const drawn = Math.max(13, Math.min(46, being.tier.world * scale));
+        // Held on the glass, easing towards the map's own scale only once
+        // you are close enough for that to still be legible.
+        const drawn = being.tier.screen * Math.max(0.85, Math.min(1.5, 1.5 - scale * 0.08));
         const image = picture(being.monster);
         ctx.globalAlpha = fade;
         if (image) {
