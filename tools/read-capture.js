@@ -93,20 +93,100 @@ function tcpOf(packet) {
 }
 
 /* ---------------- walk the framing ---------------- */
+const plausible = (stream, at) => {
+  if (at + 5 > stream.length) return 0;
+  const length = stream.readUInt32BE(at);
+  return (length >= 5 && length <= 262144 && at + length <= stream.length) ? length : 0;
+};
+
+/*
+ * Walk the framing, and pick it up again after a hole.
+ *
+ * A capture drops packets — a few per cent of a busy stream — and one missing
+ * segment breaks the chain for everything after it. Rather than stopping
+ * there, this scans forward for a byte that starts a length which chains
+ * three more times: one plausible length is a coincidence, four in a row is
+ * the frame boundary. What is skipped is counted and reported, because a
+ * reader that silently invents its own alignment is worse than one that stops.
+ */
 function frames(stream) {
   const found = [];
   let at = 0;
-  let broke = null;
+  let skipped = 0;
+  let resyncs = 0;
   while (at + 5 <= stream.length) {
-    const length = stream.readUInt32BE(at);
-    // A message is at least its own header and no bigger than the game has
-    // any reason to send.
-    if (length < 5 || length > 262144 || at + length > stream.length) { broke = at; break; }
-    found.push({ at, length, id: stream[at + 4] });
-    at += length;
+    const length = plausible(stream, at);
+    if (length) { found.push({ at, length, id: stream[at + 4] }); at += length; continue; }
+    let scan = at + 1;
+    let regained = -1;
+    while (scan + 5 <= stream.length) {
+      let probe = scan, chain = 0;
+      while (chain < 4) {
+        const next = plausible(stream, probe);
+        if (!next) break;
+        probe += next; chain++;
+      }
+      if (chain >= 4) { regained = scan; break; }
+      scan++;
+    }
+    if (regained < 0) { skipped += stream.length - at; break; }
+    skipped += regained - at;
+    resyncs++;
+    at = regained;
   }
-  return { found, broke, consumed: at };
+  return { found, skipped, resyncs, consumed: stream.length - skipped };
 }
+
+/* ---------------- shared with find-tile-packet.js ---------------- */
+function newest(dir) {
+  if (!fs.existsSync(dir)) return null;
+  const pcaps = fs.readdirSync(dir).filter(name => name.endsWith('.pcapng')).sort();
+  return pcaps.length ? path.join(dir, pcaps[pcaps.length - 1]) : null;
+}
+
+// Every connection direction in a capture, rebuilt and framed.
+function streamsOf(file, port) {
+  const packets = readPcapng(fs.readFileSync(file));
+  const grouped = new Map();
+  for (const packet of packets) {
+    const tcp = tcpOf(packet);
+    if (!tcp) continue;
+    if (tcp.sourcePort !== port && tcp.destinationPort !== port) continue;
+    const key = tcp.source + ':' + tcp.sourcePort + ' -> ' + tcp.destination + ':' + tcp.destinationPort;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(tcp);
+  }
+  const out = [];
+  for (const [name, list] of grouped) {
+    const base = list[0].sequence;
+    const offsetOf = tcp => {
+      let d = (tcp.sequence - base) >>> 0;
+      if (d > 0x80000000) d -= 0x100000000;
+      return d;
+    };
+    let low = 0, high = 0;
+    for (const tcp of list) {
+      const at = offsetOf(tcp);
+      if (at < low) low = at;
+      if (at + tcp.payload.length > high) high = at + tcp.payload.length;
+    }
+    const span = high - low;
+    if (span <= 0 || span > 512 * 1024 * 1024) continue;
+    const bytes = Buffer.alloc(span);
+    for (const tcp of list) tcp.payload.copy(bytes, offsetOf(tcp) - low);
+    out.push({
+      name, bytes,
+      fromPort: list[0].sourcePort,
+      toPort: list[0].destinationPort,
+      frames: frames(bytes).found
+    });
+  }
+  return out;
+}
+
+module.exports = { newest, streamsOf, readPcapng, tcpOf, frames };
+
+if (require.main !== module) return;
 
 /* ---------------- do it ---------------- */
 let file = process.argv[2];
@@ -130,8 +210,20 @@ console.log('\n  ' + path.relative(root, file) + '  ('
 const packets = readPcapng(fs.readFileSync(file));
 console.log('  ' + packets.length.toLocaleString('en-US') + ' packets');
 
-// One stream per direction, ordered by sequence number so retransmissions and
-// reordering do not corrupt the framing.
+/*
+ * One stream per connection and direction — not per direction alone.
+ *
+ * There can be more than one connection on this port at once, and merging them
+ * interleaves two unrelated byte streams, so the framing of the result is
+ * meaningless. That was this tool's first mistake.
+ *
+ * And a segment is placed at its sequence offset rather than appended in
+ * sorted order. TCP sequence numbers start at a random value and wrap at 2^32;
+ * sorting them puts a wrapped stream back to front. Placing each segment where
+ * it belongs relative to the lowest one seen is what actually rebuilds the
+ * stream — and it shows a missed packet as a hole rather than hiding it by
+ * closing the gap.
+ */
 const streams = new Map();
 let onPort = 0;
 for (const packet of packets) {
@@ -139,36 +231,60 @@ for (const packet of packets) {
   if (!tcp) continue;
   if (tcp.sourcePort !== PORT && tcp.destinationPort !== PORT) continue;
   onPort++;
-  const key = tcp.sourcePort === PORT ? 'server -> client' : 'client -> server';
+  const key = tcp.source + ':' + tcp.sourcePort + ' -> ' + tcp.destination + ':' + tcp.destinationPort;
   if (!streams.has(key)) streams.set(key, []);
   streams.get(key).push(tcp);
 }
-console.log('  ' + onPort.toLocaleString('en-US') + ' of them on TCP ' + PORT + '\n');
+console.log('  ' + onPort.toLocaleString('en-US') + ' of them on TCP ' + PORT);
+console.log('  ' + streams.size + ' connection direction' + (streams.size === 1 ? '' : 's') + '\n');
 
 if (!onPort) {
   console.log('  Nothing on the game port. Was the client connected while it ran?\n');
   process.exit(0);
 }
 
-for (const [name, list] of streams) {
-  list.sort((a, b) => a.sequence - b.sequence);
-  const seen = new Set();
-  const parts = [];
+// Biggest first: the stream carrying the world is the one worth reading.
+const ordered = [...streams].sort((a, b) =>
+  b[1].reduce((n, t) => n + t.payload.length, 0) - a[1].reduce((n, t) => n + t.payload.length, 0));
+
+let holes = 0;
+for (const [name, list] of ordered) {
+  // 32-bit sequence arithmetic, with a wrap treated as the short distance it
+  // is rather than a leap of four gigabytes.
+  const base = list[0].sequence;
+  const offsetOf = tcp => {
+    let d = (tcp.sequence - base) >>> 0;
+    if (d > 0x80000000) d -= 0x100000000;
+    return d;
+  };
+  let low = 0, high = 0;
   for (const tcp of list) {
-    if (seen.has(tcp.sequence)) continue;          // a retransmission
-    seen.add(tcp.sequence);
-    parts.push(tcp.payload);
+    const at = offsetOf(tcp);
+    if (at < low) low = at;
+    if (at + tcp.payload.length > high) high = at + tcp.payload.length;
   }
-  const stream = Buffer.concat(parts);
-  const { found, broke, consumed } = frames(stream);
+  const span = high - low;
+  if (span <= 0 || span > 512 * 1024 * 1024) continue;
+  const stream = Buffer.alloc(span);
+  const filled = new Uint8Array(span);
+  for (const tcp of list) {
+    const at = offsetOf(tcp) - low;
+    tcp.payload.copy(stream, at);
+    filled.fill(1, at, at + tcp.payload.length);
+  }
+  holes = 0;
+  for (let i = 0; i < span; i++) if (!filled[i]) holes++;
+  const parts = list;
+  const { found, skipped, resyncs, consumed } = frames(stream);
   const share = stream.length ? (100 * consumed / stream.length) : 0;
 
   console.log('  ' + name);
-  console.log('    ' + (stream.length / 1024).toFixed(0) + ' KB reassembled from '
-    + parts.length.toLocaleString('en-US') + ' segments');
+  console.log('    ' + (stream.length / 1024).toFixed(0) + ' KB from '
+    + parts.length.toLocaleString('en-US') + ' segments'
+    + (holes ? ', ' + (100 * holes / stream.length).toFixed(1) + '% never captured' : ', no gaps'));
   console.log('    ' + found.length.toLocaleString('en-US') + ' messages framed, '
     + share.toFixed(1) + '% of the stream'
-    + (broke === null ? '' : ' (framing broke at byte ' + broke + ')'));
+    + (resyncs ? ', picked up again ' + resyncs + ' time' + (resyncs === 1 ? '' : 's') : ''));
   if (found.length > 2) {
     const ids = new Map();
     for (const frame of found) ids.set(frame.id, (ids.get(frame.id) || 0) + 1);
@@ -178,10 +294,29 @@ for (const [name, list] of streams) {
     console.log('    message sizes: smallest ' + sizes[0]
       + ', median ' + sizes[Math.floor(sizes.length / 2)]
       + ', largest ' + sizes[sizes.length - 1]);
+
+    /*
+     * Framing cleanly is not the same as being readable, and that is the thing
+     * this tool learned the hard way: the length and the id travel in the
+     * clear, the body does not. Entropy tells them apart. Structured data —
+     * counts, coordinates, type numbers repeating — sits well under seven bits
+     * a byte. A cipher's output sits at eight and stays there.
+     */
+    const bodies = found.map(f => stream.subarray(f.at + 5, f.at + f.length)).filter(b => b.length > 32);
+    if (bodies.length) {
+      const sample = Buffer.concat(bodies.slice(0, 400));
+      const counts = new Array(256).fill(0);
+      for (const byte of sample) counts[byte]++;
+      let bits = 0;
+      for (const n of counts) { if (!n) continue; const p = n / sample.length; bits -= p * Math.log2(p); }
+      console.log('    body entropy: ' + bits.toFixed(2) + ' bits a byte — '
+        + (bits > 7.5 ? 'encrypted' : bits > 6 ? 'compressed, or packed very tight' : 'plain structured data'));
+    }
   }
   console.log('');
 }
 
-console.log('  A stream that frames cleanly for most of its length is plaintext,');
-console.log('  and the map can be read off it. One that breaks on the second');
-console.log('  message is encrypted, and this road is closed.\n');
+console.log('  The framing is in the clear: a stream that chains end to end is the');
+console.log('  game\'s, and the ids above are real. Whether anything can be read out');
+console.log('  of it is the entropy line — eight bits a byte is a cipher, and no');
+console.log('  amount of capturing gets past that.\n');
