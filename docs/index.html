@@ -1169,6 +1169,10 @@ table.mini td { padding: 3px 8px; border: 0; }
      that depends on the answer it is looking for. */
   overflow-y: auto; scrollbar-gutter: stable; padding-right: 2px;
   grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
+  /* Rows are as tall as a tile and no taller. Left to itself a grid with
+     spare height hands it to the rows, and seven event dungeons in a
+     full-height column became seven tiles the size of playing cards. */
+  align-content: start;
 }
 .fame-tile {
   position: relative; display: grid; justify-items: center; gap: 3px;
@@ -1368,8 +1372,10 @@ table.mini td { padding: 3px 8px; border: 0; }
  * as that space allows, so a tall window shows bigger dungeons rather
  * than the same ones with a gap underneath.
  *
- * And the sum drops to the floor of its own column, which is where a
- * sum belongs and uses the space the two cards above it do not want.
+ * The sum stays under "do this next" rather than being pushed to the
+ * floor: it is the third step of a column that reads downwards, and
+ * parking it at the bottom of the window separated it from the two
+ * cards it belongs to.
  */
 @media (min-width: 1041px) and (min-height: 700px) {
   #pageFame .column.results { overflow: hidden; }
@@ -1377,7 +1383,6 @@ table.mini td { padding: 3px 8px; border: 0; }
     flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
   }
   #pageFame .fame-grid { flex: 1 1 auto; min-height: 0; max-height: none; }
-  #pageFame .column.config > .fame-tally { margin-top: auto; }
 }
 
 /* ---------------- things arriving ---------------- *
@@ -3335,7 +3340,9 @@ var FamePage = (function () {
    * window with every dungeon showing — the grid scrolls as it used to, which
    * is better than tiles too small to read.
    */
-  const TILE_MAX = 132;
+  // The size these were drawn to be looked at. Filling every last pixel of a
+  // tall window is not worth a grid of tiles larger than that.
+  const TILE_MAX = 104;
   const TILE_MIN = 54;
   function fitGrid() {
     const grid = $('fameGrid');
@@ -3472,7 +3479,8 @@ var FamePage = (function () {
 
     const label = chosen.length === 1 ? chosen[0].name
       : chosen.length ? `the ${chosen.length} you picked`
-      : 'every collection left';
+      : aiming.length ? 'every collection left'
+      : 'a collection';
 
     // The sum runs again whenever a figure in it moves, which is the one
     // thing a running total is for.
@@ -3484,7 +3492,9 @@ var FamePage = (function () {
         `${count(view.earnedFlat)} flat${view.earnedPercent ? ` + ${view.earnedPercent}%` : ''}`)
       + row('Fame now', count(view.total), '', 'is-sum')
       + row(`Finishing ${label}`, count(goal),
-        wanted.size ? `${wanted.size} dungeons to go` : 'nothing left to do', 'is-gap')
+        wanted.size ? `${wanted.size} dungeons to go`
+        : aiming.length ? 'nothing left to do'
+        : 'none is in reach of what is showing', 'is-gap')
       + row('You would have', count(view.total + goal), '', 'is-total'),
       [view.base, view.earnedFame, view.total, label, goal, wanted.size].join('|'));
   }
@@ -3522,6 +3532,15 @@ var FamePage = (function () {
         row.style.setProperty('--fill', Math.round(entry.have / entry.wanted.length * 100) + '%');
         row.lastElementChild.textContent = entry.done ? '✓' : entry.missing.length;
       }
+      return;
+    }
+
+    if (!rows.length) {
+      // Every collection wants something that is not showing. Saying so beats
+      // an empty panel under an invitation to click one of them.
+      paint('fameCollections',
+        '<p class="note">No collection can be finished with only these dungeons showing.</p>',
+        signature);
       return;
     }
 

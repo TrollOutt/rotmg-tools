@@ -60,7 +60,9 @@ var FamePage = (function () {
    * window with every dungeon showing — the grid scrolls as it used to, which
    * is better than tiles too small to read.
    */
-  const TILE_MAX = 132;
+  // The size these were drawn to be looked at. Filling every last pixel of a
+  // tall window is not worth a grid of tiles larger than that.
+  const TILE_MAX = 104;
   const TILE_MIN = 54;
   function fitGrid() {
     const grid = $('fameGrid');
@@ -197,7 +199,8 @@ var FamePage = (function () {
 
     const label = chosen.length === 1 ? chosen[0].name
       : chosen.length ? `the ${chosen.length} you picked`
-      : 'every collection left';
+      : aiming.length ? 'every collection left'
+      : 'a collection';
 
     // The sum runs again whenever a figure in it moves, which is the one
     // thing a running total is for.
@@ -209,7 +212,9 @@ var FamePage = (function () {
         `${count(view.earnedFlat)} flat${view.earnedPercent ? ` + ${view.earnedPercent}%` : ''}`)
       + row('Fame now', count(view.total), '', 'is-sum')
       + row(`Finishing ${label}`, count(goal),
-        wanted.size ? `${wanted.size} dungeons to go` : 'nothing left to do', 'is-gap')
+        wanted.size ? `${wanted.size} dungeons to go`
+        : aiming.length ? 'nothing left to do'
+        : 'none is in reach of what is showing', 'is-gap')
       + row('You would have', count(view.total + goal), '', 'is-total'),
       [view.base, view.earnedFame, view.total, label, goal, wanted.size].join('|'));
   }
@@ -247,6 +252,15 @@ var FamePage = (function () {
         row.style.setProperty('--fill', Math.round(entry.have / entry.wanted.length * 100) + '%');
         row.lastElementChild.textContent = entry.done ? '✓' : entry.missing.length;
       }
+      return;
+    }
+
+    if (!rows.length) {
+      // Every collection wants something that is not showing. Saying so beats
+      // an empty panel under an invitation to click one of them.
+      paint('fameCollections',
+        '<p class="note">No collection can be finished with only these dungeons showing.</p>',
+        signature);
       return;
     }
 
