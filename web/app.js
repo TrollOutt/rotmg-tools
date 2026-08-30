@@ -2272,11 +2272,14 @@ async function openFamePage() {
       : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
     const info = bundled && bundled.dungeonText ? bundled.dungeonText
       : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
+    const overrides = bundled && bundled.overrideText ? bundled.overrideText
+      : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
+        .then(response => response.text()).catch(() => '');
     // The standalone build carries the portal pictures inlined; served from
     // the repository they are read from disk like every other sprite.
     // Kept so the background can scatter the same portals the page shows.
     ambience.fameText = text;
-    FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info);
+    FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides);
     usePool('fame');
   } catch (error) {
     console.error(error);

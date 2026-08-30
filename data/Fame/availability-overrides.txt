@@ -1,0 +1,37 @@
+## Dungeons the client still files under the wrong availability.
+##
+## The client tells us which dungeons are in the realm all year by way of two
+## of its own collections: "Hero of the Nexus" wants every standard dungeon and
+## "Season's Beatins" every seasonal one. That was true when those collections
+## were written and has drifted since — the alien and Neo alien dungeons, and
+## several others, are permanent content now, but the game never moved them out
+## of the seasonal list.
+##
+## This file is the correction, and it is the one place in the project where a
+## player's knowledge of the live game overrides the installed client. Each
+## line says who changed it and when, so a future reader can tell how stale it
+## has become.
+##
+## dungeon|standard, seasonal or event|when|why
+##
+## Reported by the project's owner on 2026-08-30, from the live game.
+
+Malogia|standard|2026-08-30|alien dungeons are permanent content now
+Untaris|standard|2026-08-30|alien dungeons are permanent content now
+Forax|standard|2026-08-30|alien dungeons are permanent content now
+Katalund|standard|2026-08-30|alien dungeons are permanent content now
+Neo Malogia|standard|2026-08-30|Neo alien dungeons are permanent content now
+Neo Untaris|standard|2026-08-30|Neo alien dungeons are permanent content now
+Neo Forax|standard|2026-08-30|Neo alien dungeons are permanent content now
+Neo Katalund|standard|2026-08-30|Neo alien dungeons are permanent content now
+Beachzone|standard|2026-08-30|no longer a seasonal dungeon
+The Machine|standard|2026-08-30|no longer a seasonal dungeon
+The Tavern|standard|2026-08-30|in the realm all year
+Moonlight Village|standard|2026-08-30|in the realm all year
+Heroic Undead Lair|standard|2026-08-30|in the realm all year
+Infernal Abyss of Demons|standard|2026-08-30|in the realm all year
+
+## Checked and left as the client has it, on 2026-08-30:
+##   Hidden Interregnum — its key comes from an event quest.
+##   Queen Bunny Chamber — an event dungeon from the 2024 easter event.
+## Both are event content, which is what the client already says.

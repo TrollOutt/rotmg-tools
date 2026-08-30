@@ -25,7 +25,7 @@ var EnchantFame = (function () {
    * data/Fame/client-fame.txt: one "bonus" line, then one "needs" line per
    * condition it wants met.
    */
-  function parse(text) {
+  function parse(text, overrideText) {
     const bonuses = [];
     let current = null;
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
@@ -96,6 +96,27 @@ var EnchantFame = (function () {
       dungeon.availability = standard.has(dungeon.name) ? 'standard'
         : seasonal.has(dungeon.name) ? 'seasonal' : 'other';
     }
+    /*
+     * Then the corrections, from data/Fame/availability-overrides.txt.
+     *
+     * The client's two collections were written when they were true and have
+     * drifted: the alien dungeons are permanent content now and it still files
+     * them as seasonal. This is the one place a player's knowledge of the live
+     * game overrides the installed client, so it is a file with dates and
+     * reasons in it rather than a list buried here.
+     */
+    const corrected = new Set();
+    for (const raw of String(overrideText || '').replace(/\r/g, '').split('\n')) {
+      const line = raw.trim();
+      if (!line || line.startsWith('##')) continue;
+      const [name, availability] = line.split('|');
+      const dungeon = dungeons.get(name);
+      if (!dungeon || !availability) continue;
+      dungeon.availability = availability;
+      corrected.add(name);
+      if (availability === 'standard') seasonal.delete(name);
+    }
+
     // And a collection is seasonal when everything it wants is.
     for (const collection of collections) {
       collection.seasonal = collection.needs.length > 0
@@ -105,6 +126,7 @@ var EnchantFame = (function () {
     return {
       bonuses,
       collections,
+      corrected,
       dungeons: [...dungeons.values()].sort((a, b) => a.name.localeCompare(b.name)),
       byName: dungeons
     };

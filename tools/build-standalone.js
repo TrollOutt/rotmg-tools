@@ -48,6 +48,7 @@ const sources = {
   clientItemText: readText('Items', 'client-items.txt'),
   fameText: readText('Fame', 'client-fame.txt'),
   dungeonText: readText('Fame', 'dungeon-pages.txt'),
+  overrideText: readText('Fame', 'availability-overrides.txt'),
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
 };

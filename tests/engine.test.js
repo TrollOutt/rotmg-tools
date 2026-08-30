@@ -1109,7 +1109,10 @@ check('Premium Silver lifts tier 2 to cover the tier it bars', (() => {
 section('16. Fame from dungeons');
 
 const fameLib = require(path.join(root, 'web', 'fame.js'));
-const fame = fameLib.parse(fs.readFileSync(path.join(root, 'data', 'Fame', 'client-fame.txt'), 'utf8'));
+const fameOverrides = fs.readFileSync(path.join(root, 'data', 'Fame', 'availability-overrides.txt'), 'utf8');
+const fame = fameLib.parse(fs.readFileSync(path.join(root, 'data', 'Fame', 'client-fame.txt'), 'utf8'), fameOverrides);
+// The same data before the corrections, to show what they actually move.
+const fameRaw = fameLib.parse(fs.readFileSync(path.join(root, 'data', 'Fame', 'client-fame.txt'), 'utf8'));
 
 check('the client defines 13 collections and 76 dungeons with a ladder',
   fame.collections.length === 13 && fame.dungeons.length === 76,
@@ -1195,17 +1198,49 @@ check('and otherwise the best value for the effort leads', (() => {
 })(), fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))
   .map(entry => `${entry.name} ${Math.round(entry.value)}x`).join(', '));
 
-check('the client itself says which dungeons are in the realm all year', (() => {
+check('the client says which dungeons are in the realm all year', (() => {
+  const kinds = new Map();
+  for (const dungeon of fameRaw.dungeons) kinds.set(dungeon.availability, (kinds.get(dungeon.availability) || 0) + 1);
+  return kinds.get('standard') === 49 && kinds.get('seasonal') === 16 && kinds.get('other') === 11;
+})(), fameRaw.dungeons.reduce((all, d) => all + d.availability[0], ''));
+
+check('and the corrections move fourteen of them, all into the realm', (() => {
+  // The client's two collections were written when they were true and have
+  // drifted; the alien dungeons are permanent content now. Every override so
+  // far makes a dungeon more available, never less.
+  if (fame.corrected.size !== 14) return false;
+  for (const name of fame.corrected) {
+    if (fame.byName.get(name).availability !== 'standard') return false;
+    if (fameRaw.byName.get(name).availability === 'standard') return false;
+  }
   const kinds = new Map();
   for (const dungeon of fame.dungeons) kinds.set(dungeon.availability, (kinds.get(dungeon.availability) || 0) + 1);
-  return kinds.get('standard') === 49 && kinds.get('seasonal') === 16 && kinds.get('other') === 11;
-})(), fame.dungeons.reduce((all, d) => all + d.availability[0], ''));
+  return kinds.get('standard') === 63 && kinds.get('seasonal') === 6 && kinds.get('other') === 7;
+})(), [...fame.corrected].join(', '));
+
+check('every correction names a dungeon that exists and a real availability', (() => {
+  const kinds = new Set(['standard', 'seasonal', 'other']);
+  for (const raw of fameOverrides.split(NEWLINE)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('##')) continue;
+    const [name, availability, when] = line.split('|');
+    if (!fame.byName.has(name) || !kinds.has(availability) || !/^\d{4}-\d{2}-\d{2}$/.test(when || '')) return false;
+  }
+  return true;
+})());
 
 check('a collection everything in which is seasonal is marked as one', (() => {
-  const view = fameLib.summarise(fame, [], 0);
-  const seasonal = view.collections.filter(entry => entry.seasonal).map(entry => entry.name).sort();
+  // Before the corrections: the two alien sets and the seasonal one.
+  const seasonal = fameLib.summarise(fameRaw, [], 0).collections
+    .filter(entry => entry.seasonal).map(entry => entry.name).sort();
   return seasonal.join(', ') === "Far Out, Farther Out, Season's Beatins";
-})(), fameLib.summarise(fame, [], 0).collections.filter(e => e.seasonal).map(e => e.name).join(', '));
+})(), fameLib.summarise(fameRaw, [], 0).collections.filter(e => e.seasonal).map(e => e.name).join(', '));
+
+check('and none is, once the alien dungeons are permanent', (() => {
+  // Far Out and Farther Out become ordinary; Season's Beatins keeps six
+  // seasonal members but is no longer entirely seasonal, so it is workable.
+  return fameLib.summarise(fame, [], 0).collections.every(entry => !entry.seasonal);
+})(), fameLib.summarise(fame, [], 0).collections.filter(e => e.seasonal).map(e => e.name).join(', ') || 'none');
 
 check('a higher base fame makes the percentages matter more', (() => {
   const poor = fameLib.summarise(fame, [], 1000);

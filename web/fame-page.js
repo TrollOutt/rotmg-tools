@@ -75,22 +75,45 @@ var FamePage = (function () {
    * The running total, along the top                                  *
    * ---------------------------------------------------------------- */
   /*
-   * The sum, read down the way a sum is read: what the character has, what the
-   * dungeons already paid, what is still out there, and the line under it.
+   * The sum, read down the way a sum is read.
+   *
+   * The last line is what the collections you picked would bring, not what
+   * sweeping all seventy-six would: nobody plans to do everything, and a
+   * total that assumes it is a number you cannot act on. With nothing
+   * picked it falls back to every collection you can currently see.
    */
   function renderTotals(view) {
     const row = (label, value, note, className) =>
       `<tr class="${className || ''}"><th>${html(label)}</th>`
       + `<td class="fame-num">${value}</td><td class="fame-note">${note || ''}</td></tr>`;
+
+    const chosen = view.collections.filter(entry => state.focus.has(entry.id));
+    const aiming = chosen.length
+      ? chosen
+      : view.collections.filter(entry => !entry.done && (!entry.seasonal || state.avail.has('seasonal')));
+
+    // What finishing them costs and pays: the collections themselves, plus
+    // the first completion of every dungeon they still want.
+    const wanted = new Set(aiming.flatMap(entry => entry.missing));
+    let goal = 0;
+    for (const entry of aiming) if (!entry.done) goal += entry.value;
+    for (const name of wanted) {
+      const dungeon = state.data.byName.get(name);
+      if (dungeon) goal += EnchantFame.firstCompletion(dungeon);
+    }
+
+    const label = chosen.length === 1 ? chosen[0].name
+      : chosen.length ? `the ${chosen.length} you picked`
+      : 'every collection left';
+
     $('fameTotals').innerHTML =
       row('Base fame', view.base ? count(view.base) : '—', 'what your experience earned')
       + row('Earned from dungeons', count(view.earnedFame),
         `${count(view.earnedFlat)} flat${view.earnedPercent ? ` + ${view.earnedPercent}%` : ''}`)
       + row('Fame now', count(view.total), '', 'is-sum')
-      + row('Still to take', count(view.remainingFame),
-        `${count(view.remainingFlat)} flat + ${view.remainingPercent}%`, 'is-gap')
-      + row('If you swept it all', count(view.potential),
-        `${view.ticked} of ${view.dungeons} dungeons ticked`, 'is-total');
+      + row(`Finishing ${label}`, count(goal),
+        wanted.size ? `${wanted.size} dungeons to go` : 'nothing left to do', 'is-gap')
+      + row('You would have', count(view.total + goal), '', 'is-total');
   }
 
   /* ---------------------------------------------------------------- *
@@ -135,7 +158,7 @@ var FamePage = (function () {
         <span class="fame-next-gain">${count(entry.gain)}<small>fame</small></span>
         <small class="fame-next-why">${entry.unlocks.length
           ? `finishes ${entry.unlocks.map(u => html(u.name)).join(' and ')}`
-          : `${Math.round(entry.value)}× what the run itself pays`}</small>
+          : 'first completion'}</small>
       </button>`).join('');
   }
 
@@ -218,8 +241,8 @@ var FamePage = (function () {
     render();
   }
 
-  function init(text, assets, dungeonInfo) {
-    state.data = EnchantFame.parse(text);
+  function init(text, assets, dungeonInfo, overrides) {
+    state.data = EnchantFame.parse(text, overrides);
     state.assets = assets || null;
     for (const raw of String(dungeonInfo || '').replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
