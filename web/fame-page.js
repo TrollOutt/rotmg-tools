@@ -42,6 +42,7 @@ var FamePage = (function () {
 
   const TICKS_KEY = 'rotmg-enchant-calculator/fame/done';
   const BASE_KEY = 'rotmg-enchant-calculator/fame/base';
+  const SKIP_KEY = 'rotmg-enchant-calculator/fame/skipped';
 
   // Where the portal pictures live. Three of the seventy-six are not drawn on
   // the page they come from, and those tiles carry the name alone.
@@ -55,6 +56,9 @@ var FamePage = (function () {
     search: '',
     sort: 'fame',
     focus: new Set(),     // the collections being worked towards, if any
+    // Dungeons the player has said they are not doing. Not ticked — refusing
+    // one earns nothing — just never offered under "do this next" again.
+    skipped: new Set(),
     // Which dungeons count. Only the ones in the realm all year, to begin
     // with: the seasonal and event ones cannot be planned for, and eleven of
     // the event ones are in no collection at all.
@@ -81,6 +85,7 @@ var FamePage = (function () {
     try {
       localStorage.setItem(TICKS_KEY, JSON.stringify([...state.done]));
       localStorage.setItem(BASE_KEY, String(state.base));
+      localStorage.setItem(SKIP_KEY, JSON.stringify([...state.skipped]));
     } catch (error) { /* private mode; the page works, it just forgets */ }
   }
 
@@ -88,8 +93,10 @@ var FamePage = (function () {
     try {
       const ticks = JSON.parse(localStorage.getItem(TICKS_KEY) || '[]');
       if (Array.isArray(ticks)) state.done = new Set(ticks);
+      const skipped = JSON.parse(localStorage.getItem(SKIP_KEY) || '[]');
+      if (Array.isArray(skipped)) state.skipped = new Set(skipped);
       state.base = Number(localStorage.getItem(BASE_KEY)) || 0;
-    } catch (error) { state.done = new Set(); state.base = 0; }
+    } catch (error) { state.done = new Set(); state.skipped = new Set(); state.base = 0; }
   }
 
   /* ---------------------------------------------------------------- *
@@ -175,9 +182,23 @@ var FamePage = (function () {
   }
 
   function renderNext(view) {
-    const best = EnchantFame.nextBest(state.data, state.done, state.base, 4, state.avail);
+    const best = EnchantFame.nextBest(state.data, state.done, state.base, 4, state.avail, state.skipped);
+
+    /*
+     * The ones set aside. A dungeon nobody intends to run is worse than
+     * useless at the top of a list of what to run next, so it can be taken
+     * off — and put back, because the reason was probably "not tonight".
+     */
+    const aside = state.skipped.size
+      ? `<button type="button" class="fame-next-restore" data-restore="all">${
+        state.skipped.size} set aside — put ${state.skipped.size === 1 ? 'it' : 'them'} back</button>`
+      : '';
+
     if (!best.length) {
-      paint('fameNext', '<p class="note">Every dungeon is ticked. There is nothing left to sweep.</p>', 'done');
+      paint('fameNext', `<p class="note">${state.skipped.size
+        ? 'Nothing left that you have not set aside.'
+        : 'Every dungeon is ticked. There is nothing left to sweep.'}</p>${aside}`,
+      'none' + state.skipped.size);
       return;
     }
     /*
@@ -191,17 +212,23 @@ var FamePage = (function () {
 
     // Advice that has changed is worth a second look, so this one plays
     // whenever the four names are not the four that were there before.
+    // A row is two controls, not one: the dungeon itself, and the small refusal
+    // beside it. Nested buttons are not allowed, hence the wrapper.
     paint('fameNext', best.map((entry, index) => `
-      <button type="button" class="fame-next-row" data-tick="${html(entry.name)}" style="--i:${index}">
-        ${tile(entry.name, 'fame-next-icon')}
-        <span class="fame-next-name">${html(entry.name)}</span>
-        <span class="fame-next-gain">${count(entry.first)}<small>fame</small></span>
-        <small class="fame-next-why">${entry.unlocks.length
-          ? `finishes ${names(entry.unlocks)}`
-          : entry.towards.length ? `counts towards ${names(entry.towards)}`
-          : 'in no collection'}</small>
-      </button>`).join(''),
-      best.map(entry => entry.name).join('|'));
+      <div class="fame-next-row" style="--i:${index}">
+        <button type="button" class="fame-next-pick" data-tick="${html(entry.name)}">
+          ${tile(entry.name, 'fame-next-icon')}
+          <span class="fame-next-name">${html(entry.name)}</span>
+          <span class="fame-next-gain">${count(entry.first)}<small>fame</small></span>
+          <small class="fame-next-why">${entry.unlocks.length
+            ? `finishes ${names(entry.unlocks)}`
+            : entry.towards.length ? `counts towards ${names(entry.towards)}`
+            : 'in no collection'}</small>
+        </button>
+        <button type="button" class="fame-next-skip" data-skip="${html(entry.name)}"
+          title="Not this one — take it off the list" aria-label="Take ${html(entry.name)} off the list">✕</button>
+      </div>`).join('') + aside,
+      best.map(entry => entry.name).join('|') + '#' + state.skipped.size);
   }
 
   /* ---------------------------------------------------------------- *
@@ -250,10 +277,31 @@ var FamePage = (function () {
       : `${state.done.size} of ${state.data.dungeons.length} ticked`;
 
     /*
-     * Seventy-six tiles play only when the set of them changes — a search, a
-     * sort, a different availability, a collection picked. Ticking one dungeon
-     * leaves the grid alone; the tile itself has a transition for that.
+     * Picking a collection does not rebuild the grid.
+     *
+     * The same dungeons in the same order means only the highlight moved, and
+     * rewriting sixty-three tiles to move a highlight throws away the elements
+     * the browser was about to transition — the glow cannot fade in on
+     * something that did not exist a moment ago. So the classes are moved on
+     * the tiles that are already there, and the grid is only rebuilt when its
+     * contents genuinely change: a search, a sort, a different availability.
      */
+    const signature = rows.map(dungeon => dungeon.name).join('|');
+    const grid = $('fameGrid');
+    if (rows.length && painted.get('fameGrid') === signature) {
+      for (const tile of grid.children) {
+        const name = tile.dataset.dungeon;
+        if (!name) continue;
+        const on = state.done.has(name);
+        const needed = wanted ? wanted.has(name) : false;
+        tile.classList.toggle('is-done', on);
+        tile.classList.toggle('is-wanted', needed);
+        tile.classList.toggle('is-dim', Boolean(wanted) && !needed && !on);
+        tile.setAttribute('aria-pressed', String(on));
+      }
+      return;
+    }
+
     paint('fameGrid', rows.length ? rows.map((dungeon, index) => {
       const on = state.done.has(dungeon.name);
       const needed = wanted ? wanted.has(dungeon.name) : false;
@@ -268,10 +316,9 @@ var FamePage = (function () {
           ${difficultyOf(dungeon.name)
             ? `<span class="fame-tile-diff" title="The game rates this dungeon ${difficultyOf(dungeon.name)} out of 10">${difficultyOf(dungeon.name)}</span>`
             : ''}
-          ${on ? '<span class="fame-tile-check">✓</span>' : ''}
+          <span class="fame-tile-check">✓</span>
         </button>`;
-    }).join('') : '<p class="note">No dungeon matches that.</p>',
-      rows.map(dungeon => dungeon.name).join('|') + '#' + (wanted ? [...wanted].sort().join(',') : ''));
+    }).join('') : '<p class="note">No dungeon matches that.</p>', signature);
   }
 
   function render() {
@@ -315,6 +362,19 @@ var FamePage = (function () {
       if (tile) toggle(tile.dataset.dungeon);
     });
     $('fameNext').addEventListener('click', event => {
+      if (event.target.closest('[data-restore]')) {
+        state.skipped.clear();
+        save();
+        render();
+        return;
+      }
+      const refused = event.target.closest('[data-skip]');
+      if (refused) {
+        state.skipped.add(refused.dataset.skip);
+        save();
+        render();
+        return;
+      }
       const row = event.target.closest('[data-tick]');
       if (row) toggle(row.dataset.tick);
     });
@@ -354,6 +414,9 @@ var FamePage = (function () {
     });
     $('fameReset').addEventListener('click', () => {
       state.done = new Set();
+      // The dungeons set aside go too. Leaving them would be state the page
+      // no longer shows anywhere, quietly shortening the suggestions.
+      state.skipped = new Set();
       save();
       render();
     });

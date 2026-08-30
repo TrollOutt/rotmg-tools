@@ -236,18 +236,23 @@ var EnchantFame = (function () {
    * player actually asks — not "what pays most", which is always the hardest
    * thing on the list, but "what pays most for the trouble".
    *
+   * "skip" is the dungeons a player has said they are not doing. They are not
+   * ticked — refusing one earns nothing — they are simply not offered, and
+   * everything behind them moves up.
+   *
    * "gain" orders the list and is not worth showing: it is a share of prizes
    * not yet won, and printing 636 next to Pirate Cave reads as a promise the
    * dungeon does not keep. "first" is the fame the game actually pays for
    * walking out of it the first time, which is 2.
    */
-  function nextBest(data, done, baseFame, limit, allow) {
+  function nextBest(data, done, baseFame, limit, allow, skip) {
     const ticked = done instanceof Set ? done : new Set(done || []);
     const state = summarise(data, ticked, baseFame);
     const byId = new Map(state.collections.map(entry => [entry.id, entry]));
 
     return data.dungeons
       .filter(dungeon => !ticked.has(dungeon.name))
+      .filter(dungeon => !skip || !skip.has(dungeon.name))
       .filter(dungeon => !allow || allow.has(dungeon.availability))
       .map(dungeon => {
         const first = firstCompletion(dungeon);

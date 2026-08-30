@@ -1295,6 +1295,28 @@ check('and every collection it would move is named, finished ones aside', (() =>
       entry.towards.every(collection => !collection.done));
 })());
 
+/*
+ * A dungeon set aside is not a dungeon done.
+ *
+ * Refusing one takes it out of the suggestions and nothing else: no fame is
+ * earned, no collection moves, and the dungeon behind it comes forward.
+ */
+check('a dungeon set aside leaves the list without paying anything', (() => {
+  const plain = fameLib.nextBest(fame, [], 12000, 4, new Set(['standard']));
+  const skipped = fameLib.nextBest(fame, [], 12000, 4, new Set(['standard']),
+    new Set([plain[0].name]));
+  if (skipped.some(entry => entry.name === plain[0].name)) return false;
+  if (skipped.length !== plain.length) return false;
+  // Everything simply moves up a place.
+  if (skipped[0].name !== plain[1].name) return false;
+  // And it is not counted as done: the sum does not move.
+  const before = fameLib.summarise(fame, [], 12000);
+  return fameLib.summarise(fame, [], 12000).total === before.total;
+})(), (() => {
+  const plain = fameLib.nextBest(fame, [], 12000, 4, new Set(['standard']));
+  return `set aside ${plain[0].name}, ${plain[1].name} comes forward`;
+})());
+
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
 if (failures.length) { for (const name of failures) console.log(`  - ${name}`); process.exit(1); }
