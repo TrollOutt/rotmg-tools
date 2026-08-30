@@ -1256,3 +1256,45 @@ table.mini td { padding: 3px 8px; border: 0; }
 @media (prefers-reduced-motion: reduce) {
   .ambience-dom img { animation: none; }
 }
+
+/* ---------------- things arriving ---------------- *
+ * One gesture, used everywhere the app puts something on screen that was not
+ * there a moment ago: it rises the last few pixels into place instead of
+ * appearing. Same curve as the artifact and plan cards, so the whole app
+ * moves the same way.
+ *
+ * A container is given .is-fresh only when its contents actually changed —
+ * see paint() in fame-page.js. Without that, ticking one dungeon would
+ * re-render four panels and the page would flinch on every click.
+ *
+ * --i is the child's position, set inline. The delay is capped so the tail of
+ * a seventy-six tile grid is not still arriving a second and a half later.
+ */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: none; }
+}
+.is-fresh > * {
+  animation: rise-in .4s cubic-bezier(.16, .84, .32, 1) backwards;
+  animation-delay: calc(min(var(--i, 0), 20) * 20ms);
+}
+
+/* ---------------- changing tool ---------------- *
+ * The page itself arrives the same way. Coming back to the home page from a
+ * tool should feel like a step back, not a cut.
+ */
+#pageHome, #pageEnchant, #pageFame {
+  transition: opacity .34s cubic-bezier(.16, .84, .32, 1),
+              transform .34s cubic-bezier(.16, .84, .32, 1);
+}
+#pageHome.page-entering, #pageEnchant.page-entering, #pageFame.page-entering {
+  opacity: 0; transform: translateY(12px);
+  transition: none;                     /* the starting state must not animate */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-fresh > * { animation: none; }
+  #pageHome, #pageEnchant, #pageFame { transition: none; }
+  #pageHome.page-entering, #pageEnchant.page-entering,
+  #pageFame.page-entering { opacity: 1; transform: none; }
+}

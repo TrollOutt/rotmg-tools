@@ -99,6 +99,21 @@ const counts = {
   'Item Rarities': embedAll('Item Rarities', file => file.includes('_scaled_8x'))
 };
 
+/*
+ * The pictures on the home page's way-in cards, whatever they happen to be.
+ *
+ * They are the one place the interface asks for an artifact icon at full size,
+ * and the rule above embeds only the half-scale ones. A card whose picture is
+ * missing from the bundle does not fall back to a relative path — app.js
+ * removes the image — so the card simply lost its sprite on the published
+ * site while still showing it from the repository. Reading the tags rather
+ * than listing the files means changing a card's picture cannot bring that
+ * back, and the build stops if one of them names a file that is not there.
+ */
+const homeArt = [...fs.readFileSync(path.join(web, 'index.html'), 'utf8')
+  .matchAll(/data-art="([^"/]+)\/([^"]+)"/g)]
+  .map(([, folder, file]) => { embed(folder, file); return `GUI Files/${folder}/${file}`; });
+
 /* ---------------------------------------------------------------- *
  * 2b. Item sprites                                                  *
  * ---------------------------------------------------------------- */
@@ -181,6 +196,7 @@ for (const dust of ['Green', 'Red', 'Purple']) {
 }
 for (const type of ['weapon', 'ability', 'armor', 'ring', 'SUMMONPOWERED', 'ALIEN', 'NEO_ALIEN']) required.add(`GUI Files/Item Types/${type}.png`);
 for (const rarity of ['uncommon', 'rare', 'legendary', 'divine']) required.add(`GUI Files/Item Rarities/${rarity}_scaled_8x.png`);
+for (const key of homeArt) required.add(key);
 
 if (enchantsWithoutArt.length) {
   console.log(`  ${enchantsWithoutArt.length} enchantments have no artwork and render without one: ${enchantsWithoutArt.join(', ')}`);

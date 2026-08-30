@@ -2296,6 +2296,22 @@ function showPage(name) {
   usePool(page);
   if (page === 'fame') openFamePage();
   window.scrollTo(0, 0);
+
+  /*
+   * The page that just became visible rises into place rather than cutting in,
+   * on the same curve as the cards inside it. It has to be unhidden first for
+   * the starting state to take, hence the one-frame delay before releasing it.
+   */
+  for (const node of [$(PAGES[page]), page === 'home' ? $('homeCards') : null]) {
+    if (!node) continue;
+    clearTimeout(node.arrivalTimer);
+    node.classList.remove('page-entering', 'is-fresh');
+    void node.offsetWidth;
+    node.classList.add(node.id === 'homeCards' ? 'is-fresh' : 'page-entering');
+    if (node.id !== 'homeCards') {
+      node.arrivalTimer = setTimeout(() => node.classList.remove('page-entering'), 30);
+    }
+  }
 }
 
 function routeFromHash() {

@@ -210,6 +210,11 @@ var EnchantFame = (function () {
    * Oryx's Sanctuary. Dividing one by the other answers the question a
    * player actually asks — not "what pays most", which is always the hardest
    * thing on the list, but "what pays most for the trouble".
+   *
+   * "gain" orders the list and is not worth showing: it is a share of prizes
+   * not yet won, and printing 636 next to Pirate Cave reads as a promise the
+   * dungeon does not keep. "first" is the fame the game actually pays for
+   * walking out of it the first time, which is 2.
    */
   function nextBest(data, done, baseFame, limit, allow) {
     const ticked = done instanceof Set ? done : new Set(done || []);
@@ -222,17 +227,19 @@ var EnchantFame = (function () {
       .map(dungeon => {
         const first = firstCompletion(dungeon);
         const unlocks = [];
+        const towards = [];
         let gain = first;
         for (const id of dungeon.collections) {
           const collection = byId.get(id);
           if (!collection || collection.done) continue;
           gain += collection.value / collection.missing.length;
           if (collection.missing.length === 1) unlocks.push(collection);
+          else towards.push(collection);
         }
         // Effort of at least one, so a dungeon the game pays nothing for
         // cannot divide by zero and float to the top.
         const value = gain / Math.max(first, 1);
-        return { name: dungeon.name, gain, value, unlocks, first, availability: dungeon.availability };
+        return { name: dungeon.name, gain, value, unlocks, towards, first, availability: dungeon.availability };
       })
       /*
        * Value for effort orders the list, with one exception: a dungeon that

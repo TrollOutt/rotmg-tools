@@ -19,6 +19,27 @@ var FamePage = (function () {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
   const count = value => Math.round(Number(value) || 0).toLocaleString('en-US');
 
+  /*
+   * Put markup in a panel, and let its contents rise into place only when they
+   * are genuinely new.
+   *
+   * Every click re-renders all four panels, so animating on each paint would
+   * make the whole page flinch each time a dungeon is ticked. The signature is
+   * whatever the caller decides makes this panel a different panel: the list
+   * of names for the grid, the numbers themselves for the totals. Same
+   * signature, no animation — the markup is simply replaced.
+   */
+  const painted = new Map();
+  function paint(id, markup, signature) {
+    const node = $(id);
+    node.innerHTML = markup;
+    if (painted.get(id) === signature) return;
+    painted.set(id, signature);
+    node.classList.remove('is-fresh');
+    void node.offsetWidth;                  // so the animation restarts
+    node.classList.add('is-fresh');
+  }
+
   const TICKS_KEY = 'rotmg-enchant-calculator/fame/done';
   const BASE_KEY = 'rotmg-enchant-calculator/fame/base';
 
@@ -83,8 +104,9 @@ var FamePage = (function () {
    * picked it falls back to every collection you can currently see.
    */
   function renderTotals(view) {
+    let index = 0;
     const row = (label, value, note, className) =>
-      `<tr class="${className || ''}"><th>${html(label)}</th>`
+      `<tr class="${className || ''}" style="--i:${index++}"><th>${html(label)}</th>`
       + `<td class="fame-num">${value}</td><td class="fame-note">${note || ''}</td></tr>`;
 
     const chosen = view.collections.filter(entry => state.focus.has(entry.id));
@@ -106,14 +128,17 @@ var FamePage = (function () {
       : chosen.length ? `the ${chosen.length} you picked`
       : 'every collection left';
 
-    $('fameTotals').innerHTML =
+    // The sum runs again whenever a figure in it moves, which is the one
+    // thing a running total is for.
+    paint('fameTotals',
       row('Base fame', view.base ? count(view.base) : '—', 'what your experience earned')
       + row('Earned from dungeons', count(view.earnedFame),
         `${count(view.earnedFlat)} flat${view.earnedPercent ? ` + ${view.earnedPercent}%` : ''}`)
       + row('Fame now', count(view.total), '', 'is-sum')
       + row(`Finishing ${label}`, count(goal),
         wanted.size ? `${wanted.size} dungeons to go` : 'nothing left to do', 'is-gap')
-      + row('You would have', count(view.total + goal), '', 'is-total');
+      + row('You would have', count(view.total + goal), '', 'is-total'),
+      [view.base, view.earnedFame, view.total, label, goal, wanted.size].join('|'));
   }
 
   /* ---------------------------------------------------------------- *
@@ -128,13 +153,15 @@ var FamePage = (function () {
     });
     // One line each. The progress is the row itself, filled from the left,
     // so thirteen collections fit in the space four used to take.
-    $('fameCollections').innerHTML = rows.map(entry => {
+    // The list rearranges itself as collections are finished or picked; that
+    // is when it plays. A row whose bar merely crept forward does not.
+    paint('fameCollections', rows.map((entry, index) => {
       const pct = Math.round(entry.have / entry.wanted.length * 100);
       return `
       <button type="button" class="fame-coll${entry.done ? ' is-done' : ''}${
         state.focus.has(entry.id) ? ' is-focus' : ''}" data-collection="${html(entry.id)}"
         aria-pressed="${state.focus.has(entry.id)}"
-        style="--fill:${pct}%"
+        style="--fill:${pct}%; --i:${index}"
         title="${html(entry.name)} — ${entry.have} of ${entry.wanted.length} done, worth ${
           count(entry.absolute)} plus ${entry.relative}% of your base fame">
         <span class="fame-coll-name">${html(entry.name)}</span>
@@ -142,24 +169,38 @@ var FamePage = (function () {
           view.base ? count(entry.value) : `${count(entry.absolute)}+${entry.relative}%`}</span>
         <span class="fame-coll-left">${entry.done ? '✓' : entry.missing.length}</span>
       </button>`;
-    }).join('');
+    }).join(''),
+      rows.map(entry => `${entry.id}${entry.done ? '!' : ''}${state.focus.has(entry.id) ? '*' : ''}`).join('|'));
   }
 
   function renderNext(view) {
     const best = EnchantFame.nextBest(state.data, state.done, state.base, 4, state.avail);
     if (!best.length) {
-      $('fameNext').innerHTML = '<p class="note">Every dungeon is ticked. There is nothing left to sweep.</p>';
+      paint('fameNext', '<p class="note">Every dungeon is ticked. There is nothing left to sweep.</p>', 'done');
       return;
     }
-    $('fameNext').innerHTML = best.map(entry => `
-      <button type="button" class="fame-next-row" data-tick="${html(entry.name)}">
+    /*
+     * The fame shown is the dungeon's own first completion — the Scout bonus,
+     * the one number the game pays you on the way out. What earns a dungeon
+     * its place in this list is said in words underneath instead, because it
+     * is a claim on collections not finished yet rather than fame in hand.
+     */
+    const names = list => list.slice(0, 2).map(entry => html(entry.name)).join(' and ')
+      + (list.length > 2 ? ` +${list.length - 2} more` : '');
+
+    // Advice that has changed is worth a second look, so this one plays
+    // whenever the four names are not the four that were there before.
+    paint('fameNext', best.map((entry, index) => `
+      <button type="button" class="fame-next-row" data-tick="${html(entry.name)}" style="--i:${index}">
         ${tile(entry.name, 'fame-next-icon')}
         <span class="fame-next-name">${html(entry.name)}</span>
-        <span class="fame-next-gain">${count(entry.gain)}<small>fame</small></span>
+        <span class="fame-next-gain">${count(entry.first)}<small>fame</small></span>
         <small class="fame-next-why">${entry.unlocks.length
-          ? `finishes ${entry.unlocks.map(u => html(u.name)).join(' and ')}`
-          : 'first completion'}</small>
-      </button>`).join('');
+          ? `finishes ${names(entry.unlocks)}`
+          : entry.towards.length ? `counts towards ${names(entry.towards)}`
+          : 'in no collection'}</small>
+      </button>`).join(''),
+      best.map(entry => entry.name).join('|'));
   }
 
   /* ---------------------------------------------------------------- *
@@ -207,13 +248,18 @@ var FamePage = (function () {
       ? `${wanted.size} to go for ${chosen.length === 1 ? chosen[0].name : chosen.length + ' collections'}`
       : `${state.done.size} of ${state.data.dungeons.length} ticked`;
 
-    $('fameGrid').innerHTML = rows.length ? rows.map(dungeon => {
+    /*
+     * Seventy-six tiles play only when the set of them changes — a search, a
+     * sort, a different availability, a collection picked. Ticking one dungeon
+     * leaves the grid alone; the tile itself has a transition for that.
+     */
+    paint('fameGrid', rows.length ? rows.map((dungeon, index) => {
       const on = state.done.has(dungeon.name);
       const needed = wanted ? wanted.has(dungeon.name) : false;
       const dimmed = wanted && !needed && !on;
       return `
         <button type="button" class="fame-tile${on ? ' is-done' : ''}${needed ? ' is-wanted' : ''}${
-          dimmed ? ' is-dim' : ''}" data-dungeon="${html(dungeon.name)}"
+          dimmed ? ' is-dim' : ''}" data-dungeon="${html(dungeon.name)}" style="--i:${index}"
           aria-pressed="${on}" title="${html(dungeon.name)}">
           ${tile(dungeon.name, 'fame-tile-art')}
           <span class="fame-tile-name">${html(dungeon.name)}</span>
@@ -223,7 +269,8 @@ var FamePage = (function () {
             : ''}
           ${on ? '<span class="fame-tile-check">✓</span>' : ''}
         </button>`;
-    }).join('') : '<p class="note">No dungeon matches that.</p>';
+    }).join('') : '<p class="note">No dungeon matches that.</p>',
+      rows.map(dungeon => dungeon.name).join('|') + '#' + (wanted ? [...wanted].sort().join(',') : ''));
   }
 
   function render() {

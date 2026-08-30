@@ -1250,6 +1250,39 @@ check('a higher base fame makes the percentages matter more', (() => {
 })());
 
 
+
+/*
+ * The fame shown against a suggestion is the fame the game pays.
+ *
+ * "gain" is what orders the list: a dungeon's own first completion plus a
+ * share of the collections it would move along. That share is a claim on
+ * prizes not yet won, and printing it against Pirate Cave — 636 — read as a
+ * promise the dungeon does not keep. Pirate Cave pays 2.
+ */
+check('the suggestion carries the dungeon own first completion, not its score', (() => {
+  for (const entry of fameLib.nextBest(fame, [], 12000, 8, new Set(['standard']))) {
+    if (entry.first !== fameLib.firstCompletion(fame.byName.get(entry.name))) return false;
+    if (entry.gain < entry.first) return false;     // the score includes it
+  }
+  const cave = fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))[0];
+  return cave.name === 'Pirate Cave' && cave.first === 2 && Math.round(cave.gain) > 2;
+})(), (() => {
+  const cave = fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))[0];
+  return `${cave.name} pays ${cave.first}, scores ${Math.round(cave.gain)}`;
+})());
+
+check('and every collection it would move is named, finished ones aside', (() => {
+  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  const done = tr.needs.slice(0, 11).map(need => need.what);
+  const last = fameLib.nextBest(fame, done, 12000, 1)[0];
+  // The twelfth finishes Tunnel Rat, so it is an unlock rather than a step
+  // towards one, and it must not be counted as both.
+  if (!last.unlocks.some(entry => entry.name === 'Tunnel Rat')) return false;
+  return !last.towards.some(entry => entry.name === 'Tunnel Rat')
+    && fameLib.nextBest(fame, [], 12000, 5).every(entry =>
+      entry.towards.every(collection => !collection.done));
+})());
+
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
 if (failures.length) { for (const name of failures) console.log(`  - ${name}`); process.exit(1); }
