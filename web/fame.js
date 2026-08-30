@@ -114,13 +114,6 @@ var EnchantFame = (function () {
       if (!dungeon || !availability) continue;
       dungeon.availability = availability;
       corrected.add(name);
-      if (availability === 'standard') seasonal.delete(name);
-    }
-
-    // And a collection is seasonal when everything it wants is.
-    for (const collection of collections) {
-      collection.seasonal = collection.needs.length > 0
-        && collection.needs.every(need => seasonal.has(need.what));
     }
 
     /*
@@ -178,10 +171,24 @@ var EnchantFame = (function () {
     const collections = data.collections.map(collection => {
       const wanted = collection.needs.map(need => need.what);
       const missing = wanted.filter(name => !ticked.has(name));
+      /*
+       * What has to be in the realm for this to be finishable at all.
+       *
+       * The availabilities of the dungeons it still wants — so a collection
+       * needing one seasonal dungeon is out of reach while seasonal content
+       * is hidden, even though the other eleven are ordinary. Read off what
+       * is missing rather than the whole list: the seasonal ones you have
+       * already done cannot stop you finishing it.
+       */
+      const needs = new Set();
+      for (const name of missing) {
+        const dungeon = data.byName.get(name);
+        if (dungeon) needs.add(dungeon.availability);
+      }
       return {
+        needs: [...needs].sort(),
         id: collection.id,
         name: collection.name,
-        seasonal: Boolean(collection.seasonal),
         description: collection.description,
         absolute: collection.absolute,
         relative: collection.relative,

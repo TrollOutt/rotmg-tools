@@ -1154,25 +1154,48 @@ table.mini td { padding: 3px 8px; border: 0; }
 .fame-sort { display: flex; gap: 4px; }
 .fame-sort .filter-chip { font-size: 12px; }
 
+/*
+ * Every measurement in a tile comes off one number, so the whole grid can be
+ * shrunk until it fits the box it is in. fitGrid() in fame-page.js sets it;
+ * 104px is the size these were drawn at and the largest it will ever be.
+ * Nobody should have to scroll a list of seventy-six things to find one.
+ */
 .fame-grid {
-  display: grid; gap: 8px; max-height: 62vh; overflow-y: auto; padding-right: 4px;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  --tile: 104px;
+  display: grid; gap: calc(var(--tile) * .077); max-height: 62vh;
+  /* The gutter is always reserved. Without it the box is a hair narrower the
+     moment it overflows, which changes how many tiles fit per row, which
+     changes whether it overflows — and fitGrid() would be measuring a layout
+     that depends on the answer it is looking for. */
+  overflow-y: auto; scrollbar-gutter: stable; padding-right: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
 }
 .fame-tile {
   position: relative; display: grid; justify-items: center; gap: 3px;
   font: inherit; color: var(--text); cursor: pointer; text-align: center;
   background: rgba(19, 18, 27, .6); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); padding: 9px 6px 7px;
+  border-radius: var(--radius-sm);
+  padding: calc(var(--tile, 104px) * .087) 6px calc(var(--tile, 104px) * .067);
   /* Picking a collection moves the highlight across a grid that stays put, so
      the glow arrives and leaves rather than being redrawn. */
   transition: border-color .26s ease, box-shadow .26s ease, background .26s ease,
               opacity .26s ease, filter .26s ease;
 }
 .fame-tile:hover { border-color: var(--accent); background: rgba(38, 34, 51, .8); }
-.fame-tile-art { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; }
+.fame-tile-art {
+  width: calc(var(--tile, 104px) * .385); height: calc(var(--tile, 104px) * .385);
+  object-fit: contain; image-rendering: pixelated;
+}
 .fame-tile-art.no-art { background: rgba(255, 255, 255, .05); border-radius: 6px; }
-.fame-tile-name { font-size: 11.5px; line-height: 1.2; color: var(--muted); }
-.fame-tile-fame { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+/* Floors, so a grid squeezed hard stays readable rather than becoming a
+   pattern of coloured squares. */
+.fame-tile-name {
+  font-size: max(9px, calc(var(--tile, 104px) * .111)); line-height: 1.2; color: var(--muted);
+}
+.fame-tile-fame {
+  font-size: max(8.5px, calc(var(--tile, 104px) * .106));
+  color: var(--dim); font-variant-numeric: tabular-nums;
+}
 /* Always in the markup, shown only when it is true: a tick that is added to
    the page cannot fade in, and this one is on a tile that is not rebuilt. */
 .fame-tile-check {
@@ -3045,13 +3068,6 @@ var EnchantFame = (function () {
       if (!dungeon || !availability) continue;
       dungeon.availability = availability;
       corrected.add(name);
-      if (availability === 'standard') seasonal.delete(name);
-    }
-
-    // And a collection is seasonal when everything it wants is.
-    for (const collection of collections) {
-      collection.seasonal = collection.needs.length > 0
-        && collection.needs.every(need => seasonal.has(need.what));
     }
 
     /*
@@ -3109,10 +3125,24 @@ var EnchantFame = (function () {
     const collections = data.collections.map(collection => {
       const wanted = collection.needs.map(need => need.what);
       const missing = wanted.filter(name => !ticked.has(name));
+      /*
+       * What has to be in the realm for this to be finishable at all.
+       *
+       * The availabilities of the dungeons it still wants — so a collection
+       * needing one seasonal dungeon is out of reach while seasonal content
+       * is hidden, even though the other eleven are ordinary. Read off what
+       * is missing rather than the whole list: the seasonal ones you have
+       * already done cannot stop you finishing it.
+       */
+      const needs = new Set();
+      for (const name of missing) {
+        const dungeon = data.byName.get(name);
+        if (dungeon) needs.add(dungeon.availability);
+      }
       return {
+        needs: [...needs].sort(),
         id: collection.id,
         name: collection.name,
-        seasonal: Boolean(collection.seasonal),
         description: collection.description,
         absolute: collection.absolute,
         relative: collection.relative,
@@ -3273,6 +3303,58 @@ var FamePage = (function () {
     return Boolean(last) && last.signature === signature;
   };
 
+  /*
+   * Shrink the tiles until the whole grid fits, rather than making someone
+   * scroll a list of seventy-six things to find one.
+   *
+   * Everything about a tile comes off --tile, so this only has to find the
+   * largest value that fits and set it. Binary search over eight steps: each
+   * one costs a layout, which is why it runs when the grid is rebuilt and on
+   * a resize, not on every tick. If even the smallest will not fit — a short
+   * window with every dungeon showing — the grid scrolls as it used to, which
+   * is better than tiles too small to read.
+   */
+  const TILE_MAX = 104;
+  const TILE_MIN = 54;
+  function fitGrid() {
+    const grid = $('fameGrid');
+    if (!grid.firstElementChild) return;
+    const room = parseFloat(getComputedStyle(grid).maxHeight);
+    if (!room) return;                            // no ceiling: nothing to fit into
+
+    // Measured with the overflow off, for browsers that do not reserve the
+    // scrollbar gutter: a bar that comes and goes narrows the box, and the
+    // search would be chasing a layout that moves when it is measured.
+    grid.style.overflowY = 'hidden';
+    const fits = size => {
+      grid.style.setProperty('--tile', size + 'px');
+      return grid.scrollHeight <= room + 1;
+    };
+
+    let best = TILE_MAX;
+    if (!fits(TILE_MAX)) {
+      best = TILE_MIN;
+      let low = TILE_MIN, high = TILE_MAX;
+      for (let step = 0; step < 8; step++) {
+        const mid = (low + high) / 2;
+        if (fits(mid)) { best = mid; low = mid; } else high = mid;
+      }
+    }
+    grid.style.setProperty('--tile', best + 'px');
+    grid.style.overflowY = '';
+  }
+
+  /*
+   * Whether a collection is worth showing at all.
+   *
+   * It is if you could finish it with the dungeons currently in view. One
+   * seasonal dungeon still outstanding is enough to put a collection out of
+   * reach while seasonal content is hidden, however ordinary the other
+   * eleven are — and turning the chip back on brings it back. A finished one
+   * always stays: there is nothing left to be blocked by.
+   */
+  const reachable = entry => entry.done || entry.needs.every(kind => state.avail.has(kind));
+
   const TICKS_KEY = 'rotmg-enchant-calculator/fame/done';
   const BASE_KEY = 'rotmg-enchant-calculator/fame/base';
   const SKIP_KEY = 'rotmg-enchant-calculator/fame/skipped';
@@ -3352,7 +3434,7 @@ var FamePage = (function () {
     const chosen = view.collections.filter(entry => state.focus.has(entry.id));
     const aiming = chosen.length
       ? chosen
-      : view.collections.filter(entry => !entry.done && (!entry.seasonal || state.avail.has('seasonal')));
+      : view.collections.filter(entry => !entry.done && reachable(entry));
 
     // What finishing them costs and pays: the collections themselves, plus
     // the first completion of every dungeon they still want.
@@ -3387,7 +3469,7 @@ var FamePage = (function () {
    * The collections, one of which you can be going for                *
    * ---------------------------------------------------------------- */
   function renderCollections(view) {
-    const rows = view.collections.filter(entry => !entry.seasonal || state.avail.has('seasonal'));
+    const rows = view.collections.filter(reachable);
 
     /*
      * This list holds still. Nothing you do on this page rebuilds it.
@@ -3586,6 +3668,7 @@ var FamePage = (function () {
           <span class="fame-tile-check">✓</span>
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>', signature);
+    fitGrid();
   }
 
   function render() {
@@ -3670,15 +3753,21 @@ var FamePage = (function () {
       if (state.avail.has(kind) && state.avail.size > 1) state.avail.delete(kind);
       else state.avail.add(kind);
       button.classList.toggle('on', state.avail.has(kind));
-      // A collection you can no longer see should not still be the focus.
-      // A collection you can no longer see should not still be a goal.
-      if (state.focus.size && !state.avail.has('seasonal')) {
+      // A collection you could no longer finish should not still be a goal.
+      if (state.focus.size) {
         for (const entry of EnchantFame.summarise(state.data, state.done, state.base).collections) {
-          if (entry.seasonal) state.focus.delete(entry.id);
+          if (!reachable(entry)) state.focus.delete(entry.id);
         }
       }
       render();
     });
+    // The box changes size with the window, so the fit has to be found again.
+    let resizeWait = 0;
+    window.addEventListener('resize', () => {
+      cancelAnimationFrame(resizeWait);
+      resizeWait = requestAnimationFrame(fitGrid);
+    });
+
     $('fameReset').addEventListener('click', () => {
       state.done = new Set();
       // The dungeons set aside go too. Leaving them would be state the page

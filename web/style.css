@@ -1146,25 +1146,48 @@ table.mini td { padding: 3px 8px; border: 0; }
 .fame-sort { display: flex; gap: 4px; }
 .fame-sort .filter-chip { font-size: 12px; }
 
+/*
+ * Every measurement in a tile comes off one number, so the whole grid can be
+ * shrunk until it fits the box it is in. fitGrid() in fame-page.js sets it;
+ * 104px is the size these were drawn at and the largest it will ever be.
+ * Nobody should have to scroll a list of seventy-six things to find one.
+ */
 .fame-grid {
-  display: grid; gap: 8px; max-height: 62vh; overflow-y: auto; padding-right: 4px;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  --tile: 104px;
+  display: grid; gap: calc(var(--tile) * .077); max-height: 62vh;
+  /* The gutter is always reserved. Without it the box is a hair narrower the
+     moment it overflows, which changes how many tiles fit per row, which
+     changes whether it overflows — and fitGrid() would be measuring a layout
+     that depends on the answer it is looking for. */
+  overflow-y: auto; scrollbar-gutter: stable; padding-right: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
 }
 .fame-tile {
   position: relative; display: grid; justify-items: center; gap: 3px;
   font: inherit; color: var(--text); cursor: pointer; text-align: center;
   background: rgba(19, 18, 27, .6); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); padding: 9px 6px 7px;
+  border-radius: var(--radius-sm);
+  padding: calc(var(--tile, 104px) * .087) 6px calc(var(--tile, 104px) * .067);
   /* Picking a collection moves the highlight across a grid that stays put, so
      the glow arrives and leaves rather than being redrawn. */
   transition: border-color .26s ease, box-shadow .26s ease, background .26s ease,
               opacity .26s ease, filter .26s ease;
 }
 .fame-tile:hover { border-color: var(--accent); background: rgba(38, 34, 51, .8); }
-.fame-tile-art { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; }
+.fame-tile-art {
+  width: calc(var(--tile, 104px) * .385); height: calc(var(--tile, 104px) * .385);
+  object-fit: contain; image-rendering: pixelated;
+}
 .fame-tile-art.no-art { background: rgba(255, 255, 255, .05); border-radius: 6px; }
-.fame-tile-name { font-size: 11.5px; line-height: 1.2; color: var(--muted); }
-.fame-tile-fame { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+/* Floors, so a grid squeezed hard stays readable rather than becoming a
+   pattern of coloured squares. */
+.fame-tile-name {
+  font-size: max(9px, calc(var(--tile, 104px) * .111)); line-height: 1.2; color: var(--muted);
+}
+.fame-tile-fame {
+  font-size: max(8.5px, calc(var(--tile, 104px) * .106));
+  color: var(--dim); font-variant-numeric: tabular-nums;
+}
 /* Always in the markup, shown only when it is true: a tick that is added to
    the page cannot fade in, and this one is on a tile that is not rebuilt. */
 .fame-tile-check {

@@ -1241,18 +1241,36 @@ check('every correction names a dungeon that exists and a real availability', ((
   return true;
 })());
 
-check('a collection everything in which is seasonal is marked as one', (() => {
-  // Before the corrections: the two alien sets and the seasonal one.
-  const seasonal = fameLib.summarise(fameRaw, [], 0).collections
-    .filter(entry => entry.seasonal).map(entry => entry.name).sort();
-  return seasonal.join(', ') === "Far Out, Farther Out, Season's Beatins";
-})(), fameLib.summarise(fameRaw, [], 0).collections.filter(e => e.seasonal).map(e => e.name).join(', '));
+/*
+ * What a collection still needs to be in the realm.
+ *
+ * Not whether it is a seasonal collection — that was the old rule and it was
+ * too kind. Season's Beatins is mostly ordinary dungeons and six seasonal
+ * ones, so by "is it entirely seasonal" it counted as workable all year,
+ * which it is not: those six have to come round before it can be finished.
+ */
+check('a collection needs whatever is left in it to be in the realm', (() => {
+  const all = fameLib.summarise(fame, [], 0).collections;
+  const blocked = all.filter(entry => !entry.needs.every(kind => kind === 'standard'));
+  return blocked.map(entry => entry.name).sort().join(', ')
+    === "Realm of the Mad God, Season's Beatins"
+    && blocked.every(entry => entry.needs.includes('seasonal'));
+})(), fameLib.summarise(fame, [], 0).collections
+  .map(entry => `${entry.name}: ${entry.needs.join('+')}`).join(' | '));
 
-check('and none is, once the alien dungeons are permanent', (() => {
-  // Far Out and Farther Out become ordinary; Season's Beatins keeps six
-  // seasonal members but is no longer entirely seasonal, so it is workable.
-  return fameLib.summarise(fame, [], 0).collections.every(entry => !entry.seasonal);
-})(), fameLib.summarise(fame, [], 0).collections.filter(e => e.seasonal).map(e => e.name).join(', ') || 'none');
+check('and doing the seasonal ones yourself puts it back in reach', (() => {
+  // The six of Season's Beatins that are not in the realm all year. Once they
+  // are ticked nothing it still wants is seasonal, so it stops depending on
+  // the time of year — which is why this reads off what is missing rather
+  // than off the whole membership.
+  const before = fameLib.summarise(fame, [], 0).collections
+    .find(entry => entry.name === "Season's Beatins");
+  const hidden = before.missing.filter(name => fame.byName.get(name).availability !== 'standard');
+  if (hidden.length !== 6) return false;
+  const after = fameLib.summarise(fame, hidden, 0).collections
+    .find(entry => entry.name === "Season's Beatins");
+  return after.needs.join('+') === 'standard';
+})());
 
 check('a higher base fame makes the percentages matter more', (() => {
   const poor = fameLib.summarise(fame, [], 1000);
