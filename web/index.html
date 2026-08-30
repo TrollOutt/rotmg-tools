@@ -21,18 +21,16 @@
 
   <div class="home-cards">
     <button type="button" class="home-card" data-go="enchant">
+      <img class="home-card-art" data-art="Artifact Icons/The Fool Tarot Card-div2.png" alt="">
       <span class="home-card-title">Enchant Calculator</span>
-      <span class="home-card-line">What an enchantment actually costs.</span>
-      <small>Describe the item you hold, say what you want on it, and compare every
-        artifact and every order to roll them in.</small>
+      <span class="home-card-line">What an enchantment really costs.</span>
       <em class="home-card-go">Open →</em>
     </button>
 
     <button type="button" class="home-card" data-go="fame">
+      <img class="home-card-art" data-art="Dungeon Icons/Tomb of the Ancients.png" alt="">
       <span class="home-card-title">Fame Sweep</span>
       <span class="home-card-line">Which dungeons are worth the trip.</span>
-      <small>Tick off what you have completed. It works out what the collection
-        bonuses have already paid, what is left, and which dungeon to do next.</small>
       <em class="home-card-go">Open →</em>
     </button>
   </div>
@@ -48,6 +46,7 @@
 <div id="pageEnchant" class="app page" hidden>
 
   <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Enchant Calculator</h1>
     <p>Describe the item you actually hold, mark what you keep and what you still want, then compare every artifact and every route.</p>
     <div class="masthead-row">
@@ -226,7 +225,11 @@
       <label class="base-fame">Your base fame
         <input id="fameBase" type="number" min="0" step="100" value="0" inputmode="numeric">
       </label>
-      <div id="fameTotals" class="fame-totals"></div>
+      <div class="fame-avail" role="group" aria-label="Which dungeons to show">
+        <button type="button" class="filter-chip on" data-avail="standard">In the realm all year</button>
+        <button type="button" class="filter-chip" data-avail="seasonal">Seasonal</button>
+        <button type="button" class="filter-chip" data-avail="other">Event</button>
+      </div>
       <button id="fameReset" type="button" class="link-button">Clear the ticks</button>
     </div>
   </header>
@@ -241,7 +244,13 @@
 
       <section class="card step">
         <header><span class="step-badge">2</span><h2>Do this next</h2></header>
+        <p class="note">Most fame for the trouble. A dungeon that finishes a collection comes first.</p>
         <div id="fameNext" class="fame-next"></div>
+      </section>
+
+      <!-- The sum, where a sum belongs. -->
+      <section class="card fame-tally">
+        <table id="fameTotals"></table>
       </section>
     </section>
 
@@ -255,6 +264,7 @@
           <input id="fameSearch" type="search" placeholder="Search a dungeon…" autocomplete="off">
           <div class="fame-sort" role="group" aria-label="Order the dungeons">
             <button type="button" class="filter-chip on" data-sort="fame">By fame</button>
+            <button type="button" class="filter-chip" data-sort="hard">By difficulty</button>
             <button type="button" class="filter-chip" data-sort="name">By name</button>
             <button type="button" class="filter-chip" data-sort="todo">Left to do</button>
           </div>

@@ -1,0 +1,83 @@
+## How hard the game says each dungeon is, and whether its
+## portal is drawn moving. Both from the wiki page of the dungeon.
+##
+## Written by tools/fetch-sprites.js.
+##
+## dungeon|difficulty|picture
+
+Abyss of Demons|4|gif
+Advanced Kogbold Steamworks|9|png
+Ancient Ruins|3|png
+Battle for the Nexus|5|png
+Beachzone||png
+Belladonna's Garden|5|png
+Candyland Hunting Grounds|3|png
+Cave of A Thousand Treasures|2|png
+Cnidarian Reef|5|png
+Crystal Cavern|7|png
+Cultist Hideout|7|png
+Cursed Library|4|gif
+Davy Jones' Locker|5|png
+Deadwater Docks|5|gif
+Forax|5|png
+Forbidden Jungle|1|png
+Forest Maze|1|png
+Fungal Cavern|7|png
+Haunted Cemetery|4|gif
+Heroic Undead Lair|6|png
+Hidden Interregnum|7|png
+High Tech Terror|6|png
+Ice Citadel|7|png
+Ice Tomb|6|png
+Infernal Abyss of Demons|6|png
+Katalund|5|png
+Kogbold Steamworks|8|png
+Lair of Draconis|6|gif
+Lair of Shaitan|6|png
+Lost Halls|8|png
+Mad Lab|4|gif
+Magic Woods|3|png
+Malogia|5|png
+Manor of the Immortals|4|png
+Moonlight Village|9|png
+Mountain Temple|6|png
+Neo Forax|8|png
+Neo Katalund|8|png
+Neo Malogia|8|png
+Neo Untaris|8|png
+Ocean Trench|5|png
+Oryx Pandemonium Decaract||png
+Oryx's Castle|4|png
+Oryx's Chamber|4|png
+Oryx's Sanctuary|9|gif
+Parasite Chambers|5|gif
+Pirate Cave|1|png
+Plagued Nest|8|png
+Puppet Master's Encore|5|png
+Puppet Master's Theatre|4|png
+Queen Bunny Chamber|5|png
+Rainbow Road||png
+Santa Workshop||png
+Secluded Thicket|6|png
+Snake Pit|2|gif
+Spectral Penitentiary|8|png
+Spider Den|1|png
+Sprite World|2|png
+Stromwell's Rift I|5|png
+Stromwell's Rift II|7|png
+Stromwell's Rift III|10|png
+Sulfurous Wetlands|6|png
+The Crawling Depths|5|gif
+The Hive|2|png
+The Machine|4|png
+The Nest|7|png
+The Shatters|10|png
+The Tavern|5|png
+The Third Dimension|6|png
+The Void|8|png
+Tomb of the Ancients|6|png
+Toxic Sewers|4|png
+Undead Lair|3|gif
+Untaris|5|png
+Wine Cellar|6|png
+Woodland Labyrinth|5|gif

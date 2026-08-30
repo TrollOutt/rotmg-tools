@@ -191,6 +191,17 @@ function halve(image) {
   return { width, height, pixels: out };
 }
 
+// One wiki page, or null when there is none under that name. A dungeon can be
+// filed under a slug that keeps its apostrophe as "-s-", so a miss is normal
+// and not worth an error.
+async function getPage(url) {
+  try {
+    return (await get(url)).toString('utf8');
+  } catch (error) {
+    return null;
+  }
+}
+
 // Every named image on one wiki page, by the name it is labelled with.
 async function imagesOn(page) {
   const html = (await get(page)).toString('utf8');
@@ -287,16 +298,97 @@ async function main() {
   await fill('awakened enchantment', ENCHANT_PAGE, enchDir,
     awakened.filter(name => !fs.existsSync(path.join(enchDir, name + '.png'))), false);
 
-  // The dungeon portals, for Fame Sweep.
+  /*
+   * The dungeon portals, and how hard the game says each dungeon is.
+   *
+   * From each dungeon's own wiki page rather than the index: the index labels
+   * a few of them with the wrong picture — it has "Ice Citadel Key" and no
+   * portal at all — and only the individual pages carry the difficulty rating.
+   * An animated portal is preferred where one exists; most are drawn as a
+   * single frame there, and the client's own animation frames would mean
+   * decoding its spritesheets, which is a different job.
+   */
   const dungeonDir = path.join(root, 'data', 'GUI Files', 'Dungeon Icons');
-  // The dungeons with a ladder of their own, which is what Fame Sweep shows.
-  // Taking every "needs" line instead drags in the stats and the biome kill
-  // counters, which are conditions but not places.
+  const infoFile = path.join(root, 'data', 'Fame', 'dungeon-pages.txt');
   const fameData = require(path.join(root, 'web', 'fame.js'))
     .parse(fs.readFileSync(path.join(root, 'data', 'Fame', 'client-fame.txt'), 'utf8'));
-  const wanted = fameData.dungeons.map(dungeon => dungeon.name)
-    .filter(name => !fs.existsSync(path.join(dungeonDir, name + '.png')));
-  await fill('dungeon', DUNGEON_PAGE, dungeonDir, wanted, false, findImage);
+
+  // The wiki turns an apostrophe into "-s-", which is why matching on the
+  // index page put a key where Ice Citadel's portal should have been.
+  const SLUG_ALIAS = {
+    'Oryx Pandemonium Decaract': 'decaract',
+    // The client drops an apostrophe the wiki keeps.
+    'Santa Workshop': 'santa-s-workshop'
+  };
+  // Two have no portal drawn at all; their boss is the picture a player knows.
+  const PICTURE_ALIAS = { 'Oryx Pandemonium Decaract': 'Decaract' };
+  const slugsFor = name => {
+    if (SLUG_ALIAS[name]) return [SLUG_ALIAS[name]];
+    const plain = name.toLowerCase().replace(/[\u2019]/g, "'");
+    return [...new Set([
+      plain.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      plain.replace(/'/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    ])];
+  };
+
+  fs.mkdirSync(dungeonDir, { recursive: true });
+  const info = new Map();
+  const noPortal = [];
+  let fetched = 0;
+  let animated = 0;
+
+  for (const dungeon of fameData.dungeons) {
+    const target = path.join(dungeonDir, dungeon.name + '.png');
+    let page = null;
+    for (const slug of slugsFor(dungeon.name)) {
+      const attempt = await getPage('https://www.realmeye.com/wiki/' + slug);
+      if (attempt) { page = attempt; break; }
+    }
+    if (!page) { noPortal.push(dungeon.name + ' (no page)'); continue; }
+
+    const difficulty = (/Difficulty:\s*(\d+)/.exec(page) || [, ''])[1];
+    if (difficulty) info.set(dungeon.name, { difficulty: Number(difficulty) });
+
+    const images = [...page.matchAll(/<img[^>]*>/g)].map(m => ({
+      title: (/title="([^"]+)"/.exec(m[0]) || [, ''])[1],
+      src: (/src="([^"]+)"/.exec(m[0]) || [, ''])[1]
+    })).filter(x => x.src && (PICTURE_ALIAS[dungeon.name]
+      ? x.title === PICTURE_ALIAS[dungeon.name]
+      : /portal$/i.test(x.title)));
+    // An animated one first: it is the same portal, moving.
+    const pick = images.find(x => /\.gif/i.test(x.src)) || images[0];
+    if (!pick) { noPortal.push(dungeon.name); continue; }
+
+    const gif = /\.gif/i.test(pick.src);
+    const file = path.join(dungeonDir, dungeon.name + (gif ? '.gif' : '.png'));
+    if (fs.existsSync(file)) continue;
+    const bytes = await get(new URL(pick.src, DUNGEON_PAGE).href);
+    fs.writeFileSync(file, bytes);
+    if (gif) { animated++; if (fs.existsSync(target)) fs.unlinkSync(target); }
+    fetched++;
+    console.log('    ' + dungeon.name.padEnd(30) + (gif ? 'animated' : 'still')
+      + (difficulty ? '   difficulty ' + difficulty : ''));
+  }
+
+  const lines = ['## How hard the game says each dungeon is, and whether its',
+    '## portal is drawn moving. Both from the wiki page of the dungeon.',
+    '##',
+    '## Written by tools/fetch-sprites.js.',
+    '##',
+    '## dungeon|difficulty|picture',
+    ''];
+  for (const dungeon of fameData.dungeons) {
+    const entry = info.get(dungeon.name) || {};
+    const file = fs.existsSync(path.join(dungeonDir, dungeon.name + '.gif')) ? 'gif'
+      : fs.existsSync(path.join(dungeonDir, dungeon.name + '.png')) ? 'png' : '';
+    lines.push([dungeon.name, entry.difficulty || '', file].join('|'));
+  }
+  fs.writeFileSync(infoFile, lines.join('\n') + '\n', 'utf8');
+
+  console.log('\n  ' + fetched + ' portals written, ' + animated + ' of them animated');
+  console.log('  ' + info.size + ' of ' + fameData.dungeons.length + ' have a difficulty -> '
+    + path.relative(root, infoFile));
+  if (noPortal.length) console.log('  no portal drawn for: ' + noPortal.join(', '));
   console.log('');
 }
 

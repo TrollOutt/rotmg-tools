@@ -1509,8 +1509,42 @@ const REALMS = [
   { name: 'Abyss of Demons', sky: ['#552018', '#1c0a08'], glow: '#ff4542' },
   { name: 'The Shatters',    sky: ['#2a2c4f', '#0d0d1a'], glow: '#8854f0' },
   { name: 'Lost Halls',      sky: ['#443a1e', '#17120a'], glow: '#ffd026' },
-  { name: 'The Nexus',       sky: ['#2a2840', '#0d0c15'], glow: '#ffabf2' }
+  { name: 'The Nexus',       sky: ['#2a2840', '#0d0c15'], glow: '#ffabf2' },
+  { name: 'Haunted Cemetery', sky: ['#1e2b26', '#080d0b'], glow: '#8fe07a' }
 ];
+
+/*
+ * Which realm a page sits in.
+ *
+ * The Nexus is where you choose what to do, so it is the way in. Fame Sweep is
+ * about walking into dungeons that kill people, so it sits in the cemetery.
+ * The calculator keeps drifting through all of them, which it always did.
+ */
+const PAGE_REALM = { home: 'The Nexus', fame: 'Haunted Cemetery' };
+
+async function usePool(page) {
+  const wanted = page === 'fame' ? 'dungeon' : 'enchant';
+  if (!ambience.enabled || ambience.pool === wanted) return;
+  ambience.pool = wanted;
+  const loaded = wanted === 'dungeon' ? await dungeonSprites() : await ambienceSprites();
+  if (loaded.length) {
+    ambience.sprites = loaded;
+    if (ambience.layers && ambience.layers.length) repaintScatter(ambience.index);
+  }
+}
+
+function pinRealm(page) {
+  const wanted = PAGE_REALM[page];
+  const index = wanted ? REALMS.findIndex(realm => realm.name === wanted) : -1;
+  ambience.pinned = index >= 0 ? index : null;
+  if (!ambience.layers || !ambience.layers.length) return;
+  if (ambience.pinned !== null && ambience.index !== ambience.pinned) {
+    ambience.index = ambience.pinned;
+    weightAurora(ambience.index);
+    repaintScatter(ambience.index);
+    showRealm(ambience.index, false);
+  }
+}
 // The colour mix is re-weighted often and fades slowly, so it reads as a
 // continuous drift rather than a slideshow. The sprite scatter underneath is
 // repainted far less often, because that one is a real change of picture.
@@ -1526,6 +1560,34 @@ const ambience = {
 
 // The scatter uses the enchantment icons: they are the most varied and the
 // most recognisable of the sprites already in memory.
+/*
+ * What drifts in the background. Enchantment icons on the calculator, dungeon
+ * portals on Fame Sweep — the page's own subject, out of focus.
+ */
+function loadSprites(sources) {
+  return Promise.all(sources.map(src => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  }))).then(images => images.filter(Boolean));
+}
+
+function dungeonSprites() {
+  const seen = new Set();
+  const sources = [];
+  for (const line of String(ambience.fameText || '').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('needs|')) continue;
+    const name = trimmed.split('|')[1];
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    const src = asset('GUI Files', 'Dungeon Icons', name + '.png');
+    if (src) sources.push(src);
+  }
+  return loadSprites(sources);
+}
+
 function ambienceSprites() {
   const seen = new Set();
   const sources = [];
@@ -1683,11 +1745,13 @@ function startAmbience() {
   clearInterval(ambience.scatterTimer);
   ambience.timer = setInterval(() => {
     if (!ambience.enabled) return;
+    if (ambience.pinned !== null && ambience.pinned !== undefined) return;
     ambience.index = (ambience.index + 1) % REALMS.length;
     showRealm(ambience.index, true);
   }, REALM_INTERVAL);
   ambience.scatterTimer = setInterval(() => {
     if (!ambience.enabled) return;
+    if (ambience.pinned !== null && ambience.pinned !== undefined) return;
     repaintScatter(ambience.index);
   }, SCATTER_INTERVAL);
 }
@@ -1719,7 +1783,9 @@ async function initAmbience() {
   $('ambience').hidden = !enabled;
   if (!enabled) return;
   // Start on a random realm so two visitors do not see the same one.
-  ambience.index = Math.floor(Math.random() * REALMS.length);
+  ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
+    ? ambience.pinned
+    : Math.floor(Math.random() * REALMS.length);
   ambience.sprites = await ambienceSprites();
   startAmbience();
 }
@@ -2131,12 +2197,17 @@ async function openFamePage() {
   if (famePageReady) return;
   famePageReady = true;
   try {
-    const text = BUNDLE && BUNDLE.sources && BUNDLE.sources.fameText
-      ? BUNDLE.sources.fameText
+    const bundled = BUNDLE && BUNDLE.sources;
+    const text = bundled && bundled.fameText ? bundled.fameText
       : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
+    const info = bundled && bundled.dungeonText ? bundled.dungeonText
+      : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
     // The standalone build carries the portal pictures inlined; served from
     // the repository they are read from disk like every other sprite.
-    FamePage.init(text, BUNDLE ? BUNDLE.assets : null);
+    // Kept so the background can scatter the same portals the page shows.
+    ambience.fameText = text;
+    FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info);
+    usePool('fame');
   } catch (error) {
     console.error(error);
     famePageReady = false;
@@ -2148,6 +2219,8 @@ function showPage(name) {
   const page = PAGES[name] ? name : 'home';
   for (const [key, id] of Object.entries(PAGES)) $(id).hidden = key !== page;
   document.body.dataset.page = page;
+  pinRealm(page);
+  usePool(page);
   if (page === 'fame') openFamePage();
   window.scrollTo(0, 0);
 }
@@ -2165,6 +2238,17 @@ document.addEventListener('click', event => {
   routeFromHash();
 });
 window.addEventListener('hashchange', routeFromHash);
+
+/*
+ * The pictures on the way-in cards, resolved the same way as every other
+ * sprite: from disk when the page is served, from the bundle when it is the
+ * single-file copy, where "../data" does not exist.
+ */
+for (const image of document.querySelectorAll('[data-art]')) {
+  const [folder, file] = image.dataset.art.split('/');
+  const src = asset('GUI Files', folder, file);
+  if (src) image.src = src; else image.remove();
+}
 
 bind();
 routeFromHash();

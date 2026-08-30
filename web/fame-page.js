@@ -34,13 +34,26 @@ var FamePage = (function () {
     search: '',
     sort: 'fame',
     focus: null,          // the collection being worked towards, if any
-    assets: null          // the standalone build's inlined pictures, if any
+    // Which dungeons count. Only the ones in the realm all year, to begin
+    // with: the seasonal and event ones cannot be planned for, and eleven of
+    // the event ones are in no collection at all.
+    avail: new Set(['standard']),
+    assets: null,         // the standalone build's inlined pictures, if any
+    info: new Map()       // difficulty and picture format, per dungeon
   };
 
+  // The portal is a GIF where the game draws it moving, a PNG otherwise; which
+  // is which comes from data/Fame/dungeon-pages.txt rather than being guessed.
   function spriteFor(name) {
-    const key = SPRITES + '/' + name + '.png';
+    const kind = (state.info.get(name) || {}).picture || 'png';
+    const key = SPRITES + '/' + name + '.' + kind;
     if (state.assets) return state.assets[key] || null;
-    return '../data/' + esc(SPRITES).replace(/%2F/g, '/') + '/' + esc(name) + '.png';
+    return '../data/' + esc(SPRITES).replace(/%2F/g, '/') + '/' + esc(name) + '.' + kind;
+  }
+
+  function difficultyOf(name) {
+    const entry = state.info.get(name);
+    return entry && entry.difficulty ? entry.difficulty : null;
   }
 
   function save() {
@@ -61,23 +74,32 @@ var FamePage = (function () {
   /* ---------------------------------------------------------------- *
    * The running total, along the top                                  *
    * ---------------------------------------------------------------- */
+  /*
+   * The sum, read down the way a sum is read: what the character has, what the
+   * dungeons already paid, what is still out there, and the line under it.
+   */
   function renderTotals(view) {
-    const figure = (value, label, hint) =>
-      `<span class="figure"${hint ? ` title="${html(hint)}"` : ''}><b>${value}</b><small>${html(label)}</small></span>`;
-    $('fameTotals').innerHTML = [
-      figure(count(view.earnedFame), 'earned',
-        `${count(view.earnedFlat)} flat and ${view.earnedPercent}% of your base fame`),
-      figure(count(view.remainingFame), 'still to take',
-        `${count(view.remainingFlat)} flat and ${view.remainingPercent}% of your base fame`),
-      figure(`${view.ticked}/${view.dungeons}`, 'dungeons')
-    ].join('');
+    const row = (label, value, note, className) =>
+      `<tr class="${className || ''}"><th>${html(label)}</th>`
+      + `<td class="fame-num">${value}</td><td class="fame-note">${note || ''}</td></tr>`;
+    $('fameTotals').innerHTML =
+      row('Base fame', view.base ? count(view.base) : '—', 'what your experience earned')
+      + row('Earned from dungeons', count(view.earnedFame),
+        `${count(view.earnedFlat)} flat${view.earnedPercent ? ` + ${view.earnedPercent}%` : ''}`)
+      + row('Fame now', count(view.total), '', 'is-sum')
+      + row('Still to take', count(view.remainingFame),
+        `${count(view.remainingFlat)} flat + ${view.remainingPercent}%`, 'is-gap')
+      + row('If you swept it all', count(view.potential),
+        `${view.ticked} of ${view.dungeons} dungeons ticked`, 'is-total');
   }
 
   /* ---------------------------------------------------------------- *
    * The collections, one of which you can be going for                *
    * ---------------------------------------------------------------- */
   function renderCollections(view) {
-    const rows = view.collections.slice().sort((a, b) => {
+    const rows = view.collections
+      .filter(entry => !entry.seasonal || state.avail.has('seasonal'))
+      .sort((a, b) => {
       if (a.done !== b.done) return a.done ? 1 : -1;
       return a.missing.length - b.missing.length || b.value - a.value;
     });
@@ -101,7 +123,7 @@ var FamePage = (function () {
   }
 
   function renderNext(view) {
-    const best = EnchantFame.nextBest(state.data, state.done, state.base, 4);
+    const best = EnchantFame.nextBest(state.data, state.done, state.base, 4, state.avail);
     if (!best.length) {
       $('fameNext').innerHTML = '<p class="note">Every dungeon is ticked. There is nothing left to sweep.</p>';
       return;
@@ -113,7 +135,7 @@ var FamePage = (function () {
         <span class="fame-next-gain">${count(entry.gain)}<small>fame</small></span>
         <small class="fame-next-why">${entry.unlocks.length
           ? `finishes ${entry.unlocks.map(u => html(u.name)).join(' and ')}`
-          : 'first completion'}</small>
+          : `${Math.round(entry.value)}× what the run itself pays`}</small>
       </button>`).join('');
   }
 
@@ -137,8 +159,16 @@ var FamePage = (function () {
     const focus = state.focus ? view.collections.find(entry => entry.id === state.focus) : null;
     const wanted = focus ? new Set(focus.missing) : null;
 
-    let rows = state.data.dungeons.filter(dungeon => !term || dungeon.name.toLowerCase().includes(term));
+    let rows = state.data.dungeons
+      .filter(dungeon => state.avail.has(dungeon.availability))
+      .filter(dungeon => !term || dungeon.name.toLowerCase().includes(term));
     if (state.sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
+    else if (state.sort === 'hard') {
+      // The game's own rating, 1 to 10, off each dungeon's wiki page. Easiest
+      // first, because that is the order you would actually do them in.
+      rows.sort((a, b) => (difficultyOf(a.name) || 99) - (difficultyOf(b.name) || 99)
+        || a.name.localeCompare(b.name));
+    }
     else if (state.sort === 'todo') {
       rows = rows.filter(dungeon => !state.done.has(dungeon.name));
       rows.sort((a, b) => EnchantFame.firstCompletion(b) - EnchantFame.firstCompletion(a));
@@ -163,6 +193,9 @@ var FamePage = (function () {
           ${tile(dungeon.name, 'fame-tile-art')}
           <span class="fame-tile-name">${html(dungeon.name)}</span>
           <span class="fame-tile-fame">+${count(EnchantFame.firstCompletion(dungeon))}</span>
+          ${difficultyOf(dungeon.name)
+            ? `<span class="fame-tile-diff" title="The game rates this dungeon ${difficultyOf(dungeon.name)} out of 10">${difficultyOf(dungeon.name)}</span>`
+            : ''}
           ${on ? '<span class="fame-tile-check">✓</span>' : ''}
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>';
@@ -183,9 +216,15 @@ var FamePage = (function () {
     render();
   }
 
-  function init(text, assets) {
+  function init(text, assets, dungeonInfo) {
     state.data = EnchantFame.parse(text);
     state.assets = assets || null;
+    for (const raw of String(dungeonInfo || '').replace(/\r/g, '').split('\n')) {
+      const line = raw.trim();
+      if (!line || line.startsWith('##')) continue;
+      const [name, difficulty, picture] = line.split('|');
+      state.info.set(name, { difficulty: Number(difficulty) || 0, picture: picture || 'png' });
+    }
     load();
     $('fameBase').value = state.base || '';
 
@@ -219,6 +258,22 @@ var FamePage = (function () {
       state.sort = button.dataset.sort;
       for (const chip of document.querySelectorAll('.fame-sort [data-sort]')) {
         chip.classList.toggle('on', chip === button);
+      }
+      render();
+    });
+    document.querySelector('.fame-avail').addEventListener('click', event => {
+      const button = event.target.closest('[data-avail]');
+      if (!button) return;
+      const kind = button.dataset.avail;
+      // Never all off: an empty grid is a broken page, not a filter.
+      if (state.avail.has(kind) && state.avail.size > 1) state.avail.delete(kind);
+      else state.avail.add(kind);
+      button.classList.toggle('on', state.avail.has(kind));
+      // A collection you can no longer see should not still be the focus.
+      if (state.focus) {
+        const kept = EnchantFame.summarise(state.data, state.done, state.base).collections
+          .find(entry => entry.id === state.focus);
+        if (kept && kept.seasonal && !state.avail.has('seasonal')) state.focus = null;
       }
       render();
     });

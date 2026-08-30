@@ -1168,15 +1168,17 @@ check('what is earned and what is left always add up to everything', (() => {
   return true;
 })());
 
-check('the last dungeon of a collection is worth the whole collection', (() => {
+check('the last dungeon of a collection comes first and carries it', (() => {
+  // Its reward is its own completion plus the whole of Tunnel Rat, and a
+  // share of every other collection it is still outstanding from — so at
+  // least the collection, and more.
   const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
   const done = tr.needs.map(need => need.what);
   const last = done.pop();
-  const best = fameLib.nextBest(fame, done, 12000, 5);
-  const top = best[0];
+  const top = fameLib.nextBest(fame, done, 12000, 5)[0];
   return top.name === last
     && top.unlocks.some(entry => entry.name === 'Tunnel Rat')
-    && Math.abs(top.gain - (top.first + 3000 + 12000 * 0.075)) < 1e-9;
+    && top.gain >= top.first + 3000 + 12000 * 0.075;
 })(), (() => {
   const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
   const done = tr.needs.map(need => need.what);
@@ -1184,6 +1186,26 @@ check('the last dungeon of a collection is worth the whole collection', (() => {
   const top = fameLib.nextBest(fame, done, 12000, 1)[0];
   return `${top.name}, ${Math.round(top.gain)} fame`;
 })());
+
+check('and otherwise the best value for the effort leads', (() => {
+  // Nothing done: Pirate Cave is five minutes and advances four collections,
+  // which beats anything that pays more but takes an evening.
+  const best = fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']));
+  return best[0].name === 'Pirate Cave' && best[0].value > best[1].value;
+})(), fameLib.nextBest(fame, [], 12000, 3, new Set(['standard']))
+  .map(entry => `${entry.name} ${Math.round(entry.value)}x`).join(', '));
+
+check('the client itself says which dungeons are in the realm all year', (() => {
+  const kinds = new Map();
+  for (const dungeon of fame.dungeons) kinds.set(dungeon.availability, (kinds.get(dungeon.availability) || 0) + 1);
+  return kinds.get('standard') === 49 && kinds.get('seasonal') === 16 && kinds.get('other') === 11;
+})(), fame.dungeons.reduce((all, d) => all + d.availability[0], ''));
+
+check('a collection everything in which is seasonal is marked as one', (() => {
+  const view = fameLib.summarise(fame, [], 0);
+  const seasonal = view.collections.filter(entry => entry.seasonal).map(entry => entry.name).sort();
+  return seasonal.join(', ') === "Far Out, Farther Out, Season's Beatins";
+})(), fameLib.summarise(fame, [], 0).collections.filter(e => e.seasonal).map(e => e.name).join(', '));
 
 check('a higher base fame makes the percentages matter more', (() => {
   const poor = fameLib.summarise(fame, [], 1000);

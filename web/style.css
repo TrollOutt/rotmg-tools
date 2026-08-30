@@ -160,11 +160,11 @@ img { image-rendering: pixelated; }
   color: #f6ecd2;
   text-shadow: 0 0 18px rgba(255, 208, 38, .18), 0 2px 0 rgba(0, 0, 0, .5);
 }
-.masthead p { margin: 4px 0 10px; color: var(--muted); max-width: 78ch; text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.masthead p { margin: 4px 0 10px; font-size: 14px; color: var(--muted); max-width: 78ch; text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
 .masthead-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .masthead-row .link-button { font-size: 12px; }
 .status {
-  display: inline-block; font-size: 12.5px; color: var(--muted);
+  display: inline-block; font-size: 13.5px; color: var(--muted);
   background: rgba(26, 24, 36, .85); border: 1px solid var(--line);
   border-radius: 999px; padding: 4px 12px;
 }
@@ -989,16 +989,25 @@ table.mini td { padding: 3px 8px; border: 0; }
  * ------------------------------------------------------------------ */
 
 .home-head { max-width: 70ch; }
-.home-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 24px; }
+.home-cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 20px; }
 .home-card {
-  display: grid; gap: 6px; text-align: left; font: inherit; cursor: pointer;
+  display: grid; gap: 3px; text-align: left; font: inherit; cursor: pointer;
+  grid-template-columns: 48px 1fr; grid-template-rows: auto auto auto;
   background: rgba(26, 24, 36, .88); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 18px 20px; color: var(--text);
+  border-radius: var(--radius); padding: 14px 16px; color: var(--text);
+  align-items: center; column-gap: 14px;
 }
+/* The picture says what the tool is faster than the sentence under it. The
+   slot keeps its width whether or not the picture arrives, so a missing one
+   cannot collapse the row. */
+.home-card-art {
+  grid-row: 1 / 4; grid-column: 1; width: 48px; height: 48px;
+  object-fit: contain; image-rendering: pixelated;
+}
+.home-card-title, .home-card-line, .home-card-go { grid-column: 2; }
 .home-card:hover { border-color: var(--accent); background: rgba(38, 34, 51, .9); }
 .home-card-title { font-size: 19px; font-weight: 600; color: #f6ecd2; }
 .home-card-line { color: var(--muted); }
-.home-card small { color: var(--dim); line-height: 1.45; }
 .home-card-go { margin-top: 4px; font-style: normal; font-size: 12.5px; color: var(--accent); }
 
 .masthead .back { display: inline-block; margin-bottom: 6px; }
@@ -1121,3 +1130,34 @@ table.mini td { padding: 3px 8px; border: 0; }
 .fame-next-icon { width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; }
 .fame-next-icon.no-art { background: rgba(255, 255, 255, .05); border-radius: 5px; }
 .fame-next-why { grid-column: 2 / -1; }
+
+/* Fame Sweep: which dungeons count, and the sum at the foot of the column. */
+.fame-avail { display: flex; gap: 4px; flex-wrap: wrap; }
+.fame-avail .filter-chip { font-size: 12px; }
+
+.fame-tally { padding-top: 12px; }
+.fame-tally table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.fame-tally th {
+  text-align: left; font-weight: 400; color: var(--muted); padding: 3px 0;
+}
+.fame-tally .fame-num {
+  text-align: right; padding: 3px 0 3px 12px; color: var(--text);
+  font-variant-numeric: tabular-nums; font-weight: 600;
+}
+.fame-tally .fame-note { padding-left: 12px; color: var(--dim); font-size: 11px; white-space: nowrap; }
+.fame-tally .is-sum th, .fame-tally .is-sum .fame-num { border-top: 1px solid var(--line); padding-top: 6px; }
+.fame-tally .is-gap th, .fame-tally .is-gap .fame-num { color: var(--muted); }
+.fame-tally .is-total th { color: var(--text); }
+.fame-tally .is-total .fame-num {
+  color: var(--divine); font-size: 15px;
+  border-top: 2px solid var(--line); padding-top: 6px;
+}
+.fame-tally .is-total th { border-top: 2px solid var(--line); padding-top: 6px; }
+
+/* The game's own difficulty rating, in the corner of the portal. */
+.fame-tile-diff {
+  position: absolute; top: 4px; left: 6px; font-size: 10px; line-height: 1;
+  padding: 2px 4px; border-radius: 4px; color: var(--dim);
+  background: rgba(0, 0, 0, .45); font-variant-numeric: tabular-nums;
+}
+.fame-tile.is-wanted .fame-tile-diff { color: var(--locked); }

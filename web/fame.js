@@ -77,6 +77,31 @@ var EnchantFame = (function () {
       }
     }
 
+    /*
+     * Whether a dungeon is in the realm all year.
+     *
+     * The client says so itself, in two of the collections: "Hero of the
+     * Nexus" wants every standard dungeon and "Season's Beatins" every
+     * seasonal one. They do not overlap, and eleven dungeons are in neither —
+     * event and rotating content, in no collection at all, so there is nothing
+     * to complete by doing them.
+     */
+    const named = name => {
+      const entry = collections.find(collection => collection.name === name);
+      return new Set(entry ? entry.needs.map(need => need.what) : []);
+    };
+    const standard = named('Hero of the Nexus');
+    const seasonal = named("Season's Beatins");
+    for (const dungeon of dungeons.values()) {
+      dungeon.availability = standard.has(dungeon.name) ? 'standard'
+        : seasonal.has(dungeon.name) ? 'seasonal' : 'other';
+    }
+    // And a collection is seasonal when everything it wants is.
+    for (const collection of collections) {
+      collection.seasonal = collection.needs.length > 0
+        && collection.needs.every(need => seasonal.has(need.what));
+    }
+
     return {
       bonuses,
       collections,
@@ -112,6 +137,7 @@ var EnchantFame = (function () {
       return {
         id: collection.id,
         name: collection.name,
+        seasonal: Boolean(collection.seasonal),
         description: collection.description,
         absolute: collection.absolute,
         relative: collection.relative,
@@ -150,33 +176,52 @@ var EnchantFame = (function () {
   }
 
   /*
-   * The dungeons that finish the most fame for the least work.
+   * The dungeons worth doing next, best value for the effort first.
    *
-   * A dungeon is worth its own first completion plus, for every collection it
-   * is the last one missing from, that whole collection. Ordering by that is
-   * what turns a list of eighty checkboxes into a plan.
+   * Reward is what one completion actually brings: the dungeon's own first
+   * completion, plus a fair share of every unfinished collection it counts
+   * towards — the whole collection if it is the last one missing, a twelfth
+   * of it if eleven others are also outstanding.
+   *
+   * Effort is the fame the game itself pays for a first completion, which is
+   * its own ranking of how hard a dungeon is: 2 for Pirate Cave, 500 for
+   * Oryx's Sanctuary. Dividing one by the other answers the question a
+   * player actually asks — not "what pays most", which is always the hardest
+   * thing on the list, but "what pays most for the trouble".
    */
-  function nextBest(data, done, baseFame, limit) {
+  function nextBest(data, done, baseFame, limit, allow) {
     const ticked = done instanceof Set ? done : new Set(done || []);
     const state = summarise(data, ticked, baseFame);
     const byId = new Map(state.collections.map(entry => [entry.id, entry]));
 
     return data.dungeons
       .filter(dungeon => !ticked.has(dungeon.name))
+      .filter(dungeon => !allow || allow.has(dungeon.availability))
       .map(dungeon => {
-        let unlocks = [];
-        let gain = firstCompletion(dungeon);
+        const first = firstCompletion(dungeon);
+        const unlocks = [];
+        let gain = first;
         for (const id of dungeon.collections) {
           const collection = byId.get(id);
-          // Only counts if this dungeon is the one thing left.
-          if (collection && collection.missing.length === 1 && collection.missing[0] === dungeon.name) {
-            unlocks.push(collection);
-            gain += collection.value;
-          }
+          if (!collection || collection.done) continue;
+          gain += collection.value / collection.missing.length;
+          if (collection.missing.length === 1) unlocks.push(collection);
         }
-        return { name: dungeon.name, gain, unlocks, first: firstCompletion(dungeon) };
+        // Effort of at least one, so a dungeon the game pays nothing for
+        // cannot divide by zero and float to the top.
+        const value = gain / Math.max(first, 1);
+        return { name: dungeon.name, gain, value, unlocks, first, availability: dungeon.availability };
       })
-      .sort((a, b) => b.gain - a.gain || a.name.localeCompare(b.name))
+      /*
+       * Value for effort orders the list, with one exception: a dungeon that
+       * finishes a collection goes first whatever its ratio. Finishing one
+       * pays a lump sum the moment you walk out, and by the ratio alone it is
+       * beaten by any five-minute dungeon that merely inches four collections
+       * forward — which is true per unit of effort and useless as advice.
+       */
+      .sort((a, b) => (b.unlocks.length ? 1 : 0) - (a.unlocks.length ? 1 : 0)
+        || (a.unlocks.length ? b.gain - a.gain : b.value - a.value)
+        || b.gain - a.gain || a.name.localeCompare(b.name))
       .slice(0, limit || 5);
   }
 

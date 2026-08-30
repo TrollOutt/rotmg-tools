@@ -47,6 +47,7 @@ const sources = {
   clientModText: readText('Enchantment documents', 'client-enchantments.txt'),
   clientItemText: readText('Items', 'client-items.txt'),
   fameText: readText('Fame', 'client-fame.txt'),
+  dungeonText: readText('Fame', 'dungeon-pages.txt'),
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
 };
@@ -65,7 +66,8 @@ function embed(folder, file) {
   if (!fs.existsSync(absolute)) return false;
   const bytes = fs.readFileSync(absolute);
   assetBytes += bytes.length;
-  assets[`GUI Files/${folder}/${file}`] = `data:image/png;base64,${bytes.toString('base64')}`;
+  const kind = /.gif$/i.test(file) ? 'gif' : 'png';
+  assets[`GUI Files/${folder}/${file}`] = `data:image/${kind};base64,${bytes.toString('base64')}`;
   return true;
 }
 
@@ -75,7 +77,9 @@ function embedAll(folder, filter) {
   // ext4 does not, which put the same assets in a different order in the
   // bundle and made two correct builds differ.
   for (const file of fs.readdirSync(path.join(gui, folder)).sort()) {
-    if (!file.toLowerCase().endsWith('.png')) continue;
+    // The dungeon portals are animated where the game animates them, and an
+    // animated PNG is not a thing the wiki serves, so GIFs come in too.
+    if (!/.(png|gif)$/i.test(file)) continue;
     if (filter && !filter(file)) continue;
     if (embed(folder, file)) added++;
   }
