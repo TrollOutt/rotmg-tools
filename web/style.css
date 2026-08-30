@@ -1060,14 +1060,43 @@ table.mini td { padding: 3px 8px; border: 0; }
 
 /* ---------------- Realm Atlas ---------------- */
 
-.realm-head { margin-bottom: 14px; }
-.realm-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 16px; align-items: stretch; min-height: min(720px, calc(100vh - 180px)); }
-.realm-stage, .realm-details {
-  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
-  background: linear-gradient(180deg, rgba(26, 24, 36, .82), rgba(13, 16, 27, .92));
-  box-shadow: inset 0 1px 0 rgba(236, 231, 220, .06), 0 2px 18px rgba(0, 0, 0, .38);
+/* ---------------- the atlas takes the window ---------------- *
+ * A map in a box is a picture of a map. This one is the page: the sea runs
+ * to all four edges and everything else — the way back, the legend, the
+ * region you opened — floats over it. Panning under a panel is fine; you
+ * sweep the realm out from behind it.
+ */
+#pageRealm {
+  position: fixed; inset: 0; margin: 0; padding: 0;
+  max-width: none; width: 100%; height: 100%; overflow: hidden;
 }
-.realm-stage { position: relative; min-height: 510px; touch-action: none; }
+#pageRealm .realm-head {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+  margin: 0; padding: 12px 16px 26px;
+  display: flex; align-items: center; gap: 14px;
+  /* Faded rather than filled, so the map keeps running under the title. */
+  background: linear-gradient(180deg, rgba(8, 11, 18, .82) 0%, rgba(8, 11, 18, .55) 45%, transparent 100%);
+  pointer-events: none;
+}
+#pageRealm .realm-head > * { pointer-events: auto; }
+#pageRealm .realm-head h1 { flex: none; }
+#pageRealm .realm-head p {
+  margin: 0; flex: 1; min-width: 0; font-size: 12.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.realm-layout { display: block; height: 100%; }
+.realm-stage {
+  position: absolute; inset: 0; touch-action: none;
+  border: 0; border-radius: 0; overflow: hidden;
+}
+.realm-details {
+  position: absolute; z-index: 2; top: 74px; right: 14px; bottom: 14px;
+  width: min(380px, calc(100% - 28px));
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: auto;
+  background: linear-gradient(180deg, rgba(20, 23, 33, .93), rgba(11, 14, 23, .96));
+  box-shadow: 0 8px 34px rgba(0, 0, 0, .5);
+  backdrop-filter: blur(8px);
+}
 #realmCanvas { display: block; width: 100%; height: 100%; cursor: grab; }
 #realmCanvas:active { cursor: grabbing; }
 .realm-map-controls { position: absolute; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: calc(100% - 24px); pointer-events: none; }
@@ -1097,9 +1126,12 @@ table.mini td { padding: 3px 8px; border: 0; }
 .realm-monsters small { display: block; margin-top: 2px; color: var(--dim); font-size: 11px; }
 
 @media (max-width: 940px) {
-  .realm-layout { grid-template-columns: 1fr; min-height: 0; }
-  .realm-stage { min-height: min(76vh, 650px); }
-  .realm-details { max-height: none; }
+  /* Narrow: the panel lies along the foot instead of down the side, and
+     still floats over the map rather than taking a share of it. */
+  .realm-details {
+    top: auto; left: 12px; right: 12px; bottom: 12px;
+    width: auto; max-height: 46%;
+  }
 }
 /* The field it was drawn on is cut away, so the glow follows the outline of
    the room itself — the antlers, the shelf, the edge of the carpet — instead
