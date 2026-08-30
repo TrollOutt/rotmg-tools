@@ -1523,7 +1523,9 @@ const REALMS = [
 const PAGE_REALM = { home: 'The Nexus', fame: 'Haunted Cemetery' };
 
 async function usePool(page) {
-  const wanted = page === 'fame' ? 'dungeon' : 'enchant';
+  // The Nexus is the room every portal opens into, so the way in gets them
+  // too — under its own colours rather than the cemetery's.
+  const wanted = (page === 'fame' || page === 'home') ? 'dungeon' : 'enchant';
   if (!ambience.enabled || ambience.pool === wanted) return;
   ambience.pool = wanted;
   const loaded = wanted === 'dungeon' ? await dungeonSprites() : await ambienceSprites();
@@ -1573,22 +1575,50 @@ function loadSprites(sources) {
   }))).then(images => images.filter(Boolean));
 }
 
-function dungeonSprites() {
-  const seen = new Set();
+async function fameSource() {
+  if (ambience.fameText) return ambience.fameText;
+  const bundled = BUNDLE && BUNDLE.sources && BUNDLE.sources.fameText;
+  ambience.fameText = bundled
+    || await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/'))
+      .then(response => response.text()).catch(() => '');
+  return ambience.fameText;
+}
+
+/*
+ * The portals, at the format each one is actually stored in: eleven are
+ * animated GIFs and the rest single PNGs. Asking for a .png every time
+ * silently dropped exactly the ones worth having behind a moving page.
+ */
+async function dungeonSprites() {
+  const info = await dungeonInfo();
   const sources = [];
-  for (const line of String(ambience.fameText || '').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith('needs|')) continue;
-    const name = trimmed.split('|')[1];
-    if (!name || seen.has(name)) continue;
-    seen.add(name);
-    const src = asset('GUI Files', 'Dungeon Icons', name + '.png');
+  for (const [name, kind] of info) {
+    const src = asset('GUI Files', 'Dungeon Icons', name + '.' + kind);
     if (src) sources.push(src);
   }
   return loadSprites(sources);
 }
 
+// name -> "gif" or "png", from data/Fame/dungeon-pages.txt.
+async function dungeonInfo() {
+  if (ambience.dungeonInfo) return ambience.dungeonInfo;
+  const bundled = BUNDLE && BUNDLE.sources && BUNDLE.sources.dungeonText;
+  const text = bundled
+    || await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/'))
+      .then(response => response.text()).catch(() => '');
+  const info = new Map();
+  for (const raw of String(text).split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('##')) continue;
+    const parts = line.split('|');
+    if (parts[0] && parts[2]) info.set(parts[0], parts[2]);
+  }
+  ambience.dungeonInfo = info;
+  return info;
+}
+
 function ambienceSprites() {
+  if (!state.data) return Promise.resolve([]);
   const seen = new Set();
   const sources = [];
   for (const mod of state.data.enchants) {
@@ -1708,7 +1738,32 @@ function showRealm(index, announce) {
 }
 
 // The sprite scatter is a genuine change of picture, so it cross-fades.
+function scatterDom(seed) {
+  let value = seed >>> 0;
+  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
+  const pieces = [];
+  for (let i = 0; i < 26; i++) {
+    const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
+    if (!sprite || !sprite.src) continue;
+    const size = 7 + random() * 16;
+    pieces.push(`<img src="${sprite.src}" alt="" style="`
+      + `left:${(random() * 104 - 2).toFixed(2)}%;top:${(random() * 104 - 2).toFixed(2)}%;`
+      + `width:${size.toFixed(2)}vmin;opacity:${(0.3 + random() * 0.45).toFixed(2)};`
+      + `transform:rotate(${((random() - 0.5) * 40).toFixed(1)}deg);`
+      + `animation-duration:${(60 + random() * 90).toFixed(0)}s;`
+      + `animation-delay:-${(random() * 90).toFixed(0)}s">`);
+  }
+  ambience.dom.innerHTML = pieces.join('');
+}
+
 function repaintScatter(index) {
+  if (ambience.pool === 'dungeon' && ambience.dom) {
+    ambience.dom.hidden = false;
+    for (const canvas of ambience.layers) canvas.classList.remove('on');
+    scatterDom((index + 1) * 2654435761);
+    return;
+  }
+  if (ambience.dom) { ambience.dom.hidden = true; ambience.dom.innerHTML = ''; }
   const back = ambience.layers[1 - ambience.front];
   paintRealm(back, REALMS[index % REALMS.length], (index + 1) * 2654435761);
   back.classList.add('on', 'drift');
@@ -1733,6 +1788,16 @@ function startAmbience() {
   const probe = ambience.layers[0].getContext('2d');
   ambience.canBlur = typeof probe.filter === 'string';
   host.classList.toggle('css-blur', !ambience.canBlur);
+  /*
+   * A layer of real elements beside the canvases.
+   *
+   * A canvas draws the first frame of an animated portal and nothing after, so
+   * the moving ones would sit still. These are ordinary images, blurred and
+   * drifting by stylesheet, and they animate because the browser animates them.
+   */
+  ambience.dom = document.createElement('div');
+  ambience.dom.className = 'ambience-dom';
+  host.append(ambience.dom);
   buildAurora(host);
 
   ambience.front = 1;
@@ -1786,7 +1851,12 @@ async function initAmbience() {
   ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
     ? ambience.pinned
     : Math.floor(Math.random() * REALMS.length);
-  ambience.sprites = await ambienceSprites();
+  // Whichever set the page already asked for. Routing happens before the data
+  // is read, so this runs second and must not undo the choice it made.
+  if (!ambience.pool) ambience.pool = 'enchant';
+  ambience.sprites = ambience.pool === 'dungeon'
+    ? await dungeonSprites()
+    : await ambienceSprites();
   startAmbience();
 }
 

@@ -33,7 +33,7 @@ var FamePage = (function () {
     base: 0,
     search: '',
     sort: 'fame',
-    focus: null,          // the collection being worked towards, if any
+    focus: new Set(),     // the collections being worked towards, if any
     // Which dungeons count. Only the ones in the realm all year, to begin
     // with: the seasonal and event ones cannot be planned for, and eleven of
     // the event ones are in no collection at all.
@@ -109,8 +109,8 @@ var FamePage = (function () {
       const pct = Math.round(entry.have / entry.wanted.length * 100);
       return `
       <button type="button" class="fame-coll${entry.done ? ' is-done' : ''}${
-        state.focus === entry.id ? ' is-focus' : ''}" data-collection="${html(entry.id)}"
-        aria-pressed="${state.focus === entry.id}"
+        state.focus.has(entry.id) ? ' is-focus' : ''}" data-collection="${html(entry.id)}"
+        aria-pressed="${state.focus.has(entry.id)}"
         style="--fill:${pct}%"
         title="${html(entry.name)} — ${entry.have} of ${entry.wanted.length} done, worth ${
           count(entry.absolute)} plus ${entry.relative}% of your base fame">
@@ -156,8 +156,10 @@ var FamePage = (function () {
 
   function renderGrid(view) {
     const term = state.search.trim().toLowerCase();
-    const focus = state.focus ? view.collections.find(entry => entry.id === state.focus) : null;
-    const wanted = focus ? new Set(focus.missing) : null;
+    // Several collections can be the goal at once; the grid lights up
+    // everything any of them still wants.
+    const chosen = view.collections.filter(entry => state.focus.has(entry.id));
+    const wanted = chosen.length ? new Set(chosen.flatMap(entry => entry.missing)) : null;
 
     let rows = state.data.dungeons
       .filter(dungeon => state.avail.has(dungeon.availability))
@@ -178,8 +180,8 @@ var FamePage = (function () {
         || a.name.localeCompare(b.name));
     }
 
-    $('fameTickedCount').textContent = focus
-      ? `${focus.name}: ${focus.missing.length} to go`
+    $('fameTickedCount').textContent = chosen.length
+      ? `${wanted.size} to go for ${chosen.length === 1 ? chosen[0].name : chosen.length + ' collections'}`
       : `${state.done.size} of ${state.data.dungeons.length} ticked`;
 
     $('fameGrid').innerHTML = rows.length ? rows.map(dungeon => {
@@ -248,8 +250,9 @@ var FamePage = (function () {
     $('fameCollections').addEventListener('click', event => {
       const row = event.target.closest('[data-collection]');
       if (!row) return;
-      // Clicking the one you are already going for stops focusing.
-      state.focus = state.focus === row.dataset.collection ? null : row.dataset.collection;
+      // Clicking one you are already going for drops it.
+      const id = row.dataset.collection;
+      if (state.focus.has(id)) state.focus.delete(id); else state.focus.add(id);
       render();
     });
     document.querySelector('.fame-sort').addEventListener('click', event => {
@@ -270,10 +273,11 @@ var FamePage = (function () {
       else state.avail.add(kind);
       button.classList.toggle('on', state.avail.has(kind));
       // A collection you can no longer see should not still be the focus.
-      if (state.focus) {
-        const kept = EnchantFame.summarise(state.data, state.done, state.base).collections
-          .find(entry => entry.id === state.focus);
-        if (kept && kept.seasonal && !state.avail.has('seasonal')) state.focus = null;
+      // A collection you can no longer see should not still be a goal.
+      if (state.focus.size && !state.avail.has('seasonal')) {
+        for (const entry of EnchantFame.summarise(state.data, state.done, state.base).collections) {
+          if (entry.seasonal) state.focus.delete(entry.id);
+        }
       }
       render();
     });

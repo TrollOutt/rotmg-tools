@@ -32,7 +32,7 @@ Ice Tomb|6|png
 Infernal Abyss of Demons|6|png
 Katalund|5|png
 Kogbold Steamworks|8|png
-Lair of Draconis|6|gif
+Lair of Draconis|6|png
 Lair of Shaitan|6|png
 Lost Halls|8|png
 Mad Lab|4|gif

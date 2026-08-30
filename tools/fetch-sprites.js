@@ -321,7 +321,17 @@ async function main() {
     'Santa Workshop': 'santa-s-workshop'
   };
   // Two have no portal drawn at all; their boss is the picture a player knows.
-  const PICTURE_ALIAS = { 'Oryx Pandemonium Decaract': 'Decaract' };
+  /*
+   * Where the page titles the picture something other than the dungeon. Two
+   * are variants that share the ordinary dungeon's door, one drops an
+   * apostrophe the wiki keeps, and one has no portal drawn at all so its boss
+   * stands in.
+   */
+  const PICTURE_ALIAS = {
+    'Oryx Pandemonium Decaract': 'Decaract',
+    'Infernal Abyss of Demons': 'Abyss of Demons Portal',
+    'Santa Workshop': "Santa's Workshop Portal"
+  };
   const slugsFor = name => {
     if (SLUG_ALIAS[name]) return [SLUG_ALIAS[name]];
     const plain = name.toLowerCase().replace(/[\u2019]/g, "'");
@@ -352,11 +362,20 @@ async function main() {
     const images = [...page.matchAll(/<img[^>]*>/g)].map(m => ({
       title: (/title="([^"]+)"/.exec(m[0]) || [, ''])[1],
       src: (/src="([^"]+)"/.exec(m[0]) || [, ''])[1]
-    })).filter(x => x.src && (PICTURE_ALIAS[dungeon.name]
-      ? x.title === PICTURE_ALIAS[dungeon.name]
-      : /portal$/i.test(x.title)));
-    // An animated one first: it is the same portal, moving.
-    const pick = images.find(x => /\.gif/i.test(x.src)) || images[0];
+    })).filter(x => x.src);
+
+    /*
+     * The picture has to be this dungeon's own. A dungeon's page shows the
+     * portals of its neighbours too, and preferring any animated one among
+     * them put the Lair of Draconis under somebody else's door.
+     */
+    const plain = text => String(text).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const wanted = PICTURE_ALIAS[dungeon.name] || dungeon.name;
+    const mine = images.filter(x => PICTURE_ALIAS[dungeon.name]
+      ? x.title === wanted
+      : plain(x.title) === plain(wanted) + 'portal' || plain(x.title) === plain(wanted));
+    // Animated first, but only among this dungeon's own.
+    const pick = mine.find(x => /[.]gif/i.test(x.src)) || mine[0];
     if (!pick) { noPortal.push(dungeon.name); continue; }
 
     const gif = /\.gif/i.test(pick.src);

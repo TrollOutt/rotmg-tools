@@ -763,12 +763,16 @@ table.mini td { padding: 3px 8px; border: 0; }
 
   /* Title, one-line summary, status and the realm toggle on a single row:
      125 px of masthead becomes about 40, and nothing is dropped. */
+  /* The way in is not a working screen: it keeps its full heading. */
+  #pageHome .masthead { display: block; }
   .masthead { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
   .masthead h1 { font-size: 21px; flex: none; }
+  #pageHome .masthead h1 { font-size: clamp(28px, 5vw, 52px); }
   .masthead p {
     margin: 0; flex: 1; min-width: 0; max-width: none; font-size: 12.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  #pageHome .masthead p { overflow: visible; white-space: normal; text-overflow: clip; max-width: 62ch; }
   .masthead-row { flex: none; }
 
   .tab-bar { margin-bottom: 10px; }
@@ -988,27 +992,49 @@ table.mini td { padding: 3px 8px; border: 0; }
  * The way in, and Fame Sweep                                          *
  * ------------------------------------------------------------------ */
 
-.home-head { max-width: 70ch; }
-.home-cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 20px; }
+/* ------------------------------------------------------------------ *
+ * The way in                                                          *
+ * ------------------------------------------------------------------ *
+ * It fills the window rather than sitting in a strip at the top: this
+ * is a choice between tools, and it should look like the room it is.
+ */
+#pageHome {
+  min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+  gap: clamp(16px, 4vh, 40px);
+}
+.home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
+.home-head h1 { font-size: clamp(28px, 5vw, 52px); }
+.home-head p {
+  font-size: clamp(14px, 1.4vw, 17px); margin-inline: auto;
+  /* The masthead clips its subtitle to one line; here it is the whole point. */
+  max-width: none; overflow: visible; white-space: normal; text-overflow: clip;
+}
+
+.home-cards {
+  display: grid; gap: clamp(12px, 2vw, 22px);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  width: min(1100px, 100%); margin: 0 auto;
+}
 .home-card {
-  display: grid; gap: 3px; text-align: left; font: inherit; cursor: pointer;
-  grid-template-columns: 48px 1fr; grid-template-rows: auto auto auto;
+  display: grid; text-align: left; font: inherit; cursor: pointer;
+  grid-template-columns: clamp(56px, 6vw, 88px) 1fr;
+  column-gap: clamp(14px, 2vw, 22px); row-gap: 4px;
   background: rgba(26, 24, 36, .88); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 14px 16px; color: var(--text);
-  align-items: center; column-gap: 14px;
+  border-radius: var(--radius); padding: clamp(16px, 2.5vw, 28px); color: var(--text);
+  align-content: center;
 }
-/* The picture says what the tool is faster than the sentence under it. The
-   slot keeps its width whether or not the picture arrives, so a missing one
-   cannot collapse the row. */
-.home-card-art {
-  grid-row: 1 / 4; grid-column: 1; width: 48px; height: 48px;
-  object-fit: contain; image-rendering: pixelated;
-}
-.home-card-title, .home-card-line, .home-card-go { grid-column: 2; }
 .home-card:hover { border-color: var(--accent); background: rgba(38, 34, 51, .9); }
-.home-card-title { font-size: 19px; font-weight: 600; color: #f6ecd2; }
-.home-card-line { color: var(--muted); }
-.home-card-go { margin-top: 4px; font-style: normal; font-size: 12.5px; color: var(--accent); }
+/* The picture keeps its column whether or not it arrives, so a missing
+   one cannot collapse the row. */
+.home-card-art {
+  grid-row: 1 / 5; grid-column: 1; align-self: center;
+  width: 100%; aspect-ratio: 1; object-fit: contain; image-rendering: pixelated;
+}
+.home-card-title, .home-card-line, .home-card-go, .home-card small { grid-column: 2; }
+.home-card-title { font-size: clamp(18px, 2vw, 24px); font-weight: 600; color: #f6ecd2; }
+.home-card-line { color: var(--muted); font-size: clamp(13px, 1.2vw, 15px); }
+.home-card small { color: var(--dim); line-height: 1.5; margin-top: 4px; }
+.home-card-go { margin-top: 10px; font-style: normal; font-size: 13px; color: var(--accent); }
 
 .masthead .back { display: inline-block; margin-bottom: 6px; }
 .base-fame { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
@@ -1161,3 +1187,72 @@ table.mini td { padding: 3px 8px; border: 0; }
   background: rgba(0, 0, 0, .45); font-variant-numeric: tabular-nums;
 }
 .fame-tile.is-wanted .fame-tile-diff { color: var(--locked); }
+
+/* ------------------------------------------------------------------ *
+ * The controls you are meant to notice                                *
+ * ------------------------------------------------------------------ */
+
+/* The way back. It was a faint link nobody found. */
+.masthead .back {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
+  font-size: 13px; color: var(--text); text-decoration: none;
+  background: rgba(26, 24, 36, .9); border: 1px solid var(--line);
+  border-radius: 999px; padding: 5px 14px;
+}
+.masthead .back:hover { border-color: var(--locked); color: var(--locked); background: rgba(38, 34, 51, .95); }
+
+/* The dungeon filters: chunky, and lit when they are on, the way a game
+   menu marks a choice rather than whispering it. */
+.fame-avail .filter-chip {
+  font-size: 12.5px; padding: 6px 13px; border-width: 2px;
+  color: var(--dim); background: rgba(12, 11, 18, .7);
+}
+.fame-avail .filter-chip:hover { color: var(--text); border-color: var(--line); }
+.fame-avail .filter-chip.on {
+  color: #1a1305; background: var(--locked); border-color: var(--locked);
+  font-weight: 600; box-shadow: 0 0 12px rgba(255, 208, 38, .28);
+}
+
+/* Base fame: the number everything else is a percentage of, so it looks
+   like the field it is — the game's own gold on dark. */
+.base-fame {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 13px; color: var(--muted);
+}
+.base-fame input {
+  width: 128px; font: inherit; font-size: 17px; font-weight: 600;
+  color: var(--locked); text-align: right; padding: 6px 11px;
+  background: rgba(12, 11, 18, .9);
+  border: 2px solid rgba(255, 208, 38, .45); border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
+}
+.base-fame input:focus {
+  outline: none; border-color: var(--locked);
+  box-shadow: 0 0 12px rgba(255, 208, 38, .25);
+}
+.base-fame input::placeholder { color: var(--dim); font-weight: 400; }
+
+/*
+ * The drifting portals behind the way in and Fame Sweep.
+ *
+ * Real elements rather than a canvas, because a canvas paints the first frame
+ * of an animated portal and then stops. Blurred hard, so it reads as a place
+ * rather than a set of icons.
+ */
+.ambience-dom { position: absolute; inset: 0; overflow: hidden; }
+.ambience-dom img {
+  position: absolute; image-rendering: pixelated;
+  filter: blur(4px) saturate(1.15);
+  animation-name: ambience-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform;
+}
+@keyframes ambience-drift {
+  from { translate: -4vmin 2vmin; }
+  to   { translate: 4vmin -3vmin; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambience-dom img { animation: none; }
+}
