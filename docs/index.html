@@ -780,7 +780,6 @@ table.mini td { padding: 3px 8px; border: 0; }
     margin: 0; flex: 1; min-width: 0; max-width: none; font-size: 12.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  #pageHome .masthead p { overflow: visible; white-space: normal; text-overflow: clip; max-width: 62ch; }
   .masthead-row { flex: none; }
 
   .tab-bar { margin-bottom: 10px; }
@@ -1006,17 +1005,23 @@ table.mini td { padding: 3px 8px; border: 0; }
  * It fills the window rather than sitting in a strip at the top: this
  * is a choice between tools, and it should look like the room it is.
  */
+/*
+ * The title and the two cards sit in the middle of the window; the credit
+ * sits on the floor of it. The auto margins split the slack above and below
+ * the pair between them, which centres it without the footer being dragged
+ * up with it.
+ */
 #pageHome {
-  min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+  min-height: 100vh; display: flex; flex-direction: column;
   gap: clamp(16px, 4vh, 40px);
+}
+#pageHome > .home-head { margin-top: auto; }
+#pageHome > .home-cards { margin-bottom: auto; }
+#pageHome > .app-foot {
+  margin-top: 0; text-align: center; font-size: 10.5px; opacity: .5;
 }
 .home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
 .home-head h1 { font-size: clamp(28px, 5vw, 52px); }
-.home-head p {
-  font-size: clamp(14px, 1.4vw, 17px); margin-inline: auto;
-  /* The masthead clips its subtitle to one line; here it is the whole point. */
-  max-width: none; overflow: visible; white-space: normal; text-overflow: clip;
-}
 
 .home-cards {
   display: grid; gap: clamp(12px, 2vw, 22px);
@@ -1395,9 +1400,6 @@ table.mini td { padding: 3px 8px; border: 0; }
 <div id="pageHome" class="app page">
   <header class="masthead home-head">
     <h1>Realm Tools</h1>
-    <p>Two things worth working out before you spend a run on them. Everything is
-      read out of an installed game client, runs in your browser, and is remembered
-      only on this machine.</p>
   </header>
 
   <div class="home-cards" id="homeCards">
@@ -3254,13 +3256,22 @@ var FamePage = (function () {
   const painted = new Map();
   function paint(id, markup, signature) {
     const node = $(id);
+    const last = painted.get(id);
+    // Identical markup is not written at all. Replacing it costs nothing on
+    // paper and everything in practice: the portal GIFs start over and the
+    // panel blinks, which is the flicker without even the animation.
+    if (last && last.signature === signature && last.markup === markup) return;
     node.innerHTML = markup;
-    if (painted.get(id) === signature) return;
-    painted.set(id, signature);
+    painted.set(id, { markup, signature });
+    if (last && last.signature === signature) return;
     node.classList.remove('is-fresh');
     void node.offsetWidth;                  // so the animation restarts
     node.classList.add('is-fresh');
   }
+  const alreadyShowing = (id, signature) => {
+    const last = painted.get(id);
+    return Boolean(last) && last.signature === signature;
+  };
 
   const TICKS_KEY = 'rotmg-enchant-calculator/fame/done';
   const BASE_KEY = 'rotmg-enchant-calculator/fame/base';
@@ -3382,10 +3393,30 @@ var FamePage = (function () {
       if (a.done !== b.done) return a.done ? 1 : -1;
       return a.missing.length - b.missing.length || b.value - a.value;
     });
+    /*
+     * The same treatment as the grid: picking a collection moves a highlight,
+     * it does not make a new list. Clicking three of them in a row should feel
+     * like ticking three boxes, not like the panel reloading three times, so
+     * the list is rebuilt only when its order changes — a collection finished,
+     * or seasonal ones brought into view.
+     */
+    const signature = rows.map(entry => entry.id).join('|');
+    const list = $('fameCollections');
+    if (rows.length && alreadyShowing('fameCollections', signature)) {
+      rows.forEach((entry, index) => {
+        const row = list.children[index];
+        if (!row || row.dataset.collection !== entry.id) return;
+        row.classList.toggle('is-done', entry.done);
+        row.classList.toggle('is-focus', state.focus.has(entry.id));
+        row.setAttribute('aria-pressed', String(state.focus.has(entry.id)));
+        row.style.setProperty('--fill', Math.round(entry.have / entry.wanted.length * 100) + '%');
+        row.lastElementChild.textContent = entry.done ? '✓' : entry.missing.length;
+      });
+      return;
+    }
+
     // One line each. The progress is the row itself, filled from the left,
     // so thirteen collections fit in the space four used to take.
-    // The list rearranges itself as collections are finished or picked; that
-    // is when it plays. A row whose bar merely crept forward does not.
     paint('fameCollections', rows.map((entry, index) => {
       const pct = Math.round(entry.have / entry.wanted.length * 100);
       return `
@@ -3399,8 +3430,7 @@ var FamePage = (function () {
         <span class="fame-coll-worth">${count(entry.absolute)}<small>+${entry.relative}%</small></span>
         <span class="fame-coll-left">${entry.done ? '✓' : entry.missing.length}</span>
       </button>`;
-    }).join(''),
-      rows.map(entry => `${entry.id}${entry.done ? '!' : ''}${state.focus.has(entry.id) ? '*' : ''}`).join('|'));
+    }).join(''), signature);
   }
 
   function renderNext(view) {
@@ -3450,7 +3480,11 @@ var FamePage = (function () {
         <button type="button" class="fame-next-skip" data-skip="${html(entry.name)}"
           title="Not this one — take it off the list" aria-label="Take ${html(entry.name)} off the list">✕</button>
       </div>`).join('') + aside,
-      best.map(entry => entry.name).join('|') + '#' + state.skipped.size);
+      // Sorted, not in the order shown: ticking a dungeon somewhere else in
+      // the realm shuffles what these four are worth relative to each other,
+      // and the same four in a different order is not new advice. The list
+      // plays when one of them leaves it and another takes its place.
+      best.map(entry => entry.name).sort().join('|') + '#' + state.skipped.size);
   }
 
   /* ---------------------------------------------------------------- *
@@ -3510,7 +3544,7 @@ var FamePage = (function () {
      */
     const signature = rows.map(dungeon => dungeon.name).join('|');
     const grid = $('fameGrid');
-    if (rows.length && painted.get('fameGrid') === signature) {
+    if (rows.length && alreadyShowing('fameGrid', signature)) {
       for (const tile of grid.children) {
         const name = tile.dataset.dungeon;
         if (!name) continue;
@@ -4936,9 +4970,33 @@ const SWAP_OUT = 300;   // must match the leaving transition in style.css
 const SWAP_IN = 420;    // and the entering one
 const RESULT_CARDS = ['artifactCard', 'planCard'];
 
+/*
+ * While the work area is still stepping aside and back, nothing inside it
+ * moves on its own.
+ *
+ * Switching tabs is one movement: the layout leaves in the direction of
+ * travel and the new one arrives. The cards inside were running their own
+ * arrival on top of that and landing a beat after it settled — the summary
+ * a full three hundred milliseconds late — which is what made changing tabs
+ * look like a fault correcting itself rather than a page turning.
+ *
+ * 190 ms out plus 300 ms in, and a little to spare. Past that window the
+ * calculation has genuinely taken a while and a card appearing is news, so it
+ * arrives the way it always did.
+ */
+const TAB_SETTLE_MS = 560;
+function midTabSwap() {
+  return Date.now() - (state.tabSwappedAt || 0) < TAB_SETTLE_MS;
+}
+
 function hideResultCard(card) {
   if (card.hidden) return false;
   clearTimeout(card.swapTimer);
+  if (midTabSwap()) {
+    card.classList.remove('entering', 'leaving');
+    card.hidden = true;
+    return false;                      // nothing is leaving, so nothing waits
+  }
   card.classList.remove('entering');
   card.classList.add('leaving');
   card.leaveStartedAt = Date.now();
@@ -4977,6 +5035,11 @@ function scheduleReveal(id) {
 function revealResultCard(card) {
   if (!card.hidden && !card.classList.contains('leaving')) return;
   clearTimeout(card.swapTimer);
+  if (midTabSwap()) {
+    card.classList.remove('entering', 'leaving');
+    card.hidden = false;
+    return;
+  }
   // The starting state has to be in place before the card enters the layout,
   // or it flashes at full opacity for one frame.
   card.classList.remove('leaving');
@@ -5665,6 +5728,7 @@ function switchTab(id) {
   layout.style.setProperty('--dir', to > from ? '1' : '-1');
 
   saveSetup();                 // bank the tab we are leaving
+  state.tabSwappedAt = Date.now();
   state.activeTab = id;
   persistTabs();               // the tab strip highlights the new one at once
   renderTabs();

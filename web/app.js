@@ -1282,9 +1282,33 @@ const SWAP_OUT = 300;   // must match the leaving transition in style.css
 const SWAP_IN = 420;    // and the entering one
 const RESULT_CARDS = ['artifactCard', 'planCard'];
 
+/*
+ * While the work area is still stepping aside and back, nothing inside it
+ * moves on its own.
+ *
+ * Switching tabs is one movement: the layout leaves in the direction of
+ * travel and the new one arrives. The cards inside were running their own
+ * arrival on top of that and landing a beat after it settled — the summary
+ * a full three hundred milliseconds late — which is what made changing tabs
+ * look like a fault correcting itself rather than a page turning.
+ *
+ * 190 ms out plus 300 ms in, and a little to spare. Past that window the
+ * calculation has genuinely taken a while and a card appearing is news, so it
+ * arrives the way it always did.
+ */
+const TAB_SETTLE_MS = 560;
+function midTabSwap() {
+  return Date.now() - (state.tabSwappedAt || 0) < TAB_SETTLE_MS;
+}
+
 function hideResultCard(card) {
   if (card.hidden) return false;
   clearTimeout(card.swapTimer);
+  if (midTabSwap()) {
+    card.classList.remove('entering', 'leaving');
+    card.hidden = true;
+    return false;                      // nothing is leaving, so nothing waits
+  }
   card.classList.remove('entering');
   card.classList.add('leaving');
   card.leaveStartedAt = Date.now();
@@ -1323,6 +1347,11 @@ function scheduleReveal(id) {
 function revealResultCard(card) {
   if (!card.hidden && !card.classList.contains('leaving')) return;
   clearTimeout(card.swapTimer);
+  if (midTabSwap()) {
+    card.classList.remove('entering', 'leaving');
+    card.hidden = false;
+    return;
+  }
   // The starting state has to be in place before the card enters the layout,
   // or it flashes at full opacity for one frame.
   card.classList.remove('leaving');
@@ -2011,6 +2040,7 @@ function switchTab(id) {
   layout.style.setProperty('--dir', to > from ? '1' : '-1');
 
   saveSetup();                 // bank the tab we are leaving
+  state.tabSwappedAt = Date.now();
   state.activeTab = id;
   persistTabs();               // the tab strip highlights the new one at once
   renderTabs();

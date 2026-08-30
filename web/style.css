@@ -772,7 +772,6 @@ table.mini td { padding: 3px 8px; border: 0; }
     margin: 0; flex: 1; min-width: 0; max-width: none; font-size: 12.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  #pageHome .masthead p { overflow: visible; white-space: normal; text-overflow: clip; max-width: 62ch; }
   .masthead-row { flex: none; }
 
   .tab-bar { margin-bottom: 10px; }
@@ -998,17 +997,23 @@ table.mini td { padding: 3px 8px; border: 0; }
  * It fills the window rather than sitting in a strip at the top: this
  * is a choice between tools, and it should look like the room it is.
  */
+/*
+ * The title and the two cards sit in the middle of the window; the credit
+ * sits on the floor of it. The auto margins split the slack above and below
+ * the pair between them, which centres it without the footer being dragged
+ * up with it.
+ */
 #pageHome {
-  min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+  min-height: 100vh; display: flex; flex-direction: column;
   gap: clamp(16px, 4vh, 40px);
+}
+#pageHome > .home-head { margin-top: auto; }
+#pageHome > .home-cards { margin-bottom: auto; }
+#pageHome > .app-foot {
+  margin-top: 0; text-align: center; font-size: 10.5px; opacity: .5;
 }
 .home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
 .home-head h1 { font-size: clamp(28px, 5vw, 52px); }
-.home-head p {
-  font-size: clamp(14px, 1.4vw, 17px); margin-inline: auto;
-  /* The masthead clips its subtitle to one line; here it is the whole point. */
-  max-width: none; overflow: visible; white-space: normal; text-overflow: clip;
-}
 
 .home-cards {
   display: grid; gap: clamp(12px, 2vw, 22px);

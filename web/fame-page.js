@@ -32,13 +32,22 @@ var FamePage = (function () {
   const painted = new Map();
   function paint(id, markup, signature) {
     const node = $(id);
+    const last = painted.get(id);
+    // Identical markup is not written at all. Replacing it costs nothing on
+    // paper and everything in practice: the portal GIFs start over and the
+    // panel blinks, which is the flicker without even the animation.
+    if (last && last.signature === signature && last.markup === markup) return;
     node.innerHTML = markup;
-    if (painted.get(id) === signature) return;
-    painted.set(id, signature);
+    painted.set(id, { markup, signature });
+    if (last && last.signature === signature) return;
     node.classList.remove('is-fresh');
     void node.offsetWidth;                  // so the animation restarts
     node.classList.add('is-fresh');
   }
+  const alreadyShowing = (id, signature) => {
+    const last = painted.get(id);
+    return Boolean(last) && last.signature === signature;
+  };
 
   const TICKS_KEY = 'rotmg-enchant-calculator/fame/done';
   const BASE_KEY = 'rotmg-enchant-calculator/fame/base';
@@ -160,10 +169,30 @@ var FamePage = (function () {
       if (a.done !== b.done) return a.done ? 1 : -1;
       return a.missing.length - b.missing.length || b.value - a.value;
     });
+    /*
+     * The same treatment as the grid: picking a collection moves a highlight,
+     * it does not make a new list. Clicking three of them in a row should feel
+     * like ticking three boxes, not like the panel reloading three times, so
+     * the list is rebuilt only when its order changes — a collection finished,
+     * or seasonal ones brought into view.
+     */
+    const signature = rows.map(entry => entry.id).join('|');
+    const list = $('fameCollections');
+    if (rows.length && alreadyShowing('fameCollections', signature)) {
+      rows.forEach((entry, index) => {
+        const row = list.children[index];
+        if (!row || row.dataset.collection !== entry.id) return;
+        row.classList.toggle('is-done', entry.done);
+        row.classList.toggle('is-focus', state.focus.has(entry.id));
+        row.setAttribute('aria-pressed', String(state.focus.has(entry.id)));
+        row.style.setProperty('--fill', Math.round(entry.have / entry.wanted.length * 100) + '%');
+        row.lastElementChild.textContent = entry.done ? '✓' : entry.missing.length;
+      });
+      return;
+    }
+
     // One line each. The progress is the row itself, filled from the left,
     // so thirteen collections fit in the space four used to take.
-    // The list rearranges itself as collections are finished or picked; that
-    // is when it plays. A row whose bar merely crept forward does not.
     paint('fameCollections', rows.map((entry, index) => {
       const pct = Math.round(entry.have / entry.wanted.length * 100);
       return `
@@ -177,8 +206,7 @@ var FamePage = (function () {
         <span class="fame-coll-worth">${count(entry.absolute)}<small>+${entry.relative}%</small></span>
         <span class="fame-coll-left">${entry.done ? '✓' : entry.missing.length}</span>
       </button>`;
-    }).join(''),
-      rows.map(entry => `${entry.id}${entry.done ? '!' : ''}${state.focus.has(entry.id) ? '*' : ''}`).join('|'));
+    }).join(''), signature);
   }
 
   function renderNext(view) {
@@ -228,7 +256,11 @@ var FamePage = (function () {
         <button type="button" class="fame-next-skip" data-skip="${html(entry.name)}"
           title="Not this one — take it off the list" aria-label="Take ${html(entry.name)} off the list">✕</button>
       </div>`).join('') + aside,
-      best.map(entry => entry.name).join('|') + '#' + state.skipped.size);
+      // Sorted, not in the order shown: ticking a dungeon somewhere else in
+      // the realm shuffles what these four are worth relative to each other,
+      // and the same four in a different order is not new advice. The list
+      // plays when one of them leaves it and another takes its place.
+      best.map(entry => entry.name).sort().join('|') + '#' + state.skipped.size);
   }
 
   /* ---------------------------------------------------------------- *
@@ -288,7 +320,7 @@ var FamePage = (function () {
      */
     const signature = rows.map(dungeon => dungeon.name).join('|');
     const grid = $('fameGrid');
-    if (rows.length && painted.get('fameGrid') === signature) {
+    if (rows.length && alreadyShowing('fameGrid', signature)) {
       for (const tile of grid.children) {
         const name = tile.dataset.dungeon;
         if (!name) continue;
