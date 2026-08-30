@@ -1,97 +1,200 @@
 {
   "Deep Sea Abyss": {
-    "file": "deep-sea-abyss.png",
-    "tile": 8,
-    "count": 7
+    "ground": {
+      "file": "deep-sea-abyss.png",
+      "tile": 8,
+      "count": 7
+    }
   },
   "Carboniferous": {
-    "file": "carboniferous.png",
-    "tile": 10,
-    "count": 4
+    "ground": {
+      "file": "carboniferous.png",
+      "tile": 10,
+      "count": 4
+    },
+    "props": {
+      "file": "carboniferous-props.png",
+      "tile": 16,
+      "count": 4
+    }
   },
   "Floral Escape": {
-    "file": "floral-escape.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "floral-escape.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "floral-escape-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Haunted Hallows": {
-    "file": "haunted-hallows.png",
-    "tile": 10,
-    "count": 6
+    "ground": {
+      "file": "haunted-hallows.png",
+      "tile": 10,
+      "count": 6
+    },
+    "props": {
+      "file": "haunted-hallows-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Runic Tundra": {
-    "file": "runic-tundra.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "runic-tundra.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "runic-tundra-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Sanguine Forest": {
-    "file": "sanguine-forest.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "sanguine-forest.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "sanguine-forest-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Coral Reefs": {
-    "file": "coral-reefs.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "coral-reefs.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "coral-reefs-props.png",
+      "tile": 16,
+      "count": 3
+    }
   },
   "Dead Church": {
-    "file": "dead-church.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "dead-church.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "dead-church-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Shipwreck Cove": {
-    "file": "shipwreck-cove.png",
-    "tile": 10,
-    "count": 8
+    "ground": {
+      "file": "shipwreck-cove.png",
+      "tile": 10,
+      "count": 8
+    },
+    "props": {
+      "file": "shipwreck-cove-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Abandoned City": {
-    "file": "abandoned-city.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "abandoned-city.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "abandoned-city-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "High Plains": {
-    "file": "high-plains.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "high-plains.png",
+      "tile": 10,
+      "count": 10
+    }
   },
   "Risen Hell": {
-    "file": "risen-hell.png",
-    "tile": 10,
-    "count": 9
+    "ground": {
+      "file": "risen-hell.png",
+      "tile": 10,
+      "count": 9
+    },
+    "props": {
+      "file": "risen-hell-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Desert": {
-    "file": "desert.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "desert.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "desert-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Mid Forest": {
-    "file": "mid-forest.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "mid-forest.png",
+      "tile": 10,
+      "count": 10
+    }
   },
   "Undead Forest": {
-    "file": "undead-forest.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "undead-forest.png",
+      "tile": 10,
+      "count": 10
+    },
+    "props": {
+      "file": "undead-forest-props.png",
+      "tile": 16,
+      "count": 10
+    }
   },
   "Mid Plains": {
-    "file": "mid-plains.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "mid-plains.png",
+      "tile": 10,
+      "count": 10
+    }
   },
   "Beach": {
-    "file": "beach.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "beach.png",
+      "tile": 10,
+      "count": 10
+    }
   },
   "High Forest": {
-    "file": "high-forest.png",
-    "tile": 10,
-    "count": 10
+    "ground": {
+      "file": "high-forest.png",
+      "tile": 10,
+      "count": 10
+    }
   },
   "Sprite Forest": {
-    "file": "sprite-forest.png",
-    "tile": 10,
-    "count": 8
+    "ground": {
+      "file": "sprite-forest.png",
+      "tile": 10,
+      "count": 8
+    },
+    "props": {
+      "file": "sprite-forest-props.png",
+      "tile": 16,
+      "count": 10
+    }
   }
 }

@@ -210,7 +210,6 @@ var RealmMap = (function () {
           hex: entry.hex,
           biome: entry.biome,
           zone: zoneFor(entry.biome),
-          family: familyOf(entry.biome),
           box: { minX, maxX, minY, maxY },
           cx: (minX + maxX + 1) / 2 * CELL,
           cy: (minY + maxY + 1) / 2 * CELL
@@ -359,104 +358,65 @@ var RealmMap = (function () {
    * so they hold still while you pan — the one thing that would give away
    * that they are drawn rather than there.
    */
-  const FAMILIES = [
-    [/forest|escape|thicket|sprite/i, 'tree'],
-    [/tundra|frost|snow/i, 'ice'],
-    [/desert|sand|beach|dune/i, 'cactus'],
-    [/reef|cove|abyss|sea/i, 'weed'],
-    [/city|church|hell|hallow|ruin|carbon/i, 'rubble'],
-    [/plain|grass|scrub/i, 'tuft']
-  ];
-  function familyOf(biome) {
-    for (const [test, family] of FAMILIES) if (test.test(biome || '')) return family;
-    return 'tuft';
-  }
-  const familyCache = new Map();
-  function region_family(biome) {
-    if (!familyCache.has(biome)) familyCache.set(biome, familyOf(biome));
-    return familyCache.get(biome);
-  }
-
-  // Three tones off the ground colour: what is under it, and what catches
-  // the light. Pixel art is mostly this, and a palette of one is flat.
-  function tones(hex) {
-    const n = parseInt(String(hex).slice(1), 16);
-    const mix = amount => {
-      const to = v => Math.max(0, Math.min(255, Math.round(v * amount)));
-      return 'rgb(' + to((n >> 16) & 255) + ',' + to((n >> 8) & 255) + ',' + to(n & 255) + ')';
-    };
-    return { dark: mix(0.62), deep: mix(0.78), lit: mix(1.28) };
-  }
-  const paletteFor = new Map();
-  function palette(hex) {
-    if (!paletteFor.has(hex)) paletteFor.set(hex, tones(hex));
-    return paletteFor.get(hex);
-  }
-
   /*
-   * One tuft, tree, cactus or heap of rubble, drawn in the ground's own
-   * colours at whatever size the cell currently is. Small enough that what
-   * matters is the silhouette; a tree is a trunk and a mass, a cactus is an
-   * upright with arms, rubble is three stones.
-   */
-  function scenery(paint, family, x, y, unit, colours, seed) {
-    const px = (dx, dy, w, h, fill) => {
-      paint.fillStyle = fill;
-      paint.fillRect(x + dx * unit, y + dy * unit, w * unit, h * unit);
-    };
-    if (family === 'tree') {
-      px(0.42, 0.62, 0.16, 0.34, colours.dark);
-      px(0.16, 0.10, 0.68, 0.56, colours.deep);
-      px(0.28, 0.02, 0.44, 0.30, colours.lit);
-    } else if (family === 'cactus') {
-      px(0.44, 0.20, 0.16, 0.72, colours.deep);
-      px(seed > 0.5 ? 0.22 : 0.60, 0.36, 0.20, 0.14, colours.deep);
-      px(0.46, 0.20, 0.06, 0.60, colours.lit);
-    } else if (family === 'ice') {
-      px(0.34, 0.30, 0.14, 0.56, colours.lit);
-      px(0.52, 0.44, 0.12, 0.42, colours.lit);
-      px(0.30, 0.80, 0.40, 0.10, colours.deep);
-    } else if (family === 'rubble') {
-      px(0.20, 0.58, 0.26, 0.20, colours.deep);
-      px(0.52, 0.66, 0.20, 0.16, colours.dark);
-      px(0.34, 0.40, 0.18, 0.16, colours.lit);
-    } else if (family === 'weed') {
-      px(0.30, 0.46, 0.08, 0.44, colours.lit);
-      px(0.48, 0.34, 0.08, 0.56, colours.deep);
-      px(0.64, 0.52, 0.08, 0.38, colours.lit);
-    } else {
-      px(0.30, 0.56, 0.08, 0.30, colours.lit);
-      px(0.46, 0.48, 0.08, 0.38, colours.deep);
-      px(0.62, 0.60, 0.08, 0.26, colours.lit);
-    }
-  }
-
-  /*
-   * The game's own floor.
+   * Where a tile comes from, and how it is chosen.
    *
-   * web/assets/realm-tiles holds, per biome, six of the tiles the client
-   * draws that ground with — found in its groundTiles sheet and paired to the
-   * biome by colour, which is tools/build-realm-tiles.js's doing. A cell picks
-   * one on a hash of where it is, so a field of them neither repeats in rows
-   * nor shuffles when you pan.
+   * web/assets/realm-tiles holds two strips per biome, cut from the client's
+   * own sheets by tools/build-realm-tiles.js: the ground it is floored with,
+   * ordered dark to light, and the things the client names as standing on it
+   * — a saguaro in the desert, a purple tree in the undead forest, skulls in
+   * Risen Hell. Where the client names none, none are drawn: a biome is
+   * better bare than wearing another's scenery.
    */
-  const tiles = { index: null, art: new Map() };
+  const tiles = { index: null, ground: new Map(), props: new Map() };
   function loadTiles() {
     const bundled = typeof BUNDLE !== 'undefined' && BUNDLE && BUNDLE.realmTiles;
+    const picture = file => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = bundled && bundled.art && bundled.art[file]
+        ? bundled.art[file] : 'assets/realm-tiles/' + file;
+      return image;
+    };
     const ready = index => {
       tiles.index = index;
       for (const [biome, entry] of Object.entries(index)) {
-        const image = new Image();
-        image.decoding = 'async';
-        image.src = bundled && bundled.art && bundled.art[entry.file]
-          ? bundled.art[entry.file] : 'assets/realm-tiles/' + entry.file;
-        tiles.art.set(biome, { image: image, tile: entry.tile, count: entry.count });
+        if (entry.ground) {
+          tiles.ground.set(biome, { image: picture(entry.ground.file), tile: entry.ground.tile, count: entry.ground.count });
+        }
+        if (entry.props) {
+          tiles.props.set(biome, { image: picture(entry.props.file), tile: entry.props.tile, count: entry.props.count });
+        }
       }
     };
     if (bundled && bundled.index) { ready(bundled.index); return; }
     fetch('assets/realm-tiles/index.json')
       .then(response => response.json()).then(ready).catch(() => { tiles.index = {}; });
   }
+
+  /*
+   * Which tile, and why not at random.
+   *
+   * Picking one per cell out of a hash gives every cell an unrelated
+   * neighbour, and a field of that reads as static — which is exactly what it
+   * is. Real ground comes in patches: a stretch of grass, a worn place, the
+   * dirt where the two meet. So the choice comes off a smooth field instead —
+   * value noise, two octaves, one broad and one to break up its edges — and
+   * because the strip is ordered dark to light, a slow rise in the field is a
+   * slow change from worn to fresh rather than a jump between unrelated
+   * tiles.
+   */
+  function smooth(x, y) {
+    const x0 = Math.floor(x), y0 = Math.floor(y);
+    const fx = x - x0, fy = y - y0;
+    const ease = t => t * t * (3 - 2 * t);
+    const u = ease(fx), v = ease(fy);
+    const a = hash(x0, y0), b = hash(x0 + 1, y0);
+    const c = hash(x0, y0 + 1), d = hash(x0 + 1, y0 + 1);
+    return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+  }
+  const field = (col, row) =>
+    smooth(col / 9, row / 9) * 0.68 + smooth(col / 2.7, row / 2.7) * 0.32;
 
   function drawGround(scale) {
     if (scale < SHOW_GRAIN) return;
@@ -481,21 +441,24 @@ var RealmMap = (function () {
         if (isWater(letter) || letter === ROAD) continue;
         const entry = legend.get(letter);
         if (!entry || !/^#[0-9a-f]{6}$/i.test(entry.hex || '')) continue;
-        const colours = palette(entry.hex);
         const spot = screenPoint(col * CELL, row * CELL);
         const n = hash(col, row);
 
-        // The real thing where there is one, and the drawn grain where there
-        // is not — a biome with no name has no tiles either.
-        const set = entry.biome && tiles.art.get(entry.biome);
-        if (set && set.image.complete && set.image.naturalWidth) {
-          const slot = Math.floor(n * set.count) % set.count;
+        const ground = entry.biome && tiles.ground.get(entry.biome);
+        if (ground && ground.image.complete && ground.image.naturalWidth) {
+          const slot = Math.min(ground.count - 1, Math.floor(field(col, row) * ground.count));
           ctx.imageSmoothingEnabled = false;
-          ctx.drawImage(set.image, slot * set.tile, 0, set.tile, set.tile,
+          ctx.drawImage(ground.image, slot * ground.tile, 0, ground.tile, ground.tile,
             spot.x, spot.y, unit + 1, unit + 1);
-          if (scenic > 0 && n > 0.93) {
+
+          // And what stands on it, on about one cell in eleven — sparse
+          // enough that a forest reads as trees rather than as a hedge.
+          const standing = scenic > 0 && tiles.props.get(entry.biome);
+          if (standing && n > 0.91 && standing.image.complete && standing.image.naturalWidth) {
+            const which = Math.floor(hash(row * 3 + 1, col * 7 + 5) * standing.count) % standing.count;
             ctx.globalAlpha = scenic;
-            scenery(ctx, region_family(entry.biome), spot.x, spot.y, unit, colours, hash(row, col));
+            ctx.drawImage(standing.image, which * standing.tile, 0, standing.tile, standing.tile,
+              spot.x - unit * 0.25, spot.y - unit * 0.5, unit * 1.5, unit * 1.5);
             ctx.globalAlpha = 1;
           }
           continue;
@@ -505,7 +468,7 @@ var RealmMap = (function () {
         // arrangements. Enough to break the flat, not enough to read as
         // noise.
         ctx.globalAlpha = grain * 0.5;
-        ctx.fillStyle = colours.deep;
+        ctx.fillStyle = palette(entry.hex).deep;
         const step = unit / 4;
         const which = Math.floor(n * 4);
         for (let i = 0; i < 3; i++) {
@@ -514,16 +477,6 @@ var RealmMap = (function () {
           ctx.fillRect(spot.x + dx, spot.y + dy, step, step);
         }
         ctx.globalAlpha = 1;
-
-        // Scenery: about one cell in nine, so a forest reads as trees and
-        // not as a hedge.
-        if (scenic > 0 && n > 0.89) {
-          ctx.globalAlpha = scenic;
-          const family = (legend.get(letter) || {}).family
-            || familyOf(entry.biome);
-          scenery(ctx, family, spot.x, spot.y, unit, colours, hash(row, col));
-          ctx.globalAlpha = 1;
-        }
       }
     }
   }

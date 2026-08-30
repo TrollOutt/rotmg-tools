@@ -168,6 +168,27 @@ for (const file of fs.readdirSync(GROUND).filter(name => /^GroundTypes\./.test(n
 }
 console.log('  ' + grounds.length.toLocaleString('en-US') + ' ground types');
 
+/*
+ * And the things standing on the ground.
+ *
+ * The client names these after their biome too — "Sanguine Forest Single Red
+ * Vine", "Runic Tundra Small Ice", "Undead Forest Small Purple Tree" — so the
+ * same trick that finds a biome's floor finds what grows out of it. Static
+ * ones only: anything that moves is a creature, and creatures come from
+ * somewhere else.
+ */
+const props = [];
+for (const file of fs.readdirSync(GROUND).filter(name => /^Objects\./.test(name))) {
+  const text = fs.readFileSync(path.join(GROUND, file), 'utf8');
+  for (const m of text.matchAll(/<Object\b([^>]*)>([\s\S]*?)<\/Object>/g)) {
+    if (!m[2].includes('<Class>GameObject</Class>') || !m[2].includes('<Static')) continue;
+    const id = /id="([^"]*)"/.exec(m[1]);
+    const art = /<File>([^<]+)<\/File>\s*<Index>([^<]+)<\/Index>/.exec(m[2]);
+    if (id && art) props.push({ id: id[1], atlas: art[1], index: Number(art[2]) });
+  }
+}
+console.log('  ' + props.length.toLocaleString('en-US') + ' static objects');
+
 const pixels = new Map();
 for (const name of new Set(Object.values(SHEET_OF))) {
   const file = path.join(SHEETS, name + '.png');
@@ -213,6 +234,7 @@ function tileFor(ground) {
   if (!sheet || rect.x + rect.w > sheet.width || rect.y + rect.h > sheet.height) return null;
   return { rect, sheet };
 }
+const luminance = rgb => 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
 function meanOf(tile) {
   const { rect, sheet } = tile;
   let r = 0, g = 0, b = 0, seen = 0;
@@ -264,30 +286,68 @@ for (const [biome, colours] of biomes) {
   for (let i = 0; i < chosen.length && picked.length < PER_BIOME; i += step) picked.push(chosen[i]);
   if (!picked.length) { report.push([biome, 'none', 0, '']); continue; }
 
-  const size = Math.max(...picked.map(entry => Math.max(entry.tile.rect.w, entry.tile.rect.h)));
-  const stripWidth = size * picked.length;
-  const strip = Buffer.alloc(stripWidth * size * 4);
-  picked.forEach((entry, slot) => {
-    const { rect, sheet } = entry.tile;
-    for (let y = 0; y < rect.h; y++) {
-      for (let x = 0; x < rect.w; x++) {
-        const from = ((rect.y + y) * sheet.width + rect.x + x) * 4;
-        const to = (y * stripWidth + slot * size + x) * 4;
-        sheet.pixels.copy(strip, to, from, from + 4);
-      }
-    }
-  });
+  /*
+   * Ordered dark to light, which is what makes coherent noise usable: the
+   * atlas picks a tile by a smooth field rather than at random, so slot 0
+   * next to slot 1 has to mean something. Brightness is the ordering the eye
+   * already reads as worn-to-fresh, dirt-to-grass.
+   */
+  picked.sort((a, b) => luminance(a.look.mean) - luminance(b.look.mean));
+
   const slug = biome.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  fs.writeFileSync(path.join(OUT, slug + '.png'), writePng(stripWidth, size, strip));
-  index[biome] = { file: slug + '.png', tile: size, count: picked.length };
-  report.push([biome, how, picked.length, picked[0].ground.id]);
+  const cut = (entries, file) => {
+    const size = Math.max(...entries.map(e => Math.max(e.tile.rect.w, e.tile.rect.h)));
+    const stripWidth = size * entries.length;
+    const strip = Buffer.alloc(stripWidth * size * 4);
+    entries.forEach((entry, slot) => {
+      const { rect, sheet } = entry.tile;
+      // Small art is centred in its cell rather than shoved into the corner,
+      // so a tuft and a tree sit on the same ground line.
+      const ox = Math.floor((size - rect.w) / 2);
+      const oy = size - rect.h;
+      for (let y = 0; y < rect.h; y++) {
+        for (let x = 0; x < rect.w; x++) {
+          const from = ((rect.y + y) * sheet.width + rect.x + x) * 4;
+          const to = ((y + oy) * stripWidth + slot * size + x + ox) * 4;
+          sheet.pixels.copy(strip, to, from, from + 4);
+        }
+      }
+    });
+    fs.writeFileSync(path.join(OUT, file), writePng(stripWidth, size, strip));
+    return { file, tile: size, count: entries.length };
+  };
+
+  index[biome] = { ground: cut(picked, slug + '.png') };
+
+  /*
+   * And what stands on it. Only what the client names for this biome — there
+   * is no guessing a fallback here, because a biome with no vine of its own
+   * is better bare than wearing another's.
+   */
+  const standing = props
+    .filter(prop => plain(prop.id).includes(wanted))
+    .map(prop => ({ ground: prop, tile: tileFor(prop) }))
+    .filter(entry => entry.tile && entry.tile.rect.w <= 24 && entry.tile.rect.h <= 24)
+    .map(entry => ({ ...entry, look: meanOf(entry.tile) }))
+    // Something you can see through is scenery; something solid is a wall.
+    .filter(entry => entry.look && entry.look.solid > 0.08 && entry.look.solid < 0.9);
+  if (standing.length >= 2) {
+    const spread = Math.max(1, Math.floor(standing.length / PER_BIOME));
+    const someProps = [];
+    for (let i = 0; i < standing.length && someProps.length < PER_BIOME; i += spread) someProps.push(standing[i]);
+    index[biome].props = cut(someProps, slug + '-props.png');
+    report.push([biome, how, picked.length, picked[0].ground.id, someProps.length, someProps[0].ground.id]);
+  } else {
+    report.push([biome, how, picked.length, picked[0].ground.id, 0, '']);
+  }
 }
 
 fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 2) + '\n');
 console.log('');
-for (const [biome, how, n, example] of report) {
-  console.log('    ' + biome.padEnd(18) + String(n).padStart(2) + ' tiles  ' + how.padEnd(7)
-    + (example ? '  e.g. ' + example : ''));
+for (const [biome, how, n, example, propCount, propExample] of report) {
+  console.log('    ' + biome.padEnd(18) + String(n).padStart(2) + ' tiles ' + how.padEnd(7)
+    + String(propCount).padStart(3) + ' props   '
+    + (propExample || example || ''));
 }
 const fell = report.filter(row => row[1] !== 'named').length;
 console.log('\n  ' + report.length + ' biomes -> ' + path.relative(root, OUT)
