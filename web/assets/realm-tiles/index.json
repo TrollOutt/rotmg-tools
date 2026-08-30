@@ -1,18 +1,18 @@
 {
   "Deep Sea Abyss": {
     "file": "deep-sea-abyss.png",
-    "tile": 10,
-    "count": 6
+    "tile": 8,
+    "count": 7
   },
   "Carboniferous": {
     "file": "carboniferous.png",
     "tile": 10,
-    "count": 6
+    "count": 4
   },
   "Floral Escape": {
     "file": "floral-escape.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Haunted Hallows": {
     "file": "haunted-hallows.png",
@@ -22,76 +22,76 @@
   "Runic Tundra": {
     "file": "runic-tundra.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Sanguine Forest": {
     "file": "sanguine-forest.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Coral Reefs": {
     "file": "coral-reefs.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Dead Church": {
     "file": "dead-church.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Shipwreck Cove": {
     "file": "shipwreck-cove.png",
     "tile": 10,
-    "count": 6
+    "count": 8
   },
   "Abandoned City": {
     "file": "abandoned-city.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "High Plains": {
     "file": "high-plains.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Risen Hell": {
     "file": "risen-hell.png",
     "tile": 10,
-    "count": 6
+    "count": 9
   },
   "Desert": {
     "file": "desert.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Mid Forest": {
     "file": "mid-forest.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Undead Forest": {
     "file": "undead-forest.png",
-    "tile": 8,
-    "count": 6
+    "tile": 10,
+    "count": 10
   },
   "Mid Plains": {
     "file": "mid-plains.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Beach": {
     "file": "beach.png",
-    "tile": 8,
-    "count": 6
+    "tile": 10,
+    "count": 10
   },
   "High Forest": {
     "file": "high-forest.png",
     "tile": 10,
-    "count": 6
+    "count": 10
   },
   "Sprite Forest": {
     "file": "sprite-forest.png",
     "tile": 10,
-    "count": 6
+    "count": 8
   }
 }

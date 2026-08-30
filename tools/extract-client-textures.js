@@ -228,5 +228,26 @@ for (const object of file.objects) {
   console.log('    ' + texture.name.padEnd(20) + texture.width + 'x' + texture.height
     + '  ' + (fs.statSync(out).size / 1048576).toFixed(1) + ' MB  -> ' + path.relative(root, out));
 }
+/*
+ * And the registry that says which tile is which.
+ *
+ * A TextAsset called "spritesheet": for every one of the game's atlases, the
+ * rectangle each of its sprites occupies in the sheets above. Without it the
+ * sheets are ten thousand tiles in no order; with it, "lofiEnvironment2 index
+ * 99" is a rectangle. It is FlatBuffers, and build-realm-tiles.js reads it.
+ */
+for (const object of file.objects) {
+  if (object.classID !== 49) continue;                 // TextAsset
+  const r = new Reader(file.buffer, file.endianness === 1);
+  r.at = object.byteStart;
+  if (r.string() !== 'spritesheetf') continue;
+  const length = r.i32();
+  const out = path.join(root, 'client-data', 'spritesheet.bin');
+  fs.writeFileSync(out, file.buffer.subarray(r.at, r.at + length));
+  console.log('    ' + 'spritesheet'.padEnd(20) + (length / 1048576).toFixed(1)
+    + ' MB  -> ' + path.relative(root, out));
+  break;
+}
+
 console.log('\n  ' + written + ' written'
   + (missing.size ? ', not found: ' + [...missing].join(', ') : '') + '\n');

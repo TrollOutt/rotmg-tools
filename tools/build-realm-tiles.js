@@ -1,49 +1,75 @@
 'use strict';
 /*
- * Give every biome a set of the game's own ground tiles.
+ * Give every biome the tiles the game actually floors it with.
  *
- *   node tools/extract-client-textures.js      (writes client-data/textures/)
+ *   node tools/extract-client-textures.js     (sheets + the sprite registry)
  *   node tools/build-realm-tiles.js
  *
- * The client's groundTiles sheet holds every tile the realm's floor is made
- * of, but nothing here says which tile belongs to which biome: that mapping
- * lives in a FlatBuffers blob keyed by the game's own atlas names, and this
- * atlas has no need of it. What it needs is tiles that look like the biome
- * they are laid on, and colour answers that.
+ * Three things have to meet for this to work, and all three are the client's:
  *
- * So: find the tiles, average each one, and give every biome the ones nearest
- * its own colour. The art is the game's; the pairing is this tool's, which is
- * the same bargain the rest of the realm data strikes — see realm-biomes.txt.
+ *   GroundTypes    10,400 ground types, each naming an atlas and an index —
+ *                  and, it turns out, naming its biome: "Risen Hell Lava",
+ *                  "Runic Tundra Light Ice", "Sprite Forest Grass".
+ *   spritesheet    a FlatBuffers registry: for each atlas, the rectangle every
+ *                  one of its sprites occupies in the packed sheets.
+ *   the sheets     groundTiles and mapObjects, the pixels themselves.
  *
- * The tiles are found rather than cut on a grid. The sheet is packed, not
- * ruled: the gaps between tiles run 12, 13, 14 and 15 pixels apart, so a grid
- * would slice half of them in two. Connected runs of opaque pixels do not
- * care how the packer felt that day.
+ * So a ground type resolves to a rectangle resolves to a tile, and its own
+ * name says which biome it belongs to. Nothing is guessed at — which matters,
+ * because a biome's floor is not one tile repeated: it is dirt and grass and
+ * the worn patches between them, and around an encounter it is arranged.
+ *
+ * Where a biome's name matches no ground type the old bargain still applies:
+ * the tiles nearest its colour, and the report says which biomes fell back.
  */
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
 const root = path.join(__dirname, '..');
-const SHEET = path.join(root, 'client-data', 'textures', 'groundTiles.png');
+const SHEETS = path.join(root, 'client-data', 'textures');
+const REGISTRY = path.join(root, 'client-data', 'spritesheet.bin');
+const GROUND = path.join(root, 'client-data');
 const BIOMES = path.join(root, 'data', 'Realm', 'realm-biomes.txt');
 const OUT = path.join(root, 'web', 'assets', 'realm-tiles');
-const INDEX = path.join(OUT, 'index.json');
 
 // How many tiles a biome gets. Enough that a field of them does not repeat
-// visibly, few enough that they still read as one biome.
-const PER_BIOME = 6;
-// A tile is a small square. Anything bigger is a wall or a set piece, and
-// anything smaller is a speck of packing.
-const MIN = 6;
-const MAX = 18;
+// visibly, few enough that the strip stays small.
+const PER_BIOME = 10;
 
-/* ---------------- PNG in and out ---------------- */
+/*
+ * The atlas the client calls a ground type's home is one of two packed
+ * sheets, and the registry says which by a small number.
+ */
+const SHEET_OF = { 1: 'groundTiles', 4: 'mapObjects' };
+
+/* ---------------- FlatBuffers, only as far as needed ---------------- */
+class Flat {
+  constructor(buffer) { this.b = buffer; }
+  u16(at) { return this.b.readUInt16LE(at); }
+  i32(at) { return this.b.readInt32LE(at); }
+  u32(at) { return this.b.readUInt32LE(at); }
+  f32(at) { return this.b.readFloatLE(at); }
+  root() { return this.u32(0); }
+  fields(table) {
+    const v = table - this.i32(table);
+    const size = this.u16(v);
+    const out = [];
+    for (let slot = 0; slot * 2 + 4 < size; slot++) {
+      const offset = this.u16(v + 4 + slot * 2);
+      out.push(offset ? table + offset : 0);
+    }
+    return out;
+  }
+  string(at) { const p = at + this.u32(at); const n = this.u32(p); return this.b.toString('utf8', p + 4, p + 4 + n); }
+  vector(at) { const p = at + this.u32(at); return { at: p + 4, length: this.u32(p) }; }
+  indirect(at) { return at + this.u32(at); }
+}
+
+/* ---------------- PNG ---------------- */
 function readPng(buffer) {
   const width = buffer.readUInt32BE(16);
   const height = buffer.readUInt32BE(20);
-  const colour = buffer[25];
-  if (colour !== 6) throw new Error('expected RGBA, got colour type ' + colour);
   const parts = [];
   let at = 8;
   while (at < buffer.length) {
@@ -75,99 +101,79 @@ function readPng(buffer) {
   }
   return { width, height, pixels };
 }
-
 const CRC_TABLE = (() => {
   const table = new Int32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    table[n] = c;
-  }
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; table[n] = c; }
   return table;
 })();
-function crc32(buffer) {
-  let c = -1;
-  for (let i = 0; i < buffer.length; i++) c = CRC_TABLE[(c ^ buffer[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ -1) >>> 0;
-}
+function crc32(b) { let c = -1; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ -1) >>> 0; }
 function chunk(kind, body) {
-  const head = Buffer.alloc(8);
-  head.writeUInt32BE(body.length, 0);
-  head.write(kind, 4, 'latin1');
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), body])), 0);
+  const head = Buffer.alloc(8); head.writeUInt32BE(body.length, 0); head.write(kind, 4, 'latin1');
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), body])), 0);
   return Buffer.concat([head, body, crc]);
 }
 function writePng(width, height, rgba) {
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; ihdr[9] = 6;
+  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4); ihdr[8] = 8; ihdr[9] = 6;
   const stride = width * 4;
   const raw = Buffer.alloc(height * (stride + 1));
-  for (let y = 0; y < height; y++) {
-    raw[y * (stride + 1)] = 0;
-    rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
-  }
+  for (let y = 0; y < height; y++) { raw[y * (stride + 1)] = 0; rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride); }
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0))
+    chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))
   ]);
 }
 
-/* ---------------- find the tiles ---------------- */
-if (!fs.existsSync(SHEET)) {
-  console.error('\n  ' + path.relative(root, SHEET) + ' is missing. Run:'
+/* ---------------- read it all in ---------------- */
+for (const needed of [REGISTRY, path.join(SHEETS, 'groundTiles.png')]) {
+  if (fs.existsSync(needed)) continue;
+  console.error('\n  ' + path.relative(root, needed) + ' is missing. Run:'
     + '\n    node tools/extract-client-textures.js\n');
   process.exit(1);
 }
-const sheet = readPng(fs.readFileSync(SHEET));
-const { width: W, height: H, pixels } = sheet;
-const alpha = (x, y) => pixels[(y * W + x) * 4 + 3];
 
-console.log('\n  ' + W + 'x' + H + ' sheet');
-const seen = new Uint8Array(W * H);
-const tiles = [];
-for (let y = 0; y < H; y++) {
-  for (let x = 0; x < W; x++) {
-    if (seen[y * W + x] || alpha(x, y) === 0) continue;
-    const queue = [[x, y]];
-    seen[y * W + x] = 1;
-    let minX = x, maxX = x, minY = y, maxY = y, n = 0;
-    while (queue.length) {
-      const [cx, cy] = queue.pop();
-      n++;
-      if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
-      if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = cx + dx, ny = cy + dy;
-        if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
-        if (seen[ny * W + nx] || alpha(nx, ny) === 0) continue;
-        seen[ny * W + nx] = 1;
-        queue.push([nx, ny]);
-      }
+const flat = new Flat(fs.readFileSync(REGISTRY));
+const atlases = new Map();
+{
+  const list = flat.vector(flat.fields(flat.root())[0]);
+  for (let i = 0; i < list.length; i++) {
+    const fields = flat.fields(flat.indirect(list.at + i * 4));
+    const sprites = flat.vector(fields[2]);
+    const rects = [];
+    for (let s = 0; s < sprites.length; s++) {
+      const sprite = flat.fields(flat.indirect(sprites.at + s * 4));
+      if (!sprite[0] || !sprite[7]) { rects.push(null); continue; }
+      rects.push({
+        x: Math.round(flat.f32(sprite[0])),
+        y: Math.round(flat.f32(sprite[0] + 4)),
+        w: Math.round(flat.f32(sprite[0] + 8)),
+        h: Math.round(flat.f32(sprite[0] + 12)),
+        sheet: SHEET_OF[flat.i32(sprite[7])] || null
+      });
     }
-    const w = maxX - minX + 1, h = maxY - minY + 1;
-    if (w < MIN || h < MIN || w > MAX || h > MAX) continue;
-    // A ground tile is solid. A blob with holes in it is a decoration that
-    // happened to land in this sheet.
-    if (n < w * h * 0.92) continue;
-    let r = 0, g = 0, b = 0;
-    for (let ty = minY; ty <= maxY; ty++) {
-      for (let tx = minX; tx <= maxX; tx++) {
-        const i = (ty * W + tx) * 4;
-        r += pixels[i]; g += pixels[i + 1]; b += pixels[i + 2];
-      }
-    }
-    const count = w * h;
-    tiles.push({ x: minX, y: minY, w, h, mean: [r / count, g / count, b / count] });
+    atlases.set(flat.string(fields[0]), rects);
   }
 }
-console.log('  ' + tiles.length + ' ground tiles found');
+console.log('\n  registry: ' + atlases.size + ' atlases, '
+  + [...atlases.values()].reduce((n, r) => n + r.length, 0).toLocaleString('en-US') + ' sprites');
 
-/* ---------------- pair them with the biomes ---------------- */
+const grounds = [];
+for (const file of fs.readdirSync(GROUND).filter(name => /^GroundTypes\./.test(name))) {
+  const text = fs.readFileSync(path.join(GROUND, file), 'utf8');
+  for (const m of text.matchAll(/<Ground\b([^>]*)>([\s\S]*?)<\/Ground>/g)) {
+    const id = /id="([^"]*)"/.exec(m[1]);
+    const art = /<File>([^<]+)<\/File>\s*<Index>([^<]+)<\/Index>/.exec(m[2]);
+    if (id && art) grounds.push({ id: id[1], atlas: art[1], index: Number(art[2]) });
+  }
+}
+console.log('  ' + grounds.length.toLocaleString('en-US') + ' ground types');
+
+const pixels = new Map();
+for (const name of new Set(Object.values(SHEET_OF))) {
+  const file = path.join(SHEETS, name + '.png');
+  if (fs.existsSync(file)) pixels.set(name, readPng(fs.readFileSync(file)));
+}
+
 const biomes = new Map();
 for (const raw of fs.readFileSync(BIOMES, 'utf8').split(/\r?\n/)) {
   const line = raw.trim();
@@ -178,43 +184,111 @@ for (const raw of fs.readFileSync(BIOMES, 'utf8').split(/\r?\n/)) {
   biomes.get(biome).push([1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)));
 }
 
+/*
+ * The client does not always call a place what the map does. Where it does
+ * not, the name it uses is written here rather than left to a guess.
+ */
+const ALIAS = { 'Abandoned City': 'Ancient City', 'Coral Reefs': 'Coral Reef' };
+
+/*
+ * What a floor is called when nothing is named for the biome.
+ *
+ * The generic terrains — the plains, the forests, the beach — have no ground
+ * type carrying their name, so those fall back to colour. Left to the whole
+ * catalogue that picked things like "AI Untaris Dark Background Crater": the
+ * right colour, and nothing anyone would call a floor. Restricting the pool
+ * to ground types that sound like ground is cruder than a name and far better
+ * than none.
+ */
+const SOUNDS_LIKE_GROUND = /grass|dirt|sand|stone|ice|snow|rock|water|tile|floor|moss|mud|gravel|earth|soil/i;
+
+/* ---------------- cut ---------------- */
+const plain = text => String(text).toLowerCase().replace(/[^a-z0-9]/g, '');
+function tileFor(ground) {
+  const rects = atlases.get(ground.atlas);
+  if (!rects) return null;
+  const rect = rects[ground.index];
+  if (!rect || !rect.sheet || !rect.w || !rect.h) return null;
+  const sheet = pixels.get(rect.sheet);
+  if (!sheet || rect.x + rect.w > sheet.width || rect.y + rect.h > sheet.height) return null;
+  return { rect, sheet };
+}
+function meanOf(tile) {
+  const { rect, sheet } = tile;
+  let r = 0, g = 0, b = 0, seen = 0;
+  for (let y = 0; y < rect.h; y++) {
+    for (let x = 0; x < rect.w; x++) {
+      const i = ((rect.y + y) * sheet.width + rect.x + x) * 4;
+      if (sheet.pixels[i + 3] < 200) continue;
+      r += sheet.pixels[i]; g += sheet.pixels[i + 1]; b += sheet.pixels[i + 2]; seen++;
+    }
+  }
+  return seen ? { mean: [r / seen, g / seen, b / seen], solid: seen / (rect.w * rect.h) } : null;
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 const index = {};
-let written = 0;
+const report = [];
 for (const [biome, colours] of biomes) {
-  // A biome painted in several tones is matched against their average: it is
-  // one place, and its tiles should look like all of it.
-  const target = [0, 1, 2].map(c => colours.reduce((sum, rgb) => sum + rgb[c], 0) / colours.length);
-  const ranked = tiles
-    .map(tile => ({
-      tile,
-      distance: (tile.mean[0] - target[0]) ** 2 + (tile.mean[1] - target[1]) ** 2 + (tile.mean[2] - target[2]) ** 2
-    }))
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, PER_BIOME);
+  const wanted = plain(ALIAS[biome] || biome);
+  let chosen = grounds
+    .filter(ground => plain(ground.id).includes(wanted))
+    .map(ground => ({ ground, tile: tileFor(ground) }))
+    .filter(entry => entry.tile)
+    .map(entry => ({ ...entry, look: meanOf(entry.tile) }))
+    // A floor tile is opaque. A half-empty rectangle is a decoration that
+    // happens to be filed as ground.
+    .filter(entry => entry.look && entry.look.solid > 0.95);
 
-  // One strip per biome, tiles side by side, so the atlas fetches one file.
-  const size = Math.max(...ranked.map(entry => Math.max(entry.tile.w, entry.tile.h)));
-  const strip = Buffer.alloc(size * ranked.length * size * 4);
-  const stripWidth = size * ranked.length;
-  ranked.forEach((entry, slot) => {
-    const { x, y, w, h } = entry.tile;
-    for (let ty = 0; ty < h; ty++) {
-      for (let tx = 0; tx < w; tx++) {
-        const from = ((y + ty) * W + x + tx) * 4;
-        const to = (ty * stripWidth + slot * size + tx) * 4;
-        pixels.copy(strip, to, from, from + 4);
+  let how = 'named';
+  if (chosen.length < 3) {
+    // No ground type says this biome's name. Fall back to colour, over every
+    // tile the registry knows.
+    how = 'colour';
+    const target = [0, 1, 2].map(c => colours.reduce((sum, rgb) => sum + rgb[c], 0) / colours.length);
+    chosen = grounds
+      .filter(ground => SOUNDS_LIKE_GROUND.test(ground.id))
+      .map(ground => ({ ground, tile: tileFor(ground) }))
+      .filter(entry => entry.tile && entry.tile.rect.w <= 16 && entry.tile.rect.h <= 16)
+      .map(entry => ({ ...entry, look: meanOf(entry.tile) }))
+      .filter(entry => entry.look && entry.look.solid > 0.95)
+      .sort((a, b) =>
+        ((a.look.mean[0] - target[0]) ** 2 + (a.look.mean[1] - target[1]) ** 2 + (a.look.mean[2] - target[2]) ** 2)
+        - ((b.look.mean[0] - target[0]) ** 2 + (b.look.mean[1] - target[1]) ** 2 + (b.look.mean[2] - target[2]) ** 2));
+  }
+
+  // Spread the pick across the set rather than taking the first few, so a
+  // biome gets its dirt and its grass and not ten shades of one.
+  const step = Math.max(1, Math.floor(chosen.length / PER_BIOME));
+  const picked = [];
+  for (let i = 0; i < chosen.length && picked.length < PER_BIOME; i += step) picked.push(chosen[i]);
+  if (!picked.length) { report.push([biome, 'none', 0, '']); continue; }
+
+  const size = Math.max(...picked.map(entry => Math.max(entry.tile.rect.w, entry.tile.rect.h)));
+  const stripWidth = size * picked.length;
+  const strip = Buffer.alloc(stripWidth * size * 4);
+  picked.forEach((entry, slot) => {
+    const { rect, sheet } = entry.tile;
+    for (let y = 0; y < rect.h; y++) {
+      for (let x = 0; x < rect.w; x++) {
+        const from = ((rect.y + y) * sheet.width + rect.x + x) * 4;
+        const to = (y * stripWidth + slot * size + x) * 4;
+        sheet.pixels.copy(strip, to, from, from + 4);
       }
     }
   });
   const slug = biome.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   fs.writeFileSync(path.join(OUT, slug + '.png'), writePng(stripWidth, size, strip));
-  index[biome] = { file: slug + '.png', tile: size, count: ranked.length };
-  written++;
-  const off = Math.round(Math.sqrt(ranked[0].distance));
-  console.log('    ' + biome.padEnd(18) + ranked.length + ' tiles at ' + size + 'px'
-    + '   nearest is ' + off + ' off');
+  index[biome] = { file: slug + '.png', tile: size, count: picked.length };
+  report.push([biome, how, picked.length, picked[0].ground.id]);
 }
 
-fs.writeFileSync(INDEX, JSON.stringify(index, null, 2) + '\n');
-console.log('\n  ' + written + ' biomes -> ' + path.relative(root, OUT) + '\n');
+fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 2) + '\n');
+console.log('');
+for (const [biome, how, n, example] of report) {
+  console.log('    ' + biome.padEnd(18) + String(n).padStart(2) + ' tiles  ' + how.padEnd(7)
+    + (example ? '  e.g. ' + example : ''));
+}
+const fell = report.filter(row => row[1] !== 'named').length;
+console.log('\n  ' + report.length + ' biomes -> ' + path.relative(root, OUT)
+  + (fell ? ', ' + fell + ' by colour for want of a named ground type' : '') + '\n');
