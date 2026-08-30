@@ -1317,6 +1317,49 @@ check('a dungeon set aside leaves the list without paying anything', (() => {
   return `set aside ${plain[0].name}, ${plain[1].name} comes forward`;
 })());
 
+/*
+ * The enchanter's room, with its background cut away.
+ *
+ * The picture is drawn on a flat near-black field, and the room's own shadows
+ * are that same near-black. Cutting the field by colour alone walked through
+ * the gaps between them and ate holes out of the middle of the bookcase, so
+ * tools/fetch-sprites.js erodes the field before flooding it. This is what
+ * that has to keep true: nothing outside, everything inside.
+ */
+check('the enchanter room keeps its inside and loses its background', (() => {
+  const zlib = require('zlib');
+  const file = fs.readFileSync(path.join(root, 'data', 'GUI Files', 'Page Art', 'Enchanting.png'));
+  const width = file.readUInt32BE(16), height = file.readUInt32BE(20);
+  if (file[25] !== 6) return false;                      // no alpha channel at all
+  const parts = [];
+  for (let at = 8; at < file.length;) {
+    const length = file.readUInt32BE(at);
+    if (file.toString('latin1', at + 4, at + 8) === 'IDAT') parts.push(file.subarray(at + 8, at + 8 + length));
+    at += 12 + length;
+  }
+  const raw = zlib.inflateSync(Buffer.concat(parts));
+  const stride = width * 4;
+  const alpha = (x, y) => raw[y * (stride + 1) + 1 + x * 4 + 3];
+
+  // The four corners are field, and must be gone.
+  for (const [x, y] of [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]]) {
+    if (alpha(x, y) !== 0) return false;
+  }
+  // Eight points that are the room: the shelf, the books, the carpet, the
+  // emblem, the chest, the antlers. Every one of them was a hole at some
+  // point while this was being got right.
+  for (const [x, y] of [[282, 60], [282, 130], [282, 250], [282, 420],
+    [100, 470], [70, 240], [420, 280], [500, 380]]) {
+    if (alpha(x, y) !== 255) return false;
+  }
+  // And the field is about a fifth of the picture: much less means the cut
+  // did not happen, much more means it went inside.
+  let clear = 0;
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) if (alpha(x, y) === 0) clear++;
+  const share = clear / (width * height);
+  return share > 0.15 && share < 0.3;
+})());
+
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
 if (failures.length) { for (const name of failures) console.log(`  - ${name}`); process.exit(1); }

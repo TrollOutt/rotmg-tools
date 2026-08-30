@@ -1029,7 +1029,6 @@ table.mini td { padding: 3px 8px; border: 0; }
 .home-card-art {
   grid-row: 1 / 5; grid-column: 1; align-self: center;
   width: 100%; aspect-ratio: 1; object-fit: contain; image-rendering: pixelated;
-  border-radius: var(--radius-sm);
 }
 /*
  * The enchanter's room is a drawing, not an icon: the wiki's copy has been
@@ -1047,9 +1046,12 @@ table.mini td { padding: 3px 8px; border: 0; }
 .home-card-art[data-art^="Page Art"] {
   animation: enchanting 4.4s ease-in-out infinite;
 }
+/* The field it was drawn on is cut away, so the glow follows the outline of
+   the room itself — the antlers, the shelf, the edge of the carpet — instead
+   of haloing a rectangle. */
 @keyframes enchanting {
-  0%, 100% { filter: drop-shadow(0 0 2px rgba(96, 168, 236, .22)) brightness(1); }
-  50%      { filter: drop-shadow(0 0 11px rgba(126, 196, 255, .5)) brightness(1.09); }
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(96, 168, 236, .3)) brightness(1); }
+  50%      { filter: drop-shadow(0 0 12px rgba(126, 196, 255, .62)) brightness(1.08); }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-card-art[data-art^="Page Art"] {

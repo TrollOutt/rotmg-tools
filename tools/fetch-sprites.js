@@ -294,6 +294,90 @@ function findImage(source, name) {
  * its own pixels, so there is no honest way to reduce it back to them, and it
  * is shown small and smoothed rather than pretending otherwise.
  */
+/*
+ * Cut the background out of a picture that was drawn on one.
+ *
+ * The wiki serves the enchanter's room on a flat near-black field, which on a
+ * dark card reads as a photograph pasted onto it rather than a thing standing
+ * on it. There is no alpha channel to trust, so the field has to be found.
+ *
+ * Colour alone cannot do it. The room's own shadows — inside the bookcase,
+ * under the shelf, behind the emblem — are the same near-black as the field,
+ * and they touch it through gaps a pixel or two wide where the drawing does
+ * not quite close. A plain flood walks straight through those gaps and eats
+ * holes out of the middle of the room.
+ *
+ * So the field is found by shape as well as colour: erode it first, keeping
+ * only what is field for two pixels in every direction, and flood that. A gap
+ * two pixels wide does not survive being eroded, so the flood cannot get in.
+ * Then the result is grown back out through the field to recover the edge it
+ * lost, which cannot reach the inside again — the gap is long and the growth
+ * is bounded.
+ */
+function cutBackground(image, tolerance = 8, radius = 2) {
+  const { width, height, pixels } = image;
+  const bg = [pixels[0], pixels[1], pixels[2]];
+  const size = width * height;
+  const clamp = (value, high) => value < 0 ? 0 : value > high ? high : value;
+
+  const flat = new Uint8Array(size);
+  for (let i = 0; i < size; i++) {
+    const at = i * 4;
+    flat[i] = Math.max(
+      Math.abs(pixels[at] - bg[0]),
+      Math.abs(pixels[at + 1] - bg[1]),
+      Math.abs(pixels[at + 2] - bg[2])) <= tolerance ? 1 : 0;
+  }
+
+  // Field for `radius` in every direction. Outside the picture counts as
+  // field, so the border it is seeded from is not eroded away.
+  const open = new Uint8Array(size);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let all = 1;
+      for (let dy = -radius; dy <= radius && all; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (!flat[clamp(y + dy, height - 1) * width + clamp(x + dx, width - 1)]) { all = 0; break; }
+        }
+      }
+      open[y * width + x] = all;
+    }
+  }
+
+  const outside = new Uint8Array(size);
+  const queue = [];
+  const seed = at => { if (open[at] && !outside[at]) { outside[at] = 1; queue.push(at); } };
+  for (let x = 0; x < width; x++) { seed(x); seed((height - 1) * width + x); }
+  for (let y = 0; y < height; y++) { seed(y * width); seed(y * width + width - 1); }
+  while (queue.length) {
+    const at = queue.pop();
+    const x = at % width, y = (at - x) / width;
+    if (x > 0) seed(at - 1);
+    if (x < width - 1) seed(at + 1);
+    if (y > 0) seed(at - width);
+    if (y < height - 1) seed(at + width);
+  }
+
+  // Grow it back through the field by what the erosion took, and one more so
+  // the outline is not left a pixel short of where it belongs.
+  for (let round = 0; round <= radius; round++) {
+    const grown = [];
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const at = y * width + x;
+        if (outside[at] || !flat[at]) continue;
+        if ((x > 0 && outside[at - 1]) || (x < width - 1 && outside[at + 1])
+          || (y > 0 && outside[at - width]) || (y < height - 1 && outside[at + width])) grown.push(at);
+      }
+    }
+    for (const at of grown) outside[at] = 1;
+  }
+
+  let cut = 0;
+  for (let i = 0; i < size; i++) if (outside[i]) { pixels[i * 4 + 3] = 0; cut++; }
+  return { cut, kept: size - cut };
+}
+
 async function pageArt() {
   const dir = path.join(root, 'data', 'GUI Files', 'Page Art');
   const file = path.join(dir, 'Enchanting.png');
@@ -308,10 +392,12 @@ async function pageArt() {
     return;
   }
   const image = readPng(await get(new URL(first[1], ENCHANT_PAGE).href));
+  const { cut } = cutBackground(image);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(file, writePng(image.width, image.height, image.pixels));
+  const share = Math.round(100 * cut / (image.width * image.height));
   console.log('\n  the enchanter room ' + image.width + 'x' + image.height
-    + ' -> ' + path.relative(root, file));
+    + ', ' + share + '% of it background cut away -> ' + path.relative(root, file));
 }
 
 async function main() {
