@@ -3996,7 +3996,24 @@ var RealmMap = (function () {
   // Beacons are one of the reasons to open the atlas at all, so they are on
   // from the first look rather than being something you have to find.
   const SHOW_BEACONS = 0.35;
-  const SHOW_CREATURES = 1.6;
+  // The ground stops being a colour and becomes pixels.
+  const SHOW_GRAIN = 2.2;
+  const SHOW_SCENERY = 3.4;
+
+  /*
+   * What is moving about down there, and how close you have to be to see it.
+   *
+   * The realm reads from the top down: the set-piece encounters are the
+   * things you can pick out from altitude — a Cube God is visible from
+   * anywhere — then Oryx's own agents, and only when you are properly down
+   * among it do the ordinary monsters of a biome appear. The client sorts
+   * them into exactly these three, so the ladder is its own, not invented.
+   */
+  const TIERS = [
+    { key: 'encounters', from: 0.5, world: 15, cap: 3 },
+    { key: 'heroes', from: 1.7, world: 11, cap: 3 },
+    { key: 'regular', from: 3.4, world: 8, cap: 6 }
+  ];
 
   const html = value => String(value || '').replace(/[&<>"']/g, char =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -4147,6 +4164,7 @@ var RealmMap = (function () {
           hex: entry.hex,
           biome: entry.biome,
           zone: zoneFor(entry.biome),
+          family: familyOf(entry.biome),
           box: { minX, maxX, minY, maxY },
           cx: (minX + maxX + 1) / 2 * CELL,
           cy: (minY + maxY + 1) / 2 * CELL
@@ -4154,6 +4172,7 @@ var RealmMap = (function () {
       }
     }
     regions = found.sort((a, b) => b.size - a.size);
+    for (const region of regions) populate(region);
 
     // A beacon belongs to whatever it stands on, so opening one opens the
     // biome it guards.
@@ -4285,27 +4304,209 @@ var RealmMap = (function () {
     }
   }
 
-  function drawCreatures(time) {
-    const scale = zoom();
-    if (scale < SHOW_CREATURES) return;
-    ctx.globalAlpha = Math.min(1, (scale - SHOW_CREATURES) / 0.8);
-    for (const region of regions) {
-      const zone = region.zone;
-      if (!zone || !zone.monsters || !zone.monsters.length) continue;
-      const many = Math.min(4, zone.monsters.length, Math.max(1, Math.round(region.size / 200)));
-      for (let index = 0; index < many; index++) {
-        const cell = ((index * 53 + region.letter.charCodeAt(0)) % (region.cells.length / 2)) * 2;
-        const phase = index * 2.4 + cell * 0.03;
-        const wander = 5 + index * 3;
-        const x = region.cells[cell] * CELL + Math.sin(time / 1900 + phase) * wander;
-        const y = region.cells[cell + 1] * CELL + Math.cos(time / 2300 + phase) * wander;
-        const spot = screenPoint(x, y);
-        const size = Math.max(1.5, 2.2 * scale);
-        ctx.fillStyle = index === 0 ? 'rgba(250, 236, 200, .92)' : 'rgba(16, 14, 22, .82)';
-        ctx.fillRect(spot.x - size, spot.y - size, size * 2, size * 2);
+  /* ---------------------------------------------------------------- *
+   * The ground, close up                                              *
+   * ---------------------------------------------------------------- *
+   * Far out a biome is a colour. Close in it should be a surface, and the
+   * surface should be made of pixels, because everything else here is. Both
+   * the grain and the scenery are placed on a hash of the cell they sit in,
+   * so they hold still while you pan — the one thing that would give away
+   * that they are drawn rather than there.
+   */
+  const FAMILIES = [
+    [/forest|escape|thicket|sprite/i, 'tree'],
+    [/tundra|frost|snow/i, 'ice'],
+    [/desert|sand|beach|dune/i, 'cactus'],
+    [/reef|cove|abyss|sea/i, 'weed'],
+    [/city|church|hell|hallow|ruin|carbon/i, 'rubble'],
+    [/plain|grass|scrub/i, 'tuft']
+  ];
+  function familyOf(biome) {
+    for (const [test, family] of FAMILIES) if (test.test(biome || '')) return family;
+    return 'tuft';
+  }
+
+  // Three tones off the ground colour: what is under it, and what catches
+  // the light. Pixel art is mostly this, and a palette of one is flat.
+  function tones(hex) {
+    const n = parseInt(String(hex).slice(1), 16);
+    const mix = amount => {
+      const to = v => Math.max(0, Math.min(255, Math.round(v * amount)));
+      return 'rgb(' + to((n >> 16) & 255) + ',' + to((n >> 8) & 255) + ',' + to(n & 255) + ')';
+    };
+    return { dark: mix(0.62), deep: mix(0.78), lit: mix(1.28) };
+  }
+  const paletteFor = new Map();
+  function palette(hex) {
+    if (!paletteFor.has(hex)) paletteFor.set(hex, tones(hex));
+    return paletteFor.get(hex);
+  }
+
+  /*
+   * One tuft, tree, cactus or heap of rubble, drawn in the ground's own
+   * colours at whatever size the cell currently is. Small enough that what
+   * matters is the silhouette; a tree is a trunk and a mass, a cactus is an
+   * upright with arms, rubble is three stones.
+   */
+  function scenery(paint, family, x, y, unit, colours, seed) {
+    const px = (dx, dy, w, h, fill) => {
+      paint.fillStyle = fill;
+      paint.fillRect(x + dx * unit, y + dy * unit, w * unit, h * unit);
+    };
+    if (family === 'tree') {
+      px(0.42, 0.62, 0.16, 0.34, colours.dark);
+      px(0.16, 0.10, 0.68, 0.56, colours.deep);
+      px(0.28, 0.02, 0.44, 0.30, colours.lit);
+    } else if (family === 'cactus') {
+      px(0.44, 0.20, 0.16, 0.72, colours.deep);
+      px(seed > 0.5 ? 0.22 : 0.60, 0.36, 0.20, 0.14, colours.deep);
+      px(0.46, 0.20, 0.06, 0.60, colours.lit);
+    } else if (family === 'ice') {
+      px(0.34, 0.30, 0.14, 0.56, colours.lit);
+      px(0.52, 0.44, 0.12, 0.42, colours.lit);
+      px(0.30, 0.80, 0.40, 0.10, colours.deep);
+    } else if (family === 'rubble') {
+      px(0.20, 0.58, 0.26, 0.20, colours.deep);
+      px(0.52, 0.66, 0.20, 0.16, colours.dark);
+      px(0.34, 0.40, 0.18, 0.16, colours.lit);
+    } else if (family === 'weed') {
+      px(0.30, 0.46, 0.08, 0.44, colours.lit);
+      px(0.48, 0.34, 0.08, 0.56, colours.deep);
+      px(0.64, 0.52, 0.08, 0.38, colours.lit);
+    } else {
+      px(0.30, 0.56, 0.08, 0.30, colours.lit);
+      px(0.46, 0.48, 0.08, 0.38, colours.deep);
+      px(0.62, 0.60, 0.08, 0.26, colours.lit);
+    }
+  }
+
+  function drawGround(scale) {
+    if (scale < SHOW_GRAIN) return;
+    const size = box();
+    const unit = CELL * scale;
+    const topLeft = worldPoint(0, 0);
+    const bottomRight = worldPoint(size.width, size.height);
+    const from = { col: Math.max(0, Math.floor(topLeft.x / CELL)), row: Math.max(0, Math.floor(topLeft.y / CELL)) };
+    const to = {
+      col: Math.min(cols - 1, Math.ceil(bottomRight.x / CELL)),
+      row: Math.min(rows - 1, Math.ceil(bottomRight.y / CELL))
+    };
+    // A hard ceiling on the work: past this many cells the view is so wide
+    // that the grain would not be visible anyway.
+    if ((to.col - from.col) * (to.row - from.row) > 26000) return;
+
+    const grain = Math.min(1, (scale - SHOW_GRAIN) / 1.2);
+    const scenic = Math.min(1, (scale - SHOW_SCENERY) / 1.6);
+    for (let row = from.row; row <= to.row; row++) {
+      for (let col = from.col; col <= to.col; col++) {
+        const letter = at(col, row);
+        if (isWater(letter) || letter === ROAD) continue;
+        const entry = legend.get(letter);
+        if (!entry || !/^#[0-9a-f]{6}$/i.test(entry.hex || '')) continue;
+        const colours = palette(entry.hex);
+        const spot = screenPoint(col * CELL, row * CELL);
+        const n = hash(col, row);
+
+        // Grain: two or three darker pixels inside the cell, in one of four
+        // arrangements. Enough to break the flat, not enough to read as
+        // noise.
+        ctx.globalAlpha = grain * 0.5;
+        ctx.fillStyle = colours.deep;
+        const step = unit / 4;
+        const which = Math.floor(n * 4);
+        for (let i = 0; i < 3; i++) {
+          const dx = ((which + i * 2) % 4) * step;
+          const dy = ((which * 3 + i) % 4) * step;
+          ctx.fillRect(spot.x + dx, spot.y + dy, step, step);
+        }
+        ctx.globalAlpha = 1;
+
+        // Scenery: about one cell in nine, so a forest reads as trees and
+        // not as a hedge.
+        if (scenic > 0 && n > 0.89) {
+          ctx.globalAlpha = scenic;
+          const family = (legend.get(letter) || {}).family
+            || familyOf(entry.biome);
+          scenery(ctx, family, spot.x, spot.y, unit, colours, hash(row, col));
+          ctx.globalAlpha = 1;
+        }
       }
     }
-    ctx.globalAlpha = 1;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * What lives there, moving about                                    *
+   * ---------------------------------------------------------------- */
+  const artwork = new Map();                       // url -> Image, or null
+  function picture(monster) {
+    const art = monsterArt(monster);
+    if (!art || !art.url) return null;
+    if (!artwork.has(art.url)) {
+      const image = new Image();
+      image.decoding = 'async';
+      image.onerror = () => artwork.set(art.url, null);
+      image.src = art.url;
+      artwork.set(art.url, image);
+    }
+    const image = artwork.get(art.url);
+    return image && image.complete && image.naturalWidth ? image : null;
+  }
+
+  /*
+   * Give every creature a home and a wander.
+   *
+   * A home cell picked off the region's own cells, so nothing stands in the
+   * sea, and a slow loop around it with a period of its own — creatures that
+   * share a phase move like a formation, which is not what a realm looks
+   * like.
+   */
+  function populate(region) {
+    region.life = [];
+    const zone = region.zone;
+    if (!zone) return;
+    const groups = zone.wikiGroups || {};
+    const count = region.cells.length / 2;
+    for (const tier of TIERS) {
+      const list = (groups[tier.key] || []).slice(0, tier.cap);
+      list.forEach((monster, index) => {
+        const pick = Math.floor(hash(index + 7, region.cells[0] + tier.key.length) * count);
+        const cell = Math.max(0, Math.min(count - 1, pick)) * 2;
+        region.life.push({
+          monster, tier,
+          x: (region.cells[cell] + 0.5) * CELL,
+          y: (region.cells[cell + 1] + 0.5) * CELL,
+          drift: 6 + index * 4,
+          period: 5200 + index * 900 + tier.key.length * 300,
+          phase: index * 1.7 + tier.key.length
+        });
+      });
+    }
+  }
+
+  function drawLife(time, scale) {
+    for (const region of regions) {
+      if (!region.life || !region.life.length) continue;
+      for (const being of region.life) {
+        if (scale < being.tier.from) continue;
+        const fade = Math.min(1, (scale - being.tier.from) / 0.6);
+        const x = being.x + Math.sin(time / being.period + being.phase) * being.drift;
+        const y = being.y + Math.cos(time / (being.period * 1.28) + being.phase) * being.drift * 0.7;
+        const spot = screenPoint(x, y);
+        const drawn = Math.max(13, Math.min(46, being.tier.world * scale));
+        const image = picture(being.monster);
+        ctx.globalAlpha = fade;
+        if (image) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(image, spot.x - drawn / 2, spot.y - drawn / 2, drawn, drawn);
+        } else {
+          // Until its portrait loads, a creature is a mark rather than
+          // nothing: the realm should not look empty while it fetches.
+          ctx.fillStyle = 'rgba(244, 228, 186, .85)';
+          ctx.fillRect(spot.x - drawn / 6, spot.y - drawn / 6, drawn / 3, drawn / 3);
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
   }
 
   function drawBeacons(time) {
@@ -4357,10 +4558,12 @@ var RealmMap = (function () {
     const delta = Math.min(1, (time - lastTime) / 80 || 1);
     lastTime = time;
     for (const key of ['x', 'y', 'z']) view[key] += (view['t' + key] - view[key]) * Math.min(0.24, delta * 0.18);
+    const scale = zoom();
     drawSea(time);
     drawTerrain();
+    drawGround(scale);
     drawSelection();
-    drawCreatures(time);
+    drawLife(time, scale);
     drawBeacons(time);
     frame = requestAnimationFrame(render);
   }
