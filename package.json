@@ -7,7 +7,7 @@
     "test": "node tests/engine.test.js && node tools/check-artifacts.js",
     "build": "node tools/build-standalone.js",
   "sprites": "node tools/fetch-sprites.js",
-  "scrape": "node tools/extract-client.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-items.js && node tools/read-client.js --snapshot",
+  "scrape": "node tools/extract-client.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-items.js && node tools/generate-fame.js && node tools/read-client.js --snapshot",
     "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
     "release": "npm test && npm run build"
   }

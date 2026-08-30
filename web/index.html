@@ -10,7 +10,42 @@
 <div id="ambience" class="ambience" aria-hidden="true"></div>
 <div id="realmName" class="realm-name" aria-hidden="true"></div>
 
-<div class="app">
+<!-- The way in ------------------------------------------------------- -->
+<div id="pageHome" class="app page">
+  <header class="masthead home-head">
+    <h1>Realm Tools</h1>
+    <p>Two things worth working out before you spend a run on them. Everything is
+      read out of an installed game client, runs in your browser, and is remembered
+      only on this machine.</p>
+  </header>
+
+  <div class="home-cards">
+    <button type="button" class="home-card" data-go="enchant">
+      <span class="home-card-title">Enchant Calculator</span>
+      <span class="home-card-line">What an enchantment actually costs.</span>
+      <small>Describe the item you hold, say what you want on it, and compare every
+        artifact and every order to roll them in.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
+
+    <button type="button" class="home-card" data-go="fame">
+      <span class="home-card-title">Fame Sweep</span>
+      <span class="home-card-line">Which dungeons are worth the trip.</span>
+      <small>Tick off what you have completed. It works out what the collection
+        bonuses have already paid, what is left, and which dungeon to do next.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
+  </div>
+
+  <footer class="app-foot">
+    Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
+    by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOnHome"></span>.
+  </footer>
+</div>
+
+<!-- Enchant Calculator ---------------------------------------------- -->
+<div id="pageEnchant" class="app page" hidden>
 
   <header class="masthead">
     <h1>Enchant Calculator</h1>
@@ -179,6 +214,50 @@
   </footer>
 </div>
 
+
+<!-- Fame Sweep -------------------------------------------------------- -->
+<div id="pageFame" class="app page" hidden>
+  <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>Fame Sweep</h1>
+    <p>Every dungeon pays fame the first time you finish it, and finishing a whole
+      era or group pays far more — a flat sum and a share of the fame you already have.</p>
+    <div class="masthead-row">
+      <label class="base-fame">Your base fame
+        <input id="fameBase" type="number" min="0" step="100" value="0" inputmode="numeric">
+      </label>
+      <button id="fameReset" type="button" class="link-button">Clear the ticks</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="column config" aria-label="What you have done">
+      <section class="card step">
+        <header><span class="step-badge">1</span><h2>What it is worth</h2></header>
+        <div id="fameSummary" class="fame-summary"></div>
+      </section>
+
+      <section class="card step">
+        <header><span class="step-badge">2</span><h2>Do this next</h2></header>
+        <div id="fameNext" class="fame-next"></div>
+      </section>
+    </section>
+
+    <section class="column results" aria-label="The bonuses">
+      <section class="card">
+        <header><h2>Collections</h2><span class="header-aside">what a whole group pays</span></header>
+        <div id="fameCollections" class="fame-collections"></div>
+      </section>
+
+      <section class="card">
+        <header><h2>Dungeons</h2><span class="header-aside" id="fameTickedCount"></span></header>
+        <input id="fameSearch" type="search" placeholder="Search a dungeon…" autocomplete="off">
+        <div id="fameDungeons" class="fame-dungeons"></div>
+      </section>
+    </section>
+  </main>
+</div>
+
 <!-- Enchantment picker ------------------------------------------------ -->
 <div id="pickerBackdrop" class="picker-backdrop" hidden>
   <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
@@ -205,6 +284,8 @@
 
 <script src="engine.js"></script>
 <script src="items.js"></script>
+<script src="fame.js"></script>
+<script src="fame-page.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

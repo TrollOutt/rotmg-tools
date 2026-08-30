@@ -46,6 +46,7 @@ const readText = (...parts) =>
 const sources = {
   clientModText: readText('Enchantment documents', 'client-enchantments.txt'),
   clientItemText: readText('Items', 'client-items.txt'),
+  fameText: readText('Fame', 'client-fame.txt'),
   clientArtifactText: readText('Artifacts', 'client-artifacts.txt'),
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
 };
@@ -123,6 +124,8 @@ if (fs.existsSync(itemIndexPath)) {
 const readWeb = file => fs.readFileSync(path.join(web, file), 'utf8').replace(/\r\n/g, '\n');
 const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
+const fameSource = readWeb('fame.js');
+const famePageSource = readWeb('fame-page.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
 
@@ -203,7 +206,8 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n<script src="app.js"></script>';
+const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n'
+  + '<script src="fame.js"></script>\n<script src="fame-page.js"></script>\n<script src="app.js"></script>';
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -229,6 +233,8 @@ page = page
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
+    `<script>\n${safe(fameSource)}\n</script>`,
+    `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);

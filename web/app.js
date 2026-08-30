@@ -2115,5 +2115,55 @@ async function load() {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Which tool you are looking at                                       *
+ * ------------------------------------------------------------------ *
+ * Three pages behind one address, keyed on the hash so the browser own
+ * back button works and a link can point straight at a tool. The
+ * enchant calculator loads its data at startup either way — it is a
+ * couple of hundred milliseconds and it means the page is ready when
+ * you pick it. Fame Sweep loads its own the first time you open it.
+ */
+const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame' };
+let famePageReady = false;
+
+async function openFamePage() {
+  if (famePageReady) return;
+  famePageReady = true;
+  try {
+    const text = BUNDLE && BUNDLE.sources && BUNDLE.sources.fameText
+      ? BUNDLE.sources.fameText
+      : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
+    FamePage.init(text);
+  } catch (error) {
+    console.error(error);
+    famePageReady = false;
+    $('fameSummary').innerHTML = '<p class="note warn">Could not read the fame bonuses.</p>';
+  }
+}
+
+function showPage(name) {
+  const page = PAGES[name] ? name : 'home';
+  for (const [key, id] of Object.entries(PAGES)) $(id).hidden = key !== page;
+  document.body.dataset.page = page;
+  if (page === 'fame') openFamePage();
+  window.scrollTo(0, 0);
+}
+
+function routeFromHash() {
+  showPage(String(location.hash || '').replace(new RegExp('^#\\/?'), ''));
+}
+
+document.addEventListener('click', event => {
+  const go = event.target.closest('[data-go]');
+  if (!go) return;
+  event.preventDefault();
+  const to = go.dataset.go;
+  location.hash = to === 'home' ? '' : to;
+  routeFromHash();
+});
+window.addEventListener('hashchange', routeFromHash);
+
 bind();
+routeFromHash();
 load();

@@ -1099,6 +1099,100 @@ check('Premium Silver lifts tier 2 to cover the tier it bars', (() => {
   return Math.abs(engine.tierMass(data.byName.get('Attack Bonus'), silver) - 1) < 0.001;
 })(), String(engine.tierMass(data.byName.get('Attack Bonus'), artifact('Premium Silver Card'))));
 
+/* ------------------------------------------------------------------ *
+ * 16. Fame from dungeons                                              *
+ * ------------------------------------------------------------------ *
+ * Every figure is read out of the client by tools/generate-fame.js: a
+ * ladder per dungeon, and thirteen collections that pay a flat sum and
+ * a share of the character's base fame for finishing a whole group.
+ */
+section('16. Fame from dungeons');
+
+const fameLib = require(path.join(root, 'web', 'fame.js'));
+const fame = fameLib.parse(fs.readFileSync(path.join(root, 'data', 'Fame', 'client-fame.txt'), 'utf8'));
+
+check('the client defines 13 collections and 76 dungeons with a ladder',
+  fame.collections.length === 13 && fame.dungeons.length === 76,
+  `${fame.collections.length} collections, ${fame.dungeons.length} dungeons`);
+
+check('every dungeon a collection names has a ladder of its own', (() => {
+  for (const collection of fame.collections) {
+    for (const need of collection.needs) if (!fame.byName.has(need.what)) return false;
+  }
+  return true;
+})());
+
+check('a ladder starts at one completion and climbs', (() => {
+  return fame.dungeons.every(dungeon => {
+    if (!dungeon.ladder.length) return false;
+    if (dungeon.ladder[0].at !== 1) return false;
+    for (let i = 1; i < dungeon.ladder.length; i++) {
+      if (dungeon.ladder[i].at <= dungeon.ladder[i - 1].at) return false;
+      if (dungeon.ladder[i].fame < dungeon.ladder[i - 1].fame) return false;
+    }
+    return true;
+  });
+})());
+
+check('Tunnel Rat is twelve dungeons for 3000 fame and 7.5 %', (() => {
+  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  return tr && tr.needs.length === 12 && tr.absolute === 3000 && tr.relative === 7.5;
+})());
+
+check('nothing ticked is worth nothing', (() => {
+  const view = fameLib.summarise(fame, [], 12000);
+  return view.earnedFame === 0 && view.total === 12000;
+})());
+
+check('a completed collection pays its flat sum and its share of the base', (() => {
+  // Far Out is the four alien dungeons: 2000 + 5 % of the base, plus the four
+  // first completions at 125 each.
+  const farOut = fame.collections.find(entry => entry.name === 'Far Out');
+  const view = fameLib.summarise(fame, farOut.needs.map(need => need.what), 12000);
+  const ladders = farOut.needs.reduce((total, need) =>
+    total + fameLib.firstCompletion(fame.byName.get(need.what)), 0);
+  return Math.abs(view.earnedFame - (2000 + 12000 * 0.05 + ladders)) < 1e-9;
+})(), (() => {
+  const farOut = fame.collections.find(entry => entry.name === 'Far Out');
+  return String(fameLib.summarise(fame, farOut.needs.map(need => need.what), 12000).earnedFame);
+})());
+
+check('what is earned and what is left always add up to everything', (() => {
+  // Whatever is ticked, the two halves must cover the same total.
+  const all = fame.dungeons.map(dungeon => dungeon.name);
+  const whole = fameLib.summarise(fame, [], 9000);
+  for (const ticked of [[], all.slice(0, 5), all.slice(0, 40), all]) {
+    const view = fameLib.summarise(fame, ticked, 9000);
+    if (Math.abs(view.potential - whole.potential) > 1e-6) return false;
+  }
+  return true;
+})());
+
+check('the last dungeon of a collection is worth the whole collection', (() => {
+  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  const done = tr.needs.map(need => need.what);
+  const last = done.pop();
+  const best = fameLib.nextBest(fame, done, 12000, 5);
+  const top = best[0];
+  return top.name === last
+    && top.unlocks.some(entry => entry.name === 'Tunnel Rat')
+    && Math.abs(top.gain - (top.first + 3000 + 12000 * 0.075)) < 1e-9;
+})(), (() => {
+  const tr = fame.collections.find(entry => entry.name === 'Tunnel Rat');
+  const done = tr.needs.map(need => need.what);
+  done.pop();
+  const top = fameLib.nextBest(fame, done, 12000, 1)[0];
+  return `${top.name}, ${Math.round(top.gain)} fame`;
+})());
+
+check('a higher base fame makes the percentages matter more', (() => {
+  const poor = fameLib.summarise(fame, [], 1000);
+  const rich = fameLib.summarise(fame, [], 100000);
+  return rich.remainingFame > poor.remainingFame
+    && rich.remainingFlat === poor.remainingFlat;
+})());
+
+
 /* ------------------------------------------------------------------ */
 console.log(`\n${passed} checks passed, ${failures.length} failed.`);
 if (failures.length) { for (const name of failures) console.log(`  - ${name}`); process.exit(1); }

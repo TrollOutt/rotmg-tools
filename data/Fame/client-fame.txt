@@ -1,0 +1,1440 @@
+## Every fame bonus an installed RotMG client defines.
+##
+## Written by tools/generate-fame.js. Do not edit by hand: run the
+## generator again after a game update and diff the result.
+##
+## bonus|id|group|category|name|absolute|relative %|repeatable|description
+##   needs|<dungeon or stat>|<completions required>
+##
+## "relative" is a percentage of the character's base fame, added on top of
+## the flat amount. A bonus with several "needs" wants all of them.
+
+bonus|Ancestor|Stats Bonuses|Special|Ancestor|20|0||This is your first character in Realm of the Mad God!
+  needs|FirstCharacter|0
+bonus|Maxed_Life|Stats Bonuses|Maxing|Maxed: Life|200|5||Max your HP
+  needs|health|0
+bonus|Maxed_Mana|Stats Bonuses|Maxing|Maxed: Mana|200|5||Max your Mana
+  needs|magic|0
+bonus|Maxed_Attack|Stats Bonuses|Maxing|Maxed: Attack|100|2.5||Max your Attack
+  needs|attack|0
+bonus|Maxed_Defense|Stats Bonuses|Maxing|Maxed: Defense|100|2.5||Max your Defense
+  needs|defense|0
+bonus|Maxed_Speed|Stats Bonuses|Maxing|Maxed: Speed|100|2.5||Max your Speed
+  needs|speed|0
+bonus|Maxed_Dexterity|Stats Bonuses|Maxing|Maxed: Dexterity|100|2.5||Max your Dexterity
+  needs|dexterity|0
+bonus|Maxed_Vitality|Stats Bonuses|Maxing|Maxed: Vitality|100|2.5||Max your Vitality
+  needs|vitality|0
+bonus|Maxed_Wisdom|Stats Bonuses|Maxing|Maxed: Wisdom|100|2.5||Max your Wisdom
+  needs|wisdom|0
+bonus|Traveler|Stats Bonuses|Cartography|Traveler|20|0||Discover 200000 squares
+  needs|TilesUncovered|200000
+bonus|Mapper|Stats Bonuses|Cartography|Mapper|100|0||Discover 1000000 squares
+  needs|TilesUncovered|1000000
+bonus|Explorer|Stats Bonuses|Cartography|Explorer|400|0||Discover 4000000 squares
+  needs|TilesUncovered|4000000
+bonus|Cartographer|Stats Bonuses|Cartography|Cartographer|1000|0||Discover 10000000 squares
+  needs|TilesUncovered|10000000
+bonus|MapMaker|Stats Bonuses|Cartography|Map Maker|2500|0|repeatable|Discover 25000000 squares
+  needs|TilesUncovered|25000000
+bonus|PursuerofDeeds|Stats Bonuses|Quest Completes|Pursuer of Deeds|20|0||Complete 25 quests
+  needs|QuestsCompleted|25
+bonus|DoerofDeeds|Stats Bonuses|Quest Completes|Doer of Deeds|200|0||Complete 100 quests
+  needs|QuestsCompleted|100
+bonus|PerformerofDeeds|Stats Bonuses|Quest Completes|Performer of Deeds|800|0||Complete 400 quests
+  needs|QuestsCompleted|400
+bonus|AchieverofDeeds|Stats Bonuses|Quest Completes|Achiever of Deeds|2000|0||Complete 1000 quests
+  needs|QuestsCompleted|1000
+bonus|MasterofDeeds|Stats Bonuses|Quest Completes|Master of Deeds|5000|0|repeatable|Complete 2000 quests
+  needs|QuestsCompleted|2000
+bonus|CombatNovice|Stats Bonuses|Combat Proficiency|Combat Novice|20|0||Hit an enemy 8000 times
+  needs|ShotsThatDamage|8000
+bonus|CombatBeginner|Stats Bonuses|Combat Proficiency|Combat Beginner|100|0||Hit an enemy 40000 times
+  needs|ShotsThatDamage|40000
+bonus|CombatProficient|Stats Bonuses|Combat Proficiency|Combat Proficient|400|0||Hit an enemy 200000 times
+  needs|ShotsThatDamage|200000
+bonus|CombatExpert|Stats Bonuses|Combat Proficiency|Combat Expert|1000|0||Hit an enemy 800000 times
+  needs|ShotsThatDamage|800000
+bonus|CombatVeteran|Stats Bonuses|Combat Proficiency|Combat Veteran|2500|0|repeatable|Hit an enemy 2000000 times
+  needs|ShotsThatDamage|2000000
+bonus|Supporter|Stats Bonuses|Party Level Ups|Supporter|20|0||Help an ally level up 25 times
+  needs|PartyLevelUps|25
+bonus|Collaborator|Stats Bonuses|Party Level Ups|Collaborator|50|0||Help an ally level up 50 times
+  needs|PartyLevelUps|50
+bonus|TeamPlayer|Stats Bonuses|Party Level Ups|Team Player|200|0||Help an ally level up 100 times
+  needs|PartyLevelUps|100
+bonus|LeaderofMen|Stats Bonuses|Party Level Ups|Leader of Men|400|0||Help an ally level up 400 times
+  needs|PartyLevelUps|400
+bonus|BuilderofArmies|Stats Bonuses|Party Level Ups|Builder of Armies|1000|0|repeatable|Help an ally level up 1000 times
+  needs|PartyLevelUps|1000
+bonus|PotionDrinker&#xD;|Stats Bonuses|Potions|Potion Drinker|20|0||Drink 25 potions
+  needs|PotionsDrunk|25
+bonus|PotionEnthusiast|Stats Bonuses|Potions|Potion Enthusiast|50|0||Drink 100 potions
+  needs|PotionsDrunk|100
+bonus|PotionConnoisseur|Stats Bonuses|Potions|Potion Connoisseur|200|0||Drink 400 potions
+  needs|PotionsDrunk|400
+bonus|PotionSage|Stats Bonuses|Potions|Potion Sage|400|0||Drink 1000 potions
+  needs|PotionsDrunk|1000
+bonus|PotionFanatic|Stats Bonuses|Potions|Potion Fanatic|1000|0|repeatable|Drink 2000 potions
+  needs|PotionsDrunk|2000
+bonus|AbilityNeophyte|Stats Bonuses|Ability|Ability Neophyte|20|0||Use your special ability 100 times
+  needs|SpecialAbilityUses|100
+bonus|AbilityApprentice|Stats Bonuses|Ability|Ability Apprentice|50|0||Use your special ability 500 times
+  needs|SpecialAbilityUses|500
+bonus|AbilityAce|Stats Bonuses|Ability|Ability Ace|200|0||Use your special ability 2500 times
+  needs|SpecialAbilityUses|2500
+bonus|AbilityExpert|Stats Bonuses|Ability|Ability Expert|400|0||Use your special ability 10000 times
+  needs|SpecialAbilityUses|10000
+bonus|AbilitySpecialist|Stats Bonuses|Ability|Ability Specialist|1000|0|repeatable|Use your special ability 25000 times
+  needs|SpecialAbilityUses|25000
+bonus|TeleportNewcomer|Stats Bonuses|Teleport|Teleport Newcomer|20|0||Teleport 50 times
+  needs|Teleports|50
+bonus|TeleportRookie|Stats Bonuses|Teleport|Teleport Rookie|50|0||Teleport 200 times
+  needs|Teleports|200
+bonus|TeleportAlumni|Stats Bonuses|Teleport|Teleport Alumni|200|0||Teleport 500 times
+  needs|Teleports|500
+bonus|TeleportZealot|Stats Bonuses|Teleport|Teleport Zealot|400|0||Teleport 1000 times
+  needs|Teleports|1000
+bonus|TeleportManiac|Stats Bonuses|Teleport|Teleport Maniac|1000|0|repeatable|Teleport 2500 times
+  needs|Teleports|2500
+bonus|MonsterFoe|Enemy Bonuses|Monster Kills|Monster Foe|20|0||Kill 2000 monsters
+  needs|MonsterKills|2000
+bonus|MonsterAdversary|Enemy Bonuses|Monster Kills|Monster Adversary|50|0||Kill 5000 monsters
+  needs|MonsterKills|5000
+bonus|MonsterSlayer|Enemy Bonuses|Monster Kills|Monster Slayer|200|0||Kill 10000 monsters
+  needs|MonsterKills|10000
+bonus|MonsterSlaughterer|Enemy Bonuses|Monster Kills|Monster Slaughterer|400|0||Kill 50000 monsters
+  needs|MonsterKills|50000
+bonus|MonsterNemesis|Enemy Bonuses|Monster Kills|Monster Nemesis|1000|0|repeatable|Kill 100000 monsters
+  needs|MonsterKills|100000
+bonus|GodFoe|Enemy Bonuses|God Kills|God Foe|20|0||Kill 200 Gods
+  needs|GodKills|200
+bonus|GodAdversary|Enemy Bonuses|God Kills|God Adversary|100|0||Kill 1000 Gods
+  needs|GodKills|1000
+bonus|GodSlayer|Enemy Bonuses|God Kills|God Slayer|400|0||Kill 5000 Gods
+  needs|GodKills|5000
+bonus|GodSlaughterer|Enemy Bonuses|God Kills|God Slaughterer|1000|0||Kill 10000 Gods
+  needs|GodKills|10000
+bonus|GodNemesis|Enemy Bonuses|God Kills|God Nemesis|2500|0|repeatable|Kill 50000 Gods
+  needs|GodKills|50000
+bonus|LesserGodFoe|Enemy Bonuses|Lesser God Kills|Lesser God Foe|20|0||Kill 100 Lesser Gods
+  needs|LesserGodKills|100
+bonus|LesserGodAdversary|Enemy Bonuses|Lesser God Kills|Lesser God Adversary|100|0||Kill 500 Lesser Gods
+  needs|LesserGodKills|500
+bonus|LesserGodSlayer|Enemy Bonuses|Lesser God Kills|Lesser God Slayer|400|0||Kill 2000 Lesser Gods
+  needs|LesserGodKills|2000
+bonus|LesserGodSlaughterer|Enemy Bonuses|Lesser God Kills|Lesser God Slaughterer|1000|0||Kill 5000 Lesser Gods
+  needs|LesserGodKills|5000
+bonus|LesserGodNemesis|Enemy Bonuses|Lesser God Kills|Lesser God Nemesis|2500|0|repeatable|Kill 25000 Lesser Gods
+  needs|LesserGodKills|25000
+bonus|OryxFoe|Enemy Bonuses|Oryx Kills|Oryx Foe|200|0||Kill Oryx 1 time
+  needs|OryxKills|1
+bonus|OryxAdversary|Enemy Bonuses|Oryx Kills|Oryx Adversary|500|0||Kill Oryx 20 times
+  needs|OryxKills|20
+bonus|OryxSlayer|Enemy Bonuses|Oryx Kills|Oryx Slayer|1000|0||Kill Oryx 100 times
+  needs|OryxKills|100
+bonus|OryxSlaughterer|Enemy Bonuses|Oryx Kills|Oryx Slaughterer|3000|0||Kill Oryx 250 times
+  needs|OryxKills|250
+bonus|OryxNemesis|Enemy Bonuses|Oryx Kills|Oryx Nemesis|8000|0|repeatable|Kill Oryx 500 times
+  needs|OryxKills|500
+bonus|EncounterFoe|Enemy Bonuses|Encounter Kills|Encounter Foe|20|0||Kill 5 Realm Encounter enemies
+  needs|EncounterKills|5
+bonus|EncounterAdversary|Enemy Bonuses|Encounter Kills|Encounter Adversary|200|0||Kill 50 Realm Encounter enemies
+  needs|EncounterKills|50
+bonus|EncounterSlayer|Enemy Bonuses|Encounter Kills|Encounter Slayer|800|0||Kill 200 Realm Encounter enemies
+  needs|EncounterKills|200
+bonus|EncounterSlaughterer|Enemy Bonuses|Encounter Kills|Encounter Slaughterer|2000|0||Kill 500 Realm Encounter enemies
+  needs|EncounterKills|500
+bonus|EncounterNemesis|Enemy Bonuses|Encounter Kills|Encounter Nemesis|5000|0|repeatable|Kill 1250 Realm Encounter enemies
+  needs|EncounterKills|1250
+bonus|HeroFoe|Enemy Bonuses|Hero Kills|Hero Foe|20|0||Kill 5 Heroes of Oryx
+  needs|HeroKills|5
+bonus|HeroAdversary|Enemy Bonuses|Hero Kills|Hero Adversary|100|0||Kill 100 Heroes of Oryx
+  needs|HeroKills|100
+bonus|HeroSlayer|Enemy Bonuses|Hero Kills|Hero Slayer|400|0||Kill 500 Heroes of Oryx
+  needs|HeroKills|500
+bonus|HeroSlaughterer|Enemy Bonuses|Hero Kills|Hero Slaughterer|1000|0||Kill 1250 Heroes of Oryx
+  needs|HeroKills|1250
+bonus|HeroNemesis|Enemy Bonuses|Hero Kills|Hero Nemesis|2500|0|repeatable|Kill 2500 Heroes of Oryx
+  needs|HeroKills|2500
+bonus|CubeFoe|Enemy Bonuses|Cube Kills|Cube Foe|20|0||Kill 200 Cubes
+  needs|CubeKills|200
+bonus|CubeAdversary|Enemy Bonuses|Cube Kills|Cube Adversary|100|0||Kill 1000 Cubes
+  needs|CubeKills|1000
+bonus|CubeSlayer|Enemy Bonuses|Cube Kills|Cube Slayer|400|0||Kill 5000 Cubes
+  needs|CubeKills|5000
+bonus|CubeSlaughterer|Enemy Bonuses|Cube Kills|Cube Slaughterer|1000|0||Kill 10000 Cubes
+  needs|CubeKills|10000
+bonus|CubeNemesis|Enemy Bonuses|Cube Kills|Cube Nemesis|2500|0|repeatable|Kill 50000 Cubes
+  needs|CubeKills|50000
+bonus|CritterFoe&#xD;|Enemy Bonuses|Critter Kills|Critter Foe|20|0||Kill 200 Critters
+  needs|CritterKills|200
+bonus|CritterAdversary|Enemy Bonuses|Critter Kills|Critter Adversary|100|0||Kill 1000 Critters
+  needs|CritterKills|1000
+bonus|CritterSlayer|Enemy Bonuses|Critter Kills|Critter Slayer|400|0||Kill 5000 Critters
+  needs|CritterKills|5000
+bonus|CritterSlaughterer|Enemy Bonuses|Critter Kills|Critter Slaughterer|1000|0||Kill 10000 Critters
+  needs|CritterKills|10000
+bonus|CritterNemesis|Enemy Bonuses|Critter Kills|Critter Nemesis|2500|0|repeatable|Kill 50000 Critters
+  needs|CritterKills|50000
+bonus|BeastFoe|Enemy Bonuses|Beast Kills|Beast Foe|20|0||Kill 200 Beasts
+  needs|BeastKills|200
+bonus|BeastAdversary|Enemy Bonuses|Beast Kills|Beast Adversary|100|0||Kill 1000 Beasts
+  needs|BeastKills|1000
+bonus|BeastSlayer|Enemy Bonuses|Beast Kills|Beast Slayer|400|0||Kill 5000 Beasts
+  needs|BeastKills|5000
+bonus|BeastSlaughterer|Enemy Bonuses|Beast Kills|Beast Slaughterer|1000|0||Kill 10000 Beasts
+  needs|BeastKills|10000
+bonus|BeastNemesis|Enemy Bonuses|Beast Kills|Beast Nemesis|2500|0|repeatable|Kill 50000 Beasts
+  needs|BeastKills|50000
+bonus|HumanoidFoe|Enemy Bonuses|Humanoid Kills|Humanoid Foe|20|0||Kill 200 Humanoids
+  needs|HumanoidKills|200
+bonus|HunamoidAdversary|Enemy Bonuses|Humanoid Kills|Hunamoid Adversary|100|0||Kill 1000 Humanoids
+  needs|HumanoidKills|1000
+bonus|HumanoidSlayer|Enemy Bonuses|Humanoid Kills|Humanoid Slayer|400|0||Kill 5000 Humanoids
+  needs|HumanoidKills|5000
+bonus|HumanoidSlaughterer|Enemy Bonuses|Humanoid Kills|Humanoid Slaughterer|1000|0||Kill 10000 Humanoids
+  needs|HumanoidKills|10000
+bonus|HumainoidNemesis|Enemy Bonuses|Humanoid Kills|Humainoid Nemesis|2500|0|repeatable|Kill 50000 Humanoids
+  needs|HumanoidKills|50000
+bonus|UndeadFoe|Enemy Bonuses|Undead Kills|Undead Foe|20|0||Kill 200 Undead
+  needs|UndeadKills|200
+bonus|UndeadAdversary|Enemy Bonuses|Undead Kills|Undead Adversary|100|0||Kill 1000 Undead
+  needs|UndeadKills|1000
+bonus|UndeadSlayer|Enemy Bonuses|Undead Kills|Undead Slayer|400|0||Kill 5000 Undead
+  needs|UndeadKills|5000
+bonus|UndeadSlaughterer|Enemy Bonuses|Undead Kills|Undead Slaughterer|1000|0||Kill 10000 Undead
+  needs|UndeadKills|10000
+bonus|UndeadNemesis|Enemy Bonuses|Undead Kills|Undead Nemesis|2500|0|repeatable|Kill 50000 Undead
+  needs|UndeadKills|50000
+bonus|NatureFoe|Enemy Bonuses|Nature Kills|Nature Foe|20|0||Kill 200 Nature creatures
+  needs|NatureKills|200
+bonus|NatureAdversary|Enemy Bonuses|Nature Kills|Nature Adversary|100|0||Kill 1000 Nature creatures
+  needs|NatureKills|1000
+bonus|NatureSlayer|Enemy Bonuses|Nature Kills|Nature Slayer|400|0||Kill 5000 Nature creatures
+  needs|NatureKills|5000
+bonus|NatureSlaughterer|Enemy Bonuses|Nature Kills|Nature Slaughterer|1000|0||Kill 10000 Nature creatures
+  needs|NatureKills|10000
+bonus|NatureNemesis|Enemy Bonuses|Nature Kills|Nature Nemesis|2500|0|repeatable|Kill 50000 Nature creatures
+  needs|NatureKills|50000
+bonus|ConstructFoe|Enemy Bonuses|Construct Kills|Construct Foe|20|0||Kill 200 Constructs
+  needs|ConstructKills|200
+bonus|ConstructAdversary|Enemy Bonuses|Construct Kills|Construct Adversary|100|0||Kill 1000 Constructs
+  needs|ConstructKills|1000
+bonus|ConstructSlayer|Enemy Bonuses|Construct Kills|Construct Slayer|400|0||Kill 5000 Constructs
+  needs|ConstructKills|5000
+bonus|ConstructSlaughterer|Enemy Bonuses|Construct Kills|Construct Slaughterer|1000|0||Kill 10000 Constructs
+  needs|ConstructKills|10000
+bonus|ConstructNemesis|Enemy Bonuses|Construct Kills|Construct Nemesis|2500|0|repeatable|Kill 50000 Constructs
+  needs|ConstructKills|50000
+bonus|GrotesqueFoe|Enemy Bonuses|Grotesque Kills|Grotesque Foe|20|0||Kill 200 Grotesque creatures
+  needs|GrotesqueKills|200
+bonus|GrotesqueAdversary|Enemy Bonuses|Grotesque Kills|Grotesque Adversary|100|0||Kill 1000 Grotesque creatures
+  needs|GrotesqueKills|1000
+bonus|GrotesqueSlayer|Enemy Bonuses|Grotesque Kills|Grotesque Slayer|400|0||Kill 5000 Grotesque creatures
+  needs|GrotesqueKills|5000
+bonus|GrotesqueSlaughterer|Enemy Bonuses|Grotesque Kills|Grotesque Slaughterer|1000|0||Kill 10000 Grotesque creatures
+  needs|GrotesqueKills|10000
+bonus|GrotesqueNemesis|Enemy Bonuses|Grotesque Kills|Grotesque Nemesis|2500|0|repeatable|Kill 50000 Grotesque creatures
+  needs|GrotesqueKills|50000
+bonus|StructureFoe|Enemy Bonuses|Structure Kills|Structure Foe|20|0||Kill 200 Structures
+  needs|StructureKills|200
+bonus|StructureAdversary|Enemy Bonuses|Structure Kills|Structure Adversary|100|0||Kill 1000 Structures
+  needs|StructureKills|1000
+bonus|StructureSlayer|Enemy Bonuses|Structure Kills|Structure Slayer|400|0||Kill 5000 Structures
+  needs|StructureKills|5000
+bonus|StructureSlaughterer|Enemy Bonuses|Structure Kills|Structure Slaughterer|1000|0||Kill 10000 Structures
+  needs|StructureKills|10000
+bonus|StructureNemesis|Enemy Bonuses|Structure Kills|Structure Nemesis|2500|0|repeatable|Kill 50000 Structures
+  needs|StructureKills|50000
+bonus|TunnelRat|Dungeon Bonuses|Dungeon Collection|Tunnel Rat|3000|7.5||Complete 1 time: Wild Shadow era dungeons
+  needs|Pirate Cave|1
+  needs|Forbidden Jungle|1
+  needs|Spider Den|1
+  needs|Snake Pit|1
+  needs|Undead Lair|1
+  needs|Abyss of Demons|1
+  needs|Manor of the Immortals|1
+  needs|Ocean Trench|1
+  needs|Tomb of the Ancients|1
+  needs|Oryx's Castle|1
+  needs|Oryx's Chamber|1
+  needs|Wine Cellar|1
+bonus|ExplosiveJourney|Dungeon Bonuses|Dungeon Collection|Explosive Journey|3000|7.5||Complete 1 time: Kabam era dungeons
+  needs|Davy Jones' Locker|1
+  needs|Mad Lab|1
+  needs|Candyland Hunting Grounds|1
+  needs|Haunted Cemetery|1
+  needs|Cave of A Thousand Treasures|1
+  needs|Lair of Draconis|1
+  needs|Deadwater Docks|1
+  needs|Woodland Labyrinth|1
+  needs|The Crawling Depths|1
+  needs|The Shatters|1
+  needs|Lair of Shaitan|1
+  needs|Puppet Master's Theatre|1
+  needs|Ice Citadel|1
+bonus|TraveloftheDecade|Dungeon Bonuses|Dungeon Collection|Travel of the Decade|5000|10||Complete 1 time: Deca era dungeons
+  needs|Puppet Master's Encore|1
+  needs|The Hive|1
+  needs|Toxic Sewers|1
+  needs|Mountain Temple|1
+  needs|The Third Dimension|1
+  needs|The Nest|1
+  needs|Lost Halls|1
+  needs|Cultist Hideout|1
+  needs|The Void|1
+  needs|Cnidarian Reef|1
+  needs|Parasite Chambers|1
+  needs|Magic Woods|1
+  needs|Secluded Thicket|1
+  needs|Cursed Library|1
+  needs|Oryx's Sanctuary|1
+  needs|Ancient Ruins|1
+  needs|High Tech Terror|1
+  needs|Sulfurous Wetlands|1
+  needs|Spectral Penitentiary|1
+bonus|FirstSteps|Dungeon Bonuses|Dungeon Collection|First Steps|100|2.5||Complete 1 time: Early game dungeons
+  needs|Pirate Cave|1
+  needs|Forest Maze|1
+  needs|Forbidden Jungle|1
+  needs|Spider Den|1
+  needs|The Hive|1
+bonus|KingoftheMountains|Dungeon Bonuses|Dungeon Collection|King of the Mountains|1000|5||Complete 1 time: Mountain dungeons
+  needs|Sprite World|1
+  needs|Snake Pit|1
+  needs|Abyss of Demons|1
+  needs|Toxic Sewers|1
+  needs|Mad Lab|1
+  needs|Magic Woods|1
+  needs|Puppet Master's Theatre|1
+  needs|Haunted Cemetery|1
+  needs|Cursed Library|1
+  needs|Ancient Ruins|1
+  needs|Sulfurous Wetlands|1
+  needs|Spectral Penitentiary|1
+bonus|ConqueroroftheRealm|Dungeon Bonuses|Dungeon Collection|Conqueror of the Realm|4000|10||Complete 1 time: Encounter dungeons
+  needs|Davy Jones' Locker|1
+  needs|Ice Citadel|1
+  needs|Lair of Draconis|1
+  needs|Mountain Temple|1
+  needs|The Third Dimension|1
+  needs|Ocean Trench|1
+  needs|Tomb of the Ancients|1
+  needs|The Shatters|1
+  needs|The Nest|1
+  needs|Fungal Cavern|1
+  needs|Crystal Cavern|1
+  needs|Lost Halls|1
+  needs|Kogbold Steamworks|1
+bonus|EnemyoftheCourt|Dungeon Bonuses|Dungeon Collection|Enemy of the Court|3000|7.5||Complete 1 time: Court dungeons
+  needs|Lair of Shaitan|1
+  needs|Puppet Master's Encore|1
+  needs|Cnidarian Reef|1
+  needs|Secluded Thicket|1
+  needs|High Tech Terror|1
+bonus|EpicBattles|Dungeon Bonuses|Dungeon Collection|Epic Battles|2000|7.5||Complete 1 time: Epic dungeons
+  needs|Deadwater Docks|1
+  needs|Woodland Labyrinth|1
+  needs|The Crawling Depths|1
+  needs|The Nest|1
+  needs|Secluded Thicket|1
+bonus|FarOut|Dungeon Bonuses|Dungeon Collection|Far Out|2000|5||Complete 1 time: Alien dungeons
+  needs|Malogia|1
+  needs|Untaris|1
+  needs|Forax|1
+  needs|Katalund|1
+bonus|HerooftheNexus|Dungeon Bonuses|Dungeon Collection|Hero of the Nexus|5000|12.5||Complete 1 time: Every "standard" dungeon.
+  needs|Pirate Cave|1
+  needs|Forest Maze|1
+  needs|Spider Den|1
+  needs|Snake Pit|1
+  needs|Forbidden Jungle|1
+  needs|The Hive|1
+  needs|Ancient Ruins|1
+  needs|Magic Woods|1
+  needs|Sprite World|1
+  needs|Candyland Hunting Grounds|1
+  needs|Cave of A Thousand Treasures|1
+  needs|Undead Lair|1
+  needs|Abyss of Demons|1
+  needs|Manor of the Immortals|1
+  needs|Puppet Master's Theatre|1
+  needs|Toxic Sewers|1
+  needs|Cursed Library|1
+  needs|Haunted Cemetery|1
+  needs|Mad Lab|1
+  needs|Parasite Chambers|1
+  needs|Davy Jones' Locker|1
+  needs|Mountain Temple|1
+  needs|The Third Dimension|1
+  needs|Lair of Draconis|1
+  needs|Deadwater Docks|1
+  needs|Woodland Labyrinth|1
+  needs|The Crawling Depths|1
+  needs|Ocean Trench|1
+  needs|Ice Citadel|1
+  needs|Tomb of the Ancients|1
+  needs|Fungal Cavern|1
+  needs|Crystal Cavern|1
+  needs|The Nest|1
+  needs|The Shatters|1
+  needs|Lost Halls|1
+  needs|Cultist Hideout|1
+  needs|The Void|1
+  needs|Sulfurous Wetlands|1
+  needs|Kogbold Steamworks|1
+  needs|Oryx's Castle|1
+  needs|Lair of Shaitan|1
+  needs|Puppet Master's Encore|1
+  needs|Cnidarian Reef|1
+  needs|Secluded Thicket|1
+  needs|High Tech Terror|1
+  needs|Oryx's Chamber|1
+  needs|Wine Cellar|1
+  needs|Oryx's Sanctuary|1
+  needs|Spectral Penitentiary|1
+bonus|SeasonsBeatins|Dungeon Bonuses|Dungeon Collection|Season's Beatins|5000|12.5||Complete 1 time: Every "seasonal" dungeon.
+  needs|Belladonna's Garden|1
+  needs|Ice Tomb|1
+  needs|Oryx Pandemonium Decaract|1
+  needs|Battle for the Nexus|1
+  needs|Santa Workshop|1
+  needs|The Machine|1
+  needs|Malogia|1
+  needs|Untaris|1
+  needs|Forax|1
+  needs|Katalund|1
+  needs|Rainbow Road|1
+  needs|Beachzone|1
+  needs|Neo Malogia|1
+  needs|Neo Untaris|1
+  needs|Neo Forax|1
+  needs|Neo Katalund|1
+bonus|RealmoftheMadGod|Dungeon Bonuses|Dungeon Collection|Realm of the Mad God|10000|25||Complete 1 time: Every dungeon
+  needs|Pirate Cave|1
+  needs|Forest Maze|1
+  needs|Spider Den|1
+  needs|Snake Pit|1
+  needs|Forbidden Jungle|1
+  needs|The Hive|1
+  needs|Ancient Ruins|1
+  needs|Magic Woods|1
+  needs|Sprite World|1
+  needs|Candyland Hunting Grounds|1
+  needs|Cave of A Thousand Treasures|1
+  needs|Undead Lair|1
+  needs|Abyss of Demons|1
+  needs|Manor of the Immortals|1
+  needs|Puppet Master's Theatre|1
+  needs|Toxic Sewers|1
+  needs|Cursed Library|1
+  needs|Haunted Cemetery|1
+  needs|Mad Lab|1
+  needs|Parasite Chambers|1
+  needs|Davy Jones' Locker|1
+  needs|Mountain Temple|1
+  needs|The Third Dimension|1
+  needs|Lair of Draconis|1
+  needs|Deadwater Docks|1
+  needs|Woodland Labyrinth|1
+  needs|The Crawling Depths|1
+  needs|Ocean Trench|1
+  needs|Ice Citadel|1
+  needs|Tomb of the Ancients|1
+  needs|Fungal Cavern|1
+  needs|Crystal Cavern|1
+  needs|The Nest|1
+  needs|The Shatters|1
+  needs|Lost Halls|1
+  needs|Cultist Hideout|1
+  needs|The Void|1
+  needs|Sulfurous Wetlands|1
+  needs|Kogbold Steamworks|1
+  needs|Oryx's Castle|1
+  needs|Lair of Shaitan|1
+  needs|Puppet Master's Encore|1
+  needs|Cnidarian Reef|1
+  needs|Secluded Thicket|1
+  needs|High Tech Terror|1
+  needs|Oryx's Chamber|1
+  needs|Wine Cellar|1
+  needs|Oryx's Sanctuary|1
+  needs|Belladonna's Garden|1
+  needs|Ice Tomb|1
+  needs|Oryx Pandemonium Decaract|1
+  needs|Battle for the Nexus|1
+  needs|Santa Workshop|1
+  needs|The Machine|1
+  needs|Malogia|1
+  needs|Untaris|1
+  needs|Forax|1
+  needs|Katalund|1
+  needs|Rainbow Road|1
+  needs|Beachzone|1
+  needs|Spectral Penitentiary|1
+bonus|PirateCaveScout|Dungeon Bonuses|Pirate Cave|Pirate Cave Scout|2|0||Complete Pirate Cave 1 time
+  needs|Pirate Cave|1
+bonus|PirateCaveExplorer|Dungeon Bonuses|Pirate Cave|Pirate Cave Explorer|5|0||Complete Pirate Cave 10 times
+  needs|Pirate Cave|10
+bonus|PirateCaveAdventurer|Dungeon Bonuses|Pirate Cave|Pirate Cave Adventurer|10|0||Complete Pirate Cave 20 times
+  needs|Pirate Cave|20
+bonus|PirateCaveConqueror|Dungeon Bonuses|Pirate Cave|Pirate Cave Conqueror|20|0||Complete Pirate Cave 40 times
+  needs|Pirate Cave|40
+bonus|PirateCaveMaster|Dungeon Bonuses|Pirate Cave|Pirate Cave Master|60|0|repeatable|Complete Pirate Cave 100 times
+  needs|Pirate Cave|100
+bonus|ForestMazeScout|Dungeon Bonuses|Forest Maze|Forest Maze Scout|2|0||Complete Forest Maze 1 time
+  needs|Forest Maze|1
+bonus|ForestMazeExplorer|Dungeon Bonuses|Forest Maze|Forest Maze Explorer|5|0||Complete Forest Maze 10 times
+  needs|Forest Maze|10
+bonus|ForestMazeAdventurer|Dungeon Bonuses|Forest Maze|Forest Maze Adventurer|10|0||Complete Forest Maze 20 times
+  needs|Forest Maze|20
+bonus|ForestMazeConqueror|Dungeon Bonuses|Forest Maze|Forest Maze Conqueror|20|0||Complete Forest Maze 40 times
+  needs|Forest Maze|40
+bonus|ForestMazeMaster|Dungeon Bonuses|Forest Maze|Forest Maze Master|60|0|repeatable|Complete Forest Maze 100 times
+  needs|Forest Maze|100
+bonus|ForbiddenJungleScout|Dungeon Bonuses|Forbidden Jungle|Forbidden Jungle Scout|4|0||Complete Forbidden Jungle 1 time
+  needs|Forbidden Jungle|1
+bonus|ForbiddenJungleExplorer|Dungeon Bonuses|Forbidden Jungle|Forbidden Jungle Explorer|8|0||Complete Forbidden Jungle 10 times
+  needs|Forbidden Jungle|10
+bonus|ForbiddenJungleAdventurer|Dungeon Bonuses|Forbidden Jungle|Forbidden Jungle Adventurer|15|0||Complete Forbidden Jungle 20 times
+  needs|Forbidden Jungle|20
+bonus|ForbiddenJungleConqueror|Dungeon Bonuses|Forbidden Jungle|Forbidden Jungle Conqueror|30|0||Complete Forbidden Jungle 40 times
+  needs|Forbidden Jungle|40
+bonus|ForbiddenJungleMaster|Dungeon Bonuses|Forbidden Jungle|Forbidden Jungle Master|80|0|repeatable|Complete Forbidden Jungle 100 times
+  needs|Forbidden Jungle|100
+bonus|TheHiveScout|Dungeon Bonuses|The Hive|The Hive Scout|4|0||Complete The Hive 1 time
+  needs|The Hive|1
+bonus|TheHiveExplorer|Dungeon Bonuses|The Hive|The Hive Explorer|8|0||Complete The Hive 10 times
+  needs|The Hive|10
+bonus|TheHiveAdventurer|Dungeon Bonuses|The Hive|The Hive Adventurer|15|0||Complete The Hive 20 times
+  needs|The Hive|20
+bonus|TheHiveConqueror|Dungeon Bonuses|The Hive|The Hive Conqueror|30|0||Complete The Hive 40 times
+  needs|The Hive|40
+bonus|TheHiveMaster|Dungeon Bonuses|The Hive|The Hive Master|80|0|repeatable|Complete The Hive 100 times
+  needs|The Hive|100
+bonus|SpiderDenScout|Dungeon Bonuses|Spider Den|Spider Den Scout|5|0||Complete Spider Den 1 time
+  needs|Spider Den|1
+bonus|SpiderDenExplorer|Dungeon Bonuses|Spider Den|Spider Den Explorer|10|0||Complete Spider Den 10 times
+  needs|Spider Den|10
+bonus|SpiderDenAdventurer|Dungeon Bonuses|Spider Den|Spider Den Adventurer|20|0||Complete Spider Den 20 times
+  needs|Spider Den|20
+bonus|SpiderDenConqueror|Dungeon Bonuses|Spider Den|Spider Den Conqueror|40|0||Complete Spider Den 40 times
+  needs|Spider Den|40
+bonus|SpiderDenMaster|Dungeon Bonuses|Spider Den|Spider Den Master|100|0|repeatable|Complete Spider Den 100 times
+  needs|Spider Den|100
+bonus|AncientRuinsScout|Dungeon Bonuses|Ancient Ruins|Ancient Ruins Scout|40|0||Complete Ancient Ruins 1 time
+  needs|Ancient Ruins|1
+bonus|AncientRuinsExplorer|Dungeon Bonuses|Ancient Ruins|Ancient Ruins Explorer|80|0||Complete Ancient Ruins 10 times
+  needs|Ancient Ruins|10
+bonus|AncientRuinsAdventurer|Dungeon Bonuses|Ancient Ruins|Ancient Ruins Adventurer|150|0||Complete Ancient Ruins 20 times
+  needs|Ancient Ruins|20
+bonus|AncientRuinsConqueror|Dungeon Bonuses|Ancient Ruins|Ancient Ruins Conqueror|300|0||Complete Ancient Ruins 40 times
+  needs|Ancient Ruins|40
+bonus|AncientRuinsMaster|Dungeon Bonuses|Ancient Ruins|Ancient Ruins Master|800|0|repeatable|Complete Ancient Ruins 100 times
+  needs|Ancient Ruins|100
+bonus|SnakePitScout|Dungeon Bonuses|Snake Pit|Snake Pit Scout|25|0||Complete Snake Pit 1 time
+  needs|Snake Pit|1
+bonus|SnakePitExplorer|Dungeon Bonuses|Snake Pit|Snake Pit Explorer|50|0||Complete Snake Pit 10 times
+  needs|Snake Pit|10
+bonus|SnakePitAdventurer|Dungeon Bonuses|Snake Pit|Snake Pit Adventurer|100|0||Complete Snake Pit 20 times
+  needs|Snake Pit|20
+bonus|SnakePitConqueror|Dungeon Bonuses|Snake Pit|Snake Pit Conqueror|200|0||Complete Snake Pit 40 times
+  needs|Snake Pit|40
+bonus|SnakePitMaster|Dungeon Bonuses|Snake Pit|Snake Pit Master|500|0|repeatable|Complete Snake Pit 100 times
+  needs|Snake Pit|100
+bonus|SpriteWorldScout|Dungeon Bonuses|Sprite World|Sprite World Scout|25|0||Complete Sprite World 1 time
+  needs|Sprite World|1
+bonus|SpriteWorldExplorer|Dungeon Bonuses|Sprite World|Sprite World Explorer|50|0||Complete Sprite World 10 times
+  needs|Sprite World|10
+bonus|SpriteWorldAdventurer|Dungeon Bonuses|Sprite World|Sprite World Adventurer|100|0||Complete Sprite World 20 times
+  needs|Sprite World|20
+bonus|SpriteWorldConqueror|Dungeon Bonuses|Sprite World|Sprite World Conqueror|200|0||Complete Sprite World 40 times
+  needs|Sprite World|40
+bonus|SpriteWorldMaster|Dungeon Bonuses|Sprite World|Sprite World Master|500|0|repeatable|Complete Sprite World 100 times
+  needs|Sprite World|100
+bonus|MagicWoodsScout|Dungeon Bonuses|Magic Woods|Magic Woods Scout|35|0||Complete Magic Woods 1 time
+  needs|Magic Woods|1
+bonus|MagicWoodsExplorer|Dungeon Bonuses|Magic Woods|Magic Woods Explorer|70|0||Complete Magic Woods 10 times
+  needs|Magic Woods|10
+bonus|MagicWoodsAdventurer|Dungeon Bonuses|Magic Woods|Magic Woods Adventurer|140|0||Complete Magic Woods 20 times
+  needs|Magic Woods|20
+bonus|MagicWoodsConqueror|Dungeon Bonuses|Magic Woods|Magic Woods Conqueror|280|0||Complete Magic Woods 40 times
+  needs|Magic Woods|40
+bonus|MagicWoodsMaster|Dungeon Bonuses|Magic Woods|Magic Woods Master|700|0|repeatable|Complete Magic Woods 100 times
+  needs|Magic Woods|100
+bonus|UndeadLairScout|Dungeon Bonuses|Undead Lair|Undead Lair Scout|35|0||Complete Undead Lair 1 time
+  needs|Undead Lair|1
+bonus|UndeadLairExplorer|Dungeon Bonuses|Undead Lair|Undead Lair Explorer|70|0||Complete Undead Lair 10 times
+  needs|Undead Lair|10
+bonus|UndeadLairAdventurer|Dungeon Bonuses|Undead Lair|Undead Lair Adventurer|140|0||Complete Undead Lair 20 times
+  needs|Undead Lair|20
+bonus|UndeadLairConqueror|Dungeon Bonuses|Undead Lair|Undead Lair Conqueror|280|0||Complete Undead Lair 40 times
+  needs|Undead Lair|40
+bonus|UndeadLairMaster|Dungeon Bonuses|Undead Lair|Undead Lair Master|700|0|repeatable|Complete Undead Lair 100 times
+  needs|Undead Lair|100
+bonus|AbyssofDemonsScout|Dungeon Bonuses|Abyss of Demons|Abyss of Demons Scout|40|0||Complete Abyss of Demons 1 time
+  needs|Abyss of Demons|1
+bonus|AbyssofDemonsExplorer|Dungeon Bonuses|Abyss of Demons|Abyss of Demons Explorer|80|0||Complete Abyss of Demons 10 times
+  needs|Abyss of Demons|10
+bonus|AbyssofDemonsAdventurer|Dungeon Bonuses|Abyss of Demons|Abyss of Demons Adventurer|150|0||Complete Abyss of Demons 20 times
+  needs|Abyss of Demons|20
+bonus|AbyssofDemonsConqueror|Dungeon Bonuses|Abyss of Demons|Abyss of Demons Conqueror|300|0||Complete Abyss of Demons 40 times
+  needs|Abyss of Demons|40
+bonus|AbyssofDemonsMaster|Dungeon Bonuses|Abyss of Demons|Abyss of Demons Master|800|0|repeatable|Complete Abyss of Demons 100 times
+  needs|Abyss of Demons|100
+bonus|CursedLibraryScout|Dungeon Bonuses|Cursed Library|Cursed Library Scout|50|0||Complete Cursed Library 1 time
+  needs|Cursed Library|1
+bonus|CursedLibraryExplorer|Dungeon Bonuses|Cursed Library|Cursed Library Explorer|100|0||Complete Cursed Library 10 times
+  needs|Cursed Library|10
+bonus|CursedLibraryAdventurer|Dungeon Bonuses|Cursed Library|Cursed Library Adventurer|200|0||Complete Cursed Library 20 times
+  needs|Cursed Library|20
+bonus|CursedLibraryConqueror|Dungeon Bonuses|Cursed Library|Cursed Library Conqueror|400|0||Complete Cursed Library 40 times
+  needs|Cursed Library|40
+bonus|CursedLibraryMaster|Dungeon Bonuses|Cursed Library|Cursed Library Master|1000|0|repeatable|Complete Cursed Library 100 times
+  needs|Cursed Library|100
+bonus|ToxicSewersScout|Dungeon Bonuses|Toxic Sewers|Toxic Sewers Scout|40|0||Complete Toxic Sewers 1 time
+  needs|Toxic Sewers|1
+bonus|ToxicSewersExplorer|Dungeon Bonuses|Toxic Sewers|Toxic Sewers Explorer|80|0||Complete Toxic Sewers 10 times
+  needs|Toxic Sewers|10
+bonus|ToxicSewersAdventurer|Dungeon Bonuses|Toxic Sewers|Toxic Sewers Adventurer|150|0||Complete Toxic Sewers 20 times
+  needs|Toxic Sewers|20
+bonus|ToxicSewersConqueror|Dungeon Bonuses|Toxic Sewers|Toxic Sewers Conqueror|300|0||Complete Toxic Sewers 40 times
+  needs|Toxic Sewers|40
+bonus|ToxicSewersMaster|Dungeon Bonuses|Toxic Sewers|Toxic Sewers Master|800|0|repeatable|Complete Toxic Sewers 100 times
+  needs|Toxic Sewers|100
+bonus|MadLabScout|Dungeon Bonuses|Mad Lab|Mad Lab Scout|50|0||Complete Mad Lab 1 time
+  needs|Mad Lab|1
+bonus|MadLabExplorer|Dungeon Bonuses|Mad Lab|Mad Lab Explorer|100|0||Complete Mad Lab 10 times
+  needs|Mad Lab|10
+bonus|MadLabAdventurer|Dungeon Bonuses|Mad Lab|Mad Lab Adventurer|200|0||Complete Mad Lab 20 times
+  needs|Mad Lab|20
+bonus|MadLabConqueror|Dungeon Bonuses|Mad Lab|Mad Lab Conqueror|400|0||Complete Mad Lab 40 times
+  needs|Mad Lab|40
+bonus|MadLabMaster|Dungeon Bonuses|Mad Lab|Mad Lab Master|1000|0|repeatable|Complete Mad Lab 100 times
+  needs|Mad Lab|100
+bonus|PuppetMaster'sTheatreScout|Dungeon Bonuses|Puppet Master's Theatre|Puppet Master's Theatre Scout|40|0||Complete Puppet Master's Theatre 1 time
+  needs|Puppet Master's Theatre|1
+bonus|PuppetMaster'sTheatreExplorer|Dungeon Bonuses|Puppet Master's Theatre|Puppet Master's Theatre Explorer|80|0||Complete Puppet Master's Theatre 10 times
+  needs|Puppet Master's Theatre|10
+bonus|PuppetMaster'sTheatreAdventurer|Dungeon Bonuses|Puppet Master's Theatre|Puppet Master's Theatre Adventurer|150|0||Complete Puppet Master's Theatre 20 times
+  needs|Puppet Master's Theatre|20
+bonus|PuppetMaster'sTheatreConqueror|Dungeon Bonuses|Puppet Master's Theatre|Puppet Master's Theatre Conqueror|300|0||Complete Puppet Master's Theatre 40 times
+  needs|Puppet Master's Theatre|40
+bonus|PuppetMaster'sTheatreMaster|Dungeon Bonuses|Puppet Master's Theatre|Puppet Master's Theatre Master|800|0|repeatable|Complete Puppet Master's Theatre 100 times
+  needs|Puppet Master's Theatre|100
+bonus|ManoroftheImmortalsScout|Dungeon Bonuses|Manor of the Immortals|Manor of the Immortals Scout|40|0||Complete Manor of the Immortals 1 time
+  needs|Manor of the Immortals|1
+bonus|ManoroftheImmortalsExplorer|Dungeon Bonuses|Manor of the Immortals|Manor of the Immortals Explorer|80|0||Complete Manor of the Immortals 10 times
+  needs|Manor of the Immortals|10
+bonus|ManoroftheImmortalsAdventurer|Dungeon Bonuses|Manor of the Immortals|Manor of the Immortals Adventurer|150|0||Complete Manor of the Immortals 20 times
+  needs|Manor of the Immortals|20
+bonus|ManoroftheImmortalsConqueror|Dungeon Bonuses|Manor of the Immortals|Manor of the Immortals Conqueror|300|0||Complete Manor of the Immortals 40 times
+  needs|Manor of the Immortals|40
+bonus|ManoroftheImmortalsMaster|Dungeon Bonuses|Manor of the Immortals|Manor of the Immortals Master|800|0|repeatable|Complete Manor of the Immortals 100 times
+  needs|Manor of the Immortals|100
+bonus|HauntedCemeteryScout|Dungeon Bonuses|Haunted Cemetery|Haunted Cemetery Scout|60|0||Complete Haunted Cemetery 1 time
+  needs|Haunted Cemetery|1
+bonus|HauntedCemeteryExplorer|Dungeon Bonuses|Haunted Cemetery|Haunted Cemetery Explorer|120|0||Complete Haunted Cemetery 10 times
+  needs|Haunted Cemetery|10
+bonus|HauntedCemeteryAdventurer|Dungeon Bonuses|Haunted Cemetery|Haunted Cemetery Adventurer|250|0||Complete Haunted Cemetery 20 times
+  needs|Haunted Cemetery|20
+bonus|HauntedCemeteryConqueror|Dungeon Bonuses|Haunted Cemetery|Haunted Cemetery Conqueror|500|0||Complete Haunted Cemetery 40 times
+  needs|Haunted Cemetery|40
+bonus|HauntedCemeteryMaster|Dungeon Bonuses|Haunted Cemetery|Haunted Cemetery Master|1200|0|repeatable|Complete Haunted Cemetery 100 times
+  needs|Haunted Cemetery|100
+bonus|CaveofaThousandTreasuresScout|Dungeon Bonuses|Cave of a Thousand Treasures|Cave of a Thousand Treasures Scout|60|0||Complete Cave of a Thousand Treasures 1 time
+  needs|Cave of A Thousand Treasures|1
+bonus|CaveofaThousandTreasuresExplorer|Dungeon Bonuses|Cave of a Thousand Treasures|Cave of a Thousand Treasures Explorer|120|0||Complete Cave of a Thousand Treasures 10 times
+  needs|Cave of A Thousand Treasures|10
+bonus|CaveofaThousandTreasuresAdventurer|Dungeon Bonuses|Cave of a Thousand Treasures|Cave of a Thousand Treasures Adventurer|250|0||Complete Cave of a Thousand Treasures 20 times
+  needs|Cave of A Thousand Treasures|20
+bonus|CaveofaThousandTreasuresConqueror|Dungeon Bonuses|Cave of a Thousand Treasures|Cave of a Thousand Treasures Conqueror|500|0||Complete Cave of a Thousand Treasures 40 times
+  needs|Cave of A Thousand Treasures|40
+bonus|CaveofaThousandTreasuresMaster|Dungeon Bonuses|Cave of a Thousand Treasures|Cave of a Thousand Treasures Master|1200|0|repeatable|Complete Cave of a Thousand Treasures 100 times
+  needs|Cave of A Thousand Treasures|100
+bonus|CandylandHuntingGroundsScout|Dungeon Bonuses|Candyland Hunting Grounds|Candyland Hunting Grounds Scout|60|0||Complete Candyland Hunting Grounds 1 time
+  needs|Candyland Hunting Grounds|1
+bonus|CandylandHuntingGroundsExplorer|Dungeon Bonuses|Candyland Hunting Grounds|Candyland Hunting Grounds Explorer|120|0||Complete Candyland Hunting Grounds 10 times
+  needs|Candyland Hunting Grounds|10
+bonus|CandylandHuntingGroundsAdventurer|Dungeon Bonuses|Candyland Hunting Grounds|Candyland Hunting Grounds Adventurer|250|0||Complete Candyland Hunting Grounds 20 times
+  needs|Candyland Hunting Grounds|20
+bonus|CandylandHuntingGroundsConqueror|Dungeon Bonuses|Candyland Hunting Grounds|Candyland Hunting Grounds Conqueror|500|0||Complete Candyland Hunting Grounds 40 times
+  needs|Candyland Hunting Grounds|40
+bonus|CandylandHuntingGroundsMaster|Dungeon Bonuses|Candyland Hunting Grounds|Candyland Hunting Grounds Master|1200|0|repeatable|Complete Candyland Hunting Grounds 100 times
+  needs|Candyland Hunting Grounds|100
+bonus|ParasiteChambersScout|Dungeon Bonuses|Parasite Chambers|Parasite Chambers Scout|150|0||Complete Parasite Chambers 1 time
+  needs|Parasite Chambers|1
+bonus|ParasiteChambersExplorer|Dungeon Bonuses|Parasite Chambers|Parasite Chambers Explorer|300|0||Complete Parasite Chambers 10 times
+  needs|Parasite Chambers|10
+bonus|ParasiteChambersAdventurer|Dungeon Bonuses|Parasite Chambers|Parasite Chambers Adventurer|600|0||Complete Parasite Chambers 20 times
+  needs|Parasite Chambers|20
+bonus|ParasiteChambersConqueror|Dungeon Bonuses|Parasite Chambers|Parasite Chambers Conqueror|1200|0||Complete Parasite Chambers 40 times
+  needs|Parasite Chambers|40
+bonus|ParasiteChambersMaster|Dungeon Bonuses|Parasite Chambers|Parasite Chambers Master|3000|0|repeatable|Complete Parasite Chambers 100 times
+  needs|Parasite Chambers|100
+bonus|DeadwaterDocksScout|Dungeon Bonuses|Deadwater Docks|Deadwater Docks Scout|100|0||Complete Deadwater Docks 1 time
+  needs|Deadwater Docks|1
+bonus|DeadwaterDocksExplorer|Dungeon Bonuses|Deadwater Docks|Deadwater Docks Explorer|200|0||Complete Deadwater Docks 10 times
+  needs|Deadwater Docks|10
+bonus|DeadwaterDocksAdventurer|Dungeon Bonuses|Deadwater Docks|Deadwater Docks Adventurer|400|0||Complete Deadwater Docks 20 times
+  needs|Deadwater Docks|20
+bonus|DeadwaterDocksConqueror|Dungeon Bonuses|Deadwater Docks|Deadwater Docks Conqueror|800|0||Complete Deadwater Docks 40 times
+  needs|Deadwater Docks|40
+bonus|DeadwaterDocksMaster|Dungeon Bonuses|Deadwater Docks|Deadwater Docks Master|2000|0|repeatable|Complete Deadwater Docks 100 times
+  needs|Deadwater Docks|100
+bonus|WoodlandLabyrinthScout|Dungeon Bonuses|Woodland Labyrinth|Woodland Labyrinth Scout|100|0||Complete Woodland Labyrinth 1 time
+  needs|Woodland Labyrinth|1
+bonus|WoodlandLabyrinthExplorer|Dungeon Bonuses|Woodland Labyrinth|Woodland Labyrinth Explorer|200|0||Complete Woodland Labyrinth 10 times
+  needs|Woodland Labyrinth|10
+bonus|WoodlandLabyrinthAdventurer|Dungeon Bonuses|Woodland Labyrinth|Woodland Labyrinth Adventurer|400|0||Complete Woodland Labyrinth 20 times
+  needs|Woodland Labyrinth|20
+bonus|WoodlandLabyrinthConqueror|Dungeon Bonuses|Woodland Labyrinth|Woodland Labyrinth Conqueror|800|0||Complete Woodland Labyrinth 40 times
+  needs|Woodland Labyrinth|40
+bonus|WoodlandLabyrinthMaster|Dungeon Bonuses|Woodland Labyrinth|Woodland Labyrinth Master|2000|0|repeatable|Complete Woodland Labyrinth 100 times
+  needs|Woodland Labyrinth|100
+bonus|CrawlingDepthsScout|Dungeon Bonuses|The Crawling Depths|The Crawling Depths Scout|100|0||Complete The Crawling Depths 1 times
+  needs|The Crawling Depths|1
+bonus|CrawlingDepthsExplorer|Dungeon Bonuses|The Crawling Depths|The Crawling Depths Explorer|200|0||Complete The Crawling Depths 10 times
+  needs|The Crawling Depths|10
+bonus|CrawlingDepthsAdventurer|Dungeon Bonuses|The Crawling Depths|The Crawling Depths Adventurer|400|0||Complete The Crawling Depths 20 times
+  needs|The Crawling Depths|20
+bonus|CrawlingDepthsConqueror|Dungeon Bonuses|The Crawling Depths|The Crawling Depths Conqueror|800|0||Complete The Crawling Depths 40 times
+  needs|The Crawling Depths|40
+bonus|CrawlingDepthsMaster|Dungeon Bonuses|The Crawling Depths|The Crawling Depths Master|2000|0|repeatable|Complete The Crawling Depths 100 times
+  needs|The Crawling Depths|100
+bonus|DavyJonesLockerScout|Dungeon Bonuses|Davy Jones' Locker|Davy Jones' Locker Scout|100|0||Complete Davy Jones' Locker 1 time
+  needs|Davy Jones' Locker|1
+bonus|DavyJonesLockerExplorer|Dungeon Bonuses|Davy Jones' Locker|Davy Jones' Locker Explorer|200|0||Complete Davy Jones' Locker 10 times
+  needs|Davy Jones' Locker|10
+bonus|DavyJonesLockerAdventurer|Dungeon Bonuses|Davy Jones' Locker|Davy Jones' Locker Adventurer|400|0||Complete Davy Jones' Locker 20 times
+  needs|Davy Jones' Locker|20
+bonus|DavyJonesLockerConqueror|Dungeon Bonuses|Davy Jones' Locker|Davy Jones' Locker Conqueror|800|0||Complete Davy Jones' Locker 40 times
+  needs|Davy Jones' Locker|40
+bonus|DavyJonesLockerMaster|Dungeon Bonuses|Davy Jones' Locker|Davy Jones' Locker Master|2000|0|repeatable|Complete Davy Jones' Locker 100 times
+  needs|Davy Jones' Locker|100
+bonus|MountainTempleScout|Dungeon Bonuses|Mountain Temple|Mountain Temple Scout|150|0||Complete Mountain Temple 1 time
+  needs|Mountain Temple|1
+bonus|MountainTempleExplorer|Dungeon Bonuses|Mountain Temple|Mountain Temple Explorer|300|0||Complete Mountain Temple 10 times
+  needs|Mountain Temple|10
+bonus|MountainTempleAdventurer|Dungeon Bonuses|Mountain Temple|Mountain Temple Adventurer|600|0||Complete Mountain Temple 20 times
+  needs|Mountain Temple|20
+bonus|MountainTempleConqueror|Dungeon Bonuses|Mountain Temple|Mountain Temple Conqueror|1200|0||Complete Mountain Temple 40 times
+  needs|Mountain Temple|40
+bonus|MountainTempleMaster|Dungeon Bonuses|Mountain Temple|Mountain Temple Master|3000|0|repeatable|Complete Mountain Temple 100 times
+  needs|Mountain Temple|100
+bonus|LairofDraconisScout|Dungeon Bonuses|Lair of Draconis|Lair of Draconis Scout|175|0||Complete Lair of Draconis 1 times
+  needs|Lair of Draconis|1
+bonus|LairofDraconisExplorer|Dungeon Bonuses|Lair of Draconis|Lair of Draconis Explorer|350|0||Complete Lair of Draconis 10 times
+  needs|Lair of Draconis|10
+bonus|LairofDraconisAdventurer|Dungeon Bonuses|Lair of Draconis|Lair of Draconis Adventurer|700|0||Complete Lair of Draconis 20 times
+  needs|Lair of Draconis|20
+bonus|LairofDraconisConqueror|Dungeon Bonuses|Lair of Draconis|Lair of Draconis Conqueror|1400|0||Complete Lair of Draconis 40 times
+  needs|Lair of Draconis|40
+bonus|LairofDraconisMaster|Dungeon Bonuses|Lair of Draconis|Lair of Draconis Master|3500|0|repeatable|Complete Lair of Draconis 100 times
+  needs|Lair of Draconis|100
+bonus|TheThirdDimensionScout|Dungeon Bonuses|The Third Dimension|The Third Dimension Scout|150|0||Complete The Third Dimension 1 time
+  needs|The Third Dimension|1
+bonus|TheThirdDimensionExplorer|Dungeon Bonuses|The Third Dimension|The Third Dimension Explorer|300|0||Complete The Third Dimension 10 times
+  needs|The Third Dimension|10
+bonus|TheThirdDimensionAdventurer|Dungeon Bonuses|The Third Dimension|The Third Dimension Adventurer|600|0||Complete The Third Dimension 20 times
+  needs|The Third Dimension|20
+bonus|TheThirdDimensionConqueror|Dungeon Bonuses|The Third Dimension|The Third Dimension Conqueror|1200|0||Complete The Third Dimension 40 times
+  needs|The Third Dimension|40
+bonus|TheThirdDimensionMaster|Dungeon Bonuses|The Third Dimension|The Third Dimension Master|3000|0|repeatable|Complete The Third Dimension 100 times
+  needs|The Third Dimension|100
+bonus|IceCaveScout|Dungeon Bonuses|Ice Citadel|Ice Citadel Scout|125|0||Complete Ice Citadel 1 time
+  needs|Ice Citadel|1
+bonus|IceCaveExplorer|Dungeon Bonuses|Ice Citadel|Ice Citadel Explorer|250|0||Complete Ice Citadel 10 times
+  needs|Ice Citadel|10
+bonus|IceCaveAdventurer|Dungeon Bonuses|Ice Citadel|Ice Citadel Adventurer|500|0||Complete Ice Citadel 20 times
+  needs|Ice Citadel|20
+bonus|IceCaveConqueror|Dungeon Bonuses|Ice Citadel|Ice Citadel Conqueror|1000|0||Complete Ice Citadel 40 times
+  needs|Ice Citadel|40
+bonus|IceCaveMaster|Dungeon Bonuses|Ice Citadel|Ice Citadel Master|2500|0|repeatable|Complete Ice Citadel 100 times
+  needs|Ice Citadel|100
+bonus|OceanTrenchScout|Dungeon Bonuses|Ocean Trench|Ocean Trench Scout|175|0||Complete Ocean Trench 1 time
+  needs|Ocean Trench|1
+bonus|OceanTrenchExplorer|Dungeon Bonuses|Ocean Trench|Ocean Trench Explorer|350|0||Complete Ocean Trench 10 times
+  needs|Ocean Trench|10
+bonus|OceanTrenchAdventurer|Dungeon Bonuses|Ocean Trench|Ocean Trench Adventurer|700|0||Complete Ocean Trench 20 times
+  needs|Ocean Trench|20
+bonus|OceanTrenchConqueror|Dungeon Bonuses|Ocean Trench|Ocean Trench Conqueror|1400|0||Complete Ocean Trench 40 times
+  needs|Ocean Trench|40
+bonus|OceanTrenchMaster|Dungeon Bonuses|Ocean Trench|Ocean Trench Master|3500|0|repeatable|Complete Ocean Trench 100 times
+  needs|Ocean Trench|100
+bonus|TomboftheAncientsScout|Dungeon Bonuses|Tomb of the Ancients|Tomb of the Ancients Scout|200|0||Complete Tomb of the Ancients 1 time
+  needs|Tomb of the Ancients|1
+bonus|TomboftheAncientsExplorer|Dungeon Bonuses|Tomb of the Ancients|Tomb of the Ancients Explorer|400|0||Complete Tomb of the Ancients 10 times
+  needs|Tomb of the Ancients|10
+bonus|TomboftheAncientsAdventurer|Dungeon Bonuses|Tomb of the Ancients|Tomb of the Ancients Adventurer|800|0||Complete Tomb of the Ancients 20 times
+  needs|Tomb of the Ancients|20
+bonus|TomboftheAncientsConqueror|Dungeon Bonuses|Tomb of the Ancients|Tomb of the Ancients Conqueror|1600|0||Complete Tomb of the Ancients 40 times
+  needs|Tomb of the Ancients|40
+bonus|TomboftheAncientsMaster|Dungeon Bonuses|Tomb of the Ancients|Tomb of the Ancients Master|4000|0|repeatable|Complete Tomb of the Ancients 100 times
+  needs|Tomb of the Ancients|100
+bonus|TheShattersScout|Dungeon Bonuses|The Shatters|The Shatters Scout|500|0||Complete The Shatters 1 time
+  needs|The Shatters|1
+bonus|TheShattersExplorer|Dungeon Bonuses|The Shatters|The Shatters Explorer|1000|0||Complete The Shatters 10 times
+  needs|The Shatters|10
+bonus|TheShattersAdventurer|Dungeon Bonuses|The Shatters|The Shatters Adventurer|2000|0||Complete The Shatters 20 times
+  needs|The Shatters|20
+bonus|TheShattersConqueror|Dungeon Bonuses|The Shatters|The Shatters Conqueror|4000|0||Complete The Shatters 40 times
+  needs|The Shatters|40
+bonus|TheShattersMaster|Dungeon Bonuses|The Shatters|The Shatters Master|10000|0|repeatable|Complete The Shatters 100 times
+  needs|The Shatters|100
+bonus|TheNestScout|Dungeon Bonuses|The Nest|The Nest Scout|200|0||Complete The Nest 1 time
+  needs|The Nest|1
+bonus|TheNestExplorer|Dungeon Bonuses|The Nest|The Nest Explorer|400|0||Complete The Nest 10 times
+  needs|The Nest|10
+bonus|TheNestAdventurer|Dungeon Bonuses|The Nest|The Nest Adventurer|800|0||Complete The Nest 20 times
+  needs|The Nest|20
+bonus|TheNestConqueror|Dungeon Bonuses|The Nest|The Nest Conqueror|1600|0||Complete The Nest 40 times
+  needs|The Nest|40
+bonus|TheNestMaster|Dungeon Bonuses|The Nest|The Nest Master|4000|0|repeatable|Complete The Nest 100 times
+  needs|The Nest|100
+bonus|FungalCavernScout|Dungeon Bonuses|Fungal Cavern|Fungal Cavern Scout|250|0||Complete Fungal Cavern 1 time
+  needs|Fungal Cavern|1
+bonus|FungalCavernExplorer|Dungeon Bonuses|Fungal Cavern|Fungal Cavern Explorer|500|0||Complete Fungal Cavern 10 times
+  needs|Fungal Cavern|10
+bonus|FungalCavernAdventurer|Dungeon Bonuses|Fungal Cavern|Fungal Cavern Adventurer|1000|0||Complete Fungal Cavern 20 times
+  needs|Fungal Cavern|20
+bonus|FungalCavernConqueror|Dungeon Bonuses|Fungal Cavern|Fungal Cavern Conqueror|2000|0||Complete Fungal Cavern 40 times
+  needs|Fungal Cavern|40
+bonus|FungalCavernMaster|Dungeon Bonuses|Fungal Cavern|Fungal Cavern Master|5000|0|repeatable|Complete Fungal Cavern 100 times
+  needs|Fungal Cavern|100
+bonus|CrystalCavernScout|Dungeon Bonuses|Crystal Cavern|Crystal Cavern Scout|300|0||Complete Crystal Cavern 1 time
+  needs|Crystal Cavern|1
+bonus|CrystalCavernExplorer|Dungeon Bonuses|Crystal Cavern|Crystal Cavern Explorer|600|0||Complete Crystal Cavern 10 times
+  needs|Crystal Cavern|10
+bonus|CrystalCavernAdventurer|Dungeon Bonuses|Crystal Cavern|Crystal Cavern Adventurer|1200|0||Complete Crystal Cavern 20 times
+  needs|Crystal Cavern|20
+bonus|CrystalCavernConqueror|Dungeon Bonuses|Crystal Cavern|Crystal Cavern Conqueror|2400|0||Complete Crystal Cavern 40 times
+  needs|Crystal Cavern|40
+bonus|CrystalCavernMaster|Dungeon Bonuses|Crystal Cavern|Crystal Cavern Master|6000|0|repeatable|Complete Crystal Cavern 100 times
+  needs|Crystal Cavern|100
+bonus|LostHallsScout|Dungeon Bonuses|Lost Halls|Lost Halls Scout|300|0||Complete Lost Halls 1 time
+  needs|Lost Halls|1
+bonus|LostHallsExplorer|Dungeon Bonuses|Lost Halls|Lost Halls Explorer|600|0||Complete Lost Halls 10 times
+  needs|Lost Halls|10
+bonus|LostHallsAdventurer|Dungeon Bonuses|Lost Halls|Lost Halls Adventurer|1200|0||Complete Lost Halls 20 times
+  needs|Lost Halls|20
+bonus|LostHallsConqueror|Dungeon Bonuses|Lost Halls|Lost Halls Conqueror|2400|0||Complete Lost Halls 40 times
+  needs|Lost Halls|40
+bonus|LostHallsMaster|Dungeon Bonuses|Lost Halls|Lost Halls Master|6000|0|repeatable|Complete Lost Halls 100 times
+  needs|Lost Halls|100
+bonus|CultistHideoutScout|Dungeon Bonuses|Cultist Hideout|Cultist Hideout Scout|350|0||Complete Cultist Hideout 1 time
+  needs|Cultist Hideout|1
+bonus|CultistHideoutExplorer|Dungeon Bonuses|Cultist Hideout|Cultist Hideout Explorer|700|0||Complete Cultist Hideout 10 times
+  needs|Cultist Hideout|10
+bonus|CultistHideoutAdventurer|Dungeon Bonuses|Cultist Hideout|Cultist Hideout Adventurer|1500|0||Complete Cultist Hideout 20 times
+  needs|Cultist Hideout|20
+bonus|CultistHideoutConqueror|Dungeon Bonuses|Cultist Hideout|Cultist Hideout Conqueror|3000|0||Complete Cultist Hideout 40 times
+  needs|Cultist Hideout|40
+bonus|CultistHideoutMaster|Dungeon Bonuses|Cultist Hideout|Cultist Hideout Master|7000|0|repeatable|Complete Cultist Hideout 100 times
+  needs|Cultist Hideout|100
+bonus|TheVoidScout|Dungeon Bonuses|The Void|The Void Scout|400|0||Complete The Void 1 time
+  needs|The Void|1
+bonus|TheVoidExplorer|Dungeon Bonuses|The Void|The Void Explorer|800|0||Complete The Void 10 times
+  needs|The Void|10
+bonus|TheVoidAdventurer|Dungeon Bonuses|The Void|The Void Adventurer|1600|0||Complete The Void 20 times
+  needs|The Void|20
+bonus|TheVoidConqueror|Dungeon Bonuses|The Void|The Void Conqueror|3200|0||Complete The Void 40 times
+  needs|The Void|40
+bonus|TheVoidMaster|Dungeon Bonuses|The Void|The Void Master|8000|0|repeatable|Complete The Void 100 times
+  needs|The Void|100
+bonus|Oryx'sCastleScout|Dungeon Bonuses|Oryx's Castle|Oryx's Castle Scout|100|0||Complete Oryx's Castle 1 time
+  needs|Oryx's Castle|1
+bonus|Oryx'sCastleExplorer|Dungeon Bonuses|Oryx's Castle|Oryx's Castle Explorer|200|0||Complete Oryx's Castle 10 times
+  needs|Oryx's Castle|10
+bonus|Oryx'sCastleAdventurer|Dungeon Bonuses|Oryx's Castle|Oryx's Castle Adventurer|400|0||Complete Oryx's Castle 20 times
+  needs|Oryx's Castle|20
+bonus|Oryx'sCastleConqueror|Dungeon Bonuses|Oryx's Castle|Oryx's Castle Conqueror|800|0||Complete Oryx's Castle 40 times
+  needs|Oryx's Castle|40
+bonus|Oryx'sCastleMaster|Dungeon Bonuses|Oryx's Castle|Oryx's Castle Master|2000|0|repeatable|Complete Oryx's Castle 100 times
+  needs|Oryx's Castle|100
+bonus|LairofShaitanScout|Dungeon Bonuses|Lair of Shaitan|Lair of Shaitan Scout|100|0||Complete Lair of Shaitan 1 time
+  needs|Lair of Shaitan|1
+bonus|LairofShaitanExplorer|Dungeon Bonuses|Lair of Shaitan|Lair of Shaitan Explorer|200|0||Complete Lair of Shaitan 10 times
+  needs|Lair of Shaitan|10
+bonus|LairofShaitanAdventurer|Dungeon Bonuses|Lair of Shaitan|Lair of Shaitan Adventurer|400|0||Complete Lair of Shaitan 20 times
+  needs|Lair of Shaitan|20
+bonus|LairofShaitanConqueror|Dungeon Bonuses|Lair of Shaitan|Lair of Shaitan Conqueror|800|0||Complete Lair of Shaitan 40 times
+  needs|Lair of Shaitan|40
+bonus|LairofShaitanMaster|Dungeon Bonuses|Lair of Shaitan|Lair of Shaitan Master|2000|0|repeatable|Complete Lair of Shaitan 100 times
+  needs|Lair of Shaitan|100
+bonus|PuppetMaster'sEncoreScout|Dungeon Bonuses|Puppet Master's Encore|Puppet Master's Encore Scout|100|0||Complete Puppet Master's Encore 1 time
+  needs|Puppet Master's Encore|1
+bonus|PuppetMaster'sEncoreExplorer|Dungeon Bonuses|Puppet Master's Encore|Puppet Master's Encore Explorer|200|0||Complete Puppet Master's Encore 10 times
+  needs|Puppet Master's Encore|10
+bonus|PuppetMaster'sEncoreAdventurer|Dungeon Bonuses|Puppet Master's Encore|Puppet Master's Encore Adventurer|400|0||Complete Puppet Master's Encore 20 times
+  needs|Puppet Master's Encore|20
+bonus|PuppetMaster'sEncoreConqueror|Dungeon Bonuses|Puppet Master's Encore|Puppet Master's Encore Conqueror|800|0||Complete Puppet Master's Encore 40 times
+  needs|Puppet Master's Encore|40
+bonus|PuppetMaster'sEncoreMaster|Dungeon Bonuses|Puppet Master's Encore|Puppet Master's Encore Master|2000|0|repeatable|Complete Puppet Master's Encore 100 times
+  needs|Puppet Master's Encore|100
+bonus|CnidarianReefScout|Dungeon Bonuses|Cnidarian Reef|Cnidarian Reef Scout|100|0||Complete Cnidarian Reef 1 time
+  needs|Cnidarian Reef|1
+bonus|CnidarianReefExplorer|Dungeon Bonuses|Cnidarian Reef|Cnidarian Reef Explorer|200|0||Complete Cnidarian Reef 10 times
+  needs|Cnidarian Reef|10
+bonus|CnidarianReefAdventurer|Dungeon Bonuses|Cnidarian Reef|Cnidarian Reef Adventurer|400|0||Complete Cnidarian Reef 20 times
+  needs|Cnidarian Reef|20
+bonus|CnidarianReefConqueror|Dungeon Bonuses|Cnidarian Reef|Cnidarian Reef Conqueror|800|0||Complete Cnidarian Reef 40 times
+  needs|Cnidarian Reef|40
+bonus|CnidarianReefMaster|Dungeon Bonuses|Cnidarian Reef|Cnidarian Reef Master|2000|0|repeatable|Complete Cnidarian Reef 100 times
+  needs|Cnidarian Reef|100
+bonus|SecludedThicketScout|Dungeon Bonuses|Secluded Thicket|Secluded Thicket Scout|125|0||Complete Secluded Thicket 1 time
+  needs|Secluded Thicket|1
+bonus|SecludedThicketExplorer|Dungeon Bonuses|Secluded Thicket|Secluded Thicket Explorer|250|0||Complete Secluded Thicket 10 times
+  needs|Secluded Thicket|10
+bonus|SecludedThicketAdventurer|Dungeon Bonuses|Secluded Thicket|Secluded Thicket Adventurer|500|0||Complete Secluded Thicket 20 times
+  needs|Secluded Thicket|20
+bonus|SecludedThicketConqueror|Dungeon Bonuses|Secluded Thicket|Secluded Thicket Conqueror|1000|0||Complete Secluded Thicket 40 times
+  needs|Secluded Thicket|40
+bonus|SecludedThicketMaster|Dungeon Bonuses|Secluded Thicket|Secluded Thicket Master|2500|0|repeatable|Complete Secluded Thicket 100 times
+  needs|Secluded Thicket|100
+bonus|HighTechTerrorScout|Dungeon Bonuses|High Tech Terror|High Tech Terror Scout|125|0||Complete High Tech Terror 1 time
+  needs|High Tech Terror|1
+bonus|HighTechTerrorExplorer|Dungeon Bonuses|High Tech Terror|High Tech Terror Explorer|250|0||Complete High Tech Terror 10 times
+  needs|High Tech Terror|10
+bonus|HighTechTerrorAdventurer|Dungeon Bonuses|High Tech Terror|High Tech Terror Adventurer|500|0||Complete High Tech Terror 20 times
+  needs|High Tech Terror|20
+bonus|HighTechTerrorConqueror|Dungeon Bonuses|High Tech Terror|High Tech Terror Conqueror|1000|0||Complete High Tech Terror 40 times
+  needs|High Tech Terror|40
+bonus|HighTechTerrorMaster|Dungeon Bonuses|High Tech Terror|High Tech Terror Master|2500|0|repeatable|Complete High Tech Terror 100 times
+  needs|High Tech Terror|100
+bonus|Oryx'sChamberScout|Dungeon Bonuses|Oryx's Chamber|Oryx's Chamber Scout|125|0||Complete Oryx's Chamber 1 time
+  needs|Oryx's Chamber|1
+bonus|Oryx'sChamberExplorer|Dungeon Bonuses|Oryx's Chamber|Oryx's Chamber Explorer|250|0||Complete Oryx's Chamber 10 times
+  needs|Oryx's Chamber|10
+bonus|Oryx'sChamberAdventurer|Dungeon Bonuses|Oryx's Chamber|Oryx's Chamber Adventurer|500|0||Complete Oryx's Chamber 20 times
+  needs|Oryx's Chamber|20
+bonus|Oryx'sChamberConqueror|Dungeon Bonuses|Oryx's Chamber|Oryx's Chamber Conqueror|1000|0||Complete Oryx's Chamber 40 times
+  needs|Oryx's Chamber|40
+bonus|Oryx'sChamberMaster|Dungeon Bonuses|Oryx's Chamber|Oryx's Chamber Master|2500|0|repeatable|Complete Oryx's Chamber 100 times
+  needs|Oryx's Chamber|100
+bonus|WineCellarScout|Dungeon Bonuses|Wine Cellar|Wine Cellar Scout|200|0||Complete Wine Cellar 1 time
+  needs|Wine Cellar|1
+bonus|WineCellarExplorer|Dungeon Bonuses|Wine Cellar|Wine Cellar Explorer|400|0||Complete Wine Cellar 10 times
+  needs|Wine Cellar|10
+bonus|WineCellarAdventurer|Dungeon Bonuses|Wine Cellar|Wine Cellar Adventurer|800|0||Complete Wine Cellar 20 times
+  needs|Wine Cellar|20
+bonus|WineCellarConqueror|Dungeon Bonuses|Wine Cellar|Wine Cellar Conqueror|1600|0||Complete Wine Cellar 40 times
+  needs|Wine Cellar|40
+bonus|WineCellarMaster|Dungeon Bonuses|Wine Cellar|Wine Cellar Master|4000|0|repeatable|Complete Wine Cellar 100 times
+  needs|Wine Cellar|100
+bonus|Oryx'sSanctuaryScout|Dungeon Bonuses|Oryx's Sanctuary|Oryx's Sanctuary Scout|500|0||Complete Oryx's Sanctuary 1 time
+  needs|Oryx's Sanctuary|1
+bonus|Oryx'sSanctuaryExplorer|Dungeon Bonuses|Oryx's Sanctuary|Oryx's Sanctuary Explorer|1000|0||Complete Oryx's Sanctuary 10 times
+  needs|Oryx's Sanctuary|10
+bonus|Oryx'sSanctuaryAdventurer|Dungeon Bonuses|Oryx's Sanctuary|Oryx's Sanctuary Adventurer|2000|0||Complete Oryx's Sanctuary 20 times
+  needs|Oryx's Sanctuary|20
+bonus|Oryx'sSanctuaryConqueror|Dungeon Bonuses|Oryx's Sanctuary|Oryx's Sanctuary Conqueror|4000|0||Complete Oryx's Sanctuary 40 times
+  needs|Oryx's Sanctuary|40
+bonus|Oryx'sSanctuaryMaster|Dungeon Bonuses|Oryx's Sanctuary|Oryx's Sanctuary Master|10000|0|repeatable|Complete Oryx's Sanctuary 100 times
+  needs|Oryx's Sanctuary|100
+bonus|Belladonna'sGardenScout|Dungeon Bonuses|Belladonna's Garden|Belladonna's Garden Scout|150|0||Complete Belladonna's Garden 1 time
+  needs|Belladonna's Garden|1
+bonus|Belladonna'sGardenExplorer|Dungeon Bonuses|Belladonna's Garden|Belladonna's Garden Explorer|300|0||Complete Belladonna's Garden 10 times
+  needs|Belladonna's Garden|10
+bonus|Belladonna'sGardenAdventurer|Dungeon Bonuses|Belladonna's Garden|Belladonna's Garden Adventurer|600|0||Complete Belladonna's Garden 20 times
+  needs|Belladonna's Garden|20
+bonus|Belladonna'sGardenConqueror|Dungeon Bonuses|Belladonna's Garden|Belladonna's Garden Conqueror|1200|0||Complete Belladonna's Garden 40 times
+  needs|Belladonna's Garden|40
+bonus|Belladonna'sGardenMaster|Dungeon Bonuses|Belladonna's Garden|Belladonna's Garden Master|3000|0|repeatable|Complete Belladonna's Garden 100 times
+  needs|Belladonna's Garden|100
+bonus|TheMachineScout|Dungeon Bonuses|The Machine|The Machine Scout|100|0||Complete The Machine 1 time
+  needs|The Machine|1
+bonus|TheMachineExplorer|Dungeon Bonuses|The Machine|The Machine Explorer|200|0||Complete The Machine 10 times
+  needs|The Machine|10
+bonus|TheMachineAdventurer|Dungeon Bonuses|The Machine|The Machine Adventurer|400|0||Complete The Machine 20 times
+  needs|The Machine|20
+bonus|TheMachineConqueror|Dungeon Bonuses|The Machine|The Machine Conqueror|800|0||Complete The Machine 40 times
+  needs|The Machine|40
+bonus|TheMachineMaster|Dungeon Bonuses|The Machine|The Machine Master|2000|0|repeatable|Complete The Machine 100 times
+  needs|The Machine|100
+bonus|RainbowRoadScout|Dungeon Bonuses|Rainbow Road|Rainbow Road Scout|5|0||Complete Rainbow Road 1 time
+  needs|Rainbow Road|1
+bonus|RainbowRoadExplorer|Dungeon Bonuses|Rainbow Road|Rainbow Road Explorer|10|0||Complete Rainbow Road 10 times
+  needs|Rainbow Road|10
+bonus|RainbowRoadAdventurer|Dungeon Bonuses|Rainbow Road|Rainbow Road Adventurer|20|0||Complete Rainbow Road 20 times
+  needs|Rainbow Road|20
+bonus|RainbowRoadConqueror|Dungeon Bonuses|Rainbow Road|Rainbow Road Conqueror|40|0||Complete Rainbow Road 40 times
+  needs|Rainbow Road|40
+bonus|RainbowRoadMaster|Dungeon Bonuses|Rainbow Road|Rainbow Road Master|100|0|repeatable|Complete Rainbow Road 100 times
+  needs|Rainbow Road|100
+bonus|MadGodMayhemScout|Dungeon Bonuses|Mad God Mayhem|Mad God Mayhem Scout|150|0||Complete Mad God Mayhem 1 time
+  needs|Oryx Pandemonium Decaract|1
+bonus|MadGodMayhemExplorer|Dungeon Bonuses|Mad God Mayhem|Mad God Mayhem Explorer|300|0||Complete Mad God Mayhem 10 times
+  needs|Oryx Pandemonium Decaract|10
+bonus|MadGodMayhemAdventurer|Dungeon Bonuses|Mad God Mayhem|Mad God Mayhem Adventurer|600|0||Complete Mad God Mayhem 20 times
+  needs|Oryx Pandemonium Decaract|20
+bonus|MadGodMayhemConqueror|Dungeon Bonuses|Mad God Mayhem|Mad God Mayhem Conqueror|1200|0||Complete Mad God Mayhem 40 times
+  needs|Oryx Pandemonium Decaract|40
+bonus|MadGodMayhemMaster|Dungeon Bonuses|Mad God Mayhem|Mad God Mayhem Master|3000|0|repeatable|Complete Mad God Mayhem 100 times
+  needs|Oryx Pandemonium Decaract|100
+bonus|MalogiaScout|Dungeon Bonuses|Malogia|Malogia Scout|125|0||Complete Malogia 1 time
+  needs|Malogia|1
+bonus|MalogiaExplorer|Dungeon Bonuses|Malogia|Malogia Explorer|250|0||Complete Malogia 10 times
+  needs|Malogia|10
+bonus|MalogiaAdventurer|Dungeon Bonuses|Malogia|Malogia Adventurer|500|0||Complete Malogia 20 times
+  needs|Malogia|20
+bonus|MalogiaConqueror|Dungeon Bonuses|Malogia|Malogia Conqueror|1000|0||Complete Malogia 40 times
+  needs|Malogia|40
+bonus|MalogiaMaster|Dungeon Bonuses|Malogia|Malogia Master|2500|0|repeatable|Complete Malogia 100 times
+  needs|Malogia|100
+bonus|UntarisScout|Dungeon Bonuses|Untaris|Untaris Scout|125|0||Complete Untaris 1 time
+  needs|Untaris|1
+bonus|UntarisExplorer|Dungeon Bonuses|Untaris|Untaris Explorer|250|0||Complete Untaris 10 times
+  needs|Untaris|10
+bonus|UntarisAdventurer|Dungeon Bonuses|Untaris|Untaris Adventurer|500|0||Complete Untaris 20 times
+  needs|Untaris|20
+bonus|UntarisConqueror|Dungeon Bonuses|Untaris|Untaris Conqueror|1000|0||Complete Untaris 40 times
+  needs|Untaris|40
+bonus|UntarisMaster|Dungeon Bonuses|Untaris|Untaris Master|2500|0|repeatable|Complete Untaris 100 times
+  needs|Untaris|100
+bonus|ForaxScout|Dungeon Bonuses|Forax|Forax Scout|125|0||Complete Forax 1 time
+  needs|Forax|1
+bonus|ForaxExplorer|Dungeon Bonuses|Forax|Forax Explorer|250|0||Complete Forax 10 times
+  needs|Forax|10
+bonus|ForaxAdventurer|Dungeon Bonuses|Forax|Forax Adventurer|500|0||Complete Forax 20 times
+  needs|Forax|20
+bonus|ForaxConqueror|Dungeon Bonuses|Forax|Forax Conqueror|1000|0||Complete Forax 40 times
+  needs|Forax|40
+bonus|ForaxMaster|Dungeon Bonuses|Forax|Forax Master|2500|0|repeatable|Complete Forax 100 times
+  needs|Forax|100
+bonus|KatalundScout|Dungeon Bonuses|Katalund|Katalund Scout|125|0||Complete Katalund 1 time
+  needs|Katalund|1
+bonus|KatalundExplorer|Dungeon Bonuses|Katalund|Katalund Explorer|250|0||Complete Katalund 10 times
+  needs|Katalund|10
+bonus|KatalundAdventurer|Dungeon Bonuses|Katalund|Katalund Adventurer|500|0||Complete Katalund 20 times
+  needs|Katalund|20
+bonus|KatalundConqueror|Dungeon Bonuses|Katalund|Katalund Conqueror|1000|0||Complete Katalund 40 times
+  needs|Katalund|40
+bonus|KatalundMaster|Dungeon Bonuses|Katalund|Katalund Master|2500|0|repeatable|Complete Katalund 100 times
+  needs|Katalund|100
+bonus|BattlefortheNexusScout|Dungeon Bonuses|Battle for the Nexus|Battle for the Nexus Scout|150|0||Complete Battle for the Nexus 1 time
+  needs|Battle for the Nexus|1
+bonus|BattlefortheNexusExplorer|Dungeon Bonuses|Battle for the Nexus|Battle for the Nexus Explorer|300|0||Complete Battle for the Nexus 10 times
+  needs|Battle for the Nexus|10
+bonus|BattlefortheNexusAdventurer|Dungeon Bonuses|Battle for the Nexus|Battle for the Nexus Adventurer|600|0||Complete Battle for the Nexus 20 times
+  needs|Battle for the Nexus|20
+bonus|BattlefortheNexusConqueror|Dungeon Bonuses|Battle for the Nexus|Battle for the Nexus Conqueror|1200|0||Complete Battle for the Nexus 40 times
+  needs|Battle for the Nexus|40
+bonus|BattlefortheNexusMaster|Dungeon Bonuses|Battle for the Nexus|Battle for the Nexus Master|3000|0|repeatable|Complete Battle for the Nexus 100 times
+  needs|Battle for the Nexus|100
+bonus|IceTombScout|Dungeon Bonuses|Ice Tomb|Ice Tomb Scout|150|0||Complete Ice Tomb 1 time
+  needs|Ice Tomb|1
+bonus|IceTombExplorer|Dungeon Bonuses|Ice Tomb|Ice Tomb Explorer|300|0||Complete Ice Tomb 10 times
+  needs|Ice Tomb|10
+bonus|IceTombAdventurer|Dungeon Bonuses|Ice Tomb|Ice Tomb Adventurer|600|0||Complete Ice Tomb 20 times
+  needs|Ice Tomb|20
+bonus|IceTombConqueror|Dungeon Bonuses|Ice Tomb|Ice Tomb Conqueror|1200|0||Complete Ice Tomb 40 times
+  needs|Ice Tomb|40
+bonus|IceTombMaster|Dungeon Bonuses|Ice Tomb|Ice Tomb Master|3000|0|repeatable|Complete Ice Tomb 100 times
+  needs|Ice Tomb|100
+bonus|Santa'sWorkshopScout|Dungeon Bonuses|Santa's Workshop|Santa's Workshop Scout|5|0||Complete Santa's Workshop 1 time
+  needs|Santa Workshop|1
+bonus|Santa'sWorkshopExplorer|Dungeon Bonuses|Santa's Workshop|Santa's Workshop Explorer|10|0||Complete Santa's Workshop 10 times
+  needs|Santa Workshop|10
+bonus|Santa'sWorkshopAdventurer|Dungeon Bonuses|Santa's Workshop|Santa's Workshop Adventurer|20|0||Complete Santa's Workshop 20 times
+  needs|Santa Workshop|20
+bonus|Santa'sWorkshopConqueror|Dungeon Bonuses|Santa's Workshop|Santa's Workshop Conqueror|40|0||Complete Santa's Workshop 40 times
+  needs|Santa Workshop|40
+bonus|Santa'sWorkshopMaster|Dungeon Bonuses|Santa's Workshop|Santa's Workshop Master|100|0|repeatable|Complete Santa's Workshop 100 times
+  needs|Santa Workshop|100
+bonus|BeachzoneScout|Dungeon Bonuses|Beachzone|Beachzone Scout|5|0||Complete Beachzone 1 time
+  needs|Beachzone|1
+bonus|BeachzoneExplorer|Dungeon Bonuses|Beachzone|Beachzone Explorer|10|0||Complete Beachzone 10 times
+  needs|Beachzone|10
+bonus|BeachzoneAdventurer|Dungeon Bonuses|Beachzone|Beachzone Adventurer|20|0||Complete Beachzone 20 times
+  needs|Beachzone|20
+bonus|BeachzoneConqueror|Dungeon Bonuses|Beachzone|Beachzone Conqueror|40|0||Complete Beachzone 40 times
+  needs|Beachzone|40
+bonus|BeachzoneMaster|Dungeon Bonuses|Beachzone|Beachzone Master|100|0|repeatable|Complete Beachzone 100 times
+  needs|Beachzone|100
+bonus|SulfurousWetlandsScout|Dungeon Bonuses|Sulfurous Wetlands|Sulfurous Wetlands Scout|100|0||Complete Sulfurous Wetlands 1 time
+  needs|Sulfurous Wetlands|1
+bonus|HiddenInterregnumScout|Dungeon Bonuses|Hidden Interregnum|Hidden Interregnum Scout|5|0||Complete Hidden Interregnum 1 time
+  needs|Hidden Interregnum|1
+bonus|SulfurousWetlandsExplorer|Dungeon Bonuses|Sulfurous Wetlands|Sulfurous Wetlands Explorer|200|0||Complete Sulfurous Wetlands 10 times
+  needs|Sulfurous Wetlands|10
+bonus|HiddenInterregnumExplorer|Dungeon Bonuses|Hidden Interregnum|Hidden Interregnum Explorer|10|0||Complete Hidden Interregnum 10 times
+  needs|Hidden Interregnum|10
+bonus|SulfurousWetlandsAdventurer|Dungeon Bonuses|Sulfurous Wetlands|Sulfurous Wetlands Adventurer|400|0||Complete Sulfurous Wetlands 20 times
+  needs|Sulfurous Wetlands|20
+bonus|HiddenInterregnumAdventurer|Dungeon Bonuses|Hidden Interregnum|Hidden Interregnum Adventurer|20|0||Complete Hidden Interregnum 20 times
+  needs|Hidden Interregnum|20
+bonus|SulfurousWetlandsConqueror|Dungeon Bonuses|Sulfurous Wetlands|Sulfurous Wetlands Conqueror|800|0||Complete Sulfurous Wetlands 40 times
+  needs|Sulfurous Wetlands|40
+bonus|HiddenInterregnumConqueror|Dungeon Bonuses|Hidden Interregnum|Hidden Interregnum Conqueror|40|0||Complete Hidden Interregnum 40 times
+  needs|Hidden Interregnum|40
+bonus|SulfurousWetlandsMaster|Dungeon Bonuses|Sulfurous Wetlands|Sulfurous Wetlands Master|2000|0|repeatable|Complete Sulfurous Wetlands 100 times
+  needs|Sulfurous Wetlands|100
+bonus|HiddenInterregnumMaster|Dungeon Bonuses|Hidden Interregnum|Hidden Interregnum Master|100|0|repeatable|Complete Hidden Interregnum 100 times
+  needs|Hidden Interregnum|100
+bonus|KogboldSteamworksScout|Dungeon Bonuses|Kogbold Steamworks|Kogbold Steamworks Scout|400|0||Complete Kogbold Steamworks 1 time
+  needs|Kogbold Steamworks|1
+bonus|KogboldSteamworksExplorer|Dungeon Bonuses|Kogbold Steamworks|Kogbold Steamworks Explorer|800|0||Complete Kogbold Steamworks 10 times
+  needs|Kogbold Steamworks|10
+bonus|KogboldSteamworksAdventurer|Dungeon Bonuses|Kogbold Steamworks|Kogbold Steamworks Adventurer|1600|0||Complete Kogbold Steamworks 20 times
+  needs|Kogbold Steamworks|20
+bonus|KogboldSteamworksConqueror|Dungeon Bonuses|Kogbold Steamworks|Kogbold Steamworks Conqueror|3200|0||Complete Kogbold Steamworks 40 times
+  needs|Kogbold Steamworks|40
+bonus|KogboldSteamworksMaster|Dungeon Bonuses|Kogbold Steamworks|Kogbold Steamworks Master|8000|0|repeatable|Complete Kogbold Steamworks 100 times
+  needs|Kogbold Steamworks|100
+bonus|MoonlightVillageScout|Dungeon Bonuses|Moonlight Village|Moonlight Village Scout|300|0||Complete Moonlight Village 1 time
+  needs|Moonlight Village|1
+bonus|moonlightVillageExplorer|Dungeon Bonuses|Moonlight Village|Moonlight Village Explorer|600|0||Complete Moonlight Village 10 times
+  needs|Moonlight Village|10
+bonus|moonlightVillageAdventurer|Dungeon Bonuses|Moonlight Village|Moonlight Village Adventurer|1200|0||Complete Moonlight Village 20 times
+  needs|Moonlight Village|20
+bonus|moonlightVillageConqueror|Dungeon Bonuses|Moonlight Village|Moonlight Village Conqueror|2400|0||Complete Moonlight Village 40 times
+  needs|Moonlight Village|40
+bonus|moonlightVillageMaster|Dungeon Bonuses|Moonlight Village|Moonlight Village Master|6000|0|repeatable|Complete Moonlight Village 100 times
+  needs|Moonlight Village|100
+bonus|AdvancedKogboldSteamworksScout|Dungeon Bonuses|Advanced Kogbold Steamworks|Advanced Kogbold Steamworks Scout|400|0||Complete Advanced Kogbold Steamworks 1 time
+  needs|Advanced Kogbold Steamworks|1
+bonus|AdvancedKogboldSteamworksExplorer|Dungeon Bonuses|Advanced Kogbold Steamworks|Advanced Kogbold Steamworks Explorer|800|0||Complete Advanced Kogbold Steamworks 10 times
+  needs|Advanced Kogbold Steamworks|10
+bonus|AdvancedKogboldSteamworksAdventurer|Dungeon Bonuses|Advanced Kogbold Steamworks|Advanced Kogbold Steamworks Adventurer|1600|0||Complete Advanced Kogbold Steamworks 20 times
+  needs|Advanced Kogbold Steamworks|20
+bonus|AdvancedKogboldSteamworksConqueror|Dungeon Bonuses|Advanced Kogbold Steamworks|Advanced Kogbold Steamworks Conqueror|3200|0||Complete Advanced Kogbold Steamworks 40 times
+  needs|Advanced Kogbold Steamworks|40
+bonus|AdvancedKogboldSteamworksMaster|Dungeon Bonuses|Advanced Kogbold Steamworks|Advanced Kogbold Steamworks Master|8000|0|repeatable|Complete Advanced Kogbold Steamworks 100 times
+  needs|Advanced Kogbold Steamworks|100
+bonus|PlaguedNestScout|Dungeon Bonuses|Plagued Nest|Plagued Nest Scout|200|0||Complete Plagued Nest 1 time
+  needs|Plagued Nest|1
+bonus|PlaguedNestExplorer|Dungeon Bonuses|Plagued Nest|Plagued Nest Explorer|400|0||Complete Plagued Nest 10 times
+  needs|Plagued Nest|10
+bonus|PlaguedNestAdventurer|Dungeon Bonuses|Plagued Nest|Plagued Nest Adventurer|800|0||Complete Plagued Nest 20 times
+  needs|Plagued Nest|20
+bonus|PlaguedNestConqueror|Dungeon Bonuses|Plagued Nest|Plagued Nest Conqueror|1600|0||Complete Plagued Nest 40 times
+  needs|Plagued Nest|40
+bonus|PlaguedNestMaster|Dungeon Bonuses|Plagued Nest|Plagued Nest Master|4000|0|repeatable|Complete Plagued Nest 100 times
+  needs|Plagued Nest|100
+bonus|TavernScout|Dungeon Bonuses|The Tavern|Tavern Scout|150|0||Complete The Tavern 1 time
+  needs|The Tavern|1
+bonus|TavernExplorer|Dungeon Bonuses|The Tavern|Tavern Explorer|300|0||Complete The Tavern 10 times
+  needs|The Tavern|10
+bonus|TavernAdventurer|Dungeon Bonuses|The Tavern|Tavern Adventurer|600|0||Complete The Tavern 20 times
+  needs|The Tavern|20
+bonus|TavernConqueror|Dungeon Bonuses|The Tavern|Tavern Conqueror|1200|0||Complete The Tavern 40 times
+  needs|The Tavern|40
+bonus|TavernMaster|Dungeon Bonuses|The Tavern|Tavern Master|3000|0|repeatable|Complete The Tavern 100 times
+  needs|The Tavern|100
+bonus|QueenBunnyScout|Dungeon Bonuses|Queen Bunny Chamber|Queen Bunny Chamber Scout|5|0||Complete Queen Bunny Chamber 1 time
+  needs|Queen Bunny Chamber|1
+bonus|QueenBunnyExplorer|Dungeon Bonuses|Queen Bunny Chamber|Queen Bunny Chamber Explorer|10|0||Complete Queen Bunny Chamber 10 times
+  needs|Queen Bunny Chamber|10
+bonus|QueenBunnyAdventurer|Dungeon Bonuses|Queen Bunny Chamber|Queen Bunny Chamber Adventurer|20|0||Complete Queen Bunny Chamber 20 times
+  needs|Queen Bunny Chamber|20
+bonus|QueenBunnyConqueror|Dungeon Bonuses|Queen Bunny Chamber|Queen Bunny Chamber Conqueror|40|0||Complete Queen Bunny Chamber 40 times
+  needs|Queen Bunny Chamber|40
+bonus|QueenBunnyMaster|Dungeon Bonuses|Queen Bunny Chamber|Queen Bunny Chamber Master|100|0|repeatable|Complete Queen Bunny Chamber 100 times
+  needs|Queen Bunny Chamber|100
+bonus|SpectralPenitentiaryScout|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Scout|300|0||Complete Spectral Penitentiary 1 time
+  needs|Spectral Penitentiary|1
+bonus|BeachFoe|Enemy Bonuses|Beach Kills|Beach Foe|20|0||Kill 200 Beach Enemies
+  needs|Beach|200
+bonus|SpectralPenitentiaryExplorer|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Explorer|600|0||Complete Spectral Penitentiary 10 times
+  needs|Spectral Penitentiary|10
+bonus|BeachAdversary|Enemy Bonuses|Beach Kills|Beach Adversary|100|0||Kill 1000 Beach Enemies
+  needs|Beach|100
+bonus|SpectralPenitentiaryAdventurer|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Adventurer|1200|0||Complete Spectral Penitentiary 20 times
+  needs|Spectral Penitentiary|20
+bonus|BeachSlayer|Enemy Bonuses|Beach Kills|Beach Slayer|400|0||Kill 5000 Beach Enemies
+  needs|Beach|5000
+bonus|SpectralPenitentiaryConqueror|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Conqueror|2400|0||Complete Spectral Penitentiary 40 times
+  needs|Spectral Penitentiary|40
+bonus|BeachSlaughterer|Enemy Bonuses|Beach Kills|Beach Slaughterer|1000|0||Kill 10000 Beach Enemies
+  needs|Beach|1000
+bonus|SpectralPenitentiaryMaster|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Master|6000|0|repeatable|Complete Spectral Penitentiary 100 times
+  needs|Spectral Penitentiary|100
+bonus|BeachNemesis|Enemy Bonuses|Beach Kills|Beach Nemesis|2500|0|repeatable|Kill 50000 Beach Enemies
+  needs|Beach|50000
+bonus|Undead ForestNemesis|Enemy Bonuses|Undead Forest Kills|Undead Forest Nemesis|2500|0|repeatable|Kill 50000 Undead Forest Enemies
+  needs|Undead Forest|50000
+bonus|ForestFoe|Enemy Bonuses|Forest Kills|Forest Foe|20|0||Kill 200 Forest Enemies
+  needs|Forest|200
+bonus|ForestAdversary|Enemy Bonuses|Forest Kills|Forest Adversary|100|0||Kill 1000 Forest Enemies
+  needs|Forest|100
+bonus|ForestSlayer|Enemy Bonuses|Forest Kills|Forest Slayer|400|0||Kill 5000 Forest Enemies
+  needs|Forest|5000
+bonus|ForestSlaughterer|Enemy Bonuses|Forest Kills|Forest Slaughterer|1000|0||Kill 10000 Forest Enemies
+  needs|Forest|1000
+bonus|ForestNemesis|Enemy Bonuses|Forest Kills|Forest Nemesis|2500|0|repeatable|Kill 50000 Forest Enemies
+  needs|Forest|50000
+bonus|DesertFoe|Enemy Bonuses|Desert Kills|Desert Foe|20|0||Kill 200 Desert Enemies
+  needs|Desert|200
+bonus|DesertAdversary|Enemy Bonuses|Desert Kills|Desert Adversary|100|0||Kill 1000 Desert Enemies
+  needs|Desert|100
+bonus|DesertSlayer|Enemy Bonuses|Desert Kills|Desert Slayer|400|0||Kill 5000 Desert Enemies
+  needs|Desert|5000
+bonus|DesertSlaughterer|Enemy Bonuses|Desert Kills|Desert Slaughterer|1000|0||Kill 10000 Desert Enemies
+  needs|Desert|1000
+bonus|DesertNemesis|Enemy Bonuses|Desert Kills|Desert Nemesis|2500|0|repeatable|Kill 50000 Desert Enemies
+  needs|Desert|50000
+bonus|PlainsFoe|Enemy Bonuses|Plains Kills|Plains Foe|20|0||Kill 200 Plains Enemies
+  needs|Plains|200
+bonus|PlainsAdversary|Enemy Bonuses|Plains Kills|Plains Adversary|100|0||Kill 1000 Plains Enemies
+  needs|Plains|100
+bonus|PlainsSlayer|Enemy Bonuses|Plains Kills|Plains Slayer|400|0||Kill 5000 Plains Enemies
+  needs|Plains|5000
+bonus|PlainsSlaughterer|Enemy Bonuses|Plains Kills|Plains Slaughterer|1000|0||Kill 10000 Plains Enemies
+  needs|Plains|1000
+bonus|PlainsNemesis|Enemy Bonuses|Plains Kills|Plains Nemesis|2500|0|repeatable|Kill 50000 Plains Enemies
+  needs|Plains|50000
+bonus|WitherFoe|Enemy Bonuses|Wither Kills|Wither Foe|20|0||Kill 200 Wither Enemies
+  needs|Wither|200
+bonus|WitherAdversary|Enemy Bonuses|Wither Kills|Wither Adversary|100|0||Kill 1000 Wither Enemies
+  needs|Wither|100
+bonus|WitherSlayer|Enemy Bonuses|Wither Kills|Wither Slayer|400|0||Kill 5000 Wither Enemies
+  needs|Wither|5000
+bonus|WitherSlaughterer|Enemy Bonuses|Wither Kills|Wither Slaughterer|1000|0||Kill 10000 Wither Enemies
+  needs|Wither|1000
+bonus|WitherNemesis|Enemy Bonuses|Wither Kills|Wither Nemesis|2500|0|repeatable|Kill 50000 Wither Enemies
+  needs|Wither|50000
+bonus|Dark ForestFoe|Enemy Bonuses|Dark Forest Kills|Dark Forest Foe|20|0||Kill 200 Dark Forest Enemies
+  needs|Dark Forest|200
+bonus|Dark ForestAdversary|Enemy Bonuses|Dark Forest Kills|Dark Forest Adversary|100|0||Kill 1000 Dark Forest Enemies
+  needs|Dark Forest|100
+bonus|Dark ForestSlayer|Enemy Bonuses|Dark Forest Kills|Dark Forest Slayer|400|0||Kill 5000 Dark Forest Enemies
+  needs|Dark Forest|5000
+bonus|Dark ForestSlaughterer|Enemy Bonuses|Dark Forest Kills|Dark Forest Slaughterer|1000|0||Kill 10000 Dark Forest Enemies
+  needs|Dark Forest|1000
+bonus|Dark ForestNemesis|Enemy Bonuses|Dark Forest Kills|Dark Forest Nemesis|2500|0|repeatable|Kill 50000 Dark Forest Enemies
+  needs|Dark Forest|50000
+bonus|Coral ReefsFoe|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Foe|20|0||Kill 200 Coral Reefs Enemies
+  needs|Coral Reefs|200
+bonus|Coral ReefsAdversary|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Adversary|100|0||Kill 1000 Coral Reefs Enemies
+  needs|Coral Reefs|100
+bonus|Coral ReefsSlayer|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Slayer|400|0||Kill 5000 Coral Reefs Enemies
+  needs|Coral Reefs|5000
+bonus|Coral ReefsSlaughterer|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Slaughterer|1000|0||Kill 10000 Coral Reefs Enemies
+  needs|Coral Reefs|1000
+bonus|Coral ReefsNemesis|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Nemesis|2500|0|repeatable|Kill 50000 Coral Reefs Enemies
+  needs|Coral Reefs|50000
+bonus|Sprite ForestFoe|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Foe|20|0||Kill 200 Sprite Forest Enemies
+  needs|Sprite Forest|200
+bonus|Sprite ForestAdversary|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Adversary|100|0||Kill 1000 Sprite Forest Enemies
+  needs|Sprite Forest|100
+bonus|Sprite ForestSlayer|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Slayer|400|0||Kill 5000 Sprite Forest Enemies
+  needs|Sprite Forest|5000
+bonus|Sprite ForestSlaughterer|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Slaughterer|1000|0||Kill 10000 Sprite Forest Enemies
+  needs|Sprite Forest|1000
+bonus|Sprite ForestNemesis|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Nemesis|2500|0|repeatable|Kill 50000 Sprite Forest Enemies
+  needs|Sprite Forest|50000
+bonus|Haunted HallowsFoe|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Foe|20|0||Kill 200 Haunted Hallows Enemies
+  needs|Haunted Hallows|200
+bonus|Haunted HallowsAdversary|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Adversary|100|0||Kill 1000 Haunted Hallows Enemies
+  needs|Haunted Hallows|100
+bonus|Haunted HallowsSlayer|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Slayer|400|0||Kill 5000 Haunted Hallows Enemies
+  needs|Haunted Hallows|5000
+bonus|Haunted HallowsSlaughterer|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Slaughterer|1000|0||Kill 10000 Haunted Hallows Enemies
+  needs|Haunted Hallows|1000
+bonus|Haunted HallowsNemesis|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Nemesis|2500|0|repeatable|Kill 50000 Haunted Hallows Enemies
+  needs|Haunted Hallows|50000
+bonus|Shipwreck CoveFoe|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Foe|20|0||Kill 200 Shipwreck Cove Enemies
+  needs|Shipwreck Cove|200
+bonus|Shipwreck CoveAdversary|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Adversary|100|0||Kill 1000 Shipwreck Cove Enemies
+  needs|Shipwreck Cove|100
+bonus|Shipwreck CoveSlayer|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Slayer|400|0||Kill 5000 Shipwreck Cove Enemies
+  needs|Shipwreck Cove|5000
+bonus|Shipwreck CoveSlaughterer|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Slaughterer|1000|0||Kill 10000 Shipwreck Cove Enemies
+  needs|Shipwreck Cove|1000
+bonus|Shipwreck CoveNemesis|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Nemesis|2500|0|repeatable|Kill 50000 Shipwreck Cove Enemies
+  needs|Shipwreck Cove|50000
+bonus|Dead ChurchFoe|Enemy Bonuses|Dead Church Kills|Dead Church Foe|20|0||Kill 200 Dead Church Enemies
+  needs|Dead Church|200
+bonus|Dead ChurchAdversary|Enemy Bonuses|Dead Church Kills|Dead Church Adversary|100|0||Kill 1000 Dead Church Enemies
+  needs|Dead Church|100
+bonus|Dead ChurchSlayer|Enemy Bonuses|Dead Church Kills|Dead Church Slayer|400|0||Kill 5000 Dead Church Enemies
+  needs|Dead Church|5000
+bonus|Dead ChurchSlaughterer|Enemy Bonuses|Dead Church Kills|Dead Church Slaughterer|1000|0||Kill 10000 Dead Church Enemies
+  needs|Dead Church|1000
+bonus|Dead ChurchNemesis|Enemy Bonuses|Dead Church Kills|Dead Church Nemesis|2500|0|repeatable|Kill 50000 Dead Church Enemies
+  needs|Dead Church|50000
+bonus|Risen HellFoe|Enemy Bonuses|Risen Hell Kills|Risen Hell Foe|20|0||Kill 200 Risen Hell Enemies
+  needs|Risen Hell|200
+bonus|Risen HellAdversary|Enemy Bonuses|Risen Hell Kills|Risen Hell Adversary|100|0||Kill 1000 Risen Hell Enemies
+  needs|Risen Hell|100
+bonus|Risen HellSlayer|Enemy Bonuses|Risen Hell Kills|Risen Hell Slayer|400|0||Kill 5000 Risen Hell Enemies
+  needs|Risen Hell|5000
+bonus|Risen HellSlaughterer|Enemy Bonuses|Risen Hell Kills|Risen Hell Slaughterer|1000|0||Kill 10000 Risen Hell Enemies
+  needs|Risen Hell|1000
+bonus|Risen HellNemesis|Enemy Bonuses|Risen Hell Kills|Risen Hell Nemesis|2500|0|repeatable|Kill 50000 Risen Hell Enemies
+  needs|Risen Hell|50000
+bonus|Abandoned CityFoe|Enemy Bonuses|Abandoned City Kills|Abandoned City Foe|20|0||Kill 200 Abandoned City Enemies
+  needs|Abandoned City|200
+bonus|Abandoned CityAdversary|Enemy Bonuses|Abandoned City Kills|Abandoned City Adversary|100|0||Kill 1000 Abandoned City Enemies
+  needs|Abandoned City|100
+bonus|Abandoned CitySlayer|Enemy Bonuses|Abandoned City Kills|Abandoned City Slayer|400|0||Kill 5000 Abandoned City Enemies
+  needs|Abandoned City|5000
+bonus|Abandoned CitySlaughterer|Enemy Bonuses|Abandoned City Kills|Abandoned City Slaughterer|1000|0||Kill 10000 Abandoned City Enemies
+  needs|Abandoned City|1000
+bonus|Abandoned CityNemesis|Enemy Bonuses|Abandoned City Kills|Abandoned City Nemesis|2500|0|repeatable|Kill 50000 Abandoned City Enemies
+  needs|Abandoned City|50000
+bonus|Deep Sea AbyssFoe|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Foe|20|0||Kill 200 Deep Sea Abyss Enemies
+  needs|Deep Sea Abyss|200
+bonus|Deep Sea AbyssAdversary|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Adversary|100|0||Kill 1000 Deep Sea Abyss Enemies
+  needs|Deep Sea Abyss|100
+bonus|Deep Sea AbyssSlayer|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Slayer|400|0||Kill 5000 Deep Sea Abyss Enemies
+  needs|Deep Sea Abyss|5000
+bonus|Deep Sea AbyssSlaughterer|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Slaughterer|1000|0||Kill 10000 Deep Sea Abyss Enemies
+  needs|Deep Sea Abyss|1000
+bonus|Deep Sea AbyssNemesis|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Nemesis|2500|0|repeatable|Kill 50000 Deep Sea Abyss Enemies
+  needs|Deep Sea Abyss|50000
+bonus|CarboniferousFoe|Enemy Bonuses|Carboniferous Kills|Carboniferous Foe|20|0||Kill 200 Carboniferous Enemies
+  needs|Carboniferous|200
+bonus|CarboniferousAdversary|Enemy Bonuses|Carboniferous Kills|Carboniferous Adversary|100|0||Kill 1000 Carboniferous Enemies
+  needs|Carboniferous|100
+bonus|CarboniferousSlayer|Enemy Bonuses|Carboniferous Kills|Carboniferous Slayer|400|0||Kill 5000 Carboniferous Enemies
+  needs|Carboniferous|5000
+bonus|CarboniferousSlaughterer|Enemy Bonuses|Carboniferous Kills|Carboniferous Slaughterer|1000|0||Kill 10000 Carboniferous Enemies
+  needs|Carboniferous|1000
+bonus|CarboniferousNemesis|Enemy Bonuses|Carboniferous Kills|Carboniferous Nemesis|2500|0|repeatable|Kill 50000 Carboniferous Enemies
+  needs|Carboniferous|50000
+bonus|Floral EscapeFoe|Enemy Bonuses|Floral Escape Kills|Floral Escape Foe|20|0||Kill 200 Floral Escape Enemies
+  needs|Floral Escape|200
+bonus|Floral EscapeAdversary|Enemy Bonuses|Floral Escape Kills|Floral Escape Adversary|100|0||Kill 1000 Floral Escape Enemies
+  needs|Floral Escape|100
+bonus|Floral EscapeSlayer|Enemy Bonuses|Floral Escape Kills|Floral Escape Slayer|400|0||Kill 5000 Floral Escape Enemies
+  needs|Floral Escape|5000
+bonus|Floral EscapeSlaughterer|Enemy Bonuses|Floral Escape Kills|Floral Escape Slaughterer|1000|0||Kill 10000 Floral Escape Enemies
+  needs|Floral Escape|1000
+bonus|Floral EscapeNemesis|Enemy Bonuses|Floral Escape Kills|Floral Escape Nemesis|2500|0|repeatable|Kill 50000 Floral Escape Enemies
+  needs|Floral Escape|50000
+bonus|Sanguine ForestFoe|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Foe|20|0||Kill 200 Sanguine Forest Enemies
+  needs|Sanguine Forest|200
+bonus|Sanguine ForestAdversary|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Adversary|100|0||Kill 1000 Sanguine Forest Enemies
+  needs|Sanguine Forest|100
+bonus|Sanguine ForestSlayer|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Slayer|400|0||Kill 5000 Sanguine Forest Enemies
+  needs|Sanguine Forest|5000
+bonus|Sanguine ForestSlaughterer|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Slaughterer|1000|0||Kill 10000 Sanguine Forest Enemies
+  needs|Sanguine Forest|1000
+bonus|Sanguine ForestNemesis|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Nemesis|2500|0|repeatable|Kill 50000 Sanguine Forest Enemies
+  needs|Sanguine Forest|50000
+bonus|Runic TundraFoe|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Foe|20|0||Kill 200 Runic Tundra Enemies
+  needs|Runic Tundra|200
+bonus|Runic TundraAdversary|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Adversary|100|0||Kill 1000 Runic Tundra Enemies
+  needs|Runic Tundra|100
+bonus|Runic TundraSlayer|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Slayer|400|0||Kill 5000 Runic Tundra Enemies
+  needs|Runic Tundra|5000
+bonus|Runic TundraSlaughterer|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Slaughterer|1000|0||Kill 10000 Runic Tundra Enemies
+  needs|Runic Tundra|1000
+bonus|Runic TundraNemesis|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Nemesis|2500|0|repeatable|Kill 50000 Runic Tundra Enemies
+  needs|Runic Tundra|50000
+bonus|Undead ForestFoe|Enemy Bonuses|Undead Forest Kills|Undead Forest Foe|20|0||Kill 200 Undead Forest Enemies
+  needs|Undead Forest|200
+bonus|Undead ForestAdversary|Enemy Bonuses|Undead Forest Kills|Undead Forest Adversary|100|0||Kill 1000 Undead Forest Enemies
+  needs|Undead Forest|100
+bonus|Undead ForestSlayer|Enemy Bonuses|Undead Forest Kills|Undead Forest Slayer|400|0||Kill 5000 Undead Forest Enemies
+  needs|Undead Forest|5000
+bonus|Undead ForestSlaughterer|Enemy Bonuses|Undead Forest Kills|Undead Forest Slaughterer|1000|0||Kill 10000 Undead Forest Enemies
+  needs|Undead Forest|1000
+bonus|RuinsFoe|Enemy Bonuses|Ruins Kills|Ruins Foe|20|0||Kill 200 Ruins Enemies
+  needs|Ruins|200
+bonus|RuinsAdversary|Enemy Bonuses|Ruins Kills|Ruins Adversary|100|0||Kill 1000 Ruins Enemies
+  needs|Ruins|100
+bonus|RuinsSlayer|Enemy Bonuses|Ruins Kills|Ruins Slayer|400|0||Kill 5000 Ruins Enemies
+  needs|Ruins|5000
+bonus|RuinsSlaughterer|Enemy Bonuses|Ruins Kills|Ruins Slaughterer|1000|0||Kill 10000 Ruins Enemies
+  needs|Ruins|1000
+bonus|RuinsNemesis|Enemy Bonuses|Ruins Kills|Ruins Nemesis|2500|0|repeatable|Kill 50000 Ruins Enemies
+  needs|Ruins|50000
+bonus|HeroicUndeadLairScout|Dungeon Bonuses|Heroic Undead Lair|Heroic Undead Lair Scout|150|0||Complete Heroic Undead Lair 1 time
+  needs|Heroic Undead Lair|1
+bonus|HeroicUndeadLairExplorer|Dungeon Bonuses|Heroic Undead Lair|Heroic Undead Lair Explorer|300|0||Complete Heroic Undead Lair 10 times
+  needs|Heroic Undead Lair|10
+bonus|HeroicUndeadLairAdventurer|Dungeon Bonuses|Heroic Undead Lair|Heroic Undead Lair Adventurer|600|0||Complete Heroic Undead Lair 20 times
+  needs|Heroic Undead Lair|20
+bonus|HeroicUndeadLairConqueror|Dungeon Bonuses|Heroic Undead Lair|Heroic Undead Lair Conqueror|1200|0||Complete Heroic Undead Lair 40 times
+  needs|Heroic Undead Lair|40
+bonus|HeroicUndeadLairMaster|Dungeon Bonuses|Heroic Undead Lair|Heroic Undead Lair Master|3000|0|repeatable|Complete Heroic Undead Lair 100 times
+  needs|Heroic Undead Lair|100
+bonus|InfernalAbyssOfDemonsScout|Dungeon Bonuses|Infernal Abyss of Demons|Infernal Abyss of Demons Scout|150|0||Complete Infernal Abyss of Demons 1 time
+  needs|Infernal Abyss of Demons|1
+bonus|InfernalAbyssOfDemonsExplorer|Dungeon Bonuses|Infernal Abyss of Demons|Infernal Abyss of Demons Explorer|300|0||Complete Infernal Abyss of Demons 10 times
+  needs|Infernal Abyss of Demons|10
+bonus|InfernalAbyssOfDemonsAdventurer|Dungeon Bonuses|Infernal Abyss of Demons|Infernal Abyss of Demons Adventurer|600|0||Complete Infernal Abyss of Demons 20 times
+  needs|Infernal Abyss of Demons|20
+bonus|InfernalAbyssOfDemonsConqueror|Dungeon Bonuses|Infernal Abyss of Demons|Infernal Abyss of Demons Conqueror|1200|0||Complete Infernal Abyss of Demons 40 times
+  needs|Infernal Abyss of Demons|40
+bonus|InfernalAbyssOfDemonsMaster|Dungeon Bonuses|Infernal Abyss of Demons|Infernal Abyss of Demons Master|3000|0|repeatable|Complete Infernal Abyss of Demons 100 times
+  needs|Infernal Abyss of Demons|100
+bonus|StromwellsRiftIScout|Dungeon Bonuses|Stromwell's Rift I|Stromwell's Rift I Scout|150|0||Complete Stromwell's Rift I 1 time
+  needs|Stromwell's Rift I|1
+bonus|StromwellsRiftIExplorer|Dungeon Bonuses|Stromwell's Rift I|Stromwell's Rift I Explorer|300|0||Complete Stromwell's Rift I 10 times
+  needs|Stromwell's Rift I|10
+bonus|StromwellsRiftIAdventurer|Dungeon Bonuses|Stromwell's Rift I|Stromwell's Rift I Adventurer|600|0||Complete Stromwell's Rift I 20 times
+  needs|Stromwell's Rift I|20
+bonus|StromwellsRiftIConqueror|Dungeon Bonuses|Stromwell's Rift I|Stromwell's Rift I Conqueror|1200|0||Complete Stromwell's Rift I 40 times
+  needs|Stromwell's Rift I|40
+bonus|StromwellsRiftIMaster|Dungeon Bonuses|Stromwell's Rift I|Stromwell's Rift I Master|3000|0|repeatable|Complete Stromwell's Rift I 100 times
+  needs|Stromwell's Rift I|100
+bonus|StromwellsRiftIIScout|Dungeon Bonuses|Stromwell's Rift II|Stromwell's Rift II Scout|150|0||Complete Stromwell's Rift II 1 time
+  needs|Stromwell's Rift II|1
+bonus|StromwellsRiftIIScoutExplorer|Dungeon Bonuses|Stromwell's Rift II|Stromwell's Rift II Explorer|300|0||Complete Stromwell's Rift II 10 times
+  needs|Stromwell's Rift II|10
+bonus|StromwellsRiftIIScoutAdventurer|Dungeon Bonuses|Stromwell's Rift II|Stromwell's Rift II Adventurer|600|0||Complete Stromwell's Rift II 20 times
+  needs|Stromwell's Rift II|20
+bonus|StromwellsRiftIIScoutConqueror|Dungeon Bonuses|Stromwell's Rift II|Stromwell's Rift II Conqueror|1200|0||Complete Stromwell's Rift II 40 times
+  needs|Stromwell's Rift II|40
+bonus|StromwellsRiftIIScoutMaster|Dungeon Bonuses|Stromwell's Rift II|Stromwell's Rift II Master|3000|0|repeatable|Complete Stromwell's Rift II 100 times
+  needs|Stromwell's Rift II|100
+bonus|StromwellsRiftIIIScout|Dungeon Bonuses|Stromwell's Rift III|Stromwell's Rift III Scout|150|0||Complete Stromwell's Rift III 1 time
+  needs|Stromwell's Rift III|1
+bonus|StromwellsRiftIIIScoutExplorer|Dungeon Bonuses|Stromwell's Rift III|Stromwell's Rift III Explorer|300|0||Complete Stromwell's Rift III 10 times
+  needs|Stromwell's Rift III|10
+bonus|StromwellsRiftIIIScoutAdventurer|Dungeon Bonuses|Stromwell's Rift III|Stromwell's Rift III Adventurer|600|0||Complete Stromwell's Rift III 20 times
+  needs|Stromwell's Rift III|20
+bonus|StromwellsRiftIIIScoutConqueror|Dungeon Bonuses|Stromwell's Rift III|Stromwell's Rift III Conqueror|1200|0||Complete Stromwell's Rift III 40 times
+  needs|Stromwell's Rift III|40
+bonus|StromwellsRiftIIIScoutMaster|Dungeon Bonuses|Stromwell's Rift III|Stromwell's Rift III Master|3000|0|repeatable|Complete Stromwell's Rift III 100 times
+  needs|Stromwell's Rift III|100
+bonus|FartherOut|Dungeon Bonuses|Dungeon Collection|Farther Out|3000|7.5||Complete 1 time: Neo Alien dungeons
+  needs|Neo Malogia|1
+  needs|Neo Untaris|1
+  needs|Neo Forax|1
+  needs|Neo Katalund|1
+bonus|NeoMalogiaScout|Dungeon Bonuses|Neo Malogia|Neo Malogia Scout|200|0||Complete Neo Malogia 1 time
+  needs|Neo Malogia|1
+bonus|NeoMalogiaExplorer|Dungeon Bonuses|Neo Malogia|Neo Malogia Explorer|400|0||Complete Neo Malogia 10 times
+  needs|Neo Malogia|10
+bonus|NeoMalogiaAdventurer|Dungeon Bonuses|Neo Malogia|Neo Malogia Adventurer|800|0||Complete Neo Malogia 20 times
+  needs|Neo Malogia|20
+bonus|NeoMalogiaConqueror|Dungeon Bonuses|Neo Malogia|Neo Malogia Conqueror|1600|0||Complete Neo Malogia 40 times
+  needs|Neo Malogia|40
+bonus|NeoMalogiaMaster|Dungeon Bonuses|Neo Malogia|Neo Malogia Master|4000|0|repeatable|Complete Neo Malogia 100 times
+  needs|Neo Malogia|100
+bonus|NeoUntarisScout|Dungeon Bonuses|Neo Untaris|Neo Untaris Scout|200|0||Complete Neo Untaris 1 time
+  needs|Neo Untaris|1
+bonus|NeoUntarisExplorer|Dungeon Bonuses|Neo Untaris|Neo Untaris Explorer|400|0||Complete Neo Untaris 10 times
+  needs|Neo Untaris|10
+bonus|NeoUntarisAdventurer|Dungeon Bonuses|Neo Untaris|Neo Untaris Adventurer|800|0||Complete Neo Untaris 20 times
+  needs|Neo Untaris|20
+bonus|NeoUntarisConqueror|Dungeon Bonuses|Neo Untaris|Neo Untaris Conqueror|1600|0||Complete Neo Untaris 40 times
+  needs|Neo Untaris|40
+bonus|NeoUntarisMaster|Dungeon Bonuses|Neo Untaris|Neo Untaris Master|4000|0|repeatable|Complete Neo Untaris 100 times
+  needs|Neo Untaris|100
+bonus|NeoForaxScout|Dungeon Bonuses|Neo Forax|Neo Forax Scout|200|0||Complete Neo Forax 1 time
+  needs|Neo Forax|1
+bonus|NeoForaxExplorer|Dungeon Bonuses|Neo Forax|Neo Forax Explorer|400|0||Complete Neo Forax 10 times
+  needs|Neo Forax|10
+bonus|NeoForaxAdventurer|Dungeon Bonuses|Neo Forax|Neo Forax Adventurer|800|0||Complete Neo Forax 20 times
+  needs|Neo Forax|20
+bonus|NeoForaxConqueror|Dungeon Bonuses|Neo Forax|Neo Forax Conqueror|1600|0||Complete Neo Forax 40 times
+  needs|Neo Forax|40
+bonus|NeoForaxMaster|Dungeon Bonuses|Neo Forax|Neo Forax Master|4000|0|repeatable|Complete Neo Forax 100 times
+  needs|Neo Forax|100
+bonus|NeoKatalundScout|Dungeon Bonuses|Neo Katalund|Neo Katalund Scout|200|0||Complete Neo Katalund 1 time
+  needs|Neo Katalund|1
+bonus|NeoKatalundExplorer|Dungeon Bonuses|Neo Katalund|Neo Katalund Explorer|400|0||Complete Neo Katalund 10 times
+  needs|Neo Katalund|10
+bonus|NeoKatalundAdventurer|Dungeon Bonuses|Neo Katalund|Neo Katalund Adventurer|800|0||Complete Neo Katalund 20 times
+  needs|Neo Katalund|20
+bonus|NeoKatalundConqueror|Dungeon Bonuses|Neo Katalund|Neo Katalund Conqueror|1600|0||Complete Neo Katalund 40 times
+  needs|Neo Katalund|40
+bonus|NeoKatalundMaster|Dungeon Bonuses|Neo Katalund|Neo Katalund Master|4000|0|repeatable|Complete Neo Katalund 100 times
+  needs|Neo Katalund|100
