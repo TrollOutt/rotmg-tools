@@ -411,6 +411,7 @@ var FamePage = (function () {
             count(EnchantFame.firstCompletion(dungeon))} fame the first time${difficultyOf(dungeon.name)
             ? `, rated ${difficultyOf(dungeon.name)} out of 10` : ''}">
           ${tile(dungeon.name, 'fame-tile-art')}
+          <span class="fame-tile-name">${html(dungeon.name)}</span>
           <span class="fame-tile-check">✓</span>
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>', signature);

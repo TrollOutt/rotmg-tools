@@ -1175,7 +1175,7 @@ table.mini td { padding: 3px 8px; border: 0; }
   font: inherit; color: var(--text); cursor: pointer; text-align: center;
   background: rgba(19, 18, 27, .6); border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: calc(var(--tile, 104px) * .07);
+  padding: calc(var(--tile, 104px) * .06) calc(var(--tile, 104px) * .045);
   /* Picking a collection moves the highlight across a grid that stays put, so
      the glow arrives and leaves rather than being redrawn. */
   transition: border-color .26s ease, box-shadow .26s ease, background .26s ease,
@@ -1183,20 +1183,25 @@ table.mini td { padding: 3px 8px; border: 0; }
 }
 .fame-tile:hover { border-color: var(--accent); background: rgba(38, 34, 51, .8); }
 /*
- * The portal, and nothing else.
+ * The portal, with its name under it.
  *
- * The name and the fame were both printed here once, and both had to go: the
- * name made every tile as tall as its longest word could wrap — "Cave of A
- * Thousand Treasures" over three lines — so rows grew as fast as tiles shrank
- * and the grid could never be made to fit. What is left is the thing a player
- * actually recognises, at nearly the full width of its tile. The name, the
- * fame and the rating are all on the tile's title, and the search box still
- * takes a name.
+ * The name is held to one line and cut with an ellipsis, which is the whole
+ * trick: wrapped, it made every tile as tall as its longest word needed —
+ * "Cave of A Thousand Treasures" over three lines — so on a short window the
+ * rows grew as fast as the tiles shrank and fitGrid() could never converge.
+ * One line is a known height, so the search always terminates. The name in
+ * full, the fame and the rating are on the tile's title.
  */
 .fame-tile-art {
-  width: calc(var(--tile, 104px) * .76); height: calc(var(--tile, 104px) * .76);
+  width: calc(var(--tile, 104px) * .62); height: calc(var(--tile, 104px) * .62);
   object-fit: contain; image-rendering: pixelated;
 }
+.fame-tile-name {
+  max-width: 100%; font-size: max(8.5px, calc(var(--tile, 104px) * .105));
+  line-height: 1.25; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fame-tile.is-wanted .fame-tile-name { color: var(--text); }
 .fame-tile-art.no-art { background: rgba(255, 255, 255, .05); border-radius: 6px; }
 /* Always in the markup, shown only when it is true: a tick that is added to
    the page cannot fade in, and this one is on a tile that is not rebuilt. */
@@ -3681,6 +3686,7 @@ var FamePage = (function () {
             count(EnchantFame.firstCompletion(dungeon))} fame the first time${difficultyOf(dungeon.name)
             ? `, rated ${difficultyOf(dungeon.name)} out of 10` : ''}">
           ${tile(dungeon.name, 'fame-tile-art')}
+          <span class="fame-tile-name">${html(dungeon.name)}</span>
           <span class="fame-tile-check">✓</span>
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>', signature);
