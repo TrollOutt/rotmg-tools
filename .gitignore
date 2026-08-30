@@ -11,3 +11,6 @@ ANONYMITY.md
 # DECA's, it is large, and it is reproducible from any client in seconds, so it
 # is read where it sits rather than copied into a public repository.
 client-data/
+
+# Local bytecode created by the optional Realm animation generator.
+tools/__pycache__/

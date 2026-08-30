@@ -26,8 +26,14 @@ const DEFAULT_CLIENTS = [
 
 function findClient(given) {
   for (const base of given ? [given] : DEFAULT_CLIENTS) {
-    const assets = path.join(base, 'RotMG Exalt_Data', 'resources.assets');
-    if (fs.existsSync(assets)) return { base, assets };
+    // Steam's current launcher calls this folder "RotMG Exalt Launcher_Data";
+    // older installations used the shorter Exalt name.  The resources file is
+    // the same, so accept both rather than making the caller point at an
+    // internal Unity folder.
+    for (const folder of ['RotMG Exalt_Data', 'RotMG Exalt Launcher_Data', 'Realm of the Mad God Exalt_Data', '']) {
+      const assets = path.join(base, folder, 'resources.assets');
+      if (fs.existsSync(assets)) return { base, assets };
+    }
   }
   return null;
 }

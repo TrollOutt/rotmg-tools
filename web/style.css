@@ -1051,6 +1051,56 @@ table.mini td { padding: 3px 8px; border: 0; }
 .home-card-art[data-art^="Page Art"] {
   animation: enchanting 4.4s ease-in-out infinite;
 }
+
+.realm-card-glyph {
+  display: grid; place-items: center;
+  background: radial-gradient(circle, rgba(108, 207, 236, .48), rgba(42, 69, 112, .2) 48%, transparent 70%);
+  color: #e8d6a0; font-size: 46px; text-shadow: 0 0 18px #61c7e8;
+}
+
+/* ---------------- Realm Atlas ---------------- */
+
+.realm-head { margin-bottom: 14px; }
+.realm-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 16px; align-items: stretch; min-height: min(720px, calc(100vh - 180px)); }
+.realm-stage, .realm-details {
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  background: linear-gradient(180deg, rgba(26, 24, 36, .82), rgba(13, 16, 27, .92));
+  box-shadow: inset 0 1px 0 rgba(236, 231, 220, .06), 0 2px 18px rgba(0, 0, 0, .38);
+}
+.realm-stage { position: relative; min-height: 510px; touch-action: none; }
+#realmCanvas { display: block; width: 100%; height: 100%; cursor: grab; }
+#realmCanvas:active { cursor: grabbing; }
+.realm-map-controls { position: absolute; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: calc(100% - 24px); pointer-events: none; }
+.realm-map-controls > * { pointer-events: auto; }
+.realm-map-key { padding: 4px 8px; background: rgba(15, 16, 25, .82); border: 1px solid rgba(161, 179, 202, .22); border-radius: 999px; color: var(--muted); font-size: 11px; }
+.realm-map-key i { display: inline-block; vertical-align: -1px; margin-right: 4px; }
+.realm-key-beacon { width: 8px; height: 10px; background: #8fe07a; clip-path: polygon(50% 0, 100% 100%, 50% 75%, 0 100%); }
+.realm-key-encounter { width: 8px; height: 8px; background: #eea3da; border-radius: 50%; }
+.realm-details { padding: 22px; overflow: auto; }
+.realm-details h2 { margin: 2px 0 10px; color: #f6ecd2; font-size: 25px; line-height: 1.1; }
+.realm-details h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 24px 0 8px; color: var(--text); font-size: 13px; letter-spacing: .4px; text-transform: uppercase; }
+.realm-details h3 span { color: var(--dim); font-size: 11px; font-weight: 500; }
+.realm-details p { margin: 0; color: var(--muted); font-size: 13px; }
+.realm-kicker { color: var(--accent); font-size: 11px; letter-spacing: 1.2px; font-weight: 700; text-transform: uppercase; }
+.realm-chance { margin-top: 12px !important; padding: 8px 10px; border: 1px solid rgba(121, 197, 232, .28); background: rgba(121, 197, 232, .08); color: #b9dcf0 !important; border-radius: var(--radius-sm); }
+.realm-threats { margin-top: 10px !important; color: #edb7d7 !important; font-size: 12px !important; }
+.realm-threat { color: #dc9fc5 !important; }
+.realm-stat { display: flex; align-items: baseline; gap: 8px; margin-top: 18px; padding: 12px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.realm-stat b { color: #f6ecd2; font: 600 28px/1 var(--mono); }
+.realm-stat span { color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .8px; }
+.realm-monsters { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line-soft); }
+.realm-monsters li { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.realm-monster { display: flex; align-items: center; gap: 10px; min-height: 42px; }
+.realm-monster-art { width: 34px; height: 34px; object-fit: contain; image-rendering: pixelated; flex: none; }
+.realm-monster-art.is-animated { filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .35)); }
+.realm-monsters b { display: block; color: var(--text); font-size: 13px; font-weight: 600; }
+.realm-monsters small { display: block; margin-top: 2px; color: var(--dim); font-size: 11px; }
+
+@media (max-width: 940px) {
+  .realm-layout { grid-template-columns: 1fr; min-height: 0; }
+  .realm-stage { min-height: min(76vh, 650px); }
+  .realm-details { max-height: none; }
+}
 /* The field it was drawn on is cut away, so the glow follows the outline of
    the room itself — the antlers, the shelf, the edge of the carpet — instead
    of haloing a rectangle. */
@@ -1413,11 +1463,11 @@ table.mini td { padding: 3px 8px; border: 0; }
  * The page itself arrives the same way. Coming back to the home page from a
  * tool should feel like a step back, not a cut.
  */
-#pageHome, #pageEnchant, #pageFame {
+#pageHome, #pageEnchant, #pageFame, #pageRealm {
   transition: opacity .34s cubic-bezier(.16, .84, .32, 1),
               transform .34s cubic-bezier(.16, .84, .32, 1);
 }
-#pageHome.page-entering, #pageEnchant.page-entering, #pageFame.page-entering {
+#pageHome.page-entering, #pageEnchant.page-entering, #pageFame.page-entering, #pageRealm.page-entering {
   opacity: 0; transform: translateY(12px);
   transition: none;                     /* the starting state must not animate */
 }
@@ -1425,7 +1475,7 @@ table.mini td { padding: 3px 8px; border: 0; }
 @media (prefers-reduced-motion: reduce) {
   .is-fresh > *, #fameGrid.is-fresh { animation: none; }
   .fame-tile, .fame-tile-check { transition: none; }
-  #pageHome, #pageEnchant, #pageFame { transition: none; }
-  #pageHome.page-entering, #pageEnchant.page-entering,
+  #pageHome, #pageEnchant, #pageFame, #pageRealm { transition: none; }
+  #pageHome.page-entering, #pageEnchant.page-entering, #pageRealm.page-entering,
   #pageFame.page-entering { opacity: 1; transform: none; }
 }

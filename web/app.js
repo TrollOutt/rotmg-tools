@@ -2284,13 +2284,13 @@ async function load() {
 /* ------------------------------------------------------------------ *
  * Which tool you are looking at                                       *
  * ------------------------------------------------------------------ *
- * Three pages behind one address, keyed on the hash so the browser own
+ * Four pages behind one address, keyed on the hash so the browser own
  * back button works and a link can point straight at a tool. The
  * enchant calculator loads its data at startup either way — it is a
  * couple of hundred milliseconds and it means the page is ready when
  * you pick it. Fame Sweep loads its own the first time you open it.
  */
-const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame' };
+const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', realm: 'pageRealm' };
 let famePageReady = false;
 
 async function openFamePage() {
@@ -2325,6 +2325,7 @@ function showPage(name) {
   pinRealm(page);
   usePool(page);
   if (page === 'fame') openFamePage();
+  if (typeof RealmMap !== 'undefined') RealmMap.setVisible(page === 'realm');
   window.scrollTo(0, 0);
 
   /*
@@ -2369,6 +2370,7 @@ for (const image of document.querySelectorAll('[data-art]')) {
   if (src) image.src = src; else image.remove();
 }
 
+if (typeof RealmMap !== 'undefined') RealmMap.init();
 bind();
 routeFromHash();
 load();

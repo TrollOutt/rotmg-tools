@@ -32,6 +32,14 @@
       <small>Tick off what you have finished and it works out what the collection bonuses have paid, what is left, and where to go next.</small>
       <em class="home-card-go">Open →</em>
     </button>
+
+    <button type="button" class="home-card" data-go="realm" style="--i:2">
+      <span class="home-card-art realm-card-glyph" aria-hidden="true">✦</span>
+      <span class="home-card-title">Realm Atlas</span>
+      <span class="home-card-line">A living view of the New Realm.</span>
+      <small>Explore a topological atlas of the realm, its biomes, encounters, beacon guardians and the creatures that inhabit each region.</small>
+      <em class="home-card-go">Explore →</em>
+    </button>
   </div>
 
   <footer class="app-foot">
@@ -39,6 +47,26 @@
     by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
     <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOnHome"></span>.
   </footer>
+</div>
+
+<!-- Realm Atlas ------------------------------------------------------ -->
+<div id="pageRealm" class="app page" hidden>
+  <header class="masthead realm-head">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>Realm Atlas</h1>
+    <p>A living, topological reading of the New Realm. Select a biome or an encounter; scroll to zoom, drag to pan, and use Reset view to return to the whole realm.</p>
+  </header>
+  <main class="realm-layout">
+    <section class="realm-stage" aria-label="Interactive map of the New Realm">
+      <canvas id="realmCanvas" aria-label="Interactive Realm Atlas. Select a biome, encounter biome or beacon to inspect it."></canvas>
+      <div class="realm-map-controls">
+        <button id="realmReset" type="button" class="filter-chip">Reset view</button>
+        <span class="realm-map-key"><i class="realm-key-beacon"></i> Beacon guardian</span>
+        <span class="realm-map-key"><i class="realm-key-encounter"></i> Encounter biome</span>
+      </div>
+    </section>
+    <aside id="realmDetails" class="realm-details" aria-live="polite"></aside>
+  </main>
 </div>
 
 <!-- Enchant Calculator ---------------------------------------------- -->
@@ -302,6 +330,8 @@
 <script src="items.js"></script>
 <script src="fame.js"></script>
 <script src="fame-page.js"></script>
+<script src="realm-data.js"></script>
+<script src="realm-map.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

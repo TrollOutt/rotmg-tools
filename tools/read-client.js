@@ -52,7 +52,7 @@ function findClient() {
   const given = option('--client');
   for (const base of given ? [given] : DEFAULT_CLIENTS) {
     if (!base) continue;
-    for (const folder of ['RotMG Exalt_Data', 'Realm of the Mad God Exalt_Data', '']) {
+    for (const folder of ['RotMG Exalt_Data', 'RotMG Exalt Launcher_Data', 'Realm of the Mad God Exalt_Data', '']) {
       const assets = path.join(base, folder, 'resources.assets');
       if (fs.existsSync(assets)) return { base, dataDir: path.join(base, folder), assets };
     }

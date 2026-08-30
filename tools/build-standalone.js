@@ -136,6 +136,49 @@ if (fs.existsSync(itemIndexPath)) {
   }
 }
 
+// Realm Atlas creature portraits are individual, lazy-loaded files while the
+// site is served. An offline copy has no directory beside it, so carry the
+// same id -> data URI lookup the item picker already uses. They are small
+// pixel sprites and are only read if the optional extraction has been run.
+const realmMonsterSprites = {};
+const realmSpriteDir = path.join(web, 'assets', 'realm-monsters');
+const realmSpriteIndex = path.join(realmSpriteDir, 'index.json');
+if (fs.existsSync(realmSpriteIndex)) {
+  const index = JSON.parse(fs.readFileSync(realmSpriteIndex, 'utf8'));
+  for (const [id, file] of Object.entries(index)) {
+    const absolute = path.join(realmSpriteDir, file);
+    if (!fs.existsSync(absolute)) continue;
+    realmMonsterSprites[id] = `data:image/png;base64,${fs.readFileSync(absolute).toString('base64')}`;
+  }
+}
+
+// Imported reference sprites cover encounter creatures that are absent from
+// this installed client snapshot. They stay local just like client portraits.
+const realmCatalogSprites = {};
+const realmCatalogDir = path.join(web, 'assets', 'realm-catalog');
+if (fs.existsSync(realmCatalogDir)) {
+  for (const file of fs.readdirSync(realmCatalogDir).sort()) {
+    if (!/\.(png|gif|webp)$/i.test(file)) continue;
+    const kind = path.extname(file).slice(1).toLowerCase();
+    realmCatalogSprites[file] = `data:image/${kind};base64,${fs.readFileSync(path.join(realmCatalogDir, file)).toString('base64')}`;
+  }
+}
+
+// Animated Realm portraits are pre-cropped, lossless WebP loops. Shipping
+// only those tiny loops keeps the offline page much smaller than embedding the
+// full client character atlas.
+const realmMonsterAnimations = {};
+const realmAnimationDir = path.join(web, 'assets', 'realm-monster-animations');
+const realmAnimationIndex = path.join(realmAnimationDir, 'index.json');
+if (fs.existsSync(realmAnimationIndex)) {
+  const index = JSON.parse(fs.readFileSync(realmAnimationIndex, 'utf8'));
+  for (const [id, file] of Object.entries(index)) {
+    const absolute = path.join(realmAnimationDir, file);
+    if (!fs.existsSync(absolute)) continue;
+    realmMonsterAnimations[id] = `data:image/webp;base64,${fs.readFileSync(absolute).toString('base64')}`;
+  }
+}
+
 /* ---------------------------------------------------------------- *
  * 3. Check the bundle covers everything the UI can ask for          *
  * ---------------------------------------------------------------- */
@@ -147,6 +190,8 @@ const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
+const realmDataSource = readWeb('realm-data.js');
+const realmMapSource = readWeb('realm-map.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
 
@@ -229,7 +274,7 @@ let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
 const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n'
-  + '<script src="fame.js"></script>\n<script src="fame-page.js"></script>\n<script src="app.js"></script>';
+  + '<script src="fame.js"></script>\n<script src="fame-page.js"></script>\n<script src="realm-data.js"></script>\n<script src="realm-map.js"></script>\n<script src="app.js"></script>';
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -252,11 +297,13 @@ page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, realmMonsterSprites, realmCatalogSprites, realmMonsterAnimations })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,
     `<script>\n${safe(famePageSource)}\n</script>`,
+    `<script>\n${safe(realmDataSource)}\n</script>`,
+    `<script>\n${safe(realmMapSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);
@@ -286,7 +333,8 @@ console.log(`\nStandalone build -> ${path.relative(root, pagesDir)}/\n`);
 for (const [folder, added] of Object.entries(counts)) console.log(`  ${String(added).padStart(3)} sprites  ${folder}`);
 console.log(`\n  ${dataset.enchants.length} enchantments - ${dataset.artifacts.length} artifacts - ${dataset.awakenings.size} awakenable items`);
 console.log(`  sprites ${kb(assetBytes)} raw -> ${kb(JSON.stringify(assets).length)} inlined`);
-console.log(`  items   ${Object.keys(itemSprites).length} sprites, ${kb(itemSpriteBytes)} raw -> ${kb(JSON.stringify(itemSprites).length)} inlined`);
+  console.log(`  items   ${Object.keys(itemSprites).length} sprites, ${kb(itemSpriteBytes)} raw -> ${kb(JSON.stringify(itemSprites).length)} inlined`);
+console.log(`  realm   ${Object.keys(realmMonsterSprites).length} client sprites + ${Object.keys(realmCatalogSprites).length} imported sprites + ${Object.keys(realmMonsterAnimations).length} animated loops inlined`);
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');
 console.log('  served as index.html, downloadable as RotMG-Enchant-Calculator.html\n');
