@@ -284,6 +284,36 @@ function findImage(source, name) {
   return null;
 }
 
+/*
+ * The picture at the head of the enchanting page: the enchanter's room, and
+ * the only drawing of the thing this calculator is about.
+ *
+ * It carries no title attribute, so imagesOn() cannot see it — it is found as
+ * the first wiki image on the page instead. Stored exactly as served: the copy
+ * there has been resampled at some point and is no longer a whole multiple of
+ * its own pixels, so there is no honest way to reduce it back to them, and it
+ * is shown small and smoothed rather than pretending otherwise.
+ */
+async function pageArt() {
+  const dir = path.join(root, 'data', 'GUI Files', 'Page Art');
+  const file = path.join(dir, 'Enchanting.png');
+  if (fs.existsSync(file)) {
+    console.log('\n  the enchanter room is already on disk.');
+    return;
+  }
+  const html = (await get(ENCHANT_PAGE)).toString('utf8');
+  const first = /<img[^>]+src="([^"]*\/img\/wiki\/i\/[^"]+\.png)"/.exec(html);
+  if (!first) {
+    console.log('\n  no picture at the head of ' + ENCHANT_PAGE);
+    return;
+  }
+  const image = readPng(await get(new URL(first[1], ENCHANT_PAGE).href));
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, writePng(image.width, image.height, image.pixels));
+  console.log('\n  the enchanter room ' + image.width + 'x' + image.height
+    + ' -> ' + path.relative(root, file));
+}
+
 async function main() {
   const artifacts = fs.readFileSync(path.join(root, 'data', 'Artifacts', 'client-artifacts.txt'), 'utf8')
     .split(/\r?\n/).filter(line => line.startsWith('artifact|')).map(line => line.split('|')[1]);
@@ -297,6 +327,8 @@ async function main() {
     .map(row => row[1]);
   await fill('awakened enchantment', ENCHANT_PAGE, enchDir,
     awakened.filter(name => !fs.existsSync(path.join(enchDir, name + '.png'))), false);
+
+  await pageArt();
 
   /*
    * The dungeon portals, and how hard the game says each dungeon is.

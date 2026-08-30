@@ -132,6 +132,8 @@ var FamePage = (function () {
     // thing a running total is for.
     paint('fameTotals',
       row('Base fame', view.base ? count(view.base) : '—', 'what your experience earned')
+      + row('Maxed 8/8', count(view.maxedFame),
+        `${count(view.maxed.flat)} flat + ${view.maxed.percent}%`)
       + row('Earned from dungeons', count(view.earnedFame),
         `${count(view.earnedFlat)} flat${view.earnedPercent ? ` + ${view.earnedPercent}%` : ''}`)
       + row('Fame now', count(view.total), '', 'is-sum')
@@ -165,8 +167,7 @@ var FamePage = (function () {
         title="${html(entry.name)} — ${entry.have} of ${entry.wanted.length} done, worth ${
           count(entry.absolute)} plus ${entry.relative}% of your base fame">
         <span class="fame-coll-name">${html(entry.name)}</span>
-        <span class="fame-coll-worth">${
-          view.base ? count(entry.value) : `${count(entry.absolute)}+${entry.relative}%`}</span>
+        <span class="fame-coll-worth">${count(entry.absolute)}<small>+${entry.relative}%</small></span>
         <span class="fame-coll-left">${entry.done ? '✓' : entry.missing.length}</span>
       </button>`;
     }).join(''),

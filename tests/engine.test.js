@@ -1142,10 +1142,22 @@ check('Tunnel Rat is twelve dungeons for 3000 fame and 7.5 %', (() => {
   return tr && tr.needs.length === 12 && tr.absolute === 3000 && tr.relative === 7.5;
 })());
 
-check('nothing ticked is worth nothing', (() => {
+check('nothing ticked is worth nothing beyond being maxed', (() => {
+  // The eight maxing bonuses are assumed rather than asked for: 1000 fame and
+  // 25 % of the base, which on 12000 is 4000. Nothing was ticked, so that is
+  // the whole of it.
   const view = fameLib.summarise(fame, [], 12000);
-  return view.earnedFame === 0 && view.total === 12000;
+  return view.earnedFame === 0 && view.maxedFame === 4000 && view.total === 16000;
 })());
+
+check('and maxing and the collections are the whole of the percentage side', (() => {
+  // Everything else the game pays — cartography, quests, kills, potions,
+  // teleports — is flat. That is what makes assuming 8/8 enough to land on a
+  // figure a player recognises: no other bonus moves the percentage.
+  if (fame.maxed.stats !== 8 || fame.maxed.flat !== 1000 || fame.maxed.percent !== 25) return false;
+  return fame.bonuses.every(bonus => !bonus.relative
+    || bonus.category === 'Maxing' || bonus.category === 'Dungeon Collection');
+})(), `8/8 is ${fame.maxed.flat} flat + ${fame.maxed.percent}%`);
 
 check('a completed collection pays its flat sum and its share of the base', (() => {
   // Far Out is the four alien dungeons: 2000 + 5 % of the base, plus the four

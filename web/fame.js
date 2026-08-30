@@ -123,10 +123,32 @@ var EnchantFame = (function () {
         && collection.needs.every(need => seasonal.has(need.what));
     }
 
+    /*
+     * What a maxed character is carrying before it does anything.
+     *
+     * Maxing a stat pays flat fame and a share of the base: 200 and 5 % for
+     * life and mana, 100 and 2.5 % for the other six. All eight is 1000 fame
+     * and 25 %, and it is assumed here rather than asked for, because nobody
+     * planning a fame run is doing it on a character that is not 8/8.
+     *
+     * It has to be in the sum for the sum to mean anything. Every other bonus
+     * in the game — cartography, quests, kills, potions — is flat, so these
+     * eight and the collections are between them the whole of the percentage
+     * side. Leaving them out does not just lose 1000 fame, it understates
+     * every percentage the collections pay on top.
+     */
+    const maxing = bonuses.filter(bonus => bonus.category === 'Maxing');
+    const maxed = {
+      stats: maxing.length,
+      flat: maxing.reduce((total, bonus) => total + bonus.absolute, 0),
+      percent: maxing.reduce((total, bonus) => total + bonus.relative, 0)
+    };
+
     return {
       bonuses,
       collections,
       corrected,
+      maxed,
       dungeons: [...dungeons.values()].sort((a, b) => a.name.localeCompare(b.name)),
       byName: dungeons
     };
@@ -184,13 +206,16 @@ var EnchantFame = (function () {
 
     const earnedFame = earnedFlat + base * earnedPercent / 100;
     const remainingFame = remainingFlat + base * remainingPercent / 100;
+    // Assumed, not asked for: see maxed in parse().
+    const maxedFame = data.maxed.flat + base * data.maxed.percent / 100;
 
     return {
       base,
+      maxed: data.maxed, maxedFame,
       earnedFlat, earnedPercent, earnedFame,
       remainingFlat, remainingPercent, remainingFame,
-      total: base + earnedFame,
-      potential: base + earnedFame + remainingFame,
+      total: base + maxedFame + earnedFame,
+      potential: base + maxedFame + earnedFame + remainingFame,
       collections,
       ticked: ticked.size,
       dungeons: data.dungeons.length
