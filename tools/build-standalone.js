@@ -164,10 +164,14 @@ const realmTileDir = path.join(web, 'assets', 'realm-tiles');
 const realmTileIndex = path.join(realmTileDir, 'index.json');
 if (fs.existsSync(realmTileIndex)) {
   realmTiles.index = JSON.parse(fs.readFileSync(realmTileIndex, 'utf8'));
+  // Two strips a biome: the ground, and what the client says stands on it.
   for (const entry of Object.values(realmTiles.index)) {
-    const absolute = path.join(realmTileDir, entry.file);
-    if (!fs.existsSync(absolute)) continue;
-    realmTiles.art[entry.file] = 'data:image/png;base64,' + fs.readFileSync(absolute).toString('base64');
+    for (const strip of [entry.ground, entry.props]) {
+      if (!strip) continue;
+      const absolute = path.join(realmTileDir, strip.file);
+      if (!fs.existsSync(absolute)) continue;
+      realmTiles.art[strip.file] = 'data:image/png;base64,' + fs.readFileSync(absolute).toString('base64');
+    }
   }
 }
 
