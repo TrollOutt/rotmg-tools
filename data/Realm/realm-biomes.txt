@@ -32,13 +32,14 @@
 #aa9177|Abandoned City|2026-08-30|owner
 #795d63|Abandoned City|2026-08-30|owner
 #424b6d|Sprite Forest|2026-08-30|owner
+#404a6d|Sprite Forest|2026-08-30|owner
 
 ## Still unnamed, and drawn as plain ground until they are. Several are second
 ## shades of a biome already named above — the map paints most regions in two
 ## or three tones — but which belongs to which has not been said, and guessing
 ## is what this file exists to stop.
 ##
-##   #404a6d  #1f283d  #888a1d  #45455b  #b79679  #a88e7f  #2f0f17
+##   #1f283d  #888a1d  #45455b  #b79679  #a88e7f  #2f0f17
 ##   #60170f  #5f415b  #402662  #9e908f  #706f8d  #585759  #695754  #323242
 ##
 ## #757c72 is the road network and #375ca6 the sea ring; both are drawn as

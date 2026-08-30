@@ -23,7 +23,7 @@
 ##   h  #704e1c    1855 cells   Dead Church
 ##   i  #2c352f    1569 cells   Shipwreck Cove
 ##   j  #87675b    1497 cells   Abandoned City
-##   k  #404a6d    1377 cells   unnamed
+##   k  #404a6d    1377 cells   Sprite Forest
 ##   l  #946e36    1303 cells   High Plains
 ##   m  #1f283d    1046 cells   unnamed
 ##   n  #888a1d     947 cells   unnamed
@@ -66,7 +66,7 @@ legend|~|#375ca6|sea
 legend|h|#704e1c|Dead Church
 legend|i|#2c352f|Shipwreck Cove
 legend|j|#87675b|Abandoned City
-legend|k|#404a6d|
+legend|k|#404a6d|Sprite Forest
 legend|l|#946e36|High Plains
 legend|m|#1f283d|
 legend|n|#888a1d|

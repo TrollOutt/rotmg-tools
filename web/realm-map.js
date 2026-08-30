@@ -36,7 +36,6 @@ var RealmMap = (function () {
   // from the first look rather than being something you have to find.
   const SHOW_BEACONS = 0.35;
   const SHOW_CREATURES = 1.6;
-  const SHOW_SMALL_LABELS = 2.2;
 
   const html = value => String(value || '').replace(/[&<>"']/g, char =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -136,10 +135,23 @@ var RealmMap = (function () {
   }
 
   /*
-   * Regions are the connected stretches of one kind of ground. Roads and sea
-   * are not regions; a stretch too small to aim at is scenery — drawn, but
-   * not something the player is meant to click.
+   * Regions are the connected stretches of one biome — not of one colour.
+   *
+   * The map paints a biome in two or three tones, and Abandoned City in four:
+   * the green ring at its heart is a different colour from the ground around
+   * it but it is the same place, and clicking the ring should not open
+   * something else. So the flood spreads across any neighbour that reads as
+   * the same biome, and only ground with no name yet is kept apart by its own
+   * colour, since that is all there is to tell one patch from another.
+   *
+   * Roads and sea are not regions; a stretch too small to aim at is scenery —
+   * drawn, but not something the player is meant to click.
    */
+  const keyOf = letter => {
+    const entry = legend.get(letter);
+    return entry && entry.biome ? 'biome:' + entry.biome : 'ground:' + letter;
+  };
+
   function findRegions() {
     const seen = new Uint8Array(cols * rows);
     const found = [];
@@ -147,6 +159,7 @@ var RealmMap = (function () {
       for (let col = 0; col < cols; col++) {
         const letter = at(col, row);
         if (seen[row * cols + col] || isWater(letter) || letter === ROAD) continue;
+        const key = keyOf(letter);
         const cells = [];
         const queue = [[col, row]];
         seen[row * cols + col] = 1;
@@ -159,7 +172,9 @@ var RealmMap = (function () {
           for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
             const nx = x + dx, ny = y + dy;
             if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
-            if (seen[ny * cols + nx] || at(nx, ny) !== letter) continue;
+            const next = at(nx, ny);
+            if (seen[ny * cols + nx] || isWater(next) || next === ROAD) continue;
+            if (keyOf(next) !== key) continue;
             seen[ny * cols + nx] = 1;
             queue.push([nx, ny]);
           }
@@ -178,14 +193,6 @@ var RealmMap = (function () {
       }
     }
     regions = found.sort((a, b) => b.size - a.size);
-
-    // One label per biome, on its largest stretch: a biome breaks into a
-    // dozen pieces, and writing its name across all of them is noise.
-    const labelled = new Set();
-    for (const region of regions) {
-      region.labelled = Boolean(region.biome) && !labelled.has(region.biome);
-      if (region.labelled) labelled.add(region.biome);
-    }
 
     // A beacon belongs to whatever it stands on, so opening one opens the
     // biome it guards.
@@ -373,23 +380,6 @@ var RealmMap = (function () {
     ctx.globalAlpha = 1;
   }
 
-  function drawLabels() {
-    const scale = zoom();
-    ctx.textAlign = 'center';
-    for (const region of regions) {
-      if (!region.labelled) continue;
-      if (region.size < (scale > SHOW_SMALL_LABELS ? 30 : 260)) continue;
-      const spot = screenPoint(region.cx, region.cy);
-      const size = Math.round(Math.max(10, Math.min(17, 11 * scale)));
-      ctx.font = size + 'px system-ui, sans-serif';
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = 'rgba(6, 10, 18, .8)';
-      ctx.strokeText(region.biome, spot.x, spot.y);
-      ctx.fillStyle = selected && selected.region === region ? '#ffe6a0' : 'rgba(244, 239, 226, .9)';
-      ctx.fillText(region.biome, spot.x, spot.y);
-    }
-  }
-
   function drawSelection() {
     if (!selected || !selected.region) return;
     const scale = zoom();
@@ -411,7 +401,6 @@ var RealmMap = (function () {
     drawSelection();
     drawCreatures(time);
     drawBeacons(time);
-    drawLabels();
     frame = requestAnimationFrame(render);
   }
 
