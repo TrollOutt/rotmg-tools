@@ -371,6 +371,11 @@ var RealmMap = (function () {
     for (const [test, family] of FAMILIES) if (test.test(biome || '')) return family;
     return 'tuft';
   }
+  const familyCache = new Map();
+  function region_family(biome) {
+    if (!familyCache.has(biome)) familyCache.set(biome, familyOf(biome));
+    return familyCache.get(biome);
+  }
 
   // Three tones off the ground colour: what is under it, and what catches
   // the light. Pixel art is mostly this, and a palette of one is flat.
@@ -426,6 +431,33 @@ var RealmMap = (function () {
     }
   }
 
+  /*
+   * The game's own floor.
+   *
+   * web/assets/realm-tiles holds, per biome, six of the tiles the client
+   * draws that ground with — found in its groundTiles sheet and paired to the
+   * biome by colour, which is tools/build-realm-tiles.js's doing. A cell picks
+   * one on a hash of where it is, so a field of them neither repeats in rows
+   * nor shuffles when you pan.
+   */
+  const tiles = { index: null, art: new Map() };
+  function loadTiles() {
+    const bundled = typeof BUNDLE !== 'undefined' && BUNDLE && BUNDLE.realmTiles;
+    const ready = index => {
+      tiles.index = index;
+      for (const [biome, entry] of Object.entries(index)) {
+        const image = new Image();
+        image.decoding = 'async';
+        image.src = bundled && bundled.art && bundled.art[entry.file]
+          ? bundled.art[entry.file] : 'assets/realm-tiles/' + entry.file;
+        tiles.art.set(biome, { image: image, tile: entry.tile, count: entry.count });
+      }
+    };
+    if (bundled && bundled.index) { ready(bundled.index); return; }
+    fetch('assets/realm-tiles/index.json')
+      .then(response => response.json()).then(ready).catch(() => { tiles.index = {}; });
+  }
+
   function drawGround(scale) {
     if (scale < SHOW_GRAIN) return;
     const size = box();
@@ -452,6 +484,22 @@ var RealmMap = (function () {
         const colours = palette(entry.hex);
         const spot = screenPoint(col * CELL, row * CELL);
         const n = hash(col, row);
+
+        // The real thing where there is one, and the drawn grain where there
+        // is not — a biome with no name has no tiles either.
+        const set = entry.biome && tiles.art.get(entry.biome);
+        if (set && set.image.complete && set.image.naturalWidth) {
+          const slot = Math.floor(n * set.count) % set.count;
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(set.image, slot * set.tile, 0, set.tile, set.tile,
+            spot.x, spot.y, unit + 1, unit + 1);
+          if (scenic > 0 && n > 0.93) {
+            ctx.globalAlpha = scenic;
+            scenery(ctx, region_family(entry.biome), spot.x, spot.y, unit, colours, hash(row, col));
+            ctx.globalAlpha = 1;
+          }
+          continue;
+        }
 
         // Grain: two or three darker pixels inside the cell, in one of four
         // arrangements. Enough to break the flat, not enough to read as
@@ -786,6 +834,7 @@ var RealmMap = (function () {
     findRegions();
     paintTerrain();
     paintRoads();
+    loadTiles();
     view.x = view.tx = coast.minX + coast.width / 2;
     view.y = view.ty = coast.minY + coast.height / 2;
     renderDetails();

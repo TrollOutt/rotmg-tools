@@ -154,6 +154,23 @@ if (fs.existsSync(realmSpriteIndex)) {
   }
 }
 
+/*
+ * The biome floor tiles, cut from the client's own groundTiles sheet by
+ * tools/build-realm-tiles.js. Small enough to carry whole: nineteen strips of
+ * six tiles each, none of them larger than a favicon.
+ */
+const realmTiles = { index: null, art: {} };
+const realmTileDir = path.join(web, 'assets', 'realm-tiles');
+const realmTileIndex = path.join(realmTileDir, 'index.json');
+if (fs.existsSync(realmTileIndex)) {
+  realmTiles.index = JSON.parse(fs.readFileSync(realmTileIndex, 'utf8'));
+  for (const entry of Object.values(realmTiles.index)) {
+    const absolute = path.join(realmTileDir, entry.file);
+    if (!fs.existsSync(absolute)) continue;
+    realmTiles.art[entry.file] = 'data:image/png;base64,' + fs.readFileSync(absolute).toString('base64');
+  }
+}
+
 // Imported reference sprites cover encounter creatures that are absent from
 // this installed client snapshot. They stay local just like client portraits.
 const realmCatalogSprites = {};
@@ -299,7 +316,7 @@ page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, realmMonsterSprites, realmCatalogSprites, realmMonsterAnimations })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, realmMonsterSprites, realmCatalogSprites, realmMonsterAnimations, realmTiles })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,

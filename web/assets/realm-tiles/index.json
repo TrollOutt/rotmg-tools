@@ -1,0 +1,97 @@
+{
+  "Deep Sea Abyss": {
+    "file": "deep-sea-abyss.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Carboniferous": {
+    "file": "carboniferous.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Floral Escape": {
+    "file": "floral-escape.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Haunted Hallows": {
+    "file": "haunted-hallows.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Runic Tundra": {
+    "file": "runic-tundra.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Sanguine Forest": {
+    "file": "sanguine-forest.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Coral Reefs": {
+    "file": "coral-reefs.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Dead Church": {
+    "file": "dead-church.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Shipwreck Cove": {
+    "file": "shipwreck-cove.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Abandoned City": {
+    "file": "abandoned-city.png",
+    "tile": 10,
+    "count": 6
+  },
+  "High Plains": {
+    "file": "high-plains.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Risen Hell": {
+    "file": "risen-hell.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Desert": {
+    "file": "desert.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Mid Forest": {
+    "file": "mid-forest.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Undead Forest": {
+    "file": "undead-forest.png",
+    "tile": 8,
+    "count": 6
+  },
+  "Mid Plains": {
+    "file": "mid-plains.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Beach": {
+    "file": "beach.png",
+    "tile": 8,
+    "count": 6
+  },
+  "High Forest": {
+    "file": "high-forest.png",
+    "tile": 10,
+    "count": 6
+  },
+  "Sprite Forest": {
+    "file": "sprite-forest.png",
+    "tile": 10,
+    "count": 6
+  }
+}
