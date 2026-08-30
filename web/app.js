@@ -2134,7 +2134,9 @@ async function openFamePage() {
     const text = BUNDLE && BUNDLE.sources && BUNDLE.sources.fameText
       ? BUNDLE.sources.fameText
       : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
-    FamePage.init(text);
+    // The standalone build carries the portal pictures inlined; served from
+    // the repository they are read from disk like every other sprite.
+    FamePage.init(text, BUNDLE ? BUNDLE.assets : null);
   } catch (error) {
     console.error(error);
     famePageReady = false;

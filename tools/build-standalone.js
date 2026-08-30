@@ -86,6 +86,7 @@ const counts = {
   // Artifact rows use the half-scale icons only.
   'Artifact Icons': embedAll('Artifact Icons', file => file.endsWith('-div2.png')),
   'Enchantment Icons': embedAll('Enchantment Icons'),
+  'Dungeon Icons': embedAll('Dungeon Icons'),
   'Awakenable Items': embedAll('Awakenable Items'),
   'Dust Types': embedAll('Dust Types'),
   'Item Types': embedAll('Item Types'),

@@ -226,15 +226,17 @@
       <label class="base-fame">Your base fame
         <input id="fameBase" type="number" min="0" step="100" value="0" inputmode="numeric">
       </label>
+      <div id="fameTotals" class="fame-totals"></div>
       <button id="fameReset" type="button" class="link-button">Clear the ticks</button>
     </div>
   </header>
 
   <main class="layout">
-    <section class="column config" aria-label="What you have done">
+    <section class="column config" aria-label="What to go for">
       <section class="card step">
-        <header><span class="step-badge">1</span><h2>What it is worth</h2></header>
-        <div id="fameSummary" class="fame-summary"></div>
+        <header><span class="step-badge">1</span><h2>Pick a collection</h2></header>
+        <p class="note">Click one and its dungeons light up in the grid. Click it again to stop.</p>
+        <div id="fameCollections" class="fame-collections"></div>
       </section>
 
       <section class="card step">
@@ -243,16 +245,21 @@
       </section>
     </section>
 
-    <section class="column results" aria-label="The bonuses">
+    <section class="column results" aria-label="The dungeons">
       <section class="card">
-        <header><h2>Collections</h2><span class="header-aside">what a whole group pays</span></header>
-        <div id="fameCollections" class="fame-collections"></div>
-      </section>
-
-      <section class="card">
-        <header><h2>Dungeons</h2><span class="header-aside" id="fameTickedCount"></span></header>
-        <input id="fameSearch" type="search" placeholder="Search a dungeon…" autocomplete="off">
-        <div id="fameDungeons" class="fame-dungeons"></div>
+        <header>
+          <h2>Dungeons</h2>
+          <span class="header-aside" id="fameTickedCount"></span>
+        </header>
+        <div class="fame-controls">
+          <input id="fameSearch" type="search" placeholder="Search a dungeon…" autocomplete="off">
+          <div class="fame-sort" role="group" aria-label="Order the dungeons">
+            <button type="button" class="filter-chip on" data-sort="fame">By fame</button>
+            <button type="button" class="filter-chip" data-sort="name">By name</button>
+            <button type="button" class="filter-chip" data-sort="todo">Left to do</button>
+          </div>
+        </div>
+        <div id="fameGrid" class="fame-grid"></div>
       </section>
     </section>
   </main>

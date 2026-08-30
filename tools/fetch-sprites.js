@@ -25,6 +25,7 @@ const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'data', 'GUI Files', 'Artifact Icons');
 const PAGE = 'https://www.realmeye.com/wiki/artifacts';
 const ENCHANT_PAGE = 'https://www.realmeye.com/wiki/enchanting';
+const DUNGEON_PAGE = 'https://www.realmeye.com/wiki/dungeons';
 
 // The client calls it Premium Silver Card; the Qt assets are filed under the
 // older name and the interface already knows to look there.
@@ -52,9 +53,9 @@ function get(url) {
 /* ---------------------------------------------------------------- *
  * A very small PNG reader and writer                                *
  * ---------------------------------------------------------------- *
- * Two forms turn up on that page: 8-bit RGBA, and 8-bit palette with
- * a transparency table. Both come out as RGBA here. Anything else is
- * refused rather than mangled.
+ * Whatever those pages serve, at 8 bits a sample and not interlaced:
+ * greyscale, greyscale with alpha, RGB, palette, RGBA. All of it comes
+ * out as RGBA here. Anything else is refused rather than mangled.
  */
 function readPng(buffer) {
   if (buffer.readUInt32BE(0) !== 0x89504e47) throw new Error('not a PNG');
@@ -62,7 +63,8 @@ function readPng(buffer) {
   const height = buffer.readUInt32BE(20);
   const depth = buffer[24];
   const colour = buffer[25];
-  if (depth !== 8 || (colour !== 6 && colour !== 3) || buffer[28] !== 0) {
+  const SAMPLES = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
+  if (depth !== 8 || !SAMPLES[colour] || buffer[28] !== 0) {
     throw new Error('unsupported PNG: depth ' + depth + ', colour type ' + colour + ', interlace ' + buffer[28]);
   }
 
@@ -82,7 +84,7 @@ function readPng(buffer) {
   const raw = zlib.inflateSync(Buffer.concat(parts));
 
   // Undo the per-scanline filter, working in whatever the stored samples are.
-  const samples = colour === 6 ? 4 : 1;
+  const samples = SAMPLES[colour];
   const stride = width * samples;
   const flat = Buffer.alloc(height * stride);
   for (let y = 0; y < height; y++) {
@@ -105,6 +107,21 @@ function readPng(buffer) {
     }
   }
   if (colour === 6) return { width, height, pixels: flat };
+
+  // Everything else becomes RGBA: greyscale with or without alpha, plain RGB,
+  // and palette entries looked up through PLTE and tRNS.
+  if (colour !== 3) {
+    const pixels = Buffer.alloc(width * height * 4);
+    for (let i = 0; i < width * height; i++) {
+      const at = i * samples;
+      const grey = colour === 0 || colour === 4;
+      pixels[i * 4] = grey ? flat[at] : flat[at];
+      pixels[i * 4 + 1] = grey ? flat[at] : flat[at + 1];
+      pixels[i * 4 + 2] = grey ? flat[at] : flat[at + 2];
+      pixels[i * 4 + 3] = colour === 4 ? flat[at + 1] : 255;
+    }
+    return { width, height, pixels };
+  }
 
   if (!palette) throw new Error('palette image with no PLTE');
   const pixels = Buffer.alloc(width * height * 4);
@@ -191,7 +208,7 @@ async function imagesOn(page) {
  * are filed at two sizes because the interface asks for the half-size copy;
  * enchantment icons are filed at one, as the existing ones are.
  */
-async function fill(what, page, dir, missing, halved) {
+async function fill(what, page, dir, missing, halved, look) {
   if (!missing.length) {
     console.log('  every ' + what + ' already has artwork.');
     return;
@@ -204,7 +221,7 @@ async function fill(what, page, dir, missing, halved) {
   const absent = [];
   let written = 0;
   for (const name of missing) {
-    const url = source.get(name);
+    const url = look ? look(source, name) : source.get(name);
     if (!url) { absent.push(name); continue; }
     const image = readPng(await get(url));
     fs.writeFileSync(path.join(dir, name + '.png'), writePng(image.width, image.height, image.pixels));
@@ -227,6 +244,35 @@ function iconName(labels) {
   return labels.includes('AWAKENED') ? true : false;
 }
 
+/*
+ * The page labels a portal "Kogbold Steamworks Portal" where the fame bonus
+ * calls the dungeon "Kogbold Steamworks", and disagrees on a capital here and
+ * an apostrophe there. Try the name, then the name with "Portal", then
+ * ignoring case and punctuation altogether — and say which are left rather
+ * than matching something that only looks close.
+ */
+/*
+ * Two the matcher cannot reach on its own. The client drops an apostrophe the
+ * wiki keeps, and one dungeon has no portal drawn on that page at all — its
+ * key is the only picture of it there, which is still what a player looks for.
+ */
+const DUNGEON_TITLE = {
+  'Santa Workshop': "Santa's Workshop",
+  'Ice Citadel': 'Ice Citadel Key'
+};
+
+function findImage(source, name) {
+  if (DUNGEON_TITLE[name] && source.has(DUNGEON_TITLE[name])) return source.get(DUNGEON_TITLE[name]);
+  const plain = text => String(text).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const wanted = plain(name);
+  if (source.has(name)) return source.get(name);
+  if (source.has(name + ' Portal')) return source.get(name + ' Portal');
+  for (const [title, url] of source) {
+    if (plain(title) === wanted || plain(title) === wanted + 'portal') return url;
+  }
+  return null;
+}
+
 async function main() {
   const artifacts = fs.readFileSync(path.join(root, 'data', 'Artifacts', 'client-artifacts.txt'), 'utf8')
     .split(/\r?\n/).filter(line => line.startsWith('artifact|')).map(line => line.split('|')[1]);
@@ -240,6 +286,17 @@ async function main() {
     .map(row => row[1]);
   await fill('awakened enchantment', ENCHANT_PAGE, enchDir,
     awakened.filter(name => !fs.existsSync(path.join(enchDir, name + '.png'))), false);
+
+  // The dungeon portals, for Fame Sweep.
+  const dungeonDir = path.join(root, 'data', 'GUI Files', 'Dungeon Icons');
+  // The dungeons with a ladder of their own, which is what Fame Sweep shows.
+  // Taking every "needs" line instead drags in the stats and the biome kill
+  // counters, which are conditions but not places.
+  const fameData = require(path.join(root, 'web', 'fame.js'))
+    .parse(fs.readFileSync(path.join(root, 'data', 'Fame', 'client-fame.txt'), 'utf8'));
+  const wanted = fameData.dungeons.map(dungeon => dungeon.name)
+    .filter(name => !fs.existsSync(path.join(dungeonDir, name + '.png')));
+  await fill('dungeon', DUNGEON_PAGE, dungeonDir, wanted, false, findImage);
   console.log('');
 }
 
