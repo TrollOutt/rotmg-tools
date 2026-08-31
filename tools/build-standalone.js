@@ -159,7 +159,7 @@ if (fs.existsSync(realmSpriteIndex)) {
  * tools/build-realm-tiles.js. Small enough to carry whole: nineteen strips of
  * six tiles each, none of them larger than a favicon.
  */
-const realmTiles = { index: null, art: {} };
+const realmTiles = { index: null, monuments: null, art: {} };
 const realmTileDir = path.join(web, 'assets', 'realm-tiles');
 const realmTileIndex = path.join(realmTileDir, 'index.json');
 if (fs.existsSync(realmTileIndex)) {
@@ -172,6 +172,20 @@ if (fs.existsSync(realmTileIndex)) {
       if (!fs.existsSync(absolute)) continue;
       realmTiles.art[strip.file] = 'data:image/png;base64,' + fs.readFileSync(absolute).toString('base64');
     }
+  }
+}
+
+/*
+ * And the monuments, which are one arrangement rather than a bag of tiles:
+ * the plate every beacon stands on, laid out cell by cell.
+ */
+const realmMonuments = path.join(realmTileDir, 'monuments.json');
+if (fs.existsSync(realmMonuments)) {
+  realmTiles.monuments = JSON.parse(fs.readFileSync(realmMonuments, 'utf8'));
+  for (const built of Object.values(realmTiles.monuments)) {
+    const absolute = path.join(realmTileDir, built.file);
+    if (!fs.existsSync(absolute)) continue;
+    realmTiles.art[built.file] = 'data:image/png;base64,' + fs.readFileSync(absolute).toString('base64');
   }
 }
 

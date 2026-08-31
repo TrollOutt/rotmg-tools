@@ -250,9 +250,23 @@ var RealmMap = (function () {
   /* ---------------------------------------------------------------- *
    * Painting the map, once                                            *
    * ---------------------------------------------------------------- */
+  /*
+   * A number in nought-to-one for a pair of whole numbers.
+   *
+   * This was the usual trick of taking the fraction of a big multiple of a
+   * sine, which is fine for a handful of values and shows its working over a
+   * field: the sine repeats, and what came out was a diagonal lattice of
+   * trees about four tiles apart, regular enough to read as wallpaper. An
+   * integer mix has no period to alias against — every call is stirred
+   * through the same avalanche a hash table uses — so neighbouring tiles
+   * come out unrelated, which is the whole point of asking.
+   */
   const hash = (x, y) => {
-    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-    return n - Math.floor(n);
+    let n = (Math.round(x) * 0x1f1f1f1f) ^ Math.round(y);
+    n = Math.imul(n ^ (n >>> 16), 0x45d9f3b);
+    n = Math.imul(n ^ (n >>> 16), 0x45d9f3b);
+    n = (n ^ (n >>> 16)) >>> 0;
+    return n / 4294967296;
   };
   // A colour and the same colour a shade deeper, so a wide flat biome has
   // grain in it rather than reading as one poured shape.
@@ -386,7 +400,7 @@ var RealmMap = (function () {
    * Risen Hell. Where the client names none, none are drawn: a biome is
    * better bare than wearing another's scenery.
    */
-  const tiles = { index: null, ground: new Map(), props: new Map() };
+  const tiles = { index: null, ground: new Map(), props: new Map(), beacon: null };
   function loadTiles() {
     const bundled = typeof BUNDLE !== 'undefined' && BUNDLE && BUNDLE.realmTiles;
     const picture = file => {
@@ -435,9 +449,24 @@ var RealmMap = (function () {
         if (entry.props) tiles.props.set(biome, strip(entry.props));
       }
     };
-    if (bundled && bundled.index) { ready(bundled.index); return; }
+    /*
+     * And the monuments, which are a different kind of thing: not a bag of
+     * tiles to scatter but one arrangement, laid exactly as it was found.
+     */
+    const built = monuments => {
+      if (!monuments || !monuments.beacon) return;
+      const plate = monuments.beacon;
+      tiles.beacon = {
+        image: picture(plate.file), tile: plate.tile,
+        w: plate.w, h: plate.h, ox: plate.ox, oy: plate.oy, cells: plate.cells
+      };
+      cache.ready = false;
+    };
+    if (bundled && bundled.index) { ready(bundled.index); built(bundled.monuments); return; }
     fetch('assets/realm-tiles/index.json')
       .then(response => response.json()).then(ready).catch(() => { tiles.index = {}; });
+    fetch('assets/realm-tiles/monuments.json')
+      .then(response => response.json()).then(built).catch(() => {});
   }
 
   /*
@@ -579,8 +608,48 @@ var RealmMap = (function () {
       }
     }
 
+    /*
+     * The beacon platforms.
+     *
+     * Every beacon in the realm stands on the same nineteen-by-nineteen plate
+     * of the castle's flagstones, and the builder has it tile for tile,
+     * merged from the nine that were walked. So it is stamped rather than
+     * sown: the cells go down in the arrangement they were found in, at each
+     * of the beacons the atlas already knows the position of. This is the
+     * difference between a biome's ground and a monument's — one is a bag of
+     * tiles that may fall anywhere, the other means nothing except in the
+     * order it was built.
+     */
+    const plate = tiles.beacon;
+    const laid = [];
+    if (plate && plate.image.complete && plate.image.naturalWidth && TILE * scale >= 1.5) {
+      const unit = TILE * scale;
+      for (const beacon of beacons) {
+        const x0 = beacon.x - (plate.ox + 0.5) * TILE;
+        const y0 = beacon.y - (plate.oy + 0.5) * TILE;
+        const x1 = x0 + plate.w * TILE, y1 = y0 + plate.h * TILE;
+        if (x1 < cache.x || y1 < cache.y || x0 > cache.x + cache.w || y0 > cache.y + cache.h) continue;
+        laid.push([x0, y0, x1, y1]);
+        for (let y = 0; y < plate.h; y++) {
+          for (let x = 0; x < plate.w; x++) {
+            const slot = plate.cells[y * plate.w + x];
+            if (slot < 0) continue;
+            c.drawImage(plate.image, slot * plate.tile, 0, plate.tile, plate.tile,
+              (x0 + x * TILE - cache.x) * scale, (y0 + y * TILE - cache.y) * scale,
+              unit + 1, unit + 1);
+          }
+        }
+      }
+    }
+
     c.globalAlpha = scenic;
     for (const [props, which, px, py] of standing) {
+      // Nothing grows on a flagstone. A tree the biome would have sown here
+      // is dropped rather than drawn over the plate it would be standing on.
+      if (laid.length) {
+        const wx = px / scale + cache.x, wy = py / scale + cache.y;
+        if (laid.some(r => wx >= r[0] && wx < r[2] && wy >= r[1] && wy < r[3])) continue;
+      }
       // Scenery is drawn at two tiles across and stood on the bottom of its
       // own tile, which is where the game puts it: a tree grows up out of
       // the ground it is rooted in rather than sitting centred on it.
