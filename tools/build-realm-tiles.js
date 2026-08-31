@@ -252,20 +252,177 @@ function nameById(prefix) {
   return out;
 }
 
+/*
+ * The traced map, which is the only thing that knows the whole realm's shape.
+ */
+const traced = (() => {
+  const file = path.join(root, 'data', 'Realm', 'realm-terrain.txt');
+  const beaconFile = path.join(root, 'data', 'Realm', 'realm-beacons.txt');
+  if (!fs.existsSync(file)) return null;
+  const legend = new Map();
+  const grid = [];
+  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    if (line.startsWith('legend|')) {
+      const part = line.split('|');
+      legend.set(part[1], { hex: part[2], biome: part[3] });
+    } else if (line && !line.startsWith('#')) grid.push(line);
+  }
+  if (!grid.length) return null;
+  const beacons = [];
+  if (fs.existsSync(beaconFile)) {
+    for (const line of fs.readFileSync(beaconFile, 'utf8').split(/\r?\n/)) {
+      if (!line || line.startsWith('#')) continue;
+      const part = line.split('|');
+      const col = Number(part[0]), row = Number(part[1]);
+      if (Number.isFinite(col) && Number.isFinite(row)) beacons.push({ col, row });
+    }
+  }
+  const cols = grid[0].length, rows = grid.length;
+  // Sea is the letter the tracer gave open water, and anything the legend
+  // never named — off the edge of the picture is sea too.
+  const wet = (col, row) => {
+    if (col < 0 || col >= cols || row < 0 || row >= rows) return true;
+    const letter = grid[row][col];
+    const entry = legend.get(letter);
+    return !entry || /water|ocean|sea/i.test(entry.biome || '');
+  };
+  return {
+    cols, rows, beacons, wet,
+    biomeOfCell: (col, row) => {
+      const entry = legend.get(grid[row][col]);
+      return entry ? entry.biome : null;
+    }
+  };
+})();
+
+/*
+ * Join the capture's coordinates to the traced map's, using the beacons.
+ *
+ * Two observed beacons matched to two traced ones give a scale and an offset
+ * per axis. There are a few thousand such pairings and only one of them is
+ * right, so each is scored by how many of the *other* observed beacons it
+ * then lands on a traced beacon. The winner is checked a second time against
+ * the coastline, which was traced from a picture and knows nothing about
+ * where any beacon is: if the walked water does not fall on the traced water,
+ * the two agreements cannot both be coincidence and neither can be trusted.
+ */
+function alignToTraced(objects, objectName, atTile, groundName) {
+  if (!traced || traced.beacons.length < 4) return null;
+  const found = [];
+  for (const object of objects) {
+    const name = objectName.get(object.type) || '';
+    if (!/^(Actual Active Beacon|Captured Beacon|Teleport Beacon|Beacon Guardian [A-Z])/.test(name)) continue;
+    if (found.some(c => Math.abs(c.x - object.x) < 20 && Math.abs(c.y - object.y) < 20)) continue;
+    found.push({ x: object.x, y: object.y });
+  }
+  if (found.length < 4) return null;
+
+  const want = traced.beacons;
+  let best = null;
+  for (let a = 0; a < found.length; a++) {
+    for (let b = a + 1; b < found.length; b++) {
+      const dx = found[b].x - found[a].x, dy = found[b].y - found[a].y;
+      // A pair too close together turns a small error in either into a large
+      // one in the scale, so only well-separated beacons set it.
+      if (Math.abs(dx) < 60 || Math.abs(dy) < 60) continue;
+      for (let i = 0; i < want.length; i++) {
+        for (let j = 0; j < want.length; j++) {
+          if (i === j) continue;
+          const ex = want[j].col - want[i].col, ey = want[j].row - want[i].row;
+          if (!ex || !ey) continue;
+          const sx = dx / ex, sy = dy / ey;
+          if (sx < 6 || sx > 11 || sy < 6 || sy > 11) continue;
+          const ox = found[a].x / sx - want[i].col;
+          const oy = found[a].y / sy - want[i].row;
+          let hit = 0, err = 0;
+          for (const one of found) {
+            const col = one.x / sx - ox, row = one.y / sy - oy;
+            let near = Infinity;
+            for (const w of want) near = Math.min(near, Math.abs(w.col - col) + Math.abs(w.row - row));
+            if (near < 2.5) { hit++; err += near; }
+          }
+          if (!best || hit > best.hit || (hit === best.hit && err < best.err)) {
+            best = { sx, sy, ox, oy, hit, err };
+          }
+        }
+      }
+    }
+  }
+  if (!best || best.hit < Math.max(4, found.length * 0.6)) return null;
+
+  // The second, independent check.
+  const wet = type => /ocean water|shoreline water|deep water/i.test(groundName.get(type) || '');
+  let ok = 0, n = 0;
+  for (const [key, type] of atTile) {
+    const x = key % 100000, y = (key - x) / 100000;
+    const col = Math.floor(x / best.sx - best.ox), row = Math.floor(y / best.sy - best.oy);
+    if (col < 0 || col >= traced.cols || row < 0 || row >= traced.rows) continue;
+    n++;
+    if (traced.wet(col, row) === wet(type)) ok++;
+  }
+  const coast = n ? ok / n : 0;
+  if (coast < 0.9) return null;
+  return { ...best, beacons: found.length, coast, checked: n };
+}
+
 function learnFromCapture(biomeNames) {
-  if (!fs.existsSync(CAPTURE)) return null;
-  const seen = JSON.parse(fs.readFileSync(CAPTURE, 'utf8'));
+  const dir = path.dirname(CAPTURE);
+  if (!fs.existsSync(dir)) return null;
+
+  /*
+   * Every walk there is, laid on top of one another.
+   *
+   * Each file is one session's worth of realm: the tiles the client was told
+   * about while it was being walked through. They cover different ground, so
+   * they are merged rather than chosen between, and where two sessions saw
+   * the same tile the later one wins — the realm is regenerated between them,
+   * but its shape is not, so the disagreements are few and about details.
+   */
+  const atTile = new Map();                         // y * KEY + x -> ground type
+  const objects = [];
+  const KEY = 100000;
+  let walks = 0;
+  for (const file of fs.readdirSync(dir).filter(name => /\.json$/.test(name)).sort()) {
+    let seen;
+    try { seen = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')); } catch { continue; }
+    if (!Array.isArray(seen.tiles) || !seen.tiles.length) continue;
+    walks++;
+    for (const tile of seen.tiles) atTile.set(tile.y * KEY + tile.x, tile.type);
+    for (const object of seen.observedObjects || []) objects.push(object);
+  }
+  if (!atTile.size) return null;
+
   const groundName = nameById('GroundTypes');
   const objectName = nameById('Objects');
 
-  // Which biome a name belongs to, by the same matching the rest of the tool
-  // uses. Nameless grounds come back null and are placed by where they sit.
-  const biomeOf = text => {
-    const flat = plain(text || '');
-    for (const biome of biomeNames) {
-      if (flat.includes(plain(ALIAS[biome] || biome))) return biome;
-    }
-    return null;
+  /*
+   * Where a walked tile falls on the traced map.
+   *
+   * The two speak different coordinates — the capture in the server's own
+   * tiles, the traced map in cells of an annotated picture — and until they
+   * are joined a walk can only be attributed to a biome by reading the names
+   * of the ground in it. That worked for the twelve biomes with a ground type
+   * carrying their name and not at all for the seven without, which is why
+   * the plains and the beach were still being guessed at from colour: their
+   * floor is called "Shoreline Sand" and "New Low Forest Grass" and belongs,
+   * by name, to nobody.
+   *
+   * The beacons join them. Both sources know where all of them are, so two
+   * beacons matched to two beacons give a scale and an offset per axis, and
+   * the right pairing is the one that then puts every other observed beacon
+   * on a traced one. What comes out is checked against the coastline, which
+   * knows nothing about beacons: if the two independent agreements do not
+   * both hold, the fit is refused and the tool falls back to reading names.
+   */
+  const fit = alignToTraced(objects, objectName, atTile, groundName);
+  if (!fit) return null;
+
+  const biomeAt = (x, y) => {
+    const col = Math.floor(x / fit.sx - fit.ox);
+    const row = Math.floor(y / fit.sy - fit.oy);
+    if (col < 0 || col >= traced.cols || row < 0 || row >= traced.rows) return null;
+    const biome = traced.biomeOfCell(col, row);
+    return biome && !/water|ocean|sea/i.test(biome) ? biome : null;
   };
 
   /*
@@ -289,11 +446,12 @@ function learnFromCapture(biomeNames) {
   const BLOCK = 16;
   const FLOOR_FILL = 70;
   const blocksOf = new Map();
-  for (const tile of seen.tiles) {
-    if (!blocksOf.has(tile.type)) blocksOf.set(tile.type, new Map());
-    const bag = blocksOf.get(tile.type);
-    const key = Math.floor(tile.y / BLOCK) * 100000 + Math.floor(tile.x / BLOCK);
-    bag.set(key, (bag.get(key) || 0) + 1);
+  for (const [key, type] of atTile) {
+    const x = key % KEY, y = (key - x) / KEY;
+    if (!blocksOf.has(type)) blocksOf.set(type, new Map());
+    const bag = blocksOf.get(type);
+    const block = Math.floor(y / BLOCK) * KEY + Math.floor(x / BLOCK);
+    bag.set(block, (bag.get(block) || 0) + 1);
   }
   const structural = new Set();
   for (const [type, bag] of blocksOf) {
@@ -302,78 +460,42 @@ function learnFromCapture(biomeNames) {
     if (total / bag.size < FLOOR_FILL) structural.add(type);
   }
 
-  const { minX, minY, maxX, maxY } = seen.bounds;
-  const width = maxX - minX + 1;
-  const height = maxY - minY + 1;
-  const atCell = new Int32Array(width * height).fill(-1);
-  const cellBiome = new Array(width * height).fill(null);
-
-  for (const tile of seen.tiles) {
-    const i = (tile.y - minY) * width + (tile.x - minX);
-    if (i < 0 || i >= atCell.length) continue;
-    atCell[i] = tile.type;
-    cellBiome[i] = biomeOf(groundName.get(tile.type));
-  }
-
-  /*
-   * Spread each named biome outwards over the nameless ground around it, a
-   * ring at a time, so a cell of "Dark Grass" takes the biome of whatever
-   * named ground it is nearest. Eight rings is about forty tiles of reach at
-   * this scale — enough to cross a clearing, not enough to jump a coast.
-   */
-  const frontier = [];
-  for (let i = 0; i < cellBiome.length; i++) if (cellBiome[i]) frontier.push(i);
-  let edge = frontier;
-  for (let ring = 0; ring < 8 && edge.length; ring++) {
-    const next = [];
-    for (const i of edge) {
-      const x = i % width, y = (i - x) / width;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx, ny = y + dy;
-        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
-        const j = ny * width + nx;
-        if (cellBiome[j] || atCell[j] < 0) continue;
-        cellBiome[j] = cellBiome[i];
-        next.push(j);
-      }
+  // Which biome a ground's name claims, where it claims one at all. Read off
+  // the traced map a tile could sit a cell inside its neighbour, so a ground
+  // that names a biome is still only counted for the one it names.
+  const claims = text => {
+    const flat = plain(text || '');
+    for (const biome of biomeNames) {
+      if (flat.includes(plain(ALIAS[biome] || biome))) return biome;
     }
-    edge = next;
-  }
+    return null;
+  };
 
-  // Ground counted per biome, and roads left out: they are drawn as roads.
   const ground = new Map();
   const tileTally = new Map();
-  for (let i = 0; i < atCell.length; i++) {
-    const biome = cellBiome[i];
-    if (!biome || atCell[i] < 0) continue;
-    const name = groundName.get(atCell[i]) || '';
+  for (const [key, type] of atTile) {
+    const x = key % KEY, y = (key - x) / KEY;
+    const biome = biomeAt(x, y);
+    if (!biome) continue;
+    const name = groundName.get(type) || '';
     tileTally.set(biome, (tileTally.get(biome) || 0) + 1);
     if (/^road /i.test(name)) continue;
-    /*
-     * A cell's biome comes from what surrounds it, which is right for ground
-     * with no name of its own and wrong for ground that has one. Oryx's
-     * castle sits inside the realm, so its flagstones fall within a ring or
-     * two of half the biomes here and were being counted as their floor. If a
-     * ground names a biome, it belongs to that one or to none.
-     */
-    const owner = biomeOf(name);
+    const owner = claims(name);
     if (owner && owner !== biome) continue;
     if (!owner && /castle|shatters|oryx|nexus|vault|guild/i.test(name)) continue;
     // Beacons and set pieces are things placed on a biome, not the biome.
     if (/beacon|set piece/i.test(name)) continue;
     // And neither is anything that was only ever laid in one tight shape.
-    if (structural.has(atCell[i])) continue;
+    if (structural.has(type)) continue;
     if (!ground.has(biome)) ground.set(biome, new Map());
     const bag = ground.get(biome);
-    bag.set(atCell[i], (bag.get(atCell[i]) || 0) + 1);
+    bag.set(type, (bag.get(type) || 0) + 1);
   }
 
   // And what was standing on it, by the biome of the ground underneath.
   const props = new Map();
-  for (const object of seen.observedObjects || []) {
-    const x = Math.round(object.x) - minX, y = Math.round(object.y) - minY;
-    if (x < 0 || x >= width || y < 0 || y >= height) continue;
-    const biome = cellBiome[y * width + x];
+  for (const object of objects) {
+    const biome = biomeAt(Math.round(object.x), Math.round(object.y));
     if (!biome) continue;
     const name = objectName.get(object.type) || '';
     // Barriers and beacon beams are the game's furniture, not the realm's.
@@ -382,10 +504,9 @@ function learnFromCapture(biomeNames) {
      * Where it stood says which biome it is in; what it is called overrules
      * that when the two disagree. A Sprite Forest mushroom growing a few
      * tiles inside Dead Church is a mushroom near a border, not evidence
-     * that Dead Church has mushrooms — and taking the location alone had
-     * every biome inheriting its neighbour's scenery.
+     * that Dead Church has mushrooms.
      */
-    const owns = biomeOf(name);
+    const owns = claims(name);
     if (owns && owns !== biome) continue;
     if (!props.has(biome)) props.set(biome, new Map());
     const bag = props.get(biome);
@@ -397,20 +518,19 @@ function learnFromCapture(biomeNames) {
    *
    * Every beacon in the realm stands in the middle of the same plate: a
    * square of the castle's flagstones, a ring of the darker ones, Oryx's rug
-   * at the centre. Nine of them were walked, in five different biomes, and
-   * they are identical tile for tile — which is the proof that it is built
-   * rather than grown, and the reason it can be stamped rather than sown.
+   * at the centre. They are identical tile for tile — which is the proof that
+   * it is built rather than grown, and the reason it can be stamped rather
+   * than sown.
    *
-   * No single walk covers a whole plate, so the nine are laid on top of one
+   * No single walk covers a whole plate, so they are laid on top of one
    * another and each cell takes the type that at least two of them agree on.
    * The ground around the plate differs from beacon to beacon, so it loses
-   * every vote it might have won; what is left, once cells that are not built
-   * of monument ground are dropped, is the plate and nothing else.
+   * every vote it might have won.
    */
   const REACH = 10;
   const SPAN = 2 * REACH + 1;
   const centres = [];
-  for (const object of seen.observedObjects || []) {
+  for (const object of objects) {
     const name = objectName.get(object.type) || '';
     if (!/^(Actual Active Beacon|Captured Beacon|Beacon Guardian [A-Z])/.test(name)) continue;
     const x = Math.round(object.x), y = Math.round(object.y);
@@ -423,11 +543,11 @@ function learnFromCapture(biomeNames) {
     let hits = 0;
     for (let dy = -REACH; dy <= REACH; dy++) {
       for (let dx = -REACH; dx <= REACH; dx++) {
-        const i = (cy + dy - minY) * width + (cx + dx - minX);
-        if (i < 0 || i >= atCell.length || atCell[i] < 0) continue;
+        const type = atTile.get((cy + dy) * KEY + (cx + dx));
+        if (type === undefined) continue;
         hits++;
         const bag = votes[(dy + REACH) * SPAN + (dx + REACH)];
-        bag.set(atCell[i], (bag.get(atCell[i]) || 0) + 1);
+        bag.set(type, (bag.get(type) || 0) + 1);
       }
     }
     if (hits > 200) plates++;
@@ -460,9 +580,7 @@ function learnFromCapture(biomeNames) {
      * cell and the cell opposite it through the centre hold the same tile.
      * So the four candidate centres around the beacon are each tried, and the
      * one that carries the largest square that reads the same upside down is
-     * the middle of the plate. Trimming to the outermost agreed cell instead
-     * had a column of whatever happened to lie east of it hanging off the
-     * edge.
+     * the middle of the plate.
      */
     const mirrors = (cx, cy, r) => {
       for (let dy = -r; dy <= r; dy++) {
@@ -493,8 +611,7 @@ function learnFromCapture(biomeNames) {
        * A plate is one built thing, so it has no holes in it. What is left
        * unresolved is the few cells at the very centre, where every beacon's
        * road arrives and covers the floor from a different direction; they
-       * take the nearest cell that was resolved. Left empty they would read
-       * as a gap in the flagstones, which is the one thing they are not.
+       * take the nearest cell that was resolved.
        */
       for (let pass = 0; pass < span; pass++) {
         let left = 0;
@@ -511,14 +628,11 @@ function learnFromCapture(biomeNames) {
         }
         if (!left) break;
       }
-
-      // Where the beacon itself stands inside the plate, so it can be laid
-      // down around a beacon the atlas already knows the position of.
       plate = { w: span, h: span, ox: r, oy: r, cells: cut, seen: plates };
     }
   }
 
-  return { ground, props, tileTally, structural, plate, groundName, objectName, bounds: seen.bounds };
+  return { ground, props, tileTally, structural, plate, groundName, objectName, walks, fit };
 }
 
 /*
@@ -552,13 +666,39 @@ const plain = text => String(text).toLowerCase().replace(/[^a-z0-9]/g, '');
  * bounding box fixes both, and for a tile that genuinely has transparency in
  * it — water, a flower — it simply changes nothing.
  */
-function tileFor(ground) {
+const TILE_ART = 8;                            // the game's ground tile, in pixels
+
+function tileFor(ground, isFloor) {
   const rects = atlases.get(ground.atlas);
   if (!rects) return null;
   const rect = rects[ground.index];
   if (!rect || !rect.sheet || !rect.w || !rect.h) return null;
   const sheet = pixels.get(rect.sheet);
   if (!sheet || rect.x + rect.w > sheet.width || rect.y + rect.h > sheet.height) return null;
+
+  /*
+   * A floor is cut to the size the game draws it, which is eight pixels
+   * square — the atlases say so in their own names. The registry files it as
+   * ten by ten with a pixel of packer's padding all round, so the middle
+   * eight are taken and the padding is left behind.
+   *
+   * Its own outline will not do here, even though that is right for a tree.
+   * Grass is drawn with gaps in it; take the outline of "New Low Forest
+   * Grass" and you get six pixels by eight, which then has to be stretched
+   * back across a whole tile. The blades come out fat and the tile no longer
+   * lines up with its neighbours.
+   */
+  if (isFloor) {
+    const w = Math.min(TILE_ART, rect.w), h = Math.min(TILE_ART, rect.h);
+    return {
+      rect: {
+        x: rect.x + Math.floor((rect.w - w) / 2),
+        y: rect.y + Math.floor((rect.h - h) / 2),
+        w, h, sheet: rect.sheet
+      },
+      sheet
+    };
+  }
 
   let minX = rect.w, minY = rect.h, maxX = -1, maxY = -1;
   for (let y = 0; y < rect.h; y++) {
@@ -593,8 +733,12 @@ function meanOf(tile) {
 const learned = learnFromCapture([...biomes.keys()]);
 if (learned) {
   const covered = [...learned.tileTally].sort((a, b) => b[1] - a[1]);
-  console.log('  capture: ' + covered.length + ' biomes walked, '
+  console.log('  capture: ' + learned.walks + ' walks, ' + covered.length + ' biomes, '
     + covered.reduce((n, row) => n + row[1], 0).toLocaleString('en-US') + ' tiles placed');
+  console.log('  aligned on ' + learned.fit.beacons + ' beacons ('
+    + learned.fit.hit + ' matched), coastline agrees on '
+    + (100 * learned.fit.coast).toFixed(1) + '% of '
+    + learned.fit.checked.toLocaleString('en-US') + ' tiles');
 }
 const groundByType = new Map();
 for (const ground of grounds) if (ground.type !== null && !groundByType.has(ground.type)) groundByType.set(ground.type, ground);
@@ -625,7 +769,7 @@ for (const [biome, colours] of biomes) {
   const wanted = plain(ALIAS[biome] || biome);
   let chosen = grounds
     .filter(ground => plain(ground.id).includes(wanted))
-    .map(ground => ({ ground, tile: tileFor(ground) }))
+    .map(ground => ({ ground, tile: tileFor(ground, true) }))
     .filter(entry => entry.tile)
     .map(entry => ({ ...entry, look: meanOf(entry.tile) }))
     // A floor tile is opaque. A half-empty rectangle is a decoration that
@@ -647,10 +791,20 @@ for (const [biome, colours] of biomes) {
       .map(([type, count]) => {
         const ground = groundByType.get(type);
         if (!ground) return null;
-        const tile = tileFor(ground);
+        const tile = tileFor(ground, true);
         if (!tile) return null;
+        /*
+         * Barely a gate at all, and deliberately. Opacity used to stand in
+         * for "is this a floor", which it does badly: shoreline sand is three
+         * quarters opaque and low forest grass is seven tenths, so the test
+         * threw out the floor of the beach and of the plains — the two biomes
+         * it was most needed for. What makes a floor a floor is that it was
+         * laid over a whole biome, and the block test upstream already knows
+         * that. All that is left to catch here is art that is very nearly
+         * empty, which no floor is.
+         */
         const look = meanOf(tile);
-        return look && look.solid > 0.9 ? { ground, tile, look, weight: count } : null;
+        return look && look.solid > 0.3 ? { ground, tile, look, weight: count } : null;
       })
       .filter(Boolean);
     /*
@@ -689,7 +843,7 @@ for (const [biome, colours] of biomes) {
     const target = [0, 1, 2].map(c => colours.reduce((sum, rgb) => sum + rgb[c], 0) / colours.length);
     chosen = grounds
       .filter(ground => SOUNDS_LIKE_GROUND.test(ground.id))
-      .map(ground => ({ ground, tile: tileFor(ground) }))
+      .map(ground => ({ ground, tile: tileFor(ground, true) }))
       .filter(entry => entry.tile && entry.tile.rect.w <= 16 && entry.tile.rect.h <= 16)
       .map(entry => ({ ...entry, look: meanOf(entry.tile) }))
       .filter(entry => entry.look && entry.look.solid > 0.95)
@@ -827,7 +981,7 @@ if (learned && learned.plate) {
   const entries = order
     .map(type => {
       const ground = groundByType.get(type);
-      const tile = ground && tileFor(ground);
+      const tile = ground && tileFor(ground, true);
       return tile ? { ground, tile } : null;
     })
     .filter(Boolean);
@@ -874,6 +1028,6 @@ for (const [biome, how, n, example, propCount, propExample] of report) {
 }
 const walked = report.filter(row => row[1] === 'walked').length;
 if (walked) console.log('\n  ' + walked + ' biomes taken from ground that was actually walked');
-const fell = report.filter(row => row[1] !== 'named').length;
+const fell = report.filter(row => row[1] === 'colour').length;
 console.log('\n  ' + report.length + ' biomes -> ' + path.relative(root, OUT)
-  + (fell ? ', ' + fell + ' by colour for want of a named ground type' : '') + '\n');
+  + (fell ? ', ' + fell + ' still by colour for want of a name or a walk' : '') + '\n');
