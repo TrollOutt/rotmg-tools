@@ -28,14 +28,9 @@
   "Carboniferous": {
     "ground": {
       "file": "carboniferous.png",
-      "tile": 10,
-      "count": 10,
+      "tile": 8,
+      "count": 5,
       "weights": [
-        1,
-        1,
-        1,
-        1,
-        1,
         1,
         1,
         1,
@@ -43,16 +38,11 @@
         1
       ],
       "names": [
-        "Carboniferous Beacon 45",
-        "Carboniferous Beacon 42",
-        "Carboniferous Beacon 44",
         "Carboniferous Water",
         "Carboniferous Dirt Grass",
         "Carboniferous Dirt",
         "Carboniferous Grass",
-        "Road Carboniferous",
-        "Carboniferous Beacon 11",
-        "Carboniferous Beacon 14"
+        "Road Carboniferous"
       ],
       "from": "named"
     },
@@ -79,7 +69,7 @@
   "Floral Escape": {
     "ground": {
       "file": "floral-escape.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -96,8 +86,8 @@
       "names": [
         "Floral Escape Dark Grass Yellow Flower",
         "Floral Escape Dark Water",
-        "Floral Escape Light Grass Yellow Flower",
         "Floral Escape Dark Grass White Flower",
+        "Floral Escape Light Grass Yellow Flower",
         "Floral Escape Light Grass Red Flower",
         "Floral Escape Dark Grass Red Flower",
         "Floral Escape Light Grass Indigo Flower",
@@ -140,53 +130,53 @@
   "Haunted Hallows": {
     "ground": {
       "file": "haunted-hallows.png",
-      "tile": 10,
-      "count": 6,
+      "tile": 8,
+      "count": 5,
       "weights": [
-        26,
-        26,
-        7727,
-        26,
-        26,
-        96
+        23,
+        23,
+        6903,
+        23,
+        23
       ],
       "names": [
         "Haunted Hallows Lightish Dirt",
         "Haunted Hallows Dark Grass",
         "Haunted Hallows Darkish Dirt",
         "Haunted Hallows Stone",
-        "Haunted Hallows Dark With Dirt",
-        "Dark Grass"
+        "Haunted Hallows Dark With Dirt"
       ],
       "from": "walked"
     },
     "props": {
       "file": "haunted-hallows-props.png",
       "tile": 16,
-      "count": 6,
+      "count": 7,
       "weights": [
-        98,
-        60,
+        99,
+        66,
         4,
         4,
-        3,
-        2
+        4,
+        4,
+        3
       ],
       "names": [
         "Haunted Hallows Large Pumpkins",
         "Gate",
         "Gate Entry",
         "Gate End 1",
+        "Gate 2",
         "SulfW Dead Grass",
-        "Bush"
+        "Sinister Pumpkin"
       ],
-      "density": 0.05860724233983287
+      "density": 0.06386102275507707
     }
   },
   "Runic Tundra": {
     "ground": {
       "file": "runic-tundra.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -205,8 +195,8 @@
         "Runic Tundra Runic 6",
         "Runic Tundra Large Skink K",
         "Runic Tundra Runic 17",
-        "Runic Tundra Large Skull E",
         "Runic Tundra Large Dragon H",
+        "Runic Tundra Large Skull E",
         "Runic Tundra Large Skink V",
         "Runic Tundra Large Runic 1 B",
         "Runic Tundra Light Ice",
@@ -216,14 +206,9 @@
     },
     "props": {
       "file": "runic-tundra-props.png",
-      "tile": 16,
-      "count": 10,
+      "tile": 18,
+      "count": 5,
       "weights": [
-        1,
-        1,
-        1,
-        1,
-        1,
         1,
         1,
         1,
@@ -231,23 +216,18 @@
         1
       ],
       "names": [
-        "Runic Tundra Small Ice",
-        "Runic Tundra Small Shrubs",
-        "Runic Tundra Large Rocks",
-        "Runic Tundra Large Tree",
-        "Runic Tundra Chopped Tree",
-        "Runic Tundra Patial Fence",
-        "Runic Tundra Lamp Post",
-        "Runic Tundra Wooden Cross",
-        "Runic Tundra Runic Rock 3",
-        "Runic Tundra Runic Rock 7"
+        "Sentient Monolith",
+        "Sentient Monolith Siphon 1",
+        "Sentient Monolith Siphon 2",
+        "Sentient Monolith Siphon 4",
+        "Sentient Monolith Siphon 3"
       ]
     }
   },
   "Sanguine Forest": {
     "ground": {
       "file": "sanguine-forest.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -262,16 +242,16 @@
         1
       ],
       "names": [
-        "Sanguine Forest Dark Veins",
+        "Sanguine Forest Dark Spooky",
         "Sanguine Forest Dark Flower",
-        "Sanguine Forest Beacon 43",
-        "Sanguine Forest Beacon 50",
-        "Sanguine Forest Beacon 63",
-        "Sanguine Forest Beacon 77",
-        "Sanguine Forest Beacon 68",
-        "Sanguine Forest Beacon 73",
+        "Sanguine Forest Beacon 62",
+        "Sanguine Forest Beacon 72",
+        "Sanguine Forest Beacon 51",
+        "Sanguine Forest Beacon 46",
         "Sanguine Forest Beacon 59",
-        "Sanguine Forest Beacon 54"
+        "Sanguine Forest Beacon 54",
+        "Sanguine Forest Beacon 67",
+        "Sanguine Forest Beacon 75"
       ],
       "from": "named"
     },
@@ -308,11 +288,11 @@
   "Coral Reefs": {
     "ground": {
       "file": "coral-reefs.png",
-      "tile": 10,
+      "tile": 8,
       "count": 2,
       "weights": [
-        345,
-        4244
+        157,
+        3481
       ],
       "names": [
         "Low Ocean Water",
@@ -332,27 +312,27 @@
         "Coral Reef Large Red Coral",
         "Coral Reef Large Yellow Coral"
       ],
-      "density": 0.058045977011494256
+      "density": 0.07297433316557625
     }
   },
   "Dead Church": {
     "ground": {
       "file": "dead-church.png",
-      "tile": 10,
+      "tile": 8,
       "count": 6,
       "weights": [
-        15,
-        15,
-        15,
-        15,
-        4354,
-        15
+        12,
+        12,
+        12,
+        12,
+        3583,
+        12
       ],
       "names": [
-        "Dead Church Purple Grass",
         "Dead Church Dirt Rough",
-        "Dead Church Green Grass",
+        "Dead Church Purple Grass",
         "Dead Church Purple Grass Mushrooms",
+        "Dead Church Green Grass",
         "Dead Church Grass Dark",
         "Dead Church Dirt Regular"
       ],
@@ -360,11 +340,13 @@
     },
     "props": {
       "file": "dead-church-props.png",
-      "tile": 13,
-      "count": 6,
+      "tile": 14,
+      "count": 8,
       "weights": [
         7,
         4,
+        3,
+        2,
         2,
         1,
         1,
@@ -373,18 +355,20 @@
       "names": [
         "Dead Church Tree Black",
         "Dead Church Graves Light",
-        "Dead Church Unlit Candles",
-        "Dead Church Bones",
+        "Dead Church Skulls",
         "Shatters Dead Tree",
-        "Dead Church Skulls"
+        "Dead Church Unlit Candles",
+        "AI Reactor Indicator Adept",
+        "AI Alien Reactor Adept",
+        "Dead Church Bones"
       ],
-      "density": 0.01975179164481734
+      "density": 0.02004008016032064
     }
   },
   "Shipwreck Cove": {
     "ground": {
       "file": "shipwreck-cove.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -445,7 +429,7 @@
   "Abandoned City": {
     "ground": {
       "file": "abandoned-city.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -506,7 +490,7 @@
   "High Plains": {
     "ground": {
       "file": "high-plains.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -521,16 +505,16 @@
         1
       ],
       "names": [
-        "MV Gravel Light Source Mid 2",
-        "Abyss Fort Tile Glyph D",
-        "Tavern Grass Bright",
-        "MV Gravel Lit",
-        "MV Gravel Light Source Bottom Mid 2",
-        "Troom Grass Tile C",
-        "DWD Water",
-        "SulfW fullstone1",
-        "Carboniferous Dirt Grass",
-        "Ancient Ruins Tile"
+        "Candy Grass Dark",
+        "Hemomancer Floor 19",
+        "Hemomancer Floor 60",
+        "Abyss Fort Tile Checkboard",
+        "BrokenHeartTile4",
+        "Dead Church Brick Floor Dark Large Slab UL 2",
+        "Tavern dark tile",
+        "SulfW SplitstoneVerti START",
+        "Earth Tile Dark",
+        "Black Water Light"
       ],
       "from": "colour"
     }
@@ -538,7 +522,7 @@
   "Risen Hell": {
     "ground": {
       "file": "risen-hell.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -602,17 +586,17 @@
       "tile": 8,
       "count": 6,
       "weights": [
-        1459,
-        45,
-        45,
-        12105,
-        45,
-        45
+        332,
+        188,
+        37,
+        10541,
+        37,
+        37
       ],
       "names": [
         "Dark Grass",
+        "Nature Ruins Grass",
         "Desert Heavy Cracked Sand",
-        "Desert Light Cracked Sand",
         "Desert Rough Sand",
         "Desert Patchy Sand",
         "Desert Smooth Sand"
@@ -624,68 +608,82 @@
       "tile": 16,
       "count": 10,
       "weights": [
-        41,
-        38,
+        39,
+        36,
         32,
-        25,
-        24,
         23,
         23,
-        23,
+        21,
         20,
-        20
+        20,
+        19,
+        19
       ],
       "names": [
         "Desert Small Saguaro Cactus",
         "Desert Small Yellow Flower Cactus",
         "Desert Small Ball Cactus",
-        "Desert Large Ball Cactus",
         "Desert Small Pale Rock",
-        "Desert Large Dead Tree",
-        "Desert Small Red Rock",
+        "Desert Large Ball Cactus",
+        "Desert Large Saguaro Cactus",
         "Desert Small Clay Rock",
-        "Desert Small Red Flower Cactus",
-        "Desert Large Prickly Pear Cactus"
+        "Desert Large Prickly Pear Cactus",
+        "Desert Small Red Rock",
+        "Desert Small Red Flower Cactus"
       ],
-      "density": 0.052495538186965354
+      "density": 0.041591021620729494
     }
   },
   "Mid Forest": {
     "ground": {
       "file": "mid-forest.png",
-      "tile": 10,
-      "count": 10,
+      "tile": 8,
+      "count": 2,
       "weights": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        218,
+        2737
       ],
       "names": [
-        "LH Main Tile UL",
-        "Hemomancer Floor 19",
-        "Hemomancer Floor 50",
-        "lod Golden Sand",
-        "Abyss Fort Tile Glyph O",
-        "Dragon Tile Green",
-        "Earthy Grass",
-        "Lab Floor Power",
-        "Floral Escape Dark Grass Red Flower",
-        "Japanese Rock Dark"
+        "New Low Forest Grass",
+        "Nature Ruins Grass"
       ],
-      "from": "colour"
+      "from": "walked"
+    },
+    "props": {
+      "file": "mid-forest-props.png",
+      "tile": 16,
+      "count": 10,
+      "weights": [
+        46,
+        37,
+        36,
+        24,
+        14,
+        7,
+        5,
+        4,
+        4,
+        3
+      ],
+      "names": [
+        "Nature Ruins Large Flower",
+        "Nature Ruins Small Plant",
+        "Nature Ruins Small Flower",
+        "Nature Ruins Small Sappling",
+        "Nature Ruins Small Rock Thing",
+        "Low Forest Large Pine",
+        "Low Forest Large Bush",
+        "Low Forest Large White Shroom",
+        "Low Forest Large Small Shrub",
+        "Low Forest Large Sues 2"
+      ],
+      "density": 0.11235955056179775
     }
   },
   "Undead Forest": {
     "ground": {
       "file": "undead-forest.png",
-      "tile": 10,
+      "tile": 8,
       "count": 10,
       "weights": [
         1,
@@ -746,109 +744,147 @@
   "Mid Plains": {
     "ground": {
       "file": "mid-plains.png",
-      "tile": 10,
-      "count": 10,
+      "tile": 8,
+      "count": 3,
       "weights": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        2373,
+        74,
+        12169
       ],
       "names": [
-        "Hemomancer Floor 23",
-        "Hemomancer Floor 19",
-        "Dead Church Brick Floor Dark Slab V4",
-        "MV Gravel Light Source Bottom Mid 2",
-        "GhostWater Slows",
-        "Ice Citadel Large Square TL Corner",
-        "Low Forest Dirt",
-        "Jungle Temple Floor Red Green",
-        "MV Gravel Light Source Bottom 3",
-        "Easter Road Tile A"
+        "Shoreline Sand",
+        "Shoreline Water",
+        "New Low Forest Grass"
       ],
-      "from": "colour"
+      "from": "walked"
+    },
+    "props": {
+      "file": "mid-plains-props.png",
+      "tile": 16,
+      "count": 10,
+      "weights": [
+        273,
+        251,
+        251,
+        227,
+        223,
+        161,
+        146,
+        128,
+        107,
+        101
+      ],
+      "names": [
+        "Low Forest Large Sues 2",
+        "Low Forest Large Pine",
+        "Low Forest Small Red Shrooms",
+        "Low Forest Large Small Shrub",
+        "Low Forest Large Bush",
+        "Low Forest Large White Shroom",
+        "Low Forest Large Red Shroom",
+        "Low Forest Large Gold Shroom",
+        "Low Forest Large Blue Flower",
+        "Low Forest Large Pink Flower"
+      ],
+      "density": 0.18567395443503382
     }
   },
   "Beach": {
     "ground": {
       "file": "beach.png",
-      "tile": 10,
-      "count": 10,
+      "tile": 8,
+      "count": 3,
       "weights": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        11641,
+        425,
+        517
       ],
       "names": [
-        "Hemomancer Floor 58",
-        "Hemomancer Floor 35",
-        "Dead Church Brick Floor Dark Large Slab UR 4",
-        "MV Gravel Light Source Mid 4",
-        "SulfW fullstonealt1",
-        "SulfW Acidwater2",
-        "Ancient Ruins Pedestal Tile",
-        "Patty Grass 2",
-        "Desert Fancy Stone",
-        "Ice"
+        "Shoreline Sand",
+        "Shoreline Water",
+        "New Low Forest Grass"
       ],
-      "from": "colour"
+      "from": "walked"
+    },
+    "props": {
+      "file": "beach-props.png",
+      "tile": 16,
+      "count": 7,
+      "weights": [
+        16,
+        15,
+        12,
+        10,
+        9,
+        7,
+        7
+      ],
+      "names": [
+        "Low Forest Large Bush",
+        "Low Forest Large Sues 2",
+        "Low Forest Large Pine",
+        "Low Forest Small Red Shrooms",
+        "Low Forest Large Small Shrub",
+        "Low Forest Large Gold Shroom",
+        "Low Forest Large Blue Flower"
+      ],
+      "density": 0.025609337452797802
     }
   },
   "High Forest": {
     "ground": {
       "file": "high-forest.png",
-      "tile": 10,
-      "count": 10,
+      "tile": 8,
+      "count": 1,
       "weights": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        3508
       ],
       "names": [
-        "Hemomancer Floor 52",
-        "MV Less Gravel 2",
-        "SpecPen Courtyard Mud NoWalk NoSpawn",
-        "O3 Normal Tile Horizontal 6",
-        "Shipwreck Cove Grass",
-        "White Floor 1",
-        "SulfW SplitstoneVerti START",
-        "Lab Floor Power Nowalk",
-        "Floral Escape Dark Grass Red Flower",
-        "Japanese Rock Dark"
+        "Dark Grass"
       ],
-      "from": "colour"
+      "from": "walked"
+    },
+    "props": {
+      "file": "high-forest-props.png",
+      "tile": 8,
+      "count": 10,
+      "weights": [
+        31,
+        28,
+        27,
+        21,
+        18,
+        17,
+        15,
+        14,
+        14,
+        14
+      ],
+      "names": [
+        "Bush",
+        "Tree Leafless",
+        "Shrub",
+        "Green Bush 4",
+        "Green Bush 8",
+        "Green Bush 7",
+        "Green Bush 5",
+        "Light Green Bush 1",
+        "Green Bush 6",
+        "Light Green Bush 4"
+      ],
+      "density": 0.22
     }
   },
   "Sprite Forest": {
     "ground": {
       "file": "sprite-forest.png",
-      "tile": 10,
+      "tile": 8,
       "count": 4,
       "weights": [
-        29,
-        8795,
-        29,
-        29
+        26,
+        7772,
+        26,
+        26
       ],
       "names": [
         "Sprite Forest Pink Sparkle",
@@ -860,23 +896,23 @@
     },
     "props": {
       "file": "sprite-forest-props.png",
-      "tile": 16,
+      "tile": 32,
       "count": 10,
       "weights": [
+        265,
         258,
-        256,
-        248,
-        67,
-        64,
-        24,
-        21,
-        14,
-        9,
-        3
+        258,
+        74,
+        69,
+        28,
+        16,
+        11,
+        8,
+        5
       ],
       "names": [
-        "Sprite Forest Blue Glow Flower",
         "Sprite Forest Mushroom",
+        "Sprite Forest Blue Glow Flower",
         "Sprite Forest Pink Glow Flower",
         "Sprite Forest Medium Blue Tree",
         "Sprite Forest Medium Pink Tree",
@@ -884,9 +920,9 @@
         "Sprite Forest Greenery",
         "Sprite Forest Medium Glow Rocks",
         "Sprite Forest Medium Jeweled Tree",
-        "Artificial Sprite Child"
+        "Elder Sprite Tree"
       ],
-      "density": 0.10840327636768127
+      "density": 0.11329087921117502
     }
   }
 }

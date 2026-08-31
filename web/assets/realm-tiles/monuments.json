@@ -1,7 +1,7 @@
 {
   "beacon": {
     "file": "beacon-plate.png",
-    "tile": 10,
+    "tile": 8,
     "count": 3,
     "w": 19,
     "h": 19,
@@ -375,6 +375,6 @@
       0,
       0
     ],
-    "seen": 9
+    "seen": 10
   }
 }
