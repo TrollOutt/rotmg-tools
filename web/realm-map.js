@@ -736,6 +736,7 @@ var RealmMap = (function () {
     drag.moved = drag.moved || Math.hypot(dx, dy) > 5;
     view.tx = drag.vx - dx / scale;
     view.ty = drag.vy - dy / scale;
+    clampTarget();
   }
   function onPointerUp(event) {
     if (!drag || drag.moved) { drag = null; return; }
@@ -753,16 +754,49 @@ var RealmMap = (function () {
     const region = regionAt(spot);
     if (region) focus(region);
   }
+  /*
+   * Keep the realm on screen.
+   *
+   * The view eases towards a target, and zooming anchored on the cursor moves
+   * that target. Working the anchor out from where the view *is* while moving
+   * where it is *going* means every turn of the wheel during an ease adds a
+   * little error, and a few turns walk the target clean off the island — at
+   * which point the map is gone, zooming does nothing you can see, and it
+   * reads as stuck. So the anchor is worked out in the target's own frame, and
+   * the target is then held over the map with a margin. There is nowhere left
+   * to get lost.
+   */
+  function clampTarget() {
+    const size = box();
+    const scale = baseScale() * view.tz;
+    // Half a screen of slack, so the coast can be brought to the middle
+    // without the sea beyond it swallowing the view.
+    const slackX = size.width / scale / 2;
+    const slackY = size.height / scale / 2;
+    view.tx = Math.max(coast.minX - slackX, Math.min(coast.maxX + slackX, view.tx));
+    view.ty = Math.max(coast.minY - slackY, Math.min(coast.maxY + slackY, view.ty));
+  }
+
   function onWheel(event) {
     event.preventDefault();
-    const spot = worldPoint(event.offsetX, event.offsetY);
+    const size = box();
+    const scale = baseScale() * view.tz;
+    // The point under the cursor, in the frame the view is heading for.
+    const spot = {
+      x: (event.offsetX - size.width / 2) / scale + view.tx,
+      y: (event.offsetY - size.height / 2) / scale + view.ty
+    };
     // Far more room to close in than before: the realm is a great deal bigger
     // than it looks from above.
-    const next = Math.max(0.8, Math.min(14, view.tz * (event.deltaY > 0 ? 0.85 : 1.18)));
+    // Room to pull back well past the opening view, so a turn of the wheel
+    // outward always visibly does something. Bottoming out one notch from
+    // where you started is what made it feel jammed.
+    const next = Math.max(0.45, Math.min(14, view.tz * (event.deltaY > 0 ? 0.82 : 1.22)));
     const ratio = next / view.tz;
     view.tx = spot.x - (spot.x - view.tx) / ratio;
     view.ty = spot.y - (spot.y - view.ty) / ratio;
     view.tz = next;
+    clampTarget();
   }
   function resize() {
     const size = box();
@@ -808,6 +842,9 @@ var RealmMap = (function () {
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('wheel', onWheel, { passive: false });
+    // The way out that does not need the wheel: however deep you are, two
+    // clicks puts the whole realm back on screen.
+    canvas.addEventListener('dblclick', event => { event.preventDefault(); home(); });
     if (reset) reset.addEventListener('click', home);
 
     const bundled = typeof BUNDLE !== 'undefined' && BUNDLE && BUNDLE.sources;

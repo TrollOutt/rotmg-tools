@@ -46,7 +46,8 @@ $pcap = Join-Path $OutDir "realm-$stamp.pcapng"
 
 Write-Host ''
 Write-Host "  capturing TCP $Port for $Seconds seconds" -ForegroundColor Cyan
-Write-Host "  walk somewhere you have not been. New ground is the point." -ForegroundColor Cyan
+Write-Host "  IMPORTANT: start a NEW realm connection after this line (leave and re-enter, or relaunch)." -ForegroundColor Yellow
+Write-Host "  Then walk through new ground. RC4 starts at connection time, not at packet time." -ForegroundColor Cyan
 Write-Host ''
 
 # Only the game's port, both directions, payload included. Nothing else on the

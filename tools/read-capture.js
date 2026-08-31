@@ -173,9 +173,14 @@ function streamsOf(file, port) {
     const span = high - low;
     if (span <= 0 || span > 512 * 1024 * 1024) continue;
     const bytes = Buffer.alloc(span);
-    for (const tcp of list) tcp.payload.copy(bytes, offsetOf(tcp) - low);
+    const filled = new Uint8Array(span);
+    for (const tcp of list) {
+      const at = offsetOf(tcp) - low;
+      tcp.payload.copy(bytes, at);
+      filled.fill(1, at, at + tcp.payload.length);
+    }
     out.push({
-      name, bytes,
+      name, bytes, filled,
       fromPort: list[0].sourcePort,
       toPort: list[0].destinationPort,
       frames: frames(bytes).found
