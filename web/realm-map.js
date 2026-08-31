@@ -24,6 +24,24 @@ var RealmMap = (function () {
   const CELL = 4;
 
   /*
+   * How big the realm actually is.
+   *
+   * The traced grid is 248 by 258, which is the realm's shape and not its
+   * size: the server's own map is 2048 tiles square, so one traced cell is
+   * eight game tiles on a side and holds sixty-four of them. Drawing one
+   * sprite per cell — which is what this did — made every tuft of grass eight
+   * times too wide and the whole realm too small to walk about in. What gets
+   * drawn now is a game tile.
+   *
+   * It matters for more than the look. The weights and densities the builder
+   * learned were counted per game tile, so a desert that stands a cactus on
+   * one tile in twenty was being given one cactus per sixty-four tiles. At
+   * this resolution the numbers mean what they say.
+   */
+  const SUB = 8;
+  const TILE = CELL / SUB;                     // world units per game tile
+
+  /*
    * How much you see, and when.
    *
    * Zoomed out the realm is its biomes and nothing else; there is no reading
@@ -374,6 +392,9 @@ var RealmMap = (function () {
     const picture = file => {
       const image = new Image();
       image.decoding = 'async';
+      // The ground is cached, and a sheet that lands after it was drawn would
+      // otherwise not appear until something else forced a redraw.
+      image.onload = () => { cache.ready = false; };
       image.src = bundled && bundled.art && bundled.art[file]
         ? bundled.art[file] : 'assets/realm-tiles/' + file;
       return image;
@@ -440,78 +461,181 @@ var RealmMap = (function () {
     const c = hash(x0, y0 + 1), d = hash(x0 + 1, y0 + 1);
     return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
   }
-  const field = (col, row) =>
-    smooth(col / 9, row / 9) * 0.68 + smooth(col / 2.7, row / 2.7) * 0.32;
+  /*
+   * In game tiles, not traced cells: a broad lattice about thirty tiles
+   * across for the lie of the land, and a finer one about eight across to
+   * break its edges up. Both were tuned in cells before, which at this
+   * resolution would have made patches a quarter of a biome wide.
+   */
+  const field = (gx, gy) =>
+    smooth(gx / 30, gy / 30) * 0.68 + smooth(gx / 8, gy / 8) * 0.32;
 
-  function drawGround(scale) {
-    if (scale < SHOW_GRAIN) return;
-    const size = box();
-    const unit = CELL * scale;
-    const topLeft = worldPoint(0, 0);
-    const bottomRight = worldPoint(size.width, size.height);
-    const from = { col: Math.max(0, Math.floor(topLeft.x / CELL)), row: Math.max(0, Math.floor(topLeft.y / CELL)) };
-    const to = {
-      col: Math.min(cols - 1, Math.ceil(bottomRight.x / CELL)),
-      row: Math.min(rows - 1, Math.ceil(bottomRight.y / CELL))
-    };
-    // A hard ceiling on the work: past this many cells the view is so wide
-    // that the grain would not be visible anyway.
-    if ((to.col - from.col) * (to.row - from.row) > 26000) return;
+  /*
+   * The ground, cached.
+   *
+   * Close in, a screenful is tens of thousands of game tiles, and reaching
+   * for each of them every frame is not affordable. So they are laid once
+   * into an offscreen canvas somewhat larger than the window, and a frame
+   * costs one blit of it. It is redrawn when the view walks off the edge of
+   * it, when the zoom has moved far enough that stretching it would show, or
+   * when the level of detail changes. Panning and the tail of an ease — the
+   * great majority of frames — cost nothing but the blit.
+   *
+   * The margin is what makes panning free: the canvas holds a fifth of a
+   * screen of ground beyond each edge, so a drag has somewhere to go before
+   * anything has to be drawn again.
+   */
+  const cache = {
+    canvas: null, ctx: null,
+    scale: 0, step: 0, x: 0, y: 0, w: 0, h: 0, ready: false
+  };
 
-    const grain = Math.min(1, (scale - SHOW_GRAIN) / 1.2);
-    const scenic = Math.min(1, (scale - SHOW_SCENERY) / 1.6);
-    for (let row = from.row; row <= to.row; row++) {
-      for (let col = from.col; col <= to.col; col++) {
+  /*
+   * How finely to draw, given how close you are.
+   *
+   * The finest subdivision whose tiles are still worth the trouble: at least
+   * three pixels each, doubling out to one sprite per traced cell when you
+   * are high enough that a game tile would be a speck. This is what bounds
+   * the work — the number of tiles on screen at any zoom is roughly the
+   * number of three-pixel squares that fit in the window, and no more. There
+   * is no cell ceiling any more and no view at which the ground gives up and
+   * goes blank.
+   */
+  function detailStep(scale) {
+    let step = 1;
+    while (step < SUB && TILE * step * scale < 3) step *= 2;
+    return step;
+  }
+
+  function paintGround(scale, step) {
+    const c = cache.ctx;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, cache.canvas.width, cache.canvas.height);
+    c.imageSmoothingEnabled = false;
+
+    const quad = TILE * step * scale;              // pixels per drawn tile
+    const lastCol = cols * SUB - 1;
+    const lastRow = rows * SUB - 1;
+    const g0 = Math.max(0, Math.floor(cache.x / TILE / step) * step);
+    const g1 = Math.min(lastCol, Math.ceil((cache.x + cache.w) / TILE));
+    const r0 = Math.max(0, Math.floor(cache.y / TILE / step) * step);
+    const r1 = Math.min(lastRow, Math.ceil((cache.y + cache.h) / TILE));
+
+    /*
+     * What stands on the ground is put aside and drawn afterwards. A tree is
+     * taller than its own tile and leans onto the one above it, so drawn in
+     * the same pass it would be half buried by whatever came next.
+     */
+    const scenic = Math.min(1, (quad - 3) / 5);
+    const standing = [];
+
+    for (let gy = r0; gy <= r1; gy += step) {
+      const row = Math.floor(gy / SUB);
+      for (let gx = g0; gx <= g1; gx += step) {
+        const col = Math.floor(gx / SUB);
         const letter = at(col, row);
         if (isWater(letter) || letter === ROAD) continue;
         const entry = legend.get(letter);
         if (!entry || !/^#[0-9a-f]{6}$/i.test(entry.hex || '')) continue;
-        const spot = screenPoint(col * CELL, row * CELL);
-        const n = hash(col, row);
 
+        const px = (gx * TILE - cache.x) * scale;
+        const py = (gy * TILE - cache.y) * scale;
         const ground = entry.biome && tiles.ground.get(entry.biome);
-        if (ground && ground.image.complete && ground.image.naturalWidth) {
-          const slot = ground.pick(Math.min(0.9999, field(col, row)));
-          ctx.imageSmoothingEnabled = false;
-          ctx.drawImage(ground.image, slot * ground.tile, 0, ground.tile, ground.tile,
-            spot.x, spot.y, unit + 1, unit + 1);
 
-          /*
-           * And what stands on it, as thickly as it was seen to. A biome
-           * learned from play carries its own density — the sprite forest
-           * stands something on one cell in nine, the dead church on one in
-           * fifty — and only a biome guessed from its name falls back to the
-           * one-in-eleven that used to apply to all of them. Which one it is
-           * comes off the weights too, so a desert is mostly the small cactus
-           * it is mostly made of.
-           */
-          const standing = scenic > 0 && tiles.props.get(entry.biome);
-          const thick = standing && (standing.density || 0.09);
-          if (standing && n > 1 - thick && standing.image.complete && standing.image.naturalWidth) {
-            const which = standing.pick(hash(row * 3 + 1, col * 7 + 5));
-            ctx.globalAlpha = scenic;
-            ctx.drawImage(standing.image, which * standing.tile, 0, standing.tile, standing.tile,
-              spot.x - unit * 0.25, spot.y - unit * 0.5, unit * 1.5, unit * 1.5);
-            ctx.globalAlpha = 1;
+        if (ground && ground.image.complete && ground.image.naturalWidth) {
+          const slot = ground.pick(Math.min(0.9999, field(gx, gy)));
+          c.drawImage(ground.image, slot * ground.tile, 0, ground.tile, ground.tile,
+            px, py, quad + 1, quad + 1);
+
+          const props = scenic > 0 && tiles.props.get(entry.biome);
+          if (props && props.image.complete && props.image.naturalWidth) {
+            /*
+             * As thickly as it was seen to stand things, and no thicker. The
+             * density was counted per game tile, so when the view is coarse
+             * enough that one drawn tile covers several real ones, the chance
+             * has to cover them too — otherwise a forest thins out as you
+             * pull back, which is the one thing it must not do.
+             */
+            const thick = Math.min(0.6, (props.density || 0.09) * step * step);
+            if (hash(gx, gy) > 1 - thick) {
+              standing.push([props, props.pick(hash(gy * 3 + 1, gx * 7 + 5)), px, py]);
+            }
           }
           continue;
         }
 
-        // Grain: two or three darker pixels inside the cell, in one of four
-        // arrangements. Enough to break the flat, not enough to read as
-        // noise.
-        ctx.globalAlpha = grain * 0.5;
-        ctx.fillStyle = shade(entry.hex, 0.72);
-        const step = unit / 4;
-        const which = Math.floor(n * 4);
+        // No tile for this ground: leave the colour underneath showing, and
+        // speckle it only when a tile is big enough for the speckle to read
+        // as texture rather than as noise.
+        if (quad < 8) continue;
+        c.globalAlpha = 0.35;
+        c.fillStyle = shade(entry.hex, 0.72);
+        const bit = quad / 4;
+        const which = Math.floor(hash(gx, gy) * 4);
         for (let i = 0; i < 3; i++) {
-          const dx = ((which + i * 2) % 4) * step;
-          const dy = ((which * 3 + i) % 4) * step;
-          ctx.fillRect(spot.x + dx, spot.y + dy, step, step);
+          c.fillRect(px + ((which + i * 2) % 4) * bit, py + ((which * 3 + i) % 4) * bit, bit, bit);
         }
-        ctx.globalAlpha = 1;
+        c.globalAlpha = 1;
       }
     }
+
+    c.globalAlpha = scenic;
+    for (const [props, which, px, py] of standing) {
+      // Scenery is drawn at two tiles across and stood on the bottom of its
+      // own tile, which is where the game puts it: a tree grows up out of
+      // the ground it is rooted in rather than sitting centred on it.
+      const size = TILE * scale * 2;
+      c.drawImage(props.image, which * props.tile, 0, props.tile, props.tile,
+        px - size * 0.25, py - size * 0.6, size, size);
+    }
+    c.globalAlpha = 1;
+  }
+
+  function drawGround(scale) {
+    if (scale < SHOW_GRAIN) return;
+    const size = box();
+    if (!size.width || !size.height) return;
+    const step = detailStep(scale);
+    const near = worldPoint(0, 0);
+    const far = worldPoint(size.width, size.height);
+
+    const stretch = cache.ready && cache.scale ? scale / cache.scale : 0;
+    const holds = cache.ready
+      && near.x >= cache.x && near.y >= cache.y
+      && far.x <= cache.x + cache.w && far.y <= cache.y + cache.h;
+
+    if (!holds || cache.step !== step || stretch < 0.8 || stretch > 1.25) {
+      const wide = Math.min(2600, Math.ceil(size.width * 1.4));
+      const tall = Math.min(1800, Math.ceil(size.height * 1.4));
+      if (!cache.canvas) {
+        cache.canvas = document.createElement('canvas');
+        cache.ctx = cache.canvas.getContext('2d');
+      }
+      if (cache.canvas.width !== wide || cache.canvas.height !== tall) {
+        cache.canvas.width = wide;
+        cache.canvas.height = tall;
+      }
+      cache.x = near.x - (wide - size.width) / 2 / scale;
+      cache.y = near.y - (tall - size.height) / 2 / scale;
+      cache.w = wide / scale;
+      cache.h = tall / scale;
+      cache.scale = scale;
+      cache.step = step;
+      cache.ready = true;
+      paintGround(scale, step);
+    }
+
+    /*
+     * Between redraws the cache is blitted at whatever the zoom has since
+     * become. Within the quarter either side that is allowed, the softness
+     * is the ordinary softness of a map easing towards a new zoom, and it
+     * snaps sharp the moment the ease is over.
+     */
+    const corner = screenPoint(cache.x, cache.y);
+    const k = scale / cache.scale;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(cache.canvas, corner.x, corner.y,
+      cache.canvas.width * k, cache.canvas.height * k);
   }
 
   /* ---------------------------------------------------------------- *
@@ -834,7 +958,10 @@ var RealmMap = (function () {
     // Room to pull back well past the opening view, so a turn of the wheel
     // outward always visibly does something. Bottoming out one notch from
     // where you started is what made it feel jammed.
-    const next = Math.max(0.45, Math.min(14, view.tz * (event.deltaY > 0 ? 0.82 : 1.22)));
+    // Far enough in to stand on a tile. The old ceiling of fourteen put a
+    // game tile at about five pixels, which is below the size at which its
+    // art means anything — the realm was never actually reachable.
+    const next = Math.max(0.45, Math.min(80, view.tz * (event.deltaY > 0 ? 0.82 : 1.22)));
     const ratio = next / view.tz;
     view.tx = spot.x - (spot.x - view.tx) / ratio;
     view.ty = spot.y - (spot.y - view.ty) / ratio;
@@ -842,6 +969,7 @@ var RealmMap = (function () {
     clampTarget();
   }
   function resize() {
+    cache.ready = false;
     const size = box();
     const dpr = Math.min(devicePixelRatio || 1, 2);
     canvas.width = Math.round(size.width * dpr);
