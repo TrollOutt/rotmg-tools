@@ -153,12 +153,27 @@ const atlases = new Map();
   const list = flat.vector(flat.fields(flat.root())[0]);
   for (let i = 0; i < list.length; i++) {
     const fields = flat.fields(flat.indirect(list.at + i * 4));
+    /*
+     * A sprite is filed under the number it carries, not where it sits.
+     *
+     * The registry's sprite vector is sorted by the *text* of that number, so
+     * an atlas runs 0, 1, 10, 11, 12, 121, 122, 13, ... and a sprite's
+     * position in the vector is its index only for the first two. Reading
+     * position as index — which is what this did — quietly hands back a
+     * different picture for all but the first couple of entries in every
+     * atlas, which is how the beach came to be paved in dark red brick.
+     *
+     * The number itself is the sprite's fourth field, and FlatBuffers leaves
+     * a field out when it holds the default, so an absent one means nought.
+     */
     const sprites = flat.vector(fields[2]);
-    const rects = [];
+    const rects = new Map();
     for (let s = 0; s < sprites.length; s++) {
       const sprite = flat.fields(flat.indirect(sprites.at + s * 4));
-      if (!sprite[0] || !sprite[7]) { rects.push(null); continue; }
-      rects.push({
+      if (!sprite[0] || !sprite[7]) continue;
+      const index = sprite[3] ? flat.i32(sprite[3]) : 0;
+      if (rects.has(index)) continue;
+      rects.set(index, {
         x: Math.round(flat.f32(sprite[0])),
         y: Math.round(flat.f32(sprite[0] + 4)),
         w: Math.round(flat.f32(sprite[0] + 8)),
@@ -170,7 +185,7 @@ const atlases = new Map();
   }
 }
 console.log('\n  registry: ' + atlases.size + ' atlases, '
-  + [...atlases.values()].reduce((n, r) => n + r.length, 0).toLocaleString('en-US') + ' sprites');
+  + [...atlases.values()].reduce((n, r) => n + r.size, 0).toLocaleString('en-US') + ' sprites');
 
 const grounds = [];
 for (const file of fs.readdirSync(GROUND).filter(name => /^GroundTypes\./.test(name))) {
@@ -671,7 +686,7 @@ const TILE_ART = 8;                            // the game's ground tile, in pix
 function tileFor(ground, isFloor) {
   const rects = atlases.get(ground.atlas);
   if (!rects) return null;
-  const rect = rects[ground.index];
+  const rect = rects.get(ground.index);
   if (!rect || !rect.sheet || !rect.w || !rect.h) return null;
   const sheet = pixels.get(rect.sheet);
   if (!sheet || rect.x + rect.w > sheet.width || rect.y + rect.h > sheet.height) return null;
@@ -817,20 +832,17 @@ for (const [biome, colours] of biomes) {
     // Seen once in ten thousand is a seam or a stray, not a floor, and it
     // costs a slot in a ten-tile strip that a real tile could have had.
     fromLife = fromLife.filter(e => e.weight * 400 >= floor);
+    /*
+     * What was walked is the answer, and it is not topped up.
+     *
+     * Filling a short list out from the grounds that carry the biome's name
+     * made sense while a walk could only be attributed by name and most
+     * biomes had none. Now that a walk is read off the traced map, a biome
+     * with three observed floors has three floors — and the top-up was
+     * putting beach towels on the beach, because "Beach Towel 1" carries the
+     * name and nothing about a name says a thing is ground.
+     */
     if (fromLife.length) {
-      if (fromLife.length < 4) {
-        const seenTypes = new Set(fromLife.map(entry => entry.ground.type));
-        for (const entry of chosen) {
-          if (fromLife.length >= 6) break;
-          if (seenTypes.has(entry.ground.type)) continue;
-          // Roads are drawn as roads and beacons are drawn as beacons; neither
-          // is floor, and neither should be scattered over one.
-          if (/beacon|^road |set piece/i.test(entry.ground.id)) continue;
-          // A walk-on part: often enough to be seen, rare enough that the
-          // ground the realm was actually seen to be still reads as the floor.
-          fromLife.push({ ...entry, weight: Math.max(1, Math.round(floor / 300)) });
-        }
-      }
       chosen = fromLife;
       how = 'walked';
     }
@@ -904,6 +916,11 @@ for (const [biome, colours] of biomes) {
   // the proportions it was seen in rather than evenly.
   strip.weights = picked.map(entry => entry.weight || 1);
   strip.names = picked.map(entry => entry.ground.id);
+  // Each floor's own average colour, for the atlas to lay behind it. Many of
+  // the client's floors are drawn with gaps in them and need something solid
+  // underneath; their own colour is the one thing that cannot show a seam.
+  strip.colours = picked.map(entry => '#' + entry.look.mean
+    .map(v => Math.round(v).toString(16).padStart(2, '0')).join(''));
   strip.from = how;
   index[biome] = { ground: strip };
 
