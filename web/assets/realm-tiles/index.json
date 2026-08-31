@@ -147,15 +147,15 @@
         26,
         7727,
         26,
-        69,
+        26,
         96
       ],
       "names": [
         "Haunted Hallows Lightish Dirt",
         "Haunted Hallows Dark Grass",
         "Haunted Hallows Darkish Dirt",
+        "Haunted Hallows Stone",
         "Haunted Hallows Dark With Dirt",
-        "SulfW DeadReeds1",
         "Dark Grass"
       ],
       "from": "walked"
@@ -339,20 +339,22 @@
     "ground": {
       "file": "dead-church.png",
       "tile": 10,
-      "count": 5,
+      "count": 6,
       "weights": [
-        120,
         15,
-        171,
-        18,
-        4354
+        15,
+        15,
+        15,
+        4354,
+        15
       ],
       "names": [
         "Dead Church Purple Grass",
-        "Dead Church Brick Floor Dark",
         "Dead Church Dirt Rough",
-        "Dead Church Road Light",
-        "Dead Church Grass Dark"
+        "Dead Church Green Grass",
+        "Dead Church Purple Grass Mushrooms",
+        "Dead Church Grass Dark",
+        "Dead Church Dirt Regular"
       ],
       "from": "walked"
     },
@@ -600,17 +602,17 @@
       "tile": 8,
       "count": 6,
       "weights": [
-        105,
         1459,
-        46,
+        45,
+        45,
         12105,
-        46,
-        46
+        45,
+        45
       ],
       "names": [
-        "Light Grass",
         "Dark Grass",
         "Desert Heavy Cracked Sand",
+        "Desert Light Cracked Sand",
         "Desert Rough Sand",
         "Desert Patchy Sand",
         "Desert Smooth Sand"

@@ -268,6 +268,40 @@ function learnFromCapture(biomeNames) {
     return null;
   };
 
+  /*
+   * Which ground is a floor, and which belongs to something built.
+   *
+   * A biome's floor is laid over the whole biome, so wherever it appears at
+   * all it appears nearly everywhere: cut the realm into blocks of sixteen by
+   * sixteen and a floor fills eighty-five to a hundred and thirty of the two
+   * hundred and fifty-six cells in every block it touches. A monument's floor
+   * — a beacon platform, a churchyard, the flagstones of a ruin — is laid in
+   * one tight shape, so it touches a few blocks and fills less than fifty of
+   * each. Between forty-eight and eighty-six there is nothing at all, which
+   * is a wide enough gap to put a line through.
+   *
+   * The distinction matters because the two are used differently. A floor is
+   * scattered at random over its biome; a monument is not scattered anywhere,
+   * because its tiles mean nothing except in the arrangement they were built
+   * in. Treating the second as the first is what put the churchyard's purple
+   * grass in clumps all over Dead Church.
+   */
+  const BLOCK = 16;
+  const FLOOR_FILL = 70;
+  const blocksOf = new Map();
+  for (const tile of seen.tiles) {
+    if (!blocksOf.has(tile.type)) blocksOf.set(tile.type, new Map());
+    const bag = blocksOf.get(tile.type);
+    const key = Math.floor(tile.y / BLOCK) * 100000 + Math.floor(tile.x / BLOCK);
+    bag.set(key, (bag.get(key) || 0) + 1);
+  }
+  const structural = new Set();
+  for (const [type, bag] of blocksOf) {
+    let total = 0;
+    for (const n of bag.values()) total += n;
+    if (total / bag.size < FLOOR_FILL) structural.add(type);
+  }
+
   const { minX, minY, maxX, maxY } = seen.bounds;
   const width = maxX - minX + 1;
   const height = maxY - minY + 1;
@@ -327,6 +361,8 @@ function learnFromCapture(biomeNames) {
     if (!owner && /castle|shatters|oryx|nexus|vault|guild/i.test(name)) continue;
     // Beacons and set pieces are things placed on a biome, not the biome.
     if (/beacon|set piece/i.test(name)) continue;
+    // And neither is anything that was only ever laid in one tight shape.
+    if (structural.has(atCell[i])) continue;
     if (!ground.has(biome)) ground.set(biome, new Map());
     const bag = ground.get(biome);
     bag.set(atCell[i], (bag.get(atCell[i]) || 0) + 1);
@@ -356,7 +392,133 @@ function learnFromCapture(biomeNames) {
     bag.set(object.type, (bag.get(object.type) || 0) + 1);
   }
 
-  return { ground, props, tileTally, groundName, objectName, bounds: seen.bounds };
+  /*
+   * The beacon platform.
+   *
+   * Every beacon in the realm stands in the middle of the same plate: a
+   * square of the castle's flagstones, a ring of the darker ones, Oryx's rug
+   * at the centre. Nine of them were walked, in five different biomes, and
+   * they are identical tile for tile — which is the proof that it is built
+   * rather than grown, and the reason it can be stamped rather than sown.
+   *
+   * No single walk covers a whole plate, so the nine are laid on top of one
+   * another and each cell takes the type that at least two of them agree on.
+   * The ground around the plate differs from beacon to beacon, so it loses
+   * every vote it might have won; what is left, once cells that are not built
+   * of monument ground are dropped, is the plate and nothing else.
+   */
+  const REACH = 10;
+  const SPAN = 2 * REACH + 1;
+  const centres = [];
+  for (const object of seen.observedObjects || []) {
+    const name = objectName.get(object.type) || '';
+    if (!/^(Actual Active Beacon|Captured Beacon|Beacon Guardian [A-Z])/.test(name)) continue;
+    const x = Math.round(object.x), y = Math.round(object.y);
+    if (centres.some(c => Math.abs(c[0] - x) < 14 && Math.abs(c[1] - y) < 14)) continue;
+    centres.push([x, y]);
+  }
+  const votes = Array.from({ length: SPAN * SPAN }, () => new Map());
+  let plates = 0;
+  for (const [cx, cy] of centres) {
+    let hits = 0;
+    for (let dy = -REACH; dy <= REACH; dy++) {
+      for (let dx = -REACH; dx <= REACH; dx++) {
+        const i = (cy + dy - minY) * width + (cx + dx - minX);
+        if (i < 0 || i >= atCell.length || atCell[i] < 0) continue;
+        hits++;
+        const bag = votes[(dy + REACH) * SPAN + (dx + REACH)];
+        bag.set(atCell[i], (bag.get(atCell[i]) || 0) + 1);
+      }
+    }
+    if (hits > 200) plates++;
+  }
+  let plate = null;
+  if (plates >= 3) {
+    /*
+     * Roads are laid rather than grown, so they pass the built test, but a
+     * road is not part of the plate it runs up to — and every beacon's road
+     * is its own biome's, so at the centre, where they all arrive, no single
+     * type can win. Left in, the vote splits five ways and punches a hole
+     * through the middle of the plate. So roads are set aside and the best
+     * of what is left takes the cell.
+     */
+    const cells = votes.map(bag => {
+      let best = -1, most = 0;
+      for (const [type, n] of bag) {
+        if (!structural.has(type)) continue;
+        if (/^road /i.test(groundName.get(type) || '')) continue;
+        if (n > most) { most = n; best = type; }
+      }
+      return most >= 2 ? best : -1;
+    });
+    /*
+     * Where the plate stops, found by its own symmetry.
+     *
+     * A beacon's position rounds to one tile or its neighbour depending on
+     * which side of a half it fell, so the beacon is not reliably the middle
+     * of anything. But the plate is built, and built things are symmetric: a
+     * cell and the cell opposite it through the centre hold the same tile.
+     * So the four candidate centres around the beacon are each tried, and the
+     * one that carries the largest square that reads the same upside down is
+     * the middle of the plate. Trimming to the outermost agreed cell instead
+     * had a column of whatever happened to lie east of it hanging off the
+     * edge.
+     */
+    const mirrors = (cx, cy, r) => {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          const a = cells[(cy + dy) * SPAN + (cx + dx)];
+          const b = cells[(cy - dy) * SPAN + (cx - dx)];
+          if (a === undefined || b === undefined || a !== b) return false;
+        }
+      }
+      return true;
+    };
+    let best = null;
+    for (const cy of [REACH - 1, REACH]) {
+      for (const cx of [REACH - 1, REACH]) {
+        let r = 0;
+        while (r + 1 <= Math.min(cx, cy, SPAN - 1 - cx, SPAN - 1 - cy) && mirrors(cx, cy, r + 1)) r++;
+        if (!best || r > best.r) best = { cx, cy, r };
+      }
+    }
+    if (best && best.r >= 4) {
+      const { cx, cy, r } = best;
+      const span = 2 * r + 1;
+      const cut = [];
+      for (let y = cy - r; y <= cy + r; y++) {
+        for (let x = cx - r; x <= cx + r; x++) cut.push(cells[y * SPAN + x]);
+      }
+      /*
+       * A plate is one built thing, so it has no holes in it. What is left
+       * unresolved is the few cells at the very centre, where every beacon's
+       * road arrives and covers the floor from a different direction; they
+       * take the nearest cell that was resolved. Left empty they would read
+       * as a gap in the flagstones, which is the one thing they are not.
+       */
+      for (let pass = 0; pass < span; pass++) {
+        let left = 0;
+        for (let i = 0; i < cut.length; i++) {
+          if (cut[i] >= 0) continue;
+          const x = i % span, y = (i - x) / span;
+          let take = -1;
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || nx >= span || ny < 0 || ny >= span) continue;
+            if (cut[ny * span + nx] >= 0) { take = cut[ny * span + nx]; break; }
+          }
+          if (take >= 0) cut[i] = take; else left++;
+        }
+        if (!left) break;
+      }
+
+      // Where the beacon itself stands inside the plate, so it can be laid
+      // down around a beacon the atlas already knows the position of.
+      plate = { w: span, h: span, ox: r, oy: r, cells: cut, seen: plates };
+    }
+  }
+
+  return { ground, props, tileTally, structural, plate, groundName, objectName, bounds: seen.bounds };
 }
 
 /*
@@ -649,6 +811,57 @@ for (const [biome, colours] of biomes) {
   }
 }
 
+/*
+ * The monuments, which are stamped rather than sown.
+ *
+ * One so far: the plate every beacon stands on. It goes out as its own
+ * small strip of tiles plus the arrangement they are laid in — a grid of
+ * slots into that strip, and where the beacon itself stands in it — so the
+ * atlas can put the real thing down at each of the thirty-nine beacons it
+ * already knows the position of, instead of scattering flagstones about.
+ */
+const monuments = {};
+if (learned && learned.plate) {
+  const plate = learned.plate;
+  const order = [...new Set(plate.cells.filter(type => type >= 0))];
+  const entries = order
+    .map(type => {
+      const ground = groundByType.get(type);
+      const tile = ground && tileFor(ground);
+      return tile ? { ground, tile } : null;
+    })
+    .filter(Boolean);
+  const slotOf = new Map(entries.map((entry, i) => [entry.ground.type, i]));
+  if (entries.length) {
+    const size = Math.max(...entries.map(e => Math.max(e.tile.rect.w, e.tile.rect.h)));
+    const stripWidth = size * entries.length;
+    const strip = Buffer.alloc(stripWidth * size * 4);
+    entries.forEach((entry, slot) => {
+      const { rect, sheet } = entry.tile;
+      const ox = Math.floor((size - rect.w) / 2);
+      const oy = size - rect.h;
+      for (let y = 0; y < rect.h; y++) {
+        for (let x = 0; x < rect.w; x++) {
+          const from = ((rect.y + y) * sheet.width + rect.x + x) * 4;
+          sheet.pixels.copy(strip, ((y + oy) * stripWidth + slot * size + x + ox) * 4, from, from + 4);
+        }
+      }
+    });
+    fs.writeFileSync(path.join(OUT, 'beacon-plate.png'), writePng(stripWidth, size, strip));
+    monuments.beacon = {
+      file: 'beacon-plate.png', tile: size, count: entries.length,
+      w: plate.w, h: plate.h, ox: plate.ox, oy: plate.oy,
+      names: entries.map(entry => entry.ground.id),
+      cells: plate.cells.map(type => (slotOf.has(type) ? slotOf.get(type) : -1)),
+      seen: plate.seen
+    };
+    console.log('');
+    console.log('  beacon plate: ' + plate.w + 'x' + plate.h + ' of ' + entries.length
+      + ' tiles, merged from ' + plate.seen + ' walked beacons');
+    console.log('    ' + entries.map(entry => entry.ground.id).join(', '));
+  }
+}
+fs.writeFileSync(path.join(OUT, 'monuments.json'), JSON.stringify(monuments, null, 2) + String.fromCharCode(10));
 fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 2) + '\n');
 console.log('');
 for (const [biome, how, n, example, propCount, propExample] of report) {
