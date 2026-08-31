@@ -378,15 +378,40 @@ var RealmMap = (function () {
         ? bundled.art[file] : 'assets/realm-tiles/' + file;
       return image;
     };
+    /*
+     * A strip, plus a way of picking out of it in the proportions it was seen
+     * in. Where the builder learned a biome from real play it hands over a
+     * weight per tile — twelve thousand of sand against a hundred of grass —
+     * and picking evenly out of that would give the desert as much grass as
+     * sand. So the weights are turned into a running total once, here, and a
+     * number in nought-to-one is looked up in it: sand covers the width of
+     * the range it deserves and grass covers a sliver.
+     */
+    const strip = spec => {
+      const total = [];
+      let sum = 0;
+      for (let i = 0; i < spec.count; i++) {
+        sum += (spec.weights && spec.weights[i]) || 1;
+        total.push(sum);
+      }
+      return {
+        image: picture(spec.file),
+        tile: spec.tile,
+        count: spec.count,
+        density: spec.density || 0,
+        // Where a number in [0,1) falls in the run of weights.
+        pick(value) {
+          const want = value * sum;
+          for (let i = 0; i < total.length; i++) if (want < total[i]) return i;
+          return spec.count - 1;
+        }
+      };
+    };
     const ready = index => {
       tiles.index = index;
       for (const [biome, entry] of Object.entries(index)) {
-        if (entry.ground) {
-          tiles.ground.set(biome, { image: picture(entry.ground.file), tile: entry.ground.tile, count: entry.ground.count });
-        }
-        if (entry.props) {
-          tiles.props.set(biome, { image: picture(entry.props.file), tile: entry.props.tile, count: entry.props.count });
-        }
+        if (entry.ground) tiles.ground.set(biome, strip(entry.ground));
+        if (entry.props) tiles.props.set(biome, strip(entry.props));
       }
     };
     if (bundled && bundled.index) { ready(bundled.index); return; }
@@ -446,16 +471,24 @@ var RealmMap = (function () {
 
         const ground = entry.biome && tiles.ground.get(entry.biome);
         if (ground && ground.image.complete && ground.image.naturalWidth) {
-          const slot = Math.min(ground.count - 1, Math.floor(field(col, row) * ground.count));
+          const slot = ground.pick(Math.min(0.9999, field(col, row)));
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(ground.image, slot * ground.tile, 0, ground.tile, ground.tile,
             spot.x, spot.y, unit + 1, unit + 1);
 
-          // And what stands on it, on about one cell in eleven — sparse
-          // enough that a forest reads as trees rather than as a hedge.
+          /*
+           * And what stands on it, as thickly as it was seen to. A biome
+           * learned from play carries its own density — the sprite forest
+           * stands something on one cell in nine, the dead church on one in
+           * fifty — and only a biome guessed from its name falls back to the
+           * one-in-eleven that used to apply to all of them. Which one it is
+           * comes off the weights too, so a desert is mostly the small cactus
+           * it is mostly made of.
+           */
           const standing = scenic > 0 && tiles.props.get(entry.biome);
-          if (standing && n > 0.91 && standing.image.complete && standing.image.naturalWidth) {
-            const which = Math.floor(hash(row * 3 + 1, col * 7 + 5) * standing.count) % standing.count;
+          const thick = standing && (standing.density || 0.09);
+          if (standing && n > 1 - thick && standing.image.complete && standing.image.naturalWidth) {
+            const which = standing.pick(hash(row * 3 + 1, col * 7 + 5));
             ctx.globalAlpha = scenic;
             ctx.drawImage(standing.image, which * standing.tile, 0, standing.tile, standing.tile,
               spot.x - unit * 0.25, spot.y - unit * 0.5, unit * 1.5, unit * 1.5);
@@ -468,7 +501,7 @@ var RealmMap = (function () {
         // arrangements. Enough to break the flat, not enough to read as
         // noise.
         ctx.globalAlpha = grain * 0.5;
-        ctx.fillStyle = palette(entry.hex).deep;
+        ctx.fillStyle = shade(entry.hex, 0.72);
         const step = unit / 4;
         const which = Math.floor(n * 4);
         for (let i = 0; i < 3; i++) {
@@ -602,19 +635,29 @@ var RealmMap = (function () {
     }
   }
 
+  /*
+   * One frame. The next one is asked for in a finally, because an exception
+   * anywhere in here used to end the animation loop for good: the map froze
+   * mid-pan with the wheel still turning, which reads as a stuck zoom rather
+   * than as the error it is. Now a bad frame costs a frame, and the console
+   * still says what went wrong.
+   */
   function render(time) {
     if (!active) return;
-    const delta = Math.min(1, (time - lastTime) / 80 || 1);
-    lastTime = time;
-    for (const key of ['x', 'y', 'z']) view[key] += (view['t' + key] - view[key]) * Math.min(0.24, delta * 0.18);
-    const scale = zoom();
-    drawSea(time);
-    drawTerrain();
-    drawGround(scale);
-    drawSelection();
-    drawLife(time, scale);
-    drawBeacons(time);
-    frame = requestAnimationFrame(render);
+    try {
+      const delta = Math.min(1, (time - lastTime) / 80 || 1);
+      lastTime = time;
+      for (const key of ['x', 'y', 'z']) view[key] += (view['t' + key] - view[key]) * Math.min(0.24, delta * 0.18);
+      const scale = zoom();
+      drawSea(time);
+      drawTerrain();
+      drawGround(scale);
+      drawSelection();
+      drawLife(time, scale);
+      drawBeacons(time);
+    } finally {
+      frame = requestAnimationFrame(render);
+    }
   }
 
   /* ---------------------------------------------------------------- *
