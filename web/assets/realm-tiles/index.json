@@ -3,8 +3,11 @@
     "ground": {
       "file": "deep-sea-abyss.png",
       "tile": 8,
-      "count": 7,
+      "count": 10,
       "weights": [
+        1,
+        1,
+        1,
         1,
         1,
         1,
@@ -14,23 +17,58 @@
         1
       ],
       "names": [
+        "Deep Sea Abyss Beacon 26",
+        "Deep Sea Abyss Beacon 0",
         "Deep Sea Abyss Beacon 50",
-        "Deep Sea Abyss Beacon 39",
-        "Deep Sea Abyss Beacon 48",
-        "Deep Sea Abyss Beacon 36",
         "Deep Sea Abyss Beacon 42",
-        "Deep Sea Abyss Beacon 43",
-        "Deep Sea Abyss Beacon 46"
+        "Deep Sea Abyss Beacon 66",
+        "Deep Sea Abyss Beacon 74",
+        "Deep Sea Abyss Beacon 8",
+        "Deep Sea Abyss Beacon 58",
+        "Deep Sea Abyss Beacon 16",
+        "Deep Sea Abyss Beacon 34"
+      ],
+      "colours": [
+        "#476182",
+        "#4e627c",
+        "#5b7184",
+        "#667885",
+        "#72838e",
+        "#738ca0",
+        "#7b94a5",
+        "#8fa0a5",
+        "#99a7a9",
+        "#99a7a9"
       ],
       "from": "named"
+    },
+    "props": {
+      "file": "deep-sea-abyss-props.png",
+      "tile": 24,
+      "count": 3,
+      "weights": [
+        1,
+        1,
+        1
+      ],
+      "names": [
+        "Deep Sea Abyss Tentacle 3",
+        "Deep Sea Abyss Tentacle 4",
+        "Deep Sea Abyss Bones 3"
+      ]
     }
   },
   "Carboniferous": {
     "ground": {
       "file": "carboniferous.png",
       "tile": 8,
-      "count": 5,
+      "count": 10,
       "weights": [
+        1,
+        1,
+        1,
+        1,
+        1,
         1,
         1,
         1,
@@ -38,19 +76,41 @@
         1
       ],
       "names": [
-        "Carboniferous Water",
-        "Carboniferous Dirt Grass",
-        "Carboniferous Dirt",
+        "Carboniferous Beacon 41",
+        "Carboniferous Beacon 56",
+        "Carboniferous Beacon 26",
         "Carboniferous Grass",
-        "Road Carboniferous"
+        "Carboniferous Beacon 5",
+        "Carboniferous Beacon 74",
+        "Carboniferous Beacon 0",
+        "Carboniferous Beacon 61",
+        "Carboniferous Beacon 31",
+        "Carboniferous Beacon 46"
+      ],
+      "colours": [
+        "#575755",
+        "#625c54",
+        "#636159",
+        "#5f694e",
+        "#78684e",
+        "#7a6c4e",
+        "#7c6f4f",
+        "#6a8152",
+        "#9ab7a4",
+        "#9fc5b1"
       ],
       "from": "named"
     },
     "props": {
       "file": "carboniferous-props.png",
-      "tile": 21,
-      "count": 5,
+      "tile": 16,
+      "count": 10,
       "weights": [
+        1,
+        1,
+        1,
+        1,
+        1,
         1,
         1,
         1,
@@ -62,7 +122,12 @@
         "Carboniferous Tuft",
         "Carboniferous Large Tuft",
         "Carboniferous Large Log",
-        "Carboniferous Watch Tower"
+        "Carboniferous Large Stones",
+        "Carboniferous Green Carpet",
+        "Carboniferous Tent 1",
+        "Carboniferous Tent 2",
+        "Carboniferous Weapon Rack",
+        "Carboniferous Shell 1"
       ]
     }
   },
@@ -84,16 +149,28 @@
         1
       ],
       "names": [
-        "Floral Escape Dark Grass Yellow Flower",
-        "Floral Escape Dark Water",
-        "Floral Escape Dark Grass White Flower",
-        "Floral Escape Light Grass Yellow Flower",
-        "Floral Escape Light Grass Red Flower",
-        "Floral Escape Dark Grass Red Flower",
-        "Floral Escape Light Grass Indigo Flower",
-        "Floral Escape Light Grass",
         "Floral Escape Dark Grass Indigo Flower",
+        "Floral Escape Dark Grass Red Flower",
+        "Floral Escape Dark Grass Yellow Flower",
+        "Floral Escape Light Grass Red Flower",
+        "Floral Escape Dark Water",
+        "Floral Escape Light Grass Indigo Flower",
+        "Floral Escape Dark Grass White Flower",
+        "Floral Escape Light Grass",
+        "Floral Escape Light Grass Yellow Flower",
         "Floral Escape Light Grass White Flower"
+      ],
+      "colours": [
+        "#475983",
+        "#8a5d54",
+        "#8b7c46",
+        "#b77242",
+        "#1394ea",
+        "#6a8c67",
+        "#779773",
+        "#71a340",
+        "#baa031",
+        "#a2be85"
       ],
       "from": "named"
     },
@@ -115,15 +192,15 @@
       ],
       "names": [
         "Floral Escape Lily Pads",
-        "Floral Escape Small Pink Flower",
-        "Floral Escape Small Orange Flower",
+        "Floral Escape Small Red Flower",
         "Floral Escape Small Purple Flower",
-        "Floral Escape Floral Bushes",
-        "Floral Escape Mid Floral Bushes",
+        "Floral Escape Small Rock",
+        "Floral Escape Small Floral Bushes",
         "Floral Escape Large Bush",
-        "Floral Escape Misc Dark Pink Bushes",
-        "Floral Escape Misc Red Bushes",
-        "Floral Escape Misc Yellow Bushes"
+        "Floral Escape Misc Light Pink Bushes",
+        "Floral Escape Misc Yellow Bushes",
+        "Floral Escape Misc Violet Bushes",
+        "Floral Escape Large Rocks"
       ]
     }
   },
@@ -131,44 +208,45 @@
     "ground": {
       "file": "haunted-hallows.png",
       "tile": 8,
-      "count": 5,
+      "count": 1,
       "weights": [
-        23,
-        23,
-        6903,
-        23,
-        23
+        6903
       ],
       "names": [
-        "Haunted Hallows Lightish Dirt",
-        "Haunted Hallows Dark Grass",
-        "Haunted Hallows Darkish Dirt",
-        "Haunted Hallows Stone",
-        "Haunted Hallows Dark With Dirt"
+        "Haunted Hallows Darkish Dirt"
+      ],
+      "colours": [
+        "#20163e"
       ],
       "from": "walked"
     },
     "props": {
       "file": "haunted-hallows-props.png",
       "tile": 16,
-      "count": 7,
+      "count": 10,
       "weights": [
+        154,
         99,
+        71,
         66,
+        52,
         4,
         4,
         4,
-        4,
-        3
+        3,
+        2
       ],
       "names": [
+        "Haunted Hallows Rock",
         "Haunted Hallows Large Pumpkins",
+        "Haunted Hallows Bones",
         "Gate",
+        "Haunted Hallows Mossy Rock",
         "Gate Entry",
-        "Gate End 1",
         "Gate 2",
         "SulfW Dead Grass",
-        "Sinister Pumpkin"
+        "Sinister Pumpkin",
+        "Tree A"
       ],
       "density": 0.06386102275507707
     }
@@ -191,22 +269,34 @@
         1
       ],
       "names": [
-        "Runic Tundra Large Skull P",
-        "Runic Tundra Runic 6",
-        "Runic Tundra Large Skink K",
-        "Runic Tundra Runic 17",
         "Runic Tundra Large Dragon H",
-        "Runic Tundra Large Skull E",
+        "Runic Tundra Large Skink K",
         "Runic Tundra Large Skink V",
+        "Runic Tundra Large Skull E",
+        "Runic Tundra Large Skull P",
         "Runic Tundra Large Runic 1 B",
-        "Runic Tundra Light Ice",
-        "Runic Tundra Large Runic 4 A"
+        "Runic Tundra Large Runic 4 A",
+        "Runic Tundra Runic 17",
+        "Runic Tundra Runic 6",
+        "Runic Tundra Light Ice"
+      ],
+      "colours": [
+        "#6a71b6",
+        "#7987c5",
+        "#8394cc",
+        "#8b9acc",
+        "#8da3db",
+        "#8ea4d7",
+        "#93a9d7",
+        "#94acdd",
+        "#98b1df",
+        "#acd3e1"
       ],
       "from": "named"
     },
     "props": {
       "file": "runic-tundra-props.png",
-      "tile": 18,
+      "tile": 22,
       "count": 5,
       "weights": [
         1,
@@ -242,16 +332,28 @@
         1
       ],
       "names": [
-        "Sanguine Forest Dark Spooky",
         "Sanguine Forest Dark Flower",
-        "Sanguine Forest Beacon 62",
-        "Sanguine Forest Beacon 72",
-        "Sanguine Forest Beacon 51",
-        "Sanguine Forest Beacon 46",
-        "Sanguine Forest Beacon 59",
+        "Sanguine Forest Beacon 92",
+        "Sanguine Forest Beacon 18",
+        "Sanguine Forest Beacon 30",
+        "Sanguine Forest Beacon 42",
+        "Sanguine Forest Beacon 104",
         "Sanguine Forest Beacon 54",
-        "Sanguine Forest Beacon 67",
-        "Sanguine Forest Beacon 75"
+        "Sanguine Forest Beacon 68",
+        "Sanguine Forest Beacon 6",
+        "Sanguine Forest Beacon 80"
+      ],
+      "colours": [
+        "#250f1c",
+        "#69172f",
+        "#70183a",
+        "#682038",
+        "#422b42",
+        "#392f3e",
+        "#8c2234",
+        "#433c50",
+        "#474057",
+        "#504655"
       ],
       "from": "named"
     },
@@ -272,16 +374,16 @@
         1
       ],
       "names": [
-        "Sanguine Forest Single Green Vine",
-        "Sanguine Forest Random Red Vine",
-        "Sanguine Forest Small Grass",
-        "Sanguine Forest Grey Small Rocks",
-        "Sanguine Forest Small Mushrooms",
-        "Sanguine Forest Large Fleshy Tree",
-        "Sanguine Forest Large Fleshy Bush",
-        "Sanguine Forest Large Weird Plants",
-        "Sanguine Forest Large Creepy Bushes",
-        "Sanguine Forest Large Grey Rocks"
+        "Sanguine Forest Random Green Vine",
+        "Sanguine Forest Small Tentacle",
+        "Sanguine Forest Fleshy Growth",
+        "Sanguine Forest Brown Small Rocks",
+        "Sanguine Forest Large Dead Tree",
+        "Sanguine Forest Large Red Bush",
+        "Sanguine Forest Large Dying Bushes",
+        "Sanguine Forest Yep",
+        "Sanguine Forest Large Red Rocks",
+        "Sanguine Forest Large Brown Rocks"
       ]
     }
   },
@@ -298,17 +400,29 @@
         "Low Ocean Water",
         "Coral Reefs Sand"
       ],
+      "colours": [
+        "#4172b9",
+        "#c8b694"
+      ],
       "from": "walked"
     },
     "props": {
       "file": "coral-reefs-props.png",
       "tile": 16,
-      "count": 2,
+      "count": 6,
       "weights": [
+        86,
+        41,
+        36,
+        30,
         4,
         2
       ],
       "names": [
+        "Coral Reef Large Sea Weed",
+        "Coral Reef Red Coral",
+        "Coral Reef Yellow Coral",
+        "Coral Reef Pink Coral",
         "Coral Reef Large Red Coral",
         "Coral Reef Large Yellow Coral"
       ],
@@ -319,28 +433,21 @@
     "ground": {
       "file": "dead-church.png",
       "tile": 8,
-      "count": 6,
+      "count": 1,
       "weights": [
-        12,
-        12,
-        12,
-        12,
-        3583,
-        12
+        3583
       ],
       "names": [
-        "Dead Church Dirt Rough",
-        "Dead Church Purple Grass",
-        "Dead Church Purple Grass Mushrooms",
-        "Dead Church Green Grass",
-        "Dead Church Grass Dark",
-        "Dead Church Dirt Regular"
+        "Dead Church Grass Dark"
+      ],
+      "colours": [
+        "#543919"
       ],
       "from": "walked"
     },
     "props": {
       "file": "dead-church-props.png",
-      "tile": 14,
+      "tile": 16,
       "count": 8,
       "weights": [
         7,
@@ -383,16 +490,28 @@
         1
       ],
       "names": [
-        "Shipwreck Cove Beacon 32",
-        "Shipwreck Cove Beacon 17",
-        "Shipwreck Cove Beacon 27",
-        "Shipwreck Cove Beacon 12",
-        "Shipwreck Cove Beacon 22",
-        "Shipwreck Cove Beacon 7",
-        "Shipwreck Cove Beacon 37",
+        "Shipwreck Cove Beacon 11",
+        "Shipwreck Cove Beacon 21",
         "Shipwreck Cove Plank Wood",
         "Shipwreck Cove Grass",
-        "Shipwreck Cove Beacon 42"
+        "Shipwreck Cove Beacon 31",
+        "Shipwreck Cove Beacon 6",
+        "Shipwreck Cove Beacon 1",
+        "Shipwreck Cove Beacon 16",
+        "Shipwreck Cove Beacon 36",
+        "Shipwreck Cove Beacon 26"
+      ],
+      "colours": [
+        "#2a2a32",
+        "#3d3b3c",
+        "#3e3b3d",
+        "#334038",
+        "#403d3f",
+        "#413e40",
+        "#4d4e2f",
+        "#4e4f30",
+        "#4f5030",
+        "#52663c"
       ],
       "from": "named"
     },
@@ -415,14 +534,14 @@
       "names": [
         "Shipwreck Cove Small Dead Tree",
         "Shipwreck Cove Small Glowing Lantern",
-        "Shipwreck Cove Small Dead Crate",
         "Shipwreck Cove Small Dead Post",
+        "Shipwreck Cove Small Dead Post Grey",
         "Shipwreck Cove Small Skull",
-        "Shipwreck Cove Small Rock",
         "Shipwreck Cove Large Rock",
-        "Shipwreck Cove Large Crates",
-        "Shipwreck Cove Large Detritus",
-        "Shipwreck Cove Large Funny Skeletons"
+        "Shipwreck Cove Large Funny Skeletons",
+        "Shipwreck Cove Large Dark Rocks",
+        "Shipwreck Cove Large Empty Chests",
+        "Shipwreck Cove Large Sea Weed"
       ]
     }
   },
@@ -444,16 +563,28 @@
         1
       ],
       "names": [
+        "Ancient City Beacon 87",
+        "Ancient City Beacon 125",
+        "Ancient City Beacon 142",
+        "Ancient City Beacon 70",
         "Ancient City Beacon 36",
-        "Ancient City Beacon 2",
-        "Ancient City Beacon 93",
-        "Ancient City Beacon 127",
         "Ancient City Beacon 19",
-        "Ancient City Beacon 59",
-        "Ancient City Beacon 76",
-        "Ancient City Beacon 144",
-        "Ancient City Beacon 110",
-        "Ancient City Grass"
+        "Ancient City Grass",
+        "Ancient City Beacon 53",
+        "Ancient City Beacon 108",
+        "Ancient City Beacon 2"
+      ],
+      "colours": [
+        "#948379",
+        "#938479",
+        "#94857a",
+        "#968b7e",
+        "#9b8c7d",
+        "#9a8c7e",
+        "#72a34e",
+        "#a09183",
+        "#a09183",
+        "#dfc8b1"
       ],
       "from": "named"
     },
@@ -505,16 +636,28 @@
         1
       ],
       "names": [
-        "Candy Grass Dark",
-        "Hemomancer Floor 19",
-        "Hemomancer Floor 60",
-        "Abyss Fort Tile Checkboard",
-        "BrokenHeartTile4",
-        "Dead Church Brick Floor Dark Large Slab UL 2",
-        "Tavern dark tile",
-        "SulfW SplitstoneVerti START",
-        "Earth Tile Dark",
-        "Black Water Light"
+        "Troom Dark Web Tile A",
+        "Crawling Spider Dirt Web",
+        "SpecPen GardenBranch Shed Tile SmHor",
+        "Eden Night 1075 Checkered Gemstone Ice",
+        "Legion Stone Floor",
+        "Woodland Bright Floor Edge Lf",
+        "Wood Panel Floor",
+        "SulfW Acidwater3 BOSS ONLY",
+        "Ancient Ruins Brick Tile",
+        "Patty Grass 1"
+      ],
+      "colours": [
+        "#0c0c0c",
+        "#1e1a28",
+        "#3b2b2a",
+        "#2d2f39",
+        "#44413b",
+        "#6e412a",
+        "#9d6533",
+        "#36855b",
+        "#c19f5c",
+        "#c4e931"
       ],
       "from": "colour"
     }
@@ -537,16 +680,28 @@
         1
       ],
       "names": [
+        "Risen Hell Beacon 20",
         "Risen Hell Dark Tiles",
-        "Risen Hell Beacon 79",
-        "Risen Hell Beacon 90",
-        "Risen Hell Beacon 68",
-        "Risen Hell Beacon 55",
-        "Risen Hell Beacon 0",
-        "Risen Hell Beacon 22",
-        "Risen Hell Beacon 11",
-        "Risen Hell Beacon 33",
-        "Risen Hell Beacon 44"
+        "Risen Hell Beacon 58",
+        "Risen Hell Beacon 69",
+        "Risen Hell Road Tiles",
+        "Risen Hell Beacon 47",
+        "Risen Hell Beacon 9",
+        "Risen Hell Beacon 80",
+        "Risen Hell Beacon 91",
+        "Risen Hell Beacon 36"
+      ],
+      "colours": [
+        "#24152c",
+        "#3c1d24",
+        "#54222a",
+        "#80271a",
+        "#453753",
+        "#80381f",
+        "#833820",
+        "#96351b",
+        "#8b3922",
+        "#833d26"
       ],
       "from": "named"
     },
@@ -568,15 +723,15 @@
       ],
       "names": [
         "Risen Hell Light Skulls",
-        "Risen Hell Dark Skulls",
         "Risen Hell Small Rocks",
-        "Risen Hell Small Multicolor Rocks",
         "Risen Hell Small Pointy Rocks",
-        "Risen Hell Small Gem Rocks",
+        "Risen Hell Small Flame Grass",
         "Risen Hell Large Light Skulls",
-        "Risen Hell Large Dark Skulls",
         "Risen Hell Lava Fissure",
-        "Risen Hell Large Pointy Rocks"
+        "Risen Hell Large Multicolor Rocks",
+        "Risen Hell Large Gem Rocks",
+        "Risen Hell Large Dead Trees",
+        "Risen Hell Purple Gobbledegook"
       ]
     }
   },
@@ -584,22 +739,21 @@
     "ground": {
       "file": "desert.png",
       "tile": 8,
-      "count": 6,
+      "count": 3,
       "weights": [
         332,
         188,
-        37,
-        10541,
-        37,
-        37
+        10541
       ],
       "names": [
         "Dark Grass",
         "Nature Ruins Grass",
-        "Desert Heavy Cracked Sand",
-        "Desert Rough Sand",
-        "Desert Patchy Sand",
-        "Desert Smooth Sand"
+        "Desert Rough Sand"
+      ],
+      "colours": [
+        "#2f3c1d",
+        "#3f4c1f",
+        "#f2c798"
       ],
       "from": "walked"
     },
@@ -640,12 +794,16 @@
       "tile": 8,
       "count": 2,
       "weights": [
-        218,
-        2737
+        2737,
+        218
       ],
       "names": [
-        "New Low Forest Grass",
-        "Nature Ruins Grass"
+        "Nature Ruins Grass",
+        "New Low Forest Grass"
+      ],
+      "colours": [
+        "#3f4c1f",
+        "#276526"
       ],
       "from": "walked"
     },
@@ -655,27 +813,27 @@
       "count": 10,
       "weights": [
         46,
+        46,
+        45,
         37,
         36,
+        31,
+        30,
         24,
         14,
-        7,
-        5,
-        4,
-        4,
-        3
+        7
       ],
       "names": [
         "Nature Ruins Large Flower",
+        "Nature Ruins Large Tree",
+        "Pink Flowers",
         "Nature Ruins Small Plant",
         "Nature Ruins Small Flower",
+        "Nature Ruins Large Plant",
+        "Cherry Tree",
         "Nature Ruins Small Sappling",
         "Nature Ruins Small Rock Thing",
-        "Low Forest Large Pine",
-        "Low Forest Large Bush",
-        "Low Forest Large White Shroom",
-        "Low Forest Large Small Shrub",
-        "Low Forest Large Sues 2"
+        "Low Forest Large Pine"
       ],
       "density": 0.11235955056179775
     }
@@ -698,16 +856,28 @@
         1
       ],
       "names": [
-        "Undead Forest Beacon 26",
-        "Undead Forest Beacon 1",
-        "Undead Forest Beacon 38",
-        "Undead Forest Beacon 16",
-        "Undead Forest Beacon 6",
-        "Undead Forest Beacon 43",
+        "Undead Forest Beacon 28",
+        "Undead Forest Beacon 24",
+        "Undead Forest Beacon 8",
+        "Undead Forest Beacon 32",
+        "Undead Forest Beacon 4",
+        "Undead Forest Beacon 12",
+        "Undead Forest Beacon 36",
         "Undead Forest Grass",
-        "Undead Forest Beacon 11",
-        "Undead Forest Beacon 33",
-        "Undead Forest Beacon 21"
+        "Undead Forest Beacon 20",
+        "Undead Forest Beacon 0"
+      ],
+      "colours": [
+        "#34283c",
+        "#392a3f",
+        "#392c43",
+        "#3d2d42",
+        "#402f46",
+        "#3c3e5d",
+        "#3d4262",
+        "#3e4262",
+        "#454465",
+        "#544e71"
       ],
       "from": "named"
     },
@@ -729,15 +899,15 @@
       ],
       "names": [
         "Undead Forest Small Purple Tree",
-        "Undead Forest Small Pink Tree",
-        "Undead Forest Small Grey Rock",
+        "Undead Forest Small Normal Tree",
         "Undead Forest Small Skeletons",
         "Undead Forest Large Purple Trees",
-        "Undead Forest Large Pink Trees",
-        "Undead Forest Large Dead Trees",
+        "Undead Forest Large Green Trees",
         "Undead Forest Large Purple Rocks",
-        "Undead Forest Large Lamp Post",
-        "Undead Forest Large Grass Tuft"
+        "Undead Forest Large Sign Post",
+        "Undead Forest Large Flowers",
+        "Undead Forest Stone Pile 2",
+        "Undead Forest Log"
       ]
     }
   },
@@ -747,14 +917,19 @@
       "tile": 8,
       "count": 3,
       "weights": [
-        2373,
+        12169,
         74,
-        12169
+        2373
       ],
       "names": [
-        "Shoreline Sand",
+        "New Low Forest Grass",
         "Shoreline Water",
-        "New Low Forest Grass"
+        "Shoreline Sand"
+      ],
+      "colours": [
+        "#276526",
+        "#5094d0",
+        "#dacdad"
       ],
       "from": "walked"
     },
@@ -763,28 +938,28 @@
       "tile": 16,
       "count": 10,
       "weights": [
+        296,
+        280,
         273,
         251,
         251,
+        248,
         227,
         223,
         161,
-        146,
-        128,
-        107,
-        101
+        146
       ],
       "names": [
+        "Low Forest Small Orange Shrooms",
+        "Low Forest Small Green Bush",
         "Low Forest Large Sues 2",
         "Low Forest Large Pine",
         "Low Forest Small Red Shrooms",
+        "Low Forest Small White Shrooms",
         "Low Forest Large Small Shrub",
         "Low Forest Large Bush",
         "Low Forest Large White Shroom",
-        "Low Forest Large Red Shroom",
-        "Low Forest Large Gold Shroom",
-        "Low Forest Large Blue Flower",
-        "Low Forest Large Pink Flower"
+        "Low Forest Large Red Shroom"
       ],
       "density": 0.18567395443503382
     }
@@ -795,38 +970,49 @@
       "tile": 8,
       "count": 3,
       "weights": [
-        11641,
+        517,
         425,
-        517
+        11641
       ],
       "names": [
-        "Shoreline Sand",
+        "New Low Forest Grass",
         "Shoreline Water",
-        "New Low Forest Grass"
+        "Shoreline Sand"
+      ],
+      "colours": [
+        "#276526",
+        "#5094d0",
+        "#dacdad"
       ],
       "from": "walked"
     },
     "props": {
       "file": "beach-props.png",
       "tile": 16,
-      "count": 7,
+      "count": 10,
       "weights": [
         16,
         15,
         12,
+        11,
+        11,
+        11,
         10,
         9,
-        7,
-        7
+        9,
+        9
       ],
       "names": [
         "Low Forest Large Bush",
         "Low Forest Large Sues 2",
         "Low Forest Large Pine",
+        "PC Small Palm",
+        "Low Forest Small Green Bush",
+        "Low Forest Small White Shrooms",
         "Low Forest Small Red Shrooms",
         "Low Forest Large Small Shrub",
-        "Low Forest Large Gold Shroom",
-        "Low Forest Large Blue Flower"
+        "Small Lilypads",
+        "Low Forest Small Orange Shrooms"
       ],
       "density": 0.025609337452797802
     }
@@ -842,6 +1028,9 @@
       "names": [
         "Dark Grass"
       ],
+      "colours": [
+        "#2f3c1d"
+      ],
       "from": "walked"
     },
     "props": {
@@ -849,28 +1038,28 @@
       "tile": 8,
       "count": 10,
       "weights": [
+        282,
+        110,
         31,
-        28,
         27,
-        21,
         18,
-        17,
         15,
         14,
         14,
-        14
+        13,
+        13
       ],
       "names": [
+        "Tree A",
+        "Tree Jungle",
         "Bush",
-        "Tree Leafless",
         "Shrub",
-        "Green Bush 4",
         "Green Bush 8",
-        "Green Bush 7",
         "Green Bush 5",
-        "Light Green Bush 1",
         "Green Bush 6",
-        "Light Green Bush 4"
+        "Large Green Bush",
+        "Green Bush 1",
+        "Light Green Bush 6"
       ],
       "density": 0.22
     }
@@ -879,24 +1068,21 @@
     "ground": {
       "file": "sprite-forest.png",
       "tile": 8,
-      "count": 4,
+      "count": 1,
       "weights": [
-        26,
-        7772,
-        26,
-        26
+        7772
       ],
       "names": [
-        "Sprite Forest Pink Sparkle",
-        "Sprite Forest Grass",
-        "Sprite Forest Blue Sparkle",
-        "Sprite Forest Pink Flower"
+        "Sprite Forest Grass"
+      ],
+      "colours": [
+        "#3b4c6b"
       ],
       "from": "walked"
     },
     "props": {
       "file": "sprite-forest-props.png",
-      "tile": 32,
+      "tile": 16,
       "count": 10,
       "weights": [
         265,
@@ -904,11 +1090,11 @@
         258,
         74,
         69,
+        35,
         28,
         16,
         11,
-        8,
-        5
+        8
       ],
       "names": [
         "Sprite Forest Mushroom",
@@ -916,11 +1102,11 @@
         "Sprite Forest Pink Glow Flower",
         "Sprite Forest Medium Blue Tree",
         "Sprite Forest Medium Pink Tree",
+        "Sprite Forest Child",
         "Sprite Forest Rocks",
         "Sprite Forest Greenery",
         "Sprite Forest Medium Glow Rocks",
-        "Sprite Forest Medium Jeweled Tree",
-        "Elder Sprite Tree"
+        "Sprite Forest Medium Jeweled Tree"
       ],
       "density": 0.11329087921117502
     }

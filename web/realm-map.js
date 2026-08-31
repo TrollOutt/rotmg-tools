@@ -434,6 +434,7 @@ var RealmMap = (function () {
         tile: spec.tile,
         count: spec.count,
         density: spec.density || 0,
+        colours: spec.colours || null,
         // Where a number in [0,1) falls in the run of weights.
         pick(value) {
           const want = value * sum;
@@ -492,12 +493,17 @@ var RealmMap = (function () {
   }
   /*
    * In game tiles, not traced cells: a broad lattice about thirty tiles
-   * across for the lie of the land, and a finer one about eight across to
+   * across for the lie of the land, and a finer one about eleven across to
    * break its edges up. Both were tuned in cells before, which at this
    * resolution would have made patches a quarter of a biome wide.
+   *
+   * Neither lattice divides eight, and that is the point. A traced cell holds
+   * eight tiles, so a lattice of eight lands on every cell boundary at once
+   * and the ground comes out as a chequerboard of whole cells — the grid of
+   * the tracing showing through ground that is meant to have no grid in it.
    */
   const field = (gx, gy) =>
-    smooth(gx / 30, gy / 30) * 0.68 + smooth(gx / 8, gy / 8) * 0.32;
+    smooth(gx / 29, gy / 29) * 0.68 + smooth(gx / 11, gy / 11) * 0.32;
 
   /*
    * The ground, cached.
@@ -567,14 +573,42 @@ var RealmMap = (function () {
         const entry = legend.get(letter);
         if (!entry || !/^#[0-9a-f]{6}$/i.test(entry.hex || '')) continue;
 
-        const px = (gx * TILE - cache.x) * scale;
-        const py = (gy * TILE - cache.y) * scale;
+        /*
+         * Snapped to whole pixels, and sized by where the next tile starts.
+         *
+         * Drawing each tile a pixel wider than its place — which is the usual
+         * way of hiding the gaps that fall out of fractional coordinates —
+         * makes every tile overlap its neighbour by a pixel. For opaque art
+         * that is invisible; for the many client floors drawn with gaps in
+         * them the overlap is drawn twice and comes out darker, putting a
+         * fine grid of lines over the whole of the ground. Rounding both
+         * edges instead leaves no gap and no overlap.
+         */
+        const px = Math.round((gx * TILE - cache.x) * scale);
+        const py = Math.round((gy * TILE - cache.y) * scale);
+        const pw = Math.round(((gx + step) * TILE - cache.x) * scale) - px;
+        const ph = Math.round(((gy + step) * TILE - cache.y) * scale) - py;
         const ground = entry.biome && tiles.ground.get(entry.biome);
 
         if (ground && ground.image.complete && ground.image.naturalWidth) {
+          /*
+           * Something solid under the tile first. A good many of the client's
+           * floors are drawn with gaps in them — shoreline sand is three
+           * quarters opaque, low forest grass seven tenths — and laid straight
+           * onto the canvas the sea shows through the holes, which put faint
+           * blue lines down the beach.
+           *
+           * What goes behind it is the floor's own average colour, not the
+           * cell's. A biome is traced as several shades of the one colour, so
+           * backing a tile with its cell painted a faint seam down every cell
+           * boundary — visible through the gaps as a change of shade in ground
+           * that is meant to be continuous. A tile behind itself cannot.
+           */
           const slot = ground.pick(Math.min(0.9999, field(gx, gy)));
+          c.fillStyle = (ground.colours && ground.colours[slot]) || entry.hex;
+          c.fillRect(px, py, pw, ph);
           c.drawImage(ground.image, slot * ground.tile, 0, ground.tile, ground.tile,
-            px, py, quad + 1, quad + 1);
+            px, py, pw, ph);
 
           const props = scenic > 0 && tiles.props.get(entry.biome);
           if (props && props.image.complete && props.image.naturalWidth) {
@@ -599,7 +633,7 @@ var RealmMap = (function () {
         if (quad < 8) continue;
         c.globalAlpha = 0.35;
         c.fillStyle = shade(entry.hex, 0.72);
-        const bit = quad / 4;
+        const bit = pw / 4;
         const which = Math.floor(hash(gx, gy) * 4);
         for (let i = 0; i < 3; i++) {
           c.fillRect(px + ((which + i * 2) % 4) * bit, py + ((which * 3 + i) % 4) * bit, bit, bit);
