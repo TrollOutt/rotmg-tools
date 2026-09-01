@@ -999,18 +999,6 @@
      }
     },
     {
-     "type": 54986,
-     "name": "Water Bubbles Spawner Coral Reefs",
-     "seen": 18,
-     "sprite": {
-      "file": "c54986.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34508,
      "name": "Maiden of the Sea",
      "seen": 17,
@@ -2272,18 +2260,6 @@
       "tile": 8,
       "height": 8,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31640,
-     "name": "Elf Spawner Haunted Hallows",
-     "seen": 4,
-     "sprite": {
-      "file": "c31640.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     }
@@ -3684,30 +3660,6 @@
      }
     },
     {
-     "type": 29934,
-     "name": "New Present Spawner Shipwreck Cove",
-     "seen": 4,
-     "sprite": {
-      "file": "c29934.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 54987,
-     "name": "Water Bubbles Spawner Ship Wreck",
-     "seen": 4,
-     "sprite": {
-      "file": "c54987.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 49415,
      "name": "Dead Church Skeleton",
      "seen": 4,
@@ -3779,18 +3731,6 @@
      }
     },
     {
-     "type": 16991,
-     "name": "Ravenous Rot Cyst",
-     "seen": 96,
-     "sprite": {
-      "file": "c16991.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 31635,
      "name": "Sanguine Archer",
      "seen": 95,
@@ -3823,42 +3763,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 53020,
-     "name": "Beacon Guardian Sanguine Forest Dark Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53020.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53019,
-     "name": "Beacon Guardian Sanguine Forest Light Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53019.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 9822,
-     "name": "Sanguine Thorn Emitter",
-     "seen": 37,
-     "sprite": {
-      "file": "c9822.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -4228,30 +4132,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 53019,
-     "name": "Beacon Guardian Sanguine Forest Light Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53019.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53020,
-     "name": "Beacon Guardian Sanguine Forest Dark Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53020.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -4708,18 +4588,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 31104,
-     "name": "Hero Helper Object",
-     "seen": 5,
-     "sprite": {
-      "file": "c31104.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -4887,18 +4755,6 @@
       "frames": 1,
       "size": 100
      }
-    },
-    {
-     "type": 31104,
-     "name": "Hero Helper Object",
-     "seen": 10,
-     "sprite": {
-      "file": "c31104.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -4956,18 +4812,6 @@
       "tile": 8,
       "height": 8,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 20847,
-     "name": "MV Wisp Helper",
-     "seen": 23,
-     "sprite": {
-      "file": "c20847.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -5040,30 +4884,6 @@
       "tile": 16,
       "height": 16,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 31639,
-     "name": "Elf Spawner Shipwreck Cove",
-     "seen": 3,
-     "sprite": {
-      "file": "c31639.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 54987,
-     "name": "Water Bubbles Spawner Ship Wreck",
-     "seen": 3,
-     "sprite": {
-      "file": "c54987.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -6022,18 +5842,6 @@
      }
     },
     {
-     "type": 28498,
-     "name": "Snowball Stash Realm Spawner High Desert",
-     "seen": 7,
-     "sprite": {
-      "file": "c28498.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 17899,
      "name": "Hallows Wraith",
      "seen": 5,
@@ -6042,18 +5850,6 @@
       "tile": 8,
       "height": 8,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 42241,
-     "name": "Realm Stone Ores Spawner High Desert",
-     "seen": 5,
-     "sprite": {
-      "file": "c42241.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -6237,18 +6033,6 @@
      }
     },
     {
-     "type": 20847,
-     "name": "MV Wisp Helper",
-     "seen": 5,
-     "sprite": {
-      "file": "c20847.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 21893,
      "name": "City Ent God",
      "seen": 4,
@@ -6426,18 +6210,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 42118,
-     "name": "Realm Stone Ores Spawner Beach",
-     "seen": 3,
-     "sprite": {
-      "file": "c42118.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -6459,30 +6231,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 53019,
-     "name": "Beacon Guardian Sanguine Forest Light Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53019.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53020,
-     "name": "Beacon Guardian Sanguine Forest Dark Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53020.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -7595,18 +7343,6 @@
       "file": "c47931.png",
       "tile": 16,
       "height": 16,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 54986,
-     "name": "Water Bubbles Spawner Coral Reefs",
-     "seen": 18,
-     "sprite": {
-      "file": "c54986.png",
-      "tile": 8,
-      "height": 8,
       "frames": 1,
       "size": 100
      }
@@ -10556,18 +10292,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 29934,
-     "name": "New Present Spawner Shipwreck Cove",
-     "seen": 4,
-     "sprite": {
-      "file": "c29934.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ],
    "met": true
@@ -10672,18 +10396,6 @@
      }
     },
     {
-     "type": 16991,
-     "name": "Ravenous Rot Cyst",
-     "seen": 96,
-     "sprite": {
-      "file": "c16991.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 31635,
      "name": "Sanguine Archer",
      "seen": 95,
@@ -10716,42 +10428,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 53020,
-     "name": "Beacon Guardian Sanguine Forest Dark Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53020.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53019,
-     "name": "Beacon Guardian Sanguine Forest Light Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53019.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 9822,
-     "name": "Sanguine Thorn Emitter",
-     "seen": 37,
-     "sprite": {
-      "file": "c9822.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -11238,30 +10914,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 53019,
-     "name": "Beacon Guardian Sanguine Forest Light Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53019.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53020,
-     "name": "Beacon Guardian Sanguine Forest Dark Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53020.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -12054,18 +11706,6 @@
      }
     },
     {
-     "type": 20847,
-     "name": "MV Wisp Helper",
-     "seen": 23,
-     "sprite": {
-      "file": "c20847.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 49906,
      "name": "Shipwreck Elemental",
      "seen": 17,
@@ -12134,18 +11774,6 @@
       "tile": 16,
       "height": 16,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 31639,
-     "name": "Elf Spawner Shipwreck Cove",
-     "seen": 3,
-     "sprite": {
-      "file": "c31639.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     }
@@ -13262,18 +12890,6 @@
      }
     },
     {
-     "type": 28498,
-     "name": "Snowball Stash Realm Spawner High Desert",
-     "seen": 7,
-     "sprite": {
-      "file": "c28498.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 17899,
      "name": "Hallows Wraith",
      "seen": 5,
@@ -13282,18 +12898,6 @@
       "tile": 8,
       "height": 8,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 42241,
-     "name": "Realm Stone Ores Spawner High Desert",
-     "seen": 5,
-     "sprite": {
-      "file": "c42241.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -13488,18 +13092,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 20847,
-     "name": "MV Wisp Helper",
-     "seen": 5,
-     "sprite": {
-      "file": "c20847.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     }
@@ -13744,30 +13336,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 53019,
-     "name": "Beacon Guardian Sanguine Forest Light Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53019.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53020,
-     "name": "Beacon Guardian Sanguine Forest Dark Beam",
-     "seen": 57,
-     "sprite": {
-      "file": "c53020.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -14923,18 +14491,6 @@
      }
     },
     {
-     "type": 9822,
-     "name": "Sanguine Thorn Emitter",
-     "seen": 2,
-     "sprite": {
-      "file": "c9822.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 31636,
      "name": "Sanguine Harpy",
      "seen": 1,
@@ -15038,18 +14594,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 42071,
-     "name": "Realm Emerald Ores Spawner Coral Reefs",
-     "seen": 1,
-     "sprite": {
-      "file": "c42071.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -15129,18 +14673,6 @@
       "tile": 16,
       "height": 16,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 42064,
-     "name": "Realm Iron Ores Spawner Coral Reefs",
-     "seen": 2,
-     "sprite": {
-      "file": "c42064.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     }
@@ -15422,18 +14954,6 @@
       "frames": 3,
       "size": 100
      }
-    },
-    {
-     "type": 28506,
-     "name": "Snowball Stash Realm Spawner Deep Sea",
-     "seen": 1,
-     "sprite": {
-      "file": "c28506.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -15679,11 +15199,11 @@
      }
     },
     {
-     "type": 31632,
-     "name": "Sanguine Ooze",
+     "type": 31635,
+     "name": "Sanguine Archer",
      "seen": 1,
      "sprite": {
-      "file": "c31632.png",
+      "file": "c31635.png",
       "tile": 16,
       "height": 16,
       "frames": 2,
@@ -15691,11 +15211,11 @@
      }
     },
     {
-     "type": 31635,
-     "name": "Sanguine Archer",
+     "type": 31632,
+     "name": "Sanguine Ooze",
      "seen": 1,
      "sprite": {
-      "file": "c31635.png",
+      "file": "c31632.png",
       "tile": 16,
       "height": 16,
       "frames": 2,
@@ -15723,18 +15243,6 @@
    "state": "teleport",
    "zone": 27,
    "guards": [
-    {
-     "type": 20847,
-     "name": "MV Wisp Helper",
-     "seen": 6,
-     "sprite": {
-      "file": "c20847.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
     {
      "type": 49901,
      "name": "Shipwreck Ghost",
@@ -15780,18 +15288,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 51942,
-     "name": "New Turkey God Spawner 1",
-     "seen": 1,
-     "sprite": {
-      "file": "c51942.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     }
@@ -15934,18 +15430,6 @@
      }
     },
     {
-     "type": 17969,
-     "name": "New Sapphire Initiator",
-     "seen": 1,
-     "sprite": {
-      "file": "c17969.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 17732,
      "name": "Sprite Forest God",
      "seen": 1,
@@ -16035,18 +15519,6 @@
      }
     },
     {
-     "type": 31639,
-     "name": "Elf Spawner Shipwreck Cove",
-     "seen": 1,
-     "sprite": {
-      "file": "c31639.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 49903,
      "name": "Shipwreck Hag",
      "seen": 1,
@@ -16104,18 +15576,6 @@
      }
     },
     {
-     "type": 42082,
-     "name": "Realm Diamond Ores Spawner Risen Hell",
-     "seen": 1,
-     "sprite": {
-      "file": "c42082.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 50130,
      "name": "Hell Dog 3",
      "seen": 1,
@@ -16136,18 +15596,6 @@
       "tile": 16,
       "height": 16,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 20847,
-     "name": "MV Wisp Helper",
-     "seen": 1,
-     "sprite": {
-      "file": "c20847.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -16336,18 +15784,6 @@
       "frames": 3,
       "size": 100
      }
-    },
-    {
-     "type": 42239,
-     "name": "Realm Stone Ores Spawner Higher Plains",
-     "seen": 1,
-     "sprite": {
-      "file": "c42239.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -16403,30 +15839,6 @@
       "tile": 8,
       "height": 8,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 42076,
-     "name": "Realm Emerald Ores Spawner Dead Church",
-     "seen": 1,
-     "sprite": {
-      "file": "c42076.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 28504,
-     "name": "Snowball Stash Realm Spawner Dead Church",
-     "seen": 1,
-     "sprite": {
-      "file": "c28504.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -16637,18 +16049,6 @@
       "tile": 8,
       "height": 8,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 51836,
-     "name": "New Merc A Spawner 1",
-     "seen": 1,
-     "sprite": {
-      "file": "c51836.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     },
@@ -16987,18 +16387,6 @@
       "frames": 3,
       "size": 100
      }
-    },
-    {
-     "type": 42241,
-     "name": "Realm Stone Ores Spawner High Desert",
-     "seen": 1,
-     "sprite": {
-      "file": "c42241.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -17195,18 +16583,6 @@
       "tile": 16,
       "height": 16,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 42076,
-     "name": "Realm Emerald Ores Spawner Dead Church",
-     "seen": 1,
-     "sprite": {
-      "file": "c42076.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
       "size": 100
      }
     }
@@ -17566,18 +16942,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 31640,
-     "name": "Elf Spawner Haunted Hallows",
-     "seen": 1,
-     "sprite": {
-      "file": "c31640.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1,
-      "size": 100
-     }
     }
    ]
   },
@@ -17775,6 +17139,18 @@
      }
     },
     {
+     "type": 9819,
+     "name": "Carboniferous Dinosaur",
+     "seen": 3,
+     "sprite": {
+      "file": "c9819.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 30573,
      "name": "Carboniferous Spider",
      "seen": 3,
@@ -17792,18 +17168,6 @@
      "seen": 3,
      "sprite": {
       "file": "c31166.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9819,
-     "name": "Carboniferous Dinosaur",
-     "seen": 3,
-     "sprite": {
-      "file": "c9819.png",
       "tile": 16,
       "height": 16,
       "frames": 2,
@@ -17844,11 +17208,11 @@
      }
     },
     {
-     "type": 9827,
-     "name": "Floral Tiger",
+     "type": 9826,
+     "name": "Floral Dragon",
      "seen": 2,
      "sprite": {
-      "file": "c9827.png",
+      "file": "c9826.png",
       "tile": 16,
       "height": 16,
       "frames": 2,
@@ -17856,11 +17220,11 @@
      }
     },
     {
-     "type": 9826,
-     "name": "Floral Dragon",
+     "type": 9827,
+     "name": "Floral Tiger",
      "seen": 2,
      "sprite": {
-      "file": "c9826.png",
+      "file": "c9827.png",
       "tile": 16,
       "height": 16,
       "frames": 2,
