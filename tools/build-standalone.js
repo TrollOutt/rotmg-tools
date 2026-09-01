@@ -359,7 +359,7 @@ page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, realmMonsterSprites, realmCatalogSprites, realmMonsterAnimations, realmTiles, whatsNew })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, whatsNew })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,
