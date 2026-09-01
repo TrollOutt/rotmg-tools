@@ -40,6 +40,14 @@
       <small>Explore a topological atlas of the realm, its biomes, encounters, beacon guardians and the creatures that inhabit each region.</small>
       <em class="home-card-go">Explore →</em>
     </button>
+
+    <button type="button" class="home-card" data-go="news" style="--i:3">
+      <span class="home-card-art news-card-glyph" aria-hidden="true">✧</span>
+      <span class="home-card-title">What's New</span>
+      <span class="home-card-line">Everything the last update brought.</span>
+      <small>Every weapon, ability, skin and creature the client gained or lost since the previous build, with its own artwork and every number that moved.</small>
+      <em class="home-card-go">See it →</em>
+    </button>
   </div>
 
   <footer class="app-foot">
@@ -50,6 +58,25 @@
 </div>
 
 <!-- Realm Atlas ------------------------------------------------------ -->
+<div id="pageNews" class="app page" hidden>
+  <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>What's New</h1>
+    <p id="newsHead">Reading the client…</p>
+  </header>
+  <main class="news-layout">
+    <div class="news-bar">
+      <div class="chip-row" id="newsDrawers"></div>
+      <div class="news-bar-end">
+        <div class="chip-row" id="newsStates"></div>
+        <input id="newsSearch" type="search" placeholder="Search by name, label or text" aria-label="Search what's new">
+        <span class="news-count" id="newsCount"></span>
+      </div>
+    </div>
+    <div class="news-grid" id="newsGrid"></div>
+  </main>
+</div>
+
 <div id="pageRealm" class="app page" hidden>
   <header class="masthead realm-head">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
@@ -332,6 +359,7 @@
 <script src="fame-page.js"></script>
 <script src="realm-data.js"></script>
 <script src="realm-map.js"></script>
+<script src="whats-new.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

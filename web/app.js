@@ -2290,7 +2290,7 @@ async function load() {
  * couple of hundred milliseconds and it means the page is ready when
  * you pick it. Fame Sweep loads its own the first time you open it.
  */
-const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', realm: 'pageRealm' };
+const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', realm: 'pageRealm', news: 'pageNews' };
 let famePageReady = false;
 
 async function openFamePage() {
@@ -2325,6 +2325,12 @@ function showPage(name) {
   pinRealm(page);
   usePool(page);
   if (page === 'fame') openFamePage();
+  // What's New reads its own index the first time it is opened, the same way
+  // Fame Sweep does: it is a megabyte of pictures and nobody who came for the
+  // calculator should pay for it.
+  if (page === 'news' && typeof WhatsNew !== 'undefined') {
+    WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
+  }
   if (typeof RealmMap !== 'undefined') RealmMap.setVisible(page === 'realm');
   window.scrollTo(0, 0);
 

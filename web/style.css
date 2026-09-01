@@ -1511,3 +1511,98 @@ table.mini td { padding: 3px 8px; border: 0; }
   #pageHome.page-entering, #pageEnchant.page-entering, #pageRealm.page-entering,
   #pageFame.page-entering { opacity: 1; transform: none; }
 }
+
+
+/* ------------------------------------------------------------------ *
+ * What's New                                                          *
+ * ------------------------------------------------------------------ */
+.news-card-glyph { font-size: 2.4rem; line-height: 1; color: #ffd479; }
+
+.news-layout { display: flex; flex-direction: column; gap: 14px; padding: 0 18px 40px; }
+
+.news-bar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  padding: 12px 0; background: var(--bg, #0d1017);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.news-bar .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.news-bar-end { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-left: auto; }
+.news-bar-end input {
+  min-width: 220px; padding: 6px 10px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+  color: inherit; font: inherit;
+}
+.news-count { opacity: .6; font-size: .85em; white-space: nowrap; }
+
+.news-grid {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  align-content: start;
+}
+
+.wn-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+}
+.wn-card.is-gone { opacity: .55; }
+.wn-card-top { display: flex; gap: 12px; align-items: flex-end; }
+.wn-card-name h3 { margin: 0; font-size: 1rem; line-height: 1.25; }
+.wn-kind { font-size: .75em; opacity: .55; }
+
+/*
+ * A sprite plays the way the game plays it: the walk cycle at rest, the
+ * attack while the pointer is on it. The strip is one row of frames, so the
+ * animation is a whole-number slide across it - steps() rather than a glide,
+ * or the frames would smear into one another.
+ */
+.wn-art {
+  flex: none; image-rendering: pixelated;
+  background-repeat: no-repeat;
+  background-image: var(--wn-rest);
+  background-size: var(--wn-rest-w) 100%;
+}
+.wn-art-empty { width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,.05); }
+.wn-art.is-moving {
+  animation: wn-frames var(--wn-rest-time) steps(var(--wn-rest-steps)) infinite;
+}
+.wn-card:hover .wn-art.has-busy {
+  background-image: var(--wn-busy);
+  background-size: var(--wn-busy-w) 100%;
+  animation: wn-busy-frames var(--wn-busy-time) steps(var(--wn-busy-steps)) infinite;
+}
+@keyframes wn-frames {
+  from { background-position-x: 0; }
+  to   { background-position-x: calc(-1 * var(--wn-rest-w)); }
+}
+@keyframes wn-busy-frames {
+  from { background-position-x: 0; }
+  to   { background-position-x: calc(-1 * var(--wn-busy-w)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wn-art, .wn-card:hover .wn-art { animation: none; }
+}
+
+.wn-labels { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.wn-labels span {
+  font-size: .68em; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.07); opacity: .8;
+}
+
+.wn-facts, .wn-moved { display: grid; gap: 2px 10px; margin: 0; font-size: .82em; }
+.wn-facts > div, .wn-moved > div { display: flex; gap: 8px; justify-content: space-between; }
+.wn-facts dt, .wn-moved dt { opacity: .55; }
+.wn-facts dd, .wn-moved dd { margin: 0; font-variant-numeric: tabular-nums; }
+.wn-moved s { opacity: .45; }
+.wn-moved b { color: #8ff0b5; }
+
+.wn-desc { margin: 0; font-size: .82em; opacity: .65; font-style: italic; }
+
+.wn-rewrite { font-size: .8em; }
+.wn-rewrite-now { margin: 0; }
+.wn-rewrite-now b { color: #8ff0b5; font-weight: 600; }
+.wn-rewrite details { margin-top: 4px; opacity: .55; }
+.wn-rewrite summary { cursor: pointer; }
+.wn-rewrite details p { margin: 4px 0 0; text-decoration: line-through; }
