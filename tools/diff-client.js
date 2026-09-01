@@ -469,9 +469,12 @@ function main() {
       const a = was.facts[key], b = thing.facts[key];
       if (String(a ?? '') !== String(b ?? '')) moved.push({ fact: key, was: a ?? null, now: b ?? null });
     }
-    if (was.description !== thing.description) {
-      moved.push({ fact: 'description', was: was.description, now: thing.description });
-    }
+    /*
+     * A rewritten description is not a change to the thing. The wording of a
+     * tooltip gets tidied every update and none of it alters what the item
+     * does; carried into the page it filled the cards and buried the numbers
+     * that matter. What it says now is shown on the card either way.
+     */
     const wasLabels = was.labels.join(','), nowLabels = thing.labels.join(',');
     if (wasLabels !== nowLabels) moved.push({ fact: 'labels', was: wasLabels, now: nowLabels });
     if (moved.length) changed.push({ ...thing, moved });

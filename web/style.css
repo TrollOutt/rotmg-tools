@@ -1586,10 +1586,11 @@ table.mini td { padding: 3px 8px; border: 0; }
 .wn-contents { display: grid; gap: 5px; }
 .wn-part {
   border-radius: 10px; overflow: hidden;
-  background: rgba(255,255,255,.055);
-  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(20,24,33,.62);
+  border: 1px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(6px);
 }
-.wn-part.is-open { background: rgba(255,255,255,.085); border-color: rgba(255,203,112,.28); }
+.wn-part.is-open { background: rgba(20,24,33,.78); border-color: rgba(255,203,112,.32); }
 .wn-part-head {
   width: 100%; display: flex; align-items: baseline; gap: 12px;
   padding: 9px 14px; font: inherit; color: inherit; text-align: left;
@@ -1604,10 +1605,23 @@ table.mini td { padding: 3px 8px; border: 0; }
 }
 .wn-part.is-open .wn-part-mark { transform: rotate(90deg); }
 .wn-part-title { font-weight: 600; font-size: .95rem; white-space: nowrap; }
-.wn-part-blurb { font-size: .82em; opacity: .5; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-part-blurb { font-size: .82em; opacity: .68; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wn-part-count { margin-left: auto; font-size: .74em; opacity: .4; font-variant-numeric: tabular-nums; }
 .wn-part ul { margin: 0; padding: 0 18px 12px 34px; display: grid; gap: 5px; }
-.wn-part li { font-size: .87em; line-height: 1.55; opacity: .85; }
+.wn-part li { font-size: .87em; line-height: 1.55; opacity: .88; }
+
+/* What a section is about, in pictures. */
+.wn-part-art {
+  display: flex; flex-wrap: wrap; gap: 10px 14px;
+  padding: 4px 18px 14px 34px;
+}
+.wn-part-one { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 74px; }
+.wn-part-one i {
+  font-style: normal; font-size: .62em; line-height: 1.2; text-align: center;
+  opacity: .55; overflow: hidden; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.wn-part-one .wn-art { margin-top: auto; }
 
 /*
  * The shelf.
@@ -1626,23 +1640,25 @@ table.mini td { padding: 3px 8px; border: 0; }
   display: flex; flex-direction: column; gap: 9px;
   padding: 13px 15px; border-radius: 13px; cursor: pointer;
   min-height: 132px;
-  background: rgba(20,24,33,.82);
-  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(20,24,33,.6);
+  border: 1px solid rgba(255,255,255,.11);
+  backdrop-filter: blur(6px);
   transition: background .16s ease, border-color .16s ease, transform .16s ease;
 }
-.wn-group:hover { background: rgba(28,33,44,.92); border-color: rgba(255,203,112,.3); transform: translateY(-2px); }
+.wn-group:hover { background: rgba(28,33,44,.74); border-color: rgba(255,203,112,.3); transform: translateY(-2px); }
 .wn-group:focus-visible { outline: 2px solid #ffcb70; outline-offset: 2px; }
 .news-groups.has-open .wn-group:not(.is-open) { opacity: .62; }
 .wn-group.is-open {
   grid-column: 1 / -1; order: -1; cursor: default;
-  background: rgba(20,24,33,.92);
-  border-color: rgba(255,203,112,.3);
+  background: rgba(20,24,33,.72);
+  border-color: rgba(255,203,112,.34);
 }
 .wn-group header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; }
 .wn-group.is-open > header {
   position: sticky; top: -13px; z-index: 3; cursor: pointer;
   margin: -13px -15px 0; padding: 12px 15px 10px;
-  background: linear-gradient(rgba(20,24,33,.97) 80%, rgba(20,24,33,0));
+  background: linear-gradient(rgba(18,22,30,.96) 80%, rgba(18,22,30,0));
+  backdrop-filter: blur(8px);
   border-radius: 13px 13px 0 0;
 }
 .wn-group h3 { margin: 0; font-size: 1rem; }
