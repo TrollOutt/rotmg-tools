@@ -208,9 +208,24 @@ var WhatsNew = (function () {
       + '</section>';
   }
 
-  function render() {
+  /*
+   * Where the shelf was when a group was opened.
+   *
+   * Opening a group replaces the whole shelf, so without this the scroll
+   * position means something different afterwards and closing leaves you
+   * somewhere you have never been - usually past the end, with the group you
+   * came from off the top of the window.
+   */
+  let wasAt = 0;
+  const scroller = () => document.querySelector('#pageNews .news-layout');
+
+  function render(restore) {
+    const box = scroller();
     $('newsGroups').innerHTML = GROUPS.map(g => groupOf(g[0], g[1], g[2])).join('');
     $('newsGroups').classList.toggle('has-open', !!open);
+    if (!box) return;
+    if (restore === 'keep') return;
+    box.scrollTop = restore === 'back' ? wasAt : 0;
   }
 
   function show(index, bundled) {
@@ -248,24 +263,26 @@ var WhatsNew = (function () {
       const page = $('pageNews');
       if (!page || page.hidden) return;
       const shut = event.target.closest('[data-shut]');
-      if (shut) { open = null; render(); return; }
+      if (shut) { open = null; render('back'); return; }
       const group = event.target.closest('.wn-group');
       if (group && !group.classList.contains('is-open')) {
+        const box = scroller();
+        wasAt = box ? box.scrollTop : 0;
         open = group.dataset.group;
         render();
-        const node = document.querySelector('.wn-group.is-open');
-        if (node) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         return;
       }
-      if (!group && open) { open = null; render(); }
+      if (!group && open) { open = null; render('back'); }
     });
     document.addEventListener('keydown', event => {
       if (!data) return;
-      if (event.key === 'Escape' && open) { open = null; render(); return; }
+      if (event.key === 'Escape' && open) { open = null; render('back'); return; }
       if (event.key !== 'Enter' && event.key !== ' ') return;
       const group = event.target.closest && event.target.closest('.wn-group');
       if (group && !group.classList.contains('is-open')) {
         event.preventDefault();
+        const box = scroller();
+        wasAt = box ? box.scrollTop : 0;
         open = group.dataset.group;
         render();
       }
