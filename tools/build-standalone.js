@@ -179,6 +179,33 @@ if (fs.existsSync(realmTileIndex)) {
  * And the monuments, which are one arrangement rather than a bag of tiles:
  * the plate every beacon stands on, laid out cell by cell.
  */
+/*
+ * What the last update brought, with its pictures.
+ *
+ * A megabyte and a half of small sprites, some of them animation strips. The
+ * served copy loads them from disk when the page is opened; the standalone
+ * file has nowhere to load them from, so it carries them.
+ */
+const whatsNew = { index: null, art: {} };
+const newsDir = path.join(web, 'assets', 'whats-new');
+const newsIndex = path.join(newsDir, 'index.json');
+if (fs.existsSync(newsIndex)) {
+  whatsNew.index = JSON.parse(fs.readFileSync(newsIndex, 'utf8'));
+  for (const drawer of Object.values(whatsNew.index.drawers || {})) {
+    for (const why of ['added', 'changed']) {
+      for (const thing of drawer[why] || []) {
+        if (!thing.sprite) continue;
+        for (const clip of Object.values(thing.sprite.clips)) {
+          const absolute = path.join(newsDir, clip.file);
+          if (!fs.existsSync(absolute) || whatsNew.art[clip.file]) continue;
+          whatsNew.art[clip.file] = 'data:image/png;base64,'
+            + fs.readFileSync(absolute).toString('base64');
+        }
+      }
+    }
+  }
+}
+
 const realmMonuments = path.join(realmTileDir, 'monuments.json');
 if (fs.existsSync(realmMonuments)) {
   realmTiles.monuments = JSON.parse(fs.readFileSync(realmMonuments, 'utf8'));
@@ -229,6 +256,7 @@ const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
 const realmDataSource = readWeb('realm-data.js');
 const realmMapSource = readWeb('realm-map.js');
+const whatsNewSource = readWeb('whats-new.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
 
@@ -311,7 +339,7 @@ let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
 const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n'
-  + '<script src="fame.js"></script>\n<script src="fame-page.js"></script>\n<script src="realm-data.js"></script>\n<script src="realm-map.js"></script>\n<script src="app.js"></script>';
+  + '<script src="fame.js"></script>\n<script src="fame-page.js"></script>\n<script src="realm-data.js"></script>\n<script src="realm-map.js"></script>\n<script src="whats-new.js"></script>\n<script src="app.js"></script>';
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -334,13 +362,14 @@ page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, realmMonsterSprites, realmCatalogSprites, realmMonsterAnimations, realmTiles })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, realmMonsterSprites, realmCatalogSprites, realmMonsterAnimations, realmTiles, whatsNew })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,
     `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(realmDataSource)}\n</script>`,
     `<script>\n${safe(realmMapSource)}\n</script>`,
+    `<script>\n${safe(whatsNewSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);

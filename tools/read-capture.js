@@ -279,6 +279,20 @@ for (const [name, list] of ordered) {
   }
   holes = 0;
   for (let i = 0; i < span; i++) if (!filled[i]) holes++;
+  /*
+   * And where they fall, because that says what caused them. A single hole
+   * at the very start is the capture beginning after the connection did.
+   * A spray of holes each a whole number of full segments, spread through
+   * the capture, is the buffer overrunning and packets going missing. The
+   * two want different fixes, and the count alone tells them apart badly.
+   */
+  const gaps = [];
+  for (let i = 0; i < span; i++) {
+    if (filled[i]) continue;
+    const start = i;
+    while (i < span && !filled[i]) i++;
+    gaps.push({ at: start, size: i - start });
+  }
   const parts = list;
   const { found, skipped, resyncs, consumed } = frames(stream);
   const share = stream.length ? (100 * consumed / stream.length) : 0;
@@ -287,6 +301,17 @@ for (const [name, list] of ordered) {
   console.log('    ' + (stream.length / 1024).toFixed(0) + ' KB from '
     + parts.length.toLocaleString('en-US') + ' segments'
     + (holes ? ', ' + (100 * holes / stream.length).toFixed(1) + '% never captured' : ', no gaps'));
+  if (gaps.length) {
+    const sizes = gaps.map(g => g.size).sort((x, y) => x - y);
+    const bins = new Array(20).fill(0);
+    for (const g of gaps) bins[Math.min(19, Math.floor(20 * g.at / span))] += g.size;
+    const atStart = gaps[0].at < span / 40 ? gaps[0].size : 0;
+    console.log('      ' + gaps.length + ' hole' + (gaps.length === 1 ? '' : 's')
+      + ', largest ' + sizes[sizes.length - 1] + ' bytes'
+      + (atStart ? ', and the first is at the very start' : ''));
+    console.log('      ' + bins.map(v => (v ? String(Math.round(v / 1024)).padStart(4) : '   .')).join('')
+      + '   KB lost, first to last');
+  }
   console.log('    ' + found.length.toLocaleString('en-US') + ' messages framed, '
     + share.toFixed(1) + '% of the stream'
     + (resyncs ? ', picked up again ' + resyncs + ' time' + (resyncs === 1 ? '' : 's') : ''));
