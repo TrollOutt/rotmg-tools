@@ -100,7 +100,20 @@ var WhatsNew = (function () {
       const bm = moves(b) ? 0 : (b.sprite ? 1 : 2);
       return am - bm;
     });
-    return ranked.slice(0, 4);
+    /*
+     * Four different pictures. Some groups are full of things the client draws
+     * identically - the ten legacy portals all use the one realm portal - and
+     * four copies of the same picture reads as a fault rather than as a group.
+     * A repeat is only taken once nothing new is left.
+     */
+    const seen = new Set(), first = [], rest = [];
+    for (const thing of ranked) {
+      const key = thing.sprite ? Object.values(thing.sprite.clips)[0].file : thing.id;
+      if (seen.has(key)) { rest.push(thing); continue; }
+      seen.add(key);
+      first.push(thing);
+    }
+    return first.concat(rest).slice(0, 4);
   }
 
   const pretty = value => {
@@ -213,6 +226,54 @@ var WhatsNew = (function () {
    * standing rather than sending you somewhere. Only one is open at a time,
    * because the point is to keep the other eight in view.
    */
+  /*
+   * What a section is talking about, in pictures.
+   *
+   * The words name things - Cold Front, the Venerable Doom Bow, the Timekeeper
+   * Mystic - and the pictures of those things are already here, cut from the
+   * client. So each section is scanned for names it shares with the update and
+   * shows them underneath: the section on new whites shows the thirteen new
+   * whites, the one on Venerable equipment shows the set. It costs nothing,
+   * the room is there once a section is open, and a picture settles what a
+   * name only suggests.
+   */
+  let byName = null;
+  function knownThings() {
+    if (byName) return byName;
+    byName = new Map();
+    for (const drawer of Object.values(data.drawers || {})) {
+      for (const why of ['added', 'changed']) {
+        for (const thing of drawer[why] || []) {
+          if (!thing.sprite) continue;
+          const key = thing.id.toLowerCase();
+          if (!byName.has(key)) byName.set(key, thing);
+        }
+      }
+    }
+    return byName;
+  }
+
+  function shownIn(part) {
+    const all = knownThings();
+    const words = part.points.join(' ').toLowerCase();
+    const found = [];
+    const taken = new Set();
+    // Longest names first, so "Venerable Doom Bow" is not eaten by "Doom Bow".
+    for (const [key, thing] of [...all].sort((a, b) => b[0].length - a[0].length)) {
+      if (key.length < 6 || !words.includes(key)) continue;
+      const file = Object.values(thing.sprite.clips)[0].file;
+      if (taken.has(file) && found.length > 3) continue;
+      taken.add(file);
+      found.push(thing);
+      if (found.length >= 18) break;
+    }
+    if (!found.length) return '';
+    return '<div class="wn-part-art">' + found.map(thing =>
+      '<span class="wn-part-one" title="' + esc(thing.id) + '">'
+      + pictureOf(thing, 34)
+      + '<i>' + esc(thing.id) + '</i></span>').join('') + '</div>';
+  }
+
   let openNote = -1;
   function notesOf() {
     const notes = data.notes;
@@ -228,7 +289,7 @@ var WhatsNew = (function () {
         + '<span class="wn-part-count">' + part.points.length + '</span>'
         + '</button>'
         + (openNote === i ? '<ul>' + part.points.map(point =>
-          '<li>' + esc(point) + '</li>').join('') + '</ul>' : '')
+          '<li>' + esc(point) + '</li>').join('') + '</ul>' + shownIn(part) : '')
         + '</article>').join('') + '</div>'
       + '</section>';
   }

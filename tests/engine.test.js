@@ -47,28 +47,53 @@ const baseCfg = extra => Object.assign({
  * ------------------------------------------------------------------ */
 section('1. Data loading');
 // Everything the client defines is kept; which of it can be drawn is the
-// pool's business. 291 rollable, and 34 that are not — the seasonal
-// enchantments an engraving guarantees, the legacy ones, Crown, and Damage
-// Resistance. None of them can be drawn without an artifact that asks for it.
+// pool's business. 292 rollable, and 33 that are not — the seasonal
+// enchantments an engraving guarantees, the legacy ones, and Crown. None of
+// those can be drawn without an artifact that asks for it.
+//
+// Damage Resistance used to be in that list and is not any more: build
+// cc648143 gave it ROLLABLE, so it can now be drawn from every pool including
+// the one you roll into with no artifact at all. Its weight of 200,000 is the
+// top band rather than an outlier - fifteen enchantments share it - so it is a
+// common roll, not a certainty. That is the client's word, and it is checked
+// below rather than assumed.
 // Everything the client defines, plus eight family goals of our own — see
 // section 2c. "fromClient" is the former, which is what the client is compared
 // against; a family is a way of asking, not something the game rolls.
 const fromClient = data.enchants.filter(mod => !mod.members);
 check('325 enchantments from the client', fromClient.length === 325, `got ${fromClient.length}`);
-check('291 of them are rollable', (() => {
-  return fromClient.filter(mod => mod.tags.has('ROLLABLE')).length === 291;
+check('292 of them are rollable', (() => {
+  return fromClient.filter(mod => mod.tags.has('ROLLABLE')).length === 292;
 })(), String(fromClient.filter(mod => mod.tags.has('ROLLABLE')).length));
 
-check('and no pool a player can reach lets it in', (() => {
-  // Every pool the client defines requires ROLLABLE, including the default one
-  // rolled into without an artifact. Nothing filters it out globally; nothing
-  // needs to.
+/*
+ * Damage Resistance, which changed sides.
+ *
+ * It was unreachable for as long as this tool has existed: the client withheld
+ * ROLLABLE, so no pool would take it and the assertion here was that no pool
+ * did. Build cc648143 granted it, and it arrived carrying the weight it always
+ * had - two hundred thousand, more than an order of magnitude above anything
+ * else in the pool. So it is not merely reachable now, it is the likeliest
+ * armour roll in the game.
+ *
+ * The check is kept and turned round rather than deleted, because the number
+ * is the sort that gets changed back, and if it does this will say so.
+ */
+check('every armour pool now offers Damage Resistance', (() => {
   const cfg = baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' });
   return data.artifacts.every(art =>
-    !engine.eligiblePool(data, cfg, art).some(mod => mod.name === 'Damage Resistance'));
-})(), data.artifacts.filter(art => engine.eligiblePool(data,
-  baseCfg({ type: 'ARMOR', item: '', desired: 'Candy-Coated' }), art)
-  .some(mod => mod.name === 'Damage Resistance')).map(a => a.name).join(', '));
+    engine.eligiblePool(data, cfg, art).some(mod => mod.name === 'Damage Resistance'));
+})(), 'the client granted it ROLLABLE in build cc648143');
+
+check('and it sits in the top weight band with fourteen others', (() => {
+  const dr = data.byName.get('Damage Resistance');
+  if (!dr || dr.weight !== 200000) return false;
+  const top = fromClient.filter(mod => mod.weight === 200000);
+  return top.length === 15 && top.every(mod => mod.tags.has('ROLLABLE'));
+})(), (() => {
+  const top = fromClient.filter(mod => mod.weight === 200000);
+  return top.length + ' at 200,000';
+})());
 // 50 the client labels ARTIFACT, plus the "No Artifact" row it has no record
 // for, because in the game that is simply not using the enchanter's slot.
 check('51 artifacts, none held back', data.artifacts.length === 51 && data.heldArtifacts.length === 0,
@@ -326,9 +351,20 @@ check('every tier split matches, to five decimals', (() => {
  */
 const DECA_BEHIND = new Set(['Draconic Gaze']);
 
+/*
+ * One more, of a different kind, and so kept apart from it.
+ *
+ * The frozen list has Damage Resistance without ROLLABLE, which is what the
+ * client said on the day the list was taken. Build cc648143 granted it. This
+ * is not the sheet being wrong about a rule - it is the sheet being older than
+ * the game, which is the ordinary fate of a frozen list and not something to
+ * confuse with a genuine disagreement.
+ */
+const LABELS_MOVED = new Set(['Damage Resistance']);
+
 check('every set of Labels matches, bar the one the client settles', (() => {
   for (const row of decaComparable) {
-    if (!row.labels.length || DECA_BEHIND.has(row.name)) continue;
+    if (!row.labels.length || DECA_BEHIND.has(row.name) || LABELS_MOVED.has(row.name)) continue;
     if (withoutTiers([...data.byName.get(row.name).tags]) !== withoutTiers(row.labels)) return false;
   }
   return true;

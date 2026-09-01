@@ -9,7 +9,8 @@
      "Pirate Cave, Forest Maze, Spider Den, Sprite World, Abyss of Demons, Undead Lair, Deadwater Docks, Crawling Depths, Woodland Labyrinth, Shaitan's Lair, Lair of Draconis, The Shatters.",
      "The portal at twelve o'clock is the gentlest and they get harder clockwise. They hit as hard as they used to.",
      "The Keyper appears at 33% and 66% of each realm's completion, and he is the way in."
-    ]
+    ],
+    "blurb": "Twelve portals to dungeons rebuilt as they used to be."
    },
    {
     "title": "Six new encounters, thirteen new whites",
@@ -19,7 +20,8 @@
      "Shifting Shroud, Cold Front, Babel Blocks, Barnacle Shell, Obsidian Lyre, Rectangular Prism, Wrathful Conduit, Rift Rippers, Scary Stories, General's Arsenal, Fossilized Skull, Skeletal Sigilpede, Ravenous Wand.",
      "Ray Katana was reworked into something worth its rarity: it now fires a laser on hit, gaining projectiles with your defense.",
      "Skull Shrine is now exclusive to the Risen Hell, Cube God to the Sprite Forest, and the Sprite Forest finally has conveyors."
-    ]
+    ],
+    "blurb": "The biomes that had nothing to fight, and what they now drop."
    },
    {
     "title": "Venerable equipment",
@@ -28,7 +30,8 @@
      "Weapons — Venerable Ancient Stone Sword, Spirit Dagger, Doom Bow, Staff of the Crystal Serpent, Crystal Wand, Doku no Ken.",
      "Armour — Venerable Resurrected Warrior's Armor, Coral Silk Armor, Robe of the Mad Scientist.",
      "Rings — Venerable Ring of the Pyramid, of the Nile, of the Sphinx. Combine the three in the Forge for the Decades Chronicle."
-    ]
+    ],
+    "blurb": "Old gear rebuilt as a set, and the ring the Forge makes of it."
    },
    {
     "title": "Timekeeper Mystic",
@@ -36,7 +39,8 @@
      "A UT set reskin marking the Mystic's rework: Staff of Rich History, Entrancing Hourglass, Traditional Blouse, Bronze Pocketwatch.",
      "Collect all four and you can transform into the Timekeeper Mystic. It comes as a mini-skin too.",
      "Fourteen shards feed the set; missions dedicated to the Mystic pay them out, and a full set exchanges for a chest you choose from."
-    ]
+    ],
+    "blurb": "Four items, one transformation, fourteen shards to get there."
    },
    {
     "title": "Missions and campaigns",
@@ -46,14 +50,16 @@
      "Retrowinds tokens now come only from missions — no longer from dungeons or the Battle Pass — and missions pay more of them to compensate. Twenty of a kind buy a Selection Chest.",
      "Six new emotes are mission rewards: Dancing Cubes, Load of Barnacles, Goofy Slop, Stygian Hand Mirror, Puzzled Deity, Very Cold Soul.",
      "Celestial quests refresh weekly, and the season 3 to 6 quests are gone. Sixty Celestial Stones buy the new Wizard skin."
-    ]
+    ],
+    "blurb": "Where the tokens, the emotes and the celestial skins come from."
    },
    {
     "title": "Battle Pass — The Old Ways",
     "points": [
      "Runs 1 September to 6 October. New skins for the Bard and the Knight.",
      "Three old collections can be finished at last, each gaining its Druid: Antinomy, Syndicate Henchman, Kingdom."
-    ]
+    ],
+    "blurb": "Five weeks, two new skins, three old collections finished."
    },
    {
     "title": "Weekly rotation",
@@ -65,7 +71,8 @@
      "Week 5 — Lair of Shaitan and Moonlight Village, then Hidden Interregnum, and Oryx's Sanctuary on loot and XP boost.",
      "Breaking the event chest opens the special dungeon 33% of the time in Adept dungeons, 66% in Veteran, always in Expert.",
      "Oryx's Sanctuary stands open from 29 September."
-    ]
+    ],
+    "blurb": "Which dungeons pay extra, and what opens after the chest."
    },
    {
     "title": "Changed, not added",
@@ -75,7 +82,8 @@
      "Round order — Sandstone Titan or Fountain Spirit, Ruthven or Corruption Phantom, Davy Jones or Thessal, Heroic Septavius or Infernal Malphas, then the Perfected Cube God.",
      "Retrowinds gear drops at guaranteed Rare rarity. The weapon engraving calls lightning for 500 on player shoot and adds dexterity worth 9% of bonus speed; the armour grants 9 dexterity for 9 seconds when hit, on an 18 second cooldown, and +3 defense.",
      "Thirteen biome shinies: Adventurer's Scarf, Torrential Staff, Celestial Recurve, Mace of the Pumpkin Effigy, Pirate's Artillery, Skull of Restless Souls, Doom's Emblem, Cavalry Lance, Cloak of the Deep, Evolutionary Records, Pollen Incendiary, Bloodbath Blade, Runes of Knowledge."
-    ]
+    ],
+    "blurb": "The Crucible, Cronus and the Retrowinds engravings, rebalanced."
    },
    {
     "title": "Leaderboards",
@@ -84,7 +92,8 @@
      "Weeks 1 to 3 pay a Collection Chest and utility items at the top 30%, dust and quest chests at 15%, stat candy at 5%.",
      "Week 4 adds sulphur at 15% and the Decades Chronicle at 5%. Week 5 pays a Season Vault Unlocker and a Seasonal Apple at 5%, after the season closes.",
      "One skin a week for weeks 1 to 4, all four needed for the Master of All Elements quest: Air Elemental Paladin, Earth Elemental Knight, Water Elemental Summoner, Fire Elemental Sorcerer."
-    ]
+    ],
+    "blurb": "Two boards on the Time Chamber, and what the top brackets pay."
    }
   ],
   "title": "Month of the Mad God",
@@ -92,10 +101,10 @@
   "date": "2026-09-01",
   "lede": "Ten years since Oryx took the realm, and the anniversary is the update. A hub of twelve portals leads to classic dungeons rebuilt as they were; six new encounters fill the biomes that had none; and an event runs five weeks on top of it."
  },
- "before": "9476657c789f4aa38ae68bf57f2a0a18",
+ "before": "cc64814365a64de583f547b036685ac2",
  "counts": {
   "added": 827,
-  "changed": 27,
+  "changed": 20,
   "gone": 121
  },
  "tally": {
@@ -126,12 +135,12 @@
   },
   "consumables": {
    "added": 44,
-   "changed": 3,
+   "changed": 0,
    "gone": 0
   },
   "equipment": {
    "added": 14,
-   "changed": 5,
+   "changed": 1,
    "gone": 0
   },
   "weapons": {
@@ -1812,146 +1821,6 @@
     }
    ],
    "changed": [
-    {
-     "id": "Seasonal Chest coupon x1",
-     "type": "0x9DC9",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj2",
-      "index": 886
-     },
-     "description": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "moved": [
-      {
-       "fact": "description",
-       "was": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion.",
-       "now": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends."
-      }
-     ],
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "seasonal-chest-coupon-x1.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Seasonal Chest coupon x2",
-     "type": "0x9DCA",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj2",
-      "index": 886
-     },
-     "description": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "moved": [
-      {
-       "fact": "description",
-       "was": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion.",
-       "now": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends."
-      }
-     ],
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "seasonal-chest-coupon-x2.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Seasonal Chest coupon x3",
-     "type": "0x9DCB",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj2",
-      "index": 886
-     },
-     "description": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "moved": [
-      {
-       "fact": "description",
-       "was": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion.",
-       "now": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends."
-      }
-     ],
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "seasonal-chest-coupon-x3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Seasonal Chest coupon x4",
-     "type": "0x9DCC",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj2",
-      "index": 886
-     },
-     "description": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "moved": [
-      {
-       "fact": "description",
-       "was": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion.",
-       "now": "Collect and use 5 Seasonal Coupons to obtain a Seasonal Vault Expansion. This item can only be used on Seasonal Characters. If you acquire this item with a non-seasonal character, it will disappear. The coupons themselves will disappear once the season ends."
-      }
-     ],
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "seasonal-chest-coupon-x4.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
     {
      "id": "S.H.E.A.T.H.",
      "type": "0x1445",
