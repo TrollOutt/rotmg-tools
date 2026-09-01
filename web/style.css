@@ -1516,41 +1516,135 @@ table.mini td { padding: 3px 8px; border: 0; }
 /* ------------------------------------------------------------------ *
  * What's New                                                          *
  * ------------------------------------------------------------------ */
-.news-card-glyph { font-size: 2.4rem; line-height: 1; color: #ffd479; }
 
-.news-layout { display: flex; flex-direction: column; gap: 14px; padding: 0 18px 40px; }
+/*
+ * The card on the front page is meant to read as an announcement rather than
+ * as a fourth tool: a kicker instead of a picture, the update's own name as
+ * the title, and a warmer edge than its neighbours so the eye lands on it
+ * first without the others being shouted down.
+ */
+.home-card-news {
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(255,203,112,.16), transparent 60%),
+    rgba(255,255,255,.04);
+  border-color: rgba(255,203,112,.32);
+}
+.home-card-news:hover { border-color: rgba(255,203,112,.55); }
+.home-card-kicker {
+  font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+  color: #ffcb70; opacity: .9;
+}
+.news-card-mark { display: flex; gap: 5px; align-items: flex-end; height: 34px; }
+.news-card-mark i {
+  display: block; width: 7px; border-radius: 2px; background: #ffcb70;
+  animation: news-mark 1.9s ease-in-out infinite;
+}
+.news-card-mark i:nth-child(1) { height: 14px; }
+.news-card-mark i:nth-child(2) { height: 26px; animation-delay: .22s; opacity: .8; }
+.news-card-mark i:nth-child(3) { height: 20px; animation-delay: .44s; opacity: .6; }
+@keyframes news-mark {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(.55); }
+}
 
-.news-bar {
-  position: sticky; top: 0; z-index: 5;
-  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
-  padding: 12px 0; background: var(--bg, #0d1017);
-  border-bottom: 1px solid rgba(255,255,255,.07);
-}
-.news-bar .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.news-bar-end { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-left: auto; }
-.news-bar-end input {
-  min-width: 220px; padding: 6px 10px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
-  color: inherit; font: inherit;
-}
-.news-count { opacity: .6; font-size: .85em; white-space: nowrap; }
+.news-head #newsHead { margin: 0; }
+.news-scale { margin: 6px 0 0; font-size: .88em; opacity: .85; }
+.news-scale b { color: #ffcb70; font-weight: 600; }
+.wn-dim { opacity: .55; }
 
-.news-grid {
-  display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  align-content: start;
+.news-layout { display: flex; flex-direction: column; gap: 22px; padding: 0 18px 48px; }
+
+/* The account of the update, in its own column so it reads as prose. */
+.wn-notes { max-width: 62rem; }
+.wn-lede { margin: 0 0 14px; font-size: 1.02em; line-height: 1.6; opacity: .9; }
+.wn-parts { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+.wn-parts article {
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+}
+.wn-parts h3 { margin: 0 0 6px; font-size: .82rem; letter-spacing: .06em;
+  text-transform: uppercase; color: #ffcb70; opacity: .85; }
+.wn-parts ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+.wn-parts li { font-size: .85em; line-height: 1.5; opacity: .82; }
+
+/*
+ * The shelf.
+ *
+ * An invisible grid: no rules, no boxes around the boxes, the columns only
+ * implied by where things land. An open group takes the whole width and the
+ * rest keep their places underneath, so closing it puts you back where you
+ * were rather than somewhere new.
+ */
+.news-groups {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  align-items: start;
+}
+.wn-group {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px 16px; border-radius: 14px;
+  background: rgba(255,255,255,.032);
+  border: 1px solid rgba(255,255,255,.06);
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.wn-group[role="button"] { cursor: pointer; }
+.wn-group[role="button"]:hover { background: rgba(255,255,255,.06); transform: translateY(-2px); }
+.wn-group[role="button"]:focus-visible { outline: 2px solid #ffcb70; outline-offset: 2px; }
+.news-groups.has-open .wn-group:not(.is-open) { opacity: .5; }
+.wn-group.is-open {
+  grid-column: 1 / -1; order: -1;
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,203,112,.3);
+}
+.wn-group header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.wn-group h3 { margin: 0; font-size: 1.02rem; }
+.wn-tally { margin: 0; font-size: .78em; color: #ffcb70; opacity: .85; }
+.wn-hint { margin: 0 0 0 auto; font-size: .78em; opacity: .45; }
+.wn-shut {
+  margin-left: auto; font: inherit; font-size: .78em; cursor: pointer;
+  padding: 3px 10px; border-radius: 999px; color: inherit;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
 }
 
-.wn-card {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 12px; border-radius: 12px;
-  background: rgba(255,255,255,.035);
-  border: 1px solid rgba(255,255,255,.07);
+.wn-four { display: flex; gap: 12px; align-items: flex-end; min-height: 58px; }
+.wn-four-one { display: block; }
+
+/* One row per thing when a group is open, laid out in columns of its own. */
+.wn-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
-.wn-card.is-gone { opacity: .55; }
-.wn-card-top { display: flex; gap: 12px; align-items: flex-end; }
-.wn-card-name h3 { margin: 0; font-size: 1rem; line-height: 1.25; }
-.wn-kind { font-size: .75em; opacity: .55; }
+.wn-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255,255,255,.03);
+}
+.wn-row.wn-gone { opacity: .5; }
+.wn-row-body { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.wn-row h4 { margin: 0; font-size: .92rem; line-height: 1.3; }
+.wn-why {
+  margin-left: 8px; font-size: .64em; font-style: normal; letter-spacing: .08em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 999px; vertical-align: middle;
+}
+.wn-why-added { background: rgba(143,240,181,.14); color: #8ff0b5; }
+.wn-why-changed { background: rgba(255,203,112,.14); color: #ffcb70; }
+.wn-why-gone { background: rgba(255,255,255,.08); opacity: .7; }
+
+.wn-labels { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.wn-labels span {
+  font-size: .64em; letter-spacing: .05em; padding: 2px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.07); opacity: .75;
+}
+
+.wn-facts { display: flex; flex-wrap: wrap; gap: 3px 12px; margin: 0; font-size: .8em; }
+.wn-facts span { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wn-facts i { font-style: normal; opacity: .5; }
+.wn-moved s { opacity: .45; }
+.wn-moved b { color: #8ff0b5; font-weight: 600; }
+.wn-rewrite { margin: 0; font-size: .8em; line-height: 1.45; }
+.wn-rewrite i { font-style: normal; opacity: .5; }
+.wn-desc { margin: 0; font-size: .8em; opacity: .6; font-style: italic; line-height: 1.45; }
 
 /*
  * A sprite plays the way the game plays it: the walk cycle at rest, the
@@ -1559,16 +1653,20 @@ table.mini td { padding: 3px 8px; border: 0; }
  * or the frames would smear into one another.
  */
 .wn-art {
+  /* A span ignores width and height until it is told to be a block, and
+     outside a flex row nothing tells it. */
+  display: block;
   flex: none; image-rendering: pixelated;
   background-repeat: no-repeat;
   background-image: var(--wn-rest);
   background-size: var(--wn-rest-w) 100%;
 }
-.wn-art-empty { width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,.05); }
+.wn-art-empty { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,.05); }
 .wn-art.is-moving {
   animation: wn-frames var(--wn-rest-time) steps(var(--wn-rest-steps)) infinite;
 }
-.wn-card:hover .wn-art.has-busy {
+.wn-four-one:hover .wn-art.has-busy,
+.wn-row:hover .wn-art.has-busy {
   background-image: var(--wn-busy);
   background-size: var(--wn-busy-w) 100%;
   animation: wn-busy-frames var(--wn-busy-time) steps(var(--wn-busy-steps)) infinite;
@@ -1582,27 +1680,5 @@ table.mini td { padding: 3px 8px; border: 0; }
   to   { background-position-x: calc(-1 * var(--wn-busy-w)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wn-art, .wn-card:hover .wn-art { animation: none; }
+  .wn-art, .wn-row:hover .wn-art, .news-card-mark i { animation: none; }
 }
-
-.wn-labels { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
-.wn-labels span {
-  font-size: .68em; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px;
-  background: rgba(255,255,255,.07); opacity: .8;
-}
-
-.wn-facts, .wn-moved { display: grid; gap: 2px 10px; margin: 0; font-size: .82em; }
-.wn-facts > div, .wn-moved > div { display: flex; gap: 8px; justify-content: space-between; }
-.wn-facts dt, .wn-moved dt { opacity: .55; }
-.wn-facts dd, .wn-moved dd { margin: 0; font-variant-numeric: tabular-nums; }
-.wn-moved s { opacity: .45; }
-.wn-moved b { color: #8ff0b5; }
-
-.wn-desc { margin: 0; font-size: .82em; opacity: .65; font-style: italic; }
-
-.wn-rewrite { font-size: .8em; }
-.wn-rewrite-now { margin: 0; }
-.wn-rewrite-now b { color: #8ff0b5; font-weight: 600; }
-.wn-rewrite details { margin-top: 4px; opacity: .55; }
-.wn-rewrite summary { cursor: pointer; }
-.wn-rewrite details p { margin: 4px 0 0; text-decoration: line-through; }
