@@ -1312,171 +1312,6 @@
   },
   {
    "index": 6,
-   "name": "Nature Ruins",
-   "tiles": 81175,
-   "at": [
-    964,
-    1659
-   ],
-   "lives": [
-    {
-     "type": 21845,
-     "name": "New Red Spider",
-     "seen": 131,
-     "sprite": {
-      "file": "c21845.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21797,
-     "name": "New Demon Warg",
-     "seen": 118,
-     "sprite": {
-      "file": "c21797.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21841,
-     "name": "New Werepanther",
-     "seen": 110,
-     "sprite": {
-      "file": "c21841.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21833,
-     "name": "New Dwarf Axebearer",
-     "seen": 104,
-     "sprite": {
-      "file": "c21833.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21796,
-     "name": "New Tawny Warg",
-     "seen": 104,
-     "sprite": {
-      "file": "c21796.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21840,
-     "name": "New Wereleopard",
-     "seen": 100,
-     "sprite": {
-      "file": "c21840.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21834,
-     "name": "New Dwarf Mage",
-     "seen": 90,
-     "sprite": {
-      "file": "c21834.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21835,
-     "name": "New Dwarf Veteran",
-     "seen": 85,
-     "sprite": {
-      "file": "c21835.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 83,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21846,
-     "name": "New Black Bat",
-     "seen": 78,
-     "sprite": {
-      "file": "c21846.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21867,
-     "name": "New Ogre Mage",
-     "seen": 68,
-     "sprite": {
-      "file": "c21867.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21869,
-     "name": "New Ogre Wizard",
-     "seen": 64,
-     "sprite": {
-      "file": "c21869.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21807,
-     "name": "New Sand Phantom",
-     "seen": 59,
-     "sprite": {
-      "file": "c21807.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21884,
-     "name": "New Dark Elf Swordsman",
-     "seen": 57,
-     "sprite": {
-      "file": "c21884.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    }
-   ]
-  },
-  {
-   "index": 7,
    "name": "Runic Tundra",
    "tiles": 68829,
    "at": [
@@ -1641,7 +1476,7 @@
    ]
   },
   {
-   "index": 8,
+   "index": 7,
    "name": "Low Forest",
    "tiles": 54612,
    "at": [
@@ -1806,174 +1641,9 @@
    ]
   },
   {
-   "index": 9,
-   "name": "Low Forest",
-   "tiles": 53147,
-   "at": [
-    837,
-    1768
-   ],
-   "lives": [
-    {
-     "type": 21778,
-     "name": "New Elf Swordsman",
-     "seen": 221,
-     "sprite": {
-      "file": "c21778.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21789,
-     "name": "New Hobbit Archer",
-     "seen": 205,
-     "sprite": {
-      "file": "c21789.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21770,
-     "name": "New Pirate",
-     "seen": 173,
-     "sprite": {
-      "file": "c21770.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21788,
-     "name": "New Hobbit Rogue",
-     "seen": 158,
-     "sprite": {
-      "file": "c21788.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21777,
-     "name": "New Elf Archer",
-     "seen": 114,
-     "sprite": {
-      "file": "c21777.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21762,
-     "name": "New Red Gelatinous Cube",
-     "seen": 97,
-     "sprite": {
-      "file": "c21762.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21764,
-     "name": "New Green Gelatinous Cube",
-     "seen": 97,
-     "sprite": {
-      "file": "c21764.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21766,
-     "name": "New Sandsman Sorcerer",
-     "seen": 65,
-     "sprite": {
-      "file": "c21766.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21773,
-     "name": "New Poison Scorpion",
-     "seen": 60,
-     "sprite": {
-      "file": "c21773.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21779,
-     "name": "New Elf Mage",
-     "seen": 59,
-     "sprite": {
-      "file": "c21779.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21787,
-     "name": "New Forest Nymph",
-     "seen": 57,
-     "sprite": {
-      "file": "c21787.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21763,
-     "name": "New Purple Gelatinous Cube",
-     "seen": 51,
-     "sprite": {
-      "file": "c21763.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21790,
-     "name": "New Hobbit Mage",
-     "seen": 50,
-     "sprite": {
-      "file": "c21790.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21765,
-     "name": "New Sandsman Archer",
-     "seen": 43,
-     "sprite": {
-      "file": "c21765.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    }
-   ]
-  },
-  {
-   "index": 10,
-   "name": "Undead Forest",
-   "tiles": 50957,
+   "index": 8,
+   "name": "Zone 9",
+   "tiles": 50953,
    "at": [
     763,
     1429
@@ -2136,9 +1806,9 @@
    ]
   },
   {
-   "index": 11,
+   "index": 9,
    "name": "Haunted Hallows",
-   "tiles": 47458,
+   "tiles": 47443,
    "at": [
     1177,
     1387
@@ -2169,7 +1839,7 @@
     {
      "type": 17898,
      "name": "Hallows Banshee",
-     "seen": 148,
+     "seen": 147,
      "sprite": {
       "file": "c17898.png",
       "tile": 8,
@@ -2301,7 +1971,7 @@
    ]
   },
   {
-   "index": 12,
+   "index": 10,
    "name": "Haunted Hallows",
    "tiles": 42769,
    "at": [
@@ -2466,7 +2136,7 @@
    ]
   },
   {
-   "index": 13,
+   "index": 11,
    "name": "Undead Forest",
    "tiles": 41368,
    "at": [
@@ -2631,18 +2301,18 @@
    ]
   },
   {
-   "index": 14,
+   "index": 12,
    "name": "Dead Church",
-   "tiles": 37957,
+   "tiles": 40160,
    "at": [
-    1349,
-    1361
+    1342,
+    1357
    ],
    "lives": [
     {
      "type": 49415,
      "name": "Dead Church Skeleton",
-     "seen": 564,
+     "seen": 602,
      "sprite": {
       "file": "c49415.png",
       "tile": 8,
@@ -2653,7 +2323,7 @@
     {
      "type": 49629,
      "name": "Dead Church Bat",
-     "seen": 481,
+     "seen": 547,
      "sprite": {
       "file": "c49629.png",
       "tile": 8,
@@ -2664,7 +2334,7 @@
     {
      "type": 49630,
      "name": "Dead Church Nun",
-     "seen": 317,
+     "seen": 323,
      "sprite": {
       "file": "c49630.png",
       "tile": 8,
@@ -2675,7 +2345,7 @@
     {
      "type": 49627,
      "name": "Dead Church Necromancer",
-     "seen": 219,
+     "seen": 234,
      "sprite": {
       "file": "c49627.png",
       "tile": 8,
@@ -2684,20 +2354,9 @@
      }
     },
     {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 186,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
      "type": 49628,
      "name": "Dead Church Vampire",
-     "seen": 176,
+     "seen": 204,
      "sprite": {
       "file": "c49628.png",
       "tile": 8,
@@ -2706,9 +2365,20 @@
      }
     },
     {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 203,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
      "type": 49416,
      "name": "Dead Church Revenant",
-     "seen": 73,
+     "seen": 75,
      "sprite": {
       "file": "c49416.png",
       "tile": 16,
@@ -2719,7 +2389,7 @@
     {
      "type": 34492,
      "name": "The Plague Doctor Cure C",
-     "seen": 32,
+     "seen": 36,
      "sprite": {
       "file": "c34492.png",
       "tile": 8,
@@ -2728,20 +2398,9 @@
      }
     },
     {
-     "type": 34491,
-     "name": "The Plague Doctor Cure B",
-     "seen": 23,
-     "sprite": {
-      "file": "c34491.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
      "type": 17900,
      "name": "Hallows Skeleton",
-     "seen": 22,
+     "seen": 31,
      "sprite": {
       "file": "c17900.png",
       "tile": 8,
@@ -2750,11 +2409,44 @@
      }
     },
     {
+     "type": 34491,
+     "name": "The Plague Doctor Cure B",
+     "seen": 28,
+     "sprite": {
+      "file": "c34491.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 6175,
+     "name": "Tombstone",
+     "seen": 13,
+     "sprite": {
+      "file": "c6175.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
      "type": 17733,
      "name": "Sprite Forest Child",
      "seen": 11,
      "sprite": {
       "file": "c17733.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 34490,
+     "name": "The Plague Doctor Cure A",
+     "seen": 10,
+     "sprite": {
+      "file": "c34490.png",
       "tile": 8,
       "height": 8,
       "frames": 1
@@ -2770,24 +2462,167 @@
       "height": 8,
       "frames": 2
      }
-    },
+    }
+   ]
+  },
+  {
+   "index": 13,
+   "name": "Nature Ruins",
+   "tiles": 39195,
+   "at": [
+    903,
+    1716
+   ],
+   "lives": [
     {
-     "type": 34490,
-     "name": "The Plague Doctor Cure A",
-     "seen": 8,
+     "type": 21845,
+     "name": "New Red Spider",
+     "seen": 109,
      "sprite": {
-      "file": "c34490.png",
+      "file": "c21845.png",
       "tile": 8,
       "height": 8,
-      "frames": 1
+      "frames": 2
      }
     },
     {
-     "type": 52998,
-     "name": "Beacon Guardian Dead Church Minion",
-     "seen": 8,
+     "type": 21833,
+     "name": "New Dwarf Axebearer",
+     "seen": 94,
      "sprite": {
-      "file": "c52998.png",
+      "file": "c21833.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21841,
+     "name": "New Werepanther",
+     "seen": 88,
+     "sprite": {
+      "file": "c21841.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21835,
+     "name": "New Dwarf Veteran",
+     "seen": 83,
+     "sprite": {
+      "file": "c21835.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21834,
+     "name": "New Dwarf Mage",
+     "seen": 80,
+     "sprite": {
+      "file": "c21834.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21840,
+     "name": "New Wereleopard",
+     "seen": 78,
+     "sprite": {
+      "file": "c21840.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21846,
+     "name": "New Black Bat",
+     "seen": 70,
+     "sprite": {
+      "file": "c21846.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21932,
+     "name": "New Ent Sapling",
+     "seen": 55,
+     "sprite": {
+      "file": "c21932.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 51,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21844,
+     "name": "New Drake Baby",
+     "seen": 43,
+     "sprite": {
+      "file": "c21844.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21839,
+     "name": "New Weretiger",
+     "seen": 36,
+     "sprite": {
+      "file": "c21839.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21842,
+     "name": "New Werelion",
+     "seen": 32,
+     "sprite": {
+      "file": "c21842.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21837,
+     "name": "New Metal Golem",
+     "seen": 31,
+     "sprite": {
+      "file": "c21837.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21838,
+     "name": "New Clockwork Golem",
+     "seen": 30,
+     "sprite": {
+      "file": "c21838.png",
       "tile": 8,
       "height": 8,
       "frames": 2
@@ -2796,7 +2631,7 @@
    ]
   },
   {
-   "index": 15,
+   "index": 14,
    "name": "Shipwreck Cove",
    "tiles": 35076,
    "at": [
@@ -2961,172 +2796,7 @@
    ]
   },
   {
-   "index": 16,
-   "name": "Shipwreck Cove",
-   "tiles": 34094,
-   "at": [
-    1839,
-    1238
-   ],
-   "lives": [
-    {
-     "type": 49901,
-     "name": "Shipwreck Ghost",
-     "seen": 295,
-     "sprite": {
-      "file": "c49901.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49902,
-     "name": "Shipwreck Pirate",
-     "seen": 221,
-     "sprite": {
-      "file": "c49902.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49905,
-     "name": "Shipwreck Sailor",
-     "seen": 187,
-     "sprite": {
-      "file": "c49905.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49906,
-     "name": "Shipwreck Elemental",
-     "seen": 65,
-     "sprite": {
-      "file": "c49906.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 54,
-     "sprite": {
-      "file": "c49629.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49903,
-     "name": "Shipwreck Hag",
-     "seen": 47,
-     "sprite": {
-      "file": "c49903.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 35,
-     "sprite": {
-      "file": "c49630.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 30,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 18,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 13,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 6175,
-     "name": "Tombstone",
-     "seen": 13,
-     "sprite": {
-      "file": "c6175.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 34501,
-     "name": "Pirate's Tavern Drunk Sailor",
-     "seen": 11,
-     "sprite": {
-      "file": "c34501.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49341,
-     "name": "Reef Turtle",
-     "seen": 10,
-     "sprite": {
-      "file": "c49341.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17733,
-     "name": "Sprite Forest Child",
-     "seen": 10,
-     "sprite": {
-      "file": "c17733.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    }
-   ]
-  },
-  {
-   "index": 17,
+   "index": 15,
    "name": "Risen Hell",
    "tiles": 33317,
    "at": [
@@ -3291,7 +2961,502 @@
    ]
   },
   {
+   "index": 16,
+   "name": "Low Forest",
+   "tiles": 33041,
+   "at": [
+    841,
+    1741
+   ],
+   "lives": [
+    {
+     "type": 21778,
+     "name": "New Elf Swordsman",
+     "seen": 197,
+     "sprite": {
+      "file": "c21778.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21789,
+     "name": "New Hobbit Archer",
+     "seen": 185,
+     "sprite": {
+      "file": "c21789.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21788,
+     "name": "New Hobbit Rogue",
+     "seen": 140,
+     "sprite": {
+      "file": "c21788.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21777,
+     "name": "New Elf Archer",
+     "seen": 103,
+     "sprite": {
+      "file": "c21777.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21779,
+     "name": "New Elf Mage",
+     "seen": 50,
+     "sprite": {
+      "file": "c21779.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21787,
+     "name": "New Forest Nymph",
+     "seen": 49,
+     "sprite": {
+      "file": "c21787.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21790,
+     "name": "New Hobbit Mage",
+     "seen": 46,
+     "sprite": {
+      "file": "c21790.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21780,
+     "name": "New Elf Wizard",
+     "seen": 37,
+     "sprite": {
+      "file": "c21780.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21785,
+     "name": "New Easily Enraged Bunny",
+     "seen": 33,
+     "sprite": {
+      "file": "c21785.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 1737,
+     "name": "Enraged Bunny",
+     "seen": 23,
+     "sprite": {
+      "file": "c1737.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "seen": 18,
+     "sprite": {
+      "file": "c21766.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "seen": 12,
+     "sprite": {
+      "file": "c21762.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21763,
+     "name": "New Purple Gelatinous Cube",
+     "seen": 11,
+     "sprite": {
+      "file": "c21763.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "seen": 10,
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "index": 17,
+   "name": "Dead Church",
+   "tiles": 32956,
+   "at": [
+    1681,
+    1265
+   ],
+   "lives": [
+    {
+     "type": 49415,
+     "name": "Dead Church Skeleton",
+     "seen": 470,
+     "sprite": {
+      "file": "c49415.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49629,
+     "name": "Dead Church Bat",
+     "seen": 322,
+     "sprite": {
+      "file": "c49629.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 304,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 226,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49628,
+     "name": "Dead Church Vampire",
+     "seen": 166,
+     "sprite": {
+      "file": "c49628.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 129,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49416,
+     "name": "Dead Church Revenant",
+     "seen": 31,
+     "sprite": {
+      "file": "c49416.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 3
+     }
+    },
+    {
+     "type": 24022,
+     "name": "Shady Sect Follower",
+     "seen": 18,
+     "sprite": {
+      "file": "c24022.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 6175,
+     "name": "Tombstone",
+     "seen": 13,
+     "sprite": {
+      "file": "c6175.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 17900,
+     "name": "Hallows Skeleton",
+     "seen": 12,
+     "sprite": {
+      "file": "c17900.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 17898,
+     "name": "Hallows Banshee",
+     "seen": 10,
+     "sprite": {
+      "file": "c17898.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 17899,
+     "name": "Hallows Wraith",
+     "seen": 9,
+     "sprite": {
+      "file": "c17899.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 17903,
+     "name": "Hallows Brute",
+     "seen": 7,
+     "sprite": {
+      "file": "c17903.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 17737,
+     "name": "Sprite Forest Dark God",
+     "seen": 6,
+     "sprite": {
+      "file": "c17737.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    }
+   ]
+  },
+  {
    "index": 18,
+   "name": "Shipwreck Cove",
+   "tiles": 31995,
+   "at": [
+    1845,
+    1241
+   ],
+   "lives": [
+    {
+     "type": 49901,
+     "name": "Shipwreck Ghost",
+     "seen": 295,
+     "sprite": {
+      "file": "c49901.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49902,
+     "name": "Shipwreck Pirate",
+     "seen": 221,
+     "sprite": {
+      "file": "c49902.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49905,
+     "name": "Shipwreck Sailor",
+     "seen": 186,
+     "sprite": {
+      "file": "c49905.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49906,
+     "name": "Shipwreck Elemental",
+     "seen": 65,
+     "sprite": {
+      "file": "c49906.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49903,
+     "name": "Shipwreck Hag",
+     "seen": 47,
+     "sprite": {
+      "file": "c49903.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 34501,
+     "name": "Pirate's Tavern Drunk Sailor",
+     "seen": 11,
+     "sprite": {
+      "file": "c34501.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "seen": 10,
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 34499,
+     "name": "Pirate's Tavern Washed Captain",
+     "seen": 7,
+     "sprite": {
+      "file": "c34499.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 7,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 17733,
+     "name": "Sprite Forest Child",
+     "seen": 7,
+     "sprite": {
+      "file": "c17733.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 49342,
+     "name": "Reef Octopus",
+     "seen": 6,
+     "sprite": {
+      "file": "c49342.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 29934,
+     "name": "New Present Spawner Shipwreck Cove",
+     "seen": 4,
+     "sprite": {
+      "file": "c29934.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 54987,
+     "name": "Water Bubbles Spawner Ship Wreck",
+     "seen": 4,
+     "sprite": {
+      "file": "c54987.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 49415,
+     "name": "Dead Church Skeleton",
+     "seen": 4,
+     "sprite": {
+      "file": "c49415.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "index": 19,
    "name": "Sanguine Forest",
    "tiles": 31846,
    "at": [
@@ -3450,171 +3615,6 @@
       "file": "c34509.png",
       "tile": 16,
       "height": 16,
-      "frames": 2
-     }
-    }
-   ]
-  },
-  {
-   "index": 19,
-   "name": "Dead Church",
-   "tiles": 30857,
-   "at": [
-    1677,
-    1270
-   ],
-   "lives": [
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 444,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 276,
-     "sprite": {
-      "file": "c49630.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 268,
-     "sprite": {
-      "file": "c49629.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 216,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 148,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 121,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49416,
-     "name": "Dead Church Revenant",
-     "seen": 31,
-     "sprite": {
-      "file": "c49416.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 3
-     }
-    },
-    {
-     "type": 24022,
-     "name": "Shady Sect Follower",
-     "seen": 18,
-     "sprite": {
-      "file": "c24022.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17900,
-     "name": "Hallows Skeleton",
-     "seen": 12,
-     "sprite": {
-      "file": "c17900.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17898,
-     "name": "Hallows Banshee",
-     "seen": 10,
-     "sprite": {
-      "file": "c17898.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17899,
-     "name": "Hallows Wraith",
-     "seen": 9,
-     "sprite": {
-      "file": "c17899.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17903,
-     "name": "Hallows Brute",
-     "seen": 7,
-     "sprite": {
-      "file": "c17903.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21894,
-     "name": "Hallows Ghost God",
-     "seen": 5,
-     "sprite": {
-      "file": "c21894.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 3
-     }
-    },
-    {
-     "type": 17005,
-     "name": "Graverobber Lookout",
-     "seen": 3,
-     "sprite": {
-      "file": "c17005.png",
-      "tile": 8,
-      "height": 8,
       "frames": 2
      }
     }
@@ -4051,127 +4051,127 @@
   },
   {
    "index": 23,
-   "name": "Desert",
-   "tiles": 25000,
+   "name": "Low Forest",
+   "tiles": 25448,
    "at": [
-    558,
-    1192
+    1030,
+    1567
    ],
    "lives": [
     {
-     "type": 21797,
-     "name": "New Demon Warg",
-     "seen": 140,
+     "type": 21867,
+     "name": "New Ogre Mage",
+     "seen": 67,
      "sprite": {
-      "file": "c21797.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21796,
-     "name": "New Tawny Warg",
-     "seen": 106,
-     "sprite": {
-      "file": "c21796.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21773,
-     "name": "New Poison Scorpion",
-     "seen": 88,
-     "sprite": {
-      "file": "c21773.png",
+      "file": "c21867.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21807,
-     "name": "New Sand Phantom",
-     "seen": 58,
+     "type": 21869,
+     "name": "New Ogre Wizard",
+     "seen": 61,
      "sprite": {
-      "file": "c21807.png",
+      "file": "c21869.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21762,
-     "name": "New Red Gelatinous Cube",
+     "type": 21884,
+     "name": "New Dark Elf Swordsman",
+     "seen": 57,
+     "sprite": {
+      "file": "c21884.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21883,
+     "name": "New Dark Elf Scout",
+     "seen": 55,
+     "sprite": {
+      "file": "c21883.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21872,
+     "name": "New Night Elf Warrior",
+     "seen": 40,
+     "sprite": {
+      "file": "c21872.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21885,
+     "name": "New Dark Elf Cleric",
+     "seen": 40,
+     "sprite": {
+      "file": "c21885.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21871,
+     "name": "New Night Elf Archer",
+     "seen": 40,
+     "sprite": {
+      "file": "c21871.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21873,
+     "name": "New Night Elf Mage",
+     "seen": 39,
+     "sprite": {
+      "file": "c21873.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21868,
+     "name": "New Ogre Warrior",
      "seen": 33,
      "sprite": {
-      "file": "c21762.png",
+      "file": "c21868.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 33,
+     "type": 21874,
+     "name": "New Night Elf Veteran",
+     "seen": 27,
      "sprite": {
-      "file": "c21805.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21809,
-     "name": "New Nomadic Shaman",
-     "seen": 32,
-     "sprite": {
-      "file": "c21809.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21800,
-     "name": "New Darkness Golem",
-     "seen": 31,
-     "sprite": {
-      "file": "c21800.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21776,
-     "name": "New Bandit Enemy",
-     "seen": 28,
-     "sprite": {
-      "file": "c21776.png",
+      "file": "c21874.png",
       "tile": 8,
       "height": 8,
       "frames": 3
-     }
-    },
-    {
-     "type": 21902,
-     "name": "New Birdman Chief",
-     "seen": 28,
-     "sprite": {
-      "file": "c21902.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
      }
     },
     {
      "type": 54291,
      "name": "Legion Surveyor",
-     "seen": 27,
+     "seen": 26,
      "sprite": {
       "file": "c54291.png",
       "tile": 16,
@@ -4180,36 +4180,36 @@
      }
     },
     {
-     "type": 21772,
-     "name": "New Snake",
+     "type": 21870,
+     "name": "New Ogre King",
      "seen": 26,
      "sprite": {
-      "file": "c21772.png",
+      "file": "c21870.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 24,
+     "type": 21886,
+     "name": "New Dark Elf Royal Guard",
+     "seen": 25,
      "sprite": {
-      "file": "c21802.png",
+      "file": "c21886.png",
       "tile": 8,
       "height": 8,
-      "frames": 2
+      "frames": 3
      }
     },
     {
-     "type": 21903,
-     "name": "New Birdman",
-     "seen": 23,
+     "type": 21877,
+     "name": "New Dragon Egg",
+     "seen": 24,
      "sprite": {
-      "file": "c21903.png",
+      "file": "c21877.png",
       "tile": 8,
       "height": 8,
-      "frames": 2
+      "frames": 1
      }
     }
    ]
@@ -4711,6 +4711,171 @@
   },
   {
    "index": 27,
+   "name": "Zone 28",
+   "tiles": 20106,
+   "at": [
+    830,
+    1813
+   ],
+   "lives": [
+    {
+     "type": 21770,
+     "name": "New Pirate",
+     "seen": 164,
+     "sprite": {
+      "file": "c21770.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "seen": 87,
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "seen": 85,
+     "sprite": {
+      "file": "c21762.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21773,
+     "name": "New Poison Scorpion",
+     "seen": 60,
+     "sprite": {
+      "file": "c21773.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "seen": 47,
+     "sprite": {
+      "file": "c21766.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21763,
+     "name": "New Purple Gelatinous Cube",
+     "seen": 40,
+     "sprite": {
+      "file": "c21763.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21765,
+     "name": "New Sandsman Archer",
+     "seen": 36,
+     "sprite": {
+      "file": "c21765.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21772,
+     "name": "New Snake",
+     "seen": 33,
+     "sprite": {
+      "file": "c21772.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21778,
+     "name": "New Elf Swordsman",
+     "seen": 24,
+     "sprite": {
+      "file": "c21778.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21789,
+     "name": "New Hobbit Archer",
+     "seen": 20,
+     "sprite": {
+      "file": "c21789.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21788,
+     "name": "New Hobbit Rogue",
+     "seen": 18,
+     "sprite": {
+      "file": "c21788.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 44158,
+     "name": "Admiral of Pirates",
+     "seen": 13,
+     "sprite": {
+      "file": "c44158.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21767,
+     "name": "New Sandsman King",
+     "seen": 13,
+     "sprite": {
+      "file": "c21767.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21771,
+     "name": "New Piratess",
+     "seen": 12,
+     "sprite": {
+      "file": "c21771.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "index": 28,
    "name": "Carboniferous",
    "tiles": 19074,
    "at": [
@@ -4875,7 +5040,7 @@
    ]
   },
   {
-   "index": 28,
+   "index": 29,
    "name": "Low Forest",
    "tiles": 14852,
    "at": [
@@ -4985,7 +5150,337 @@
    ]
   },
   {
-   "index": 29,
+   "index": 30,
+   "name": "Desert",
+   "tiles": 14721,
+   "at": [
+    530,
+    1105
+   ],
+   "lives": [
+    {
+     "type": 21797,
+     "name": "New Demon Warg",
+     "seen": 140,
+     "sprite": {
+      "file": "c21797.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21796,
+     "name": "New Tawny Warg",
+     "seen": 106,
+     "sprite": {
+      "file": "c21796.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21807,
+     "name": "New Sand Phantom",
+     "seen": 58,
+     "sprite": {
+      "file": "c21807.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 33,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21809,
+     "name": "New Nomadic Shaman",
+     "seen": 32,
+     "sprite": {
+      "file": "c21809.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21800,
+     "name": "New Darkness Golem",
+     "seen": 31,
+     "sprite": {
+      "file": "c21800.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21902,
+     "name": "New Birdman Chief",
+     "seen": 28,
+     "sprite": {
+      "file": "c21902.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 54291,
+     "name": "Legion Surveyor",
+     "seen": 27,
+     "sprite": {
+      "file": "c54291.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 24,
+     "sprite": {
+      "file": "c21802.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21903,
+     "name": "New Birdman",
+     "seen": 23,
+     "sprite": {
+      "file": "c21903.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21799,
+     "name": "New Fire Golem",
+     "seen": 22,
+     "sprite": {
+      "file": "c21799.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 20,
+     "sprite": {
+      "file": "c21798.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21801,
+     "name": "New Red Satellite",
+     "seen": 20,
+     "sprite": {
+      "file": "c21801.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21804,
+     "name": "New Gray Satellite 1",
+     "seen": 19,
+     "sprite": {
+      "file": "c21804.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    }
+   ]
+  },
+  {
+   "index": 31,
+   "name": "Desert",
+   "tiles": 14442,
+   "at": [
+    1028,
+    1675
+   ],
+   "lives": [
+    {
+     "type": 21797,
+     "name": "New Demon Warg",
+     "seen": 107,
+     "sprite": {
+      "file": "c21797.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21796,
+     "name": "New Tawny Warg",
+     "seen": 96,
+     "sprite": {
+      "file": "c21796.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21807,
+     "name": "New Sand Phantom",
+     "seen": 52,
+     "sprite": {
+      "file": "c21807.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21809,
+     "name": "New Nomadic Shaman",
+     "seen": 40,
+     "sprite": {
+      "file": "c21809.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 32,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21799,
+     "name": "New Fire Golem",
+     "seen": 29,
+     "sprite": {
+      "file": "c21799.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21801,
+     "name": "New Red Satellite",
+     "seen": 25,
+     "sprite": {
+      "file": "c21801.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21800,
+     "name": "New Darkness Golem",
+     "seen": 24,
+     "sprite": {
+      "file": "c21800.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21804,
+     "name": "New Gray Satellite 1",
+     "seen": 22,
+     "sprite": {
+      "file": "c21804.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 17,
+     "sprite": {
+      "file": "c21802.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21810,
+     "name": "New Great Lizard",
+     "seen": 16,
+     "sprite": {
+      "file": "c21810.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21841,
+     "name": "New Werepanther",
+     "seen": 16,
+     "sprite": {
+      "file": "c21841.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 14,
+     "sprite": {
+      "file": "c21798.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21840,
+     "name": "New Wereleopard",
+     "seen": 13,
+     "sprite": {
+      "file": "c21840.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    }
+   ]
+  },
+  {
+   "index": 32,
    "name": "Desert",
    "tiles": 13715,
    "at": [
@@ -5150,7 +5645,7 @@
    ]
   },
   {
-   "index": 30,
+   "index": 33,
    "name": "Risen Hell",
    "tiles": 13670,
    "at": [
@@ -5304,7 +5799,172 @@
    ]
   },
   {
-   "index": 31,
+   "index": 34,
+   "name": "Zone 35",
+   "tiles": 10279,
+   "at": [
+    598,
+    1315
+   ],
+   "lives": [
+    {
+     "type": 21773,
+     "name": "New Poison Scorpion",
+     "seen": 87,
+     "sprite": {
+      "file": "c21773.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "seen": 33,
+     "sprite": {
+      "file": "c21762.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21776,
+     "name": "New Bandit Enemy",
+     "seen": 28,
+     "sprite": {
+      "file": "c21776.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21770,
+     "name": "New Pirate",
+     "seen": 20,
+     "sprite": {
+      "file": "c21770.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21772,
+     "name": "New Snake",
+     "seen": 19,
+     "sprite": {
+      "file": "c21772.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21763,
+     "name": "New Purple Gelatinous Cube",
+     "seen": 9,
+     "sprite": {
+      "file": "c21763.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "seen": 8,
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21774,
+     "name": "New Scorpion Queen",
+     "seen": 7,
+     "sprite": {
+      "file": "c21774.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "seen": 7,
+     "sprite": {
+      "file": "c21766.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21775,
+     "name": "New Bandit Leader",
+     "seen": 7,
+     "sprite": {
+      "file": "c21775.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21769,
+     "name": "New Sand Devil",
+     "seen": 6,
+     "sprite": {
+      "file": "c21769.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21765,
+     "name": "New Sandsman Archer",
+     "seen": 4,
+     "sprite": {
+      "file": "c21765.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21768,
+     "name": "New Giant Crab",
+     "seen": 3,
+     "sprite": {
+      "file": "c21768.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 42118,
+     "name": "Realm Stone Ores Spawner Beach",
+     "seen": 3,
+     "sprite": {
+      "file": "c42118.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    }
+   ]
+  },
+  {
+   "index": 35,
    "name": "Sanguine Forest",
    "tiles": 9228,
    "at": [
@@ -5436,7 +6096,7 @@
    ]
   },
   {
-   "index": 32,
+   "index": 36,
    "name": "Carboniferous",
    "tiles": 6673,
    "at": [
@@ -5524,151 +6184,129 @@
    ]
   },
   {
-   "index": 33,
-   "name": "Zone 34",
-   "tiles": 2188,
+   "index": 37,
+   "name": "Zone 38",
+   "tiles": 2094,
    "at": [
-    1219,
-    1286
+    849,
+    1612
    ],
    "lives": [
     {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 66,
+     "type": 21828,
+     "name": "New Scout Bee",
+     "seen": 18,
      "sprite": {
-      "file": "c49629.png",
+      "file": "c21828.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 4
+     }
+    },
+    {
+     "type": 21833,
+     "name": "New Dwarf Axebearer",
+     "seen": 10,
+     "sprite": {
+      "file": "c21833.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 38,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 28,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 16,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 15,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 6175,
-     "name": "Tombstone",
-     "seen": 13,
-     "sprite": {
-      "file": "c6175.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 17900,
-     "name": "Hallows Skeleton",
+     "type": 21834,
+     "name": "New Dwarf Mage",
      "seen": 9,
      "sprite": {
-      "file": "c17900.png",
+      "file": "c21834.png",
       "tile": 8,
       "height": 8,
-      "frames": 2
+      "frames": 3
      }
     },
     {
-     "type": 49630,
-     "name": "Dead Church Nun",
+     "type": 21846,
+     "name": "New Black Bat",
      "seen": 6,
      "sprite": {
-      "file": "c49630.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 34491,
-     "name": "The Plague Doctor Cure B",
-     "seen": 5,
-     "sprite": {
-      "file": "c34491.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 34492,
-     "name": "The Plague Doctor Cure C",
-     "seen": 4,
-     "sprite": {
-      "file": "c34492.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 17003,
-     "name": "Graverobber Digger",
-     "seen": 4,
-     "sprite": {
-      "file": "c17003.png",
+      "file": "c21846.png",
       "tile": 8,
       "height": 8,
       "frames": 2
      }
     },
     {
-     "type": 21894,
-     "name": "Hallows Ghost God",
+     "type": 21845,
+     "name": "New Red Spider",
+     "seen": 6,
+     "sprite": {
+      "file": "c21845.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21829,
+     "name": "New Fighter Bee",
+     "seen": 6,
+     "sprite": {
+      "file": "c21829.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 4
+     }
+    },
+    {
+     "type": 21827,
+     "name": "New Warrior Bee",
+     "seen": 4,
+     "sprite": {
+      "file": "c21827.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 4
+     }
+    },
+    {
+     "type": 21840,
+     "name": "New Wereleopard",
+     "seen": 4,
+     "sprite": {
+      "file": "c21840.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21843,
+     "name": "New Horned Drake",
      "seen": 3,
      "sprite": {
-      "file": "c21894.png",
+      "file": "c21843.png",
       "tile": 16,
       "height": 16,
-      "frames": 3
+      "frames": 2
+     }
+    },
+    {
+     "type": 21844,
+     "name": "New Drake Baby",
+     "seen": 3,
+     "sprite": {
+      "file": "c21844.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
      }
     }
    ]
   },
   {
-   "index": 34,
-   "name": "Zone 35",
+   "index": 38,
+   "name": "Zone 39",
    "tiles": 1961,
    "at": [
     107,
@@ -6797,192 +7435,6 @@
   {
    "id": 7,
    "biome": 6,
-   "tiles": 81175,
-   "at": [
-    964,
-    1659
-   ],
-   "box": [
-    752,
-    1475,
-    1204,
-    1840
-   ],
-   "name": "Nature Ruins",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Low Forest",
-     "tiles": 1753
-    },
-    {
-     "biome": "Desert",
-     "tiles": 704
-    },
-    {
-     "biome": "Undead Forest",
-     "tiles": 16
-    }
-   ],
-   "colour": "#575d35",
-   "madeOf": [
-    {
-     "ground": "Nature Ruins Grass",
-     "tiles": 29281
-    },
-    {
-     "ground": "Dark Grass",
-     "tiles": 29047
-    },
-    {
-     "ground": "Desert Rough Sand",
-     "tiles": 13821
-    },
-    {
-     "ground": "Light Grass",
-     "tiles": 3184
-    }
-   ],
-   "lives": [
-    {
-     "type": 21845,
-     "name": "New Red Spider",
-     "seen": 131,
-     "sprite": {
-      "file": "c21845.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21797,
-     "name": "New Demon Warg",
-     "seen": 118,
-     "sprite": {
-      "file": "c21797.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21841,
-     "name": "New Werepanther",
-     "seen": 110,
-     "sprite": {
-      "file": "c21841.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21833,
-     "name": "New Dwarf Axebearer",
-     "seen": 104,
-     "sprite": {
-      "file": "c21833.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21796,
-     "name": "New Tawny Warg",
-     "seen": 104,
-     "sprite": {
-      "file": "c21796.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21840,
-     "name": "New Wereleopard",
-     "seen": 100,
-     "sprite": {
-      "file": "c21840.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21834,
-     "name": "New Dwarf Mage",
-     "seen": 90,
-     "sprite": {
-      "file": "c21834.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21835,
-     "name": "New Dwarf Veteran",
-     "seen": 85,
-     "sprite": {
-      "file": "c21835.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 83,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21846,
-     "name": "New Black Bat",
-     "seen": 78,
-     "sprite": {
-      "file": "c21846.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21867,
-     "name": "New Ogre Mage",
-     "seen": 68,
-     "sprite": {
-      "file": "c21867.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21869,
-     "name": "New Ogre Wizard",
-     "seen": 64,
-     "sprite": {
-      "file": "c21869.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    }
-   ],
-   "met": true
-  },
-  {
-   "id": 8,
-   "biome": 7,
    "tiles": 68829,
    "at": [
     1250,
@@ -7167,8 +7619,8 @@
    "met": true
   },
   {
-   "id": 9,
-   "biome": 8,
+   "id": 8,
+   "biome": 7,
    "tiles": 54612,
    "at": [
     911,
@@ -7353,191 +7805,9 @@
    "met": true
   },
   {
-   "id": 10,
-   "biome": 9,
-   "tiles": 53147,
-   "at": [
-    837,
-    1768
-   ],
-   "box": [
-    624,
-    1505,
-    1149,
-    1940
-   ],
-   "name": "Low Forest",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Low Forest",
-     "tiles": 454
-    },
-    {
-     "biome": "Undead Forest",
-     "tiles": 10
-    }
-   ],
-   "colour": "#6c8a58",
-   "madeOf": [
-    {
-     "ground": "New Low Forest Grass",
-     "tiles": 30485
-    },
-    {
-     "ground": "Shoreline Sand",
-     "tiles": 19376
-    },
-    {
-     "ground": "Brown Lines",
-     "tiles": 951
-    },
-    {
-     "ground": "Nature Ruins Grass",
-     "tiles": 685
-    }
-   ],
-   "lives": [
-    {
-     "type": 21778,
-     "name": "New Elf Swordsman",
-     "seen": 221,
-     "sprite": {
-      "file": "c21778.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21789,
-     "name": "New Hobbit Archer",
-     "seen": 205,
-     "sprite": {
-      "file": "c21789.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21770,
-     "name": "New Pirate",
-     "seen": 173,
-     "sprite": {
-      "file": "c21770.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21788,
-     "name": "New Hobbit Rogue",
-     "seen": 158,
-     "sprite": {
-      "file": "c21788.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21777,
-     "name": "New Elf Archer",
-     "seen": 114,
-     "sprite": {
-      "file": "c21777.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21762,
-     "name": "New Red Gelatinous Cube",
-     "seen": 97,
-     "sprite": {
-      "file": "c21762.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21764,
-     "name": "New Green Gelatinous Cube",
-     "seen": 97,
-     "sprite": {
-      "file": "c21764.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21766,
-     "name": "New Sandsman Sorcerer",
-     "seen": 65,
-     "sprite": {
-      "file": "c21766.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21773,
-     "name": "New Poison Scorpion",
-     "seen": 60,
-     "sprite": {
-      "file": "c21773.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21779,
-     "name": "New Elf Mage",
-     "seen": 59,
-     "sprite": {
-      "file": "c21779.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21787,
-     "name": "New Forest Nymph",
-     "seen": 57,
-     "sprite": {
-      "file": "c21787.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 21763,
-     "name": "New Purple Gelatinous Cube",
-     "seen": 51,
-     "sprite": {
-      "file": "c21763.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    }
-   ],
-   "met": true
-  },
-  {
-   "id": 11,
-   "biome": 10,
-   "tiles": 50957,
+   "id": 9,
+   "biome": 8,
+   "tiles": 50953,
    "at": [
     763,
     1429
@@ -7548,9 +7818,9 @@
     960,
     1650
    ],
-   "name": "Undead Forest",
-   "named": true,
-   "from": "roads",
+   "name": "Zone 9",
+   "named": false,
+   "from": null,
    "roadSplit": [
     {
      "biome": "Undead Forest",
@@ -7565,7 +7835,7 @@
    "madeOf": [
     {
      "ground": "Yellow Grass",
-     "tiles": 45345
+     "tiles": 45341
     },
     {
      "ground": "Blue Floor",
@@ -7717,9 +7987,9 @@
    "met": true
   },
   {
-   "id": 12,
-   "biome": 11,
-   "tiles": 47458,
+   "id": 10,
+   "biome": 9,
+   "tiles": 47443,
    "at": [
     1177,
     1387
@@ -7751,15 +8021,15 @@
    "madeOf": [
     {
      "ground": "Haunted Hallows Darkish Dirt",
-     "tiles": 43894
+     "tiles": 43893
     },
     {
      "ground": "Dead Church Grass Dark",
-     "tiles": 833
+     "tiles": 827
     },
     {
      "ground": "Dark Grass",
-     "tiles": 371
+     "tiles": 363
     },
     {
      "ground": "Desert Rough Sand",
@@ -7792,7 +8062,7 @@
     {
      "type": 17898,
      "name": "Hallows Banshee",
-     "seen": 148,
+     "seen": 147,
      "sprite": {
       "file": "c17898.png",
       "tile": 8,
@@ -7903,8 +8173,8 @@
    "met": true
   },
   {
-   "id": 13,
-   "biome": 12,
+   "id": 11,
+   "biome": 10,
    "tiles": 42769,
    "at": [
     737,
@@ -8089,8 +8359,8 @@
    "met": true
   },
   {
-   "id": 14,
-   "biome": 13,
+   "id": 12,
+   "biome": 11,
    "tiles": 41368,
    "at": [
     661,
@@ -8275,12 +8545,12 @@
    "met": true
   },
   {
-   "id": 15,
-   "biome": 14,
-   "tiles": 37957,
+   "id": 13,
+   "biome": 12,
+   "tiles": 40160,
    "at": [
-    1349,
-    1361
+    1342,
+    1357
    ],
    "box": [
     1182,
@@ -8305,30 +8575,30 @@
      "tiles": 19
     }
    ],
-   "colour": "#52391d",
+   "colour": "#50381e",
    "madeOf": [
     {
      "ground": "Dead Church Grass Dark",
-     "tiles": 34178
+     "tiles": 34283
+    },
+    {
+     "ground": "Blue Grass",
+     "tiles": 1010
+    },
+    {
+     "ground": "Dark Grass",
+     "tiles": 879
     },
     {
      "ground": "Haunted Hallows Darkish Dirt",
-     "tiles": 745
-    },
-    {
-     "ground": "Cultists Set Piece 2010",
-     "tiles": 481
-    },
-    {
-     "ground": "Ancient City Dirt",
-     "tiles": 380
+     "tiles": 782
     }
    ],
    "lives": [
     {
      "type": 49415,
      "name": "Dead Church Skeleton",
-     "seen": 564,
+     "seen": 602,
      "sprite": {
       "file": "c49415.png",
       "tile": 8,
@@ -8339,7 +8609,7 @@
     {
      "type": 49629,
      "name": "Dead Church Bat",
-     "seen": 481,
+     "seen": 547,
      "sprite": {
       "file": "c49629.png",
       "tile": 8,
@@ -8350,7 +8620,7 @@
     {
      "type": 49630,
      "name": "Dead Church Nun",
-     "seen": 317,
+     "seen": 323,
      "sprite": {
       "file": "c49630.png",
       "tile": 8,
@@ -8361,7 +8631,7 @@
     {
      "type": 49627,
      "name": "Dead Church Necromancer",
-     "seen": 219,
+     "seen": 234,
      "sprite": {
       "file": "c49627.png",
       "tile": 8,
@@ -8370,20 +8640,9 @@
      }
     },
     {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 186,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
      "type": 49628,
      "name": "Dead Church Vampire",
-     "seen": 176,
+     "seen": 204,
      "sprite": {
       "file": "c49628.png",
       "tile": 8,
@@ -8392,9 +8651,20 @@
      }
     },
     {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 203,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
      "type": 49416,
      "name": "Dead Church Revenant",
-     "seen": 73,
+     "seen": 75,
      "sprite": {
       "file": "c49416.png",
       "tile": 16,
@@ -8405,7 +8675,7 @@
     {
      "type": 34492,
      "name": "The Plague Doctor Cure C",
-     "seen": 32,
+     "seen": 36,
      "sprite": {
       "file": "c34492.png",
       "tile": 8,
@@ -8414,9 +8684,20 @@
      }
     },
     {
+     "type": 17900,
+     "name": "Hallows Skeleton",
+     "seen": 31,
+     "sprite": {
+      "file": "c17900.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
      "type": 34491,
      "name": "The Plague Doctor Cure B",
-     "seen": 23,
+     "seen": 28,
      "sprite": {
       "file": "c34491.png",
       "tile": 8,
@@ -8425,14 +8706,14 @@
      }
     },
     {
-     "type": 17900,
-     "name": "Hallows Skeleton",
-     "seen": 22,
+     "type": 6175,
+     "name": "Tombstone",
+     "seen": 13,
      "sprite": {
-      "file": "c17900.png",
+      "file": "c6175.png",
       "tile": 8,
       "height": 8,
-      "frames": 2
+      "frames": 1
      }
     },
     {
@@ -8445,24 +8726,199 @@
       "height": 8,
       "frames": 1
      }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 14,
+   "biome": 13,
+   "tiles": 39195,
+   "at": [
+    903,
+    1716
+   ],
+   "box": [
+    752,
+    1565,
+    1093,
+    1840
+   ],
+   "name": "Nature Ruins",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Low Forest",
+     "tiles": 1285
     },
     {
-     "type": 24022,
-     "name": "Shady Sect Follower",
-     "seen": 10,
+     "biome": "Desert",
+     "tiles": 41
+    },
+    {
+     "biome": "Undead Forest",
+     "tiles": 15
+    }
+   ],
+   "colour": "#3d4f23",
+   "madeOf": [
+    {
+     "ground": "Nature Ruins Grass",
+     "tiles": 28700
+    },
+    {
+     "ground": "Dark Grass",
+     "tiles": 4097
+    },
+    {
+     "ground": "Light Grass",
+     "tiles": 2945
+    },
+    {
+     "ground": "Jungle Temple Floor",
+     "tiles": 1530
+    }
+   ],
+   "lives": [
+    {
+     "type": 21845,
+     "name": "New Red Spider",
+     "seen": 109,
      "sprite": {
-      "file": "c24022.png",
+      "file": "c21845.png",
       "tile": 8,
       "height": 8,
       "frames": 2
+     }
+    },
+    {
+     "type": 21833,
+     "name": "New Dwarf Axebearer",
+     "seen": 94,
+     "sprite": {
+      "file": "c21833.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21841,
+     "name": "New Werepanther",
+     "seen": 88,
+     "sprite": {
+      "file": "c21841.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21835,
+     "name": "New Dwarf Veteran",
+     "seen": 83,
+     "sprite": {
+      "file": "c21835.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21834,
+     "name": "New Dwarf Mage",
+     "seen": 80,
+     "sprite": {
+      "file": "c21834.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21840,
+     "name": "New Wereleopard",
+     "seen": 78,
+     "sprite": {
+      "file": "c21840.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21846,
+     "name": "New Black Bat",
+     "seen": 70,
+     "sprite": {
+      "file": "c21846.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21932,
+     "name": "New Ent Sapling",
+     "seen": 55,
+     "sprite": {
+      "file": "c21932.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 51,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21844,
+     "name": "New Drake Baby",
+     "seen": 43,
+     "sprite": {
+      "file": "c21844.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21839,
+     "name": "New Weretiger",
+     "seen": 36,
+     "sprite": {
+      "file": "c21839.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21842,
+     "name": "New Werelion",
+     "seen": 32,
+     "sprite": {
+      "file": "c21842.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
      }
     }
    ],
    "met": true
   },
   {
-   "id": 16,
-   "biome": 15,
+   "id": 15,
+   "biome": 14,
    "tiles": 35076,
    "at": [
     1863,
@@ -8643,194 +9099,8 @@
    "met": true
   },
   {
-   "id": 17,
-   "biome": 16,
-   "tiles": 34094,
-   "at": [
-    1839,
-    1238
-   ],
-   "box": [
-    1718,
-    1113,
-    1980,
-    1371
-   ],
-   "name": "Shipwreck Cove",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Shipwreck Cove",
-     "tiles": 1261
-    },
-    {
-     "biome": "Coral Reef",
-     "tiles": 72
-    },
-    {
-     "biome": "Sprite Forest",
-     "tiles": 20
-    }
-   ],
-   "colour": "#333735",
-   "madeOf": [
-    {
-     "ground": "Shipwreck Cove Grassy Dirt",
-     "tiles": 28986
-    },
-    {
-     "ground": "Blue Grass",
-     "tiles": 1003
-    },
-    {
-     "ground": "Dark Grass",
-     "tiles": 820
-    },
-    {
-     "ground": "Coral Reefs Sand",
-     "tiles": 586
-    }
-   ],
-   "lives": [
-    {
-     "type": 49901,
-     "name": "Shipwreck Ghost",
-     "seen": 295,
-     "sprite": {
-      "file": "c49901.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49902,
-     "name": "Shipwreck Pirate",
-     "seen": 221,
-     "sprite": {
-      "file": "c49902.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49905,
-     "name": "Shipwreck Sailor",
-     "seen": 187,
-     "sprite": {
-      "file": "c49905.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49906,
-     "name": "Shipwreck Elemental",
-     "seen": 65,
-     "sprite": {
-      "file": "c49906.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 54,
-     "sprite": {
-      "file": "c49629.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49903,
-     "name": "Shipwreck Hag",
-     "seen": 47,
-     "sprite": {
-      "file": "c49903.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 35,
-     "sprite": {
-      "file": "c49630.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 30,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 18,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 13,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 6175,
-     "name": "Tombstone",
-     "seen": 13,
-     "sprite": {
-      "file": "c6175.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 34501,
-     "name": "Pirate's Tavern Drunk Sailor",
-     "seen": 11,
-     "sprite": {
-      "file": "c34501.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    }
-   ],
-   "met": true
-  },
-  {
-   "id": 18,
-   "biome": 17,
+   "id": 16,
+   "biome": 15,
    "tiles": 33317,
    "at": [
     1456,
@@ -9015,8 +9285,562 @@
    "met": true
   },
   {
+   "id": 17,
+   "biome": 16,
+   "tiles": 33041,
+   "at": [
+    841,
+    1741
+   ],
+   "box": [
+    624,
+    1505,
+    1149,
+    1895
+   ],
+   "name": "Low Forest",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Low Forest",
+     "tiles": 425
+    },
+    {
+     "biome": "Undead Forest",
+     "tiles": 10
+    }
+   ],
+   "colour": "#2f662a",
+   "madeOf": [
+    {
+     "ground": "New Low Forest Grass",
+     "tiles": 29641
+    },
+    {
+     "ground": "Brown Lines",
+     "tiles": 951
+    },
+    {
+     "ground": "Shoreline Sand",
+     "tiles": 862
+    },
+    {
+     "ground": "Nature Ruins Grass",
+     "tiles": 685
+    }
+   ],
+   "lives": [
+    {
+     "type": 21778,
+     "name": "New Elf Swordsman",
+     "seen": 197,
+     "sprite": {
+      "file": "c21778.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21789,
+     "name": "New Hobbit Archer",
+     "seen": 185,
+     "sprite": {
+      "file": "c21789.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21788,
+     "name": "New Hobbit Rogue",
+     "seen": 140,
+     "sprite": {
+      "file": "c21788.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21777,
+     "name": "New Elf Archer",
+     "seen": 103,
+     "sprite": {
+      "file": "c21777.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21779,
+     "name": "New Elf Mage",
+     "seen": 50,
+     "sprite": {
+      "file": "c21779.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21787,
+     "name": "New Forest Nymph",
+     "seen": 49,
+     "sprite": {
+      "file": "c21787.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21790,
+     "name": "New Hobbit Mage",
+     "seen": 46,
+     "sprite": {
+      "file": "c21790.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21780,
+     "name": "New Elf Wizard",
+     "seen": 37,
+     "sprite": {
+      "file": "c21780.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21785,
+     "name": "New Easily Enraged Bunny",
+     "seen": 33,
+     "sprite": {
+      "file": "c21785.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 1737,
+     "name": "Enraged Bunny",
+     "seen": 23,
+     "sprite": {
+      "file": "c1737.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "seen": 18,
+     "sprite": {
+      "file": "c21766.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "seen": 12,
+     "sprite": {
+      "file": "c21762.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 18,
+   "biome": 17,
+   "tiles": 32956,
+   "at": [
+    1681,
+    1265
+   ],
+   "box": [
+    1568,
+    1143,
+    1802,
+    1373
+   ],
+   "name": "Dead Church",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Dead Church",
+     "tiles": 1367
+    },
+    {
+     "biome": "Shipwreck Cove",
+     "tiles": 125
+    },
+    {
+     "biome": "Sprite Forest",
+     "tiles": 24
+    }
+   ],
+   "colour": "#4d371f",
+   "madeOf": [
+    {
+     "ground": "Dead Church Grass Dark",
+     "tiles": 25810
+    },
+    {
+     "ground": "Blue Grass",
+     "tiles": 1025
+    },
+    {
+     "ground": "Cultists Set Piece 2010",
+     "tiles": 962
+    },
+    {
+     "ground": "Dark Grass",
+     "tiles": 865
+    }
+   ],
+   "lives": [
+    {
+     "type": 49415,
+     "name": "Dead Church Skeleton",
+     "seen": 470,
+     "sprite": {
+      "file": "c49415.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49629,
+     "name": "Dead Church Bat",
+     "seen": 322,
+     "sprite": {
+      "file": "c49629.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 304,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 226,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49628,
+     "name": "Dead Church Vampire",
+     "seen": 166,
+     "sprite": {
+      "file": "c49628.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 129,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 49416,
+     "name": "Dead Church Revenant",
+     "seen": 31,
+     "sprite": {
+      "file": "c49416.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 3
+     }
+    },
+    {
+     "type": 24022,
+     "name": "Shady Sect Follower",
+     "seen": 18,
+     "sprite": {
+      "file": "c24022.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 6175,
+     "name": "Tombstone",
+     "seen": 13,
+     "sprite": {
+      "file": "c6175.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 17900,
+     "name": "Hallows Skeleton",
+     "seen": 12,
+     "sprite": {
+      "file": "c17900.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 17898,
+     "name": "Hallows Banshee",
+     "seen": 10,
+     "sprite": {
+      "file": "c17898.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 17899,
+     "name": "Hallows Wraith",
+     "seen": 9,
+     "sprite": {
+      "file": "c17899.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    }
+   ],
+   "met": true
+  },
+  {
    "id": 19,
    "biome": 18,
+   "tiles": 31995,
+   "at": [
+    1845,
+    1241
+   ],
+   "box": [
+    1758,
+    1113,
+    1980,
+    1371
+   ],
+   "name": "Shipwreck Cove",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Shipwreck Cove",
+     "tiles": 1261
+    },
+    {
+     "biome": "Coral Reef",
+     "tiles": 72
+    },
+    {
+     "biome": "Sprite Forest",
+     "tiles": 20
+    }
+   ],
+   "colour": "#343736",
+   "madeOf": [
+    {
+     "ground": "Shipwreck Cove Grassy Dirt",
+     "tiles": 28971
+    },
+    {
+     "ground": "Coral Reefs Sand",
+     "tiles": 586
+    },
+    {
+     "ground": "Dead Church Grass Dark",
+     "tiles": 370
+    },
+    {
+     "ground": "Set Piece 853",
+     "tiles": 316
+    }
+   ],
+   "lives": [
+    {
+     "type": 49901,
+     "name": "Shipwreck Ghost",
+     "seen": 295,
+     "sprite": {
+      "file": "c49901.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49902,
+     "name": "Shipwreck Pirate",
+     "seen": 221,
+     "sprite": {
+      "file": "c49902.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49905,
+     "name": "Shipwreck Sailor",
+     "seen": 186,
+     "sprite": {
+      "file": "c49905.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49906,
+     "name": "Shipwreck Elemental",
+     "seen": 65,
+     "sprite": {
+      "file": "c49906.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49903,
+     "name": "Shipwreck Hag",
+     "seen": 47,
+     "sprite": {
+      "file": "c49903.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 34501,
+     "name": "Pirate's Tavern Drunk Sailor",
+     "seen": 11,
+     "sprite": {
+      "file": "c34501.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "seen": 10,
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 34499,
+     "name": "Pirate's Tavern Washed Captain",
+     "seen": 7,
+     "sprite": {
+      "file": "c34499.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 7,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 17733,
+     "name": "Sprite Forest Child",
+     "seen": 7,
+     "sprite": {
+      "file": "c17733.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    },
+    {
+     "type": 49342,
+     "name": "Reef Octopus",
+     "seen": 6,
+     "sprite": {
+      "file": "c49342.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 29934,
+     "name": "New Present Spawner Shipwreck Cove",
+     "seen": 4,
+     "sprite": {
+      "file": "c29934.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 1
+     }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 20,
+   "biome": 19,
    "tiles": 31846,
    "at": [
     483,
@@ -9192,192 +10016,6 @@
      "seen": 15,
      "sprite": {
       "file": "c1984.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    }
-   ],
-   "met": true
-  },
-  {
-   "id": 20,
-   "biome": 19,
-   "tiles": 30857,
-   "at": [
-    1677,
-    1270
-   ],
-   "box": [
-    1568,
-    1143,
-    1802,
-    1373
-   ],
-   "name": "Dead Church",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Dead Church",
-     "tiles": 1362
-    },
-    {
-     "biome": "Shipwreck Cove",
-     "tiles": 125
-    },
-    {
-     "biome": "Sprite Forest",
-     "tiles": 24
-    }
-   ],
-   "colour": "#50371e",
-   "madeOf": [
-    {
-     "ground": "Dead Church Grass Dark",
-     "tiles": 25769
-    },
-    {
-     "ground": "Cultists Set Piece 2010",
-     "tiles": 962
-    },
-    {
-     "ground": "Haunted Hallows Darkish Dirt",
-     "tiles": 844
-    },
-    {
-     "ground": "Castle Stone Floor Tile Dark",
-     "tiles": 518
-    }
-   ],
-   "lives": [
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 444,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 276,
-     "sprite": {
-      "file": "c49630.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 268,
-     "sprite": {
-      "file": "c49629.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 216,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 148,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 121,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49416,
-     "name": "Dead Church Revenant",
-     "seen": 31,
-     "sprite": {
-      "file": "c49416.png",
-      "tile": 16,
-      "height": 16,
-      "frames": 3
-     }
-    },
-    {
-     "type": 24022,
-     "name": "Shady Sect Follower",
-     "seen": 18,
-     "sprite": {
-      "file": "c24022.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17900,
-     "name": "Hallows Skeleton",
-     "seen": 12,
-     "sprite": {
-      "file": "c17900.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17898,
-     "name": "Hallows Banshee",
-     "seen": 10,
-     "sprite": {
-      "file": "c17898.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17899,
-     "name": "Hallows Wraith",
-     "seen": 9,
-     "sprite": {
-      "file": "c17899.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 17903,
-     "name": "Hallows Brute",
-     "seen": 7,
-     "sprite": {
-      "file": "c17903.png",
       "tile": 8,
       "height": 8,
       "frames": 2
@@ -9947,168 +10585,164 @@
   {
    "id": 24,
    "biome": 23,
-   "tiles": 25000,
+   "tiles": 25448,
    "at": [
-    558,
-    1192
+    1030,
+    1567
    ],
    "box": [
-    455,
-    1031,
-    659,
-    1459
+    897,
+    1475,
+    1204,
+    1675
    ],
-   "name": "Desert",
+   "name": "Low Forest",
    "named": true,
-   "from": "ground",
+   "from": "roads",
    "roadSplit": [
     {
+     "biome": "Low Forest",
+     "tiles": 429
+    },
+    {
      "biome": "Desert",
-     "tiles": 506
-    },
-    {
-     "biome": "Undead Forest",
-     "tiles": 135
-    },
-    {
-     "biome": "Haunted Hallows",
-     "tiles": 84
+     "tiles": 21
     }
    ],
-   "colour": "#dbc09a",
+   "colour": "#353f22",
    "madeOf": [
     {
+     "ground": "Dark Grass",
+     "tiles": 22729
+    },
+    {
+     "ground": "Rock",
+     "tiles": 1072
+    },
+    {
      "ground": "Desert Rough Sand",
-     "tiles": 13006
+     "tiles": 616
     },
     {
-     "ground": "Shoreline Sand",
-     "tiles": 10279
-    },
-    {
-     "ground": "Light Grass",
-     "tiles": 492
-    },
-    {
-     "ground": "Scorch",
-     "tiles": 388
+     "ground": "Nature Ruins Grass",
+     "tiles": 254
     }
    ],
    "lives": [
     {
-     "type": 21797,
-     "name": "New Demon Warg",
-     "seen": 140,
+     "type": 21867,
+     "name": "New Ogre Mage",
+     "seen": 67,
      "sprite": {
-      "file": "c21797.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21796,
-     "name": "New Tawny Warg",
-     "seen": 106,
-     "sprite": {
-      "file": "c21796.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21773,
-     "name": "New Poison Scorpion",
-     "seen": 88,
-     "sprite": {
-      "file": "c21773.png",
+      "file": "c21867.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21807,
-     "name": "New Sand Phantom",
-     "seen": 58,
+     "type": 21869,
+     "name": "New Ogre Wizard",
+     "seen": 61,
      "sprite": {
-      "file": "c21807.png",
+      "file": "c21869.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21762,
-     "name": "New Red Gelatinous Cube",
+     "type": 21884,
+     "name": "New Dark Elf Swordsman",
+     "seen": 57,
+     "sprite": {
+      "file": "c21884.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21883,
+     "name": "New Dark Elf Scout",
+     "seen": 55,
+     "sprite": {
+      "file": "c21883.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21872,
+     "name": "New Night Elf Warrior",
+     "seen": 40,
+     "sprite": {
+      "file": "c21872.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21885,
+     "name": "New Dark Elf Cleric",
+     "seen": 40,
+     "sprite": {
+      "file": "c21885.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21871,
+     "name": "New Night Elf Archer",
+     "seen": 40,
+     "sprite": {
+      "file": "c21871.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21873,
+     "name": "New Night Elf Mage",
+     "seen": 39,
+     "sprite": {
+      "file": "c21873.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21868,
+     "name": "New Ogre Warrior",
      "seen": 33,
      "sprite": {
-      "file": "c21762.png",
+      "file": "c21868.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 33,
+     "type": 21874,
+     "name": "New Night Elf Veteran",
+     "seen": 27,
      "sprite": {
-      "file": "c21805.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21809,
-     "name": "New Nomadic Shaman",
-     "seen": 32,
-     "sprite": {
-      "file": "c21809.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21800,
-     "name": "New Darkness Golem",
-     "seen": 31,
-     "sprite": {
-      "file": "c21800.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 21776,
-     "name": "New Bandit Enemy",
-     "seen": 28,
-     "sprite": {
-      "file": "c21776.png",
+      "file": "c21874.png",
       "tile": 8,
       "height": 8,
       "frames": 3
-     }
-    },
-    {
-     "type": 21902,
-     "name": "New Birdman Chief",
-     "seen": 28,
-     "sprite": {
-      "file": "c21902.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
      }
     },
     {
      "type": 54291,
      "name": "Legion Surveyor",
-     "seen": 27,
+     "seen": 26,
      "sprite": {
       "file": "c54291.png",
       "tile": 16,
@@ -10117,11 +10751,11 @@
      }
     },
     {
-     "type": 21772,
-     "name": "New Snake",
+     "type": 21870,
+     "name": "New Ogre King",
      "seen": 26,
      "sprite": {
-      "file": "c21772.png",
+      "file": "c21870.png",
       "tile": 8,
       "height": 8,
       "frames": 3
@@ -10691,6 +11325,184 @@
   {
    "id": 28,
    "biome": 27,
+   "tiles": 20106,
+   "at": [
+    830,
+    1813
+   ],
+   "box": [
+    632,
+    1642,
+    1050,
+    1940
+   ],
+   "name": "Zone 28",
+   "named": false,
+   "from": null,
+   "roadSplit": [
+    {
+     "biome": "Low Forest",
+     "tiles": 29
+    }
+   ],
+   "colour": "#d0c6a5",
+   "madeOf": [
+    {
+     "ground": "Shoreline Sand",
+     "tiles": 18514
+    },
+    {
+     "ground": "New Low Forest Grass",
+     "tiles": 844
+    },
+    {
+     "ground": "Setpiece PC Sand",
+     "tiles": 637
+    },
+    {
+     "ground": "Setpiece PC Sand Alt",
+     "tiles": 27
+    }
+   ],
+   "lives": [
+    {
+     "type": 21770,
+     "name": "New Pirate",
+     "seen": 164,
+     "sprite": {
+      "file": "c21770.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "seen": 87,
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "seen": 85,
+     "sprite": {
+      "file": "c21762.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21773,
+     "name": "New Poison Scorpion",
+     "seen": 60,
+     "sprite": {
+      "file": "c21773.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "seen": 47,
+     "sprite": {
+      "file": "c21766.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21763,
+     "name": "New Purple Gelatinous Cube",
+     "seen": 40,
+     "sprite": {
+      "file": "c21763.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21765,
+     "name": "New Sandsman Archer",
+     "seen": 36,
+     "sprite": {
+      "file": "c21765.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21772,
+     "name": "New Snake",
+     "seen": 33,
+     "sprite": {
+      "file": "c21772.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21778,
+     "name": "New Elf Swordsman",
+     "seen": 24,
+     "sprite": {
+      "file": "c21778.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21789,
+     "name": "New Hobbit Archer",
+     "seen": 20,
+     "sprite": {
+      "file": "c21789.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21788,
+     "name": "New Hobbit Rogue",
+     "seen": 18,
+     "sprite": {
+      "file": "c21788.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 44158,
+     "name": "Admiral of Pirates",
+     "seen": 13,
+     "sprite": {
+      "file": "c44158.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 29,
+   "biome": 28,
    "tiles": 19074,
    "at": [
     453,
@@ -10871,8 +11683,8 @@
    "met": true
   },
   {
-   "id": 29,
-   "biome": 28,
+   "id": 30,
+   "biome": 29,
    "tiles": 14852,
    "at": [
     1230,
@@ -11046,8 +11858,376 @@
    "met": true
   },
   {
-   "id": 30,
-   "biome": 29,
+   "id": 31,
+   "biome": 30,
+   "tiles": 14721,
+   "at": [
+    530,
+    1105
+   ],
+   "box": [
+    455,
+    1031,
+    653,
+    1188
+   ],
+   "name": "Desert",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Desert",
+     "tiles": 506
+    },
+    {
+     "biome": "Haunted Hallows",
+     "tiles": 84
+    },
+    {
+     "biome": "Undead Forest",
+     "tiles": 19
+    }
+   ],
+   "colour": "#dcb78c",
+   "madeOf": [
+    {
+     "ground": "Desert Rough Sand",
+     "tiles": 13006
+    },
+    {
+     "ground": "Light Grass",
+     "tiles": 492
+    },
+    {
+     "ground": "Scorch",
+     "tiles": 388
+    },
+    {
+     "ground": "Castle Stone Floor Tile",
+     "tiles": 212
+    }
+   ],
+   "lives": [
+    {
+     "type": 21797,
+     "name": "New Demon Warg",
+     "seen": 140,
+     "sprite": {
+      "file": "c21797.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21796,
+     "name": "New Tawny Warg",
+     "seen": 106,
+     "sprite": {
+      "file": "c21796.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21807,
+     "name": "New Sand Phantom",
+     "seen": 58,
+     "sprite": {
+      "file": "c21807.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 33,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21809,
+     "name": "New Nomadic Shaman",
+     "seen": 32,
+     "sprite": {
+      "file": "c21809.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21800,
+     "name": "New Darkness Golem",
+     "seen": 31,
+     "sprite": {
+      "file": "c21800.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21902,
+     "name": "New Birdman Chief",
+     "seen": 28,
+     "sprite": {
+      "file": "c21902.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 54291,
+     "name": "Legion Surveyor",
+     "seen": 27,
+     "sprite": {
+      "file": "c54291.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 24,
+     "sprite": {
+      "file": "c21802.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21903,
+     "name": "New Birdman",
+     "seen": 23,
+     "sprite": {
+      "file": "c21903.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21799,
+     "name": "New Fire Golem",
+     "seen": 22,
+     "sprite": {
+      "file": "c21799.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 20,
+     "sprite": {
+      "file": "c21798.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 32,
+   "biome": 31,
+   "tiles": 14442,
+   "at": [
+    1028,
+    1675
+   ],
+   "box": [
+    945,
+    1584,
+    1092,
+    1762
+   ],
+   "name": "Desert",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Desert",
+     "tiles": 642
+    },
+    {
+     "biome": "Low Forest",
+     "tiles": 9
+    }
+   ],
+   "colour": "#deb98c",
+   "madeOf": [
+    {
+     "ground": "Desert Rough Sand",
+     "tiles": 12904
+    },
+    {
+     "ground": "Dark Grass",
+     "tiles": 523
+    },
+    {
+     "ground": "Nature Ruins Grass",
+     "tiles": 242
+    },
+    {
+     "ground": "Light Grass",
+     "tiles": 239
+    }
+   ],
+   "lives": [
+    {
+     "type": 21797,
+     "name": "New Demon Warg",
+     "seen": 107,
+     "sprite": {
+      "file": "c21797.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21796,
+     "name": "New Tawny Warg",
+     "seen": 96,
+     "sprite": {
+      "file": "c21796.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21807,
+     "name": "New Sand Phantom",
+     "seen": 52,
+     "sprite": {
+      "file": "c21807.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21809,
+     "name": "New Nomadic Shaman",
+     "seen": 40,
+     "sprite": {
+      "file": "c21809.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 32,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21799,
+     "name": "New Fire Golem",
+     "seen": 29,
+     "sprite": {
+      "file": "c21799.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21801,
+     "name": "New Red Satellite",
+     "seen": 25,
+     "sprite": {
+      "file": "c21801.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21800,
+     "name": "New Darkness Golem",
+     "seen": 24,
+     "sprite": {
+      "file": "c21800.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21804,
+     "name": "New Gray Satellite 1",
+     "seen": 22,
+     "sprite": {
+      "file": "c21804.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 17,
+     "sprite": {
+      "file": "c21802.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21810,
+     "name": "New Great Lizard",
+     "seen": 16,
+     "sprite": {
+      "file": "c21810.png",
+      "tile": 16,
+      "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21841,
+     "name": "New Werepanther",
+     "seen": 16,
+     "sprite": {
+      "file": "c21841.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 33,
+   "biome": 32,
    "tiles": 13715,
    "at": [
     1034,
@@ -11232,8 +12412,8 @@
    "met": true
   },
   {
-   "id": 31,
-   "biome": 30,
+   "id": 34,
+   "biome": 33,
    "tiles": 13670,
    "at": [
     1119,
@@ -11414,8 +12594,174 @@
    "met": true
   },
   {
-   "id": 32,
-   "biome": 31,
+   "id": 35,
+   "biome": 34,
+   "tiles": 10279,
+   "at": [
+    598,
+    1315
+   ],
+   "box": [
+    512,
+    1173,
+    659,
+    1459
+   ],
+   "name": "Zone 35",
+   "named": false,
+   "from": null,
+   "roadSplit": [
+    {
+     "biome": "Undead Forest",
+     "tiles": 116
+    }
+   ],
+   "colour": "#dacdad",
+   "madeOf": [
+    {
+     "ground": "Shoreline Sand",
+     "tiles": 10279
+    }
+   ],
+   "lives": [
+    {
+     "type": 21773,
+     "name": "New Poison Scorpion",
+     "seen": 87,
+     "sprite": {
+      "file": "c21773.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "seen": 33,
+     "sprite": {
+      "file": "c21762.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21776,
+     "name": "New Bandit Enemy",
+     "seen": 28,
+     "sprite": {
+      "file": "c21776.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21770,
+     "name": "New Pirate",
+     "seen": 20,
+     "sprite": {
+      "file": "c21770.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21772,
+     "name": "New Snake",
+     "seen": 19,
+     "sprite": {
+      "file": "c21772.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21763,
+     "name": "New Purple Gelatinous Cube",
+     "seen": 9,
+     "sprite": {
+      "file": "c21763.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "seen": 8,
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21774,
+     "name": "New Scorpion Queen",
+     "seen": 7,
+     "sprite": {
+      "file": "c21774.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "seen": 7,
+     "sprite": {
+      "file": "c21766.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21775,
+     "name": "New Bandit Leader",
+     "seen": 7,
+     "sprite": {
+      "file": "c21775.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21769,
+     "name": "New Sand Devil",
+     "seen": 6,
+     "sprite": {
+      "file": "c21769.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21765,
+     "name": "New Sandsman Archer",
+     "seen": 4,
+     "sprite": {
+      "file": "c21765.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    }
+   ],
+   "met": true
+  },
+  {
+   "id": 36,
+   "biome": 35,
    "tiles": 9228,
    "at": [
     968,
@@ -11600,8 +12946,8 @@
    "met": true
   },
   {
-   "id": 33,
-   "biome": 32,
+   "id": 37,
+   "biome": 36,
    "tiles": 6673,
    "at": [
     864,
@@ -11738,172 +13084,181 @@
    "met": true
   },
   {
-   "id": 34,
-   "biome": 33,
-   "tiles": 2188,
+   "id": 38,
+   "biome": 37,
+   "tiles": 2094,
    "at": [
-    1219,
-    1286
+    849,
+    1612
    ],
    "box": [
-    1189,
-    1253,
-    1247,
-    1313
+    818,
+    1590,
+    881,
+    1635
    ],
-   "name": "Zone 34",
+   "name": "Zone 38",
    "named": false,
    "from": null,
-   "roadSplit": [],
-   "colour": "#2b312b",
+   "roadSplit": [
+    {
+     "biome": "Low Forest",
+     "tiles": 30
+    },
+    {
+     "biome": "Undead Forest",
+     "tiles": 1
+    }
+   ],
+   "colour": "#323f21",
    "madeOf": [
     {
-     "ground": "Blue Grass",
-     "tiles": 1007
-    },
-    {
      "ground": "Dark Grass",
-     "tiles": 756
+     "tiles": 1698
     },
     {
-     "ground": "Grey Dirt",
-     "tiles": 290
+     "ground": "Jungle Temple Floor",
+     "tiles": 297
     },
     {
-     "ground": "Dead Church Grass Dark",
-     "tiles": 99
+     "ground": "Nature Ruins Grass",
+     "tiles": 85
+    },
+    {
+     "ground": "Yellow Grass",
+     "tiles": 14
     }
    ],
    "lives": [
     {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 66,
+     "type": 21828,
+     "name": "New Scout Bee",
+     "seen": 18,
      "sprite": {
-      "file": "c49629.png",
+      "file": "c21828.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 4
+     }
+    },
+    {
+     "type": 21833,
+     "name": "New Dwarf Axebearer",
+     "seen": 10,
+     "sprite": {
+      "file": "c21833.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 38,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 28,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 16,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 15,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 3
-     }
-    },
-    {
-     "type": 6175,
-     "name": "Tombstone",
-     "seen": 13,
-     "sprite": {
-      "file": "c6175.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 17900,
-     "name": "Hallows Skeleton",
+     "type": 21834,
+     "name": "New Dwarf Mage",
      "seen": 9,
      "sprite": {
-      "file": "c17900.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 2
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 6,
-     "sprite": {
-      "file": "c49630.png",
+      "file": "c21834.png",
       "tile": 8,
       "height": 8,
       "frames": 3
      }
     },
     {
-     "type": 34491,
-     "name": "The Plague Doctor Cure B",
-     "seen": 5,
+     "type": 21846,
+     "name": "New Black Bat",
+     "seen": 6,
      "sprite": {
-      "file": "c34491.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 34492,
-     "name": "The Plague Doctor Cure C",
-     "seen": 4,
-     "sprite": {
-      "file": "c34492.png",
-      "tile": 8,
-      "height": 8,
-      "frames": 1
-     }
-    },
-    {
-     "type": 17003,
-     "name": "Graverobber Digger",
-     "seen": 4,
-     "sprite": {
-      "file": "c17003.png",
+      "file": "c21846.png",
       "tile": 8,
       "height": 8,
       "frames": 2
      }
     },
     {
-     "type": 21894,
-     "name": "Hallows Ghost God",
+     "type": 21845,
+     "name": "New Red Spider",
+     "seen": 6,
+     "sprite": {
+      "file": "c21845.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21829,
+     "name": "New Fighter Bee",
+     "seen": 6,
+     "sprite": {
+      "file": "c21829.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 4
+     }
+    },
+    {
+     "type": 21827,
+     "name": "New Warrior Bee",
+     "seen": 4,
+     "sprite": {
+      "file": "c21827.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 4
+     }
+    },
+    {
+     "type": 21840,
+     "name": "New Wereleopard",
+     "seen": 4,
+     "sprite": {
+      "file": "c21840.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 3
+     }
+    },
+    {
+     "type": 21843,
+     "name": "New Horned Drake",
      "seen": 3,
      "sprite": {
-      "file": "c21894.png",
+      "file": "c21843.png",
       "tile": 16,
       "height": 16,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21844,
+     "name": "New Drake Baby",
+     "seen": 3,
+     "sprite": {
+      "file": "c21844.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21837,
+     "name": "New Metal Golem",
+     "seen": 2,
+     "sprite": {
+      "file": "c21837.png",
+      "tile": 8,
+      "height": 8,
+      "frames": 2
+     }
+    },
+    {
+     "type": 21835,
+     "name": "New Dwarf Veteran",
+     "seen": 2,
+     "sprite": {
+      "file": "c21835.png",
+      "tile": 8,
+      "height": 8,
       "frames": 3
      }
     }
@@ -11911,8 +13266,8 @@
    "met": true
   },
   {
-   "id": 35,
-   "biome": 34,
+   "id": 39,
+   "biome": 38,
    "tiles": 1961,
    "at": [
     107,
@@ -11924,7 +13279,7 @@
     132,
     187
    ],
-   "name": "Zone 35",
+   "name": "Zone 39",
    "named": false,
    "from": null,
    "roadSplit": [],
@@ -11957,7 +13312,7 @@
    "y": 1444,
    "name": "Shore",
    "state": "active",
-   "zone": 24,
+   "zone": 35,
    "guards": [
     {
      "type": 21784,
@@ -11977,7 +13332,7 @@
    "y": 1756,
    "name": "Shore",
    "state": "active",
-   "zone": 10,
+   "zone": 28,
    "guards": [
     {
      "type": 21762,
@@ -12074,7 +13429,7 @@
    "y": 1692,
    "name": "Forest",
    "state": "active",
-   "zone": 7,
+   "zone": 14,
    "guards": [
     {
      "type": 21845,
@@ -12171,7 +13526,7 @@
    "y": 1558,
    "name": "Forest",
    "state": "teleport",
-   "zone": 7,
+   "zone": 24,
    "guards": [
     {
      "type": 21884,
@@ -12268,7 +13623,7 @@
    "y": 1684,
    "name": "Desert",
    "state": "teleport",
-   "zone": 7,
+   "zone": 32,
    "guards": [
     {
      "type": 21797,
@@ -12365,7 +13720,7 @@
    "y": 1575,
    "name": "Plains",
    "state": "teleport",
-   "zone": 11,
+   "zone": 9,
    "guards": [
     {
      "type": 21821,
@@ -12440,7 +13795,7 @@
    "y": 1436,
    "name": "Undead Forest",
    "state": "teleport",
-   "zone": 14,
+   "zone": 12,
    "guards": [
     {
      "type": 21792,
@@ -12493,7 +13848,7 @@
    "y": 866,
    "name": "Sanguine Forest",
    "state": "teleport",
-   "zone": 19,
+   "zone": 20,
    "guards": [
     {
      "type": 31637,
@@ -13042,7 +14397,7 @@
    "y": 1899,
    "name": "Shore",
    "state": "teleport",
-   "zone": 10,
+   "zone": 28,
    "guards": [
     {
      "type": 21773,
@@ -13375,7 +14730,7 @@
    "y": 1250,
    "name": "Shipwreck Cove",
    "state": "teleport",
-   "zone": 17,
+   "zone": 19,
    "guards": [
     {
      "type": 49901,
@@ -13536,7 +14891,7 @@
    "y": 1395,
    "name": "Haunted Hallows",
    "state": "teleport",
-   "zone": 12,
+   "zone": 10,
    "guards": []
   },
   {
@@ -13544,7 +14899,7 @@
    "y": 1600,
    "name": "Shipwreck Cove",
    "state": "teleport",
-   "zone": 16,
+   "zone": 15,
    "guards": [
     {
      "type": 49901,
@@ -13619,7 +14974,7 @@
    "y": 951,
    "name": "Risen Hell",
    "state": "teleport",
-   "zone": 31,
+   "zone": 34,
    "guards": [
     {
      "type": 21896,
@@ -13985,7 +15340,7 @@
    "y": 1201,
    "name": "Risen Hell",
    "state": "teleport",
-   "zone": 18,
+   "zone": 16,
    "guards": [
     {
      "type": 49898,
@@ -14082,7 +15437,7 @@
    "y": 1103,
    "name": "Desert",
    "state": "teleport",
-   "zone": 24,
+   "zone": 31,
    "guards": [
     {
      "type": 21903,
@@ -14179,7 +15534,7 @@
    "y": 1084,
    "name": "Haunted Hallows",
    "state": "teleport",
-   "zone": 13,
+   "zone": 11,
    "guards": [
     {
      "type": 17900,
@@ -14210,7 +15565,7 @@
    "y": 1392,
    "name": "Dead Church",
    "state": "teleport",
-   "zone": 15,
+   "zone": 13,
    "guards": [
     {
      "type": 49629,
@@ -14393,7 +15748,7 @@
    "y": 1445,
    "name": "Desert",
    "state": "teleport",
-   "zone": 30,
+   "zone": 33,
    "guards": [
     {
      "type": 21849,
@@ -14587,7 +15942,7 @@
    "y": 1276,
    "name": "Dead Church",
    "state": "teleport",
-   "zone": 20,
+   "zone": 18,
    "guards": [
     {
      "type": 49628,
@@ -14726,7 +16081,7 @@
    "y": 686,
    "name": "Carboniferous",
    "state": "teleport",
-   "zone": 28,
+   "zone": 29,
    "guards": [
     {
      "type": 30573,
@@ -14779,7 +16134,7 @@
    "y": 312,
    "name": "Runic Tundra",
    "state": "teleport",
-   "zone": 8,
+   "zone": 7,
    "guards": [
     {
      "type": 29557,
@@ -15026,7 +16381,7 @@
    "y": 431,
    "name": "Sanguine Forest",
    "state": "active",
-   "zone": 32,
+   "zone": 36,
    "guards": [
     {
      "type": 9821,
@@ -15090,7 +16445,7 @@
    "y": 804,
    "name": "Floral Escape",
    "state": "teleport",
-   "zone": 9,
+   "zone": 8,
    "guards": [
     {
      "type": 9826,
@@ -15240,7 +16595,7 @@
    "y": 531,
    "name": "Floral Escape",
    "state": "captured",
-   "zone": 29,
+   "zone": 30,
    "guards": [
     {
      "type": 9830,

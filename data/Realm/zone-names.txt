@@ -1,0 +1,15 @@
+## Which ground belongs to which place, where the client does not say.
+##
+## The atlas works out a place from the ground it is made of, and names it
+## from the ground types that carry a biome's name. Some ground carries no
+## name at all and no amount of reading the client will supply one - the
+## graveyards are laid with "Blue Grass" and nothing in the client says a
+## graveyard is part of the Dead Church.
+##
+## So that knowledge is written here by hand, from someone who has walked it.
+## One line per ground type: ground|place. Anything named here counts exactly
+## as if the client had named it.
+##
+## Told to me on 2026-09-02.
+
+Blue Grass|Dead Church
