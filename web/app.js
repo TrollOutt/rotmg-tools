@@ -2276,7 +2276,7 @@ async function load() {
     console.error(error);
     $('status').textContent = location.protocol === 'file:'
       ? 'This copy of index.html needs the local server. Use the single-file build (RotMG-Enchant-Calculator.html) to open it straight from disk.'
-      : 'Could not read the original data files. Start the local server from the repository root (npm run dev).';
+      : 'Could not read the data files.';
     $('status').classList.add('bad');
   }
 }
@@ -2305,8 +2305,6 @@ async function openFamePage() {
     const overrides = bundled && bundled.overrideText ? bundled.overrideText
       : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
         .then(response => response.text()).catch(() => '');
-    // The standalone build carries the portal pictures inlined; served from
-    // the repository they are read from disk like every other sprite.
     // Kept so the background can scatter the same portals the page shows.
     ambience.fameText = text;
     FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides);
@@ -2332,19 +2330,14 @@ function showPage(name) {
     WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
   }
   /*
-   * The atlas is its own page, held in a frame.
-   *
-   * It is built from recordings of the realm rather than from anything in the
-   * client, so it lives outside the app's assets - twenty-three megabytes of
-   * ground at five scales, which is not something to carry in a page that most
-   * people open for the calculator. The frame is pointed at it the first time
-   * the tab is opened and left alone after that, so panning and zooming are
-   * not thrown away by switching tabs.
+   * The atlas is its own page, held in a frame. It is pointed at the first
+   * time the tab is opened and left alone after that, so panning and zooming
+   * survive a switch to another tool and back.
    */
   if (page === 'realm') {
     const frame = $('realmFrame');
     if (frame && !frame.src) {
-      const base = (window.ATLAS_BASE || '../local/atlas/');
+      const base = (window.ATLAS_BASE || 'assets/atlas/');
       fetch(base + 'atlas.json', { method: 'HEAD' })
         .then(response => {
           if (!response.ok) throw new Error('no atlas');

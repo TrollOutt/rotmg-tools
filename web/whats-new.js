@@ -398,8 +398,7 @@ var WhatsNew = (function () {
       .then(index => show(index, null))
       .catch(() => {
         started = false;
-        $('newsScale').innerHTML = '<span class="note warn">No comparison has been made yet. '
-          + 'Run <code>node tools/diff-client.js</code>.</span>';
+        $('newsScale').innerHTML = '<span class="note warn">Nothing to show just now.</span>';
       });
   }
 

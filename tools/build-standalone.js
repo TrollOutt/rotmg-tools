@@ -26,6 +26,27 @@ const gui = path.join(dataRoot, 'GUI Files');
 // is what the "keep a copy" link on the served page points at, so the offline
 // file is the very one being served rather than a second build of it.
 const pagesDir = path.join(root, 'docs');
+
+/*
+ * The atlas is a folder of pictures rather than something that can be inlined,
+ * so it is copied across whole. Twenty-four megabytes of ground at five scales
+ * is more than the rest of the page put together, and it is only read when the
+ * atlas is actually opened.
+ */
+function carryAcross(from, to) {
+  if (!fs.existsSync(from)) return 0;
+  fs.mkdirSync(to, { recursive: true });
+  let n = 0;
+  for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    const here = path.join(from, entry.name), there = path.join(to, entry.name);
+    if (entry.isDirectory()) { n += carryAcross(here, there); continue; }
+    const older = !fs.existsSync(there)
+      || fs.statSync(there).mtimeMs < fs.statSync(here).mtimeMs
+      || fs.statSync(there).size !== fs.statSync(here).size;
+    if (older) { fs.copyFileSync(here, there); n++; }
+  }
+  return n;
+}
 const outFile = path.join(pagesDir, 'index.html');
 
 /*
@@ -398,4 +419,6 @@ console.log(`  sprites ${kb(assetBytes)} raw -> ${kb(JSON.stringify(assets).leng
 console.log(`  realm   ${Object.keys(realmMonsterSprites).length} client sprites + ${Object.keys(realmCatalogSprites).length} imported sprites + ${Object.keys(realmMonsterAnimations).length} animated loops inlined`);
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');
+const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDir, 'assets', 'atlas'));
+if (carried) console.log(`  atlas   ${carried} files copied to docs/assets/atlas`);
 console.log('  served as index.html, downloadable as RotMG-Enchant-Calculator.html\n');

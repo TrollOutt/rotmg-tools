@@ -1839,14 +1839,11 @@ table.mini td { padding: 3px 8px; border: 0; }
   <header class="masthead realm-head">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Realm Atlas</h1>
-    <p>The realm as it was actually walked, one tile for one. Hover a zone to pick it out, click it to go there and see what was met in it; scroll to zoom, drag to pan.</p>
+    <p>The New Realm at full size, tile for tile. Hover a zone to pick it out, click it to go there and see what lives in it; scroll to zoom, drag to pan.</p>
   </header>
   <main class="realm-stage-full">
     <iframe id="realmFrame" title="Realm Atlas" loading="lazy"></iframe>
-    <p id="realmMissing" class="note" hidden>
-      The atlas has not been built yet. Record some realm, then run
-      <code>node tools/realm-atlas-build.js</code>.
-    </p>
+    <p id="realmMissing" class="note" hidden>The atlas is unavailable just now.</p>
   </main>
 </div>
 
@@ -4618,8 +4615,7 @@ var WhatsNew = (function () {
       .then(index => show(index, null))
       .catch(() => {
         started = false;
-        $('newsScale').innerHTML = '<span class="note warn">No comparison has been made yet. '
-          + 'Run <code>node tools/diff-client.js</code>.</span>';
+        $('newsScale').innerHTML = '<span class="note warn">Nothing to show just now.</span>';
       });
   }
 
@@ -6906,7 +6902,7 @@ async function load() {
     console.error(error);
     $('status').textContent = location.protocol === 'file:'
       ? 'This copy of index.html needs the local server. Use the single-file build (RotMG-Enchant-Calculator.html) to open it straight from disk.'
-      : 'Could not read the original data files. Start the local server from the repository root (npm run dev).';
+      : 'Could not read the data files.';
     $('status').classList.add('bad');
   }
 }
@@ -6935,8 +6931,6 @@ async function openFamePage() {
     const overrides = bundled && bundled.overrideText ? bundled.overrideText
       : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
         .then(response => response.text()).catch(() => '');
-    // The standalone build carries the portal pictures inlined; served from
-    // the repository they are read from disk like every other sprite.
     // Kept so the background can scatter the same portals the page shows.
     ambience.fameText = text;
     FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides);
@@ -6962,19 +6956,14 @@ function showPage(name) {
     WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
   }
   /*
-   * The atlas is its own page, held in a frame.
-   *
-   * It is built from recordings of the realm rather than from anything in the
-   * client, so it lives outside the app's assets - twenty-three megabytes of
-   * ground at five scales, which is not something to carry in a page that most
-   * people open for the calculator. The frame is pointed at it the first time
-   * the tab is opened and left alone after that, so panning and zooming are
-   * not thrown away by switching tabs.
+   * The atlas is its own page, held in a frame. It is pointed at the first
+   * time the tab is opened and left alone after that, so panning and zooming
+   * survive a switch to another tool and back.
    */
   if (page === 'realm') {
     const frame = $('realmFrame');
     if (frame && !frame.src) {
-      const base = (window.ATLAS_BASE || '../local/atlas/');
+      const base = (window.ATLAS_BASE || 'assets/atlas/');
       fetch(base + 'atlas.json', { method: 'HEAD' })
         .then(response => {
           if (!response.ok) throw new Error('no atlas');
