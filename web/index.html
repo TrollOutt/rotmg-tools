@@ -41,12 +41,15 @@
       <em class="home-card-go">Explore →</em>
     </button>
 
-    <button type="button" class="home-card" data-go="news" style="--i:3">
-      <span class="home-card-art news-card-glyph" aria-hidden="true">✧</span>
-      <span class="home-card-title">What's New</span>
-      <span class="home-card-line">Everything the last update brought.</span>
-      <small>Every weapon, ability, skin and creature the client gained or lost since the previous build, with its own artwork and every number that moved.</small>
-      <em class="home-card-go">See it →</em>
+    <button type="button" class="home-card home-card-news" data-go="news" style="--i:3">
+      <span class="news-card-mark" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </span>
+      <span class="home-card-kicker">Latest update</span>
+      <span class="home-card-title">Month of the Mad God</span>
+      <span class="home-card-line">Season 30, Part 2 — Time Chamber</span>
+      <small>Every weapon, ability, skin and place the client gained since the build before it, drawn with its own artwork and moving where the game moves it.</small>
+      <em class="home-card-go">See what changed →</em>
     </button>
   </div>
 
@@ -59,21 +62,15 @@
 
 <!-- Realm Atlas ------------------------------------------------------ -->
 <div id="pageNews" class="app page" hidden>
-  <header class="masthead">
+  <header class="masthead news-head">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
-    <h1>What's New</h1>
-    <p id="newsHead">Reading the client…</p>
+    <h1 id="newsTitle">What's New</h1>
+    <p id="newsHead"></p>
+    <p id="newsScale" class="news-scale"></p>
   </header>
   <main class="news-layout">
-    <div class="news-bar">
-      <div class="chip-row" id="newsDrawers"></div>
-      <div class="news-bar-end">
-        <div class="chip-row" id="newsStates"></div>
-        <input id="newsSearch" type="search" placeholder="Search by name, label or text" aria-label="Search what's new">
-        <span class="news-count" id="newsCount"></span>
-      </div>
-    </div>
-    <div class="news-grid" id="newsGrid"></div>
+    <div class="news-groups" id="newsGroups"></div>
+    <div id="newsNotes"></div>
   </main>
 </div>
 

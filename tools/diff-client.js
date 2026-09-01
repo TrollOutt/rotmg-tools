@@ -362,8 +362,8 @@ function cutter() {
 /* ------------------------------------------------------------------ *
  * Which drawer a thing belongs in                                     *
  * ------------------------------------------------------------------ */
-const WEAPON = /^(BOW|STAFF|WAND|SWORD|DAGGER|KATANA)$/;
-const ABILITY = /^(SPELL|TOME|CLOAK|QUIVER|HELM|SHIELD|SEAL|POISON|SKULL|TRAP|ORB|PRISM|SCEPTER|STAR|WAKIZASHI|LUTE|MASK)$/;
+const WEAPON = /^(BOW|STAFF|WAND|SWORD|DAGGER|KATANA|TACHI)$/;
+const ABILITY = /^(SPELL|TOME|CLOAK|QUIVER|HELM|SHIELD|SEAL|POISON|SKULL|TRAP|ORB|PRISM|SCEPTER|STAR|WAKIZASHI|LUTE|MASK|SIGIL|MACE)$/;
 /*
  * The machinery behind the game, which is not news.
  *
@@ -373,6 +373,17 @@ const ABILITY = /^(SPELL|TOME|CLOAK|QUIVER|HELM|SHIELD|SEAL|POISON|SKULL|TRAP|OR
  * size of an update is worth knowing, but no picture is cut for them and they
  * are not put in front of you.
  */
+/*
+ * What is put in front of you.
+ *
+ * An update moves a great many objects and most of them are not news. What
+ * is kept is what a player holds, wears, becomes or walks into; creatures,
+ * consumables and machinery are counted in the summary and go no further,
+ * because a page of two hundred and thirty-five monsters is a page nobody
+ * reads.
+ */
+const SHOWN = ['weapons', 'abilities', 'armour', 'rings', 'skins', 'pets', 'equipment', 'places'];
+
 const BACKSTAGE = /^(Projectile|Wall|Summon|PlayerSpawnedObject|PetBehavior|ConnectedWall|CaveWall|Container|Merchant|GuildHallPortal|Sign|Stalagmite|Character Changer|Name Changer|Vault Chest|Reskin)$/;
 
 function drawerOf(thing) {
@@ -381,11 +392,13 @@ function drawerOf(thing) {
   const id = thing.id;
 
   if (kind === 'Skin' || labels.has('SKIN')) return 'skins';
-  if (kind === 'PetSkin' || /Pet (Skin|Stone)$/.test(id)) return 'pets';
+  if (kind === 'PetSkin' || /Pet (Skin|Stone)$/.test(id)) return 'pets';
   if (kind === 'Equipment' || kind === 'Dye') {
     // The item that unlocks a skin is filed with the skin it unlocks, not
     // among the equipment, because that is what anyone looking for it means.
-    if (/Skin$/.test(id)) return 'skins';
+    if (/Skin$/.test(id)) return 'skins';
+    // A "Proc" is the invisible thing an item fires, not an item.
+    if (/Proc/.test(id)) return 'backstage';
     for (const label of thing.labels) {
       if (WEAPON.test(label)) return 'weapons';
       if (ABILITY.test(label)) return 'abilities';
@@ -524,25 +537,59 @@ function main() {
       const drawer = drawerOf(thing);
       if (!drawers[drawer]) drawers[drawer] = { added: [], changed: [], gone: [] };
       if (why === 'gone') { drawers[drawer].gone.push({ id: thing.id, labels: thing.labels }); continue; }
-      // The backstage is counted and named, and costs nothing to carry.
-      drawers[drawer][why].push(drawer === 'backstage'
-        ? { id: thing.id, facts: { class: thing.facts['class'] || null }, labels: [], moved: thing.moved }
-        : withArt(thing));
+      // Only what is shown is drawn; the rest is a number in the summary.
+      drawers[drawer][why].push(SHOWN.includes(drawer)
+        ? withArt(thing)
+        : { id: thing.id, facts: { class: thing.facts['class'] || null }, labels: [] });
     }
   };
   file(added, 'added');
   file(changed, 'changed');
   file(gone, 'gone');
 
+  // Everything that moved, by drawer, so the summary can say how big the
+  // update was even for the parts that are not put on show.
+  const tally = {};
+  for (const [name, drawer] of Object.entries(drawers)) {
+    tally[name] = { added: drawer.added.length, changed: drawer.changed.length, gone: drawer.gone.length };
+  }
+  for (const name of Object.keys(drawers)) if (!SHOWN.includes(name)) delete drawers[name];
+
   const buildOf = dir => {
     const snap = path.join(root, 'data', 'client-snapshot.txt');
     const m = fs.existsSync(snap) ? /^build\|(.+)$/m.exec(fs.readFileSync(snap, 'utf8')) : null;
     return m ? m[1] : null;
   };
+  /*
+   * And why any of it happened, which no client will ever say. The one
+   * hand-written part of the page, kept as its own dated file.
+   */
+  const notes = (() => {
+    const dir = path.join(root, 'data', 'Updates');
+    if (!fs.existsSync(dir)) return null;
+    const files = fs.readdirSync(dir).filter(n => /\.txt$/.test(n)).sort();
+    if (!files.length) return null;
+    const out = { parts: [] };
+    let part = null;
+    const text = fs.readFileSync(path.join(dir, files[files.length - 1]), 'utf8');
+    for (const line of text.split(/\r?\n/)) {
+      if (!line || line.startsWith('#')) continue;
+      const cut = line.indexOf('|');
+      if (cut < 0) continue;
+      const kind = line.slice(0, cut), body = line.slice(cut + 1);
+      if (kind === 'part') { part = { title: body, points: [] }; out.parts.push(part); }
+      else if (kind === 'point') { if (part) part.points.push(body); }
+      else out[kind] = body;
+    }
+    return out.parts.length ? out : null;
+  })();
+
   const index = {
     made: new Date().toISOString().slice(0, 10),
+    notes,
     before: buildOf(BEFORE),
     counts: { added: added.length, changed: changed.length, gone: gone.length },
+    tally,
     drawers
   };
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1) + '\n');
