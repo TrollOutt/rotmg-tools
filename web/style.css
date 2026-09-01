@@ -1567,117 +1567,130 @@ table.mini td { padding: 3px 8px; border: 0; }
  * On a large screen the app locks the body to the window and hides its
  * overflow, because the calculator is a set of columns that each scroll on
  * their own. That is right for the calculator and wrong for a page that is
- * simply long: it left this one with two thirds of its content below the
- * window and no way to reach it. So the news page keeps its heading in place
- * and gives the scrolling to the part that needs it.
+ * simply long. It scrolls one way only: anything wide enough to push the page
+ * sideways is a mistake in the thing, not a reason to let the page slide.
  */
 .news-layout {
-  display: flex; flex-direction: column; gap: 22px;
+  display: flex; flex-direction: column; gap: 20px;
   padding: 0 18px 48px;
   flex: 1 1 auto; min-height: 0;
-  overflow-y: auto; overscroll-behavior: contain;
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
-#pageNews.page { display: flex; flex-direction: column; }
+#pageNews.page { display: flex; flex-direction: column; overflow: hidden; }
 #pageNews .masthead { flex: none; }
 
-/* The account of the update, in its own column so it reads as prose. */
-.wn-notes { max-width: 62rem; }
-.wn-lede { margin: 0 0 14px; font-size: 1.02em; line-height: 1.6; opacity: .9; }
-.wn-parts { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
-.wn-parts article {
-  padding: 12px 14px; border-radius: 12px;
-  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+/* ---- the account of the update, as a contents page ---- */
+.wn-notes { max-width: 74rem; }
+.wn-lede { margin: 0 0 12px; font-size: 1rem; line-height: 1.6; opacity: .88; max-width: 62rem; }
+.wn-contents { display: grid; gap: 5px; }
+.wn-part {
+  border-radius: 10px; overflow: hidden;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.08);
 }
-.wn-parts h3 { margin: 0 0 6px; font-size: .82rem; letter-spacing: .06em;
-  text-transform: uppercase; color: #ffcb70; opacity: .85; }
-.wn-parts ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
-.wn-parts li { font-size: .85em; line-height: 1.5; opacity: .82; }
+.wn-part.is-open { background: rgba(255,255,255,.085); border-color: rgba(255,203,112,.28); }
+.wn-part-head {
+  width: 100%; display: flex; align-items: baseline; gap: 12px;
+  padding: 9px 14px; font: inherit; color: inherit; text-align: left;
+  background: none; border: 0; cursor: pointer;
+}
+.wn-part-head:hover { background: rgba(255,255,255,.05); }
+.wn-part-mark {
+  flex: none; width: 0; height: 0; align-self: center;
+  border-left: 5px solid #ffcb70; border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform .16s ease; transform-origin: 30% 50%;
+}
+.wn-part.is-open .wn-part-mark { transform: rotate(90deg); }
+.wn-part-title { font-weight: 600; font-size: .95rem; white-space: nowrap; }
+.wn-part-blurb { font-size: .82em; opacity: .5; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-part-count { margin-left: auto; font-size: .74em; opacity: .4; font-variant-numeric: tabular-nums; }
+.wn-part ul { margin: 0; padding: 0 18px 12px 34px; display: grid; gap: 5px; }
+.wn-part li { font-size: .87em; line-height: 1.55; opacity: .85; }
 
 /*
  * The shelf.
  *
- * An invisible grid: no rules, no boxes around the boxes, the columns only
- * implied by where things land. An open group takes the whole width and the
- * rest keep their places underneath, so closing it puts you back where you
- * were rather than somewhere new.
+ * An invisible grid of tiles that are all the same size, whatever they hold.
+ * A group whose things happen to be drawn twice as tall should not be twice
+ * as tall itself; the shelf only reads as a shelf if the tiles match. An open
+ * group takes the whole width and the rest keep their places underneath.
  */
 .news-groups {
-  display: grid; gap: 14px;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
   align-items: start;
 }
 .wn-group {
-  display: flex; flex-direction: column; gap: 10px;
-  padding: 14px 16px; border-radius: 14px;
-  background: rgba(255,255,255,.032);
-  border: 1px solid rgba(255,255,255,.06);
-  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 13px 15px; border-radius: 13px; cursor: pointer;
+  min-height: 132px;
+  background: rgba(20,24,33,.82);
+  border: 1px solid rgba(255,255,255,.1);
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
 }
-.wn-group[role="button"] { cursor: pointer; }
-.wn-group[role="button"]:hover { background: rgba(255,255,255,.06); transform: translateY(-2px); }
-.wn-group[role="button"]:focus-visible { outline: 2px solid #ffcb70; outline-offset: 2px; }
-.news-groups.has-open .wn-group:not(.is-open) { opacity: .5; }
+.wn-group:hover { background: rgba(28,33,44,.92); border-color: rgba(255,203,112,.3); transform: translateY(-2px); }
+.wn-group:focus-visible { outline: 2px solid #ffcb70; outline-offset: 2px; }
+.news-groups.has-open .wn-group:not(.is-open) { opacity: .62; }
 .wn-group.is-open {
-  grid-column: 1 / -1; order: -1;
-  background: rgba(255,255,255,.05);
+  grid-column: 1 / -1; order: -1; cursor: default;
+  background: rgba(20,24,33,.92);
   border-color: rgba(255,203,112,.3);
 }
-.wn-group header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
-.wn-group.is-open header {
-  position: sticky; top: -14px; z-index: 3;
-  margin: -14px -16px 0; padding: 12px 16px 10px;
-  background: linear-gradient(#171b24 78%, rgba(23,27,36,0));
-  border-radius: 14px 14px 0 0;
+.wn-group header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; }
+.wn-group.is-open > header {
+  position: sticky; top: -13px; z-index: 3; cursor: pointer;
+  margin: -13px -15px 0; padding: 12px 15px 10px;
+  background: linear-gradient(rgba(20,24,33,.97) 80%, rgba(20,24,33,0));
+  border-radius: 13px 13px 0 0;
 }
-.wn-group h3 { margin: 0; font-size: 1.02rem; }
-.wn-tally { margin: 0; font-size: .78em; color: #ffcb70; opacity: .85; }
-.wn-hint { margin: 0 0 0 auto; font-size: .78em; opacity: .45; }
-.wn-shut {
-  margin-left: auto; font: inherit; font-size: .78em; cursor: pointer;
-  padding: 3px 10px; border-radius: 999px; color: inherit;
-  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+.wn-group h3 { margin: 0; font-size: 1rem; }
+.wn-tally { margin: 0; font-size: .76em; color: #ffcb70; opacity: .9; }
+.wn-hint { margin: 0 0 0 auto; font-size: .74em; opacity: .4; }
+
+/* Four boxes of one size, the picture centred in each. */
+.wn-four { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: auto; }
+.wn-four-one {
+  display: flex; align-items: center; justify-content: center;
+  height: 52px; border-radius: 8px; background: rgba(255,255,255,.045);
 }
 
-.wn-four { display: flex; gap: 12px; align-items: flex-end; min-height: 58px; }
-.wn-four-one { display: block; }
-
-/* One row per thing when a group is open, laid out in columns of its own. */
 .wn-list {
   list-style: none; margin: 0; padding: 0;
-  display: grid; gap: 10px;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  display: grid; gap: 9px;
+  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
 }
 .wn-row {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 10px 12px; border-radius: 10px;
-  background: rgba(255,255,255,.03);
+  display: flex; gap: 11px; align-items: flex-start; min-width: 0;
+  padding: 9px 11px; border-radius: 10px;
+  background: rgba(255,255,255,.05);
 }
 .wn-row.wn-gone { opacity: .5; }
-.wn-row-body { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.wn-row h4 { margin: 0; font-size: .92rem; line-height: 1.3; }
+.wn-row-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wn-row h4 { margin: 0; font-size: .9rem; line-height: 1.3; overflow-wrap: anywhere; }
 .wn-why {
-  margin-left: 8px; font-size: .64em; font-style: normal; letter-spacing: .08em;
-  text-transform: uppercase; padding: 2px 7px; border-radius: 999px; vertical-align: middle;
+  margin-left: 7px; font-size: .62em; font-style: normal; letter-spacing: .08em;
+  text-transform: uppercase; padding: 2px 6px; border-radius: 999px; vertical-align: middle;
 }
-.wn-why-added { background: rgba(143,240,181,.14); color: #8ff0b5; }
-.wn-why-changed { background: rgba(255,203,112,.14); color: #ffcb70; }
-.wn-why-gone { background: rgba(255,255,255,.08); opacity: .7; }
+.wn-why-added { background: rgba(143,240,181,.16); color: #8ff0b5; }
+.wn-why-changed { background: rgba(255,203,112,.16); color: #ffcb70; }
+.wn-why-gone { background: rgba(255,255,255,.09); opacity: .7; }
 
 .wn-labels { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
 .wn-labels span {
-  font-size: .64em; letter-spacing: .05em; padding: 2px 6px; border-radius: 999px;
-  background: rgba(255,255,255,.07); opacity: .75;
+  font-size: .62em; letter-spacing: .05em; padding: 2px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.08); opacity: .8;
 }
 
-.wn-facts { display: flex; flex-wrap: wrap; gap: 3px 12px; margin: 0; font-size: .8em; }
-.wn-facts span { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wn-facts { display: flex; flex-wrap: wrap; gap: 2px 11px; margin: 0; font-size: .79em; }
+.wn-facts span { font-variant-numeric: tabular-nums; }
 .wn-facts i { font-style: normal; opacity: .5; }
 .wn-moved s { opacity: .45; }
 .wn-moved b { color: #8ff0b5; font-weight: 600; }
-.wn-rewrite { margin: 0; font-size: .8em; line-height: 1.45; }
+.wn-rewrite { margin: 0; font-size: .79em; line-height: 1.45; overflow-wrap: anywhere; }
 .wn-rewrite i { font-style: normal; opacity: .5; }
-.wn-desc { margin: 0; font-size: .8em; opacity: .6; font-style: italic; line-height: 1.45; }
+.wn-desc { margin: 0; font-size: .79em; opacity: .62; font-style: italic; line-height: 1.45; overflow-wrap: anywhere; }
 
 /*
  * A sprite plays the way the game plays it: the walk cycle at rest, the
@@ -1686,15 +1699,12 @@ table.mini td { padding: 3px 8px; border: 0; }
  * or the frames would smear into one another.
  */
 .wn-art {
-  /* A span ignores width and height until it is told to be a block, and
-     outside a flex row nothing tells it. */
-  display: block;
-  flex: none; image-rendering: pixelated;
+  display: block; flex: none; image-rendering: pixelated;
   background-repeat: no-repeat;
   background-image: var(--wn-rest);
   background-size: var(--wn-rest-w) 100%;
 }
-.wn-art-empty { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,.05); }
+.wn-art-empty { width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,.06); }
 .wn-art.is-moving {
   animation: wn-frames var(--wn-rest-time) steps(var(--wn-rest-steps)) infinite;
 }
@@ -1713,5 +1723,23 @@ table.mini td { padding: 3px 8px; border: 0; }
   to   { background-position-x: calc(-1 * var(--wn-busy-w)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wn-art, .wn-row:hover .wn-art, .news-card-mark i { animation: none; }
+  .wn-art, .wn-row:hover .wn-art, .news-bell-glyph, .news-bell-dot { animation: none; }
 }
+
+/* ------------------------------------------------------------------ *
+ * Realm Atlas                                                         *
+ * ------------------------------------------------------------------ */
+/*
+ * The atlas fills whatever is left under the heading. It is a page of its
+ * own inside a frame, so all that is wanted here is the room.
+ */
+#pageRealm.page { display: flex; flex-direction: column; overflow: hidden; }
+#pageRealm .masthead { flex: none; }
+.realm-stage-full {
+  flex: 1 1 auto; min-height: 0; position: relative;
+  margin: 0 18px 18px; border-radius: 14px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.09);
+  background: #070a10;
+}
+.realm-stage-full iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.realm-stage-full .note { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }

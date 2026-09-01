@@ -578,6 +578,7 @@ function main() {
       if (cut < 0) continue;
       const kind = line.slice(0, cut), body = line.slice(cut + 1);
       if (kind === 'part') { part = { title: body, points: [] }; out.parts.push(part); }
+      else if (kind === 'blurb') { if (part) part.blurb = body; }
       else if (kind === 'point') { if (part) part.points.push(body); }
       else out[kind] = body;
     }
