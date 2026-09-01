@@ -254,8 +254,6 @@ const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
-const realmDataSource = readWeb('realm-data.js');
-const realmMapSource = readWeb('realm-map.js');
 const whatsNewSource = readWeb('whats-new.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
@@ -338,8 +336,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = '<script src="engine.js"></script>\n<script src="items.js"></script>\n'
-  + '<script src="fame.js"></script>\n<script src="fame-page.js"></script>\n<script src="realm-data.js"></script>\n<script src="realm-map.js"></script>\n<script src="whats-new.js"></script>\n<script src="app.js"></script>';
+const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -367,8 +364,6 @@ page = page
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,
     `<script>\n${safe(famePageSource)}\n</script>`,
-    `<script>\n${safe(realmDataSource)}\n</script>`,
-    `<script>\n${safe(realmMapSource)}\n</script>`,
     `<script>\n${safe(whatsNewSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))

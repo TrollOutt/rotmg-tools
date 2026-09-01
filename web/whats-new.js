@@ -183,28 +183,53 @@ var WhatsNew = (function () {
     if (isOpen) {
       inner = '<ul class="wn-list">' + everything(name).map(rowOf).join('') + '</ul>';
     } else {
-      inner = '<div class="wn-four">' + fourOf(name).map(t =>
-        '<span class="wn-four-one" title="' + esc(t.id) + '">' + pictureOf(t, 52) + '</span>'
+      /*
+       * Four boxes of one size, whatever is put in them. A group whose things
+       * happen to be drawn sixteen pixels tall should not be twice the height
+       * of one whose things are eight: the shelf reads as a shelf only if the
+       * tiles are the same, so the picture is centred in a fixed box rather
+       * than the box being cut to the picture.
+       */
+      const four = fourOf(name);
+      inner = '<div class="wn-four">' + four.map(t =>
+        '<span class="wn-four-one" title="' + esc(t.id) + '">' + pictureOf(t, 40) + '</span>'
       ).join('') + '</div>';
     }
     return '<section class="wn-group' + (isOpen ? ' is-open' : '') + '" data-group="' + name + '"'
-      + (isOpen ? '' : ' role="button" tabindex="0"') + '>'
+      + ' role="button" tabindex="0">'
       + '<header><h3>' + esc(label) + '</h3>'
       + '<p class="wn-tally">' + esc(parts.join(' · ')) + '</p>'
-      + (isOpen ? '<button type="button" class="wn-shut" data-shut="1">close</button>'
-        : '<p class="wn-hint">' + esc(hint) + '</p>') + '</header>'
+      + '<p class="wn-hint">' + esc(isOpen ? 'click the heading to close' : hint) + '</p>'
+      + '</header>'
       + inner + '</section>';
   }
 
+  /*
+   * The account of the update as a contents page.
+   *
+   * Nine sections laid out side by side is a wall of small print that has to
+   * be read to be navigated. As a list of headings it can be scanned instead:
+   * each line says what it is about in a few words, and opens where it is
+   * standing rather than sending you somewhere. Only one is open at a time,
+   * because the point is to keep the other eight in view.
+   */
+  let openNote = -1;
   function notesOf() {
     const notes = data.notes;
     if (!notes) return '';
     return '<section class="wn-notes">'
       + (notes.lede ? '<p class="wn-lede">' + esc(notes.lede) + '</p>' : '')
-      + '<div class="wn-parts">' + (notes.parts || []).map(part =>
-        '<article><h3>' + esc(part.title) + '</h3><ul>'
-        + part.points.map(point => '<li>' + esc(point) + '</li>').join('')
-        + '</ul></article>').join('') + '</div>'
+      + '<div class="wn-contents">' + (notes.parts || []).map((part, i) =>
+        '<article class="wn-part' + (openNote === i ? ' is-open' : '') + '" data-note="' + i + '">'
+        + '<button type="button" class="wn-part-head">'
+        + '<span class="wn-part-mark" aria-hidden="true"></span>'
+        + '<span class="wn-part-title">' + esc(part.title) + '</span>'
+        + '<span class="wn-part-blurb">' + esc(part.blurb || '') + '</span>'
+        + '<span class="wn-part-count">' + part.points.length + '</span>'
+        + '</button>'
+        + (openNote === i ? '<ul>' + part.points.map(point =>
+          '<li>' + esc(point) + '</li>').join('') + '</ul>' : '')
+        + '</article>').join('') + '</div>'
       + '</section>';
   }
 
@@ -262,14 +287,26 @@ var WhatsNew = (function () {
       if (!data) return;
       const page = $('pageNews');
       if (!page || page.hidden) return;
-      const shut = event.target.closest('[data-shut]');
-      if (shut) { open = null; render('back'); return; }
+      /*
+       * A group is its own switch. Clicking it opens it and clicking its
+       * heading again closes it, so there is nothing extra on the card to
+       * find and nothing to explain - which is what a close button was.
+       */
+      const heading = event.target.closest('.wn-group.is-open > header');
+      if (heading) { open = null; render('back'); return; }
       const group = event.target.closest('.wn-group');
       if (group && !group.classList.contains('is-open')) {
         const box = scroller();
         wasAt = box ? box.scrollTop : 0;
         open = group.dataset.group;
         render();
+        return;
+      }
+      const note = event.target.closest('[data-note]');
+      if (note) {
+        const which = Number(note.dataset.note);
+        openNote = openNote === which ? -1 : which;
+        $('newsNotes').innerHTML = notesOf();
         return;
       }
       if (!group && open) { open = null; render('back'); }

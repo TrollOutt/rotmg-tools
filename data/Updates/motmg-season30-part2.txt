@@ -15,12 +15,14 @@ date|2026-09-01
 lede|Ten years since Oryx took the realm, and the anniversary is the update. A hub of twelve portals leads to classic dungeons rebuilt as they were; six new encounters fill the biomes that had none; and an event runs five weeks on top of it.
 
 part|The Time Chamber
+blurb|Twelve portals to dungeons rebuilt as they used to be.
 point|A hub room ringed by twelve Legacy Portals, each leading to a classic dungeon rebuilt one for one — same sprites, same monsters, same loot.
 point|Pirate Cave, Forest Maze, Spider Den, Sprite World, Abyss of Demons, Undead Lair, Deadwater Docks, Crawling Depths, Woodland Labyrinth, Shaitan's Lair, Lair of Draconis, The Shatters.
 point|The portal at twelve o'clock is the gentlest and they get harder clockwise. They hit as hard as they used to.
 point|The Keyper appears at 33% and 66% of each realm's completion, and he is the way in.
 
 part|Six new encounters, thirteen new whites
+blurb|The biomes that had nothing to fight, and what they now drop.
 point|The realm rework left some biomes short of encounters — Risen Hell had only the Skull Shrine, and not exclusively. These fill the gaps, and every class now has an event white of its own.
 point|Artificial Slop in the Haunted Hallows, Cold Soul in the Risen Hell, Towering Perfection in the Sprite Forest, Man-eating Barnacle in the Coral Reefs, Stygian Mirror in the Risen Hell, Cube Deity in the Deep Sea Abyss.
 point|Shifting Shroud, Cold Front, Babel Blocks, Barnacle Shell, Obsidian Lyre, Rectangular Prism, Wrathful Conduit, Rift Rippers, Scary Stories, General's Arsenal, Fossilized Skull, Skeletal Sigilpede, Ravenous Wand.
@@ -28,17 +30,20 @@ point|Ray Katana was reworked into something worth its rarity: it now fires a la
 point|Skull Shrine is now exclusive to the Risen Hell, Cube God to the Sprite Forest, and the Sprite Forest finally has conveyors.
 
 part|Venerable equipment
+blurb|Old gear rebuilt as a set, and the ring the Forge makes of it.
 point|Existing gear rebuilt and improved, designed as a set: the bonus lands once a weapon, an armour and a ring are all worn. No ability item is part of it.
 point|Weapons — Venerable Ancient Stone Sword, Spirit Dagger, Doom Bow, Staff of the Crystal Serpent, Crystal Wand, Doku no Ken.
 point|Armour — Venerable Resurrected Warrior's Armor, Coral Silk Armor, Robe of the Mad Scientist.
 point|Rings — Venerable Ring of the Pyramid, of the Nile, of the Sphinx. Combine the three in the Forge for the Decades Chronicle.
 
 part|Timekeeper Mystic
+blurb|Four items, one transformation, fourteen shards to get there.
 point|A UT set reskin marking the Mystic's rework: Staff of Rich History, Entrancing Hourglass, Traditional Blouse, Bronze Pocketwatch.
 point|Collect all four and you can transform into the Timekeeper Mystic. It comes as a mini-skin too.
 point|Fourteen shards feed the set; missions dedicated to the Mystic pay them out, and a full set exchanges for a chest you choose from.
 
 part|Missions and campaigns
+blurb|Where the tokens, the emotes and the celestial skins come from.
 point|A new mission tree, The Forgotten Legacy, runs the whole event: missions for the Mystic set, for the legacy dungeons, for each new encounter's white, and for the emotes.
 point|A free campaign, Relics of the Past, runs five weeks. Forgotten Relics are scattered through the realm and its dungeons; right-click them in your inventory. Thirty stack to a slot.
 point|Retrowinds tokens now come only from missions — no longer from dungeons or the Battle Pass — and missions pay more of them to compensate. Twenty of a kind buy a Selection Chest.
@@ -46,10 +51,12 @@ point|Six new emotes are mission rewards: Dancing Cubes, Load of Barnacles, Goof
 point|Celestial quests refresh weekly, and the season 3 to 6 quests are gone. Sixty Celestial Stones buy the new Wizard skin.
 
 part|Battle Pass — The Old Ways
+blurb|Five weeks, two new skins, three old collections finished.
 point|Runs 1 September to 6 October. New skins for the Bard and the Knight.
 point|Three old collections can be finished at last, each gaining its Druid: Antinomy, Syndicate Henchman, Kingdom.
 
 part|Weekly rotation
+blurb|Which dungeons pay extra, and what opens after the chest.
 point|Week 1 — Crawling Depths and Ice Citadel, then Battle for the Nexus.
 point|Week 2 — Woodland Labyrinth and The Shatters, then Mad God Mayhem.
 point|Week 3 — Deadwater Docks and Lost Halls, then Trials of Cronus.
@@ -59,6 +66,7 @@ point|Breaking the event chest opens the special dungeon 33% of the time in Adep
 point|Oryx's Sanctuary stands open from 29 September.
 
 part|Changed, not added
+blurb|The Crucible, Cronus and the Retrowinds engravings, rebalanced.
 point|The Crucible was rebuilt after the season's feedback: +10 DEF, +5 ATT, +5 DEX; shots over 15 damage carry a 30% chance of Exposed for 3 seconds on a 4 second cooldown; +20% loot, +15% BXP, +20% XP.
 point|Trials of Cronus is a boss rush now — minion waves gone, two bosses to choose from each round instead of three, and every boss given a balance pass. It expects 6/8.
 point|Round order — Sandstone Titan or Fountain Spirit, Ruthven or Corruption Phantom, Davy Jones or Thessal, Heroic Septavius or Infernal Malphas, then the Perfected Cube God.
@@ -66,6 +74,7 @@ point|Retrowinds gear drops at guaranteed Rare rarity. The weapon engraving call
 point|Thirteen biome shinies: Adventurer's Scarf, Torrential Staff, Celestial Recurve, Mace of the Pumpkin Effigy, Pirate's Artillery, Skull of Restless Souls, Doom's Emblem, Cavalry Lance, Cloak of the Deep, Evolutionary Records, Pollen Incendiary, Bloodbath Blade, Runes of Knowledge.
 
 part|Leaderboards
+blurb|Two boards on the Time Chamber, and what the top brackets pay.
 point|Two boards for the Time Chamber: one for completions and tenacity, one for speed. The twelve legacy dungeons award points by how fast you clear them and how hard they are.
 point|Weeks 1 to 3 pay a Collection Chest and utility items at the top 30%, dust and quest chests at 15%, stat candy at 5%.
 point|Week 4 adds sulphur at 15% and the Decades Chronicle at 5%. Week 5 pays a Season Vault Unlocker and a Seasonal Apple at 5%, after the season closes.

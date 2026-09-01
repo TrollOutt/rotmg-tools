@@ -2331,7 +2331,28 @@ function showPage(name) {
   if (page === 'news' && typeof WhatsNew !== 'undefined') {
     WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
   }
-  if (typeof RealmMap !== 'undefined') RealmMap.setVisible(page === 'realm');
+  /*
+   * The atlas is its own page, held in a frame.
+   *
+   * It is built from recordings of the realm rather than from anything in the
+   * client, so it lives outside the app's assets - twenty-three megabytes of
+   * ground at five scales, which is not something to carry in a page that most
+   * people open for the calculator. The frame is pointed at it the first time
+   * the tab is opened and left alone after that, so panning and zooming are
+   * not thrown away by switching tabs.
+   */
+  if (page === 'realm') {
+    const frame = $('realmFrame');
+    if (frame && !frame.src) {
+      const base = (window.ATLAS_BASE || '../local/atlas/');
+      fetch(base + 'atlas.json', { method: 'HEAD' })
+        .then(response => {
+          if (!response.ok) throw new Error('no atlas');
+          frame.src = base + 'index.html';
+        })
+        .catch(() => { frame.hidden = true; $('realmMissing').hidden = false; });
+    }
+  }
   window.scrollTo(0, 0);
 
   /*
@@ -2376,7 +2397,7 @@ for (const image of document.querySelectorAll('[data-art]')) {
   if (src) image.src = src; else image.remove();
 }
 
-if (typeof RealmMap !== 'undefined') RealmMap.init();
+
 bind();
 routeFromHash();
 load();
