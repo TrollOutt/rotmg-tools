@@ -1,0 +1,47 @@
+## What does not belong on a map of a place.
+##
+## A walked recording keeps whatever happened to be standing there. Some of it
+## is the realm - trees, walls, monuments - and some of it is the afternoon:
+## other players and their pets, the bags their kills dropped, an attack that
+## was still in the air. The second kind comes back every time more of the
+## realm is walked, so it is turned away here rather than deleted afterwards,
+## and the map is built without it from the start.
+##
+## Four kinds of line, and anything after ## is a note:
+##
+##   class NAME   turn away everything the client files under that class
+##   id NAME      turn away one thing by the name the client gives it; * matches
+##   keep NAME    keep this one whatever else says, and it wins over everything
+##   life NAME    take this creature out of a place's list of what lives there
+##
+## Written 2026-09-02.
+
+## Other people, and what belongs to them rather than to the realm.
+class Player
+class Pet
+class PetAbility
+class PetBehavior
+class PlayerSpawnedObject
+class Trap
+class Decoy
+class Summon
+
+## Loot lies where it fell. The class catches a colour of bag nobody has seen
+## yet; the two below are furniture and stay.
+class Container
+keep Treasure Chest
+keep Realm Fishing Rod Dropper
+
+## Named among the creatures, but not creatures: a satellite is a projectile
+## held in orbit round its owner, and the rest are attacks that were in flight.
+life New Gray Satellite 1
+life New Gray Satellite 2
+life New Gray Satellite 3
+life New Green Satellite
+life New Red Satellite
+life Flesh Satellite
+life Daughter of Limon Laser
+life New Left Horizontal Trap
+life New Top Vertical Trap
+life Shipwreck Hag Whirlpool
+life New Shield Orc Shield

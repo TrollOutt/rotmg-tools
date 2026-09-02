@@ -27,7 +27,14 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const ATLAS = path.join(root, 'web', 'assets', 'atlas');
+/*
+ * Which atlas to work on. The published one by default; --atlas=DIR points it
+ * at a copy, which is how a change is looked at before it goes out.
+ */
+const asked = process.argv.find(one => one.startsWith('--atlas='));
+const ATLAS = asked
+  ? path.resolve(root, asked.slice('--atlas='.length))
+  : path.join(root, 'web', 'assets', 'atlas');
 const BOSS = path.join(ATLAS, 'boss');
 const CATALOG = path.join(root, 'web', 'assets', 'realm-catalog');
 const MONSTERS = path.join(root, 'web', 'assets', 'realm-monsters');
@@ -70,8 +77,8 @@ const BIOME_ZONES = {
    * creatures and a Floral Escape beacon guardian. Their ground was absorbed
    * into whatever the segmentation decided was next door.
    */
-  'high-plains': null,
-  'floral-escape': null,
+  'high-plains': 'High Plains',
+  'floral-escape': 'Floral Escape',
   'eternal-frost': null,
   'spring-of-meaning': null
 };
