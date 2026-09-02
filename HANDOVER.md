@@ -79,6 +79,30 @@ road, bit 1 impassable), blue is the zone id.
 
 ---
 
+## The generator, and the order things run in
+
+The atlas is not committed art — it is built, on the machine that has the game
+client, by a generator that is deliberately not in this repository. Written
+down here because the order matters and nothing else records it:
+
+    node tools/realm-render.js --copy       the ground, the water, the standing layer
+    node tools/realm-atlas-build.js         the pyramid, the zones, the page
+    node tools/merge-realm-roles.js         the ranks and the cast
+
+`--atlas=DIR` sends the last one at a copy; `--publish` on the second writes
+into `web/assets/atlas` instead of `local/atlas`. `prune-map.js` is no longer
+part of this: what does not belong on the map is turned away while it is being
+built, from `data/Realm/off-the-map.txt`, so it never comes back when more of
+the realm is walked. `refine-outline.js` still runs once, after.
+
+**The page is generated.** `web/assets/atlas/index.html` is built from
+`tools/atlas-viewer.html`, which is not in the repository either. Working on
+the built file directly means the next build throws the work away — that
+happened once, and cost six hundred lines of globe and zoom work that had to
+be lifted back into the template by hand. Change the template.
+
+---
+
 ## What is not available here
 
 Two data sources the repository is designed around were out of reach, which
@@ -88,6 +112,11 @@ shaped what could and could not be done.
 client). Without it there is no regenerating the realm data from source, and
 the atlas generator itself is not in the repository at all — only the tools
 listed below, which work on the committed assets.
+
+*On the machine with the client both of these are available,* and the two
+things they blocked have since been done: the encounters and heroes were cut
+out of the client (see `tools/boss-sprites.js`), and the merged Dead Church
+was split along its wildlife.
 
 **`realmeye.com` is unreachable from the machine this was done on** —
 connection reset on every path, any user agent, in Node and in a browser
@@ -226,6 +255,65 @@ synchronously against a box you set yourself, rather than counting frames:
 
 ---
 
+## What was done next, with the client to hand
+
+1. **The planet stopped costing what it was worth.** Measured on a 1388-wide
+   canvas it took 42ms a frame at zoom 1 and 25ms at 0.4, rebuilt from cold
+   every frame the view moved — about fourteen thousand small `drawImage`
+   calls. Three changes: the sphere is skipped entirely once a screenful of it
+   is flat to under half a pixel (`roundWorld`), which is every close zoom;
+   the disc is built at one pixel to the pixel rather than the screen's grain
+   while nothing stands on the ground; and the tolerance and band depth are
+   loosened over the same range, because the tight ones are only there so that
+   creatures land on their own ground. 42ms became 1.9, 25 became 2.3, and the
+   close zooms became free.
+2. **The realm stays in front of you.** The middle of the view is held inside
+   the realm with as much slack as there is realm left once the window has had
+   its share — so the slack falls to nothing as you pull back and zooming out
+   always ends looking at the island, never at empty ocean.
+3. **Turning turns the world.** It used to route to the flat camera, so the
+   map slid about under a planet that stayed still. The chart is spun before
+   it is bent onto the ball now, which is the order the things standing on it
+   already went through. **a** and **e** turn it, as in the game; they are a
+   published feature, not part of the bench.
+4. **What does not belong on the map is turned away as it is built,** from
+   `data/Realm/off-the-map.txt` — by the class the client files a thing under
+   rather than by a picture id, so it survives regeneration. That is what the
+   list of `things.png` ids in `prune-map.js` could not do. 5,219 placements
+   went: 2,270 other players, 272 of their pets, 382 pet effects, 2,267 loot
+   bags. Add a line to the file when more turns up.
+5. **The Dead Church was cut in two along its wildlife.** Both halves are laid
+   with the same grass, so no reading of the floor could ever separate them —
+   but their creatures are not mixed: 1,586 that name HigherPlains stand about
+   a point in the south-west and 703 that name DeadChurch about a point two
+   hundred tiles north-east. `cleaveByLife` in the atlas build cuts a patch
+   where the two voices are equal. It is deliberately shy — two terrains each
+   holding a quarter of the vote, sixty voices, their middles a fifth of the
+   diagonal apart — and on this map it fired exactly once.
+6. **The three across the top are Floral Escape**, and the rest of the Dead
+   Church is the High Plains. Written in `data/Realm/zone-names.txt`. Both
+   biomes now have a zone for `merge-realm-roles.js` to attach to, which took
+   it from 34 zones with a cast to 38 of 40.
+7. **Fifty-six encounters and heroes had no picture anywhere.** They are all in
+   the client; the difficulty was only that it does not call them what the wiki
+   does. `tools/boss-sprites.js` matches a name three ways — the id, the
+   DisplayId, and a single containing name — prints every match with the client
+   id it came from, and writes into `web/assets/realm-monsters` where the
+   roles tool already looks. 48 found, and 103 pictures now travel with the
+   atlas. The nine still missing are seasonal event bosses not in this build:
+   Hat God, Ice Cube God, Jolly Sphinx, Snow Shrine, Wrapped Dragon,
+   Chocolatier God, Hopping Goliath, Porcelain Egg, Spring Cabbage.
+8. **The side panel** shows the zone's rank, its encounters and Heroes of Oryx
+   with their pictures, what was met there, its beacons and their guardians,
+   and what the floor is made of. Wider, and with the contrast it lacked.
+
+Two matches in step 7 are worth an eye: *Rock Dragon* came from
+`LOD Rock Dragon Head` and reads as an orb rather than a dragon, and
+*Flying Behemoth* is smaller than the name suggests. Both are the client's own
+naming; neither has been checked against the wiki.
+
+---
+
 ## Still to do
 
 Roughly in the order it was asked for.
@@ -241,17 +329,16 @@ Roughly in the order it was asked for.
 - **More monsters.** 193 creatures have art in `web/assets/realm-monsters/` and
   are not on the map; 54 of those have an animated `.webp` as well. The
   RealmEye `regular` lists match those keys.
-- **Three zones are missing.** The imported data has 24 biomes; 20 have a zone
-  here. `high-plains` and `floral-escape` have none at all, although the
-  capture is full of Floral Escape creatures and a Floral Escape beacon
-  guardian — their ground was absorbed into whatever the segmentation decided
-  was next door. Zone 5 "Dead Church" is 68% *Dead Church Grass Light* and 23%
-  *Dead Church Grass Dark*, which is very likely Dead Church and the Withered
-  Plains merged. Splitting them properly wants the per-tile ground types from
-  `client-data/capture/realm-map.json`, which is not here; the fallback is
-  classifying the rendered `z0` pixels by colour, which is a heuristic and
-  should be shown as a before-and-after rather than pushed quietly. Floral
-  Escape is the three biomes across the top of the map.
-- **A bag with a pet egg** is still on the map somewhere; the loot-bag
-  silhouette family only turned up four colours and the brown one may or may
-  not be it.
+- **Two biomes still have no zone**, and both are seasonal: `eternal-frost` and
+  `spring-of-meaning` are not in this realm at all. The other two are done —
+  the High Plains were cut out of the Dead Church along its wildlife, and the
+  Floral Escape is the three patches across the top.
+- **The biome-to-zone join is worth re-reading.** Two of its lines were arrived
+  at when the zone names were poor, and look wrong now that they are not:
+  `low-plains` points at "Mid Plains" and `mid-plains` at "Mid Desert". They
+  were left alone rather than re-guessed, because a wrong attach puts the wrong
+  monsters on a place.
+- **The pet-egg bag is answered.** Bags are turned away by the class the client
+  files them under rather than by their picture, so a colour nobody has seen
+  yet goes with the rest. `Treasure Chest` and `Realm Fishing Rod Dropper` are
+  kept by name, because they are furniture.

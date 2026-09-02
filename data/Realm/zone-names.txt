@@ -29,3 +29,15 @@ Blue Grass|Dead Church
 @530,1105|High Desert
 @1034,1445|Mid Desert
 @1028,1675|Low Desert
+
+## Told to me on 2026-09-02, after the Dead Church was cut in two along its
+## wildlife. The piece the Dead Church creatures stand in keeps the name; what
+## is left of it is the Withered Plains, which the client's own creatures call
+## HigherPlains. The three across the top of the map are Floral Escape - the
+## ground there is Low Forest grass, so the floor could never have said so.
+
+@874,1287|High Plains
+@1022,1087|Dead Church
+@911,807|Floral Escape
+@799,550|Floral Escape
+@1230,529|Floral Escape

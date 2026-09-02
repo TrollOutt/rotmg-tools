@@ -912,8 +912,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     },
     {
      "type": 34488,
@@ -1181,7 +1180,7 @@
     {
      "type": 21853,
      "name": "New Undead Dwarf Warrior",
-     "seen": 371,
+     "seen": 369,
      "sprite": {
       "file": "c21853.png",
       "tile": 20,
@@ -1196,18 +1195,6 @@
      "seen": 317,
      "sprite": {
       "file": "c21854.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 261,
-     "sprite": {
-      "file": "c49415.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -1263,35 +1250,11 @@
      }
     },
     {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 118,
+     "type": 21861,
+     "name": "New Shield Orc Shield",
+     "seen": 94,
      "sprite": {
-      "file": "c49630.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 98,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 86,
-     "sprite": {
-      "file": "c49629.png",
+      "file": "c21861.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -1311,11 +1274,11 @@
      }
     },
     {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 57,
+     "type": 21863,
+     "name": "New Left Horizontal Trap",
+     "seen": 43,
      "sprite": {
-      "file": "c49628.png",
+      "file": "c21863.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -1323,14 +1286,62 @@
      }
     },
     {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 49,
+     "type": 21859,
+     "name": "New Shield Orc Key",
+     "seen": 29,
      "sprite": {
-      "file": "c49414.png",
+      "file": "c21859.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21864,
+     "name": "New Top Vertical Trap",
+     "seen": 29,
+     "sprite": {
+      "file": "c21864.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21860,
+     "name": "New Shield Orc Flooder",
+     "seen": 20,
+     "sprite": {
+      "file": "c21860.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49633,
+     "name": "City Gladiator",
+     "seen": 17,
+     "sprite": {
+      "file": "c49633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21821,
+     "name": "New Gray Blob",
+     "seen": 13,
+     "sprite": {
+      "file": "c21821.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     }
@@ -1845,7 +1856,8 @@
       "height": 36,
       "frames": 1,
       "size": 100
-     }
+     },
+     "role": "hero"
     },
     {
      "type": 34603,
@@ -2178,6 +2190,18 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 34516,
+     "name": "Flesh Satellite",
+     "seen": 15,
+     "sprite": {
+      "file": "c34516.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
       "size": 100
      }
     },
@@ -2844,6 +2868,18 @@
      "seen": 55,
      "sprite": {
       "file": "c21932.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 51,
+     "sprite": {
+      "file": "c21805.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -4531,8 +4567,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     }
    ]
   },
@@ -4638,6 +4673,18 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 22433,
+     "name": "Daughter of Limon Laser",
+     "seen": 12,
+     "sprite": {
+      "file": "c22433.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
       "size": 100
      }
     },
@@ -4826,6 +4873,18 @@
      "seen": 12,
      "sprite": {
       "file": "c374.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 22433,
+     "name": "Daughter of Limon Laser",
+     "seen": 11,
+     "sprite": {
+      "file": "c22433.png",
       "tile": 20,
       "height": 20,
       "frames": 1,
@@ -5271,8 +5330,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     },
     {
      "type": 29232,
@@ -5513,6 +5571,18 @@
      }
     },
     {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 33,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21809,
      "name": "New Nomadic Shaman",
      "seen": 32,
@@ -5561,6 +5631,18 @@
      }
     },
     {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 24,
+     "sprite": {
+      "file": "c21802.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21903,
      "name": "New Birdman",
      "seen": 23,
@@ -5590,6 +5672,30 @@
      "seen": 20,
      "sprite": {
       "file": "c21798.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21801,
+     "name": "New Red Satellite",
+     "seen": 20,
+     "sprite": {
+      "file": "c21801.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21804,
+     "name": "New Gray Satellite 1",
+     "seen": 19,
+     "sprite": {
+      "file": "c21804.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -5656,6 +5762,18 @@
      }
     },
     {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 32,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21799,
      "name": "New Fire Golem",
      "seen": 29,
@@ -5668,11 +5786,47 @@
      }
     },
     {
+     "type": 21801,
+     "name": "New Red Satellite",
+     "seen": 25,
+     "sprite": {
+      "file": "c21801.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21800,
      "name": "New Darkness Golem",
      "seen": 24,
      "sprite": {
       "file": "c21800.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21804,
+     "name": "New Gray Satellite 1",
+     "seen": 22,
+     "sprite": {
+      "file": "c21804.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 17,
+     "sprite": {
+      "file": "c21802.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -6774,7 +6928,8 @@
      "art": "sea-dragon.png"
     },
     {
-     "name": "Sunken Treasure"
+     "name": "Sunken Treasure",
+     "art": "sunken-treasure.png"
     }
    ]
   },
@@ -6982,23 +7137,28 @@
      "art": "cube-god.png"
     },
     {
-     "name": "Goblin Patriarch"
+     "name": "Goblin Patriarch",
+     "art": "goblin-patriarch.png"
     },
     {
      "name": "Grand Sphinx",
      "art": "grand-sphinx.png"
     },
     {
-     "name": "Legion General"
+     "name": "Legion General",
+     "art": "legion-general.png"
     },
     {
-     "name": "Maze Minotaur"
+     "name": "Maze Minotaur",
+     "art": "maze-minotaur.png"
     },
     {
-     "name": "Rock Dragon"
+     "name": "Rock Dragon",
+     "art": "rock-dragon.png"
     },
     {
-     "name": "Alien UFO"
+     "name": "Alien UFO",
+     "art": "alien-ufo.png"
     }
    ],
    "heroes": [
@@ -7160,8 +7320,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     },
     {
      "type": 34488,
@@ -7232,13 +7391,16 @@
      "art": "ancient-kaiju.png"
     },
     {
-     "name": "Crystal Worm Father"
+     "name": "Crystal Worm Father",
+     "art": "crystal-worm-father.png"
     },
     {
-     "name": "Ethereal Shrine"
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
     },
     {
-     "name": "Flying Behemoth"
+     "name": "Flying Behemoth",
+     "art": "flying-behemoth.png"
     }
    ],
    "heroes": [
@@ -7450,7 +7612,8 @@
      "art": "hermit-god.png"
     },
     {
-     "name": "World’s Oyster"
+     "name": "World’s Oyster",
+     "art": "world-s-oyster.png"
     }
    ],
    "heroes": [
@@ -7460,231 +7623,8 @@
     },
     {
      "name": "Maiden of the Sea",
+     "art": "maiden-of-the-sea.png",
      "onMap": true
-    }
-   ]
-  },
-  {
-   "id": 5,
-   "biome": 4,
-   "tiles": 101333,
-   "at": [
-    917,
-    1229
-   ],
-   "box": [
-    655,
-    978,
-    1152,
-    1508
-   ],
-   "name": "Dead Church",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Low Forest",
-     "tiles": 2530
-    },
-    {
-     "biome": "Dead Church",
-     "tiles": 1276
-    },
-    {
-     "biome": "Desert",
-     "tiles": 15
-    }
-   ],
-   "colour": "#664b2a",
-   "madeOf": [
-    {
-     "ground": "Dead Church Grass Light",
-     "tiles": 69068
-    },
-    {
-     "ground": "Dead Church Grass Dark",
-     "tiles": 22939
-    },
-    {
-     "ground": "Ancient City Dirt",
-     "tiles": 1334
-    },
-    {
-     "ground": "Yellow Grass",
-     "tiles": 1016
-    }
-   ],
-   "lives": [
-    {
-     "type": 21853,
-     "name": "New Undead Dwarf Warrior",
-     "seen": 371,
-     "sprite": {
-      "file": "c21853.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21854,
-     "name": "New Undead Dwarf Axebearer",
-     "seen": 317,
-     "sprite": {
-      "file": "c21854.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 261,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21856,
-     "name": "New Undead Dwarf King",
-     "seen": 186,
-     "sprite": {
-      "file": "c21856.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21855,
-     "name": "New Undead Dwarf Mage",
-     "seen": 182,
-     "sprite": {
-      "file": "c21855.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21857,
-     "name": "New Soulless Dwarf",
-     "seen": 163,
-     "sprite": {
-      "file": "c21857.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21858,
-     "name": "New Undead Dwarf God",
-     "seen": 153,
-     "sprite": {
-      "file": "c21858.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 118,
-     "sprite": {
-      "file": "c49630.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 98,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 86,
-     "sprite": {
-      "file": "c49629.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21862,
-     "name": "New Urgle",
-     "seen": 61,
-     "sprite": {
-      "file": "c21862.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "rank": "Adept",
-   "encounters": [
-    {
-     "name": "Pentaract",
-     "art": "pentaract.png"
-    },
-    {
-     "name": "The Lich King",
-     "art": "the-lich-king.png"
-    },
-    {
-     "name": "The Plague Doctor"
-    },
-    {
-     "name": "Well of Souls"
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Death Knight",
-     "art": "death-knight.png"
-    },
-    {
-     "name": "Kage Kami"
-    },
-    {
-     "name": "Lantern Holder"
-    },
-    {
-     "name": "Shady Sect Leader"
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Church Guardian",
-     "art": "legion-church-guardian.png"
     }
    ]
   },
@@ -7892,10 +7832,12 @@
      "art": "possessed-pumpkin.png"
     },
     {
-     "name": "Sigma Werewolf"
+     "name": "Sigma Werewolf",
+     "art": "sigma-werewolf.png"
     },
     {
-     "name": "Skull Knight"
+     "name": "Skull Knight",
+     "art": "skull-knight.png"
     },
     {
      "name": "Skull Shrine",
@@ -7913,13 +7855,219 @@
      "art": "flesh-golem.png"
     },
     {
-     "name": "Sinister Scarecrow"
+     "name": "Sinister Scarecrow",
+     "art": "sinister-scarecrow.png"
     }
    ],
    "guardians": [
     {
      "name": "Legion Graveyard Guardian",
      "art": "legion-graveyard-guardian.png"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "biome": 4,
+   "tiles": 70952,
+   "at": [
+    873,
+    1289
+   ],
+   "box": [
+    655,
+    1114,
+    1105,
+    1508
+   ],
+   "name": "High Plains",
+   "named": true,
+   "from": "walked",
+   "roadSplit": [
+    {
+     "biome": "Low Forest",
+     "tiles": 2530
+    },
+    {
+     "biome": "Dead Church",
+     "tiles": 1276
+    },
+    {
+     "biome": "Desert",
+     "tiles": 15
+    }
+   ],
+   "colour": "#664b2a",
+   "madeOf": [
+    {
+     "ground": "Dead Church Grass Light",
+     "tiles": 69068
+    },
+    {
+     "ground": "Dead Church Grass Dark",
+     "tiles": 22939
+    },
+    {
+     "ground": "Ancient City Dirt",
+     "tiles": 1334
+    },
+    {
+     "ground": "Yellow Grass",
+     "tiles": 1016
+    }
+   ],
+   "lives": [
+    {
+     "type": 21853,
+     "name": "New Undead Dwarf Warrior",
+     "seen": 369,
+     "sprite": {
+      "file": "c21853.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21854,
+     "name": "New Undead Dwarf Axebearer",
+     "seen": 317,
+     "sprite": {
+      "file": "c21854.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21856,
+     "name": "New Undead Dwarf King",
+     "seen": 186,
+     "sprite": {
+      "file": "c21856.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21855,
+     "name": "New Undead Dwarf Mage",
+     "seen": 182,
+     "sprite": {
+      "file": "c21855.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21857,
+     "name": "New Soulless Dwarf",
+     "seen": 163,
+     "sprite": {
+      "file": "c21857.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21858,
+     "name": "New Undead Dwarf God",
+     "seen": 153,
+     "sprite": {
+      "file": "c21858.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 21862,
+     "name": "New Urgle",
+     "seen": 61,
+     "sprite": {
+      "file": "c21862.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21859,
+     "name": "New Shield Orc Key",
+     "seen": 29,
+     "sprite": {
+      "file": "c21859.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21860,
+     "name": "New Shield Orc Flooder",
+     "seen": 20,
+     "sprite": {
+      "file": "c21860.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49633,
+     "name": "City Gladiator",
+     "seen": 17,
+     "sprite": {
+      "file": "c49633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21821,
+     "name": "New Gray Blob",
+     "seen": 13,
+     "sprite": {
+      "file": "c21821.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21849,
+     "name": "New Flayer Veteran",
+     "seen": 12,
+     "sprite": {
+      "file": "c21849.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Plains Guard",
+     "art": "legion-plains-guard.png"
     }
    ]
   },
@@ -8123,29 +8271,36 @@
    "rank": "Veteran",
    "encounters": [
     {
-     "name": "Aerial Warship"
+     "name": "Aerial Warship",
+     "art": "aerial-warship.png"
     },
     {
      "name": "Beer God",
      "art": "beer-god.png"
     },
     {
-     "name": "Crystal Worm Father"
+     "name": "Crystal Worm Father",
+     "art": "crystal-worm-father.png"
     },
     {
-     "name": "Kogbold Expedition Engine"
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
     },
     {
-     "name": "Lord of the Lost Lands"
+     "name": "Lord of the Lost Lands",
+     "art": "lord-of-the-lost-lands.png"
     },
     {
-     "name": "Lost Sentry"
+     "name": "Lost Sentry",
+     "art": "lost-sentry.png"
     },
     {
-     "name": "Sentient Monolith"
+     "name": "Sentient Monolith",
+     "art": "sentient-monolith.png"
     },
     {
-     "name": "Commander Calbrik"
+     "name": "Commander Calbrik",
+     "art": "commander-calbrik.png"
     }
    ],
    "heroes": [
@@ -8154,12 +8309,14 @@
      "art": "assembled-giant.png"
     },
     {
-     "name": "Monstrous Grizzly"
+     "name": "Monstrous Grizzly",
+     "art": "monstrous-grizzly.png"
     }
    ],
    "guardians": [
     {
-     "name": "Legion Principal"
+     "name": "Legion Principal",
+     "art": "legion-principal.png"
     }
    ]
   },
@@ -8177,9 +8334,9 @@
     1295,
     918
    ],
-   "name": "Low Forest",
+   "name": "Floral Escape",
    "named": true,
-   "from": "ground",
+   "from": "walked",
    "roadSplit": [
     {
      "biome": "Floral Escape",
@@ -8356,15 +8513,49 @@
       "height": 36,
       "frames": 1,
       "size": 100
-     }
+     },
+     "role": "hero"
     }
    ],
    "met": true,
-   "rank": "Rookie",
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Corrupted Bramblethorn",
+     "art": "corrupted-bramblethorn.png"
+    },
+    {
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
+    },
+    {
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
+    },
+    {
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alluring Blossom",
+     "art": "alluring-blossom.png"
+    },
+    {
+     "name": "Elder Ent Ancient",
+     "art": "elder-ent-ancient.png",
+     "onMap": true
+    },
+    {
+     "name": "Hornet’s Nest",
+     "art": "hornet-s-nest.png"
+    }
+   ],
    "guardians": [
     {
-     "name": "Legion Forest Guard",
-     "art": "legion-forest-guard.png"
+     "name": "Legion Commissioner",
+     "art": "legion-commissioner.png"
     }
    ]
   },
@@ -8761,6 +8952,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 54329,
+     "name": "Legion Researcher",
+     "seen": 9,
+     "sprite": {
+      "file": "c54329.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -8771,10 +8974,12 @@
      "art": "possessed-pumpkin.png"
     },
     {
-     "name": "Sigma Werewolf"
+     "name": "Sigma Werewolf",
+     "art": "sigma-werewolf.png"
     },
     {
-     "name": "Skull Knight"
+     "name": "Skull Knight",
+     "art": "skull-knight.png"
     },
     {
      "name": "Skull Shrine",
@@ -8792,7 +8997,8 @@
      "art": "flesh-golem.png"
     },
     {
-     "name": "Sinister Scarecrow"
+     "name": "Sinister Scarecrow",
+     "art": "sinister-scarecrow.png"
     }
    ],
    "guardians": [
@@ -9007,10 +9213,12 @@
      "art": "possessed-pumpkin.png"
     },
     {
-     "name": "Sigma Werewolf"
+     "name": "Sigma Werewolf",
+     "art": "sigma-werewolf.png"
     },
     {
-     "name": "Skull Knight"
+     "name": "Skull Knight",
+     "art": "skull-knight.png"
     },
     {
      "name": "Skull Shrine",
@@ -9028,7 +9236,8 @@
      "art": "flesh-golem.png"
     },
     {
-     "name": "Sinister Scarecrow"
+     "name": "Sinister Scarecrow",
+     "art": "sinister-scarecrow.png"
     }
    ],
    "guardians": [
@@ -9451,10 +9660,12 @@
      "art": "the-lich-king.png"
     },
     {
-     "name": "The Plague Doctor"
+     "name": "The Plague Doctor",
+     "art": "the-plague-doctor.png"
     },
     {
-     "name": "Well of Souls"
+     "name": "Well of Souls",
+     "art": "well-of-souls.png"
     }
    ],
    "heroes": [
@@ -9463,13 +9674,16 @@
      "art": "death-knight.png"
     },
     {
-     "name": "Kage Kami"
+     "name": "Kage Kami",
+     "art": "kage-kami.png"
     },
     {
-     "name": "Lantern Holder"
+     "name": "Lantern Holder",
+     "art": "lantern-holder.png"
     },
     {
-     "name": "Shady Sect Leader"
+     "name": "Shady Sect Leader",
+     "art": "shady-sect-leader.png"
     }
    ],
    "guardians": [
@@ -9661,6 +9875,18 @@
       "frames": 3,
       "size": 100
      }
+    },
+    {
+     "type": 21837,
+     "name": "New Metal Golem",
+     "seen": 31,
+     "sprite": {
+      "file": "c21837.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -9671,7 +9897,8 @@
      "art": "ent-ancient.png"
     },
     {
-     "name": "Great Coil Snake"
+     "name": "Great Coil Snake",
+     "art": "great-coil-snake.png"
     }
    ],
    "guardians": [
@@ -9881,16 +10108,20 @@
      "art": "beer-god.png"
     },
     {
-     "name": "Bilgewater’s Galleon"
+     "name": "Bilgewater’s Galleon",
+     "art": "bilgewater-s-galleon.png"
     },
     {
-     "name": "Crab Sovereign"
+     "name": "Crab Sovereign",
+     "art": "crab-sovereign.png"
     },
     {
-     "name": "Eye of the Storm"
+     "name": "Eye of the Storm",
+     "art": "eye-of-the-storm.png"
     },
     {
-     "name": "Ghost Ship"
+     "name": "Ghost Ship",
+     "art": "ghost-ship.png"
     }
    ],
    "heroes": [
@@ -10125,10 +10356,12 @@
     },
     {
      "name": "Infernal Ironsmith",
+     "art": "infernal-ironsmith.png",
      "onMap": true
     },
     {
-     "name": "Red Demon"
+     "name": "Red Demon",
+     "art": "red-demon.png"
     }
    ],
    "guardians": [
@@ -10547,10 +10780,12 @@
      "art": "the-lich-king.png"
     },
     {
-     "name": "The Plague Doctor"
+     "name": "The Plague Doctor",
+     "art": "the-plague-doctor.png"
     },
     {
-     "name": "Well of Souls"
+     "name": "Well of Souls",
+     "art": "well-of-souls.png"
     }
    ],
    "heroes": [
@@ -10559,13 +10794,16 @@
      "art": "death-knight.png"
     },
     {
-     "name": "Kage Kami"
+     "name": "Kage Kami",
+     "art": "kage-kami.png"
     },
     {
-     "name": "Lantern Holder"
+     "name": "Lantern Holder",
+     "art": "lantern-holder.png"
     },
     {
-     "name": "Shady Sect Leader"
+     "name": "Shady Sect Leader",
+     "art": "shady-sect-leader.png"
     }
    ],
    "guardians": [
@@ -10767,16 +11005,20 @@
      "art": "beer-god.png"
     },
     {
-     "name": "Bilgewater’s Galleon"
+     "name": "Bilgewater’s Galleon",
+     "art": "bilgewater-s-galleon.png"
     },
     {
-     "name": "Crab Sovereign"
+     "name": "Crab Sovereign",
+     "art": "crab-sovereign.png"
     },
     {
-     "name": "Eye of the Storm"
+     "name": "Eye of the Storm",
+     "art": "eye-of-the-storm.png"
     },
     {
-     "name": "Ghost Ship"
+     "name": "Ghost Ship",
+     "art": "ghost-ship.png"
     }
    ],
    "heroes": [
@@ -10948,22 +11190,28 @@
    "rank": "Veteran",
    "encounters": [
     {
-     "name": "Avatar of the Forgotten King"
+     "name": "Avatar of the Forgotten King",
+     "art": "avatar-of-the-forgotten-king.png"
     },
     {
-     "name": "Bloodroot Heart"
+     "name": "Bloodroot Heart",
+     "art": "bloodroot-heart.png"
     },
     {
-     "name": "Killer Bee Nest"
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
     },
     {
-     "name": "Lost Sentry"
+     "name": "Lost Sentry",
+     "art": "lost-sentry.png"
     },
     {
-     "name": "Ravenous Rot"
+     "name": "Ravenous Rot",
+     "art": "ravenous-rot.png"
     },
     {
-     "name": "Skeletal Centipede"
+     "name": "Skeletal Centipede",
+     "art": "skeletal-centipede.png"
     }
    ],
    "heroes": [
@@ -10979,7 +11227,237 @@
    ],
    "guardians": [
     {
-     "name": "Legion Missionary"
+     "name": "Legion Missionary",
+     "art": "legion-missionary.png"
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "biome": 39,
+   "tiles": 30381,
+   "at": [
+    1020,
+    1089
+   ],
+   "box": [
+    897,
+    978,
+    1152,
+    1226
+   ],
+   "name": "Dead Church",
+   "named": true,
+   "from": "walked",
+   "roadSplit": [],
+   "colour": "#664b2a",
+   "madeOf": [
+    {
+     "ground": "Dead Church Grass Dark",
+     "tiles": 21463
+    },
+    {
+     "ground": "Dead Church Grass Light",
+     "tiles": 2021
+    },
+    {
+     "ground": "Road Dead Church",
+     "tiles": 1263
+    },
+    {
+     "ground": "Blue Grass",
+     "tiles": 970
+    }
+   ],
+   "cleftFrom": 5,
+   "lives": [
+    {
+     "type": 49415,
+     "name": "Dead Church Skeleton",
+     "seen": 261,
+     "sprite": {
+      "file": "c49415.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 118,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 98,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49629,
+     "name": "Dead Church Bat",
+     "seen": 86,
+     "sprite": {
+      "file": "c49629.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49628,
+     "name": "Dead Church Vampire",
+     "seen": 56,
+     "sprite": {
+      "file": "c49628.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 48,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49416,
+     "name": "Dead Church Revenant",
+     "seen": 25,
+     "sprite": {
+      "file": "c49416.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21896,
+     "name": "Hell White Demon",
+     "seen": 19,
+     "sprite": {
+      "file": "c21896.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49896,
+     "name": "Hell Skeleton",
+     "seen": 9,
+     "sprite": {
+      "file": "c49896.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 34491,
+     "name": "The Plague Doctor Cure B",
+     "seen": 8,
+     "sprite": {
+      "file": "c34491.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 17900,
+     "name": "Hallows Skeleton",
+     "seen": 7,
+     "sprite": {
+      "file": "c17900.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 6175,
+     "name": "Tombstone",
+     "seen": 7,
+     "sprite": {
+      "file": "c6175.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Pentaract",
+     "art": "pentaract.png"
+    },
+    {
+     "name": "The Lich King",
+     "art": "the-lich-king.png"
+    },
+    {
+     "name": "The Plague Doctor",
+     "art": "the-plague-doctor.png"
+    },
+    {
+     "name": "Well of Souls",
+     "art": "well-of-souls.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Death Knight",
+     "art": "death-knight.png"
+    },
+    {
+     "name": "Kage Kami",
+     "art": "kage-kami.png"
+    },
+    {
+     "name": "Lantern Holder",
+     "art": "lantern-holder.png"
+    },
+    {
+     "name": "Shady Sect Leader",
+     "art": "shady-sect-leader.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Church Guardian",
+     "art": "legion-church-guardian.png"
     }
    ]
   },
@@ -11191,7 +11669,8 @@
      "art": "cube-god.png"
     },
     {
-     "name": "Daughter of Limon"
+     "name": "Daughter of Limon",
+     "art": "daughter-of-limon.png"
     }
    ],
    "heroes": [
@@ -11200,13 +11679,16 @@
      "art": "artificial-sprite-god.png"
     },
     {
-     "name": "Celestial Sprite"
+     "name": "Celestial Sprite",
+     "art": "celestial-sprite.png"
     },
     {
-     "name": "Cosmic Sprite"
+     "name": "Cosmic Sprite",
+     "art": "cosmic-sprite.png"
     },
     {
-     "name": "Elder Sprite Tree"
+     "name": "Elder Sprite Tree",
+     "art": "elder-sprite-tree.png"
     }
    ],
    "guardians": [
@@ -11230,9 +11712,9 @@
     967,
     675
    ],
-   "name": "Low Forest",
+   "name": "Floral Escape",
    "named": true,
-   "from": "ground",
+   "from": "walked",
    "roadSplit": [
     {
      "biome": "Floral Escape",
@@ -11413,11 +11895,44 @@
     }
    ],
    "met": true,
-   "rank": "Rookie",
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Corrupted Bramblethorn",
+     "art": "corrupted-bramblethorn.png"
+    },
+    {
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
+    },
+    {
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
+    },
+    {
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alluring Blossom",
+     "art": "alluring-blossom.png"
+    },
+    {
+     "name": "Elder Ent Ancient",
+     "art": "elder-ent-ancient.png",
+     "onMap": true
+    },
+    {
+     "name": "Hornet’s Nest",
+     "art": "hornet-s-nest.png"
+    }
+   ],
    "guardians": [
     {
-     "name": "Legion Forest Guard",
-     "art": "legion-forest-guard.png"
+     "name": "Legion Commissioner",
+     "art": "legion-commissioner.png"
     }
    ]
   },
@@ -11597,22 +12112,28 @@
    "rank": "Veteran",
    "encounters": [
     {
-     "name": "Avatar of the Forgotten King"
+     "name": "Avatar of the Forgotten King",
+     "art": "avatar-of-the-forgotten-king.png"
     },
     {
-     "name": "Bloodroot Heart"
+     "name": "Bloodroot Heart",
+     "art": "bloodroot-heart.png"
     },
     {
-     "name": "Killer Bee Nest"
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
     },
     {
-     "name": "Lost Sentry"
+     "name": "Lost Sentry",
+     "art": "lost-sentry.png"
     },
     {
-     "name": "Ravenous Rot"
+     "name": "Ravenous Rot",
+     "art": "ravenous-rot.png"
     },
     {
-     "name": "Skeletal Centipede"
+     "name": "Skeletal Centipede",
+     "art": "skeletal-centipede.png"
     }
    ],
    "heroes": [
@@ -11628,7 +12149,8 @@
    ],
    "guardians": [
     {
-     "name": "Legion Missionary"
+     "name": "Legion Missionary",
+     "art": "legion-missionary.png"
     }
    ]
   },
@@ -12021,6 +12543,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "seen": 5,
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -12035,7 +12569,8 @@
      "art": "cube-god.png"
     },
     {
-     "name": "Daughter of Limon"
+     "name": "Daughter of Limon",
+     "art": "daughter-of-limon.png"
     }
    ],
    "heroes": [
@@ -12044,13 +12579,16 @@
      "art": "artificial-sprite-god.png"
     },
     {
-     "name": "Celestial Sprite"
+     "name": "Celestial Sprite",
+     "art": "celestial-sprite.png"
     },
     {
-     "name": "Cosmic Sprite"
+     "name": "Cosmic Sprite",
+     "art": "cosmic-sprite.png"
     },
     {
-     "name": "Elder Sprite Tree"
+     "name": "Elder Sprite Tree",
+     "art": "elder-sprite-tree.png"
     }
    ],
    "guardians": [
@@ -12242,6 +12780,18 @@
       "frames": 1,
       "size": 100
      }
+    },
+    {
+     "type": 34572,
+     "name": "Artificial Sprite Child",
+     "seen": 10,
+     "sprite": {
+      "file": "c34572.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -12256,7 +12806,8 @@
      "art": "cube-god.png"
     },
     {
-     "name": "Daughter of Limon"
+     "name": "Daughter of Limon",
+     "art": "daughter-of-limon.png"
     }
    ],
    "heroes": [
@@ -12265,13 +12816,16 @@
      "art": "artificial-sprite-god.png"
     },
     {
-     "name": "Celestial Sprite"
+     "name": "Celestial Sprite",
+     "art": "celestial-sprite.png"
     },
     {
-     "name": "Cosmic Sprite"
+     "name": "Cosmic Sprite",
+     "art": "cosmic-sprite.png"
     },
     {
-     "name": "Elder Sprite Tree"
+     "name": "Elder Sprite Tree",
+     "art": "elder-sprite-tree.png"
     }
    ],
    "guardians": [
@@ -12461,16 +13015,20 @@
      "art": "beer-god.png"
     },
     {
-     "name": "Bilgewater’s Galleon"
+     "name": "Bilgewater’s Galleon",
+     "art": "bilgewater-s-galleon.png"
     },
     {
-     "name": "Crab Sovereign"
+     "name": "Crab Sovereign",
+     "art": "crab-sovereign.png"
     },
     {
-     "name": "Eye of the Storm"
+     "name": "Eye of the Storm",
+     "art": "eye-of-the-storm.png"
     },
     {
-     "name": "Ghost Ship"
+     "name": "Ghost Ship",
+     "art": "ghost-ship.png"
     }
    ],
    "heroes": [
@@ -12828,8 +13386,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     },
     {
      "type": 29232,
@@ -12888,13 +13445,16 @@
      "art": "ancient-kaiju.png"
     },
     {
-     "name": "Crystal Worm Father"
+     "name": "Crystal Worm Father",
+     "art": "crystal-worm-father.png"
     },
     {
-     "name": "Ethereal Shrine"
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
     },
     {
-     "name": "Flying Behemoth"
+     "name": "Flying Behemoth",
+     "art": "flying-behemoth.png"
     }
    ],
    "heroes": [
@@ -12924,9 +13484,9 @@
     1354,
     613
    ],
-   "name": "Low Forest",
+   "name": "Floral Escape",
    "named": true,
-   "from": "ground",
+   "from": "walked",
    "roadSplit": [
     {
      "biome": "Floral Escape",
@@ -13095,11 +13655,44 @@
     }
    ],
    "met": true,
-   "rank": "Rookie",
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Corrupted Bramblethorn",
+     "art": "corrupted-bramblethorn.png"
+    },
+    {
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
+    },
+    {
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
+    },
+    {
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alluring Blossom",
+     "art": "alluring-blossom.png"
+    },
+    {
+     "name": "Elder Ent Ancient",
+     "art": "elder-ent-ancient.png",
+     "onMap": true
+    },
+    {
+     "name": "Hornet’s Nest",
+     "art": "hornet-s-nest.png"
+    }
+   ],
    "guardians": [
     {
-     "name": "Legion Forest Guard",
-     "art": "legion-forest-guard.png"
+     "name": "Legion Commissioner",
+     "art": "legion-commissioner.png"
     }
    ]
   },
@@ -13273,6 +13866,30 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 21810,
+     "name": "New Great Lizard",
+     "seen": 17,
+     "sprite": {
+      "file": "c21810.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 54289,
+     "name": "Legion Novice Hunter",
+     "seen": 12,
+     "sprite": {
+      "file": "c54289.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -13424,6 +14041,54 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 14,
+     "sprite": {
+      "file": "c21798.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21840,
+     "name": "New Wereleopard",
+     "seen": 13,
+     "sprite": {
+      "file": "c21840.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21903,
+     "name": "New Birdman",
+     "seen": 12,
+     "sprite": {
+      "file": "c21903.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21839,
+     "name": "New Weretiger",
+     "seen": 8,
+     "sprite": {
+      "file": "c21839.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -13822,10 +14487,12 @@
     },
     {
      "name": "Infernal Ironsmith",
+     "art": "infernal-ironsmith.png",
      "onMap": true
     },
     {
-     "name": "Red Demon"
+     "name": "Red Demon",
+     "art": "red-demon.png"
     }
    ],
    "guardians": [
@@ -14196,22 +14863,28 @@
    "rank": "Veteran",
    "encounters": [
     {
-     "name": "Avatar of the Forgotten King"
+     "name": "Avatar of the Forgotten King",
+     "art": "avatar-of-the-forgotten-king.png"
     },
     {
-     "name": "Bloodroot Heart"
+     "name": "Bloodroot Heart",
+     "art": "bloodroot-heart.png"
     },
     {
-     "name": "Killer Bee Nest"
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
     },
     {
-     "name": "Lost Sentry"
+     "name": "Lost Sentry",
+     "art": "lost-sentry.png"
     },
     {
-     "name": "Ravenous Rot"
+     "name": "Ravenous Rot",
+     "art": "ravenous-rot.png"
     },
     {
-     "name": "Skeletal Centipede"
+     "name": "Skeletal Centipede",
+     "art": "skeletal-centipede.png"
     }
    ],
    "heroes": [
@@ -14227,7 +14900,8 @@
    ],
    "guardians": [
     {
-     "name": "Legion Missionary"
+     "name": "Legion Missionary",
+     "art": "legion-missionary.png"
     }
    ]
   },
@@ -14383,13 +15057,16 @@
      "art": "ancient-kaiju.png"
     },
     {
-     "name": "Crystal Worm Father"
+     "name": "Crystal Worm Father",
+     "art": "crystal-worm-father.png"
     },
     {
-     "name": "Ethereal Shrine"
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
     },
     {
-     "name": "Flying Behemoth"
+     "name": "Flying Behemoth",
+     "art": "flying-behemoth.png"
     }
    ],
    "heroes": [
@@ -14835,6 +15512,30 @@
      }
     },
     {
+     "type": 21801,
+     "name": "New Red Satellite",
+     "seen": 1,
+     "sprite": {
+      "file": "c21801.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21806,
+     "name": "New Gray Satellite 3",
+     "seen": 1,
+     "sprite": {
+      "file": "c21806.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21838,
      "name": "New Clockwork Golem",
      "seen": 1,
@@ -14953,8 +15654,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     }
    ],
    "guardian": {
@@ -15002,6 +15702,42 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21805,
+     "name": "New Gray Satellite 2",
+     "seen": 8,
+     "sprite": {
+      "file": "c21805.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21802,
+     "name": "New Green Satellite",
+     "seen": 6,
+     "sprite": {
+      "file": "c21802.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21804,
+     "name": "New Gray Satellite 1",
+     "seen": 5,
+     "sprite": {
+      "file": "c21804.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     },
@@ -15270,7 +16006,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Missionary"
+    "name": "Legion Missionary",
+    "art": "legion-missionary.png"
    }
   },
   {
@@ -16005,7 +16742,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Missionary"
+    "name": "Legion Missionary",
+    "art": "legion-missionary.png"
    }
   },
   {
@@ -16121,6 +16859,18 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49904,
+     "name": "Shipwreck Hag Whirlpool",
+     "seen": 1,
+     "sprite": {
+      "file": "c49904.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     }
@@ -16490,6 +17240,30 @@
    "zone": 5,
    "guards": [
     {
+     "type": 21863,
+     "name": "New Left Horizontal Trap",
+     "seen": 3,
+     "sprite": {
+      "file": "c21863.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21864,
+     "name": "New Top Vertical Trap",
+     "seen": 3,
+     "sprite": {
+      "file": "c21864.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
      "type": 21853,
      "name": "New Undead Dwarf Warrior",
      "seen": 2,
@@ -16526,6 +17300,18 @@
      }
     },
     {
+     "type": 21861,
+     "name": "New Shield Orc Shield",
+     "seen": 1,
+     "sprite": {
+      "file": "c21861.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
      "type": 21856,
      "name": "New Undead Dwarf King",
      "seen": 1,
@@ -16539,8 +17325,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Church Guardian",
-    "art": "legion-church-guardian.png"
+    "name": "Legion Plains Guard",
+    "art": "legion-plains-guard.png"
    }
   },
   {
@@ -16548,7 +17334,7 @@
    "y": 1076,
    "name": "Dead Church",
    "state": "teleport",
-   "zone": 5,
+   "zone": 40,
    "guards": [
     {
      "type": 49630,
@@ -16608,8 +17394,7 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     },
-     "spawner": true
+     }
     },
     {
      "type": 21943,
@@ -17426,8 +18211,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Forest Guard",
-    "art": "legion-forest-guard.png"
+    "name": "Legion Commissioner",
+    "art": "legion-commissioner.png"
    }
   },
   {
@@ -17572,7 +18357,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Principal"
+    "name": "Legion Principal",
+    "art": "legion-principal.png"
    }
   },
   {
@@ -17826,7 +18612,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Missionary"
+    "name": "Legion Missionary",
+    "art": "legion-missionary.png"
    }
   },
   {
@@ -17898,8 +18685,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Forest Guard",
-    "art": "legion-forest-guard.png"
+    "name": "Legion Commissioner",
+    "art": "legion-commissioner.png"
    }
   },
   {
@@ -18056,8 +18843,8 @@
     }
    ],
    "guardian": {
-    "name": "Legion Forest Guard",
-    "art": "legion-forest-guard.png"
+    "name": "Legion Commissioner",
+    "art": "legion-commissioner.png"
    }
   }
  ],
