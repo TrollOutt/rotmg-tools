@@ -13,3 +13,19 @@
 ## Told to me on 2026-09-02.
 
 Blue Grass|Dead Church
+
+## And places named by a tile inside them, which survives the map being cut
+## up again in a way a patch number does not: @x,y|name
+##
+## Told to me on 2026-09-02. The tier names are the client's own vocabulary -
+## the same words its creatures use to say where they belong - with the name
+## the realm is described by in brackets where the two differ.
+
+@763,1429|Mid Plains
+@1030,1567|High Forest
+@849,1612|Mid Forest
+@830,1813|Beach
+@598,1315|Beach
+@530,1105|High Desert
+@1034,1445|Mid Desert
+@1028,1675|Low Desert
