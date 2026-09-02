@@ -822,10 +822,17 @@ function stepLife(delta) {
  * Which is also how the map stays cheap far out: thirty-odd landmarks
  * instead of thirteen hundred creatures and a hundred and eighty thousand
  * things.
+ *
+ * The wildlife used to come in at 1.4, which fitting the realm and then
+ * turning the wheel five times reaches - so it was on the map almost
+ * always and there was barely a band where the set pieces stood alone. At
+ * 3 it takes nine turns, the rare things have the middle distance to
+ * themselves, and the wildlife arrives at about the zoom where the ground
+ * it is standing on becomes worth looking at.
  */
 const SHOW_ENCOUNTER = 0.35;
 const SHOW_HERO = 0.9;
-const SHOW_LIFE = 1.4;
+const SHOW_LIFE = 3;
 
 /*
  * How tall a landmark is drawn, in tiles.
