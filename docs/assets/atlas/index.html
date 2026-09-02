@@ -639,8 +639,52 @@ function populate() {
  * without asking, its wildlife strolls over the range that is there to keep
  * it in.
  */
+/*
+ * The ground a beacon stands on.
+ *
+ * Every beacon in the realm is planted on the same built plate - the
+ * castle flagstones, a darker ring, a rug at the middle - and nothing
+ * wanders across it.
+ *
+ * Its size and where it sits are read off the ground rather than guessed
+ * at. The plate is identical at every beacon and the biome around it is
+ * not, so for each offset from a beacon you can ask how many of the
+ * forty-two show the same tile there: inside the plate better than three
+ * quarters of them agree, and one tile outside it the agreement falls to
+ * two per cent. What that draws is nineteen tiles square, reaching from
+ * ten tiles west to eight east and thirteen north to five south - so the
+ * position recorded for a beacon is not the middle of its own plate, but
+ * a tile east and four south of it.
+ *
+ * (The very middle disagrees too, because a captured beacon and an active
+ * one do not look alike and a guardian may be standing on it. That is
+ * inside the plate all the same.)
+ *
+ * Held as the set of tiles the plates cover rather than as a distance to
+ * be measured, because the walk asks this question up to three times per
+ * creature per frame and there are forty-two plates it would otherwise
+ * have to ask about every time.
+ */
+const BEACON_REACH = 9;
+const BEACON_OFF_X = -1;
+const BEACON_OFF_Y = -4;
+const beaconGround = (() => {
+  const held = new Set();
+  for (const beacon of A.beacons) {
+    const cx = beacon.x + BEACON_OFF_X, cy = beacon.y + BEACON_OFF_Y;
+    for (let dy = -BEACON_REACH; dy <= BEACON_REACH; dy++) {
+      for (let dx = -BEACON_REACH; dx <= BEACON_REACH; dx++) {
+        held.add((cy + dy) * 4096 + cx + dx);
+      }
+    }
+  }
+  return held;
+})();
+const onBeaconGround = (x, y) => beaconGround.has(Math.floor(y) * 4096 + Math.floor(x));
+
 function canStand(x, y, home) {
   if (zoneOf(x, y) !== home) return false;
+  if (onBeaconGround(x, y)) return false;
   const here = atTile(x, y);
   return !(here && here.walled);
 }
@@ -849,10 +893,6 @@ function openBeacon(beacon) {
     + '</div>'
     + '<h3>Around it</h3>' + livesList(beacon.guards);
   panel.classList.add('is-open');
-
-  const box = size();
-  want.x = beacon.x; want.y = beacon.y;
-  want.scale = Math.max(view.scale, 3.2);
 }
 
 function openZone(id) {
@@ -870,7 +910,6 @@ function openZone(id) {
     + '<div class="facts">'
     + '<span><i>beacons here</i> ' + beacons + '</span>'
     + '<span><i>creatures walking</i> ' + alive.filter(o => o.home === id).length + '</span>'
-    + '<span><i>beacons here</i> ' + beacons + '</span>'.replace(/^.*$/, '')
     + (zone.named
       ? '<span><i>named from</i> ' + (zone.from === 'roads' ? 'its roads, not its ground' : 'its own ground') + '</span>'
       : '<span><i>no name yet</i> zone ' + zone.id + '</span>')
@@ -882,13 +921,6 @@ function openZone(id) {
       : '')
     + '<h3>' + (zone.met ? 'Met here' : 'Expected here') + '</h3>' + livesList(zone.lives);
   panel.classList.add('is-open');
-
-  // And go there: the patch fills the window with a little room round it.
-  const box = size();
-  want.x = (zone.box[0] + zone.box[2]) / 2;
-  want.y = (zone.box[1] + zone.box[3]) / 2;
-  want.scale = Math.max(0.05, Math.min(12,
-    Math.min((box.w - 320) / wide, (box.h - 60) / tall) * 0.85));
 }
 function shutPanel() { chosen = 0; chosenBeacon = null; panel.classList.remove('is-open'); }
 document.getElementById('shut').addEventListener('click', shutPanel);
