@@ -34,18 +34,38 @@ const pagesDir = path.join(root, 'docs');
  * atlas is actually opened.
  */
 function carryAcross(from, to) {
-  if (!fs.existsSync(from)) return 0;
+  if (!fs.existsSync(from)) return { copied: 0, dropped: 0 };
   fs.mkdirSync(to, { recursive: true });
-  let n = 0;
+  let copied = 0, dropped = 0;
+  const mine = new Set();
   for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    mine.add(entry.name);
     const here = path.join(from, entry.name), there = path.join(to, entry.name);
-    if (entry.isDirectory()) { n += carryAcross(here, there); continue; }
+    if (entry.isDirectory()) {
+      const inner = carryAcross(here, there);
+      copied += inner.copied; dropped += inner.dropped;
+      continue;
+    }
     const older = !fs.existsSync(there)
       || fs.statSync(there).mtimeMs < fs.statSync(here).mtimeMs
       || fs.statSync(there).size !== fs.statSync(here).size;
-    if (older) { fs.copyFileSync(here, there); n++; }
+    if (older) { fs.copyFileSync(here, there); copied++; }
   }
-  return n;
+  /*
+   * And what is no longer on this side goes.
+   *
+   * Copying alone made docs a place things could only ever arrive at. Every
+   * sprite ever generated and later dropped was still being published: by
+   * the time this was noticed the atlas was carrying thirty-five creature
+   * sprites nothing pointed at, from several generations back. A published
+   * copy that cannot lose a file is not a copy of anything.
+   */
+  for (const entry of fs.readdirSync(to, { withFileTypes: true })) {
+    if (mine.has(entry.name)) continue;
+    fs.rmSync(path.join(to, entry.name), { recursive: true, force: true });
+    dropped++;
+  }
+  return { copied, dropped };
 }
 const outFile = path.join(pagesDir, 'index.html');
 
@@ -420,5 +440,8 @@ console.log(`  realm   ${Object.keys(realmMonsterSprites).length} client sprites
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');
 const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDir, 'assets', 'atlas'));
-if (carried) console.log(`  atlas   ${carried} files copied to docs/assets/atlas`);
+if (carried.copied || carried.dropped) {
+  console.log(`  atlas   ${carried.copied} files copied to docs/assets/atlas`
+    + (carried.dropped ? `, ${carried.dropped} no longer there removed` : ''));
+}
 console.log('  served as index.html, downloadable as RotMG-Enchant-Calculator.html\n');
