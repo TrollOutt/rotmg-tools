@@ -816,7 +816,8 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     }
    ]
   },
@@ -1151,7 +1152,8 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     },
     {
      "type": 17735,
@@ -2368,7 +2370,8 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     },
     {
      "type": 24014,
@@ -3907,7 +3910,8 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     }
    ]
   },
@@ -6019,7 +6023,8 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     },
     {
      "type": 21893,
@@ -6755,7 +6760,23 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Adult Baneserpent",
+     "art": "adult-baneserpent.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Sea Dragon",
+     "art": "sea-dragon.png"
+    },
+    {
+     "name": "Sunken Treasure"
+    }
+   ]
   },
   {
    "id": 2,
@@ -6953,7 +6974,58 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Cube God",
+     "art": "cube-god.png"
+    },
+    {
+     "name": "Goblin Patriarch"
+    },
+    {
+     "name": "Grand Sphinx",
+     "art": "grand-sphinx.png"
+    },
+    {
+     "name": "Legion General"
+    },
+    {
+     "name": "Maze Minotaur"
+    },
+    {
+     "name": "Rock Dragon"
+    },
+    {
+     "name": "Alien UFO"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Dragon’s Treasure",
+     "art": "dragon-s-treasure.png"
+    },
+    {
+     "name": "Insurgent Rebel Commander",
+     "art": "insurgent-rebel-commander.png",
+     "onMap": true
+    },
+    {
+     "name": "Mysterious Crystal",
+     "art": "mysterious-crystal.png"
+    },
+    {
+     "name": "Sword in the Stone?",
+     "art": "sword-in-the-stone.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion City Guardian",
+     "art": "legion-city-guardian.png"
+    }
+   ]
   },
   {
    "id": 3,
@@ -7152,7 +7224,35 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Ancient Kaiju",
+     "art": "ancient-kaiju.png"
+    },
+    {
+     "name": "Crystal Worm Father"
+    },
+    {
+     "name": "Ethereal Shrine"
+    },
+    {
+     "name": "Flying Behemoth"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Critter Brood",
+     "art": "critter-brood.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Colonel",
+     "art": "legion-colonel.png"
+    }
+   ]
   },
   {
    "id": 4,
@@ -7338,7 +7438,31 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Carp Emperor",
+     "art": "carp-emperor.png"
+    },
+    {
+     "name": "Hermit God",
+     "art": "hermit-god.png"
+    },
+    {
+     "name": "World’s Oyster"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Beach Bum",
+     "art": "beach-bum.png"
+    },
+    {
+     "name": "Maiden of the Sea",
+     "onMap": true
+    }
+   ]
   },
   {
    "id": 5,
@@ -7524,7 +7648,45 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Pentaract",
+     "art": "pentaract.png"
+    },
+    {
+     "name": "The Lich King",
+     "art": "the-lich-king.png"
+    },
+    {
+     "name": "The Plague Doctor"
+    },
+    {
+     "name": "Well of Souls"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Death Knight",
+     "art": "death-knight.png"
+    },
+    {
+     "name": "Kage Kami"
+    },
+    {
+     "name": "Lantern Holder"
+    },
+    {
+     "name": "Shady Sect Leader"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Church Guardian",
+     "art": "legion-church-guardian.png"
+    }
+   ]
   },
   {
    "id": 6,
@@ -7722,7 +7884,44 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Possessed Pumpkin",
+     "art": "possessed-pumpkin.png"
+    },
+    {
+     "name": "Sigma Werewolf"
+    },
+    {
+     "name": "Skull Knight"
+    },
+    {
+     "name": "Skull Shrine",
+     "art": "skull-shrine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alpha Werewolf",
+     "art": "alpha-werewolf.png",
+     "onMap": true
+    },
+    {
+     "name": "Flesh Golem",
+     "art": "flesh-golem.png"
+    },
+    {
+     "name": "Sinister Scarecrow"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Graveyard Guardian",
+     "art": "legion-graveyard-guardian.png"
+    }
+   ]
   },
   {
    "id": 7,
@@ -7920,7 +8119,49 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Aerial Warship"
+    },
+    {
+     "name": "Beer God",
+     "art": "beer-god.png"
+    },
+    {
+     "name": "Crystal Worm Father"
+    },
+    {
+     "name": "Kogbold Expedition Engine"
+    },
+    {
+     "name": "Lord of the Lost Lands"
+    },
+    {
+     "name": "Lost Sentry"
+    },
+    {
+     "name": "Sentient Monolith"
+    },
+    {
+     "name": "Commander Calbrik"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Assembled Giant",
+     "art": "assembled-giant.png"
+    },
+    {
+     "name": "Monstrous Grizzly"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Principal"
+    }
+   ]
   },
   {
    "id": 8,
@@ -8118,7 +8359,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Forest Guard",
+     "art": "legion-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 9,
@@ -8312,7 +8560,24 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "heroes": [
+    {
+     "name": "Deathmage",
+     "art": "deathmage.png"
+    },
+    {
+     "name": "Lich",
+     "art": "lich.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Plains Guard",
+     "art": "legion-plains-guard.png"
+    }
+   ]
   },
   {
    "id": 10,
@@ -8498,7 +8763,44 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Possessed Pumpkin",
+     "art": "possessed-pumpkin.png"
+    },
+    {
+     "name": "Sigma Werewolf"
+    },
+    {
+     "name": "Skull Knight"
+    },
+    {
+     "name": "Skull Shrine",
+     "art": "skull-shrine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alpha Werewolf",
+     "art": "alpha-werewolf.png",
+     "onMap": true
+    },
+    {
+     "name": "Flesh Golem",
+     "art": "flesh-golem.png"
+    },
+    {
+     "name": "Sinister Scarecrow"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Graveyard Guardian",
+     "art": "legion-graveyard-guardian.png"
+    }
+   ]
   },
   {
    "id": 11,
@@ -8693,10 +8995,48 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Possessed Pumpkin",
+     "art": "possessed-pumpkin.png"
+    },
+    {
+     "name": "Sigma Werewolf"
+    },
+    {
+     "name": "Skull Knight"
+    },
+    {
+     "name": "Skull Shrine",
+     "art": "skull-shrine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alpha Werewolf",
+     "art": "alpha-werewolf.png",
+     "onMap": true
+    },
+    {
+     "name": "Flesh Golem",
+     "art": "flesh-golem.png"
+    },
+    {
+     "name": "Sinister Scarecrow"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Graveyard Guardian",
+     "art": "legion-graveyard-guardian.png"
+    }
+   ]
   },
   {
    "id": 12,
@@ -8894,7 +9234,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Undead Forest Guard",
+     "art": "legion-undead-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 13,
@@ -9092,7 +9439,45 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Pentaract",
+     "art": "pentaract.png"
+    },
+    {
+     "name": "The Lich King",
+     "art": "the-lich-king.png"
+    },
+    {
+     "name": "The Plague Doctor"
+    },
+    {
+     "name": "Well of Souls"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Death Knight",
+     "art": "death-knight.png"
+    },
+    {
+     "name": "Kage Kami"
+    },
+    {
+     "name": "Lantern Holder"
+    },
+    {
+     "name": "Shady Sect Leader"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Church Guardian",
+     "art": "legion-church-guardian.png"
+    }
+   ]
   },
   {
    "id": 14,
@@ -9278,7 +9663,23 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "heroes": [
+    {
+     "name": "Ent Ancient",
+     "art": "ent-ancient.png"
+    },
+    {
+     "name": "Great Coil Snake"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Forest Guard",
+     "art": "legion-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 15,
@@ -9472,7 +9873,42 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Beer God",
+     "art": "beer-god.png"
+    },
+    {
+     "name": "Bilgewater’s Galleon"
+    },
+    {
+     "name": "Crab Sovereign"
+    },
+    {
+     "name": "Eye of the Storm"
+    },
+    {
+     "name": "Ghost Ship"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Animal Merchant",
+     "art": "animal-merchant.png"
+    },
+    {
+     "name": "Washed-Up Captain",
+     "art": "washed-up-captain.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Cove Guardian",
+     "art": "legion-cove-guardian.png"
+    }
+   ]
   },
   {
    "id": 16,
@@ -9670,7 +10106,37 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Skull Shrine",
+     "art": "skull-shrine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Demonic Effigy",
+     "art": "demonic-effigy.png"
+    },
+    {
+     "name": "Eternal Tormentor",
+     "art": "eternal-tormentor.png"
+    },
+    {
+     "name": "Infernal Ironsmith",
+     "onMap": true
+    },
+    {
+     "name": "Red Demon"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Hell Guardian",
+     "art": "legion-hell-guardian.png"
+    }
+   ]
   },
   {
    "id": 17,
@@ -9864,7 +10330,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Forest Guard",
+     "art": "legion-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 18,
@@ -10062,7 +10535,45 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Pentaract",
+     "art": "pentaract.png"
+    },
+    {
+     "name": "The Lich King",
+     "art": "the-lich-king.png"
+    },
+    {
+     "name": "The Plague Doctor"
+    },
+    {
+     "name": "Well of Souls"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Death Knight",
+     "art": "death-knight.png"
+    },
+    {
+     "name": "Kage Kami"
+    },
+    {
+     "name": "Lantern Holder"
+    },
+    {
+     "name": "Shady Sect Leader"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Church Guardian",
+     "art": "legion-church-guardian.png"
+    }
+   ]
   },
   {
    "id": 19,
@@ -10248,7 +10759,42 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Beer God",
+     "art": "beer-god.png"
+    },
+    {
+     "name": "Bilgewater’s Galleon"
+    },
+    {
+     "name": "Crab Sovereign"
+    },
+    {
+     "name": "Eye of the Storm"
+    },
+    {
+     "name": "Ghost Ship"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Animal Merchant",
+     "art": "animal-merchant.png"
+    },
+    {
+     "name": "Washed-Up Captain",
+     "art": "washed-up-captain.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Cove Guardian",
+     "art": "legion-cove-guardian.png"
+    }
+   ]
   },
   {
    "id": 20,
@@ -10398,7 +10944,44 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Avatar of the Forgotten King"
+    },
+    {
+     "name": "Bloodroot Heart"
+    },
+    {
+     "name": "Killer Bee Nest"
+    },
+    {
+     "name": "Lost Sentry"
+    },
+    {
+     "name": "Ravenous Rot"
+    },
+    {
+     "name": "Skeletal Centipede"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Organ Harvester",
+     "art": "organ-harvester.png",
+     "onMap": true
+    },
+    {
+     "name": "Scout Colony",
+     "art": "scout-colony.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Missionary"
+    }
+   ]
   },
   {
    "id": 21,
@@ -10596,7 +11179,42 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Astral Rift",
+     "art": "astral-rift.gif"
+    },
+    {
+     "name": "Cube God",
+     "art": "cube-god.png"
+    },
+    {
+     "name": "Daughter of Limon"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Artificial Sprite God",
+     "art": "artificial-sprite-god.png"
+    },
+    {
+     "name": "Celestial Sprite"
+    },
+    {
+     "name": "Cosmic Sprite"
+    },
+    {
+     "name": "Elder Sprite Tree"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Fey Guardian",
+     "art": "legion-fey-guardian.png"
+    }
+   ]
   },
   {
    "id": 22,
@@ -10794,7 +11412,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Forest Guard",
+     "art": "legion-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 23,
@@ -10968,7 +11593,44 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Avatar of the Forgotten King"
+    },
+    {
+     "name": "Bloodroot Heart"
+    },
+    {
+     "name": "Killer Bee Nest"
+    },
+    {
+     "name": "Lost Sentry"
+    },
+    {
+     "name": "Ravenous Rot"
+    },
+    {
+     "name": "Skeletal Centipede"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Organ Harvester",
+     "art": "organ-harvester.png",
+     "onMap": true
+    },
+    {
+     "name": "Scout Colony",
+     "art": "scout-colony.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Missionary"
+    }
+   ]
   },
   {
    "id": 24,
@@ -11162,7 +11824,20 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "heroes": [
+    {
+     "name": "Ghost King",
+     "art": "ghost-king.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Forest Guard",
+     "art": "legion-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 25,
@@ -11348,7 +12023,42 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Astral Rift",
+     "art": "astral-rift.gif"
+    },
+    {
+     "name": "Cube God",
+     "art": "cube-god.png"
+    },
+    {
+     "name": "Daughter of Limon"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Artificial Sprite God",
+     "art": "artificial-sprite-god.png"
+    },
+    {
+     "name": "Celestial Sprite"
+    },
+    {
+     "name": "Cosmic Sprite"
+    },
+    {
+     "name": "Elder Sprite Tree"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Fey Guardian",
+     "art": "legion-fey-guardian.png"
+    }
+   ]
   },
   {
    "id": 26,
@@ -11534,7 +12244,42 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Astral Rift",
+     "art": "astral-rift.gif"
+    },
+    {
+     "name": "Cube God",
+     "art": "cube-god.png"
+    },
+    {
+     "name": "Daughter of Limon"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Artificial Sprite God",
+     "art": "artificial-sprite-god.png"
+    },
+    {
+     "name": "Celestial Sprite"
+    },
+    {
+     "name": "Cosmic Sprite"
+    },
+    {
+     "name": "Elder Sprite Tree"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Fey Guardian",
+     "art": "legion-fey-guardian.png"
+    }
+   ]
   },
   {
    "id": 27,
@@ -11708,7 +12453,42 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Beer God",
+     "art": "beer-god.png"
+    },
+    {
+     "name": "Bilgewater’s Galleon"
+    },
+    {
+     "name": "Crab Sovereign"
+    },
+    {
+     "name": "Eye of the Storm"
+    },
+    {
+     "name": "Ghost Ship"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Animal Merchant",
+     "art": "animal-merchant.png"
+    },
+    {
+     "name": "Washed-Up Captain",
+     "art": "washed-up-captain.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Cove Guardian",
+     "art": "legion-cove-guardian.png"
+    }
+   ]
   },
   {
    "id": 28,
@@ -11898,7 +12678,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "heroes": [
+    {
+     "name": "Beached Buccaneer",
+     "art": "beached-buccaneer.png"
+    }
+   ]
   },
   {
    "id": 29,
@@ -12093,7 +12880,35 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Ancient Kaiju",
+     "art": "ancient-kaiju.png"
+    },
+    {
+     "name": "Crystal Worm Father"
+    },
+    {
+     "name": "Ethereal Shrine"
+    },
+    {
+     "name": "Flying Behemoth"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Critter Brood",
+     "art": "critter-brood.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Colonel",
+     "art": "legion-colonel.png"
+    }
+   ]
   },
   {
    "id": 30,
@@ -12279,7 +13094,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Forest Guard",
+     "art": "legion-forest-guard.png"
+    }
+   ]
   },
   {
    "id": 31,
@@ -12453,7 +13275,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "guardians": [
+    {
+     "name": "Legion Desert Guard",
+     "art": "legion-desert-guard.png"
+    }
+   ]
   },
   {
    "id": 32,
@@ -12599,7 +13428,8 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie"
   },
   {
    "id": 33,
@@ -12773,7 +13603,24 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "heroes": [
+    {
+     "name": "Oasis Giant",
+     "art": "oasis-giant.png"
+    },
+    {
+     "name": "Phoenix Lord",
+     "art": "phoenix-lord.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Desert Guard",
+     "art": "legion-desert-guard.png"
+    }
+   ]
   },
   {
    "id": 34,
@@ -12952,10 +13799,41 @@
       "height": 36,
       "frames": 2,
       "size": 100
-     }
+     },
+     "role": "hero"
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Skull Shrine",
+     "art": "skull-shrine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Demonic Effigy",
+     "art": "demonic-effigy.png"
+    },
+    {
+     "name": "Eternal Tormentor",
+     "art": "eternal-tormentor.png"
+    },
+    {
+     "name": "Infernal Ironsmith",
+     "onMap": true
+    },
+    {
+     "name": "Red Demon"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Hell Guardian",
+     "art": "legion-hell-guardian.png"
+    }
+   ]
   },
   {
    "id": 35,
@@ -13133,7 +14011,14 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Rookie",
+   "heroes": [
+    {
+     "name": "Beached Buccaneer",
+     "art": "beached-buccaneer.png"
+    }
+   ]
   },
   {
    "id": 36,
@@ -13307,7 +14192,44 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Avatar of the Forgotten King"
+    },
+    {
+     "name": "Bloodroot Heart"
+    },
+    {
+     "name": "Killer Bee Nest"
+    },
+    {
+     "name": "Lost Sentry"
+    },
+    {
+     "name": "Ravenous Rot"
+    },
+    {
+     "name": "Skeletal Centipede"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Organ Harvester",
+     "art": "organ-harvester.png",
+     "onMap": true
+    },
+    {
+     "name": "Scout Colony",
+     "art": "scout-colony.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Missionary"
+    }
+   ]
   },
   {
    "id": 37,
@@ -13453,7 +14375,35 @@
      }
     }
    ],
-   "met": true
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Ancient Kaiju",
+     "art": "ancient-kaiju.png"
+    },
+    {
+     "name": "Crystal Worm Father"
+    },
+    {
+     "name": "Ethereal Shrine"
+    },
+    {
+     "name": "Flying Behemoth"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Critter Brood",
+     "art": "critter-brood.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Colonel",
+     "art": "legion-colonel.png"
+    }
+   ]
   },
   {
    "id": 38,
@@ -13896,7 +14846,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Forest Guard",
+    "art": "legion-forest-guard.png"
+   }
   },
   {
    "x": 1060,
@@ -14002,7 +14956,11 @@
      },
      "spawner": true
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Forest Guard",
+    "art": "legion-forest-guard.png"
+   }
   },
   {
    "x": 1037,
@@ -14152,7 +15110,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Plains Guard",
+    "art": "legion-plains-guard.png"
+   }
   },
   {
    "x": 672,
@@ -14209,7 +15171,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Undead Forest Guard",
+    "art": "legion-undead-forest-guard.png"
+   }
   },
   {
    "x": 478,
@@ -14302,7 +15268,10 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Missionary"
+   }
   },
   {
    "x": 1993,
@@ -15034,7 +16003,10 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Missionary"
+   }
   },
   {
    "x": 989,
@@ -15091,7 +16063,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Cove Guardian",
+    "art": "legion-cove-guardian.png"
+   }
   },
   {
    "x": 1852,
@@ -15148,7 +16124,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Cove Guardian",
+    "art": "legion-cove-guardian.png"
+   }
   },
   {
    "x": 1671,
@@ -15241,7 +16221,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Fey Guardian",
+    "art": "legion-fey-guardian.png"
+   }
   },
   {
    "x": 1173,
@@ -15249,7 +16233,11 @@
    "name": "Haunted Hallows",
    "state": "teleport",
    "zone": 10,
-   "guards": []
+   "guards": [],
+   "guardian": {
+    "name": "Legion Graveyard Guardian",
+    "art": "legion-graveyard-guardian.png"
+   }
   },
   {
    "x": 1865,
@@ -15318,7 +16306,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Cove Guardian",
+    "art": "legion-cove-guardian.png"
+   }
   },
   {
    "x": 1122,
@@ -15399,7 +16391,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Hell Guardian",
+    "art": "legion-hell-guardian.png"
+   }
   },
   {
    "x": 1719,
@@ -15480,7 +16476,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Fey Guardian",
+    "art": "legion-fey-guardian.png"
+   }
   },
   {
    "x": 831,
@@ -15537,7 +16537,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Church Guardian",
+    "art": "legion-church-guardian.png"
+   }
   },
   {
    "x": 1021,
@@ -15619,7 +16623,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Church Guardian",
+    "art": "legion-church-guardian.png"
+   }
   },
   {
    "x": 1437,
@@ -15724,7 +16732,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Hell Guardian",
+    "art": "legion-hell-guardian.png"
+   }
   },
   {
    "x": 546,
@@ -15817,7 +16829,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Desert Guard",
+    "art": "legion-desert-guard.png"
+   }
   },
   {
    "x": 779,
@@ -15850,7 +16866,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Graveyard Guardian",
+    "art": "legion-graveyard-guardian.png"
+   }
   },
   {
    "x": 1342,
@@ -15943,7 +16963,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Church Guardian",
+    "art": "legion-church-guardian.png"
+   }
   },
   {
    "x": 1345,
@@ -16048,7 +17072,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Fey Guardian",
+    "art": "legion-fey-guardian.png"
+   }
   },
   {
    "x": 1032,
@@ -16141,7 +17169,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Desert Guard",
+    "art": "legion-desert-guard.png"
+   }
   },
   {
    "x": 1292,
@@ -16246,7 +17278,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion City Guardian",
+    "art": "legion-city-guardian.png"
+   }
   },
   {
    "x": 1689,
@@ -16339,7 +17375,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Church Guardian",
+    "art": "legion-church-guardian.png"
+   }
   },
   {
    "x": 807,
@@ -16384,7 +17424,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Forest Guard",
+    "art": "legion-forest-guard.png"
+   }
   },
   {
    "x": 489,
@@ -16441,7 +17485,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Colonel",
+    "art": "legion-colonel.png"
+   }
   },
   {
    "x": 1133,
@@ -16522,7 +17570,10 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Principal"
+   }
   },
   {
    "x": 1463,
@@ -16603,7 +17654,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Colonel",
+    "art": "legion-colonel.png"
+   }
   },
   {
    "x": 1533,
@@ -16696,7 +17751,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Graveyard Guardian",
+    "art": "legion-graveyard-guardian.png"
+   }
   },
   {
    "x": 961,
@@ -16765,7 +17824,10 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Missionary"
+   }
   },
   {
    "x": 917,
@@ -16834,7 +17896,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Forest Guard",
+    "art": "legion-forest-guard.png"
+   }
   },
   {
    "x": 1048,
@@ -16927,7 +17993,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Colonel",
+    "art": "legion-colonel.png"
+   }
   },
   {
    "x": 1247,
@@ -16984,7 +18054,11 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Forest Guard",
+    "art": "legion-forest-guard.png"
+   }
   }
  ],
  "roads": 53802,
