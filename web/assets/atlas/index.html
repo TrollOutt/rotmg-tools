@@ -375,12 +375,36 @@ if (A.things) {
   thingArt.src = BASE + 'things.png';
   fetch(BASE + 'things.json').then(r => r.json()).then(index =>
     fetch(BASE + 'things.bin').then(r => r.arrayBuffer()).then(buffer => {
-      things = { index, at: new Uint16Array(buffer) };
+      things = { index, at: new Uint16Array(buffer), reach: reachOf(index) };
     })).catch(() => { things = null; });
+}
+
+/*
+ * How far the biggest thing in the sheet reaches past the tile it stands
+ * on, in tiles.
+ *
+ * Needed to know what can be thrown away unseen, and worth measuring
+ * rather than guessing: the widest cell is sixty-eight sheet pixels and
+ * the largest a thing is drawn is 160 per cent, which together are nearly
+ * seven tiles - so a foot three tiles outside the frame can still put a
+ * shoulder inside it. Read off the sheet once, when it arrives.
+ */
+function reachOf(index) {
+  let wide = 0, tall = 0, rise = 0;
+  for (const pic of index.pics) {
+    if (!pic) continue;
+    const size = (pic[4] || 100) / 100;
+    wide = Math.max(wide, pic[2] * size);
+    tall = Math.max(tall, pic[3] * size);
+    rise = Math.max(rise, (pic[5] || 0) / 100);
+  }
+  const perTile = A.px * SS;
+  return { half: wide / perTile / 2, tall: tall / perTile, rise };
 }
 
 // Reused between frames so a busy corner of the realm does not make garbage.
 const standing = [];
+const mob = [];
 
 function drawThings(box, time) {
   if (!things || !thingArt.complete || !thingArt.naturalWidth) return null;
@@ -390,20 +414,55 @@ function drawThings(box, time) {
   const c0 = Math.floor(near.x / span) - 1, c1 = Math.floor(far.x / span) + 1;
   const r0 = Math.floor(near.y / span) - 1, r1 = Math.floor(far.y / span) + 1;
 
+  /*
+   * Only the things that could land on the screen.
+   *
+   * A chunk is a hundred and twenty-eight tiles square and holds thousands
+   * of things; the screen at this level holds a couple of hundred tiles
+   * across. Collected by the chunk and sorted before anything was thrown
+   * away, nineteen things in twenty were sorted, measured, placed and only
+   * then discarded - twenty-nine thousand of them handled to draw thirteen
+   * hundred. The bounds are asked first now, in the units the file is
+   * written in, so that nothing has to be divided to answer.
+   *
+   * The margin below is generous because a thing is placed by its foot and
+   * drawn upwards: the tallest stand six tiles high, so one whose foot is
+   * under the bottom edge can still hang into view. Above the top edge a
+   * foot cannot, since the body is above it - and `near` is already read
+   * eighty pixels high for that. The exact check further down still has
+   * the last word.
+   */
+  const a = things.at;
+  /*
+   * The margin carries three things: half the widest thing, because a
+   * thing is placed by the middle of its foot; its whole height on the
+   * near side, because it is drawn upwards and one standing below the
+   * bottom edge can still hang into view; and the forty screen pixels the
+   * exact check further down tolerates, which this far in is several tiles
+   * and was what the first attempt at this forgot. Losing twenty-four
+   * things off the edges is what forgetting it looks like.
+   */
+  const reach = things.reach;
+  const slack = 40 / view.scale;
+  const overX = reach.half + slack, aboveY = 1 + slack;
+  const belowY = reach.tall + reach.rise + 1 + slack;
+  const lowX = (near.x - overX) * 8, highX = (far.x + overX) * 8;
+  const lowY = (near.y - aboveY) * 8, highY = (far.y + belowY) * 8;
   standing.length = 0;
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const where = things.index.chunks[c + '_' + r];
       if (!where) continue;
-      const [from, count] = where;
+      const from = where[0], count = where[1];
       for (let i = 0; i < count; i++) {
         const at = (from + i) * 3;
+        const tx = a[at + 1], ty = a[at + 2];
+        if (tx < lowX || tx > highX || ty < lowY || ty > highY) continue;
         standing.push(at);
       }
     }
   }
   // Down the screen, so the near thing is drawn last and stands in front.
-  const a = things.at;
   standing.sort((p, q) => a[p + 2] - a[q + 2]);
 
   /*
@@ -411,7 +470,7 @@ function drawThings(box, time) {
    * would always pass in front of it, and a monster standing behind a wall
    * would be drawn on top of the wall; sorted together, it is behind it.
    */
-  const mob = [];
+  mob.length = 0;
   for (const one of alive) {
     if (one.x < near.x - 6 || one.x > far.x + 6) continue;
     if (one.y < near.y - 6 || one.y > far.y + 6) continue;
