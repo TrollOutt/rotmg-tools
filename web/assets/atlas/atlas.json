@@ -911,7 +911,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     },
     {
      "type": 34488,
@@ -1277,18 +1278,6 @@
      "seen": 98,
      "sprite": {
       "file": "c49627.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21861,
-     "name": "New Shield Orc Shield",
-     "seen": 94,
-     "sprite": {
-      "file": "c21861.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -2191,18 +2180,6 @@
      }
     },
     {
-     "type": 34516,
-     "name": "Flesh Satellite",
-     "seen": 15,
-     "sprite": {
-      "file": "c34516.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34601,
      "name": "Sinister Crow",
      "seen": 10,
@@ -2864,18 +2841,6 @@
      "seen": 55,
      "sprite": {
       "file": "c21932.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 51,
-     "sprite": {
-      "file": "c21805.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -4562,7 +4527,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     }
    ]
   },
@@ -4668,18 +4634,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 12,
-     "sprite": {
-      "file": "c22433.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
       "size": 100
      }
     },
@@ -4868,18 +4822,6 @@
      "seen": 12,
      "sprite": {
       "file": "c374.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 11,
-     "sprite": {
-      "file": "c22433.png",
       "tile": 20,
       "height": 20,
       "frames": 1,
@@ -5325,7 +5267,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     },
     {
      "type": 29232,
@@ -5566,18 +5509,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 33,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21809,
      "name": "New Nomadic Shaman",
      "seen": 32,
@@ -5626,18 +5557,6 @@
      }
     },
     {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 24,
-     "sprite": {
-      "file": "c21802.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21903,
      "name": "New Birdman",
      "seen": 23,
@@ -5667,30 +5586,6 @@
      "seen": 20,
      "sprite": {
       "file": "c21798.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 20,
-     "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 19,
-     "sprite": {
-      "file": "c21804.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -5757,18 +5652,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 32,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21799,
      "name": "New Fire Golem",
      "seen": 29,
@@ -5781,47 +5664,11 @@
      }
     },
     {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 25,
-     "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21800,
      "name": "New Darkness Golem",
      "seen": 24,
      "sprite": {
       "file": "c21800.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 22,
-     "sprite": {
-      "file": "c21804.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 17,
-     "sprite": {
-      "file": "c21802.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -7241,7 +7088,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     },
     {
      "type": 34488,
@@ -7645,18 +7493,6 @@
      "seen": 98,
      "sprite": {
       "file": "c49627.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21861,
-     "name": "New Shield Orc Shield",
-     "seen": 94,
-     "sprite": {
-      "file": "c21861.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -8650,18 +8486,6 @@
      }
     },
     {
-     "type": 34516,
-     "name": "Flesh Satellite",
-     "seen": 15,
-     "sprite": {
-      "file": "c34516.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34601,
      "name": "Sinister Crow",
      "seen": 10,
@@ -9411,18 +9235,6 @@
      "seen": 55,
      "sprite": {
       "file": "c21932.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 51,
-     "sprite": {
-      "file": "c21805.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -11500,18 +11312,6 @@
      }
     },
     {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 12,
-     "sprite": {
-      "file": "c22433.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34572,
      "name": "Artificial Sprite Child",
      "seen": 10,
@@ -11727,18 +11527,6 @@
      "seen": 12,
      "sprite": {
       "file": "c374.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 11,
-     "sprite": {
-      "file": "c22433.png",
       "tile": 20,
       "height": 20,
       "frames": 1,
@@ -12253,7 +12041,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     },
     {
      "type": 29232,
@@ -12580,18 +12369,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 33,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21809,
      "name": "New Nomadic Shaman",
      "seen": 32,
@@ -12636,18 +12413,6 @@
       "tile": 36,
       "height": 36,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 24,
-     "sprite": {
-      "file": "c21802.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
       "size": 100
      }
     },
@@ -12786,18 +12551,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 32,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21799,
      "name": "New Fire Golem",
      "seen": 29,
@@ -12810,47 +12563,11 @@
      }
     },
     {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 25,
-     "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21800,
      "name": "New Darkness Golem",
      "seen": 24,
      "sprite": {
       "file": "c21800.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 22,
-     "sprite": {
-      "file": "c21804.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 17,
-     "sprite": {
-      "file": "c21802.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -14168,30 +13885,6 @@
      }
     },
     {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 1,
-     "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21806,
-     "name": "New Gray Satellite 3",
-     "seen": 1,
-     "sprite": {
-      "file": "c21806.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21838,
      "name": "New Clockwork Golem",
      "seen": 1,
@@ -14306,7 +13999,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     }
    ]
   },
@@ -14350,42 +14044,6 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 8,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 6,
-     "sprite": {
-      "file": "c21802.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 5,
-     "sprite": {
-      "file": "c21804.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
       "size": 100
      }
     },
@@ -15489,18 +15147,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 49904,
-     "name": "Shipwreck Hag Whirlpool",
-     "seen": 1,
-     "sprite": {
-      "file": "c49904.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
     }
    ]
   },
@@ -15844,30 +15490,6 @@
    "zone": 5,
    "guards": [
     {
-     "type": 21863,
-     "name": "New Left Horizontal Trap",
-     "seen": 3,
-     "sprite": {
-      "file": "c21863.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21864,
-     "name": "New Top Vertical Trap",
-     "seen": 3,
-     "sprite": {
-      "file": "c21864.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21853,
      "name": "New Undead Dwarf Warrior",
      "seen": 2,
@@ -15897,18 +15519,6 @@
      "seen": 1,
      "sprite": {
       "file": "c21854.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21861,
-     "name": "New Shield Orc Shield",
-     "seen": 1,
-     "sprite": {
-      "file": "c21861.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -15994,7 +15604,8 @@
       "height": 20,
       "frames": 1,
       "size": 100
-     }
+     },
+     "spawner": true
     },
     {
      "type": 21943,
