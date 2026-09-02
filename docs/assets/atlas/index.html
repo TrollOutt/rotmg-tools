@@ -122,6 +122,20 @@ const HIGH = 2.4;                       // how far back the camera sits, in scre
 const flatMap = document.createElement('canvas');
 const flatCtx = flatMap.getContext('2d', { alpha: false });
 
+/*
+ * The globe gets a canvas of its own, and it keeps its alpha.
+ *
+ * The leaning camera draws onto an opaque one and fills it with the
+ * background first, which is right for a floor that covers the window. The
+ * globe needs the opposite: everywhere the chart was not recorded has to
+ * come through as nothing, so the ocean painted underneath shows. Sharing
+ * the opaque canvas made clearRect paint solid black, and the black was then
+ * laid over the sea - which is why the world had a ring of night round its
+ * coast instead of water.
+ */
+const globeMap = document.createElement('canvas');
+const globeCtx = globeMap.getContext('2d');
+
 const tilting = () => TUNE.tilt >= 1 && levelFor(view.scale) === 0;
 const turning = () => Math.abs(TUNE.turn) >= 1;
 // The camera swung round to left or right. The floor turns with it; what
@@ -140,6 +154,75 @@ const toScreen = (tx, ty, box) => ({
   x: (tx - view.x) * view.scale + box.w / 2,
   y: (ty - view.y) * view.scale + box.h / 2
 });
+
+/* ------------------------------------------------------------------ *
+ * The world is round                                                 *
+ * ------------------------------------------------------------------ */
+/*
+ * The realm is an island, and an island is on something. Drawn flat it
+ * ended as a blue rectangle in a black surround, which says "a picture of
+ * a map" rather than "a place" - so the flat chart is treated as an
+ * equirectangular one and laid onto a globe.
+ *
+ * A radius in tiles is all it takes. The realm is a little under two
+ * thousand tiles across and the sea reaches eighty tiles past every coast,
+ * so a world of this radius shows the whole of it on the near face with
+ * ocean to spare round the edge.
+ */
+const PLANET = 1250;
+
+// The blue the sea is drawn in the ground pictures - counted off the
+// coarsest of them, where it is the commonest colour there is - so the
+// ocean painted beyond the recorded water is the same water.
+const OCEAN = [64, 105, 181];
+
+/*
+ * Curvature costs nothing when you are close, and that falls out of the
+ * arithmetic rather than being switched off: the world in screen pixels is
+ * the radius times the zoom, so the closer you are the larger it is, and a
+ * screen-sized patch of a very large sphere is flat to well under a pixel.
+ * At the far end a whole hemisphere is on screen and it is a globe.
+ */
+const globe = () => PLANET * view.scale;
+
+/*
+ * Flat offset from the middle of the screen, to where the globe puts it.
+ *
+ * The flat map is read as latitude and longitude - so many tiles north is
+ * so many radians of latitude - and then projected the way a globe seen
+ * from a long way off projects: straight down the line of sight.
+ *
+ *     x = R cos(lat) sin(lon)        y = R sin(lat)
+ *
+ * Null for anything on the far side, which is anything more than a quarter
+ * turn from the middle in either direction.
+ */
+function onGlobe(u, v) {
+  const R = globe();
+  const lat = v / R, lon = u / R;
+  if (lat <= -Math.PI / 2 || lat >= Math.PI / 2) return null;
+  if (lon <= -Math.PI / 2 || lon >= Math.PI / 2) return null;
+  const cosLat = Math.cos(lat);
+  return {
+    x: R * cosLat * Math.sin(lon),
+    y: R * Math.sin(lat),
+    // How much the surface is turned away here, which is how much smaller
+    // anything standing on it should be drawn.
+    k: cosLat * Math.cos(lon)
+  };
+}
+
+/* And back: from a point on the disc to the flat chart. */
+function offGlobe(x, y) {
+  const R = globe();
+  const sinLat = y / R;
+  if (sinLat <= -1 || sinLat >= 1) return null;
+  const lat = Math.asin(sinLat), cosLat = Math.cos(lat);
+  if (cosLat < 1e-6) return null;
+  const sinLon = x / (R * cosLat);
+  if (sinLon < -1 || sinLon > 1) return null;
+  return { u: R * Math.asin(sinLon), v: R * lat };
+}
 /*
  * Where a thing standing at this tile meets the screen, and how big distance
  * makes it. Flat, unless the camera is leaning.
@@ -148,7 +231,11 @@ function place(tx, ty, box) {
   let u = (tx - view.x) * view.scale, v = (ty - view.y) * view.scale;
   const S = spin();
   if (S) { const nu = u * S.cos - v * S.sin; v = u * S.sin + v * S.cos; u = nu; }
-  if (!tilting()) return { x: box.w / 2 + u, y: box.h / 2 + v, k: 1 };
+  if (!tilting()) {
+    const on = onGlobe(u, v);
+    if (!on) return null;                          // round the far side
+    return { x: box.w / 2 + on.x, y: box.h / 2 + on.y, k: on.k };
+  }
   const L = lean(box);
   const z = L.h - v * L.sin;
   if (z < 1) return null;                            // behind the camera
@@ -162,6 +249,11 @@ function place(tx, ty, box) {
  */
 function fromScreen(px, py, box) {
   let u = px - box.w / 2, v = py - box.h / 2;
+  if (!tilting()) {
+    const off = offGlobe(u, v);
+    if (!off) return { x: NaN, y: NaN };           // off the world
+    u = off.u; v = off.v;
+  }
   if (tilting()) {
     const L = lean(box);
     const under = L.cos * L.h + v * L.sin;
@@ -192,7 +284,21 @@ const toTile = (px, py, box) => fromScreen(px, py, box);
  * than as running out of room. So the ones not looked at recently are let go;
  * they cost a moment to fetch again and nothing at all to keep off the heap.
  */
-const KEEP = 64;
+/*
+ * Raised from sixty-four once the levels either side of the one in use
+ * started being fetched ahead of time: at sixty-four a zoom in and back out
+ * could evict the pictures it was about to want again, and fetch them
+ * twice. Ninety-six of them is under a hundred megabytes decoded, which is
+ * well short of where the browser gives up.
+ */
+/*
+ * Counts up every time a chunk picture finishes loading. The kept globe is
+ * keyed on it, because the first frame of a fresh page is drawn before any
+ * ground has arrived - and keeping that one produced a planet of unbroken
+ * ocean that never corrected itself.
+ */
+let arrived = 0;
+const KEEP = 96;
 const images = new Map();
 function chunkImage(z, name) {
   const key = z + '/' + name;
@@ -205,6 +311,9 @@ function chunkImage(z, name) {
   }
   img = new Image();
   img.decoding = 'async';
+  // Something that was not there a moment ago now is, which anything
+  // holding a finished picture of the ground needs to know about.
+  img.onload = () => { arrived++; };
   img.src = BASE + 'z' + z + '/' + name + '.png';
   images.set(key, img);
   while (images.size > KEEP) {
@@ -279,6 +388,58 @@ function drawLevel(z, box) {
  * of it a moment later without anything having flickered.
  */
 const COARSEST = A.levels.length - 1;
+
+/*
+ * Fetch the level we are heading for, not the one we are on.
+ *
+ * The view eases towards where it was asked to go, so at the moment the
+ * wheel turns we already know the zoom it is going to settle at - and
+ * therefore which level will be wanted when it gets there. Asking for those
+ * pictures now means the fetch and the decode happen during the ease
+ * instead of after it, and the soft version underneath is replaced by the
+ * sharp one at about the moment the movement stops rather than a beat
+ * later.
+ *
+ * Nothing is drawn here. Asking chunkImage for a picture is what starts it
+ * loading; the cache holds it until the frame that wants it arrives.
+ */
+function warm(z, atX, atY, scale, box) {
+  const have = haveChunk.get(z);
+  if (!have) return 0;
+  const span = A.chunk * (1 << z);
+  const half = { x: box.w / 2 / scale, y: box.h / 2 / scale };
+  const c0 = Math.floor((atX - half.x) / span), c1 = Math.floor((atX + half.x) / span);
+  const r0 = Math.floor((atY - half.y) / span), r1 = Math.floor((atY + half.y) / span);
+  let asked = 0;
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const name = c + '_' + r;
+      if (!have.has(name)) continue;
+      chunkImage(z, name);
+      asked++;
+    }
+  }
+  return asked;
+}
+
+/*
+ * Where the wheel is taking us, and one step either side of it.
+ *
+ * The step either side is for the next turn of the wheel: zooming is rarely
+ * one notch, and having the neighbour already in hand is the difference
+ * between a soft frame and none at all. It only runs while the view is
+ * actually moving, so sitting still costs nothing.
+ */
+function warmAhead(box) {
+  const moving = Math.abs(want.scale - view.scale) > view.scale * 0.002
+    || Math.abs(want.x - view.x) > 0.5 || Math.abs(want.y - view.y) > 0.5;
+  if (!moving) return;
+  const going = levelFor(want.scale);
+  warm(going, want.x, want.y, want.scale, box);
+  if (going > 0) warm(going - 1, want.x, want.y, want.scale * 2, box);
+  if (going < COARSEST) warm(going + 1, want.x, want.y, want.scale / 2, box);
+}
+
 function drawGround(box) {
   const z = levelFor(view.scale);
   ctx.imageSmoothingEnabled = view.scale < A.px / 2;
@@ -309,6 +470,7 @@ maskImage.src = BASE + 'mask.png';
 
 function atTile(tx, ty) {
   if (!mask) return null;
+  if (!Number.isFinite(tx) || !Number.isFinite(ty)) return null;   // off the world
   const x = Math.floor(tx) - B.minX, y = Math.floor(ty) - B.minY;
   if (x < 0 || y < 0 || x >= mask.w || y >= mask.h) return null;
   const at = (y * mask.w + x) * 4;
@@ -1046,7 +1208,10 @@ function drawBeacons(box, time) {
     const at = place(beacon.x, beacon.y, box);
     if (!at) continue;
     if (at.x < -60 || at.y < -60 || at.x > box.w + 60 || at.y > box.h + 60) continue;
-    const r = Math.max(14, view.scale * 2.6) * at.k * pulse;
+    // Foreshortened round the curve of the world, and never less than a
+    // pixel: a radius has to be positive, and one frame of a bad one used
+    // to take the whole loop down with it.
+    const r = Math.max(1, Math.max(14, view.scale * 2.6) * (at.k || 0) * pulse);
     const warm = beacon === chosenBeacon ? [255, 203, 112] : [180, 232, 255];
 
     ctx.save();
@@ -1185,6 +1350,191 @@ document.getElementById('shut').addEventListener('click', shutPanel);
 /* ---------------- the frame ---------------- */
 let last = performance.now();
 /*
+ * The ground, laid onto the globe.
+ *
+ * Drawn flat first, onto a canvas wider and taller than the screen, because
+ * the near face pulls in a great deal more chart than a flat view of the
+ * same window would hold. Then read back a band of rows at a time.
+ *
+ * A band cannot be laid down in one piece. Latitude only bends rows up and
+ * down, which a band handles, but longitude enters as its sine - the middle
+ * of the face is stretched and the edges are crowded - so within a band the
+ * chart has to be taken in several pieces, each stretched by its own
+ * amount. How many pieces comes from how much of a turn is actually on
+ * screen, so a close view takes one piece per band and pays nothing for
+ * being on a globe at all.
+ */
+const SPHERE_STEP = 3;                              // rows per band
+
+/*
+ * How near the truth a band has to be, in screen pixels.
+ *
+ * Each piece of a band is a straight stretch standing in for a piece of a
+ * sine curve, and a chord of angular width d departs from its arc by about
+ * r*d*d/8 - so the width that keeps it inside half a pixel is the square
+ * root of four over the radius. This matters more than it sounds: the
+ * creatures and the scenery are put where the exact projection says, so a
+ * band that is off by seven pixels stands its trees seven pixels off their
+ * own ground. A fixed number of pieces got that wrong in the middle
+ * distance and wasted them at the far end.
+ */
+const SPHERE_TRUE = 0.5;
+
+/*
+ * The warped world, kept until something about it changes.
+ *
+ * Laying a hemisphere down takes a couple of thousand small pieces, which
+ * is worth doing once and not sixty times a second. Nothing in the ground
+ * layer moves at these zooms - the drifting water is lifted out only at the
+ * closest level, and the lit patch changes when the pointer does - so the
+ * finished disc is kept and blitted whole until the view, the window or the
+ * highlight is different.
+ */
+const globeKept = document.createElement('canvas');
+const globeKeptCtx = globeKept.getContext('2d');
+let globeKeptKey = null;
+let globeKeptGround = null;
+
+function groundGlobe(box, now) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const level = levelFor(view.scale);
+  /*
+   * The drifting water is lifted out and drawn moving only at the closest
+   * level, so at every other one the ground layer is a still picture and
+   * the finished disc can be kept. The view is rounded into the key, so
+   * the easing settling by a thousandth of a pixel does not throw away a
+   * couple of thousand pieces of work.
+   */
+  const still = level !== 0;
+  const key = still ? [Math.round(view.x * 8), Math.round(view.y * 8),
+    Math.round(view.scale * 4096), hovered, chosen, box.w, box.h, arrived].join() : null;
+  if (still && key === globeKeptKey && globeKeptGround) {
+    ctx.drawImage(globeKept, 0, 0, box.w, box.h);
+    return globeKeptGround;
+  }
+  const R = globe();
+  /*
+   * How much flat chart has to be drawn to fill this window.
+   *
+   * Asked the other way round: the corner of the window is at some latitude
+   * and longitude, and the chart is needed out to there and no further.
+   * Close in that is the window itself to within a pixel; far out it is a
+   * quarter turn of the world in each direction. Getting this wrong the
+   * generous way asks for a canvas thirty thousand pixels on a side and the
+   * page simply stops.
+   */
+  const latMax = Math.asin(Math.min(1, (box.h / 2) / R));
+  const cosLatMin = Math.max(1e-3, Math.cos(latMax));
+  const lonMax = Math.asin(Math.min(1, (box.w / 2) / (R * cosLatMin)));
+  const reachX = Math.min(R * Math.PI / 2, R * lonMax + 2);
+  const reachY = Math.min(R * Math.PI / 2, R * latMax + 2);
+  const wide = Math.min(4096, Math.ceil(reachX * 2));
+  const tall = Math.min(4096, Math.ceil(reachY * 2));
+  if (globeMap.width !== Math.round(wide * dpr) || globeMap.height !== Math.round(tall * dpr)) {
+    globeMap.width = Math.round(wide * dpr);
+    globeMap.height = Math.round(tall * dpr);
+  }
+  globeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  globeCtx.clearRect(0, 0, wide, tall);
+
+  const big = { w: wide, h: tall };
+  const real = ctx;
+  ctx = globeCtx;
+  const ground = drawGround(big);
+  drawWater(big, now);
+  drawRoads(big);
+  if (chosen) drawLit(big, chosen, 0.16);
+  else if (hovered) drawLit(big, hovered, 0.1);
+  ctx = real;
+
+  // The disc is built on a canvas of its own so that it can be kept.
+  if (globeKept.width !== Math.round(box.w * dpr) || globeKept.height !== Math.round(box.h * dpr)) {
+    globeKept.width = Math.round(box.w * dpr);
+    globeKept.height = Math.round(box.h * dpr);
+  }
+  globeKeptCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  globeKeptCtx.clearRect(0, 0, box.w, box.h);
+  const screen = ctx;
+  ctx = globeKeptCtx;
+
+  const cx = box.w / 2, cy = box.h / 2;
+  ctx.save();
+  // Everything from here on belongs to the disc.
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Ocean first, so the chart has water to sit in wherever nothing was
+  // recorded - which past the eighty tiles of sea is everywhere.
+  ctx.fillStyle = 'rgb(' + OCEAN.join(',') + ')';
+  ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+  ctx.imageSmoothingEnabled = true;
+  const top = Math.max(-R, -cy), bottom = Math.min(R, box.h - cy);
+  for (let y = Math.floor(top); y < bottom; y += SPHERE_STEP) {
+    const y2 = Math.min(y + SPHERE_STEP, bottom);
+    const lat = Math.asin(Math.max(-1, Math.min(1, y / R)));
+    const lat2 = Math.asin(Math.max(-1, Math.min(1, y2 / R)));
+    const cosLat = Math.cos((lat + lat2) / 2);
+    if (cosLat < 0.02) continue;
+    const sv = R * lat, sv2 = R * lat2;
+    // The stretch of longitude this band of the screen covers.
+    const half = R * cosLat;
+    const fromX = Math.max(-half, -cx), toX = Math.min(half, box.w - cx);
+    if (toX <= fromX) continue;
+    const lonAt = px => Math.asin(Math.max(-1, Math.min(1, px / half)));
+    const lon0 = lonAt(fromX), lon1 = lonAt(toX);
+    const widest = Math.sqrt(4 * SPHERE_TRUE / half);
+    const pieces = Math.max(1, Math.min(48, Math.ceil((lon1 - lon0) / widest)));
+    for (let p = 0; p < pieces; p++) {
+      const a = lon0 + (lon1 - lon0) * p / pieces;
+      const b = lon0 + (lon1 - lon0) * (p + 1) / pieces;
+      const dx0 = half * Math.sin(a), dx1 = half * Math.sin(b);
+      const su0 = R * a, su1 = R * b;
+      if (dx1 - dx0 < 0.05) continue;
+      ctx.drawImage(globeMap,
+        (wide / 2 + su0) * dpr, (tall / 2 + sv) * dpr,
+        Math.max(1, (su1 - su0) * dpr), Math.max(1, (sv2 - sv) * dpr),
+        cx + dx0, cy + y, dx1 - dx0, Math.max(1, y2 - y));
+    }
+  }
+  ctx.imageSmoothingEnabled = false;
+
+  /*
+   * The edge of a lit sphere is darker than the middle of it, and there is
+   * a little air above it. Both are drawn only when the world is small
+   * enough on screen for an edge to be in view at all.
+   */
+  if (R < Math.max(box.w, box.h) * 1.6) {
+    const limb = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R);
+    limb.addColorStop(0, 'rgba(0,0,0,0)');
+    limb.addColorStop(0.75, 'rgba(2,5,12,.22)');
+    limb.addColorStop(1, 'rgba(1,3,8,.72)');
+    ctx.fillStyle = limb;
+    ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  }
+  ctx.restore();
+
+  if (R < Math.max(box.w, box.h) * 1.6) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const air = ctx.createRadialGradient(cx, cy, R * 0.96, cx, cy, R * 1.06);
+    air.addColorStop(0, 'rgba(96,150,220,0)');
+    air.addColorStop(0.45, 'rgba(110,168,235,.30)');
+    air.addColorStop(1, 'rgba(96,150,220,0)');
+    ctx.fillStyle = air;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.06, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  ctx = screen;
+  ctx.drawImage(globeKept, 0, 0, box.w, box.h);
+  globeKeptKey = key;
+  globeKeptGround = ground;
+  return ground;
+}
+
+/*
  * The floor drawn flat on a larger canvas than the screen - tilting brings
  * more of the far distance into view than a flat picture holds - and then
  * laid back onto the screen one strip at a time.
@@ -1247,14 +1597,27 @@ function groundTilted(box, now) {
   return ground;
 }
 
+/*
+ * The next frame is asked for before this one is drawn.
+ *
+ * With the request at the end, anything that threw on the way down stopped
+ * the map for good - one bad number in one frame and the realm froze
+ * half-drawn, which is indistinguishable from the page having crashed. Asked
+ * for first, a bad frame is a bad frame and the next one is fine.
+ */
 function frame(now) {
+  requestAnimationFrame(frame);
   const delta = Math.min(0.1, (now - last) / 1000);
   last = now;
   // The view eases to where it was asked to go rather than jumping.
   for (const key of ['x', 'y', 'scale']) {
     view[key] += (want[key] - view[key]) * Math.min(1, delta * 7);
   }
+  // Whatever else happens, the world has a positive size.
+  if (!(view.scale > 0.001)) view.scale = 0.02;
+  if (!(want.scale > 0.001)) want.scale = 0.02;
   const box = size();
+  warmAhead(box);
   ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, box.w, box.h);
 
@@ -1262,11 +1625,7 @@ function frame(now) {
   if (tilting() || turning()) {
     ground = groundTilted(box, now);
   } else {
-    ground = drawGround(box);
-    drawWater(box, now);
-    drawRoads(box);
-    if (chosen) drawLit(box, chosen, 0.16);
-    else if (hovered) drawLit(box, hovered, 0.1);
+    ground = groundGlobe(box, now);
   }
   stepLife(delta);
   const close = drawThings(box, now);
@@ -1288,8 +1647,6 @@ function frame(now) {
     zoneAt.textContent = zone ? zone.name : (here && here.biome === A.mask.sea ? 'open water' : '');
     canvas.style.cursor = (zone || hoveredBeacon) ? 'pointer' : 'crosshair';
   }
-
-requestAnimationFrame(frame);
 }
 
 /* ---------------- getting about ---------------- */
@@ -1302,12 +1659,32 @@ requestAnimationFrame(frame);
  * the box round the places big enough to be places, which is where the realm
  * actually is.
  */
+/*
+ * Fitting shows the world.
+ *
+ * Fitting the island alone put its coasts against the edges of the window,
+ * which on a globe means the world runs off the screen in every direction
+ * and you cannot see that it is one. The disc is what is fitted now; the
+ * island is most of it.
+ */
 function fit() {
   const box = size();
   const f = A.focus || [B.minX, B.minY, B.maxX, B.maxY];
-  want.scale = Math.min(box.w / (f[2] - f[0] + 1), (box.h - 34) / (f[3] - f[1] + 1)) * 0.98;
   want.x = (f[0] + f[2]) / 2;
   want.y = (f[1] + f[3]) / 2;
+  /*
+   * The disc is two radii across, and it wants a little air round it.
+   *
+   * A window of no size has to be survived rather than divided by. The
+   * atlas is opened inside a frame that is hidden until its tab is asked
+   * for, so the first fit can happen while the canvas measures nothing at
+   * all - and `box.h - 34` is then negative, which made the scale
+   * negative, which made the radius of the world negative. Everything
+   * downstream of that is nonsense, and a negative radius handed to arc()
+   * threw once a frame.
+   */
+  const room = Math.min(Math.max(1, box.w), Math.max(1, box.h - 34));
+  want.scale = Math.max(0.02, (room / (PLANET * 2)) * 0.92);
 }
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
