@@ -1204,7 +1204,7 @@
     {
      "type": 21856,
      "name": "New Undead Dwarf King",
-     "seen": 186,
+     "seen": 185,
      "sprite": {
       "file": "c21856.png",
       "tile": 20,
@@ -1216,7 +1216,7 @@
     {
      "type": 21855,
      "name": "New Undead Dwarf Mage",
-     "seen": 182,
+     "seen": 181,
      "sprite": {
       "file": "c21855.png",
       "tile": 20,
@@ -1228,7 +1228,7 @@
     {
      "type": 21857,
      "name": "New Soulless Dwarf",
-     "seen": 163,
+     "seen": 162,
      "sprite": {
       "file": "c21857.png",
       "tile": 20,
@@ -7869,9 +7869,9 @@
   {
    "id": 5,
    "biome": 4,
-   "tiles": 70952,
+   "tiles": 71351,
    "at": [
-    873,
+    874,
     1289
    ],
    "box": [
@@ -7944,7 +7944,7 @@
     {
      "type": 21856,
      "name": "New Undead Dwarf King",
-     "seen": 186,
+     "seen": 185,
      "sprite": {
       "file": "c21856.png",
       "tile": 20,
@@ -7956,7 +7956,7 @@
     {
      "type": 21855,
      "name": "New Undead Dwarf Mage",
-     "seen": 182,
+     "seen": 181,
      "sprite": {
       "file": "c21855.png",
       "tile": 20,
@@ -7968,7 +7968,7 @@
     {
      "type": 21857,
      "name": "New Soulless Dwarf",
-     "seen": 163,
+     "seen": 162,
      "sprite": {
       "file": "c21857.png",
       "tile": 20,
@@ -11233,235 +11233,6 @@
    ]
   },
   {
-   "id": 40,
-   "biome": 39,
-   "tiles": 30381,
-   "at": [
-    1020,
-    1089
-   ],
-   "box": [
-    897,
-    978,
-    1152,
-    1226
-   ],
-   "name": "Dead Church",
-   "named": true,
-   "from": "walked",
-   "roadSplit": [],
-   "colour": "#664b2a",
-   "madeOf": [
-    {
-     "ground": "Dead Church Grass Dark",
-     "tiles": 21463
-    },
-    {
-     "ground": "Dead Church Grass Light",
-     "tiles": 2021
-    },
-    {
-     "ground": "Road Dead Church",
-     "tiles": 1263
-    },
-    {
-     "ground": "Blue Grass",
-     "tiles": 970
-    }
-   ],
-   "cleftFrom": 5,
-   "lives": [
-    {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
-     "seen": 261,
-     "sprite": {
-      "file": "c49415.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49630,
-     "name": "Dead Church Nun",
-     "seen": 118,
-     "sprite": {
-      "file": "c49630.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49627,
-     "name": "Dead Church Necromancer",
-     "seen": 98,
-     "sprite": {
-      "file": "c49627.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49629,
-     "name": "Dead Church Bat",
-     "seen": 86,
-     "sprite": {
-      "file": "c49629.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49628,
-     "name": "Dead Church Vampire",
-     "seen": 56,
-     "sprite": {
-      "file": "c49628.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49414,
-     "name": "Dead Church Cleric",
-     "seen": 48,
-     "sprite": {
-      "file": "c49414.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49416,
-     "name": "Dead Church Revenant",
-     "seen": 25,
-     "sprite": {
-      "file": "c49416.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21896,
-     "name": "Hell White Demon",
-     "seen": 19,
-     "sprite": {
-      "file": "c21896.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49896,
-     "name": "Hell Skeleton",
-     "seen": 9,
-     "sprite": {
-      "file": "c49896.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 34491,
-     "name": "The Plague Doctor Cure B",
-     "seen": 8,
-     "sprite": {
-      "file": "c34491.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 17900,
-     "name": "Hallows Skeleton",
-     "seen": 7,
-     "sprite": {
-      "file": "c17900.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 6175,
-     "name": "Tombstone",
-     "seen": 7,
-     "sprite": {
-      "file": "c6175.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "rank": "Adept",
-   "encounters": [
-    {
-     "name": "Pentaract",
-     "art": "pentaract.png"
-    },
-    {
-     "name": "The Lich King",
-     "art": "the-lich-king.png"
-    },
-    {
-     "name": "The Plague Doctor",
-     "art": "the-plague-doctor.png"
-    },
-    {
-     "name": "Well of Souls",
-     "art": "well-of-souls.png"
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Death Knight",
-     "art": "death-knight.png"
-    },
-    {
-     "name": "Kage Kami",
-     "art": "kage-kami.png"
-    },
-    {
-     "name": "Lantern Holder",
-     "art": "lantern-holder.png"
-    },
-    {
-     "name": "Shady Sect Leader",
-     "art": "shady-sect-leader.png"
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Church Guardian",
-     "art": "legion-church-guardian.png"
-    }
-   ]
-  },
-  {
    "id": 21,
    "biome": 20,
    "tiles": 30123,
@@ -11695,6 +11466,235 @@
     {
      "name": "Legion Fey Guardian",
      "art": "legion-fey-guardian.png"
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "biome": 39,
+   "tiles": 29982,
+   "at": [
+    1019,
+    1087
+   ],
+   "box": [
+    893,
+    978,
+    1152,
+    1203
+   ],
+   "name": "Dead Church",
+   "named": true,
+   "from": "walked",
+   "roadSplit": [],
+   "colour": "#664b2a",
+   "madeOf": [
+    {
+     "ground": "Dead Church Grass Dark",
+     "tiles": 21909
+    },
+    {
+     "ground": "Road Dead Church",
+     "tiles": 1263
+    },
+    {
+     "ground": "Dead Church Grass Light",
+     "tiles": 1142
+    },
+    {
+     "ground": "Blue Grass",
+     "tiles": 970
+    }
+   ],
+   "cleftFrom": 5,
+   "lives": [
+    {
+     "type": 49415,
+     "name": "Dead Church Skeleton",
+     "seen": 261,
+     "sprite": {
+      "file": "c49415.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 116,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 98,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49629,
+     "name": "Dead Church Bat",
+     "seen": 86,
+     "sprite": {
+      "file": "c49629.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49628,
+     "name": "Dead Church Vampire",
+     "seen": 57,
+     "sprite": {
+      "file": "c49628.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 44,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49416,
+     "name": "Dead Church Revenant",
+     "seen": 25,
+     "sprite": {
+      "file": "c49416.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21896,
+     "name": "Hell White Demon",
+     "seen": 19,
+     "sprite": {
+      "file": "c21896.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49896,
+     "name": "Hell Skeleton",
+     "seen": 9,
+     "sprite": {
+      "file": "c49896.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 34491,
+     "name": "The Plague Doctor Cure B",
+     "seen": 8,
+     "sprite": {
+      "file": "c34491.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 17900,
+     "name": "Hallows Skeleton",
+     "seen": 7,
+     "sprite": {
+      "file": "c17900.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 6175,
+     "name": "Tombstone",
+     "seen": 7,
+     "sprite": {
+      "file": "c6175.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "rank": "Adept",
+   "encounters": [
+    {
+     "name": "Pentaract",
+     "art": "pentaract.png"
+    },
+    {
+     "name": "The Lich King",
+     "art": "the-lich-king.png"
+    },
+    {
+     "name": "The Plague Doctor",
+     "art": "the-plague-doctor.png"
+    },
+    {
+     "name": "Well of Souls",
+     "art": "well-of-souls.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Death Knight",
+     "art": "death-knight.png"
+    },
+    {
+     "name": "Kage Kami",
+     "art": "kage-kami.png"
+    },
+    {
+     "name": "Lantern Holder",
+     "art": "lantern-holder.png"
+    },
+    {
+     "name": "Shady Sect Leader",
+     "art": "shady-sect-leader.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Church Guardian",
+     "art": "legion-church-guardian.png"
     }
    ]
   },
