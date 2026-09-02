@@ -241,15 +241,29 @@ function roundWorld(box) {
  * Null for anything on the far side, which is anything more than a quarter
  * turn from the middle in either direction.
  */
+/*
+ * How much of the ball the realm is allowed to wrap round.
+ *
+ * Taken at its word the chart covers half the near face, and that much sphere
+ * bends it hard: pulled back and turned, the whole map visibly bulges and
+ * the far side of it squashes into the limb. So the realm is treated as
+ * lying across a smaller patch of a correspondingly larger world - the same
+ * projection, read through a narrower angle - which keeps the round silhouette
+ * and takes most of the bend out of the ground inside it.
+ *
+ * At one this is the plain sphere; towards zero it flattens to the chart.
+ */
+const BULGE = 0.5;
+
 function onGlobe(u, v) {
-  const R = globe();
-  const lat = v / R, lon = u / R;
+  const R = globe(), W = R / BULGE;
+  const lat = v / W, lon = u / W;
   if (lat <= -Math.PI / 2 || lat >= Math.PI / 2) return null;
   if (lon <= -Math.PI / 2 || lon >= Math.PI / 2) return null;
   const cosLat = Math.cos(lat);
   return {
-    x: R * cosLat * Math.sin(lon),
-    y: R * Math.sin(lat),
+    x: W * cosLat * Math.sin(lon),
+    y: W * Math.sin(lat),
     // How much the surface is turned away here, which is how much smaller
     // anything standing on it should be drawn.
     k: cosLat * Math.cos(lon)
@@ -258,14 +272,14 @@ function onGlobe(u, v) {
 
 /* And back: from a point on the disc to the flat chart. */
 function offGlobe(x, y) {
-  const R = globe();
-  const sinLat = y / R;
+  const W = globe() / BULGE;
+  const sinLat = y / W;
   if (sinLat <= -1 || sinLat >= 1) return null;
   const lat = Math.asin(sinLat), cosLat = Math.cos(lat);
   if (cosLat < 1e-6) return null;
-  const sinLon = x / (R * cosLat);
+  const sinLon = x / (W * cosLat);
   if (sinLon < -1 || sinLon > 1) return null;
-  return { u: R * Math.asin(sinLon), v: R * lat };
+  return { u: W * Math.asin(sinLon), v: W * lat };
 }
 /*
  * Where a thing standing at this tile meets the screen, and how big distance
@@ -645,6 +659,205 @@ function drawWater(box, time) {
       drawn++;
     }
   }
+  return drawn;
+}
+
+/* ------------------------------------------------------------------ *
+ * Weather, and things with wings                                      *
+ * ------------------------------------------------------------------ */
+/*
+ * A world with nothing moving over it reads as a diagram of a world. So there
+ * is weather on it: cloud drifting westward over the ocean, a shimmer where
+ * the light catches the water, and birds once you are near enough for a bird
+ * to make sense.
+ *
+ * All of it thins out as you come down. The cloud is what you see of a planet
+ * from far off and the last thing you want between you and the ground, so as
+ * the zoom rises each bank is pushed outwards from the middle of the view and
+ * faded, and by the time the realm is worth reading the sky is clear. The
+ * birds arrive as the cloud leaves.
+ *
+ * It costs one picture drawn a hundred-odd times. The puff is rendered once
+ * into a canvas of its own; everything after that is a blit.
+ */
+const CLOUD_GONE = 2.4;                  // zoom by which the sky has cleared
+const CLOUD_FULL = 0.55;                 // and below which it is at its thickest
+const BIRDS_FROM = 2.4, BIRDS_TO = 26;   // the zooms a bird makes sense at
+
+const puff = (() => {
+  const size = 128;
+  const off = document.createElement('canvas');
+  off.width = size; off.height = size;
+  const o = off.getContext('2d');
+  const g = o.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  g.addColorStop(0, 'rgba(255,255,255,.62)');
+  g.addColorStop(0.45, 'rgba(246,250,255,.34)');
+  g.addColorStop(0.75, 'rgba(238,246,255,.12)');
+  g.addColorStop(1, 'rgba(235,244,255,0)');
+  o.fillStyle = g;
+  o.fillRect(0, 0, size, size);
+  return off;
+})();
+
+/*
+ * Where the weather sits, settled once from a fixed roll so it is the same
+ * world every time it is opened rather than a new one every frame.
+ */
+const weather = (() => {
+  let seed = 20260902;
+  const roll = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const midX = (B.minX + B.maxX) / 2, midY = (B.minY + B.maxY) / 2;
+  const banks = [];
+  for (let i = 0; i < 92; i++) {
+    // Spread over the near face of the world, not just over the island.
+    const a = roll() * Math.PI * 2, r = Math.sqrt(roll()) * PLANET * 0.92;
+    banks.push({
+      x: midX + Math.cos(a) * r,
+      y: midY + Math.sin(a) * r * 0.86,
+      wide: 90 + roll() * 190,           // tiles across
+      tall: 0.42 + roll() * 0.3,         // and how squat
+      drift: 3.5 + roll() * 5,           // tiles a second, westward
+      dim: 0.55 + roll() * 0.45
+    });
+  }
+  const shine = [];
+  for (let i = 0; i < 16; i++) {
+    const a = roll() * Math.PI * 2, r = Math.sqrt(roll()) * PLANET * 0.95;
+    shine.push({
+      x: midX + Math.cos(a) * r, y: midY + Math.sin(a) * r * 0.86,
+      wide: 240 + roll() * 320, drift: 1.4 + roll() * 2.2, dim: 0.3 + roll() * 0.3
+    });
+  }
+  const birds = [];
+  for (let i = 0; i < 7; i++) {
+    const fx = midX + (roll() - 0.5) * (B.maxX - B.minX) * 0.8;
+    const fy = midY + (roll() - 0.5) * (B.maxY - B.minY) * 0.8;
+    const heading = roll() * Math.PI * 2;
+    for (let k = 0; k < 3 + Math.floor(roll() * 3); k++) {
+      birds.push({
+        x: fx + (roll() - 0.5) * 26, y: fy + (roll() - 0.5) * 20,
+        vx: Math.cos(heading) * (2.2 + roll()), vy: Math.sin(heading) * (2.2 + roll()),
+        beat: roll() * 6, span: 0.55 + roll() * 0.45
+      });
+    }
+  }
+  return { banks, shine, birds, midX, midY };
+})();
+
+// How much sky there is at this distance, and how far it has been pushed aside.
+const skyLeft = () => Math.max(0, Math.min(1,
+  (CLOUD_GONE - view.scale) / (CLOUD_GONE - CLOUD_FULL)));
+
+function drawSky(box, now) {
+  const left = skyLeft();
+  if (left <= 0.01) return 0;
+  const t = now / 1000;
+  // Parted: each bank slides away from the middle as the ground comes up.
+  const apart = 1 + Math.max(0, view.scale - CLOUD_FULL) * 0.5;
+  const span = PLANET * 1.9;
+
+  ctx.save();
+  if (roundWorld(box)) {
+    ctx.beginPath();
+    ctx.arc(box.w / 2, box.h / 2, globe(), 0, Math.PI * 2);
+    ctx.clip();
+  }
+
+  // The light on the water first, under the cloud.
+  ctx.globalCompositeOperation = 'lighter';
+  for (const one of weather.shine) {
+    let wx = one.x - t * one.drift;
+    wx = weather.midX + (((wx - weather.midX) % span) + span * 1.5) % span - span / 2;
+    const at = place(weather.midX + (wx - weather.midX) * apart,
+      weather.midY + (one.y - weather.midY) * apart, box);
+    if (!at) continue;
+    const w = one.wide * view.scale * at.k, h = w * 0.18;
+    if (at.x + w < 0 || at.x - w > box.w || at.y + h < 0 || at.y - h > box.h) continue;
+    ctx.globalAlpha = left * one.dim * 0.22;
+    ctx.drawImage(puff, at.x - w / 2, at.y - h / 2, w, h);
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  let drawn = 0;
+  for (const one of weather.banks) {
+    let wx = one.x - t * one.drift;
+    wx = weather.midX + (((wx - weather.midX) % span) + span * 1.5) % span - span / 2;
+    const at = place(weather.midX + (wx - weather.midX) * apart,
+      weather.midY + (one.y - weather.midY) * apart, box);
+    if (!at) continue;
+    const w = one.wide * view.scale * at.k, h = w * one.tall;
+    if (at.x + w < 0 || at.x - w > box.w || at.y + h < 0 || at.y - h > box.h) continue;
+    ctx.globalAlpha = left * one.dim * 0.52;
+    ctx.drawImage(puff, at.x - w / 2, at.y - h / 2, w, h);
+    drawn++;
+  }
+  ctx.restore();
+  return drawn;
+}
+
+/*
+ * Birds, once the cloud is thin enough to see past. They wander rather than
+ * fly anywhere, turn slowly, and are kept over the realm so they are not
+ * found flapping across open ocean.
+ */
+function stepBirds(delta) {
+  if (view.scale < BIRDS_FROM || view.scale > BIRDS_TO) return;
+  for (const one of weather.birds) {
+    one.beat += delta * 7;
+    const turn = (Math.random() - 0.5) * 0.9 * delta;
+    const cos = Math.cos(turn), sin = Math.sin(turn);
+    const vx = one.vx * cos - one.vy * sin, vy = one.vx * sin + one.vy * cos;
+    one.vx = vx; one.vy = vy;
+    one.x += vx * delta; one.y += vy * delta;
+    // Turned back at the coast rather than allowed to leave.
+    if (one.x < B.minX) { one.x = B.minX; one.vx = Math.abs(one.vx); }
+    if (one.x > B.maxX) { one.x = B.maxX; one.vx = -Math.abs(one.vx); }
+    if (one.y < B.minY) { one.y = B.minY; one.vy = Math.abs(one.vy); }
+    if (one.y > B.maxY) { one.y = B.maxY; one.vy = -Math.abs(one.vy); }
+  }
+}
+
+function drawBirds(box) {
+  if (view.scale < BIRDS_FROM || view.scale > BIRDS_TO) return 0;
+  const fade = Math.min(1, (view.scale - BIRDS_FROM) / 2)
+    * Math.min(1, (BIRDS_TO - view.scale) / 6);
+  if (fade <= 0.02) return 0;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  let drawn = 0;
+  for (const one of weather.birds) {
+    const at = place(one.x, one.y, box);
+    if (!at) continue;
+    if (at.x < -20 || at.y < -20 || at.x > box.w + 20 || at.y > box.h + 20) continue;
+    /*
+     * A pair of strokes that open and close, which is all a bird is from up
+     * here - drawn twice, a pale one under a dark one, so it reads over a
+     * dark forest as well as over sand.
+     */
+    const arm = Math.max(5, Math.min(26, view.scale * 1.5)) * one.span * at.k;
+    const lift = Math.sin(one.beat) * arm * 0.5;
+    const wing = () => {
+      ctx.beginPath();
+      ctx.moveTo(at.x - arm, at.y - lift);
+      ctx.quadraticCurveTo(at.x - arm * 0.45, at.y - lift * 0.15, at.x, at.y);
+      ctx.quadraticCurveTo(at.x + arm * 0.45, at.y - lift * 0.15, at.x + arm, at.y - lift);
+      ctx.stroke();
+    };
+    ctx.globalAlpha = fade * 0.34;
+    ctx.strokeStyle = '#eaf2ff';
+    ctx.lineWidth = Math.max(2, arm * 0.5);
+    wing();
+    ctx.globalAlpha = fade * 0.92;
+    ctx.strokeStyle = '#0a0e15';
+    ctx.lineWidth = Math.max(1.2, arm * 0.24);
+    wing();
+    drawn++;
+  }
+  ctx.restore();
   return drawn;
 }
 
@@ -1663,13 +1876,14 @@ function groundGlobe(box, now) {
    * generous way asks for a canvas thirty thousand pixels on a side and the
    * page simply stops.
    */
-  const latMax = Math.asin(Math.min(1, (box.h / 2) / R));
+  const wide9 = R / BULGE;
+  const latMax = Math.asin(Math.min(1, (box.h / 2) / wide9));
   const cosLatMin = Math.max(1e-3, Math.cos(latMax));
-  const lonMax = Math.asin(Math.min(1, (box.w / 2) / (R * cosLatMin)));
+  const lonMax = Math.asin(Math.min(1, (box.w / 2) / (wide9 * cosLatMin)));
   // Turned, the corners of the chart swing outside the square it covered.
   const swung = turning() ? Math.SQRT2 : 1;
-  const reachX = Math.min(R * Math.PI / 2, (R * lonMax + 2) * swung);
-  const reachY = Math.min(R * Math.PI / 2, (R * latMax + 2) * swung);
+  const reachX = Math.min(wide9 * Math.PI / 2, (wide9 * lonMax + 2) * swung);
+  const reachY = Math.min(wide9 * Math.PI / 2, (wide9 * latMax + 2) * swung);
   const wide = Math.min(4096, Math.ceil(reachX * 2));
   const tall = Math.min(4096, Math.ceil(reachY * 2));
   if (globeMap.width !== Math.round(wide * grain) || globeMap.height !== Math.round(tall * grain)) {
@@ -1731,13 +1945,13 @@ function groundGlobe(box, now) {
   const trueTo = plain ? SPHERE_LOOSE : SPHERE_TRUE;
   for (let y = Math.floor(top); y < bottom; y += step) {
     const y2 = Math.min(y + step, bottom);
-    const lat = Math.asin(Math.max(-1, Math.min(1, y / R)));
-    const lat2 = Math.asin(Math.max(-1, Math.min(1, y2 / R)));
+    const lat = Math.asin(Math.max(-1, Math.min(1, y / wide9)));
+    const lat2 = Math.asin(Math.max(-1, Math.min(1, y2 / wide9)));
     const cosLat = Math.cos((lat + lat2) / 2);
     if (cosLat < 0.02) continue;
-    const sv = R * lat, sv2 = R * lat2;
+    const sv = wide9 * lat, sv2 = wide9 * lat2;
     // The stretch of longitude this band of the screen covers.
-    const half = R * cosLat;
+    const half = wide9 * cosLat;
     const fromX = Math.max(-half, -cx), toX = Math.min(half, box.w - cx);
     if (toX <= fromX) continue;
     const lonAt = px => Math.asin(Math.max(-1, Math.min(1, px / half)));
@@ -1748,7 +1962,7 @@ function groundGlobe(box, now) {
       const a = lon0 + (lon1 - lon0) * p / pieces;
       const b = lon0 + (lon1 - lon0) * (p + 1) / pieces;
       const dx0 = half * Math.sin(a), dx1 = half * Math.sin(b);
-      const su0 = R * a, su1 = R * b;
+      const su0 = wide9 * a, su1 = wide9 * b;
       if (dx1 - dx0 < 0.05) continue;
       ctx.drawImage(globeMap,
         (wide / 2 + su0) * grain, (tall / 2 + sv) * grain,
@@ -1896,6 +2110,9 @@ function frame(now) {
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);
+  stepBirds(delta);
+  drawBirds(box);
+  drawSky(box, now);
 
   if (pointer) {
     const t = toTile(pointer.x, pointer.y, box);
