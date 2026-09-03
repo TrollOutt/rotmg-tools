@@ -45,3 +45,9 @@ life New Left Horizontal Trap
 life New Top Vertical Trap
 life Shipwreck Hag Whirlpool
 life New Shield Orc Shield
+
+## Somewhere else entirely: a fifty-tile room of wood plank floor and Space,
+## eight hundred tiles off the coast in the corner of the chart, with nothing
+## ever met in it. Walked into by accident and recorded along with the realm.
+## Everything joined to this tile goes.
+elsewhere 107,162
