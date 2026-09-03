@@ -1,0 +1,2562 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Realm Atlas</title>
+<!-- The New Realm, drawn at full size. -->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070a10;
+    font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #7b8496; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+  canvas.drag { cursor: grabbing; }
+  #bar {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 12px;
+    display: flex; gap: 20px; align-items: baseline;
+    background: linear-gradient(rgba(7,10,16,0), rgba(7,10,16,.92) 55%);
+    pointer-events: none;
+  }
+  #where { color: #b9c2d4; }
+  #hint { margin-left: auto; opacity: .5; }
+
+  /* The panel a zone opens into. */
+  #panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 372px; max-width: 86vw;
+    background: rgba(9,12,19,.97); border-left: 1px solid rgba(255,255,255,.12);
+    padding: 18px 18px 26px; overflow-y: auto; color: #cfd8e6;
+    transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.7,.3,1);
+  }
+  #panel.is-open { transform: none; }
+  #panel h2 { margin: 0 28px 0 0; font-size: 1.18rem; color: #f2f6fc; letter-spacing: .01em; }
+  #panel .sub { margin: 4px 0 14px; font-size: .8em; color: #8d9bb0; }
+  /* The rank a realm gives the place, said the way the game says it. */
+  .rank { display: inline-block; margin: 7px 0 0; padding: 2px 9px; border-radius: 999px;
+    font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 600;
+    border: 1px solid currentColor; }
+  .rank.rookie { color: #86d98e; } .rank.veteran { color: #7fbcf5; }
+  .rank.seasonal { color: #c79bf0; } .rank.other { color: #ffcb70; }
+  #panel .shut {
+    position: absolute; top: 12px; right: 12px; width: 24px; height: 24px;
+    border-radius: 6px; border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.05); color: inherit; cursor: pointer; font: inherit;
+  }
+  #panel h3 { margin: 20px 0 8px; font-size: .72rem; letter-spacing: .13em;
+    text-transform: uppercase; color: #ffcb70;
+    border-bottom: 1px solid rgba(255,203,112,.2); padding-bottom: 5px; }
+  #panel h3 span { float: right; color: #7c8899; letter-spacing: 0; text-transform: none;
+    font-weight: 400; }
+  .life { display: grid; gap: 2px; }
+  .life div { display: flex; gap: 11px; align-items: center;
+    padding: 4px 6px; border-radius: 5px; }
+  .life div:nth-child(odd) { background: rgba(255,255,255,.035); }
+  .life b { font-weight: 500; color: #e3eaf5; font-size: .88em; }
+  .life em { margin-left: auto; font-style: normal; color: #7c8899; font-size: .76em; }
+  .life i { font-style: normal; color: #ffcb70; font-size: .68em; letter-spacing: .06em;
+    text-transform: uppercase; margin-left: 8px; }
+  /* An encounter or a hero: one picture, sized to the row. */
+  .face { flex: none; width: 34px; height: 34px; object-fit: contain;
+    image-rendering: pixelated; }
+  /* How much of the floor is what. */
+  .soil { display: grid; gap: 5px; font-size: .8em; }
+  .soil div { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+  .soil b { font-weight: 400; color: #c3ccdb; }
+  .soil em { font-style: normal; color: #8d9bb0; }
+  .soil u { grid-column: 1 / -1; height: 3px; border-radius: 2px; text-decoration: none;
+    background: rgba(255,255,255,.09); }
+  .soil u s { display: block; height: 100%; border-radius: 2px; background: #ffcb70; opacity: .55; }
+  .art { image-rendering: pixelated; background-repeat: no-repeat; flex: none; }
+  .art.runs { animation: run var(--time) steps(var(--steps)) infinite; }
+  @keyframes run { from { background-position-x: 0; } to { background-position-x: calc(-1 * var(--w)); } }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: .8em; }
+  .facts span { display: flex; flex-direction: column; gap: 1px;
+    background: rgba(255,255,255,.04); border-radius: 5px; padding: 6px 8px; }
+  .facts i { font-style: normal; color: #8d9bb0; font-size: .82em; }
+  .facts b { font-weight: 500; color: #e9eff8; }
+  @media (prefers-reduced-motion: reduce) { .art.runs { animation: none; } }
+  /* The bench, for trying things on this machine. Never shown to anyone else. */
+  #bench { position: fixed; left: 12px; top: 12px; z-index: 40; display: none;
+    background: rgba(8,11,18,.9); border: 1px solid #26303f; border-radius: 6px;
+    padding: 10px 12px; font: 11px/1.7 ui-monospace, monospace; color: #9fb0c4;
+    min-width: 210px; }
+  #bench b { color: #ffe6b0; font-weight: 600; display: block; margin-bottom: 4px; }
+  #bench label { display: flex; align-items: center; gap: 8px; }
+  #bench input[type=range] { flex: 1; accent-color: #ffe6b0; }
+  #bench i { font-style: normal; color: #dfe8f2; min-width: 34px; text-align: right; }
+  #bench p { margin: 6px 0 0; color: #6c7c90; }
+</style>
+<canvas id="map"></canvas>
+<aside id="bench">
+  <b>bench &mdash; local only</b>
+  <label>tilt <input id="benchTilt" type="range" min="0" max="40" step="1" value="0"><i id="benchTiltAt">off</i></label>
+  <label>turn <input id="benchTurn" type="range" min="-90" max="90" step="1" value="0"><i id="benchTurnAt">0&deg;</i></label>
+  <p>tilt works at the closest zoom</p>
+</aside>
+<aside id="panel"><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
+<div id="bar">
+  <span id="where">—</span>
+  <span id="zone"></span>
+  <span id="count"></span>
+  <span id="hint">drag to pan · wheel to zoom · click a zone · double-click to fit</span>
+</div>
+<script>
+const A = /*ATLAS*/null;
+
+/*
+ * How many pixels of the sprite sheets go to one pixel of the art they
+ * hold. The floor is still eight pixels to a tile, but the things standing
+ * on it are kept at a finer grain, so that the black line round them can be
+ * thinner than a pixel of their own art. Every measurement taken from those
+ * sheets is divided by this again on the way to the screen. One, for an
+ * atlas built before any of that was true.
+ */
+const SS = A.ss || 1;
+
+/*
+ * Where the atlas's files are. Beside this page when it is opened on its own;
+ * wherever the host says when it is embedded in something else.
+ */
+const BASE = window.ATLAS_BASE || (() => {
+  let at = location.pathname;
+  if (/[.]html?$/i.test(at)) return at.replace(/[^/]*$/, '');
+  return at.endsWith('/') ? at : at + '/';
+})();
+
+const canvas = document.getElementById('map');
+let ctx = canvas.getContext('2d', { alpha: false });
+const whereAt = document.getElementById('where');
+const zoneAt = document.getElementById('zone');
+const countAt = document.getElementById('count');
+const panel = document.getElementById('panel');
+const panelBody = document.getElementById('panelBody');
+
+const B = A.bounds;
+const view = { x: (B.minX + B.maxX) / 2, y: (B.minY + B.maxY) / 2, scale: 0.4 };
+const want = { x: view.x, y: view.y, scale: view.scale };
+let pointer = null, hovered = 0, chosen = 0;
+
+const zoneById = new Map(A.zones.map(z => [z.id, z]));
+
+function size() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(canvas.clientWidth * dpr);
+  canvas.height = Math.round(canvas.clientHeight * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { w: canvas.clientWidth, h: canvas.clientHeight };
+}
+/* ------------------------------------------------------------------ *
+ * Leaning and turning the camera                                      *
+ * ------------------------------------------------------------------ */
+/*
+ * The game's camera does not tilt. Nothing in any of the client's scenes is
+ * turned by so much as half a degree, and a square platform in the game comes
+ * out square on the screen - a leaning camera would make its far edge shorter
+ * than its near one, and it does not.
+ *
+ * This is here to be looked at anyway, because a question like that is better
+ * settled by seeing it than by arguing it. It shows up only when the map is
+ * opened from this machine, and it changes nothing that is published.
+ *
+ * The floor is drawn flat, as it always is, and then laid back in strips: a
+ * band of floor all at one distance is drawn at one size, and the far bands
+ * come out narrower. What stands on the floor is not laid back with it - a
+ * tree does not lie down because you tip your head - so each is placed at its
+ * own foot and drawn at the size its distance gives it.
+ */
+const TUNE = { tilt: 0, turn: 0 };
+const HIGH = 2.4;                       // how far back the camera sits, in screens
+const flatMap = document.createElement('canvas');
+const flatCtx = flatMap.getContext('2d', { alpha: false });
+
+/*
+ * The globe gets a canvas of its own, and it keeps its alpha.
+ *
+ * The leaning camera draws onto an opaque one and fills it with the
+ * background first, which is right for a floor that covers the window. The
+ * globe needs the opposite: everywhere the chart was not recorded has to
+ * come through as nothing, so the ocean painted underneath shows. Sharing
+ * the opaque canvas made clearRect paint solid black, and the black was then
+ * laid over the sea - which is why the world had a ring of night round its
+ * coast instead of water.
+ */
+const globeMap = document.createElement('canvas');
+const globeCtx = globeMap.getContext('2d');
+
+const tilting = () => TUNE.tilt >= 1 && levelFor(view.scale) === 0;
+const turning = () => Math.abs(TUNE.turn) >= 1;
+// The camera swung round to left or right. The floor turns with it; what
+// stands on the floor is carried round but stays upright.
+const spin = () => {
+  if (!turning()) return null;
+  const t = TUNE.turn * Math.PI / 180;
+  return { cos: Math.cos(t), sin: Math.sin(t) };
+};
+const lean = box => {
+  const t = TUNE.tilt * Math.PI / 180;
+  return { sin: Math.sin(t), cos: Math.cos(t), h: box.h * HIGH };
+};
+
+const toScreen = (tx, ty, box) => ({
+  x: (tx - view.x) * view.scale + box.w / 2,
+  y: (ty - view.y) * view.scale + box.h / 2
+});
+
+/* ------------------------------------------------------------------ *
+ * The world is round                                                 *
+ * ------------------------------------------------------------------ */
+/*
+ * The realm is an island, and an island is on something. Drawn flat it
+ * ended as a blue rectangle in a black surround, which says "a picture of
+ * a map" rather than "a place" - so the flat chart is treated as an
+ * equirectangular one and laid onto a globe.
+ *
+ * A radius in tiles is all it takes. The realm is a little under two
+ * thousand tiles across and the sea reaches eighty tiles past every coast,
+ * so a world of this radius shows the whole of it on the near face with
+ * ocean to spare round the edge.
+ */
+const PLANET = 1250;
+
+/*
+ * The blue the sea is drawn in the ground pictures, counted off the coarsest
+ * of them where it is the commonest colour there is, so that the ocean
+ * painted beyond the recorded water is the same water.
+ *
+ * It is not quite one colour: every sea tile is jittered a shade or two, and
+ * what is wanted here is the middle of that spread rather than any one of
+ * them. Taking one of the brighter ones drew a line all the way round the
+ * chart where the flat paint met the mottled water - which is what the fade
+ * below is for as well, because matching the colour is not enough on its own
+ * when one side has a texture and the other has none.
+ */
+const OCEAN = [62, 102, 178];
+const SEA_FADE = 50;                     // tiles of chart edge given to the fade
+
+/*
+ * Curvature costs nothing when you are close, and that falls out of the
+ * arithmetic rather than being switched off: the world in screen pixels is
+ * the radius times the zoom, so the closer you are the larger it is, and a
+ * screen-sized patch of a very large sphere is flat to well under a pixel.
+ * At the far end a whole hemisphere is on screen and it is a globe.
+ */
+const globe = () => PLANET * view.scale;
+
+/*
+ * Whether the world is worth drawing round.
+ *
+ * Bending the chart onto a sphere pushes a point half a screen out by about
+ * its distance cubed over six times the radius squared. Close in that comes
+ * to less than half a pixel - the curve is there in the arithmetic and
+ * invisible on the glass - and drawing it costs a couple of thousand small
+ * pieces for nothing. So past that point the world is simply flat, and both
+ * the ground and the things standing on it agree about it because they ask
+ * the same question.
+ */
+const FLAT_ENOUGH = 0.5;
+function roundWorld(box) {
+  const R = globe();
+  const reach = Math.hypot(box.w, box.h) / 2;
+  return (reach * reach * reach) / (6 * R * R) > FLAT_ENOUGH;
+}
+
+/*
+ * Flat offset from the middle of the screen, to where the globe puts it.
+ *
+ * The flat map is read as latitude and longitude - so many tiles north is
+ * so many radians of latitude - and then projected the way a globe seen
+ * from a long way off projects: straight down the line of sight.
+ *
+ *     x = R cos(lat) sin(lon)        y = R sin(lat)
+ *
+ * Null for anything on the far side, which is anything more than a quarter
+ * turn from the middle in either direction.
+ */
+/*
+ * How much of the ball the realm is allowed to wrap round.
+ *
+ * Taken at its word the chart covers half the near face, and that much sphere
+ * bends it hard: pulled back and turned, the whole map visibly bulges and
+ * the far side of it squashes into the limb. So the realm is treated as
+ * lying across a smaller patch of a correspondingly larger world - the same
+ * projection, read through a narrower angle - which keeps the round silhouette
+ * and takes most of the bend out of the ground inside it.
+ *
+ * At one this is the plain sphere; towards zero it flattens to the chart.
+ */
+const BULGE = 0.5;
+
+function onGlobe(u, v) {
+  const R = globe(), W = R / BULGE;
+  const lat = v / W, lon = u / W;
+  if (lat <= -Math.PI / 2 || lat >= Math.PI / 2) return null;
+  if (lon <= -Math.PI / 2 || lon >= Math.PI / 2) return null;
+  const cosLat = Math.cos(lat);
+  return {
+    x: W * cosLat * Math.sin(lon),
+    y: W * Math.sin(lat),
+    // How much the surface is turned away here, which is how much smaller
+    // anything standing on it should be drawn.
+    k: cosLat * Math.cos(lon)
+  };
+}
+
+/* And back: from a point on the disc to the flat chart. */
+function offGlobe(x, y) {
+  const W = globe() / BULGE;
+  const sinLat = y / W;
+  if (sinLat <= -1 || sinLat >= 1) return null;
+  const lat = Math.asin(sinLat), cosLat = Math.cos(lat);
+  if (cosLat < 1e-6) return null;
+  const sinLon = x / (W * cosLat);
+  if (sinLon < -1 || sinLon > 1) return null;
+  return { u: W * Math.asin(sinLon), v: W * lat };
+}
+/*
+ * Where a thing standing at this tile meets the screen, and how big distance
+ * makes it. Flat, unless the camera is leaning.
+ */
+function place(tx, ty, box) {
+  let u = (tx - view.x) * view.scale, v = (ty - view.y) * view.scale;
+  const S = spin();
+  if (S) { const nu = u * S.cos - v * S.sin; v = u * S.sin + v * S.cos; u = nu; }
+  if (!tilting()) {
+    if (!roundWorld(box)) return { x: box.w / 2 + u, y: box.h / 2 + v, k: 1 };
+    const on = onGlobe(u, v);
+    if (!on) return null;                          // round the far side
+    return { x: box.w / 2 + on.x, y: box.h / 2 + on.y, k: on.k };
+  }
+  const L = lean(box);
+  const z = L.h - v * L.sin;
+  if (z < 1) return null;                            // behind the camera
+  const k = L.h / z;
+  return { x: box.w / 2 + u * k, y: box.h / 2 + v * L.cos * k, k };
+}
+
+/*
+ * And back again, for working out what the pointer is over. Undone in the
+ * order it was done: the lean first, then the turn.
+ */
+function fromScreen(px, py, box) {
+  let u = px - box.w / 2, v = py - box.h / 2;
+  if (!tilting() && roundWorld(box)) {
+    const off = offGlobe(u, v);
+    if (!off) return { x: NaN, y: NaN };           // off the world
+    u = off.u; v = off.v;
+  }
+  if (tilting()) {
+    const L = lean(box);
+    const under = L.cos * L.h + v * L.sin;
+    v = Math.abs(under) < 1e-6 ? v : (v * L.h) / under;
+    u = u * (L.h - v * L.sin) / L.h;
+  }
+  const S = spin();
+  if (S) { const nu = u * S.cos + v * S.sin; v = -u * S.sin + v * S.cos; u = nu; }
+  return { x: u / view.scale + view.x, y: v / view.scale + view.y };
+}
+
+/*
+ * How much of the realm the window can see.
+ *
+ * Two corners are enough while the world is flat and square to the screen.
+ * Turned, the corners are no longer the extremes; curved, a corner can be off
+ * the edge of the world altogether and answer with nothing at all. Asking two
+ * of them then gave a range of nothing, and the scenery and the creatures
+ * simply stopped being drawn - which is what turning the planet did.
+ *
+ * So the window is sampled across, every answer that means anything is kept,
+ * and the flat reading is thrown in as a floor under it so the range can
+ * never come back empty.
+ */
+function seenRange(box, pad) {
+  const room = pad || 0;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const take = one => {
+    if (!one || !Number.isFinite(one.x) || !Number.isFinite(one.y)) return;
+    if (one.x < x0) x0 = one.x; if (one.x > x1) x1 = one.x;
+    if (one.y < y0) y0 = one.y; if (one.y > y1) y1 = one.y;
+  };
+  const STEPS = 6;
+  for (let i = 0; i <= STEPS; i++) {
+    for (let j = 0; j <= STEPS; j++) {
+      take(toTile(-room + (box.w + room * 2) * i / STEPS,
+        -room + (box.h + room * 2) * j / STEPS, box));
+    }
+  }
+  // The flat reading, widened for a turn, as a floor under all that.
+  const flat0 = flatTile(-room, -room, box);
+  const flat1 = flatTile(box.w + room, box.h + room, box);
+  const over = turning() ? Math.max(flat1.x - flat0.x, flat1.y - flat0.y) * 0.5 : 0;
+  take({ x: flat0.x - over, y: flat0.y - over });
+  take({ x: flat1.x + over, y: flat1.y + over });
+  return { x0, y0, x1, y1 };
+}
+
+// The floor is drawn flat and then turned and leaned as a whole, so it works
+// in flat coordinates; everything else asks toTile, which knows about both.
+const flatTile = (px, py, box) => ({
+  x: (px - box.w / 2) / view.scale + view.x,
+  y: (py - box.h / 2) / view.scale + view.y
+});
+const toTile = (px, py, box) => fromScreen(px, py, box);
+
+/* ---------------- the pyramid ---------------- */
+/*
+ * The pictures already loaded, and no more than that.
+ *
+ * At one-to-one a chunk is a megapixel, and a long look round the realm asks
+ * for every one of the hundred and eighty-seven. Left to accumulate they come
+ * to the better part of a gigabyte, at which point the browser stops decoding
+ * and the ground simply goes black - which reads as the map breaking rather
+ * than as running out of room. So the ones not looked at recently are let go;
+ * they cost a moment to fetch again and nothing at all to keep off the heap.
+ */
+/*
+ * Raised from sixty-four once the levels either side of the one in use
+ * started being fetched ahead of time: at sixty-four a zoom in and back out
+ * could evict the pictures it was about to want again, and fetch them
+ * twice. Ninety-six of them is under a hundred megabytes decoded, which is
+ * well short of where the browser gives up.
+ */
+/*
+ * Counts up every time a chunk picture finishes loading. The kept globe is
+ * keyed on it, because the first frame of a fresh page is drawn before any
+ * ground has arrived - and keeping that one produced a planet of unbroken
+ * ocean that never corrected itself.
+ */
+let arrived = 0;
+const KEEP = 96;
+const images = new Map();
+function chunkImage(z, name) {
+  const key = z + '/' + name;
+  let img = images.get(key);
+  if (img !== undefined) {
+    // Move it to the end, so what is in use is never the first to go.
+    images.delete(key);
+    images.set(key, img);
+    return img;
+  }
+  img = new Image();
+  img.decoding = 'async';
+  // Something that was not there a moment ago now is, which anything
+  // holding a finished picture of the ground needs to know about.
+  img.onload = () => { arrived++; };
+  img.src = BASE + 'z' + z + '/' + name + '.png';
+  images.set(key, img);
+  while (images.size > KEEP) {
+    // The coarsest level is what a missing chunk falls back on, so it is
+    // never the thing that goes; skip past it for the next oldest.
+    let oldest = null;
+    for (const key of images.keys()) {
+      if (key.startsWith(COARSEST + '/')) continue;
+      oldest = key; break;
+    }
+    if (oldest === null) break;
+    const gone = images.get(oldest);
+    images.delete(oldest);
+    if (gone) gone.src = '';
+  }
+  return img;
+}
+const haveChunk = new Map();
+for (const level of A.levels) haveChunk.set(level.z, new Set(level.chunks));
+
+// The level whose pixels come closest to the screen's.
+function levelFor(scale) {
+  const wanted = Math.log2(A.px / Math.max(scale, 1e-6));
+  return Math.max(0, Math.min(A.levels.length - 1, Math.round(wanted)));
+}
+
+/*
+ * One level of the ground, as much of it as has arrived.
+ *
+ * Returns what it managed to draw and what it wanted and did not have, so
+ * the caller can decide whether the picture needs propping up underneath.
+ */
+function drawLevel(z, box) {
+  const have = haveChunk.get(z);
+  if (!have) return { drawn: 0, missing: 0 };
+  const span = A.chunk * (1 << z);
+  const near = flatTile(0, 0, box), far = flatTile(box.w, box.h, box);
+  // Turned, the corners of the screen reach outside the square it covers.
+  const over = turning() ? Math.max(far.x - near.x, far.y - near.y) * 0.5 : 0;
+  const c0 = Math.floor((near.x - over) / span), c1 = Math.floor((far.x + over) / span);
+  const r0 = Math.floor((near.y - over) / span), r1 = Math.floor((far.y + over) / span);
+  const on = span * view.scale;
+  let drawn = 0, missing = 0;
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const name = c + '_' + r;
+      if (!have.has(name)) continue;
+      const img = chunkImage(z, name);
+      if (!img.complete || !img.naturalWidth) { missing++; continue; }
+      const at = toScreen(c * span, r * span, box);
+      ctx.drawImage(img, at.x, at.y, on + 1, on + 1);
+      drawn++;
+    }
+  }
+  return { drawn, missing };
+}
+
+/*
+ * The ground, and never a hole in it.
+ *
+ * Changing the zoom changes which level is wanted, and a level that has not
+ * been looked at yet is a set of megapixel pictures that have to be fetched
+ * and decoded. Drawing only the wanted level meant that for those few
+ * hundred milliseconds there was nothing to draw, so the realm went black
+ * and came back - which reads as the map breaking rather than as it
+ * thinking.
+ *
+ * So when anything is missing, the coarsest level goes down first. It is
+ * four pictures for the whole realm, it is never evicted because it is
+ * always in use, and blown up it is soft and too dark in places - but it is
+ * the right ground in the right place, and the sharp version lands on top
+ * of it a moment later without anything having flickered.
+ */
+const COARSEST = A.levels.length - 1;
+
+/*
+ * Fetch the level we are heading for, not the one we are on.
+ *
+ * The view eases towards where it was asked to go, so at the moment the
+ * wheel turns we already know the zoom it is going to settle at - and
+ * therefore which level will be wanted when it gets there. Asking for those
+ * pictures now means the fetch and the decode happen during the ease
+ * instead of after it, and the soft version underneath is replaced by the
+ * sharp one at about the moment the movement stops rather than a beat
+ * later.
+ *
+ * Nothing is drawn here. Asking chunkImage for a picture is what starts it
+ * loading; the cache holds it until the frame that wants it arrives.
+ */
+function warm(z, atX, atY, scale, box) {
+  const have = haveChunk.get(z);
+  if (!have) return 0;
+  const span = A.chunk * (1 << z);
+  const half = { x: box.w / 2 / scale, y: box.h / 2 / scale };
+  const c0 = Math.floor((atX - half.x) / span), c1 = Math.floor((atX + half.x) / span);
+  const r0 = Math.floor((atY - half.y) / span), r1 = Math.floor((atY + half.y) / span);
+  let asked = 0;
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const name = c + '_' + r;
+      if (!have.has(name)) continue;
+      chunkImage(z, name);
+      asked++;
+    }
+  }
+  return asked;
+}
+
+/*
+ * Where the wheel is taking us, and one step either side of it.
+ *
+ * The step either side is for the next turn of the wheel: zooming is rarely
+ * one notch, and having the neighbour already in hand is the difference
+ * between a soft frame and none at all. It only runs while the view is
+ * actually moving, so sitting still costs nothing.
+ */
+function warmAhead(box) {
+  const moving = Math.abs(want.scale - view.scale) > view.scale * 0.002
+    || Math.abs(want.x - view.x) > 0.5 || Math.abs(want.y - view.y) > 0.5;
+  if (!moving) return;
+  const going = levelFor(want.scale);
+  warm(going, want.x, want.y, want.scale, box);
+  if (going > 0) warm(going - 1, want.x, want.y, want.scale * 2, box);
+  if (going < COARSEST) warm(going + 1, want.x, want.y, want.scale / 2, box);
+}
+
+function drawGround(box) {
+  const z = levelFor(view.scale);
+  ctx.imageSmoothingEnabled = view.scale < A.px / 2;
+  let wanted = drawLevel(z, box);
+  if (wanted.missing && z !== COARSEST) {
+    // Underneath, then the wanted level again over the top of it.
+    const smooth = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = true;
+    drawLevel(COARSEST, box);
+    ctx.imageSmoothingEnabled = smooth;
+    wanted = drawLevel(z, box);
+  }
+  return { z, drawn: wanted.drawn };
+}
+
+/* ---------------- the mask, read once ---------------- */
+let mask = null;
+const maskImage = new Image();
+maskImage.onload = () => {
+  const off = document.createElement('canvas');
+  off.width = maskImage.width; off.height = maskImage.height;
+  const o = off.getContext('2d', { willReadFrequently: true });
+  o.drawImage(maskImage, 0, 0);
+  mask = { w: off.width, h: off.height, data: o.getImageData(0, 0, off.width, off.height).data };
+  populate();
+};
+maskImage.src = BASE + 'mask.png';
+
+function atTile(tx, ty) {
+  if (!mask) return null;
+  if (!Number.isFinite(tx) || !Number.isFinite(ty)) return null;   // off the world
+  const x = Math.floor(tx) - B.minX, y = Math.floor(ty) - B.minY;
+  if (x < 0 || y < 0 || x >= mask.w || y >= mask.h) return null;
+  const at = (y * mask.w + x) * 4;
+  const flags = mask.data[at + 1];
+  return {
+    biome: mask.data[at],
+    road: (flags & 1) !== 0,
+    walled: (flags & 2) !== 0,             // mountain, deep water: nothing crosses it
+    zone: mask.data[at + 2]
+  };
+}
+const zoneOf = (tx, ty) => { const t = atTile(tx, ty); return t ? t.zone : 0; };
+
+/* ---------------- the water that moves ---------------- */
+/*
+ * A fifth of the realm's floor drifts - open sea rocking, rivers running,
+ * lava creeping. It cannot be done in the baked floor, which can only hold
+ * one instant, so the tiles that move are listed and drawn here instead, each
+ * with its own texture sliding under it.
+ *
+ * The list holds only water walled in by its own kind. At the water's edge
+ * the sand is blended across the tile, and sliding a whole tile over that
+ * would cut the shoreline back to a step, so the edge keeps the floor it was
+ * baked with.
+ */
+let wet = null;
+const wetArt = new Image();
+if (A.water) {
+  wetArt.src = BASE + 'water-art.png';
+  fetch(BASE + 'water.json').then(r => r.json()).then(index => {
+    const img = new Image();
+    img.onload = () => {
+      const off = document.createElement('canvas');
+      off.width = img.width; off.height = img.height;
+      const o = off.getContext('2d', { willReadFrequently: true });
+      o.drawImage(img, 0, 0);
+      const data = o.getImageData(0, 0, img.width, img.height).data;
+      // Only the first channel carries anything, so the map is kept as one
+      // byte a tile rather than four.
+      const at = new Uint8Array(img.width * img.height);
+      for (let i = 0, j = 0; j < at.length; i += 4, j++) at[j] = data[i];
+      wet = { index: index, at: at };
+    };
+    img.src = BASE + 'water.png';
+  }).catch(() => { wet = null; });
+}
+
+function drawWater(box, time) {
+  if (!wet || !wetArt.complete || !wetArt.naturalWidth) return 0;
+  if (levelFor(view.scale) !== 0) return 0;
+  const W = wet.index;
+  const flat0 = flatTile(0, 0, box), flat1 = flatTile(box.w, box.h, box);
+  const over = turning() ? Math.max(flat1.x - flat0.x, flat1.y - flat0.y) * 0.5 : 0;
+  const near = { x: flat0.x - over, y: flat0.y - over };
+  const far = { x: flat1.x + over, y: flat1.y + over };
+  const x0 = Math.max(W.minX, Math.floor(near.x));
+  const x1 = Math.min(W.minX + W.wide - 1, Math.ceil(far.x));
+  const y0 = Math.max(W.minY, Math.floor(near.y));
+  const y1 = Math.min(W.minY + W.tall - 1, Math.ceil(far.y));
+  if (x1 < x0 || y1 < y0) return 0;
+
+  /*
+   * How far each kind of drift has slid, worked out once for the frame. Flow
+   * runs one way and keeps going; Wave rocks about where it started. Whole
+   * pixels either way - the art is pixels, and sliding it by halves turns
+   * water into porridge.
+   */
+  const t = time / 1000;
+  const slid = [];
+  for (const pic of W.pics) {
+    const ox = pic[4] ? Math.sin(t * 1.6) * pic[2] * 8 : t * pic[2] * 8;
+    const oy = pic[4] ? Math.cos(t * 1.27) * pic[3] * 8 : t * pic[3] * 8;
+    slid.push([((Math.round(ox) % 8) + 8) % 8, ((Math.round(oy) % 8) + 8) % 8]);
+  }
+
+  ctx.imageSmoothingEnabled = false;
+  const on = view.scale;
+  let drawn = 0;
+  for (let y = y0; y <= y1; y++) {
+    const row = (y - W.minY) * W.wide - W.minX;
+    for (let x = x0; x <= x1; x++) {
+      const n = wet.at[row + x];
+      if (!n) continue;
+      const pic = W.pics[n - 1];
+      if (!pic) continue;
+      const off = slid[n - 1];
+      const at = toScreen(x, y, box);
+      ctx.drawImage(wetArt, pic[0] + off[0], pic[1] + off[1], 8, 8,
+        at.x, at.y, on + 1, on + 1);
+      drawn++;
+    }
+  }
+  return drawn;
+}
+
+/* ------------------------------------------------------------------ *
+ * Weather, and things with wings                                      *
+ * ------------------------------------------------------------------ */
+/*
+ * A world with nothing moving over it reads as a diagram of a world. So there
+ * is weather on it: cloud drifting westward over the ocean, a shimmer where
+ * the light catches the water, and birds once you are near enough for a bird
+ * to make sense.
+ *
+ * All of it thins out as you come down. The cloud is what you see of a planet
+ * from far off and the last thing you want between you and the ground, so as
+ * the zoom rises each bank is pushed outwards from the middle of the view and
+ * faded, and by the time the realm is worth reading the sky is clear. The
+ * birds arrive as the cloud leaves.
+ *
+ * It costs one picture drawn a hundred-odd times. The puff is rendered once
+ * into a canvas of its own; everything after that is a blit.
+ */
+const CLOUD_GONE = 7;                    // zoom by which the sky has cleared
+const CLOUD_FULL = 0.5;                  // and below which it is at its thickest
+const BIRDS_FROM = 2.4, BIRDS_TO = 26;   // the zooms a bird makes sense at
+
+/*
+ * The cloud is the client's own, stamped into shapes when the map was built.
+ * It is drawn as pixels and nothing else: no blur, no gradient, no smoothing
+ * - the same grain as the ground under it.
+ */
+let skyArt = null;
+const skySheet = new Image();
+const oryxSheet = new Image();
+if (A.sky) {
+  skySheet.src = BASE + 'sky.png';
+  fetch(BASE + 'sky.json').then(r => r.json())
+    .then(one => { skyArt = one; }).catch(() => { skyArt = null; });
+}
+
+/*
+ * He is not fetched until he is wanted.
+ *
+ * His picture is the largest single thing the map carries and it is seen at
+ * one distance only - the furthest one, which most people opening the atlas
+ * will never go to. Asking for it on the way in would put a megabyte and more
+ * in front of the ground, which is the thing they did come for.
+ */
+let sentFor = false;
+function callForOryx() {
+  if (sentFor || !A.sky) return;
+  sentFor = true;
+  oryxSheet.src = BASE + 'oryx.png';
+}
+
+/*
+ * Oryx, closing on the world.
+ *
+ * Only when you have drawn right back, and more of him the further back you
+ * go: the head rises from behind the planet and the hands come in from either
+ * side, both of them breathing a little so they are held rather than pasted.
+ * Come down towards the ground and he lets go.
+ */
+/*
+ * He begins where the opening view ends.
+ *
+ * Reckoned as a multiple of the furthest you may stand rather than as a zoom
+ * of its own, because both the floor and the view the map opens at are set
+ * from the size of the window: written as a plain number he would be half
+ * out already on a tall screen and nowhere to be seen on a short one. The map
+ * opens at about twice the floor, so he starts a little inside that, and you
+ * have to take a step back to meet him.
+ */
+const ORYX_FROM = 1.75;                  // in floors, the distance he starts at
+
+function oryxShows(box) {
+  if (!A.sky || !skyArt || !skyArt.oryx) return 0;
+  if (!roundWorld(box)) return 0;
+  const least = floorZoom(box), from = least * ORYX_FROM;
+  if (view.scale >= from) return 0;
+  // Sent for a little before he is due, so he has arrived by the time he is.
+  if (view.scale < from * 1.6) callForOryx();
+  if (!oryxSheet.complete || !oryxSheet.naturalWidth) return 0;
+  return Math.max(0, Math.min(1, (from - view.scale) / Math.max(0.01, from - least)));
+}
+
+// The head, behind the world - so it is drawn before the world is.
+function drawOryxBehind(box, now) {
+  const showing = oryxShows(box);
+  if (showing <= 0.01) return;
+  const cut = skyArt.oryx.head;
+  const R = globe();
+  /*
+   * Sized to the room there is for him rather than to the world.
+   *
+   * All of him that can ever be seen is the part standing above the world:
+   * horns, brow, eyes, and the top of the cheeks - about the upper three
+   * fifths of the picture. So it is that fraction which is fitted into the
+   * gap between the top of the window and the top of the world, and he never
+   * has his horns cut off by the edge of the glass however the window is
+   * shaped.
+   */
+  const SHOWN = 0.62;
+  const room = Math.max(40, box.h / 2 - R - 8);
+  const wide = Math.min(R * 2 * 1.7, (room / SHOWN) * cut[2] / cut[3]);
+  const tall = wide * cut[3] / cut[2];
+  const breathe = Math.sin(now / 1700) * R * 0.012;
+  /*
+   * Risen until his eyes are clear of the horizon and the rest of him is
+   * behind the world; sunk away again as you come down towards the ground.
+   */
+  const risen = box.h / 2 - R - tall * (SHOWN - 0.5);
+  const sunk = box.h / 2 - R * 0.3;
+  const y = sunk + (risen - sunk) * showing + breathe;
+  ctx.save();
+  ctx.globalAlpha = showing;
+  ctx.drawImage(oryxSheet, cut[0], cut[1], cut[2], cut[3],
+    box.w / 2 - wide / 2, y - tall / 2, wide, tall);
+  ctx.restore();
+}
+
+// And the hands, in front of it.
+function drawOryxHands(box, now) {
+  const showing = oryxShows(box);
+  if (showing <= 0.01) return;
+  const R = globe();
+  const cy = box.h / 2 + R * 0.14;
+  // Closing on it as you draw back, and never quite still.
+  const reach = R * (1.34 - 0.22 * showing);
+  ctx.save();
+  ctx.globalAlpha = showing;
+  for (const side of [-1, 1]) {
+    /*
+     * Each hand is its own picture, drawn the way round it was drawn. They
+     * were one picture of a pair facing each other and they are not quite
+     * mirror images, so turning one of them over to serve as the other put a
+     * left hand on the right of the world.
+     */
+    const cut = side < 0 ? skyArt.oryx.handL : skyArt.oryx.handR;
+    if (!cut) continue;
+    const tall = R * 2 * 1.02, wide = tall * cut[2] / cut[3];
+    const bob = Math.sin(now / 1300 + (side > 0 ? 1.7 : 0)) * R * 0.022;
+    // Anchored by the edge that reaches, which is the one facing the world.
+    const edge = box.w / 2 + side * reach;
+    ctx.drawImage(oryxSheet, cut[0], cut[1], cut[2], cut[3],
+      side < 0 ? edge - wide : edge, cy + bob - tall / 2, wide, tall);
+  }
+  ctx.restore();
+}
+
+/*
+ * Where the weather sits, settled once from a fixed roll so it is the same
+ * world every time it is opened rather than a new one every frame.
+ */
+const weather = (() => {
+  let seed = 20260902;
+  const roll = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const midX = (B.minX + B.maxX) / 2, midY = (B.minY + B.maxY) / 2;
+  const banks = [];
+  // Enough for weather, not enough to hide the world under it.
+  for (let i = 0; i < 78; i++) {
+    // Spread over the near face of the world, not just over the island.
+    const a = roll() * Math.PI * 2, r = Math.sqrt(roll()) * PLANET * 0.92;
+    banks.push({
+      x: midX + Math.cos(a) * r,
+      y: midY + Math.sin(a) * r * 0.86,
+      wide: 60 + roll() * 130,           // tiles across
+      // Fair weather mostly; the dark ones are the odd storm cell.
+      shape: Math.floor(roll() * 18),
+      drift: 3.5 + roll() * 5,           // tiles a second, westward
+      dim: 0.62 + roll() * 0.38
+    });
+  }
+  const birds = [];
+  for (let i = 0; i < 7; i++) {
+    const fx = midX + (roll() - 0.5) * (B.maxX - B.minX) * 0.8;
+    const fy = midY + (roll() - 0.5) * (B.maxY - B.minY) * 0.8;
+    const heading = roll() * Math.PI * 2;
+    for (let k = 0; k < 3 + Math.floor(roll() * 3); k++) {
+      birds.push({
+        x: fx + (roll() - 0.5) * 26, y: fy + (roll() - 0.5) * 20,
+        vx: Math.cos(heading) * (2.2 + roll()), vy: Math.sin(heading) * (2.2 + roll()),
+        beat: roll() * 6, span: 0.55 + roll() * 0.45
+      });
+    }
+  }
+  return { banks, birds, midX, midY };
+})();
+
+/*
+ * How much sky there is at this distance.
+ *
+ * Measured across the zoom the way the zoom is actually worked - by ratio,
+ * not by difference. Every notch of the wheel multiplies, so a straight
+ * reading spends nearly all of its range on the last two notches and clears
+ * the whole sky in a moment; read as a ratio the same clearing is spread
+ * evenly over every notch of the approach, which is a dozen of them rather
+ * than three.
+ *
+ * Eased at the ends besides, so it neither starts nor finishes abruptly.
+ */
+const skyLeft = () => {
+  const t = Math.max(0, Math.min(1,
+    Math.log(CLOUD_GONE / Math.max(CLOUD_FULL, view.scale))
+    / Math.log(CLOUD_GONE / CLOUD_FULL)));
+  return t * t * (3 - 2 * t);
+};
+
+function drawSky(box, now) {
+  const left = skyLeft();
+  if (left <= 0.01) return 0;
+  if (!skyArt || !skySheet.complete || !skySheet.naturalWidth) return 0;
+  const t = now / 1000;
+  // Parted: each bank slides away from the middle as the ground comes up.
+  // Drifting apart gently as you come down, rather than being flung aside.
+  const apart = 1 + Math.max(0, view.scale - CLOUD_FULL) * 0.28;
+  const span = PLANET * 1.9;
+
+  ctx.save();
+  if (roundWorld(box)) {
+    ctx.beginPath();
+    ctx.arc(box.w / 2, box.h / 2, globe(), 0, Math.PI * 2);
+    ctx.clip();
+  }
+
+  ctx.imageSmoothingEnabled = false;
+  let drawn = 0;
+  for (const one of weather.banks) {
+    const cut = skyArt.clouds[one.shape % skyArt.clouds.length];
+    if (!cut) continue;
+    /*
+     * Carried west and brought round again. A cloud that simply reappeared on
+     * the far side jumped in plain sight, so it thins away over the last of
+     * its run and comes back out of nothing.
+     */
+    let wx = one.x - t * one.drift;
+    wx = weather.midX + (((wx - weather.midX) % span) + span * 1.5) % span - span / 2;
+    const edge = Math.min(1, (span / 2 - Math.abs(wx - weather.midX)) / (span * 0.16));
+    if (edge <= 0) continue;
+    const at = place(weather.midX + (wx - weather.midX) * apart,
+      weather.midY + (one.y - weather.midY) * apart, box);
+    if (!at) continue;
+    // Drawn at the shape's own proportions, so it is never stretched.
+    const w = one.wide * view.scale * at.k;
+    const h = w * cut[3] / cut[2];
+    if (at.x + w < 0 || at.x - w > box.w || at.y + h < 0 || at.y - h > box.h) continue;
+    ctx.globalAlpha = left * one.dim * edge * 0.4;
+    ctx.drawImage(skySheet, cut[0], cut[1], cut[2], cut[3],
+      Math.round(at.x - w / 2), Math.round(at.y - h / 2), Math.round(w), Math.round(h));
+    drawn++;
+  }
+  ctx.restore();
+  return drawn;
+}
+
+/*
+ * Birds, once the cloud is thin enough to see past. They wander rather than
+ * fly anywhere, turn slowly, and are kept over the realm so they are not
+ * found flapping across open ocean.
+ */
+function stepBirds(delta) {
+  if (view.scale < BIRDS_FROM || view.scale > BIRDS_TO) return;
+  for (const one of weather.birds) {
+    one.beat += delta * 7;
+    const turn = (Math.random() - 0.5) * 0.9 * delta;
+    const cos = Math.cos(turn), sin = Math.sin(turn);
+    const vx = one.vx * cos - one.vy * sin, vy = one.vx * sin + one.vy * cos;
+    one.vx = vx; one.vy = vy;
+    one.x += vx * delta; one.y += vy * delta;
+    // Turned back at the coast rather than allowed to leave.
+    if (one.x < B.minX) { one.x = B.minX; one.vx = Math.abs(one.vx); }
+    if (one.x > B.maxX) { one.x = B.maxX; one.vx = -Math.abs(one.vx); }
+    if (one.y < B.minY) { one.y = B.minY; one.vy = Math.abs(one.vy); }
+    if (one.y > B.maxY) { one.y = B.maxY; one.vy = -Math.abs(one.vy); }
+  }
+}
+
+function drawBirds(box) {
+  if (view.scale < BIRDS_FROM || view.scale > BIRDS_TO) return 0;
+  const fade = Math.min(1, (view.scale - BIRDS_FROM) / 2)
+    * Math.min(1, (BIRDS_TO - view.scale) / 6);
+  if (fade <= 0.02) return 0;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  let drawn = 0;
+  for (const one of weather.birds) {
+    const at = place(one.x, one.y, box);
+    if (!at) continue;
+    if (at.x < -20 || at.y < -20 || at.x > box.w + 20 || at.y > box.h + 20) continue;
+    /*
+     * A pair of strokes that open and close, which is all a bird is from up
+     * here - drawn twice, a pale one under a dark one, so it reads over a
+     * dark forest as well as over sand.
+     */
+    const arm = Math.max(5, Math.min(26, view.scale * 1.5)) * one.span * at.k;
+    const lift = Math.sin(one.beat) * arm * 0.5;
+    const wing = () => {
+      ctx.beginPath();
+      ctx.moveTo(at.x - arm, at.y - lift);
+      ctx.quadraticCurveTo(at.x - arm * 0.45, at.y - lift * 0.15, at.x, at.y);
+      ctx.quadraticCurveTo(at.x + arm * 0.45, at.y - lift * 0.15, at.x + arm, at.y - lift);
+      ctx.stroke();
+    };
+    ctx.globalAlpha = fade * 0.34;
+    ctx.strokeStyle = '#eaf2ff';
+    ctx.lineWidth = Math.max(2, arm * 0.5);
+    wing();
+    ctx.globalAlpha = fade * 0.92;
+    ctx.strokeStyle = '#0a0e15';
+    ctx.lineWidth = Math.max(1.2, arm * 0.24);
+    wing();
+    drawn++;
+  }
+  ctx.restore();
+  return drawn;
+}
+
+/* ---------------- what stands in the realm ---------------- */
+/*
+ * Close up the floor is only the floor, and everything standing on it is
+ * drawn here instead: each thing as its own picture, sorted by how far down
+ * the realm it stands so the near one passes in front of the far one, and
+ * lifted by the height it carries so that what flies is seen to fly. Further
+ * out there is no room to sort anything and the floor picture carries them
+ * all flattened into it, which is why this only runs at the closest level.
+ */
+let things = null;
+const thingArt = new Image();
+if (A.things) {
+  thingArt.src = BASE + 'things.png';
+  fetch(BASE + 'things.json').then(r => r.json()).then(index =>
+    fetch(BASE + 'things.bin').then(r => r.arrayBuffer()).then(buffer => {
+      things = { index, at: new Uint16Array(buffer), reach: reachOf(index) };
+    })).catch(() => { things = null; });
+}
+
+/*
+ * How far the biggest thing in the sheet reaches past the tile it stands
+ * on, in tiles.
+ *
+ * Needed to know what can be thrown away unseen, and worth measuring
+ * rather than guessing: the widest cell is sixty-eight sheet pixels and
+ * the largest a thing is drawn is 160 per cent, which together are nearly
+ * seven tiles - so a foot three tiles outside the frame can still put a
+ * shoulder inside it. Read off the sheet once, when it arrives.
+ */
+function reachOf(index) {
+  let wide = 0, tall = 0, rise = 0;
+  for (const pic of index.pics) {
+    if (!pic) continue;
+    const size = (pic[4] || 100) / 100;
+    wide = Math.max(wide, pic[2] * size);
+    tall = Math.max(tall, pic[3] * size);
+    rise = Math.max(rise, (pic[5] || 0) / 100);
+  }
+  const perTile = A.px * SS;
+  return { half: wide / perTile / 2, tall: tall / perTile, rise };
+}
+
+// Reused between frames so a busy corner of the realm does not make garbage.
+const standing = [];
+const mob = [];
+
+function drawThings(box, time) {
+  if (!things || !thingArt.complete || !thingArt.naturalWidth) return null;
+  if (levelFor(view.scale) !== 0) return null;
+  const span = A.chunk;
+const seen = seenRange(box, 80);
+  const near = { x: seen.x0, y: seen.y0 }, far = { x: seen.x1, y: seen.y1 };
+  const c0 = Math.floor(near.x / span) - 1, c1 = Math.floor(far.x / span) + 1;
+  const r0 = Math.floor(near.y / span) - 1, r1 = Math.floor(far.y / span) + 1;
+
+  /*
+   * Only the things that could land on the screen.
+   *
+   * A chunk is a hundred and twenty-eight tiles square and holds thousands
+   * of things; the screen at this level holds a couple of hundred tiles
+   * across. Collected by the chunk and sorted before anything was thrown
+   * away, nineteen things in twenty were sorted, measured, placed and only
+   * then discarded - twenty-nine thousand of them handled to draw thirteen
+   * hundred. The bounds are asked first now, in the units the file is
+   * written in, so that nothing has to be divided to answer.
+   *
+   * The margin below is generous because a thing is placed by its foot and
+   * drawn upwards: the tallest stand six tiles high, so one whose foot is
+   * under the bottom edge can still hang into view. Above the top edge a
+   * foot cannot, since the body is above it - and `near` is already read
+   * eighty pixels high for that. The exact check further down still has
+   * the last word.
+   */
+  const a = things.at;
+  /*
+   * The margin carries three things: half the widest thing, because a
+   * thing is placed by the middle of its foot; its whole height on the
+   * near side, because it is drawn upwards and one standing below the
+   * bottom edge can still hang into view; and the forty screen pixels the
+   * exact check further down tolerates, which this far in is several tiles
+   * and was what the first attempt at this forgot. Losing twenty-four
+   * things off the edges is what forgetting it looks like.
+   */
+  const reach = things.reach;
+  const slack = 40 / view.scale;
+  const overX = reach.half + slack, aboveY = 1 + slack;
+  const belowY = reach.tall + reach.rise + 1 + slack;
+  const lowX = (near.x - overX) * 8, highX = (far.x + overX) * 8;
+  const lowY = (near.y - aboveY) * 8, highY = (far.y + belowY) * 8;
+  standing.length = 0;
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const where = things.index.chunks[c + '_' + r];
+      if (!where) continue;
+      const from = where[0], count = where[1];
+      for (let i = 0; i < count; i++) {
+        const at = (from + i) * 3;
+        const tx = a[at + 1], ty = a[at + 2];
+        if (tx < lowX || tx > highX || ty < lowY || ty > highY) continue;
+        standing.push(at);
+      }
+    }
+  }
+  // Down the screen, so the near thing is drawn last and stands in front.
+  standing.sort((p, q) => a[p + 2] - a[q + 2]);
+
+  /*
+   * The creatures walk in the same order. Sorted apart from the scenery they
+   * would always pass in front of it, and a monster standing behind a wall
+   * would be drawn on top of the wall; sorted together, it is behind it.
+   */
+  mob.length = 0;
+  for (const one of alive) {
+    if (one.x < near.x - 6 || one.x > far.x + 6) continue;
+    if (one.y < near.y - 6 || one.y > far.y + 6) continue;
+    mob.push(one);
+  }
+  mob.sort((p, q) => p.y - q.y);
+
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = false;
+  const pics = things.index.pics;
+  const perPixel = view.scale / (A.px * SS);
+  let drawn = 0, living = 0, m = 0;
+  for (const at of standing) {
+    const x = a[at + 1] / 8, y = a[at + 2] / 8;
+    while (m < mob.length && mob[m].y < y) living += drawOneLife(mob[m++], box);
+    const pic = pics[a[at]];
+    if (!pic) continue;
+    const size = pic[4] / 100;
+    const wide = pic[2] * size * perPixel;
+    const tall = pic[3] * size * perPixel;
+    // The line took a pixel of art all round, so it is put back down by that much.
+    const foot = (pic[6] || 0) * size * perPixel;
+    const on = place(x, y + 1, box);
+    if (!on) continue;
+    const w2 = wide * on.k, h2 = tall * on.k;
+    if (on.x + w2 < -40 || on.x - w2 > box.w + 40) continue;
+    if (on.y + h2 < -40 || on.y - h2 > box.h + 40) continue;
+    /*
+     * A thing with a run of frames plays it. A dungeon portal turns, a torch
+     * gutters, a captured beacon pulses - the client says how many frames and
+     * how long the whole run lasts, and the frames sit side by side in one
+     * cell of the sheet, so playing one is a step along the row.
+     */
+    let sx = pic[0];
+    const frames = pic[7] || 1;
+    if (frames > 1) {
+      const run = pic[8] || 800;
+      sx += (Math.floor(time / (run / frames)) % frames) * pic[2];
+    }
+    ctx.drawImage(thingArt, sx, pic[1], pic[2], pic[3],
+      on.x - w2 / 2, on.y - h2 + foot * on.k - (pic[5] / 100) * view.scale * on.k, w2, h2);
+    drawn++;
+  }
+  while (m < mob.length) living += drawOneLife(mob[m++], box);
+  return { stood: drawn, living };
+}
+
+const roads = new Image();
+roads.src = BASE + 'roads.png';
+
+/*
+ * A zone lit up.
+ *
+ * Drawn once into a canvas the size of the patch and kept, because a patch of
+ * two hundred thousand tiles is not something to walk over every frame. What
+ * comes back is a white silhouette to be laid over the ground at a low
+ * opacity - enough to say "this, and this much of it" without hiding what is
+ * underneath.
+ */
+const lit = new Map();
+/*
+ * A place picked out by its edge alone.
+ *
+ * Washing the whole patch in light told you where it was and ruined what it
+ * was made of: a forest under the mouse went pale and stopped looking like a
+ * forest. So only the border is kept - the tiles of the patch that touch
+ * something that is not the patch - and the inside is left exactly as the
+ * client drew it.
+ *
+ * Two tiles thick, because one tile is less than a screen pixel when the
+ * whole realm is in view and the border would vanish at the very moment it
+ * is most useful.
+ */
+function litZone(id) {
+  if (lit.has(id)) return lit.get(id);
+  const zone = zoneById.get(id);
+  if (!zone || !mask) return null;
+  const [x0, y0, x1, y1] = zone.box;
+  const PAD = 5;
+  const w = x1 - x0 + 1 + PAD * 2, h = y1 - y0 + 1 + PAD * 2;
+  const mine = (x, y) => {
+    const mx = x + x0 - PAD - B.minX, my = y + y0 - PAD - B.minY;
+    if (mx < 0 || my < 0 || mx >= mask.w || my >= mask.h) return false;
+    return mask.data[(my * mask.w + mx) * 4 + 2] === id;
+  };
+  const off = document.createElement('canvas');
+  off.width = w; off.height = h;
+  const o = off.getContext('2d');
+  const out = o.createImageData(w, h);
+  const rim = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!mine(x, y)) continue;
+      if (mine(x - 1, y) && mine(x + 1, y) && mine(x, y - 1) && mine(x, y + 1)) continue;
+      rim[y * w + x] = 1;
+    }
+  }
+  // Grown outward in steps, each fainter, so there is something for the
+  // blur to work with rather than one hard line.
+  for (let step = 2; step <= 4; step++) {
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (rim[y * w + x] !== step - 1) continue;
+        for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          if (!rim[ny * w + nx]) rim[ny * w + nx] = step;
+        }
+      }
+    }
+  }
+  const fade = [0, 255, 200, 140, 80];
+  for (let i = 0; i < rim.length; i++) {
+    if (!rim[i]) continue;
+    const to = i * 4;
+    out.data[to] = 255; out.data[to + 1] = 236; out.data[to + 2] = 190;
+    out.data[to + 3] = fade[rim[i]];
+  }
+  o.putImageData(out, 0, 0);
+
+  // The same line again in near-black, to lay under it as its shadow.
+  const under = document.createElement('canvas');
+  under.width = w; under.height = h;
+  const u = under.getContext('2d');
+  const dark = u.createImageData(w, h);
+  for (let i = 0; i < rim.length; i++) {
+    if (!rim[i]) continue;
+    const to = i * 4;
+    dark.data[to] = 4; dark.data[to + 1] = 6; dark.data[to + 2] = 10;
+    dark.data[to + 3] = fade[rim[i]];
+  }
+  u.putImageData(dark, 0, 0);
+
+  const made = { canvas: off, under, x: x0 - PAD, y: y0 - PAD, w, h };
+  lit.set(id, made);
+  return made;
+}
+
+/*
+ * A place lit from under its own edge, as though it stood a little proud of
+ * the map around it: a soft pool of shade laid below and to the right of the
+ * border, and a warm light bloomed along the border itself. Both are blurred
+ * in screen pixels rather than tiles, so the softness is the same however
+ * close you are, and neither of them touches the inside - the ground there
+ * keeps exactly the colour the client gave it.
+ */
+function drawLit(box, id, alpha) {
+  const made = litZone(id);
+  if (!made) return;
+  const at = toScreen(made.x, made.y, box);
+  const w = made.w * view.scale, h = made.h * view.scale;
+  const soft = Math.max(5, Math.min(18, view.scale * 1.6));
+  const drop = soft * 0.55;
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+
+  ctx.filter = 'blur(' + soft.toFixed(1) + 'px)';
+  ctx.globalAlpha = Math.min(0.75, alpha * 4.5);
+  ctx.drawImage(made.under, at.x + drop, at.y + drop, w, h);
+
+  // The light itself, added rather than painted on, twice over: a wide bloom
+  // and a tighter one inside it, so it reads as a glow and not as a band.
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = Math.min(0.55, alpha * 3.2);
+  ctx.drawImage(made.canvas, at.x, at.y, w, h);
+  ctx.filter = 'blur(' + (soft * 0.35).toFixed(1) + 'px)';
+  ctx.globalAlpha = Math.min(0.45, alpha * 2.6);
+  ctx.drawImage(made.canvas, at.x, at.y, w, h);
+
+  ctx.restore();
+}
+
+/* ---------------- what lives there ---------------- */
+/*
+ * One creature to about twelve hundred tiles of its own patch, floored and
+ * capped so a small zone is not empty and a vast one is not a swarm. They are
+ * placed by sampling inside the patch's own bounds rather than the whole map,
+ * which is what makes placing a thousand of them instant.
+ */
+// One creature to about seven hundred tiles of its own patch, which is
+// nearer to how a realm feels than the one in twelve hundred it was.
+const perZone = area => Math.max(7, Math.min(150, Math.round(area / 700)));
+const alive = [];
+const lifeArt = new Map();
+
+function artFor(sprite) {
+  let img = lifeArt.get(sprite.file);
+  if (!img) {
+    img = new Image();
+    img.decoding = 'async';
+    img.src = BASE + 'life/' + sprite.file;
+    lifeArt.set(sprite.file, img);
+  }
+  return img;
+}
+
+function populate() {
+  alive.length = 0;
+  for (const zone of A.zones) {
+    if (!zone.lives || !zone.lives.length) continue;
+    const [x0, y0, x1, y1] = zone.box;
+    const wanted = perZone(zone.tiles);
+    let placed = 0, tries = 0;
+    while (placed < wanted && tries < wanted * 60) {
+      tries++;
+      const x = x0 + Math.random() * (x1 - x0 + 1);
+      const y = y0 + Math.random() * (y1 - y0 + 1);
+      // Its own patch, and ground it could actually stand on.
+      if (!canStand(x, y, zone.id)) continue;
+      const kind = zone.lives[Math.floor(Math.random() * zone.lives.length)];
+      const angle = Math.random() * Math.PI * 2;
+      alive.push({
+        kind, home: zone.id, x, y,
+        vx: Math.cos(angle) * 0.5, vy: Math.sin(angle) * 0.5,
+        phase: Math.random() * 100
+      });
+      placed++;
+    }
+  }
+  standUpLandmarks();
+  countAt.textContent = alive.length + ' creatures and ' + landmarks.length
+    + ' set pieces across ' + A.zones.length + ' zones';
+}
+
+/*
+ * Where a creature may put its feet: inside its own patch, and on ground the
+ * client says can be walked on. The second matters as much as the first - the
+ * Deep Sea's patch takes in the ring of Craggle mountains around it, and
+ * without asking, its wildlife strolls over the range that is there to keep
+ * it in.
+ */
+/*
+ * The ground a beacon stands on.
+ *
+ * Every beacon in the realm is planted on the same built plate - the
+ * castle flagstones, a darker ring, a rug at the middle - and nothing
+ * wanders across it.
+ *
+ * Its size and where it sits are read off the ground rather than guessed
+ * at. The plate is identical at every beacon and the biome around it is
+ * not, so for each offset from a beacon you can ask how many of the
+ * forty-two show the same tile there: inside the plate better than three
+ * quarters of them agree, and one tile outside it the agreement falls to
+ * two per cent. What that draws is nineteen tiles square, reaching from
+ * ten tiles west to eight east and thirteen north to five south - so the
+ * position recorded for a beacon is not the middle of its own plate, but
+ * a tile east and four south of it.
+ *
+ * (The very middle disagrees too, because a captured beacon and an active
+ * one do not look alike and a guardian may be standing on it. That is
+ * inside the plate all the same.)
+ *
+ * Held as the set of tiles the plates cover rather than as a distance to
+ * be measured, because the walk asks this question up to three times per
+ * creature per frame and there are forty-two plates it would otherwise
+ * have to ask about every time.
+ */
+const BEACON_REACH = 9;
+const BEACON_OFF_X = -1;
+const BEACON_OFF_Y = -4;
+const beaconGround = (() => {
+  const held = new Set();
+  for (const beacon of A.beacons) {
+    const cx = beacon.x + BEACON_OFF_X, cy = beacon.y + BEACON_OFF_Y;
+    for (let dy = -BEACON_REACH; dy <= BEACON_REACH; dy++) {
+      for (let dx = -BEACON_REACH; dx <= BEACON_REACH; dx++) {
+        held.add((cy + dy) * 4096 + cx + dx);
+      }
+    }
+  }
+  return held;
+})();
+const onBeaconGround = (x, y) => beaconGround.has(Math.floor(y) * 4096 + Math.floor(x));
+
+function canStand(x, y, home) {
+  if (zoneOf(x, y) !== home) return false;
+  if (onBeaconGround(x, y)) return false;
+  const here = atTile(x, y);
+  return !(here && here.walled);
+}
+
+function stepLife(delta) {
+  for (const one of alive) {
+    one.phase += delta;
+    const turn = (Math.random() - 0.5) * 0.4 * delta;
+    const cos = Math.cos(turn), sin = Math.sin(turn);
+    const vx = one.vx * cos - one.vy * sin;
+    const vy = one.vx * sin + one.vy * cos;
+    one.vx = vx; one.vy = vy;
+    const nx = one.x + vx * delta, ny = one.y + vy * delta;
+    if (canStand(nx, ny, one.home)) { one.x = nx; one.y = ny; continue; }
+    if (canStand(nx, one.y, one.home)) { one.x = nx; one.vy = -one.vy; }
+    else if (canStand(one.x, ny, one.home)) { one.y = ny; one.vx = -one.vx; }
+    else { one.vx = -one.vx; one.vy = -one.vy; }
+  }
+}
+
+/*
+ * How far away a thing is worth seeing from.
+ *
+ * Zoomed right out the realm is a shape, and what matters about it is where
+ * its set pieces are - so the encounters come up first, alone, at a scale
+ * where a tile is a third of a pixel and nothing else could be read. The
+ * Heroes of Oryx follow, then the ordinary wildlife, then the scenery, which
+ * has its own level and does not appear until eight pixels to the tile.
+ *
+ * Which is also how the map stays cheap far out: thirty-odd landmarks
+ * instead of thirteen hundred creatures and a hundred and eighty thousand
+ * things.
+ *
+ * The wildlife used to come in at 1.4, which fitting the realm and then
+ * turning the wheel five times reaches - so it was on the map almost
+ * always and there was barely a band where the set pieces stood alone. At
+ * 3 it takes nine turns, the rare things have the middle distance to
+ * themselves, and the wildlife arrives at about the zoom where the ground
+ * it is standing on becomes worth looking at.
+ */
+/*
+ * What appears at what distance, as a staircase.
+ *
+ * Standing right back you get a world and nothing else - the point of being
+ * that far away is to see the shape of it, and a realm dotted with its bosses
+ * before you have come anywhere near tells you nothing you can use. So each
+ * kind arrives as you come down, in the order of how much a thing matters
+ * when you are looking for it: the encounters first, then the Heroes of Oryx,
+ * then the wildlife, and last the scenery, which arrives with the ground it
+ * stands on.
+ *
+ * None of them is at the furthest zoom, which is a little under nine tenths.
+ */
+const SHOW_ENCOUNTER = 0.85;
+const SHOW_HERO = 1.7;
+const SHOW_LIFE = 3;
+
+/*
+ * How tall a landmark is drawn, in tiles.
+ *
+ * An editorial choice, and it has to be, because nothing anywhere says how
+ * big these are. The client would know, but not one encounter and only five
+ * heroes were met during the walk, so their pictures come from the imported
+ * catalogue - which is a sprite inside a square of transparency, and the
+ * square is ninety pixels for one and four hundred for the next. Sizing
+ * them from that would say nothing except how the picture was cropped.
+ *
+ * So they are drawn at a size that reads as a set piece against wildlife of
+ * one and a half to six tiles, and the sprite inside the picture is measured
+ * so the drawn size is the same whatever the square around it was.
+ */
+const LANDMARK_TILES = { encounter: 7, hero: 4.5 };
+
+/*
+ * And never smaller than this on the screen, whatever the zoom.
+ *
+ * Seven tiles is four pixels when the whole realm is in view, which is not
+ * something you can see, let alone the first thing you see. Below the zoom
+ * where its true size overtakes this, a set piece stops being a thing on the
+ * ground and becomes a mark on a map - which is what it is for out there.
+ * The beacons already work this way.
+ */
+const LANDMARK_LEAST = { encounter: 26, hero: 17 };
+
+const landmarks = [];
+const bossArt = new Map();
+
+/*
+ * The drawn part of a picture, in its own pixels, measured once when it
+ * arrives. Canvas will decode a palette PNG, a greyscale one and a GIF
+ * alike, which is the reason for measuring here rather than offline.
+ */
+function opaqueBox(img) {
+  const off = document.createElement('canvas');
+  off.width = img.naturalWidth; off.height = img.naturalHeight;
+  const o = off.getContext('2d', { willReadFrequently: true });
+  o.drawImage(img, 0, 0);
+  const data = o.getImageData(0, 0, off.width, off.height).data;
+  let x0 = off.width, y0 = off.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < off.height; y++) {
+    for (let x = 0; x < off.width; x++) {
+      if (!data[(y * off.width + x) * 4 + 3]) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  }
+  if (x1 < 0) return { x: 0, y: 0, w: off.width, h: off.height };
+  return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
+function bossFor(file) {
+  let held = bossArt.get(file);
+  if (held) return held;
+  const img = new Image();
+  img.decoding = 'async';
+  held = { img, box: null };
+  img.onload = () => { try { held.box = opaqueBox(img); } catch (error) { held.box = null; } };
+  img.src = BASE + 'boss/' + file;
+  bossArt.set(file, held);
+  return held;
+}
+
+/*
+ * A landmark has to be in the same place every time the atlas is opened - one
+ * that wanders between visits is not a landmark - so they are placed from a
+ * seed of the zone they belong to rather than from Math.random.
+ */
+function seeded(seed) {
+  let held = seed >>> 0;
+  return () => { held = (held * 1664525 + 1013904223) >>> 0; return held / 4294967296; };
+}
+
+/*
+ * How many of a place's cast actually stand on the map.
+ *
+ * The panel lists everything a zone can hold, which is what a list is for.
+ * The map is not a list: an encounter turns up once in a realm, so showing
+ * every one a biome can produce would be showing a realm that has never
+ * existed. One encounter to a place, and no more than one of any kind in the
+ * whole realm; three Heroes of Oryx, which is about what a realm carries.
+ */
+const STAND_UP = { encounter: 1, hero: 3 };
+
+function standUpLandmarks() {
+  landmarks.length = 0;
+  const alreadyInRealm = new Set();
+  for (const zone of A.zones) {
+    const roll = seeded(zone.id * 2654435761);
+    const cast = [];
+    for (const one of zone.encounters || []) cast.push({ one, role: 'encounter' });
+    for (const one of zone.heroes || []) cast.push({ one, role: 'hero' });
+    // Shuffled by the zone's own roll, so which ones stand is settled once
+    // and does not change between visits.
+    for (let i = cast.length - 1; i > 0; i--) {
+      const j = Math.floor(roll() * (i + 1));
+      const t = cast[i]; cast[i] = cast[j]; cast[j] = t;
+    }
+    const stoodUp = { encounter: 0, hero: 0 };
+    const [x0, y0, x1, y1] = zone.box;
+    for (const { one, role } of cast) {
+      // No picture, or already walking about as wildlife: nothing to stand up.
+      if (!one.art || one.onMap) continue;
+      if (stoodUp[role] >= STAND_UP[role]) continue;
+      if (role === 'encounter') {
+        if (alreadyInRealm.has(one.name)) continue;
+        alreadyInRealm.add(one.name);
+      }
+      for (let tries = 0; tries < 400; tries++) {
+        const x = x0 + roll() * (x1 - x0 + 1), y = y0 + roll() * (y1 - y0 + 1);
+        if (!canStand(x, y, zone.id)) continue;
+        landmarks.push({ name: one.name, art: one.art, role, x, y, home: zone.id });
+        stoodUp[role]++;
+        break;
+      }
+    }
+  }
+}
+
+/*
+ * The set pieces, drawn over the ground rather than sorted into it: a thing
+ * you are looking for should not go behind a tree.
+ */
+function drawLandmarks(box) {
+  if (view.scale < SHOW_ENCOUNTER) return 0;
+  const seen = seenRange(box, 60);
+  const near = { x: seen.x0, y: seen.y0 }, far = { x: seen.x1, y: seen.y1 };
+  let drawn = 0;
+  for (const one of landmarks) {
+    const from = one.role === 'encounter' ? SHOW_ENCOUNTER : SHOW_HERO;
+    if (view.scale < from) continue;
+    if (one.x < near.x || one.x > far.x || one.y < near.y || one.y > far.y) continue;
+    const held = bossFor(one.art);
+    if (!held.box) continue;
+    const at = place(one.x, one.y, box);
+    if (!at) continue;
+    const tall = Math.max(LANDMARK_LEAST[one.role],
+      LANDMARK_TILES[one.role] * view.scale) * at.k;
+    const wide = tall * (held.box.w / held.box.h);
+    // Softened only when it is being made smaller than its own picture;
+    // blown up it stays square, like everything else on the map.
+    ctx.imageSmoothingEnabled = tall < held.box.h;
+    ctx.globalAlpha = Math.min(1, (view.scale - from) / (from * 0.9));
+    ctx.drawImage(held.img, held.box.x, held.box.y, held.box.w, held.box.h,
+      at.x - wide / 2, at.y - tall, wide, tall);
+    drawn++;
+  }
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = false;
+  return drawn;
+}
+
+// One creature where it stands. Drawn either on its own, far out, or sorted
+// in among the scenery close up.
+function drawOneLife(one, box) {
+  const img = artFor(one.kind.sprite);
+  if (!img.complete || !img.naturalWidth) return 0;
+  const sprite = one.kind.sprite;
+  const frame = sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0;
+  // At the size the client draws it, not all at one size.
+  const k = 1.5 * ((sprite.size || 100) / 100);
+  const wide = (sprite.tile / (A.px * SS)) * view.scale * k;
+  const tall = (sprite.height / (A.px * SS)) * view.scale * k;
+  // The line took a pixel of art under its feet, so it is put back down by that much.
+  const foot = (1 / A.px) * view.scale * k;
+  const at = place(one.x, one.y, box);
+  if (!at) return 0;
+  const w2 = wide * at.k, h2 = tall * at.k;
+  ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
+    at.x - w2 / 2, at.y - h2 + (foot + view.scale / 2) * at.k, w2, h2);
+  return 1;
+}
+
+function drawLife(box) {
+  if (view.scale < SHOW_LIFE) return 0;
+  const fade = Math.min(1, (view.scale - SHOW_LIFE) / 1.2);
+  const seen = seenRange(box, 60);
+  const near = { x: seen.x0, y: seen.y0 }, far = { x: seen.x1, y: seen.y1 };
+  ctx.globalAlpha = fade;
+  ctx.imageSmoothingEnabled = false;
+  let drawn = 0;
+  for (const one of alive) {
+    if (one.x < near.x || one.x > far.x || one.y < near.y || one.y > far.y) continue;
+    drawn += drawOneLife(one, box);
+  }
+  ctx.globalAlpha = 1;
+  return drawn;
+}
+
+/*
+ * Which beacon the pointer is over, with a margin that does not shrink to
+ * nothing when the whole realm is in view.
+ */
+function beaconUnder(px, py, box) {
+  const reach = Math.max(9, Math.min(24, view.scale * 2.4));
+  let near = null, best = reach * reach;
+  for (const beacon of A.beacons) {
+    const at = place(beacon.x, beacon.y, box);
+    if (!at) continue;
+    const d = (at.x - px) ** 2 + (at.y - py) ** 2;
+    if (d < best) { best = d; near = beacon; }
+  }
+  return near;
+}
+
+/* ---------------- roads and beacons, quietly ---------------- */
+function drawRoads(box) {
+  if (!roads.complete || !roads.naturalWidth || !mask) return;
+  const at = toScreen(B.minX, B.minY, box);
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.12;
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(roads, at.x, at.y, mask.w * view.scale, mask.h * view.scale);
+  ctx.restore();
+}
+
+/*
+ * A beacon is not marked. It stands in the realm and it looks like itself,
+ * and a ring drawn over it only hid what it was. It answers to the pointer
+ * instead - once you are close enough to be looking at one - by lighting up
+ * from underneath, the way a place does, so you can see it is a thing you can
+ * open without anything being painted across it the rest of the time.
+ */
+const BEACON_NEAR = 3;                  // close enough to be looking at one
+
+function drawBeacons(box, time) {
+  if (view.scale < BEACON_NEAR) return;
+  const pulse = 1 + Math.sin(time / 620) * 0.1;
+  for (const beacon of A.beacons) {
+    const lit = beacon === chosenBeacon || beacon === hoveredBeacon;
+    if (!lit) continue;
+    const at = place(beacon.x, beacon.y, box);
+    if (!at) continue;
+    if (at.x < -60 || at.y < -60 || at.x > box.w + 60 || at.y > box.h + 60) continue;
+    // Foreshortened round the curve of the world, and never less than a
+    // pixel: a radius has to be positive, and one frame of a bad one used
+    // to take the whole loop down with it.
+    const r = Math.max(1, Math.max(14, view.scale * 2.6) * (at.k || 0) * pulse);
+    const warm = beacon === chosenBeacon ? [255, 203, 112] : [180, 232, 255];
+
+    ctx.save();
+    // A pool of shade under it first, so it reads as standing a little proud.
+    ctx.globalAlpha = 0.5;
+    const shade = ctx.createRadialGradient(at.x, at.y + r * 0.45, 0, at.x, at.y + r * 0.45, r);
+    shade.addColorStop(0, 'rgba(2,4,8,.85)');
+    shade.addColorStop(1, 'rgba(2,4,8,0)');
+    ctx.fillStyle = shade;
+    ctx.beginPath(); ctx.arc(at.x, at.y + r * 0.45, r, 0, Math.PI * 2); ctx.fill();
+
+    // Then the light, added rather than painted on.
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 1;
+    const glow = ctx.createRadialGradient(at.x, at.y - r * 0.15, 0, at.x, at.y - r * 0.15, r);
+    const rgb = warm[0] + ',' + warm[1] + ',' + warm[2];
+    glow.addColorStop(0, 'rgba(' + rgb + ',.34)');
+    glow.addColorStop(0.55, 'rgba(' + rgb + ',.16)');
+    glow.addColorStop(1, 'rgba(' + rgb + ',0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(at.x, at.y - r * 0.15, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ---------------- names of places ---------------- */
+/*
+ * Nothing is labelled until it is asked about.
+ *
+ * A hundred names scattered over the ground is a legend printed on the map,
+ * and it hides the thing it describes - which here is the realm itself, drawn
+ * tile for tile. So only the patch under the pointer, or the one that has been
+ * opened, is named, and it is named where it is rather than in a list.
+ */
+function drawNames(box) {
+  const named = chosenBeacon || (view.scale >= BEACON_NEAR ? hoveredBeacon : null);
+  if (named) {
+    const at = place(named.x, named.y, box) || { x: -999, y: -999 };
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.font = '600 13px ui-monospace, Consolas, monospace';
+    ctx.globalAlpha = 0.6; ctx.lineWidth = 4; ctx.strokeStyle = '#05080d';
+    ctx.strokeText(named.name, at.x, at.y - 14);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#ffe6b0';
+    ctx.fillText(named.name, at.x, at.y - 14);
+    return;
+  }
+  const show = chosen || hovered;
+  if (!show) return;
+  const zone = zoneById.get(show);
+  if (!zone) return;
+  const at = place(zone.at[0], zone.at[1], box);
+  if (!at || at.x < 0 || at.y < 0 || at.x > box.w || at.y > box.h) return;
+  const scale = Math.max(13, Math.min(22, Math.sqrt(zone.tiles) * view.scale * 0.06));
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '600 ' + scale.toFixed(0) + 'px ui-monospace, Consolas, monospace';
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 4; ctx.strokeStyle = '#05080d';
+  ctx.strokeText(zone.name, at.x, at.y);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = show === chosen ? '#ffe6b0' : '#e8eef8';
+  ctx.fillText(zone.name, at.x, at.y);
+}
+
+/* ---------------- the panel ---------------- */
+/*
+ * A row of creatures with their pictures, used by both panels.
+ */
+function livesList(list) {
+  if (!list || !list.length) return '<p class="sub">Nothing was met here.</p>';
+  return '<div class="life">' + list.map(one => {
+    const s = one.sprite;
+    const k = Math.max(2, Math.min(6, Math.round(30 / s.height)));
+    const style = 'width:' + (s.tile * k) + 'px;height:' + (s.height * k) + 'px;'
+      + 'background-image:url(' + BASE + 'life/' + s.file + ');'
+      + 'background-size:' + (s.tile * s.frames * k) + 'px 100%;'
+      + '--w:' + (s.tile * s.frames * k) + 'px;--steps:' + s.frames + ';'
+      + '--time:' + (s.frames * 0.24).toFixed(2) + 's';
+    return '<div><span class="art' + (s.frames > 1 ? ' runs' : '') + '" style="' + style + '"></span>'
+      + '<b>' + one.name + '</b><em>' + one.seen + '</em></div>';
+  }).join('') + '</div>';
+}
+
+/*
+ * A beacon is inside a place without being of it. It has its own guardian and
+ * its own fight, and someone looking for one is not looking for the forest it
+ * happens to stand in - so it answers to a click in its own right, and says
+ * which place it is in rather than being swallowed by it.
+ */
+let chosenBeacon = null;
+let hoveredBeacon = null;
+function openBeacon(beacon) {
+  chosen = 0;
+  chosenBeacon = beacon;
+  const zone = zoneById.get(beacon.zone);
+  panelBody.innerHTML = '<h2>' + beacon.name + ' Beacon</h2>'
+    + '<p class="sub">' + beacon.state + ' · at ' + beacon.x + ', ' + beacon.y + '</p>'
+    + '<div class="facts">'
+    + '<span><i>standing in</i> ' + (zone ? zone.name : 'unclaimed ground') + '</span>'
+    + '<span><i>guardians met</i> ' + (beacon.guards || []).length + '</span>'
+    + '</div>'
+    + (beacon.guardian
+      ? '<h3>Guardian</h3>'
+        + castList([{ name: beacon.guardian.name || beacon.guardian, art: beacon.guardian.art }])
+      : '')
+    + '<h3>Around it</h3>' + livesList(beacon.guards);
+  panel.classList.add('is-open');
+}
+
+/*
+ * A row of pictures for a part of the cast.
+ *
+ * An encounter and a Hero of Oryx are not in the walked recording at all -
+ * the things a realm is visited for are exactly the things a stroll through
+ * it does not meet - so they come from the imported reference, with pictures
+ * cut from the client and carried into the atlas beside it.
+ */
+function castList(list, note) {
+  if (!list || !list.length) return '';
+  return '<div class="life">' + list.map(one => {
+    const art = one.art
+      ? '<img class="face" src="' + BASE + 'boss/' + one.art + '" alt="" loading="lazy">'
+      : '<span class="face"></span>';
+    return '<div>' + art + '<b>' + one.name + '</b>'
+      + (one.onMap ? '<i>on the map</i>' : '')
+      + (note ? '<em>' + note + '</em>' : '') + '</div>';
+  }).join('') + '</div>';
+}
+
+/* What the floor is made of, as much as a bar as a number. */
+function soilList(zone) {
+  if (!zone.madeOf || !zone.madeOf.length) return '';
+  return '<div class="soil">' + zone.madeOf.map(part => {
+    const share = Math.round(100 * part.tiles / zone.tiles);
+    return '<div><b>' + part.ground + '</b><em>' + share + '%</em>'
+      + '<u><s style="width:' + Math.max(2, share) + '%"></s></u></div>';
+  }).join('') + '</div>';
+}
+
+function openZone(id) {
+  const zone = zoneById.get(id);
+  if (!zone) return;
+  chosen = id;
+  chosenBeacon = null;
+  const beacons = A.beacons.filter(b =>
+    b.x >= zone.box[0] && b.x <= zone.box[2] && b.y >= zone.box[1] && b.y <= zone.box[3]).length;
+  const wide = zone.box[2] - zone.box[0] + 1, tall = zone.box[3] - zone.box[1] + 1;
+
+  const here = A.beacons.filter(b =>
+    b.x >= zone.box[0] && b.x <= zone.box[2] && b.y >= zone.box[1] && b.y <= zone.box[3]);
+  const said = {
+    ground: 'from the ground it is laid with',
+    roads: 'from the roads that cross it',
+    creatures: 'from the creatures that live in it',
+    walked: 'by someone who has walked it'
+  }[zone.from] || ('zone ' + zone.id + ', still unnamed');
+  const rank = zone.rank || '';
+  const badge = rank
+    ? '<div class="rank ' + (/rookie/i.test(rank) ? 'rookie'
+      : /veteran/i.test(rank) ? 'veteran'
+      : /seasonal/i.test(rank) ? 'seasonal' : 'other') + '">' + rank + '</div>'
+    : '';
+
+  panelBody.innerHTML = '<h2>' + zone.name + '</h2>'
+    + '<p class="sub">' + zone.tiles.toLocaleString() + ' tiles, ' + wide + ' by ' + tall
+    + ' &middot; named ' + said + '</p>'
+    + badge
+    + '<div class="facts">'
+    + '<span><i>beacons</i><b>' + here.length + '</b></span>'
+    + '<span><i>walking now</i><b>' + alive.filter(o => o.home === id).length + '</b></span>'
+    + '<span><i>middle</i><b>' + zone.at[0] + ', ' + zone.at[1] + '</b></span>'
+    + '<span><i>kinds met</i><b>' + (zone.lives ? zone.lives.length : 0) + '</b></span>'
+    + '</div>'
+
+    + (zone.encounters && zone.encounters.length
+      ? '<h3>Encounters<span>' + zone.encounters.length + '</span></h3>'
+        + castList(zone.encounters) : '')
+    + (zone.heroes && zone.heroes.length
+      ? '<h3>Heroes of Oryx<span>' + zone.heroes.length + '</span></h3>'
+        + castList(zone.heroes) : '')
+    + '<h3>' + (zone.met ? 'Met here' : 'Expected here')
+      + '<span>' + (zone.lives ? zone.lives.length : 0) + '</span></h3>'
+      + livesList(zone.lives)
+
+    + (here.length
+      ? '<h3>Beacons<span>' + here.length + '</span></h3>'
+        + here.map(b => '<div class="life"><div>'
+          + '<b>' + b.name + '</b><em>' + b.state + '</em></div></div>'
+          + (b.guardian
+            ? castList([{ name: b.guardian.name || b.guardian, art: b.guardian.art }], 'guardian')
+            : '')).join('')
+      : '')
+
+    + '<h3>Ground</h3>' + soilList(zone);
+  panel.classList.add('is-open');
+}
+function shutPanel() { chosen = 0; chosenBeacon = null; panel.classList.remove('is-open'); }
+document.getElementById('shut').addEventListener('click', shutPanel);
+
+/* ---------------- the frame ---------------- */
+let last = performance.now();
+/*
+ * The ground, laid onto the globe.
+ *
+ * Drawn flat first, onto a canvas wider and taller than the screen, because
+ * the near face pulls in a great deal more chart than a flat view of the
+ * same window would hold. Then read back a band of rows at a time.
+ *
+ * A band cannot be laid down in one piece. Latitude only bends rows up and
+ * down, which a band handles, but longitude enters as its sine - the middle
+ * of the face is stretched and the edges are crowded - so within a band the
+ * chart has to be taken in several pieces, each stretched by its own
+ * amount. How many pieces comes from how much of a turn is actually on
+ * screen, so a close view takes one piece per band and pays nothing for
+ * being on a globe at all.
+ */
+const SPHERE_STEP = 3;                              // rows per band
+
+/*
+ * How near the truth a band has to be, in screen pixels.
+ *
+ * Each piece of a band is a straight stretch standing in for a piece of a
+ * sine curve, and a chord of angular width d departs from its arc by about
+ * r*d*d/8 - so the width that keeps it inside half a pixel is the square
+ * root of four over the radius. This matters more than it sounds: the
+ * creatures and the scenery are put where the exact projection says, so a
+ * band that is off by seven pixels stands its trees seven pixels off their
+ * own ground. A fixed number of pieces got that wrong in the middle
+ * distance and wasted them at the far end.
+ */
+/*
+ * How true the bending has to be, and how deep a band of it is.
+ *
+ * Both are loosened when nothing is standing on the ground. The tolerance is
+ * tight because the creatures and the scenery are placed by the exact
+ * projection, so a band that is off by seven pixels stands its trees seven
+ * pixels off their own ground - but that only matters where there are trees.
+ * Below the zoom at which anything is placed the disc is scenery on its own,
+ * nobody can measure it, and it can be built out of a quarter as many pieces.
+ */
+const SPHERE_TRUE = 0.5;
+const SPHERE_LOOSE = 3;
+const SPHERE_STEP_LOOSE = 7;
+const globePlain = () => view.scale < SHOW_LIFE;
+
+/*
+ * The warped world, kept until something about it changes.
+ *
+ * Laying a hemisphere down takes a couple of thousand small pieces, which
+ * is worth doing once and not sixty times a second. Nothing in the ground
+ * layer moves at these zooms - the drifting water is lifted out only at the
+ * closest level, and the lit patch changes when the pointer does - so the
+ * finished disc is kept and blitted whole until the view, the window or the
+ * highlight is different.
+ */
+const globeKept = document.createElement('canvas');
+const globeKeptCtx = globeKept.getContext('2d');
+let globeKeptKey = null;
+let globeKeptGround = null;
+
+/*
+ * The ground, straight onto the screen. Close in the world is flat to less
+ * than half a pixel and there is nothing to bend it round.
+ */
+/*
+ * The realm stays in front of you.
+ *
+ * The world is a ball of empty ocean with one island on it, and there is
+ * nothing to be had from drifting off over the water until the island is
+ * behind the curve. So the middle of the view is held inside the realm, with
+ * as much slack as there is realm left once the window has taken its share -
+ * and that slack falls to nothing as you pull back, so zooming out always
+ * ends up looking at the realm rather than at wherever you happened to be.
+ */
+
+/*
+ * How far back you may stand.
+ *
+ * Once the whole world is on the screen there is nothing further to see, and
+ * pulling back past that only makes it smaller: at the old floor the planet
+ * came to seventy pixels in the middle of an empty black field, which reads
+ * as the map having vanished rather than as being very far away. So the
+ * furthest is the distance at which the world about fills the window.
+ */
+const FURTHEST = 0.22;                   // of the shorter side, filled by the world
+const floorZoom = box => FURTHEST * Math.min(box.w, box.h) / PLANET;
+
+/*
+ * A pin in the middle of the glass.
+ *
+ * The question of whether you have lost the realm was being answered by
+ * measuring how much of it was on the screen, weighed by how square-on it
+ * was, counted twice and compared - and it was wrong twice over before it was
+ * right. The simple question turns out to be the right one: what is directly
+ * under the middle of the window? If the answer is open ocean then you are
+ * looking at nothing, whatever else is at the edges of the frame, and the
+ * view should drift back until the middle of the realm is under the pin
+ * again.
+ *
+ * The middle of the window is always exactly the point the camera is over,
+ * in every mode - flat, leaning, or round - so no projection needs asking.
+ * And the chart already knows what is at a tile: everything that was walked
+ * carries a biome, and everything that was not is 255.
+ */
+const NOWHERE = 255;                     // the chart's word for unwalked water
+
+// Where the map opens, and where it drifts back to.
+function homeView(box) {
+  const f = A.focus || [B.minX, B.minY, B.maxX, B.maxY];
+  const room = Math.min(Math.max(1, box.w), Math.max(1, box.h - 34));
+  return {
+    x: (f[0] + f[2]) / 2,
+    y: (f[1] + f[3]) / 2,
+    scale: Math.max(0.02, (room / (PLANET * 2)) * 0.92)
+  };
+}
+
+function overOcean() {
+  const here = atTile(view.x, view.y);
+  return !here || here.biome === NOWHERE;
+}
+
+function keepInSight(box, delta) {
+  /*
+   * The one limit kept: pulled back past the point where the world fills the
+   * window there is nothing further to see, only a smaller world.
+   */
+  const least = floorZoom(box);
+  if (want.scale < least) want.scale = least;
+  if (view.scale < least) view.scale = least;
+
+  if (from) return;                      // a hand on it, so leave it be
+  if (!mask || !overOcean()) return;
+  const home = homeView(box);
+  const step = Math.min(1, delta * 0.7);
+  want.x += (home.x - want.x) * step;
+  want.y += (home.y - want.y) * step;
+}
+
+/*
+ * Swinging the camera round, on a and e as the game has it. This goes out
+ * with the map; the slider on the bench is the same number seen another way
+ * and is kept in step when there is one, which there is not once the bench
+ * has been cut out of a published copy.
+ */
+const TURN_STEP = 6;
+function turnBy(by) {
+  let t = TUNE.turn + by;
+  while (t > 180) t -= 360;
+  while (t < -180) t += 360;
+  TUNE.turn = t;
+  const slider = document.getElementById('benchTurn');
+  if (slider) {
+    slider.value = Math.max(-90, Math.min(90, Math.round(t)));
+    const said = document.getElementById('benchTurnAt');
+    if (said) said.textContent = Math.round(t) + '\u00b0';
+  }
+}
+
+function groundFlat(box, now) {
+  const ground = drawGround(box);
+  drawWater(box, now);
+  drawRoads(box);
+  if (chosen) drawLit(box, chosen, 0.16);
+  else if (hovered) drawLit(box, hovered, 0.1);
+  return ground;
+}
+
+function groundGlobe(box, now) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const level = levelFor(view.scale);
+  /*
+   * The drifting water is lifted out and drawn moving only at the closest
+   * level, so at every other one the ground layer is a still picture and
+   * the finished disc can be kept. The view is rounded into the key, so
+   * the easing settling by a thousandth of a pixel does not throw away a
+   * couple of thousand pieces of work.
+   */
+  const still = level !== 0;
+  /*
+   * The disc is built at the screen's own grain. Building it at half of that
+   * saved a good deal of fill and made the whole map soft, which is not a
+   * trade worth making for a map: the point of it is to be read. The saving
+   * that mattered was never the fill - it was the number of pieces the bend
+   * is made of, and that is loosened below.
+   */
+  const plain = globePlain();
+  const grain = dpr;
+  const key = still ? [Math.round(view.x * 8), Math.round(view.y * 8),
+    Math.round(view.scale * 4096), hovered, chosen, box.w, box.h, arrived,
+    TUNE.turn].join() : null;
+  if (still && key === globeKeptKey && globeKeptGround) {
+    ctx.drawImage(globeKept, 0, 0, box.w, box.h);
+    return globeKeptGround;
+  }
+  const R = globe();
+  /*
+   * How much flat chart has to be drawn to fill this window.
+   *
+   * Asked the other way round: the corner of the window is at some latitude
+   * and longitude, and the chart is needed out to there and no further.
+   * Close in that is the window itself to within a pixel; far out it is a
+   * quarter turn of the world in each direction. Getting this wrong the
+   * generous way asks for a canvas thirty thousand pixels on a side and the
+   * page simply stops.
+   */
+  const wide9 = R / BULGE;
+  const latMax = Math.asin(Math.min(1, (box.h / 2) / wide9));
+  const cosLatMin = Math.max(1e-3, Math.cos(latMax));
+  const lonMax = Math.asin(Math.min(1, (box.w / 2) / (wide9 * cosLatMin)));
+  // Turned, the corners of the chart swing outside the square it covered.
+  const swung = turning() ? Math.SQRT2 : 1;
+  const reachX = Math.min(wide9 * Math.PI / 2, (wide9 * lonMax + 2) * swung);
+  const reachY = Math.min(wide9 * Math.PI / 2, (wide9 * latMax + 2) * swung);
+  const wide = Math.min(4096, Math.ceil(reachX * 2));
+  const tall = Math.min(4096, Math.ceil(reachY * 2));
+  if (globeMap.width !== Math.round(wide * grain) || globeMap.height !== Math.round(tall * grain)) {
+    globeMap.width = Math.round(wide * grain);
+    globeMap.height = Math.round(tall * grain);
+  }
+  globeCtx.setTransform(grain, 0, 0, grain, 0, 0);
+  globeCtx.clearRect(0, 0, wide, tall);
+
+  const big = { w: wide, h: tall };
+  const real = ctx;
+  ctx = globeCtx;
+  /*
+   * Turned with the world, not instead of it. The chart is spun about its own
+   * middle before it is bent onto the ball, which is the same order the
+   * things standing on it are put through - so the camera swings round the
+   * planet rather than sliding a flat picture about underneath it.
+   */
+  globeCtx.save();
+  const S = spin();
+  if (S) {
+    globeCtx.translate(wide / 2, tall / 2);
+    globeCtx.rotate(TUNE.turn * Math.PI / 180);
+    globeCtx.translate(-wide / 2, -tall / 2);
+  }
+  const ground = drawGround(big);
+  drawWater(big, now);
+  drawRoads(big);
+  if (chosen) drawLit(big, chosen, 0.16);
+  else if (hovered) drawLit(big, hovered, 0.1);
+  /*
+   * And the chart's own edge taken off, so it dissolves into the ocean
+   * painted under it instead of ending at a line.
+   *
+   * The chart is a rectangle of recorded ground and it stops dead where the
+   * recording stopped, eighty tiles out from the last coast. Beyond that the
+   * page paints flat water. Even in the same blue the join shows, because
+   * the recorded water is mottled tile by tile and flat paint is not - so the
+   * last fifty tiles of it are rubbed away to nothing and the two meet
+   * through a gradient rather than at a border.
+   *
+   * Done here, inside the turn, because that is the frame the chart is square
+   * in; done after the ground so nothing standing on it is touched; and only
+   * on the ball, since flat there is night behind the chart and not water.
+   */
+  {
+    const edge = Math.max(2, SEA_FADE * view.scale);
+    const left = wide / 2 + (B.minX - view.x) * view.scale;
+    const right = wide / 2 + (B.maxX - view.x) * view.scale;
+    const top = tall / 2 + (B.minY - view.y) * view.scale;
+    const bottom = tall / 2 + (B.maxY - view.y) * view.scale;
+    globeCtx.globalCompositeOperation = 'destination-out';
+    const rub = (x0, y0, x1, y1, w, h) => {
+      const wash = globeCtx.createLinearGradient(x0, y0, x1, y1);
+      wash.addColorStop(0, 'rgba(0,0,0,1)');
+      wash.addColorStop(1, 'rgba(0,0,0,0)');
+      globeCtx.fillStyle = wash;
+      globeCtx.fillRect(Math.min(x0, x1), Math.min(y0, y1), w, h);
+    };
+    const across = right - left, down = bottom - top;
+    rub(left, top, left + edge, top, edge, down);
+    rub(right, top, right - edge, top, edge, down);
+    rub(left, top, left, top + edge, across, edge);
+    rub(left, bottom, left, bottom - edge, across, edge);
+    globeCtx.globalCompositeOperation = 'source-over';
+  }
+  globeCtx.restore();
+  ctx = real;
+
+  // The disc is built on a canvas of its own so that it can be kept.
+  if (globeKept.width !== Math.round(box.w * grain) || globeKept.height !== Math.round(box.h * grain)) {
+    globeKept.width = Math.round(box.w * grain);
+    globeKept.height = Math.round(box.h * grain);
+  }
+  globeKeptCtx.setTransform(grain, 0, 0, grain, 0, 0);
+  globeKeptCtx.clearRect(0, 0, box.w, box.h);
+  const screen = ctx;
+  ctx = globeKeptCtx;
+
+  const cx = box.w / 2, cy = box.h / 2;
+  ctx.save();
+  // Everything from here on belongs to the disc.
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Ocean first, so the chart has water to sit in wherever nothing was
+  // recorded - which past the eighty tiles of sea is everywhere.
+  ctx.fillStyle = 'rgb(' + OCEAN.join(',') + ')';
+  ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+  ctx.imageSmoothingEnabled = true;
+  const top = Math.max(-R, -cy), bottom = Math.min(R, box.h - cy);
+  const step = plain ? SPHERE_STEP_LOOSE : SPHERE_STEP;
+  const trueTo = plain ? SPHERE_LOOSE : SPHERE_TRUE;
+  for (let y = Math.floor(top); y < bottom; y += step) {
+    const y2 = Math.min(y + step, bottom);
+    const lat = Math.asin(Math.max(-1, Math.min(1, y / wide9)));
+    const lat2 = Math.asin(Math.max(-1, Math.min(1, y2 / wide9)));
+    const cosLat = Math.cos((lat + lat2) / 2);
+    if (cosLat < 0.02) continue;
+    const sv = wide9 * lat, sv2 = wide9 * lat2;
+    // The stretch of longitude this band of the screen covers.
+    const half = wide9 * cosLat;
+    const fromX = Math.max(-half, -cx), toX = Math.min(half, box.w - cx);
+    if (toX <= fromX) continue;
+    const lonAt = px => Math.asin(Math.max(-1, Math.min(1, px / half)));
+    const lon0 = lonAt(fromX), lon1 = lonAt(toX);
+    const widest = Math.sqrt(4 * trueTo / half);
+    const pieces = Math.max(1, Math.min(48, Math.ceil((lon1 - lon0) / widest)));
+    for (let p = 0; p < pieces; p++) {
+      const a = lon0 + (lon1 - lon0) * p / pieces;
+      const b = lon0 + (lon1 - lon0) * (p + 1) / pieces;
+      const dx0 = half * Math.sin(a), dx1 = half * Math.sin(b);
+      const su0 = wide9 * a, su1 = wide9 * b;
+      if (dx1 - dx0 < 0.05) continue;
+      ctx.drawImage(globeMap,
+        (wide / 2 + su0) * grain, (tall / 2 + sv) * grain,
+        Math.max(1, (su1 - su0) * grain), Math.max(1, (sv2 - sv) * grain),
+        cx + dx0, cy + y, dx1 - dx0, Math.max(1, y2 - y));
+    }
+  }
+  ctx.imageSmoothingEnabled = false;
+
+  /*
+   * The edge of a lit sphere is darker than the middle of it, and there is
+   * a little air above it. Both are drawn only when the world is small
+   * enough on screen for an edge to be in view at all.
+   */
+  if (R < Math.max(box.w, box.h) * 1.6) {
+    const limb = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R);
+    limb.addColorStop(0, 'rgba(0,0,0,0)');
+    limb.addColorStop(0.75, 'rgba(2,5,12,.22)');
+    limb.addColorStop(1, 'rgba(1,3,8,.72)');
+    ctx.fillStyle = limb;
+    ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  }
+  ctx.restore();
+
+  if (R < Math.max(box.w, box.h) * 1.6) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const air = ctx.createRadialGradient(cx, cy, R * 0.96, cx, cy, R * 1.06);
+    air.addColorStop(0, 'rgba(96,150,220,0)');
+    air.addColorStop(0.45, 'rgba(110,168,235,.30)');
+    air.addColorStop(1, 'rgba(96,150,220,0)');
+    ctx.fillStyle = air;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.06, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  ctx = screen;
+  ctx.drawImage(globeKept, 0, 0, box.w, box.h);
+  globeKeptKey = key;
+  globeKeptGround = ground;
+  return ground;
+}
+
+/*
+ * The floor drawn flat on a larger canvas than the screen - tilting brings
+ * more of the far distance into view than a flat picture holds - and then
+ * laid back onto the screen one strip at a time.
+ */
+function groundTilted(box, now) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const room = turning() ? 2.2 : 1.6;
+  const wide = box.w * room, tall = box.h * 2;
+  if (flatMap.width !== Math.round(wide * dpr) || flatMap.height !== Math.round(tall * dpr)) {
+    flatMap.width = Math.round(wide * dpr);
+    flatMap.height = Math.round(tall * dpr);
+  }
+  flatCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  flatCtx.fillStyle = '#070a10';
+  flatCtx.fillRect(0, 0, wide, tall);
+
+  const big = { w: wide, h: tall };
+  const real = ctx;
+  ctx = flatCtx;
+  flatCtx.save();
+  const S = spin();
+  if (S) {
+    flatCtx.translate(wide / 2, tall / 2);
+    flatCtx.rotate(TUNE.turn * Math.PI / 180);
+    flatCtx.translate(-wide / 2, -tall / 2);
+  }
+  const ground = drawGround(big);
+  drawWater(big, now);
+  drawRoads(big);
+  if (chosen) drawLit(big, chosen, 0.16);
+  else if (hovered) drawLit(big, hovered, 0.1);
+  flatCtx.restore();
+  ctx = real;
+
+  // Turned but not leaned: the middle of that canvas is the picture.
+  if (!tilting()) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(flatMap,
+      (wide / 2 - box.w / 2) * dpr, (tall / 2 - box.h / 2) * dpr,
+      box.w * dpr, box.h * dpr, 0, 0, box.w, box.h);
+    return ground;
+  }
+
+  const L = lean(box);
+  ctx.imageSmoothingEnabled = false;
+  const step = 3;
+  for (let v = -tall / 2; v < tall / 2; v += step) {
+    const z = L.h - v * L.sin, zNext = L.h - (v + step) * L.sin;
+    if (z < 1 || zNext < 1) continue;
+    const k = L.h / z, kNext = L.h / zNext;
+    const y = box.h / 2 + v * L.cos * k;
+    const yNext = box.h / 2 + (v + step) * L.cos * kNext;
+    if (yNext < 0 || y > box.h) continue;
+    const from = box.w / k;
+    if (from > wide) continue;                       // further out than we drew
+    ctx.drawImage(flatMap,
+      (wide / 2 - from / 2) * dpr, (tall / 2 + v) * dpr, from * dpr, step * dpr,
+      0, y, box.w, Math.max(1, yNext - y));
+  }
+  return ground;
+}
+
+/*
+ * The next frame is asked for before this one is drawn.
+ *
+ * With the request at the end, anything that threw on the way down stopped
+ * the map for good - one bad number in one frame and the realm froze
+ * half-drawn, which is indistinguishable from the page having crashed. Asked
+ * for first, a bad frame is a bad frame and the next one is fine.
+ */
+function frame(now) {
+  requestAnimationFrame(frame);
+  const delta = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  /*
+   * The view eases to where it was asked to go rather than jumping.
+   *
+   * The distance closes by the same fraction every second, so it is quick
+   * while there is a long way to go and slow as it arrives. Position is eased
+   * straight and the zoom by ratio: halfway between one tile to the pixel and
+   * a hundred is ten, not fifty, and easing the zoom straight spends most of
+   * the movement almost stationary at the far end.
+   */
+  const ease = Math.min(1, delta * 5.5);
+  view.x += (want.x - view.x) * ease;
+  view.y += (want.y - view.y) * ease;
+  if (view.scale > 0 && want.scale > 0) {
+    const apart = want.scale / view.scale;
+    view.scale *= Math.abs(apart - 1) < 1e-4 ? 1 : Math.pow(apart, ease);
+  } else view.scale = want.scale;
+  // Whatever else happens, the world has a positive size.
+  if (!(view.scale > 0.001)) view.scale = 0.02;
+  if (!(want.scale > 0.001)) want.scale = 0.02;
+  const box = size();
+  keepInSight(box, delta);
+  warmAhead(box);
+  ctx.fillStyle = '#070a10';
+  ctx.fillRect(0, 0, box.w, box.h);
+  drawOryxBehind(box, now);
+
+  /*
+   * Leaning is the only thing that flattens the world - it is a different
+   * camera, and the two do not compose. Turning does not: the world turns
+   * with it.
+   */
+  let ground;
+  if (tilting()) ground = groundTilted(box, now);
+  else if (roundWorld(box)) ground = groundGlobe(box, now);
+  else if (turning()) ground = groundTilted(box, now);
+  else ground = groundFlat(box, now);
+  stepLife(delta);
+  const close = drawThings(box, now);
+  const living = close ? close.living : drawLife(box);
+  const marks = drawLandmarks(box);
+  drawBeacons(box, now);
+  drawNames(box);
+  stepBirds(delta);
+  drawBirds(box);
+  drawSky(box, now);
+  drawOryxHands(box, now);
+
+  if (pointer) {
+    const t = toTile(pointer.x, pointer.y, box);
+    const here = atTile(t.x, t.y);
+    hovered = here ? here.zone : 0;
+    hoveredBeacon = view.scale >= BEACON_NEAR
+      ? beaconUnder(pointer.x, pointer.y, box) : null;
+    const zone = zoneById.get(hovered);
+    whereAt.textContent = 'tile ' + Math.floor(t.x) + ', ' + Math.floor(t.y)
+      + '   z' + ground.z + '   ' + ground.drawn + ' chunks   ' + living + ' alive   '
+      + marks + ' set pieces';
+    zoneAt.textContent = zone ? zone.name : (here && here.biome === A.mask.sea ? 'open water' : '');
+    canvas.style.cursor = (zone || hoveredBeacon) ? 'pointer' : 'crosshair';
+  }
+}
+
+/* ---------------- getting about ---------------- */
+/*
+ * Fitting the realm, not the strays.
+ *
+ * The recorded ground reaches a long way past the realm proper - a corner of
+ * somewhere else, a handful of tiles from a stray moment - and fitting to all
+ * of it left the realm a postage stamp in the middle of nothing. The focus is
+ * the box round the places big enough to be places, which is where the realm
+ * actually is.
+ */
+/*
+ * Fitting shows the world.
+ *
+ * Fitting the island alone put its coasts against the edges of the window,
+ * which on a globe means the world runs off the screen in every direction
+ * and you cannot see that it is one. The disc is what is fitted now; the
+ * island is most of it.
+ */
+/*
+ * The disc is two radii across, and it wants a little air round it.
+ *
+ * A window of no size has to be survived rather than divided by. The atlas is
+ * opened inside a frame that is hidden until its tab is asked for, so the
+ * first fit can happen while the canvas measures nothing at all - and
+ * `box.h - 34` is then negative, which made the scale negative, which made
+ * the radius of the world negative. Everything downstream of that is
+ * nonsense, and a negative radius handed to arc() threw once a frame.
+ */
+function fit() {
+  const home = homeView(size());
+  want.x = home.x; want.y = home.y; want.scale = home.scale;
+}
+/*
+ * The wheel.
+ *
+ * A notch used to be a fifth again and it was applied to the view itself, so
+ * every click of it was a jump and four of them took you the whole way from
+ * the ground to the far side of the sky. Now a notch is a tenth, and it moves
+ * only where the view is *going* - the view walks there over the next few
+ * frames of its own accord. Rolling quickly still crosses the same distance,
+ * because the notches pile onto a target that is already ahead of you, but it
+ * arrives as one movement rather than as a series of steps.
+ *
+ * How far a notch is worth is taken from the event rather than assumed. A
+ * wheel reports a hundred or so at a time and a trackpad reports a handful,
+ * and treating both as one notch made the trackpad unusable.
+ */
+const WHEEL = 1.1;
+canvas.addEventListener('wheel', event => {
+  event.preventDefault();
+  const box = size();
+  /*
+   * Reckoned where the view is going rather than where it is, so that a quick
+   * roll of several notches still leaves the thing under the pointer under
+   * the pointer when it all settles.
+   */
+  const keep = { x: view.x, y: view.y, scale: view.scale };
+  view.x = want.x; view.y = want.y; view.scale = want.scale;
+  const under = toTile(event.offsetX, event.offsetY, box);
+  const notch = Math.max(-1.5, Math.min(1.5, event.deltaY / 100));
+  view.scale = want.scale = Math.max(floorZoom(box),
+    Math.min(40, want.scale * Math.pow(WHEEL, -notch)));
+  const after = toTile(event.offsetX, event.offsetY, box);
+  want.x += under.x - after.x;
+  want.y += under.y - after.y;
+  view.x = keep.x; view.y = keep.y; view.scale = keep.scale;
+}, { passive: false });
+
+let from = null, moved = 0;
+canvas.addEventListener('pointerdown', event => {
+  from = { x: event.offsetX, y: event.offsetY, vx: view.x, vy: view.y };
+  moved = 0;
+  canvas.classList.add('drag');
+  canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener('pointermove', event => {
+  pointer = { x: event.offsetX, y: event.offsetY };
+  if (!from) return;
+  moved += Math.abs(event.movementX) + Math.abs(event.movementY);
+  /*
+   * The world is dragged in the frame it is drawn in. Turned a quarter, a
+   * pull to the right walked the map upwards, because the pull was being
+   * read in the screen's frame and applied in the world's.
+   */
+  let dx = (event.offsetX - from.x) / view.scale;
+  let dy = (event.offsetY - from.y) / view.scale;
+  const S = spin();
+  if (S) { const nx = dx * S.cos + dy * S.sin; dy = -dx * S.sin + dy * S.cos; dx = nx; }
+  view.x = want.x = from.vx - dx;
+  view.y = want.y = from.vy - dy;
+});
+canvas.addEventListener('pointerup', event => {
+  canvas.classList.remove('drag');
+  const dragged = moved > 5;
+  from = null;
+  if (dragged) return;
+  // A click, not a drag: open what is under it, or close what is open.
+  const box = size();
+  const t = toTile(event.offsetX, event.offsetY, box);
+  // A beacon is a smaller target than the ground under it, so it is tried
+  // first, and with a margin that does not shrink to nothing when zoomed out.
+  const near = beaconUnder(event.offsetX, event.offsetY, box);
+  if (near) { openBeacon(near); return; }
+  const zone = zoneOf(t.x, t.y);
+  if (zone) openZone(zone); else shutPanel();
+});
+canvas.addEventListener('pointerleave', () => { pointer = null; hovered = 0; hoveredBeacon = null; });
+canvas.addEventListener('dblclick', () => { shutPanel(); fit(); });
+addEventListener('resize', () => { if (!from) size(); });
+addEventListener('keydown', event => {
+  if (event.key === 'Escape') { shutPanel(); return; }
+  const on = event.target;
+  if (on && (on.tagName === 'INPUT' || on.tagName === 'TEXTAREA')) return;
+  if (event.key === 'a' || event.key === 'A') { turnBy(-TURN_STEP); event.preventDefault(); }
+  else if (event.key === 'e' || event.key === 'E') { turnBy(TURN_STEP); event.preventDefault(); }
+});
+
+fit();
+view.scale = want.scale; view.x = want.x; view.y = want.y;
+/* ---------------- the bench, wired up ---------------- */
+/*
+ * Shown only when the map is being served from this machine, or when the
+ * address asks for it. A published copy never sees it.
+ */
+{
+  const here = location.hostname;
+  const mine = here === 'localhost' || here === '127.0.0.1' || here === '' || here === '[::1]';
+  if (mine || /[?&]bench/.test(location.search)) {
+    const box = document.getElementById('bench');
+    const tilt = document.getElementById('benchTilt');
+    const turn = document.getElementById('benchTurn');
+    const tiltAt = document.getElementById('benchTiltAt');
+    const turnAt = document.getElementById('benchTurnAt');
+    box.style.display = 'block';
+    const say = () => {
+      TUNE.tilt = Number(tilt.value);
+      TUNE.turn = Number(turn.value);
+      tiltAt.textContent = TUNE.tilt ? TUNE.tilt + '\u00b0' : 'off';
+      turnAt.textContent = TUNE.turn + '\u00b0';
+      try {
+        localStorage.setItem('atlas.bench.2', JSON.stringify([tilt.value, turn.value]));
+      } catch (e) { /* a private window, or storage turned off */ }
+    };
+    try {
+      const was = JSON.parse(localStorage.getItem('atlas.bench.2') || 'null');
+      if (was) { tilt.value = was[0]; turn.value = was[1] || 0; }
+    } catch (e) { /* nothing remembered */ }
+    tilt.addEventListener('input', say);
+    turn.addEventListener('input', say);
+    // The sliders take the keyboard otherwise, and the map wants the arrows.
+    box.addEventListener('keydown', e => e.stopPropagation());
+    say();
+  }
+}
+
+requestAnimationFrame(frame);
+</script>

@@ -45,9 +45,23 @@ life New Left Horizontal Trap
 life New Top Vertical Trap
 life Shipwreck Hag Whirlpool
 life New Shield Orc Shield
+life New 135-315 Diagonal Trap
+life New 45-225 Diagonal Trap
+life New Blue Satellite
+life New Sand Phantom Wisp
 
 ## Somewhere else entirely: a fifty-tile room of wood plank floor and Space,
 ## eight hundred tiles off the coast in the corner of the chart, with nothing
 ## ever met in it. Walked into by accident and recorded along with the realm.
 ## Everything joined to this tile goes.
+## Scenery that grew over the realm. All three are GameObjects the client
+## scatters as decoration, and all three were scattered hard: eight hundred and
+## twenty-four of the floral tuft alone, against two hundred and ninety-one
+## things standing in the whole rest of the map. Turned away by name rather
+## than by class, because the class is GameObject and that is every rock,
+## tombstone and campfire in the realm.
+id Floral Escape Large Floral Tuft
+id Ancient City Large Pots
+id Ancient City Large Flowery
+
 elsewhere 107,162
