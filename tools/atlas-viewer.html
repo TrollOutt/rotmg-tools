@@ -2210,8 +2210,26 @@ function artFor(sprite) {
   return img;
 }
 
+/*
+ * Whether creatures wander the map.
+ *
+ * They are not recorded positions - nothing walks the same path twice - so
+ * they are sown from each zone's own cast, one every so many tiles, and they
+ * drift about. It is the map's life, and it is off while the work on what
+ * lives where is being done: a map with two and a half thousand creatures
+ * strewn across it cannot be read for what the ground is doing, and the
+ * monsters are going back on it once their behaviour, their spawners and
+ * their drops are all in hand.
+ *
+ * Turning it back on is this one word. Nothing else has been taken out: the
+ * sowing below, the drifting, the depth sorting and the portraits are all
+ * still here and still built.
+ */
+const WANDERERS = false;
+
 function populate() {
   alive.length = 0;
+  if (!WANDERERS) return;
   for (const zone of A.zones) {
     if (!zone.lives || !zone.lives.length) continue;
     const [x0, y0, x1, y1] = zone.box;
