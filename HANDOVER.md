@@ -190,6 +190,39 @@ to put a new sky in front of anyone from anywhere else. It reads the same
 folder under the same rule and leaves the Oryx rectangles exactly as it found
 them, so the two agree; if you change how a cloud is cut, change it in both.
 
+The one number they can silently disagree about is how wide a cloud may be:
+`CLOUD_MOST` in `realm-render.js`, `WIDEST` in `build-sky.js`. They were 110
+and 128, which meant a full build and a clouds-only build produced different
+sheets and the sky jumped between them. Both are 128. Move one, move the other.
+
+### One byte a tile, and four things that do not work
+
+`water.png` is a lookup rather than a picture: one number per tile saying which
+of the eleven drifts it has. It was written as four channels with three of them
+copying the first, and it is the largest single thing the page fetches before
+it can draw anything. It is written by `writeGreyPng` now — 981 KB down to 714,
+pixel for pixel the same. The page needed no change, because a grey PNG drawn
+onto a canvas comes back out of `getImageData` with red, green and blue all set
+to the value, which is what the reader was taking anyway.
+
+Four other savings were measured and rejected, so that nobody spends an
+afternoon rediscovering them:
+
+- **Dropping alpha from the ground chunks saves nothing.** Deflate already
+  compresses a plane of constant 255 down to almost no bytes at all.
+- **Deflate level 9 on the chunks saves 4%**, for a build several times slower.
+- **A 256-colour palette saves 49% and is lossy.** The chunks carry between six
+  hundred and four thousand colours each; quantising bands the ground visibly.
+- **Per-scanline PNG filtering, the textbook trick, makes `water.png` bigger** —
+  836 KB against 714. It is long runs of one value, which is exactly what
+  deflate is best at and exactly what a difference filter destroys. Every
+  uniform filter was tried as well; none beat none.
+
+What is actually expensive is the history. `.git` is around 700 MB, because a
+PNG that changes at all is stored whole and there are 391 of them in two copies.
+The builds are deterministic, so a rebuild that changes nothing costs nothing —
+but every real growth of the map pays for the whole pyramid again.
+
 ## What is not available here
 
 Two data sources the repository is designed around were out of reach, which

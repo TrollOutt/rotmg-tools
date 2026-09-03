@@ -1383,7 +1383,19 @@ function oryxPaint() {
  * stops, which is seven or eight notches past where the realm fits the
  * window, and there he is.
  */
-const ORYX_FROM = 1.12;                  // in floors, the distance he starts at
+/*
+ * How far out he begins, counted in floors rather than in zooms because both
+ * the floor and the view the map opens at are set from the size of the
+ * window: written as a plain number he would be half out already on a tall
+ * screen and nowhere to be seen on a short one.
+ *
+ * It used to be 1.12, which put the whole of him inside the last twelfth of
+ * the wheel - a single notch from nothing to all of him, which is not an
+ * arrival, it is a jump scare. The map opens at about twice the floor, so
+ * there is room for the best part of an octave between the two, and he now
+ * has it.
+ */
+const ORYX_FROM = 1.85;                  // in floors, the distance he starts at
 
 function oryxShows(box) {
   if (!A.sky || !skyArt || !skyArt.oryx) return 0;
@@ -1391,9 +1403,20 @@ function oryxShows(box) {
   const least = floorZoom(box), from = least * ORYX_FROM;
   if (view.scale >= from) return 0;
   // Sent for a little before he is due, so he has arrived by the time he is.
-  if (view.scale < from * 1.6) callForOryx();
+  if (view.scale < from * 1.08) callForOryx();
   if (!oryxSheet.complete || !oryxSheet.naturalWidth) return 0;
-  return Math.max(0, Math.min(1, (from - view.scale) / Math.max(0.01, from - least)));
+  /*
+   * Measured by ratio and eased at both ends.
+   *
+   * Straight subtraction spends most of its range on the last notch or two,
+   * because every notch of a wheel multiplies rather than adds - so he
+   * appeared all at once however wide the span was made. Read as a ratio, the
+   * same span is spread evenly over every notch of the way out; smoothed, he
+   * neither starts nor finishes abruptly, but swims up out of the dark.
+   */
+  const t = Math.max(0, Math.min(1,
+    Math.log(from / view.scale) / Math.log(from / least)));
+  return t * t * (3 - 2 * t);
 }
 
 // The head, behind the world - so it is drawn before the world is.
