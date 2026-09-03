@@ -50,6 +50,19 @@ life New 45-225 Diagonal Trap
 life New Blue Satellite
 life New Sand Phantom Wisp
 
+## Every creature, off the drawn map.
+##
+## Not off the atlas: who lives where, their portraits, the beacons' guards
+## and everything the panel says about them are built from the store by the
+## atlas builder and are untouched by this. This is only about what is painted
+## on the ground.
+##
+## The test is the client's own <Enemy/> flag, because nothing else works. Not
+## the class: a Goblin Village Bush is a Character and is a bush, and a
+## Barnacle Rock is a Character with three thousand hit points and is a
+## monster. Not the name, for the same reason.
+creatures
+
 ## Anything drawn from an empty square.
 ##
 ## Most of the machinery of the realm is placed as an object, because that is
