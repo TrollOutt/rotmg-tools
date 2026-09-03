@@ -81,25 +81,99 @@ road, bit 1 impassable), blue is the zone id.
 
 ## The generator, and the order things run in
 
-The atlas is not committed art — it is built, on the machine that has the game
-client, by a generator that is deliberately not in this repository. Written
-down here because the order matters and nothing else records it:
-
     node tools/realm-render.js --copy       the ground, the water, the standing layer
     node tools/realm-atlas-build.js         the pyramid, the zones, the page
     node tools/merge-realm-roles.js         the ranks and the cast
+    node tools/refine-outline.js            the black line round everything, once
+    npm run build                           web/ copied into docs/
 
-`--atlas=DIR` sends the last one at a copy; `--publish` on the second writes
-into `web/assets/atlas` instead of `local/atlas`. `prune-map.js` is no longer
-part of this: what does not belong on the map is turned away while it is being
+`--atlas=DIR` sends the third at a copy; `--publish` on the second writes into
+`web/assets/atlas` instead of `local/atlas`. `prune-map.js` is no longer part
+of this: what does not belong on the map is turned away while it is being
 built, from `data/Realm/off-the-map.txt`, so it never comes back when more of
-the realm is walked. `refine-outline.js` still runs once, after.
+the realm is walked.
+
+Two of those four are in the repository and one is not, and the difference is
+worth being exact about.
 
 **The page is generated.** `web/assets/atlas/index.html` is built from
-`tools/atlas-viewer.html`, which is not in the repository either. Working on
-the built file directly means the next build throws the work away — that
-happened once, and cost six hundred lines of globe and zoom work that had to
-be lifted back into the template by hand. Change the template.
+`tools/atlas-viewer.html`, **which is now in the repository**. Working on the
+built file directly means the next build throws the work away — that happened
+once, and cost six hundred lines of globe and zoom work that had to be lifted
+back into the template by hand. Change the template. `realm-atlas-build.js` is
+here too, so a change to the template can be checked against the thing that
+inlines it.
+
+### Why realm-render.js is not here
+
+It works from a local `client-data/` that is not published, so a clone cannot
+run it whatever else it has. Publishing the file would put a build step in the
+repository that nobody outside can execute, which is worse than an absence that
+is written down.
+
+What follows from that, for anyone working without it:
+
+- The chunk pyramid, `things.*`, `water.*`, `sky.*`, `oryx.png` and `mask.png`
+  cannot be regenerated on a machine that has neither the client nor the
+  recordings. They must be taken from the repository as they stand.
+- A template change *can* still be checked, because `realm-atlas-build.js` is
+  here: point it at an existing `local/realm-copy` if you have one. Without
+  one, the honest check is to read the inlining in `realm-atlas-build.js` and
+  to have the change built on the machine that can build it.
+
+### What the build writes, and what is source
+
+Everything under `web/assets/atlas/` is written by the chain above. None of it
+is edited by hand, and an edit to any of it is lost on the next build:
+
+    index.html          from tools/atlas-viewer.html, with atlas.json inlined
+    atlas.json          zones, biomes, beacons, the cast, the focus box
+    z0/ z1/ z2/ z3/ z4/ 389 ground chunks, five scales
+    things.png/.json    the standing layer's sheet and its table
+    things.bin          (pic, x*8, y*8) triples, three uint16 each
+    mask.png            R biome, G flags, B zone
+    roads.png           water.png water.json water-art.png
+    sky.png sky.json    the weather, and Oryx's rectangles within it
+    oryx.png            his head and his two hands
+    life/               316 creature portraits
+    boss/               103 encounter portraits
+
+`docs/assets/atlas/` is a copy of all of it, made by `npm run build`. Never
+edit either.
+
+The sources that are in the repository, and are edited by hand:
+
+    tools/atlas-viewer.html       the page
+    tools/realm-atlas-build.js    the pyramid, the zones, the inlining
+    tools/merge-realm-roles.js    tools/refine-outline.js
+    data/Realm/off-the-map.txt    what is not the realm
+    data/Realm/zone-names.txt     what the places are called
+    data/Realm/oryx-head.png      data/Realm/oryx-hands.png
+    data/Realm/clouds/            the sky, if anyone draws it
+
+### The sky
+
+`sky.png` and `sky.json` are written by `buildSky()` in `realm-render.js`, and
+by nothing else. `sky.json` holds the rectangle of every cloud on the sheet and
+Oryx's three rectangles beside them; the page picks a cloud for each of its 78
+banks by index, so the *order* of the clouds is part of the contract.
+
+Until now they had no sources at all: the eighteen were arithmetic, stacks of
+ellipses shaded by how far each pixel lies under the crest of its own lobe.
+There is now a folder instead, and anything in it wins:
+
+    data/Realm/clouds/01-name.png   one cloud per file, any name after the number
+
+Taken in the order the names sort — hence the numbers, because a bank that
+changes shape between builds is a bank that visibly jumps. Each file is cut
+from its paper by flooding in from the border (so white *inside* the drawing
+survives), trimmed to what is actually drawn, and eased down to at most 110
+pixels across by averaging whole blocks. Alpha already in the file is honoured,
+so a proper cut-out needs no keying. Drop nineteen files in and the eighteen
+built ones are skipped entirely; empty or remove the folder and they come back.
+
+Do not write a second sky tool. This is the only reader of that folder and the
+only writer of those two files.
 
 ---
 
@@ -109,9 +183,9 @@ Two data sources the repository is designed around were out of reach, which
 shaped what could and could not be done.
 
 **`client-data/` is absent** (gitignored; rebuilt from an installed game
-client). Without it there is no regenerating the realm data from source, and
-the atlas generator itself is not in the repository at all — only the tools
-listed below, which work on the committed assets.
+client). Without it there is no regenerating the realm data from source. The
+page and the atlas builder are in the repository now; the renderer that reads
+the recordings is not, for the reason set out above.
 
 *On the machine with the client both of these are available,* and the two
 things they blocked have since been done: the encounters and heroes were cut

@@ -1234,18 +1234,6 @@
      }
     },
     {
-     "type": 21861,
-     "name": "New Shield Orc Shield",
-     "seen": 94,
-     "sprite": {
-      "file": "c21861.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21862,
      "name": "New Urgle",
      "seen": 61,
@@ -1258,35 +1246,11 @@
      }
     },
     {
-     "type": 21863,
-     "name": "New Left Horizontal Trap",
-     "seen": 43,
-     "sprite": {
-      "file": "c21863.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21859,
      "name": "New Shield Orc Key",
      "seen": 29,
      "sprite": {
       "file": "c21859.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21864,
-     "name": "New Top Vertical Trap",
-     "seen": 29,
-     "sprite": {
-      "file": "c21864.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -1326,6 +1290,42 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21849,
+     "name": "New Flayer Veteran",
+     "seen": 12,
+     "sprite": {
+      "file": "c21849.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21893,
+     "name": "City Ent God",
+     "seen": 10,
+     "sprite": {
+      "file": "c21893.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21814,
+     "name": "New Orc Warrior",
+     "seen": 10,
+     "sprite": {
+      "file": "c21814.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -2178,18 +2178,6 @@
      }
     },
     {
-     "type": 34516,
-     "name": "Flesh Satellite",
-     "seen": 15,
-     "sprite": {
-      "file": "c34516.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34601,
      "name": "Sinister Crow",
      "seen": 10,
@@ -2219,6 +2207,18 @@
      "seen": 9,
      "sprite": {
       "file": "c54330.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21849,
+     "name": "New Flayer Veteran",
+     "seen": 8,
+     "sprite": {
+      "file": "c21849.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -3174,18 +3174,6 @@
      "seen": 55,
      "sprite": {
       "file": "c21932.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 51,
-     "sprite": {
-      "file": "c21805.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -4578,18 +4566,6 @@
      }
     },
     {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 10,
-     "sprite": {
-      "file": "c22433.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 49905,
      "name": "Shipwreck Sailor",
      "seen": 9,
@@ -4610,6 +4586,18 @@
       "tile": 36,
       "height": 36,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 373,
+     "name": "Purple Sprite Tree",
+     "seen": 8,
+     "sprite": {
+      "file": "c373.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
       "size": 100
      }
     }
@@ -4900,18 +4888,6 @@
      }
     },
     {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 12,
-     "sprite": {
-      "file": "c22433.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34572,
      "name": "Artificial Sprite Child",
      "seen": 10,
@@ -4953,6 +4929,18 @@
      "seen": 5,
      "sprite": {
       "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 5,
+     "sprite": {
+      "file": "c14714.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -5103,18 +5091,6 @@
      }
     },
     {
-     "type": 22433,
-     "name": "Daughter of Limon Laser",
-     "seen": 11,
-     "sprite": {
-      "file": "c22433.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34572,
      "name": "Artificial Sprite Child",
      "seen": 10,
@@ -5123,6 +5099,18 @@
       "tile": 20,
       "height": 20,
       "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 9,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -5496,18 +5484,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 33,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21809,
      "name": "New Nomadic Shaman",
      "seen": 32,
@@ -5556,18 +5532,6 @@
      }
     },
     {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 24,
-     "sprite": {
-      "file": "c21802.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21903,
      "name": "New Birdman",
      "seen": 23,
@@ -5604,26 +5568,50 @@
      }
     },
     {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 20,
+     "type": 21810,
+     "name": "New Great Lizard",
+     "seen": 17,
      "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
+      "file": "c21810.png",
+      "tile": 36,
+      "height": 36,
       "frames": 2,
       "size": 100
      }
     },
     {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 19,
+     "type": 54289,
+     "name": "Legion Novice Hunter",
+     "seen": 12,
      "sprite": {
-      "file": "c21804.png",
+      "file": "c54289.png",
       "tile": 20,
       "height": 20,
-      "frames": 2,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 54288,
+     "name": "Legion Novice Mage",
+     "seen": 12,
+     "sprite": {
+      "file": "c54288.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21928,
+     "name": "New Oasis Monster",
+     "seen": 10,
+     "sprite": {
+      "file": "c21928.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -5687,18 +5675,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 32,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21799,
      "name": "New Fire Golem",
      "seen": 29,
@@ -5711,47 +5687,11 @@
      }
     },
     {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 25,
-     "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21800,
      "name": "New Darkness Golem",
      "seen": 24,
      "sprite": {
       "file": "c21800.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 22,
-     "sprite": {
-      "file": "c21804.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 17,
-     "sprite": {
-      "file": "c21802.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -5803,6 +5743,54 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21903,
+     "name": "New Birdman",
+     "seen": 12,
+     "sprite": {
+      "file": "c21903.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21839,
+     "name": "New Weretiger",
+     "seen": 8,
+     "sprite": {
+      "file": "c21839.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 54291,
+     "name": "Legion Surveyor",
+     "seen": 7,
+     "sprite": {
+      "file": "c54291.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21902,
+     "name": "New Birdman Chief",
+     "seen": 7,
+     "sprite": {
+      "file": "c21902.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     }
@@ -8692,30 +8680,6 @@
      }
     },
     {
-     "type": 21866,
-     "name": "New 135-315 Diagonal Trap",
-     "seen": 11,
-     "sprite": {
-      "file": "c21866.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21865,
-     "name": "New 45-225 Diagonal Trap",
-     "seen": 11,
-     "sprite": {
-      "file": "c21865.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21893,
      "name": "City Ent God",
      "seen": 10,
@@ -8781,6 +8745,30 @@
      "seen": 8,
      "sprite": {
       "file": "c21889.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21892,
+     "name": "City Slime God",
+     "seen": 7,
+     "sprite": {
+      "file": "c21892.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21895,
+     "name": "City Djinn",
+     "seen": 5,
+     "sprite": {
+      "file": "c21895.png",
       "tile": 36,
       "height": 36,
       "frames": 3,
@@ -11581,18 +11569,6 @@
      }
     },
     {
-     "type": 21803,
-     "name": "New Blue Satellite",
-     "seen": 28,
-     "sprite": {
-      "file": "c21803.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21843,
      "name": "New Horned Drake",
      "seen": 24,
@@ -11646,6 +11622,18 @@
      "seen": 14,
      "sprite": {
       "file": "c21931.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21823,
+     "name": "New Little Green Slime",
+     "seen": 14,
+     "sprite": {
+      "file": "c21823.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -16503,18 +16491,6 @@
      }
     },
     {
-     "type": 21808,
-     "name": "New Sand Phantom Wisp",
-     "seen": 5,
-     "sprite": {
-      "file": "c21808.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21838,
      "name": "New Clockwork Golem",
      "seen": 3,
@@ -17981,30 +17957,6 @@
      }
     },
     {
-     "type": 21801,
-     "name": "New Red Satellite",
-     "seen": 1,
-     "sprite": {
-      "file": "c21801.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21806,
-     "name": "New Gray Satellite 3",
-     "seen": 1,
-     "sprite": {
-      "file": "c21806.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21838,
      "name": "New Clockwork Golem",
      "seen": 1,
@@ -18175,42 +18127,6 @@
      }
     },
     {
-     "type": 21805,
-     "name": "New Gray Satellite 2",
-     "seen": 8,
-     "sprite": {
-      "file": "c21805.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21802,
-     "name": "New Green Satellite",
-     "seen": 6,
-     "sprite": {
-      "file": "c21802.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21804,
-     "name": "New Gray Satellite 1",
-     "seen": 5,
-     "sprite": {
-      "file": "c21804.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21799,
      "name": "New Fire Golem",
      "seen": 5,
@@ -18228,6 +18144,30 @@
      "seen": 5,
      "sprite": {
       "file": "c21800.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21809,
+     "name": "New Nomadic Shaman",
+     "seen": 4,
+     "sprite": {
+      "file": "c21809.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 2,
+     "sprite": {
+      "file": "c21798.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -19330,18 +19270,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 49904,
-     "name": "Shipwreck Hag Whirlpool",
-     "seen": 1,
-     "sprite": {
-      "file": "c49904.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
     }
    ],
    "guardian": {
@@ -19709,30 +19637,6 @@
    "zone": 5,
    "guards": [
     {
-     "type": 21863,
-     "name": "New Left Horizontal Trap",
-     "seen": 3,
-     "sprite": {
-      "file": "c21863.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21864,
-     "name": "New Top Vertical Trap",
-     "seen": 3,
-     "sprite": {
-      "file": "c21864.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21853,
      "name": "New Undead Dwarf Warrior",
      "seen": 2,
@@ -19762,18 +19666,6 @@
      "seen": 1,
      "sprite": {
       "file": "c21854.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21861,
-     "name": "New Shield Orc Shield",
-     "seen": 1,
-     "sprite": {
-      "file": "c21861.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
