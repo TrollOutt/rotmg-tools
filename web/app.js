@@ -2521,6 +2521,31 @@ function placeGlobe(box, at) {
   box.style.height = at.height + 'px';
 }
 
+/*
+ * The drifting realms are put on hold while the atlas has the page.
+ *
+ * Nothing of them can be seen behind a full-page map, and they are two
+ * canvases being repainted and a row of sprites being animated - which is
+ * work taken straight out of the frame budget of the thing you are actually
+ * looking at. This is a hold rather than a setting: the switch's own state is
+ * not touched, so putting the frame back brings them back exactly as they
+ * were left.
+ */
+function holdAmbience(hold) {
+  const host = document.getElementById('ambience');
+  if (!host) return;
+  if (hold) {
+    host.hidden = true;
+    clearInterval(ambience.timer);
+    clearInterval(ambience.scatterTimer);
+    ambience.timer = 0; ambience.scatterTimer = 0;
+    return;
+  }
+  if (!ambience.enabled) return;
+  host.hidden = false;
+  startAmbience();
+}
+
 let globeSettling = 0;
 function setGlobe(open) {
   const box = document.getElementById('globeBox');
@@ -2553,6 +2578,7 @@ function setGlobe(open) {
   }
 
   tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
+  holdAmbience(open);
 
   /*
    * And handed back to the layout once it has arrived. Left pinned, it would
