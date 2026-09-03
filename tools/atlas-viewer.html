@@ -58,6 +58,18 @@
   .face { flex: none; width: 34px; height: 34px; object-fit: contain;
     image-rendering: pixelated; }
   /* How much of the floor is what. */
+  /* Tiers of gear, drawn as a run rather than as a list of numbers. */
+  .tiers { margin: 4px 0 10px; }
+  .tiers div { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+  .tiers b { flex: 0 0 116px; font-weight: 500; color: #9aa4ba; font-size: 11px; }
+  .tiers em { flex: 0 0 42px; font-style: normal; color: #d7c98a; font-size: 11px; }
+  .tiers u { display: flex; gap: 2px; text-decoration: none; }
+  .tiers s { text-decoration: none; font-size: 9px; line-height: 13px; min-width: 13px;
+    text-align: center; border-radius: 2px; background: #2a3346; color: #b9c4d8; }
+  .drops { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 12px; }
+  .drops span { font-size: 10px; padding: 2px 6px; border-radius: 9px;
+    background: rgba(120,132,158,.14); color: #93a0b6; }
+  .life u.stat { display: block; text-decoration: none; font-size: 10px; color: #6f7b90; }
   .soil { display: grid; gap: 5px; font-size: .8em; }
   .soil div { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
   .soil b { font-weight: 400; color: #c3ccdb; }
@@ -2712,9 +2724,21 @@ function openBeacon(beacon) {
     + '</div>'
     + (beacon.guardian
       ? '<h3>Guardian</h3>'
-        + castList([{ name: beacon.guardian.name || beacon.guardian, art: beacon.guardian.art }])
+        + castList([beacon.guardian.name ? beacon.guardian : { name: beacon.guardian }])
       : '')
-    + '<h3>Around it</h3>' + livesList(beacon.guards);
+    /*
+     * The ground's other guardians, if it has any this one is not. A beacon
+     * whose guardian is the only one its ground has would otherwise print it
+     * twice, once under each heading.
+     */
+    + (() => {
+      const mine = beacon.guardian && (beacon.guardian.name || beacon.guardian);
+      const rest = ((zone && zone.guardians) || []).filter(one => one.name !== mine);
+      return rest.length
+        ? '<h3>Others on this ground<span>' + rest.length + '</span></h3>' + castList(rest) : '';
+    })()
+    + '<h3>Standing round it<span>' + (beacon.guards || []).length + '</span></h3>'
+      + livesList(beacon.guards);
   panel.classList.add('is-open');
 }
 
@@ -2732,20 +2756,47 @@ function castList(list, note) {
     const art = one.art
       ? '<img class="face" src="' + BASE + 'boss/' + one.art + '" alt="" loading="lazy">'
       : '<span class="face"></span>';
+    /*
+     * What it is worth going after. Hit points and defence say how long it
+     * takes, experience says what it is worth; a thing with none of the three
+     * simply does not show a line, rather than showing three dashes.
+     */
+    const facts = [
+      one.hp !== undefined ? Number(one.hp).toLocaleString() + ' hp' : '',
+      one.def !== undefined ? one.def + ' def' : '',
+      one.exp !== undefined ? Number(one.exp).toLocaleString() + ' xp' : ''
+    ].filter(Boolean).join(' \u00b7 ');
     return '<div>' + art + '<b>' + one.name + '</b>'
+      + (facts ? '<u class="stat">' + facts + '</u>' : '')
       + (one.onMap ? '<i>on the map</i>' : '')
       + (note ? '<em>' + note + '</em>' : '') + '</div>';
   }).join('') + '</div>';
 }
 
-/* What the floor is made of, as much as a bar as a number. */
-function soilList(zone) {
-  if (!zone.madeOf || !zone.madeOf.length) return '';
-  return '<div class="soil">' + zone.madeOf.map(part => {
-    const share = Math.round(100 * part.tiles / zone.tiles);
-    return '<div><b>' + part.ground + '</b><em>' + share + '%</em>'
-      + '<u><s style="width:' + Math.max(2, share) + '%"></s></u></div>';
-  }).join('') + '</div>';
+/*
+ * What can fall in a place.
+ *
+ * The useful half of a drop table is not the list of names but the tiers: a
+ * place is worth walking into because tier eleven armour falls in it, not
+ * because a health potion does. So the tiers of each kind of gear are drawn
+ * as a run - eight to twelve - and everything that is a named thing rather
+ * than a tier follows underneath.
+ */
+const GEAR = ['Weapons', 'Alternate Weapons', 'Armor', 'Rings', 'Abilities'];
+function lootList(loot) {
+  if (!loot) return '';
+  const kinds = Object.keys(loot.tiers)
+    .sort((a, b) => (GEAR.indexOf(a) + 1 || 99) - (GEAR.indexOf(b) + 1 || 99));
+  const rows = kinds.map(kind => {
+    const t = loot.tiers[kind];
+    const run = t.length > 1 ? t[0] + '\u2013' + t[t.length - 1] : String(t[0]);
+    return '<div><b>' + kind + '</b><em>' + run + '</em>'
+      + '<u>' + t.map(n => '<s>' + n + '</s>').join('') + '</u></div>';
+  }).join('');
+  const items = (loot.items || []).length
+    ? '<p class="drops">' + loot.items.map(one => '<span>' + one + '</span>').join('') + '</p>'
+    : '';
+  return '<div class="tiers">' + rows + '</div>' + items;
 }
 
 function openZone(id) {
@@ -2772,37 +2823,50 @@ function openZone(id) {
       : /seasonal/i.test(rank) ? 'seasonal' : 'other') + '">' + rank + '</div>'
     : '';
 
+  const roster = (title, list, note) => (list && list.length)
+    ? '<h3>' + title + '<span>' + list.length + '</span></h3>' + castList(list, note) : '';
+
   panelBody.innerHTML = '<h2>' + zone.name + '</h2>'
     + '<p class="sub">' + zone.tiles.toLocaleString() + ' tiles, ' + wide + ' by ' + tall
     + ' &middot; named ' + said + '</p>'
     + badge
     + '<div class="facts">'
     + '<span><i>beacons</i><b>' + here.length + '</b></span>'
-    + '<span><i>walking now</i><b>' + alive.filter(o => o.home === id).length + '</b></span>'
+    + '<span><i>ground</i><b>' + (zone.ground || '&mdash;') + '</b></span>'
     + '<span><i>middle</i><b>' + zone.at[0] + ', ' + zone.at[1] + '</b></span>'
     + '<span><i>kinds met</i><b>' + (zone.lives ? zone.lives.length : 0) + '</b></span>'
     + '</div>'
 
-    + (zone.encounters && zone.encounters.length
-      ? '<h3>Encounters<span>' + zone.encounters.length + '</span></h3>'
-        + castList(zone.encounters) : '')
-    + (zone.heroes && zone.heroes.length
-      ? '<h3>Heroes of Oryx<span>' + zone.heroes.length + '</span></h3>'
-        + castList(zone.heroes) : '')
-    + '<h3>' + (zone.met ? 'Met here' : 'Expected here')
-      + '<span>' + (zone.lives ? zone.lives.length : 0) + '</span></h3>'
-      + livesList(zone.lives)
+    /*
+     * The roster first, because it is the answer to what lives here. It comes
+     * from the reference rather than from the walk: the things a realm is
+     * visited for are exactly the things a stroll through it does not meet.
+     */
+    + roster('Encounters', zone.encounters)
+    + roster('Heroes of Oryx', zone.heroes)
+    + roster('Monsters', zone.regular)
+    + roster('Beacon guardians', zone.guardians)
+
+    + (zone.loot ? '<h3>What falls here</h3>' + lootList(zone.loot) : '')
 
     + (here.length
       ? '<h3>Beacons<span>' + here.length + '</span></h3>'
         + here.map(b => '<div class="life"><div>'
           + '<b>' + b.name + '</b><em>' + b.state + '</em></div></div>'
           + (b.guardian
-            ? castList([{ name: b.guardian.name || b.guardian, art: b.guardian.art }], 'guardian')
+            ? castList([b.guardian.name ? b.guardian : { name: b.guardian }], 'guardian')
             : '')).join('')
       : '')
 
-    + '<h3>Ground</h3>' + soilList(zone);
+    /*
+     * And last, what was actually walked past here, which is a different
+     * question and is worth keeping separate from the first. The names differ
+     * too - the client calls a thing Deep Sea Squid where the reference calls
+     * it an Abyssal Squid - so running the two lists together would read as
+     * twice as many creatures as there are.
+     */
+    + '<h3>Seen on the walk<span>' + (zone.lives ? zone.lives.length : 0) + '</span></h3>'
+      + livesList(zone.lives);
   panel.classList.add('is-open');
 }
 function shutPanel() { chosen = 0; chosenBeacon = null; panel.classList.remove('is-open'); }
