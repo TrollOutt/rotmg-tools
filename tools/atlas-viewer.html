@@ -21,8 +21,12 @@
     position: absolute; top: 0; right: 0; bottom: 0; width: 372px; max-width: 86vw;
     background: rgba(9,12,19,.97); border-left: 1px solid rgba(255,255,255,.12);
     padding: 18px 18px 26px; overflow-y: auto; color: #cfd8e6;
+    /* It scrolls; it does not advertise that it scrolls. A light bar down
+       the edge of a dark panel is the brightest thing on the page. */
+    scrollbar-width: none; -ms-overflow-style: none;
     transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.7,.3,1);
   }
+  #panel::-webkit-scrollbar { width: 0; height: 0; }
   #panel.is-open { transform: none; }
   #panel h2 { margin: 0 28px 0 0; font-size: 1.18rem; color: #f2f6fc; letter-spacing: .01em; }
   #panel .sub { margin: 4px 0 14px; font-size: .8em; color: #8d9bb0; }
@@ -274,7 +278,6 @@ const seaPatch = (() => {
   pen.putImageData(skin, 0, 0);
   return pad;
 })();
-const SEA_FADE = 50;
 /*
  * Set a pen to paint sea with.
  *
@@ -1111,33 +1114,53 @@ const SKY_WRAP = 3.6;                    // sky radii a front drifts before it r
 /*
  * How the sky answers the world being turned under it.
  *
- * Fixed to the glass was right and it was not the whole story. Weather sits
- * on a world and a world that turns takes its air with it - not at once and
- * not exactly, because air slips. So the sky is hung off a lagging copy of
- * the camera: shove the realm and the cloud is pulled after it a beat late,
- * and when the realm stops the cloud arrives, overshoots nothing, and
- * settles back onto the glass over a second or so.
+ * Weather sits on a world, and a world that turns takes its air with it -
+ * not at once, and not all of it, because air slips. Shove the realm and
+ * the cloud is pulled after it, late, and it keeps most of the ground it
+ * was given rather than sliding back.
  *
- * That is not the thing this started out doing. Weather laid out in tiles
- * moved exactly with the map, which read as a sky painted on the map. What
- * is different here is that the coupling is temporary: while you are moving,
- * the sky is being dragged; once you stop, it is in front of the camera
- * again, and nothing about where you have panned to is written into it.
+ * The first attempt at this hung the sky off a lagging copy of the camera
+ * and it was wrong in a way worth writing down, because it looks almost
+ * right. A copy that eases towards the camera converges on it, so the
+ * offset it produces always decays to nothing: the cloud jumps with the map
+ * and then slides back against it. The visible motion is therefore in the
+ * wrong direction - not while you drag, but for the second afterwards, when
+ * the whole sky is drifting the other way. Lag is not a decaying offset. It
+ * is arriving late somewhere and staying there.
+ *
+ * So what is kept is how far the air has been dragged, in tiles, added to
+ * frame by frame as a share of wherever the camera went and eased towards
+ * rather than jumped to. Pan and come back and it nets out; pan one way for
+ * a long time and it stops at the slip below, because a planet cannot drag
+ * its atmosphere off itself.
  */
-const SKY_DRAG = 0.8;                    // how much of the movement pulls it
-const SKY_CATCH = 1.6;                   // and how quickly it catches up
-const SKY_SLIP = 0.6;                    // sky radii it may ever fall behind
+const SKY_DRAG = 0.55;                   // the share of the movement it takes
+const SKY_CATCH = 2.6;                   // and how quickly it gets there
+const SKY_SLIP = 0.5;                    // sky radii it may ever be dragged
 
-/* The lagging copy of the camera that the sky hangs off. */
-const skyBehind = { x: 0, y: 0, set: false };
-function stepSky(delta) {
-  if (!skyBehind.set) {
-    skyBehind.x = view.x; skyBehind.y = view.y; skyBehind.set = true;
+const skyPull = { x: 0, y: 0, toX: 0, toY: 0, wasX: 0, wasY: 0, set: false };
+function stepSky(delta, box) {
+  if (!skyPull.set) {
+    skyPull.wasX = view.x; skyPull.wasY = view.y; skyPull.set = true;
     return;
   }
+  // Where the camera went since the last frame, and the air taking its share.
+  skyPull.toX += (view.x - skyPull.wasX) * SKY_DRAG;
+  skyPull.toY += (view.y - skyPull.wasY) * SKY_DRAG;
+  skyPull.wasX = view.x; skyPull.wasY = view.y;
+  /*
+   * Held to a share of the sky rather than a number of tiles, since a tile
+   * is a different distance at every zoom - and held on the target rather
+   * than on the drawing, so that panning back out of the limit answers at
+   * once instead of crossing a dead zone first.
+   */
+  const room = Math.min(globe(), Math.hypot(box.w, box.h) * SKY_SPAN) * SKY_SLIP;
+  const most = room / Math.max(1e-6, view.scale);
+  skyPull.toX = Math.max(-most, Math.min(most, skyPull.toX));
+  skyPull.toY = Math.max(-most, Math.min(most, skyPull.toY));
   const catchUp = Math.min(1, delta * SKY_CATCH);
-  skyBehind.x += (view.x - skyBehind.x) * catchUp;
-  skyBehind.y += (view.y - skyBehind.y) * catchUp;
+  skyPull.x += (skyPull.toX - skyPull.x) * catchUp;
+  skyPull.y += (skyPull.toY - skyPull.y) * catchUp;
 }
 /*
  * How many banks there are, and how many weather systems they make up.
@@ -1647,15 +1670,12 @@ function drawSky(box, now) {
    * you, which is the thing being drawn.
    */
   /*
-   * How far behind the sky has fallen, in pixels of glass. Clamped, because
-   * a fast drag across the whole realm would otherwise fling the weather
-   * clean out of the frame and leave a bare planet until it caught up.
+   * How far the air has been dragged, on the glass. Negative of the pull,
+   * because the pull is measured in the world and the world moves the other
+   * way from the camera that is looking at it.
    */
-  const slip = SKY_SLIP * R;
-  const lagX = Math.max(-slip, Math.min(slip,
-    (skyBehind.x - view.x) * view.scale * SKY_DRAG));
-  const lagY = Math.max(-slip, Math.min(slip,
-    (skyBehind.y - view.y) * view.scale * SKY_DRAG));
+  const lagX = -skyPull.x * view.scale;
+  const lagY = -skyPull.y * view.scale;
   const push = 1 + SKY_PUSH * gone * gone;
   /*
    * And coming at you as they part, which is the other half of coming down
@@ -3066,61 +3086,23 @@ function groundGlobe(box, now) {
   if (chosen) drawLit(big, chosen, 0.16);
   else if (hovered) drawLit(big, hovered, 0.1);
   /*
-   * And the chart's own edge taken off, so it dissolves into the ocean
-   * painted under it instead of ending at a line.
+   * There used to be a gradient here, rubbing the chart's edge away into the
+   * ocean painted past it. It is gone, and its going is the end of a long
+   * argument.
    *
-   * The chart stops dead where the recording stopped and the page paints
-   * flat water beyond it. Even in the same blue the join shows, because the
-   * recorded water is mottled tile by tile and flat paint is not - so the
-   * last of the chart is rubbed away to nothing and the two meet through a
-   * gradient rather than at a border.
+   * It was there because the join showed, and the join showed because the
+   * chart is mottled tile by tile and flat paint is not. Three sessions
+   * aimed that gradient at three different places - the recorded bounds, the
+   * chunk grid, and neither was where the ground actually ends, which is
+   * wherever the recording stopped. Aimed anywhere but there it does harm
+   * rather than good: it thins a band of real recorded sea, which puts two
+   * new edges into the water where there was one.
    *
-   * Where the chart stops is the thing this got wrong, twice.
-   *
-   * The recorded bounds are not where the ground ends. The floor is drawn
-   * by whole chunks of a hundred and twenty-eight tiles and the bounds are
-   * nowhere near a chunk boundary, so the pyramid carries ground well past
-   * them: a hundred and seventeen tiles west of minX, seventy-six north,
-   * seventy-seven south, and none at all east, where maxX happens to land
-   * on a boundary. Rubbing at the bounds put the gradient a hundred and
-   * seventeen pixels inside the picture at one tile to the pixel and left
-   * the actual edge as bare as it started - a hard vertical line with
-   * mottled water on one side of it and flat paint on the other, which is
-   * exactly what was reported and is nothing to do with the colour.
-   *
-   * So the rectangle is the chunk grid, not the bounds. It is the same four
-   * gradients over the same fifty tiles; they are simply in the right place.
-   *
-   * Done here, inside the turn, because that is the frame the chart is square
-   * in; done after the ground so nothing standing on it is touched; and only
-   * on the ball, since flat there is night behind the chart and not water.
+   * The paint carries the grain now, so there is nothing left to blend: same
+   * colour, same grain, same pitch at every zoom. Measured across all four
+   * edges, the sea is one surface with no step in it. A gradient over that
+   * can only make it worse, so there is not one.
    */
-  {
-    const edge = Math.max(2, SEA_FADE * view.scale);
-    const grid = A.chunk;
-    const westAt = Math.floor(B.minX / grid) * grid;
-    const eastAt = Math.ceil((B.maxX + 1) / grid) * grid;
-    const northAt = Math.floor(B.minY / grid) * grid;
-    const southAt = Math.ceil((B.maxY + 1) / grid) * grid;
-    const left = wide / 2 + (westAt - view.x) * view.scale;
-    const right = wide / 2 + (eastAt - view.x) * view.scale;
-    const top = tall / 2 + (northAt - view.y) * view.scale;
-    const bottom = tall / 2 + (southAt - view.y) * view.scale;
-    globeCtx.globalCompositeOperation = 'destination-out';
-    const rub = (x0, y0, x1, y1, w, h) => {
-      const wash = globeCtx.createLinearGradient(x0, y0, x1, y1);
-      wash.addColorStop(0, 'rgba(0,0,0,1)');
-      wash.addColorStop(1, 'rgba(0,0,0,0)');
-      globeCtx.fillStyle = wash;
-      globeCtx.fillRect(Math.min(x0, x1), Math.min(y0, y1), w, h);
-    };
-    const across = right - left, down = bottom - top;
-    rub(left, top, left + edge, top, edge, down);
-    rub(right, top, right - edge, top, edge, down);
-    rub(left, top, left, top + edge, across, edge);
-    rub(left, bottom, left, bottom - edge, across, edge);
-    globeCtx.globalCompositeOperation = 'source-over';
-  }
   globeCtx.restore();
   ctx = real;
 
@@ -3339,6 +3321,55 @@ function groundTilted(box, now) {
  * for first, a bad frame is a bad frame and the next one is fine.
  */
 
+/*
+ * Fitting itself to a frame that is still growing.
+ *
+ * The atlas can be embedded in a box that changes size - a panel on the way
+ * in that opens out to the whole page over half a second. Fitting once at
+ * the start of that is fitting to the small box; so the host says "settle",
+ * and the atlas re-fits itself and follows the box out.
+ *
+ * Counted in frames, not in milliseconds, and that is the whole trick. A
+ * deadline is only met if frames happen to be drawn before it passes, and
+ * the half second a panel takes to open is also the half second the atlas
+ * spends fetching and decoding the ground for a box that just quadrupled -
+ * so the window can go by with no frame drawn in it at all, and then the
+ * settle never happens. A count comes off one frame at a time, so it cannot
+ * be skipped however busy the browser is, and a slow machine simply takes
+ * longer over it.
+ *
+ * It also comes in past him. A short frame puts the opening view below the
+ * distance he starts at, so in a letterbox panel he is most of the picture -
+ * which is a fine thing to meet on the way in to a map and no use at all
+ * once you are trying to read one. Coming to rest just inside his distance
+ * leaves the planet and takes him out of it, whatever shape the box is.
+ */
+let settleFor = 0;                       // frames left to keep fitting for
+window.addEventListener('message', event => {
+  const said = event.data;
+  if (!said || said.rotmg !== 'settle') return;
+  const frames = Math.max(1, Math.min(240, Math.round(Number(said.frames) || 48)));
+  settleFor = Math.max(settleFor, frames);
+});
+
+function settleInto(box) {
+  fit();
+  const least = floorZoom(box);
+  const past = least * ORYX_FROM * 1.06;
+  if (want.scale < past) want.scale = past;
+  /*
+   * And stepped past him rather than eased past him.
+   *
+   * Easing towards a zoom he is not in still draws him for the third of a
+   * second it takes to get there, and a frame opening out is exactly when
+   * somebody is looking. The view is floored at his distance for as long as
+   * the settle lasts, so he is never on a drawn frame; what makes it a zoom
+   * rather than a jump is the box itself growing under it, which re-fits
+   * every frame and takes the planet up with it.
+   */
+  if (view.scale < past) view.scale = past;
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   /*
@@ -3368,6 +3399,7 @@ function frame(now) {
   if (!(view.scale > 0.001)) view.scale = 0.02;
   if (!(want.scale > 0.001)) want.scale = 0.02;
   const box = size();
+  if (settleFor > 0) { settleFor--; settleInto(box); }
   keepInSight(box, delta);
   warmAhead(box);
   ctx.fillStyle = '#070a10';
@@ -3391,7 +3423,7 @@ function frame(now) {
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);
-  stepSky(delta);
+  stepSky(delta, box);
   stepBirds(delta);
   drawBirds(box);
   drawSky(box, now);

@@ -2464,6 +2464,7 @@ function pointAtAtlas() {
   fetch(base + 'atlas.json', { method: 'HEAD' })
     .then(response => {
       if (!response.ok) throw new Error('no atlas');
+      frame.addEventListener('load', () => tellAtlas({ rotmg: 'settle', frames: 12 }));
       frame.src = base + 'index.html';
     })
     .catch(() => {
@@ -2473,15 +2474,106 @@ function pointAtAtlas() {
     });
 }
 
-/* Open out, or put back. */
+/*
+ * Open out, or put back - and the map grows with the frame.
+ *
+ * The frame is taken out of the flow at exactly the rectangle it already
+ * occupies, so nothing moves, and then told to be the window instead. The
+ * transition is on the four edges, which means a real layout change every
+ * frame rather than a stretched picture - and that is the point, because
+ * what is inside is a map that has to re-lay itself out to be zoomed rather
+ * than magnified. The atlas is told to keep re-fitting for the same half
+ * second, so the two move as one and the whole thing reads as a zoom in.
+ *
+ * It also comes to rest just past the distance Oryx starts at, which the
+ * atlas works out for itself: a letterbox panel puts the opening view
+ * inside his reach and he ends up most of the picture, which is no use in
+ * front of a map somebody is about to read.
+ */
+const GLOBE_TAKES = 560;                 // milliseconds the frame takes
+/*
+ * And what the atlas is given to settle into it, counted in its own frames.
+ * Rather more than half a second of them, because the frame it is being
+ * given is four times the one it had and it will be busy fetching ground
+ * for it - a count it draws through cannot be missed the way a deadline can.
+ */
+const GLOBE_FRAMES = 48;
+
+function tellAtlas(what) {
+  const frame = document.getElementById('realmFrame');
+  if (!frame || !frame.contentWindow) return;
+  try { frame.contentWindow.postMessage(what, '*'); }
+  catch (error) { /* not loaded yet; it is told again on load */ }
+}
+
+/* The rectangle it opens out to: the window, less a margin to click in. */
+function globeRoom() {
+  const pad = Math.max(18, Math.min(44, Math.round(window.innerHeight * 0.032)));
+  return { top: pad, left: pad,
+    width: Math.max(120, window.innerWidth - pad * 2),
+    height: Math.max(120, window.innerHeight - pad * 2) };
+}
+
+function placeGlobe(box, at) {
+  box.style.top = at.top + 'px';
+  box.style.left = at.left + 'px';
+  box.style.width = at.width + 'px';
+  box.style.height = at.height + 'px';
+}
+
+let globeSettling = 0;
 function setGlobe(open) {
-  document.body.classList.toggle('globe-wide', open);
-  const back = document.getElementById('globeBack');
-  if (back) back.hidden = !open;
   const box = document.getElementById('globeBox');
+  const back = document.getElementById('globeBack');
+  const already = globeWide();
   if (box) box.setAttribute('aria-expanded', String(open));
   if (open) pointAtAtlas();
+  if (!box) {
+    document.body.classList.toggle('globe-wide', open);
+    if (back) back.hidden = !open;
+    return;
+  }
+  if (open === already) return;
+
+  // Where it is now, before anything is changed about it.
+  const here = box.getBoundingClientRect();
+  box.classList.add('is-moving');
+  box.style.position = 'fixed';
+  placeGlobe(box, { top: here.top, left: here.left, width: here.width, height: here.height });
+  void box.offsetWidth;                  // and let that stand as the start
+
+  document.body.classList.toggle('globe-wide', open);
+  if (back) back.hidden = !open;
+  if (open) {
+    placeGlobe(box, globeRoom());
+  } else {
+    const stage = document.querySelector('.globe-stage');
+    const room = stage ? stage.getBoundingClientRect() : here;
+    placeGlobe(box, { top: room.top, left: room.left, width: room.width, height: room.height });
+  }
+
+  tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
+
+  /*
+   * And handed back to the layout once it has arrived. Left pinned, it would
+   * be a fixed box the size of a hole in a column that has since been
+   * resized - so the inline pinning comes off and the stage owns it again.
+   */
+  clearTimeout(globeSettling);
+  globeSettling = setTimeout(() => {
+    box.classList.remove('is-moving');
+    if (!globeWide()) {
+      box.style.position = '';
+      box.style.top = ''; box.style.left = ''; box.style.width = ''; box.style.height = '';
+    }
+  }, GLOBE_TAKES + 60);
 }
+
+/* Opened out, it is the window, so it follows the window. */
+window.addEventListener('resize', () => {
+  const box = document.getElementById('globeBox');
+  if (box && globeWide()) placeGlobe(box, globeRoom());
+});
 const globeWide = () => document.body.classList.contains('globe-wide');
 let famePageReady = false;
 
