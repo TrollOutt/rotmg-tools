@@ -201,6 +201,7 @@
     "5_14",
     "5_15",
     "5_16",
+    "5_2",
     "5_3",
     "5_4",
     "5_5",
@@ -217,6 +218,7 @@
     "6_14",
     "6_15",
     "6_16",
+    "6_2",
     "6_3",
     "6_4",
     "6_5",
@@ -449,16 +451,16 @@
   {
    "index": 0,
    "name": "Deep Sea Abyss",
-   "tiles": 310569,
+   "tiles": 369331,
    "at": [
-    1210,
-    413
+    1181,
+    416
    ],
    "lives": [
     {
      "type": 29232,
      "name": "Deep Sea Squid",
-     "seen": 1127,
+     "seen": 1800,
      "sprite": {
       "file": "c29232.png",
       "tile": 36,
@@ -470,7 +472,7 @@
     {
      "type": 29209,
      "name": "Deep Sea Jellyfish",
-     "seen": 1101,
+     "seen": 1656,
      "sprite": {
       "file": "c29209.png",
       "tile": 36,
@@ -482,7 +484,7 @@
     {
      "type": 29233,
      "name": "Deep Sea Hydra",
-     "seen": 956,
+     "seen": 1465,
      "sprite": {
       "file": "c29233.png",
       "tile": 36,
@@ -494,7 +496,7 @@
     {
      "type": 29234,
      "name": "Deep Sea Siren",
-     "seen": 911,
+     "seen": 1313,
      "sprite": {
       "file": "c29234.png",
       "tile": 36,
@@ -506,7 +508,7 @@
     {
      "type": 29221,
      "name": "Deep Sea Kraken",
-     "seen": 234,
+     "seen": 365,
      "sprite": {
       "file": "c29221.png",
       "tile": 68,
@@ -518,7 +520,7 @@
     {
      "type": 21956,
      "name": "New Corsair Crab",
-     "seen": 126,
+     "seen": 178,
      "sprite": {
       "file": "c21956.png",
       "tile": 36,
@@ -530,7 +532,7 @@
     {
      "type": 31509,
      "name": "Deep Sea Submarine",
-     "seen": 116,
+     "seen": 147,
      "sprite": {
       "file": "c31509.png",
       "tile": 68,
@@ -542,7 +544,7 @@
     {
      "type": 1031,
      "name": "Sea Dragon Carp",
-     "seen": 112,
+     "seen": 120,
      "sprite": {
       "file": "c1031.png",
       "tile": 20,
@@ -552,21 +554,9 @@
      }
     },
     {
-     "type": 29443,
-     "name": "Tundra Dragon",
-     "seen": 16,
-     "sprite": {
-      "file": "c29443.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 29593,
      "name": "Tundra Wizard",
-     "seen": 14,
+     "seen": 52,
      "sprite": {
       "file": "c29593.png",
       "tile": 20,
@@ -576,21 +566,9 @@
      }
     },
     {
-     "type": 34457,
-     "name": "Baneserpent Head 1",
-     "seen": 13,
-     "sprite": {
-      "file": "c34457.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 31637,
      "name": "Sanguine Ghoul",
-     "seen": 13,
+     "seen": 48,
      "sprite": {
       "file": "c31637.png",
       "tile": 36,
@@ -600,11 +578,23 @@
      }
     },
     {
-     "type": 9829,
-     "name": "Tundra Wolf",
-     "seen": 13,
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 44,
      "sprite": {
-      "file": "c9829.png",
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 22,
+     "sprite": {
+      "file": "c56087.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -612,11 +602,23 @@
      }
     },
     {
-     "type": 34459,
-     "name": "Baneserpent Head 3",
-     "seen": 12,
+     "type": 29443,
+     "name": "Tundra Dragon",
+     "seen": 21,
      "sprite": {
-      "file": "c34459.png",
+      "file": "c29443.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9829,
+     "name": "Tundra Wolf",
+     "seen": 20,
+     "sprite": {
+      "file": "c9829.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -628,40 +630,16 @@
   {
    "index": 1,
    "name": "Carboniferous",
-   "tiles": 193763,
+   "tiles": 237631,
    "at": [
-    1127,
-    789
+    1140,
+    771
    ],
    "lives": [
     {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 768,
-     "sprite": {
-      "file": "c14714.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 762,
-     "sprite": {
-      "file": "c30573.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 9819,
      "name": "Carboniferous Dinosaur",
-     "seen": 749,
+     "seen": 1109,
      "sprite": {
       "file": "c9819.png",
       "tile": 36,
@@ -671,9 +649,33 @@
      }
     },
     {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 1103,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 1102,
+     "sprite": {
+      "file": "c14714.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 31166,
      "name": "Carboniferous Flytrap",
-     "seen": 735,
+     "seen": 1052,
      "sprite": {
       "file": "c31166.png",
       "tile": 36,
@@ -685,7 +687,7 @@
     {
      "type": 9820,
      "name": "Carboniferous Mantis",
-     "seen": 635,
+     "seen": 878,
      "sprite": {
       "file": "c9820.png",
       "tile": 36,
@@ -697,7 +699,7 @@
     {
      "type": 30575,
      "name": "Carboniferous Bush Monster",
-     "seen": 600,
+     "seen": 789,
      "sprite": {
       "file": "c30575.png",
       "tile": 36,
@@ -707,21 +709,9 @@
      }
     },
     {
-     "type": 34482,
-     "name": "Giant Critter Egg",
-     "seen": 154,
-     "sprite": {
-      "file": "c34482.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 17019,
      "name": "SulfW God",
-     "seen": 133,
+     "seen": 211,
      "sprite": {
       "file": "c17019.png",
       "tile": 36,
@@ -731,9 +721,21 @@
      }
     },
     {
+     "type": 34482,
+     "name": "Giant Critter Egg",
+     "seen": 194,
+     "sprite": {
+      "file": "c34482.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 34488,
      "name": "Giant Critter Small Insect",
-     "seen": 103,
+     "seen": 136,
      "sprite": {
       "file": "c34488.png",
       "tile": 20,
@@ -743,9 +745,21 @@
      }
     },
     {
+     "type": 21957,
+     "name": "New Sting Spider",
+     "seen": 67,
+     "sprite": {
+      "file": "c21957.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
      "type": 53007,
      "name": "Beacon Guardian Carboniferous Minion",
-     "seen": 41,
+     "seen": 66,
      "sprite": {
       "file": "c53007.png",
       "tile": 36,
@@ -757,7 +771,7 @@
     {
      "type": 9826,
      "name": "Floral Dragon",
-     "seen": 40,
+     "seen": 59,
      "sprite": {
       "file": "c9826.png",
       "tile": 36,
@@ -767,23 +781,11 @@
      }
     },
     {
-     "type": 21957,
-     "name": "New Sting Spider",
-     "seen": 35,
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 30,
      "sprite": {
-      "file": "c21957.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 20,
-     "sprite": {
-      "file": "c29459.png",
+      "file": "c56087.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -791,13 +793,13 @@
      }
     },
     {
-     "type": 34481,
-     "name": "Giant Critter Brood",
-     "seen": 17,
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 28,
      "sprite": {
-      "file": "c34481.png",
-      "tile": 20,
-      "height": 20,
+      "file": "c9827.png",
+      "tile": 36,
+      "height": 36,
       "frames": 2,
       "size": 100
      }
@@ -806,6 +808,174 @@
   },
   {
    "index": 2,
+   "name": "Runic Tundra",
+   "tiles": 159722,
+   "at": [
+    1071,
+    292
+   ],
+   "lives": [
+    {
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 1387,
+     "sprite": {
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 1387,
+     "sprite": {
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29443,
+     "name": "Tundra Dragon",
+     "seen": 405,
+     "sprite": {
+      "file": "c29443.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9832,
+     "name": "Tundra Troll",
+     "seen": 301,
+     "sprite": {
+      "file": "c9832.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31508,
+     "name": "Tundra Yeti",
+     "seen": 264,
+     "sprite": {
+      "file": "c31508.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9829,
+     "name": "Tundra Wolf",
+     "seen": 214,
+     "sprite": {
+      "file": "c9829.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29555,
+     "name": "Tundra Archer",
+     "seen": 203,
+     "sprite": {
+      "file": "c29555.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9831,
+     "name": "Tundra Golem",
+     "seen": 195,
+     "sprite": {
+      "file": "c9831.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29442,
+     "name": "Tundra Giant",
+     "seen": 60,
+     "sprite": {
+      "file": "c29442.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29234,
+     "name": "Deep Sea Siren",
+     "seen": 37,
+     "sprite": {
+      "file": "c29234.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 34518,
+     "name": "Monstrous Grizzly",
+     "seen": 31,
+     "sprite": {
+      "file": "c34518.png",
+      "tile": 52,
+      "height": 52,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "hero"
+    },
+    {
+     "type": 29233,
+     "name": "Deep Sea Hydra",
+     "seen": 30,
+     "sprite": {
+      "file": "c29233.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 29232,
+     "name": "Deep Sea Squid",
+     "seen": 25,
+     "sprite": {
+      "file": "c29232.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ]
+  },
+  {
+   "index": 3,
    "name": "Ancient City",
    "tiles": 119735,
    "at": [
@@ -816,7 +986,7 @@
     {
      "type": 21893,
      "name": "City Ent God",
-     "seen": 579,
+     "seen": 580,
      "sprite": {
       "file": "c21893.png",
       "tile": 36,
@@ -828,7 +998,7 @@
     {
      "type": 21895,
      "name": "City Djinn",
-     "seen": 324,
+     "seen": 325,
      "sprite": {
       "file": "c21895.png",
       "tile": 36,
@@ -840,7 +1010,7 @@
     {
      "type": 49634,
      "name": "City Satyr",
-     "seen": 320,
+     "seen": 322,
      "sprite": {
       "file": "c49634.png",
       "tile": 36,
@@ -864,7 +1034,7 @@
     {
      "type": 49633,
      "name": "City Gladiator",
-     "seen": 242,
+     "seen": 243,
      "sprite": {
       "file": "c49633.png",
       "tile": 36,
@@ -876,7 +1046,7 @@
     {
      "type": 21889,
      "name": "City Medusa",
-     "seen": 236,
+     "seen": 238,
      "sprite": {
       "file": "c21889.png",
       "tile": 36,
@@ -888,7 +1058,7 @@
     {
      "type": 21892,
      "name": "City Slime God",
-     "seen": 227,
+     "seen": 229,
      "sprite": {
       "file": "c21892.png",
       "tile": 36,
@@ -924,7 +1094,7 @@
     {
      "type": 2490,
      "name": "City Rock Bot",
-     "seen": 69,
+     "seen": 70,
      "sprite": {
       "file": "c2490.png",
       "tile": 36,
@@ -936,7 +1106,7 @@
     {
      "type": 2491,
      "name": "City Paper Bot",
-     "seen": 60,
+     "seen": 61,
      "sprite": {
       "file": "c2491.png",
       "tile": 36,
@@ -960,7 +1130,7 @@
     {
      "type": 2492,
      "name": "City Steel Bot",
-     "seen": 46,
+     "seen": 47,
      "sprite": {
       "file": "c2492.png",
       "tile": 36,
@@ -985,18 +1155,18 @@
    ]
   },
   {
-   "index": 3,
+   "index": 4,
    "name": "Coral Reef",
-   "tiles": 115739,
+   "tiles": 115919,
    "at": [
     1859,
-    1364
+    1363
    ],
    "lives": [
     {
      "type": 49340,
      "name": "Reef Seahorse",
-     "seen": 629,
+     "seen": 664,
      "sprite": {
       "file": "c49340.png",
       "tile": 36,
@@ -1008,7 +1178,7 @@
     {
      "type": 49344,
      "name": "Reef Walrus",
-     "seen": 600,
+     "seen": 636,
      "sprite": {
       "file": "c49344.png",
       "tile": 36,
@@ -1020,7 +1190,7 @@
     {
      "type": 49341,
      "name": "Reef Turtle",
-     "seen": 584,
+     "seen": 619,
      "sprite": {
       "file": "c49341.png",
       "tile": 36,
@@ -1032,7 +1202,7 @@
     {
      "type": 49342,
      "name": "Reef Octopus",
-     "seen": 507,
+     "seen": 538,
      "sprite": {
       "file": "c49342.png",
       "tile": 36,
@@ -1044,7 +1214,7 @@
     {
      "type": 49343,
      "name": "Reef Narwhal",
-     "seen": 344,
+     "seen": 363,
      "sprite": {
       "file": "c49343.png",
       "tile": 36,
@@ -1056,7 +1226,7 @@
     {
      "type": 21888,
      "name": "Reef Leviathan",
-     "seen": 216,
+     "seen": 228,
      "sprite": {
       "file": "c21888.png",
       "tile": 36,
@@ -1068,7 +1238,7 @@
     {
      "type": 49901,
      "name": "Shipwreck Ghost",
-     "seen": 54,
+     "seen": 56,
      "sprite": {
       "file": "c49901.png",
       "tile": 20,
@@ -1080,7 +1250,7 @@
     {
      "type": 17733,
      "name": "Sprite Forest Child",
-     "seen": 32,
+     "seen": 35,
      "sprite": {
       "file": "c17733.png",
       "tile": 20,
@@ -1102,21 +1272,9 @@
      }
     },
     {
-     "type": 49902,
-     "name": "Shipwreck Pirate",
-     "seen": 25,
-     "sprite": {
-      "file": "c49902.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 47931,
      "name": "Barnacle Rock",
-     "seen": 24,
+     "seen": 30,
      "sprite": {
       "file": "c47931.png",
       "tile": 36,
@@ -1126,9 +1284,21 @@
      }
     },
     {
+     "type": 49902,
+     "name": "Shipwreck Pirate",
+     "seen": 28,
+     "sprite": {
+      "file": "c49902.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 34508,
      "name": "Maiden of the Sea",
-     "seen": 17,
+     "seen": 21,
      "sprite": {
       "file": "c34508.png",
       "tile": 36,
@@ -1141,7 +1311,7 @@
     {
      "type": 17735,
      "name": "Sprite Forest Poison God",
-     "seen": 17,
+     "seen": 19,
      "sprite": {
       "file": "c17735.png",
       "tile": 36,
@@ -1153,7 +1323,7 @@
    ]
   },
   {
-   "index": 4,
+   "index": 5,
    "name": "Dead Church",
    "tiles": 101333,
    "at": [
@@ -1332,7 +1502,7 @@
    ]
   },
   {
-   "index": 5,
+   "index": 6,
    "name": "Haunted Hallows",
    "tiles": 97532,
    "at": [
@@ -1343,7 +1513,7 @@
     {
      "type": 17900,
      "name": "Hallows Skeleton",
-     "seen": 1033,
+     "seen": 1054,
      "sprite": {
       "file": "c17900.png",
       "tile": 20,
@@ -1355,7 +1525,7 @@
     {
      "type": 17898,
      "name": "Hallows Banshee",
-     "seen": 247,
+     "seen": 250,
      "sprite": {
       "file": "c17898.png",
       "tile": 20,
@@ -1367,7 +1537,7 @@
     {
      "type": 21894,
      "name": "Hallows Ghost God",
-     "seen": 238,
+     "seen": 245,
      "sprite": {
       "file": "c21894.png",
       "tile": 36,
@@ -1379,7 +1549,7 @@
     {
      "type": 17903,
      "name": "Hallows Brute",
-     "seen": 221,
+     "seen": 228,
      "sprite": {
       "file": "c17903.png",
       "tile": 20,
@@ -1391,7 +1561,7 @@
     {
      "type": 17902,
      "name": "Hallows Beholder",
-     "seen": 220,
+     "seen": 221,
      "sprite": {
       "file": "c17902.png",
       "tile": 36,
@@ -1403,7 +1573,7 @@
     {
      "type": 17899,
      "name": "Hallows Wraith",
-     "seen": 207,
+     "seen": 212,
      "sprite": {
       "file": "c17899.png",
       "tile": 20,
@@ -1415,7 +1585,7 @@
     {
      "type": 17901,
      "name": "Hallows Werewolf",
-     "seen": 95,
+     "seen": 98,
      "sprite": {
       "file": "c17901.png",
       "tile": 36,
@@ -1511,210 +1681,18 @@
    ]
   },
   {
-   "index": 6,
-   "name": "Runic Tundra",
-   "tiles": 77334,
-   "at": [
-    1251,
-    288
-   ],
-   "lives": [
-    {
-     "type": 29593,
-     "name": "Tundra Wizard",
-     "seen": 686,
-     "sprite": {
-      "file": "c29593.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29557,
-     "name": "Tundra Knight",
-     "seen": 666,
-     "sprite": {
-      "file": "c29557.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29443,
-     "name": "Tundra Dragon",
-     "seen": 165,
-     "sprite": {
-      "file": "c29443.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9832,
-     "name": "Tundra Troll",
-     "seen": 141,
-     "sprite": {
-      "file": "c9832.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29555,
-     "name": "Tundra Archer",
-     "seen": 110,
-     "sprite": {
-      "file": "c29555.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31508,
-     "name": "Tundra Yeti",
-     "seen": 106,
-     "sprite": {
-      "file": "c31508.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9829,
-     "name": "Tundra Wolf",
-     "seen": 97,
-     "sprite": {
-      "file": "c9829.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9831,
-     "name": "Tundra Golem",
-     "seen": 78,
-     "sprite": {
-      "file": "c9831.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29442,
-     "name": "Tundra Giant",
-     "seen": 32,
-     "sprite": {
-      "file": "c29442.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29234,
-     "name": "Deep Sea Siren",
-     "seen": 18,
-     "sprite": {
-      "file": "c29234.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29232,
-     "name": "Deep Sea Squid",
-     "seen": 14,
-     "sprite": {
-      "file": "c29232.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29233,
-     "name": "Deep Sea Hydra",
-     "seen": 13,
-     "sprite": {
-      "file": "c29233.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 31509,
-     "name": "Deep Sea Submarine",
-     "seen": 12,
-     "sprite": {
-      "file": "c31509.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 34518,
-     "name": "Monstrous Grizzly",
-     "seen": 8,
-     "sprite": {
-      "file": "c34518.png",
-      "tile": 52,
-      "height": 52,
-      "frames": 2,
-      "size": 100
-     },
-     "role": "hero"
-    }
-   ]
-  },
-  {
    "index": 7,
    "name": "Low Forest",
-   "tiles": 59687,
+   "tiles": 79779,
    "at": [
-    891,
-    804
+    777,
+    500
    ],
    "lives": [
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 197,
-     "sprite": {
-      "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
     {
      "type": 29458,
      "name": "Floral Rafflesia",
-     "seen": 195,
+     "seen": 291,
      "sprite": {
       "file": "c29458.png",
       "tile": 36,
@@ -1724,9 +1702,45 @@
      }
     },
     {
+     "type": 9825,
+     "name": "Floral Hand",
+     "seen": 281,
+     "sprite": {
+      "file": "c9825.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 274,
+     "sprite": {
+      "file": "c9828.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 240,
+     "sprite": {
+      "file": "c29459.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 9830,
      "name": "Floral Rhino",
-     "seen": 193,
+     "seen": 234,
      "sprite": {
       "file": "c9830.png",
       "tile": 36,
@@ -1738,7 +1752,7 @@
     {
      "type": 9827,
      "name": "Floral Tiger",
-     "seen": 192,
+     "seen": 226,
      "sprite": {
       "file": "c9827.png",
       "tile": 36,
@@ -1748,21 +1762,9 @@
      }
     },
     {
-     "type": 9825,
-     "name": "Floral Hand",
-     "seen": 177,
-     "sprite": {
-      "file": "c9825.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 9826,
      "name": "Floral Dragon",
-     "seen": 176,
+     "seen": 217,
      "sprite": {
       "file": "c9826.png",
       "tile": 36,
@@ -1772,11 +1774,59 @@
      }
     },
     {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 169,
+     "type": 4316,
+     "name": "EH Ev Red Fat Bees",
+     "seen": 58,
      "sprite": {
-      "file": "c9828.png",
+      "file": "c4316.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 4317,
+     "name": "EH Ev Blue Fat Bees",
+     "seen": 58,
+     "sprite": {
+      "file": "c4317.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 4240,
+     "name": "EH Small Bees",
+     "seen": 57,
+     "sprite": {
+      "file": "c4240.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 4318,
+     "name": "EH Ev Fat Bees",
+     "seen": 55,
+     "sprite": {
+      "file": "c4318.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 56086,
+     "name": "AI Alien Champion",
+     "seen": 44,
+     "sprite": {
+      "file": "c56086.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -1786,7 +1836,245 @@
     {
      "type": 21958,
      "name": "New Great Owl",
-     "seen": 34,
+     "seen": 38,
+     "sprite": {
+      "file": "c21958.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    }
+   ]
+  },
+  {
+   "index": 8,
+   "name": "Sanguine Forest",
+   "tiles": 72322,
+   "at": [
+    1516,
+    635
+   ],
+   "lives": [
+    {
+     "type": 9821,
+     "name": "Sanguine Thorn",
+     "seen": 483,
+     "sprite": {
+      "file": "c9821.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31636,
+     "name": "Sanguine Harpy",
+     "seen": 440,
+     "sprite": {
+      "file": "c31636.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 412,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31632,
+     "name": "Sanguine Ooze",
+     "seen": 339,
+     "sprite": {
+      "file": "c31632.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31634,
+     "name": "Sanguine Treant",
+     "seen": 271,
+     "sprite": {
+      "file": "c31634.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 261,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 253,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 767,
+     "name": "Sanguine Ooze Puddle",
+     "seen": 63,
+     "sprite": {
+      "file": "c767.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 29233,
+     "name": "Deep Sea Hydra",
+     "seen": 33,
+     "sprite": {
+      "file": "c29233.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 53013,
+     "name": "Beacon Guardian Sanguine Forest",
+     "seen": 26,
+     "sprite": {
+      "file": "c53013.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "name": "Low Forest",
+   "tiles": 71198,
+   "at": [
+    938,
+    796
+   ],
+   "lives": [
+    {
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 288,
+     "sprite": {
+      "file": "c9827.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29458,
+     "name": "Floral Rafflesia",
+     "seen": 276,
+     "sprite": {
+      "file": "c29458.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 268,
+     "sprite": {
+      "file": "c9830.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 251,
+     "sprite": {
+      "file": "c29459.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9825,
+     "name": "Floral Hand",
+     "seen": 240,
+     "sprite": {
+      "file": "c9825.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 240,
+     "sprite": {
+      "file": "c9828.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 237,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21958,
+     "name": "New Great Owl",
+     "seen": 46,
      "sprite": {
       "file": "c21958.png",
       "tile": 36,
@@ -1798,7 +2086,7 @@
     {
      "type": 9820,
      "name": "Carboniferous Mantis",
-     "seen": 24,
+     "seen": 25,
      "sprite": {
       "file": "c9820.png",
       "tile": 36,
@@ -1808,21 +2096,9 @@
      }
     },
     {
-     "type": 9819,
-     "name": "Carboniferous Dinosaur",
-     "seen": 16,
-     "sprite": {
-      "file": "c9819.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 14714,
      "name": "Carboniferous Dragonfly",
-     "seen": 16,
+     "seen": 24,
      "sprite": {
       "file": "c14714.png",
       "tile": 36,
@@ -1832,11 +2108,11 @@
      }
     },
     {
-     "type": 34604,
-     "name": "Angry Hornet",
-     "seen": 11,
+     "type": 9819,
+     "name": "Carboniferous Dinosaur",
+     "seen": 19,
      "sprite": {
-      "file": "c34604.png",
+      "file": "c9819.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -1846,7 +2122,7 @@
     {
      "type": 31166,
      "name": "Carboniferous Flytrap",
-     "seen": 9,
+     "seen": 15,
      "sprite": {
       "file": "c31166.png",
       "tile": 36,
@@ -1856,22 +2132,213 @@
      }
     },
     {
-     "type": 49897,
-     "name": "Hell Ghost",
-     "seen": 8,
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 12,
      "sprite": {
-      "file": "c49897.png",
+      "file": "c30573.png",
       "tile": 36,
       "height": 36,
-      "frames": 3,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34604,
+     "name": "Angry Hornet",
+     "seen": 9,
+     "sprite": {
+      "file": "c34604.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
       "size": 100
      }
     }
    ]
   },
   {
-   "index": 8,
-   "name": "Zone 9",
+   "index": 10,
+   "name": "Low Forest",
+   "tiles": 68006,
+   "at": [
+    1297,
+    534
+   ],
+   "lives": [
+    {
+     "type": 29458,
+     "name": "Floral Rafflesia",
+     "seen": 269,
+     "sprite": {
+      "file": "c29458.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 237,
+     "sprite": {
+      "file": "c29459.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 225,
+     "sprite": {
+      "file": "c9828.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 219,
+     "sprite": {
+      "file": "c9830.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9825,
+     "name": "Floral Hand",
+     "seen": 214,
+     "sprite": {
+      "file": "c9825.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 213,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 182,
+     "sprite": {
+      "file": "c9827.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 27,
+     "sprite": {
+      "file": "c56087.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 26,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21958,
+     "name": "New Great Owl",
+     "seen": 24,
+     "sprite": {
+      "file": "c21958.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 23,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 16,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 16,
+     "sprite": {
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 13,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ]
+  },
+  {
+   "index": 11,
+   "name": "Zone 12",
    "tiles": 50953,
    "at": [
     763,
@@ -2049,7 +2516,7 @@
    ]
   },
   {
-   "index": 9,
+   "index": 12,
    "name": "Haunted Hallows",
    "tiles": 47443,
    "at": [
@@ -2228,186 +2695,7 @@
    ]
   },
   {
-   "index": 10,
-   "name": "Low Forest",
-   "tiles": 45614,
-   "at": [
-    801,
-    569
-   ],
-   "lives": [
-    {
-     "type": 9825,
-     "name": "Floral Hand",
-     "seen": 163,
-     "sprite": {
-      "file": "c9825.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 163,
-     "sprite": {
-      "file": "c9828.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9827,
-     "name": "Floral Tiger",
-     "seen": 152,
-     "sprite": {
-      "file": "c9827.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 132,
-     "sprite": {
-      "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9830,
-     "name": "Floral Rhino",
-     "seen": 132,
-     "sprite": {
-      "file": "c9830.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29458,
-     "name": "Floral Rafflesia",
-     "seen": 127,
-     "sprite": {
-      "file": "c29458.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9826,
-     "name": "Floral Dragon",
-     "seen": 117,
-     "sprite": {
-      "file": "c9826.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21958,
-     "name": "New Great Owl",
-     "seen": 25,
-     "sprite": {
-      "file": "c21958.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 34604,
-     "name": "Angry Hornet",
-     "seen": 24,
-     "sprite": {
-      "file": "c34604.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9820,
-     "name": "Carboniferous Mantis",
-     "seen": 16,
-     "sprite": {
-      "file": "c9820.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 9,
-     "sprite": {
-      "file": "c30573.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30575,
-     "name": "Carboniferous Bush Monster",
-     "seen": 7,
-     "sprite": {
-      "file": "c30575.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 34603,
-     "name": "Hornet's Nest",
-     "seen": 5,
-     "sprite": {
-      "file": "c34603.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 5,
-     "sprite": {
-      "file": "c14714.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ]
-  },
-  {
-   "index": 11,
+   "index": 13,
    "name": "Haunted Hallows",
    "tiles": 42769,
    "at": [
@@ -2575,150 +2863,7 @@
    ]
   },
   {
-   "index": 12,
-   "name": "Sanguine Forest",
-   "tiles": 42110,
-   "at": [
-    1488,
-    610
-   ],
-   "lives": [
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 125,
-     "sprite": {
-      "file": "c31636.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 124,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9821,
-     "name": "Sanguine Thorn",
-     "seen": 119,
-     "sprite": {
-      "file": "c9821.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31632,
-     "name": "Sanguine Ooze",
-     "seen": 96,
-     "sprite": {
-      "file": "c31632.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 78,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31633,
-     "name": "Sanguine Hound",
-     "seen": 71,
-     "sprite": {
-      "file": "c31633.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31634,
-     "name": "Sanguine Treant",
-     "seen": 63,
-     "sprite": {
-      "file": "c31634.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 19,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 2397,
-     "name": "pD Daggers Scout",
-     "seen": 7,
-     "sprite": {
-      "file": "c2397.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9820,
-     "name": "Carboniferous Mantis",
-     "seen": 7,
-     "sprite": {
-      "file": "c9820.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 1984,
-     "name": "pD Blob Scout",
-     "seen": 6,
-     "sprite": {
-      "file": "c1984.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ]
-  },
-  {
-   "index": 13,
+   "index": 14,
    "name": "Undead Forest",
    "tiles": 41368,
    "at": [
@@ -2897,7 +3042,7 @@
    ]
   },
   {
-   "index": 14,
+   "index": 15,
    "name": "Dead Church",
    "tiles": 40160,
    "at": [
@@ -3076,7 +3221,7 @@
    ]
   },
   {
-   "index": 15,
+   "index": 16,
    "name": "Nature Ruins",
    "tiles": 39195,
    "at": [
@@ -3243,188 +3388,9 @@
    ]
   },
   {
-   "index": 16,
-   "name": "Low Forest",
-   "tiles": 37865,
-   "at": [
-    1296,
-    462
-   ],
-   "lives": [
-    {
-     "type": 29458,
-     "name": "Floral Rafflesia",
-     "seen": 127,
-     "sprite": {
-      "file": "c29458.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9827,
-     "name": "Floral Tiger",
-     "seen": 123,
-     "sprite": {
-      "file": "c9827.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9825,
-     "name": "Floral Hand",
-     "seen": 113,
-     "sprite": {
-      "file": "c9825.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 104,
-     "sprite": {
-      "file": "c9828.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9830,
-     "name": "Floral Rhino",
-     "seen": 102,
-     "sprite": {
-      "file": "c9830.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 99,
-     "sprite": {
-      "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9826,
-     "name": "Floral Dragon",
-     "seen": 95,
-     "sprite": {
-      "file": "c9826.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 13,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 13,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21958,
-     "name": "New Great Owl",
-     "seen": 12,
-     "sprite": {
-      "file": "c21958.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29209,
-     "name": "Deep Sea Jellyfish",
-     "seen": 10,
-     "sprite": {
-      "file": "c29209.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29232,
-     "name": "Deep Sea Squid",
-     "seen": 9,
-     "sprite": {
-      "file": "c29232.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 56087,
-     "name": "AI Alien Sage",
-     "seen": 9,
-     "sprite": {
-      "file": "c56087.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9832,
-     "name": "Tundra Troll",
-     "seen": 7,
-     "sprite": {
-      "file": "c9832.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ]
-  },
-  {
    "index": 17,
    "name": "Sanguine Forest",
-   "tiles": 37720,
+   "tiles": 37725,
    "at": [
     489,
     848
@@ -3433,7 +3399,7 @@
     {
      "type": 31636,
      "name": "Sanguine Harpy",
-     "seen": 215,
+     "seen": 246,
      "sprite": {
       "file": "c31636.png",
       "tile": 36,
@@ -3445,7 +3411,7 @@
     {
      "type": 9821,
      "name": "Sanguine Thorn",
-     "seen": 193,
+     "seen": 226,
      "sprite": {
       "file": "c9821.png",
       "tile": 36,
@@ -3457,7 +3423,7 @@
     {
      "type": 31637,
      "name": "Sanguine Ghoul",
-     "seen": 169,
+     "seen": 197,
      "sprite": {
       "file": "c31637.png",
       "tile": 36,
@@ -3469,7 +3435,7 @@
     {
      "type": 31633,
      "name": "Sanguine Hound",
-     "seen": 131,
+     "seen": 167,
      "sprite": {
       "file": "c31633.png",
       "tile": 36,
@@ -3481,7 +3447,7 @@
     {
      "type": 31635,
      "name": "Sanguine Archer",
-     "seen": 113,
+     "seen": 141,
      "sprite": {
       "file": "c31635.png",
       "tile": 36,
@@ -3493,7 +3459,7 @@
     {
      "type": 31634,
      "name": "Sanguine Treant",
-     "seen": 104,
+     "seen": 127,
      "sprite": {
       "file": "c31634.png",
       "tile": 36,
@@ -3505,7 +3471,7 @@
     {
      "type": 31632,
      "name": "Sanguine Ooze",
-     "seen": 101,
+     "seen": 126,
      "sprite": {
       "file": "c31632.png",
       "tile": 36,
@@ -3513,6 +3479,19 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 34509,
+     "name": "Organ Harvester",
+     "seen": 18,
+     "sprite": {
+      "file": "c34509.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "hero"
     },
     {
      "type": 1984,
@@ -3527,27 +3506,14 @@
      }
     },
     {
-     "type": 34509,
-     "name": "Organ Harvester",
+     "type": 767,
+     "name": "Sanguine Ooze Puddle",
      "seen": 15,
      "sprite": {
-      "file": "c34509.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     },
-     "role": "hero"
-    },
-    {
-     "type": 2397,
-     "name": "pD Daggers Scout",
-     "seen": 14,
-     "sprite": {
-      "file": "c2397.png",
+      "file": "c767.png",
       "tile": 20,
       "height": 20,
-      "frames": 2,
+      "frames": 1,
       "size": 100
      }
     }
@@ -3556,7 +3522,7 @@
   {
    "index": 18,
    "name": "Shipwreck Cove",
-   "tiles": 35076,
+   "tiles": 35094,
    "at": [
     1863,
     1602
@@ -3647,6 +3613,18 @@
      }
     },
     {
+     "type": 24019,
+     "name": "Illegal Animal Parrot",
+     "seen": 17,
+     "sprite": {
+      "file": "c24019.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 49340,
      "name": "Reef Seahorse",
      "seen": 13,
@@ -3712,18 +3690,6 @@
      "seen": 7,
      "sprite": {
       "file": "c49967.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49341,
-     "name": "Reef Turtle",
-     "seen": 6,
-     "sprite": {
-      "file": "c49341.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -3838,6 +3804,18 @@
      }
     },
     {
+     "type": 47957,
+     "name": "Small Stygian Mirror",
+     "seen": 24,
+     "sprite": {
+      "file": "c47957.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 50130,
      "name": "Hell Dog 3",
      "seen": 17,
@@ -3893,18 +3871,6 @@
       "file": "c22005.png",
       "tile": 20,
       "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21889,
-     "name": "City Medusa",
-     "seen": 9,
-     "sprite": {
-      "file": "c21889.png",
-      "tile": 36,
-      "height": 36,
       "frames": 3,
       "size": 100
      }
@@ -4272,7 +4238,7 @@
   {
    "index": 22,
    "name": "Shipwreck Cove",
-   "tiles": 31995,
+   "tiles": 31994,
    "at": [
     1845,
     1241
@@ -4281,7 +4247,7 @@
     {
      "type": 49901,
      "name": "Shipwreck Ghost",
-     "seen": 295,
+     "seen": 301,
      "sprite": {
       "file": "c49901.png",
       "tile": 20,
@@ -4293,7 +4259,7 @@
     {
      "type": 49902,
      "name": "Shipwreck Pirate",
-     "seen": 221,
+     "seen": 233,
      "sprite": {
       "file": "c49902.png",
       "tile": 20,
@@ -4305,7 +4271,7 @@
     {
      "type": 49905,
      "name": "Shipwreck Sailor",
-     "seen": 186,
+     "seen": 197,
      "sprite": {
       "file": "c49905.png",
       "tile": 20,
@@ -4317,7 +4283,7 @@
     {
      "type": 49906,
      "name": "Shipwreck Elemental",
-     "seen": 65,
+     "seen": 69,
      "sprite": {
       "file": "c49906.png",
       "tile": 36,
@@ -4339,6 +4305,18 @@
      }
     },
     {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "seen": 11,
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 34501,
      "name": "Pirate's Tavern Drunk Sailor",
      "seen": 11,
@@ -4346,18 +4324,6 @@
       "file": "c34501.png",
       "tile": 20,
       "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49341,
-     "name": "Reef Turtle",
-     "seen": 10,
-     "sprite": {
-      "file": "c49341.png",
-      "tile": 36,
-      "height": 36,
       "frames": 2,
       "size": 100
      }
@@ -4411,14 +4377,14 @@
      }
     },
     {
-     "type": 49415,
-     "name": "Dead Church Skeleton",
+     "type": 49344,
+     "name": "Reef Walrus",
      "seen": 4,
      "sprite": {
-      "file": "c49415.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
+      "file": "c49344.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
       "size": 100
      }
     }
@@ -4458,6 +4424,18 @@
      }
     },
     {
+     "type": 51030,
+     "name": "Daughter of Limon Portal",
+     "seen": 77,
+     "sprite": {
+      "file": "c51030.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 17735,
      "name": "Sprite Forest Poison God",
      "seen": 73,
@@ -4466,18 +4444,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 60,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
       "size": 100
      }
     },
@@ -4639,7 +4605,7 @@
     {
      "type": 21884,
      "name": "New Dark Elf Swordsman",
-     "seen": 57,
+     "seen": 59,
      "sprite": {
       "file": "c21884.png",
       "tile": 20,
@@ -4651,7 +4617,7 @@
     {
      "type": 21883,
      "name": "New Dark Elf Scout",
-     "seen": 55,
+     "seen": 58,
      "sprite": {
       "file": "c21883.png",
       "tile": 20,
@@ -4663,9 +4629,21 @@
     {
      "type": 21872,
      "name": "New Night Elf Warrior",
-     "seen": 40,
+     "seen": 41,
      "sprite": {
       "file": "c21872.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21871,
+     "name": "New Night Elf Archer",
+     "seen": 41,
+     "sprite": {
+      "file": "c21871.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -4685,21 +4663,9 @@
      }
     },
     {
-     "type": 21871,
-     "name": "New Night Elf Archer",
-     "seen": 40,
-     "sprite": {
-      "file": "c21871.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21873,
      "name": "New Night Elf Mage",
-     "seen": 39,
+     "seen": 40,
      "sprite": {
       "file": "c21873.png",
       "tile": 20,
@@ -4723,7 +4689,7 @@
     {
      "type": 54291,
      "name": "Legion Surveyor",
-     "seen": 28,
+     "seen": 31,
      "sprite": {
       "file": "c54291.png",
       "tile": 36,
@@ -4757,6 +4723,18 @@
      }
     },
     {
+     "type": 21877,
+     "name": "New Dragon Egg",
+     "seen": 26,
+     "sprite": {
+      "file": "c21877.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 21886,
      "name": "New Dark Elf Royal Guard",
      "seen": 25,
@@ -4765,18 +4743,6 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21877,
-     "name": "New Dragon Egg",
-     "seen": 24,
-     "sprite": {
-      "file": "c21877.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
       "size": 100
      }
     }
@@ -4794,7 +4760,7 @@
     {
      "type": 17733,
      "name": "Sprite Forest Child",
-     "seen": 223,
+     "seen": 229,
      "sprite": {
       "file": "c17733.png",
       "tile": 20,
@@ -4806,7 +4772,7 @@
     {
      "type": 49967,
      "name": "Sprite Forest Dog",
-     "seen": 117,
+     "seen": 121,
      "sprite": {
       "file": "c49967.png",
       "tile": 36,
@@ -4818,7 +4784,7 @@
     {
      "type": 17735,
      "name": "Sprite Forest Poison God",
-     "seen": 62,
+     "seen": 66,
      "sprite": {
       "file": "c17735.png",
       "tile": 36,
@@ -4842,7 +4808,7 @@
     {
      "type": 17732,
      "name": "Sprite Forest God",
-     "seen": 51,
+     "seen": 52,
      "sprite": {
       "file": "c17732.png",
       "tile": 36,
@@ -4854,7 +4820,7 @@
     {
      "type": 17736,
      "name": "Sprite Forest Electric God",
-     "seen": 45,
+     "seen": 48,
      "sprite": {
       "file": "c17736.png",
       "tile": 36,
@@ -4866,7 +4832,7 @@
     {
      "type": 17738,
      "name": "Sprite Forest Nature God",
-     "seen": 43,
+     "seen": 45,
      "sprite": {
       "file": "c17738.png",
       "tile": 36,
@@ -4878,12 +4844,24 @@
     {
      "type": 17734,
      "name": "Sprite Forest Fire God",
-     "seen": 38,
+     "seen": 39,
      "sprite": {
       "file": "c17734.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 51030,
+     "name": "Daughter of Limon Portal",
+     "seen": 15,
+     "sprite": {
+      "file": "c51030.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
       "size": 100
      }
     },
@@ -4926,21 +4904,9 @@
     {
      "type": 49341,
      "name": "Reef Turtle",
-     "seen": 5,
+     "seen": 6,
      "sprite": {
       "file": "c49341.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 5,
-     "sprite": {
-      "file": "c14714.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -5271,7 +5237,7 @@
     {
      "type": 21770,
      "name": "New Pirate",
-     "seen": 170,
+     "seen": 171,
      "sprite": {
       "file": "c21770.png",
       "tile": 20,
@@ -5283,7 +5249,7 @@
     {
      "type": 21764,
      "name": "New Green Gelatinous Cube",
-     "seen": 87,
+     "seen": 96,
      "sprite": {
       "file": "c21764.png",
       "tile": 20,
@@ -5331,7 +5297,7 @@
     {
      "type": 21763,
      "name": "New Purple Gelatinous Cube",
-     "seen": 42,
+     "seen": 44,
      "sprite": {
       "file": "c21763.png",
       "tile": 20,
@@ -5355,7 +5321,7 @@
     {
      "type": 21772,
      "name": "New Snake",
-     "seen": 33,
+     "seen": 35,
      "sprite": {
       "file": "c21772.png",
       "tile": 20,
@@ -5440,6 +5406,125 @@
   },
   {
    "index": 29,
+   "name": "Sanguine Forest",
+   "tiles": 19024,
+   "at": [
+    956,
+    429
+   ],
+   "lives": [
+    {
+     "type": 9821,
+     "name": "Sanguine Thorn",
+     "seen": 143,
+     "sprite": {
+      "file": "c9821.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31636,
+     "name": "Sanguine Harpy",
+     "seen": 92,
+     "sprite": {
+      "file": "c31636.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31632,
+     "name": "Sanguine Ooze",
+     "seen": 68,
+     "sprite": {
+      "file": "c31632.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 59,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31634,
+     "name": "Sanguine Treant",
+     "seen": 57,
+     "sprite": {
+      "file": "c31634.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 48,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 45,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 7,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 1984,
+     "name": "pD Blob Scout",
+     "seen": 6,
+     "sprite": {
+      "file": "c1984.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ]
+  },
+  {
+   "index": 30,
    "name": "Desert",
    "tiles": 14721,
    "at": [
@@ -5618,18 +5703,18 @@
    ]
   },
   {
-   "index": 30,
+   "index": 31,
    "name": "Desert",
-   "tiles": 14442,
+   "tiles": 14139,
    "at": [
     1028,
-    1675
+    1677
    ],
    "lives": [
     {
      "type": 21797,
      "name": "New Demon Warg",
-     "seen": 107,
+     "seen": 147,
      "sprite": {
       "file": "c21797.png",
       "tile": 20,
@@ -5641,7 +5726,7 @@
     {
      "type": 21796,
      "name": "New Tawny Warg",
-     "seen": 96,
+     "seen": 114,
      "sprite": {
       "file": "c21796.png",
       "tile": 20,
@@ -5653,7 +5738,7 @@
     {
      "type": 21807,
      "name": "New Sand Phantom",
-     "seen": 52,
+     "seen": 65,
      "sprite": {
       "file": "c21807.png",
       "tile": 20,
@@ -5665,7 +5750,7 @@
     {
      "type": 21809,
      "name": "New Nomadic Shaman",
-     "seen": 40,
+     "seen": 46,
      "sprite": {
       "file": "c21809.png",
       "tile": 20,
@@ -5677,7 +5762,7 @@
     {
      "type": 21799,
      "name": "New Fire Golem",
-     "seen": 29,
+     "seen": 35,
      "sprite": {
       "file": "c21799.png",
       "tile": 20,
@@ -5689,7 +5774,7 @@
     {
      "type": 21800,
      "name": "New Darkness Golem",
-     "seen": 24,
+     "seen": 30,
      "sprite": {
       "file": "c21800.png",
       "tile": 20,
@@ -5701,11 +5786,23 @@
     {
      "type": 21810,
      "name": "New Great Lizard",
-     "seen": 16,
+     "seen": 17,
      "sprite": {
       "file": "c21810.png",
       "tile": 36,
       "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 16,
+     "sprite": {
+      "file": "c21798.png",
+      "tile": 20,
+      "height": 20,
       "frames": 2,
       "size": 100
      }
@@ -5716,18 +5813,6 @@
      "seen": 16,
      "sprite": {
       "file": "c21841.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21798,
-     "name": "New Desert Werewolf",
-     "seen": 14,
-     "sprite": {
-      "file": "c21798.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -5747,14 +5832,14 @@
      }
     },
     {
-     "type": 21903,
-     "name": "New Birdman",
-     "seen": 12,
+     "type": 54291,
+     "name": "Legion Surveyor",
+     "seen": 8,
      "sprite": {
-      "file": "c21903.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
+      "file": "c54291.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     },
@@ -5771,33 +5856,33 @@
      }
     },
     {
-     "type": 54291,
-     "name": "Legion Surveyor",
+     "type": 21845,
+     "name": "New Red Spider",
      "seen": 7,
      "sprite": {
-      "file": "c54291.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
+      "file": "c21845.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     },
     {
-     "type": 21902,
-     "name": "New Birdman Chief",
-     "seen": 7,
+     "type": 21842,
+     "name": "New Werelion",
+     "seen": 6,
      "sprite": {
-      "file": "c21902.png",
+      "file": "c21842.png",
       "tile": 20,
       "height": 20,
-      "frames": 2,
+      "frames": 3,
       "size": 100
      }
     }
    ]
   },
   {
-   "index": 31,
+   "index": 32,
    "name": "Desert",
    "tiles": 13715,
    "at": [
@@ -5952,7 +6037,7 @@
    ]
   },
   {
-   "index": 32,
+   "index": 33,
    "name": "Risen Hell",
    "tiles": 13670,
    "at": [
@@ -6108,8 +6193,8 @@
    ]
   },
   {
-   "index": 33,
-   "name": "Zone 34",
+   "index": 34,
+   "name": "Zone 35",
    "tiles": 10279,
    "at": [
     598,
@@ -6275,125 +6360,6 @@
    ]
   },
   {
-   "index": 34,
-   "name": "Sanguine Forest",
-   "tiles": 9228,
-   "at": [
-    968,
-    440
-   ],
-   "lives": [
-    {
-     "type": 9821,
-     "name": "Sanguine Thorn",
-     "seen": 62,
-     "sprite": {
-      "file": "c9821.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31632,
-     "name": "Sanguine Ooze",
-     "seen": 23,
-     "sprite": {
-      "file": "c31632.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 23,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 16,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31633,
-     "name": "Sanguine Hound",
-     "seen": 14,
-     "sprite": {
-      "file": "c31633.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31634,
-     "name": "Sanguine Treant",
-     "seen": 11,
-     "sprite": {
-      "file": "c31634.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 6,
-     "sprite": {
-      "file": "c31636.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29593,
-     "name": "Tundra Wizard",
-     "seen": 4,
-     "sprite": {
-      "file": "c29593.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29557,
-     "name": "Tundra Knight",
-     "seen": 3,
-     "sprite": {
-      "file": "c29557.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ]
-  },
-  {
    "index": 35,
    "name": "Zone 36",
    "tiles": 2094,
@@ -6529,10 +6495,10 @@
   {
    "id": 1,
    "biome": 0,
-   "tiles": 310569,
+   "tiles": 369331,
    "at": [
-    1210,
-    413
+    1181,
+    416
    ],
    "box": [
     245,
@@ -6557,30 +6523,30 @@
      "tiles": 18
     }
    ],
-   "colour": "#353e4a",
+   "colour": "#37404b",
    "madeOf": [
     {
      "ground": "Deep Sea Light Sand",
-     "tiles": 198130
+     "tiles": 250782
     },
     {
      "ground": "Deep Sea Craggle",
      "tiles": 99001
     },
     {
-     "ground": "Deep Sea Craggle Sand",
-     "tiles": 1413
+     "ground": "Runic Tundra Dark Ice Textured",
+     "tiles": 2464
     },
     {
      "ground": "Shipwreck Cove Plank Wood",
-     "tiles": 1403
+     "tiles": 2254
     }
    ],
    "lives": [
     {
      "type": 29232,
      "name": "Deep Sea Squid",
-     "seen": 1127,
+     "seen": 1800,
      "sprite": {
       "file": "c29232.png",
       "tile": 36,
@@ -6592,7 +6558,7 @@
     {
      "type": 29209,
      "name": "Deep Sea Jellyfish",
-     "seen": 1101,
+     "seen": 1656,
      "sprite": {
       "file": "c29209.png",
       "tile": 36,
@@ -6604,7 +6570,7 @@
     {
      "type": 29233,
      "name": "Deep Sea Hydra",
-     "seen": 956,
+     "seen": 1465,
      "sprite": {
       "file": "c29233.png",
       "tile": 36,
@@ -6616,7 +6582,7 @@
     {
      "type": 29234,
      "name": "Deep Sea Siren",
-     "seen": 911,
+     "seen": 1313,
      "sprite": {
       "file": "c29234.png",
       "tile": 36,
@@ -6628,7 +6594,7 @@
     {
      "type": 29221,
      "name": "Deep Sea Kraken",
-     "seen": 234,
+     "seen": 365,
      "sprite": {
       "file": "c29221.png",
       "tile": 68,
@@ -6640,7 +6606,7 @@
     {
      "type": 21956,
      "name": "New Corsair Crab",
-     "seen": 126,
+     "seen": 178,
      "sprite": {
       "file": "c21956.png",
       "tile": 36,
@@ -6652,7 +6618,7 @@
     {
      "type": 31509,
      "name": "Deep Sea Submarine",
-     "seen": 116,
+     "seen": 147,
      "sprite": {
       "file": "c31509.png",
       "tile": 68,
@@ -6664,7 +6630,7 @@
     {
      "type": 1031,
      "name": "Sea Dragon Carp",
-     "seen": 112,
+     "seen": 120,
      "sprite": {
       "file": "c1031.png",
       "tile": 20,
@@ -6674,21 +6640,9 @@
      }
     },
     {
-     "type": 29443,
-     "name": "Tundra Dragon",
-     "seen": 16,
-     "sprite": {
-      "file": "c29443.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 29593,
      "name": "Tundra Wizard",
-     "seen": 14,
+     "seen": 52,
      "sprite": {
       "file": "c29593.png",
       "tile": 20,
@@ -6698,21 +6652,9 @@
      }
     },
     {
-     "type": 34457,
-     "name": "Baneserpent Head 1",
-     "seen": 13,
-     "sprite": {
-      "file": "c34457.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 31637,
      "name": "Sanguine Ghoul",
-     "seen": 13,
+     "seen": 48,
      "sprite": {
       "file": "c31637.png",
       "tile": 36,
@@ -6722,9 +6664,45 @@
      }
     },
     {
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 44,
+     "sprite": {
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 22,
+     "sprite": {
+      "file": "c56087.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29443,
+     "name": "Tundra Dragon",
+     "seen": 21,
+     "sprite": {
+      "file": "c29443.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 9829,
      "name": "Tundra Wolf",
-     "seen": 13,
+     "seen": 20,
      "sprite": {
       "file": "c9829.png",
       "tile": 36,
@@ -6734,9 +6712,45 @@
      }
     },
     {
+     "type": 56088,
+     "name": "AI Alien Shadow",
+     "seen": 18,
+     "sprite": {
+      "file": "c56088.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 16,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34457,
+     "name": "Baneserpent Head 1",
+     "seen": 15,
+     "sprite": {
+      "file": "c34457.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 34459,
      "name": "Baneserpent Head 3",
-     "seen": 12,
+     "seen": 14,
      "sprite": {
       "file": "c34459.png",
       "tile": 36,
@@ -6748,7 +6762,7 @@
     {
      "type": 34458,
      "name": "Baneserpent Head 2",
-     "seen": 12,
+     "seen": 14,
      "sprite": {
       "file": "c34458.png",
       "tile": 36,
@@ -6758,66 +6772,16 @@
      }
     },
     {
-     "type": 29557,
-     "name": "Tundra Knight",
-     "seen": 12,
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 14,
      "sprite": {
-      "file": "c29557.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31634,
-     "name": "Sanguine Treant",
-     "seen": 11,
-     "sprite": {
-      "file": "c31634.png",
+      "file": "c9820.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 44337,
-     "name": "SpecPen Spectral Jailer",
-     "seen": 10,
-     "sprite": {
-      "file": "c44337.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 34456,
-     "name": "Adult Baneserpent",
-     "seen": 10,
-     "sprite": {
-      "file": "c34456.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     },
-     "role": "encounter"
-    },
-    {
-     "type": 1033,
-     "name": "Sea Dragon",
-     "seen": 9,
-     "sprite": {
-      "file": "c1033.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 3,
-      "size": 100
-     },
-     "role": "hero"
     }
    ],
    "met": true,
@@ -6825,15 +6789,13 @@
    "encounters": [
     {
      "name": "Adult Baneserpent",
-     "art": "adult-baneserpent.png",
-     "onMap": true
+     "art": "adult-baneserpent.png"
     }
    ],
    "heroes": [
     {
      "name": "Sea Dragon",
-     "art": "sea-dragon.png",
-     "onMap": true
+     "art": "sea-dragon.png"
     },
     {
      "name": "Sunken Treasure",
@@ -6844,10 +6806,10 @@
   {
    "id": 2,
    "biome": 1,
-   "tiles": 193763,
+   "tiles": 237631,
    "at": [
-    1127,
-    789
+    1140,
+    771
    ],
    "box": [
     315,
@@ -6861,7 +6823,7 @@
    "roadSplit": [
     {
      "biome": "Carboniferous",
-     "tiles": 8548
+     "tiles": 8547
     },
     {
      "biome": "Floral Escape",
@@ -6876,50 +6838,26 @@
    "madeOf": [
     {
      "ground": "Carboniferous Grass",
-     "tiles": 180304
+     "tiles": 220725
     },
     {
      "ground": "Low Forest Grass",
-     "tiles": 2628
+     "tiles": 3588
     },
     {
      "ground": "Giant Critters Set Piece 2431",
-     "tiles": 2352
+     "tiles": 2781
     },
     {
      "ground": "Sanguine Forest Dark Dirt",
-     "tiles": 1027
+     "tiles": 1383
     }
    ],
    "lives": [
     {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 768,
-     "sprite": {
-      "file": "c14714.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 762,
-     "sprite": {
-      "file": "c30573.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 9819,
      "name": "Carboniferous Dinosaur",
-     "seen": 749,
+     "seen": 1109,
      "sprite": {
       "file": "c9819.png",
       "tile": 36,
@@ -6929,9 +6867,33 @@
      }
     },
     {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 1103,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 1102,
+     "sprite": {
+      "file": "c14714.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 31166,
      "name": "Carboniferous Flytrap",
-     "seen": 735,
+     "seen": 1052,
      "sprite": {
       "file": "c31166.png",
       "tile": 36,
@@ -6943,7 +6905,7 @@
     {
      "type": 9820,
      "name": "Carboniferous Mantis",
-     "seen": 635,
+     "seen": 878,
      "sprite": {
       "file": "c9820.png",
       "tile": 36,
@@ -6955,7 +6917,7 @@
     {
      "type": 30575,
      "name": "Carboniferous Bush Monster",
-     "seen": 600,
+     "seen": 789,
      "sprite": {
       "file": "c30575.png",
       "tile": 36,
@@ -6965,21 +6927,9 @@
      }
     },
     {
-     "type": 34482,
-     "name": "Giant Critter Egg",
-     "seen": 154,
-     "sprite": {
-      "file": "c34482.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 17019,
      "name": "SulfW God",
-     "seen": 133,
+     "seen": 211,
      "sprite": {
       "file": "c17019.png",
       "tile": 36,
@@ -6989,9 +6939,21 @@
      }
     },
     {
+     "type": 34482,
+     "name": "Giant Critter Egg",
+     "seen": 194,
+     "sprite": {
+      "file": "c34482.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 34488,
      "name": "Giant Critter Small Insect",
-     "seen": 103,
+     "seen": 136,
      "sprite": {
       "file": "c34488.png",
       "tile": 20,
@@ -7001,9 +6963,21 @@
      }
     },
     {
+     "type": 21957,
+     "name": "New Sting Spider",
+     "seen": 67,
+     "sprite": {
+      "file": "c21957.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
      "type": 53007,
      "name": "Beacon Guardian Carboniferous Minion",
-     "seen": 41,
+     "seen": 66,
      "sprite": {
       "file": "c53007.png",
       "tile": 36,
@@ -7015,7 +6989,7 @@
     {
      "type": 9826,
      "name": "Floral Dragon",
-     "seen": 40,
+     "seen": 59,
      "sprite": {
       "file": "c9826.png",
       "tile": 36,
@@ -7025,21 +6999,45 @@
      }
     },
     {
-     "type": 21957,
-     "name": "New Sting Spider",
-     "seen": 35,
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 30,
      "sprite": {
-      "file": "c21957.png",
+      "file": "c56087.png",
       "tile": 36,
       "height": 36,
-      "frames": 3,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 28,
+     "sprite": {
+      "file": "c9827.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29458,
+     "name": "Floral Rafflesia",
+     "seen": 28,
+     "sprite": {
+      "file": "c29458.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
       "size": 100
      }
     },
     {
      "type": 29459,
      "name": "Floral Lily",
-     "seen": 20,
+     "seen": 27,
      "sprite": {
       "file": "c29459.png",
       "tile": 36,
@@ -7051,7 +7049,7 @@
     {
      "type": 34481,
      "name": "Giant Critter Brood",
-     "seen": 17,
+     "seen": 25,
      "sprite": {
       "file": "c34481.png",
       "tile": 20,
@@ -7061,45 +7059,9 @@
      }
     },
     {
-     "type": 9827,
-     "name": "Floral Tiger",
-     "seen": 16,
-     "sprite": {
-      "file": "c9827.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 17733,
-     "name": "Sprite Forest Child",
-     "seen": 15,
-     "sprite": {
-      "file": "c17733.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 15,
-     "sprite": {
-      "file": "c9828.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 9830,
      "name": "Floral Rhino",
-     "seen": 15,
+     "seen": 25,
      "sprite": {
       "file": "c9830.png",
       "tile": 36,
@@ -7111,7 +7073,7 @@
     {
      "type": 9825,
      "name": "Floral Hand",
-     "seen": 14,
+     "seen": 23,
      "sprite": {
       "file": "c9825.png",
       "tile": 36,
@@ -7121,11 +7083,11 @@
      }
     },
     {
-     "type": 29458,
-     "name": "Floral Rafflesia",
-     "seen": 13,
+     "type": 56088,
+     "name": "AI Alien Shadow",
+     "seen": 22,
      "sprite": {
-      "file": "c29458.png",
+      "file": "c56088.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -7169,6 +7131,341 @@
   {
    "id": 3,
    "biome": 2,
+   "tiles": 159722,
+   "at": [
+    1071,
+    292
+   ],
+   "box": [
+    559,
+    145,
+    1537,
+    511
+   ],
+   "name": "Runic Tundra",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Runic Tundra",
+     "tiles": 3349
+    },
+    {
+     "biome": "Deep Sea Abyss",
+     "tiles": 80
+    },
+    {
+     "biome": "Floral Escape",
+     "tiles": 13
+    }
+   ],
+   "colour": "#a5bbdb",
+   "madeOf": [
+    {
+     "ground": "Runic Tundra Dark Ice Textured",
+     "tiles": 148902
+    },
+    {
+     "ground": "Deep Sea Light Sand",
+     "tiles": 2365
+    },
+    {
+     "ground": "Set Piece 1421",
+     "tiles": 1499
+    },
+    {
+     "ground": "Set Piece 821",
+     "tiles": 1337
+    }
+   ],
+   "lives": [
+    {
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 1387,
+     "sprite": {
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 1387,
+     "sprite": {
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29443,
+     "name": "Tundra Dragon",
+     "seen": 405,
+     "sprite": {
+      "file": "c29443.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9832,
+     "name": "Tundra Troll",
+     "seen": 301,
+     "sprite": {
+      "file": "c9832.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31508,
+     "name": "Tundra Yeti",
+     "seen": 264,
+     "sprite": {
+      "file": "c31508.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9829,
+     "name": "Tundra Wolf",
+     "seen": 214,
+     "sprite": {
+      "file": "c9829.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29555,
+     "name": "Tundra Archer",
+     "seen": 203,
+     "sprite": {
+      "file": "c29555.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9831,
+     "name": "Tundra Golem",
+     "seen": 195,
+     "sprite": {
+      "file": "c9831.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29442,
+     "name": "Tundra Giant",
+     "seen": 60,
+     "sprite": {
+      "file": "c29442.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29234,
+     "name": "Deep Sea Siren",
+     "seen": 37,
+     "sprite": {
+      "file": "c29234.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 34518,
+     "name": "Monstrous Grizzly",
+     "seen": 31,
+     "sprite": {
+      "file": "c34518.png",
+      "tile": 52,
+      "height": 52,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "hero"
+    },
+    {
+     "type": 29233,
+     "name": "Deep Sea Hydra",
+     "seen": 30,
+     "sprite": {
+      "file": "c29233.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 29232,
+     "name": "Deep Sea Squid",
+     "seen": 25,
+     "sprite": {
+      "file": "c29232.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34486,
+     "name": "Assembled Giant Arm",
+     "seen": 19,
+     "sprite": {
+      "file": "c34486.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 17,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31509,
+     "name": "Deep Sea Submarine",
+     "seen": 15,
+     "sprite": {
+      "file": "c31509.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21997,
+     "name": "New Protection Crystal",
+     "seen": 15,
+     "sprite": {
+      "file": "c21997.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 29209,
+     "name": "Deep Sea Jellyfish",
+     "seen": 14,
+     "sprite": {
+      "file": "c29209.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 12,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Aerial Warship",
+     "art": "aerial-warship.png"
+    },
+    {
+     "name": "Beer God",
+     "art": "beer-god.png"
+    },
+    {
+     "name": "Crystal Worm Father",
+     "art": "crystal-worm-father.png"
+    },
+    {
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
+    },
+    {
+     "name": "Lord of the Lost Lands",
+     "art": "lord-of-the-lost-lands.png"
+    },
+    {
+     "name": "Lost Sentry",
+     "art": "lost-sentry.png"
+    },
+    {
+     "name": "Sentient Monolith",
+     "art": "sentient-monolith.png"
+    },
+    {
+     "name": "Commander Calbrik",
+     "art": "commander-calbrik.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Assembled Giant",
+     "art": "assembled-giant.png"
+    },
+    {
+     "name": "Monstrous Grizzly",
+     "art": "monstrous-grizzly.png",
+     "onMap": true
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Principal",
+     "art": "legion-principal.png"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "biome": 3,
    "tiles": 119735,
    "at": [
     1210,
@@ -7220,7 +7517,7 @@
     {
      "type": 21893,
      "name": "City Ent God",
-     "seen": 579,
+     "seen": 580,
      "sprite": {
       "file": "c21893.png",
       "tile": 36,
@@ -7232,7 +7529,7 @@
     {
      "type": 21895,
      "name": "City Djinn",
-     "seen": 324,
+     "seen": 325,
      "sprite": {
       "file": "c21895.png",
       "tile": 36,
@@ -7244,7 +7541,7 @@
     {
      "type": 49634,
      "name": "City Satyr",
-     "seen": 320,
+     "seen": 322,
      "sprite": {
       "file": "c49634.png",
       "tile": 36,
@@ -7268,7 +7565,7 @@
     {
      "type": 49633,
      "name": "City Gladiator",
-     "seen": 242,
+     "seen": 243,
      "sprite": {
       "file": "c49633.png",
       "tile": 36,
@@ -7280,7 +7577,7 @@
     {
      "type": 21889,
      "name": "City Medusa",
-     "seen": 236,
+     "seen": 238,
      "sprite": {
       "file": "c21889.png",
       "tile": 36,
@@ -7292,7 +7589,7 @@
     {
      "type": 21892,
      "name": "City Slime God",
-     "seen": 227,
+     "seen": 229,
      "sprite": {
       "file": "c21892.png",
       "tile": 36,
@@ -7328,7 +7625,7 @@
     {
      "type": 2490,
      "name": "City Rock Bot",
-     "seen": 69,
+     "seen": 70,
      "sprite": {
       "file": "c2490.png",
       "tile": 36,
@@ -7340,7 +7637,7 @@
     {
      "type": 2491,
      "name": "City Paper Bot",
-     "seen": 60,
+     "seen": 61,
      "sprite": {
       "file": "c2491.png",
       "tile": 36,
@@ -7364,7 +7661,7 @@
     {
      "type": 2492,
      "name": "City Steel Bot",
-     "seen": 46,
+     "seen": 47,
      "sprite": {
       "file": "c2492.png",
       "tile": 36,
@@ -7389,12 +7686,24 @@
     {
      "type": 9820,
      "name": "Carboniferous Mantis",
-     "seen": 22,
+     "seen": 27,
      "sprite": {
       "file": "c9820.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45864,
+     "name": "AI Alien UFO Bomb",
+     "seen": 25,
+     "sprite": {
+      "file": "c45864.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     },
@@ -7506,12 +7815,12 @@
    ]
   },
   {
-   "id": 4,
-   "biome": 3,
-   "tiles": 115739,
+   "id": 5,
+   "biome": 4,
+   "tiles": 115919,
    "at": [
     1859,
-    1364
+    1363
    ],
    "box": [
     1469,
@@ -7540,11 +7849,11 @@
    "madeOf": [
     {
      "ground": "Coral Reefs Sand",
-     "tiles": 109935
+     "tiles": 110204
     },
     {
      "ground": "Shipwreck Cove Grassy Dirt",
-     "tiles": 1722
+     "tiles": 1728
     },
     {
      "ground": "Sprite Forest Grass",
@@ -7559,7 +7868,7 @@
     {
      "type": 49340,
      "name": "Reef Seahorse",
-     "seen": 629,
+     "seen": 664,
      "sprite": {
       "file": "c49340.png",
       "tile": 36,
@@ -7571,7 +7880,7 @@
     {
      "type": 49344,
      "name": "Reef Walrus",
-     "seen": 600,
+     "seen": 636,
      "sprite": {
       "file": "c49344.png",
       "tile": 36,
@@ -7583,7 +7892,7 @@
     {
      "type": 49341,
      "name": "Reef Turtle",
-     "seen": 584,
+     "seen": 619,
      "sprite": {
       "file": "c49341.png",
       "tile": 36,
@@ -7595,7 +7904,7 @@
     {
      "type": 49342,
      "name": "Reef Octopus",
-     "seen": 507,
+     "seen": 538,
      "sprite": {
       "file": "c49342.png",
       "tile": 36,
@@ -7607,7 +7916,7 @@
     {
      "type": 49343,
      "name": "Reef Narwhal",
-     "seen": 344,
+     "seen": 363,
      "sprite": {
       "file": "c49343.png",
       "tile": 36,
@@ -7619,7 +7928,7 @@
     {
      "type": 21888,
      "name": "Reef Leviathan",
-     "seen": 216,
+     "seen": 228,
      "sprite": {
       "file": "c21888.png",
       "tile": 36,
@@ -7631,7 +7940,7 @@
     {
      "type": 49901,
      "name": "Shipwreck Ghost",
-     "seen": 54,
+     "seen": 56,
      "sprite": {
       "file": "c49901.png",
       "tile": 20,
@@ -7643,7 +7952,7 @@
     {
      "type": 17733,
      "name": "Sprite Forest Child",
-     "seen": 32,
+     "seen": 35,
      "sprite": {
       "file": "c17733.png",
       "tile": 20,
@@ -7665,21 +7974,9 @@
      }
     },
     {
-     "type": 49902,
-     "name": "Shipwreck Pirate",
-     "seen": 25,
-     "sprite": {
-      "file": "c49902.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 47931,
      "name": "Barnacle Rock",
-     "seen": 24,
+     "seen": 30,
      "sprite": {
       "file": "c47931.png",
       "tile": 36,
@@ -7689,9 +7986,21 @@
      }
     },
     {
+     "type": 49902,
+     "name": "Shipwreck Pirate",
+     "seen": 28,
+     "sprite": {
+      "file": "c49902.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 34508,
      "name": "Maiden of the Sea",
-     "seen": 17,
+     "seen": 21,
      "sprite": {
       "file": "c34508.png",
       "tile": 36,
@@ -7704,7 +8013,7 @@
     {
      "type": 17735,
      "name": "Sprite Forest Poison God",
-     "seen": 17,
+     "seen": 19,
      "sprite": {
       "file": "c17735.png",
       "tile": 36,
@@ -7716,7 +8025,7 @@
     {
      "type": 49967,
      "name": "Sprite Forest Dog",
-     "seen": 13,
+     "seen": 15,
      "sprite": {
       "file": "c49967.png",
       "tile": 36,
@@ -7734,6 +8043,18 @@
       "tile": 36,
       "height": 36,
       "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 17732,
+     "name": "Sprite Forest God",
+     "seen": 8,
+     "sprite": {
+      "file": "c17732.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     },
@@ -7758,18 +8079,6 @@
       "tile": 36,
       "height": 36,
       "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 17732,
-     "name": "Sprite Forest God",
-     "seen": 7,
-     "sprite": {
-      "file": "c17732.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
       "size": 100
      }
     },
@@ -7815,8 +8124,8 @@
    ]
   },
   {
-   "id": 6,
-   "biome": 5,
+   "id": 7,
+   "biome": 6,
    "tiles": 97532,
    "at": [
     1612,
@@ -7849,7 +8158,7 @@
    "madeOf": [
     {
      "ground": "Haunted Hallows Darkish Dirt",
-     "tiles": 91213
+     "tiles": 91114
     },
     {
      "ground": "Sprite Forest Grass",
@@ -7868,7 +8177,7 @@
     {
      "type": 17900,
      "name": "Hallows Skeleton",
-     "seen": 1033,
+     "seen": 1054,
      "sprite": {
       "file": "c17900.png",
       "tile": 20,
@@ -7880,7 +8189,7 @@
     {
      "type": 17898,
      "name": "Hallows Banshee",
-     "seen": 247,
+     "seen": 250,
      "sprite": {
       "file": "c17898.png",
       "tile": 20,
@@ -7892,7 +8201,7 @@
     {
      "type": 21894,
      "name": "Hallows Ghost God",
-     "seen": 238,
+     "seen": 245,
      "sprite": {
       "file": "c21894.png",
       "tile": 36,
@@ -7904,7 +8213,7 @@
     {
      "type": 17903,
      "name": "Hallows Brute",
-     "seen": 221,
+     "seen": 228,
      "sprite": {
       "file": "c17903.png",
       "tile": 20,
@@ -7916,7 +8225,7 @@
     {
      "type": 17902,
      "name": "Hallows Beholder",
-     "seen": 220,
+     "seen": 221,
      "sprite": {
       "file": "c17902.png",
       "tile": 36,
@@ -7928,7 +8237,7 @@
     {
      "type": 17899,
      "name": "Hallows Wraith",
-     "seen": 207,
+     "seen": 212,
      "sprite": {
       "file": "c17899.png",
       "tile": 20,
@@ -7940,7 +8249,7 @@
     {
      "type": 17901,
      "name": "Hallows Werewolf",
-     "seen": 95,
+     "seen": 98,
      "sprite": {
       "file": "c17901.png",
       "tile": 36,
@@ -8138,86 +8447,62 @@
    ]
   },
   {
-   "id": 7,
-   "biome": 6,
-   "tiles": 77334,
+   "id": 8,
+   "biome": 7,
+   "tiles": 79779,
    "at": [
-    1251,
-    288
+    777,
+    500
    ],
    "box": [
-    994,
-    145,
-    1537,
-    455
+    561,
+    257,
+    967,
+    675
    ],
-   "name": "Runic Tundra",
+   "name": "Floral Escape",
    "named": true,
-   "from": "ground",
+   "from": "walked",
    "roadSplit": [
     {
-     "biome": "Runic Tundra",
-     "tiles": 3349
-    },
-    {
-     "biome": "Deep Sea Abyss",
-     "tiles": 80
-    },
-    {
      "biome": "Floral Escape",
-     "tiles": 13
+     "tiles": 2920
+    },
+    {
+     "biome": "Carboniferous",
+     "tiles": 69
+    },
+    {
+     "biome": "Sanguine Forest",
+     "tiles": 36
     }
    ],
-   "colour": "#a4badb",
+   "colour": "#7d9632",
    "madeOf": [
     {
-     "ground": "Runic Tundra Dark Ice Textured",
-     "tiles": 72459
+     "ground": "Low Forest Grass",
+     "tiles": 72634
+    },
+    {
+     "ground": "EH Floor",
+     "tiles": 1118
+    },
+    {
+     "ground": "Carboniferous Grass",
+     "tiles": 1020
     },
     {
      "ground": "Deep Sea Light Sand",
-     "tiles": 1287
-    },
-    {
-     "ground": "DN CSq 2",
-     "tiles": 840
-    },
-    {
-     "ground": "Set Piece 1421",
-     "tiles": 497
+     "tiles": 828
     }
    ],
    "lives": [
     {
-     "type": 29593,
-     "name": "Tundra Wizard",
-     "seen": 686,
+     "type": 29458,
+     "name": "Floral Rafflesia",
+     "seen": 291,
      "sprite": {
-      "file": "c29593.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29557,
-     "name": "Tundra Knight",
-     "seen": 666,
-     "sprite": {
-      "file": "c29557.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29443,
-     "name": "Tundra Dragon",
-     "seen": 165,
-     "sprite": {
-      "file": "c29443.png",
+      "file": "c29458.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8225,11 +8510,11 @@
      }
     },
     {
-     "type": 9832,
-     "name": "Tundra Troll",
-     "seen": 141,
+     "type": 9825,
+     "name": "Floral Hand",
+     "seen": 281,
      "sprite": {
-      "file": "c9832.png",
+      "file": "c9825.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8237,23 +8522,11 @@
      }
     },
     {
-     "type": 29555,
-     "name": "Tundra Archer",
-     "seen": 110,
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 274,
      "sprite": {
-      "file": "c29555.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31508,
-     "name": "Tundra Yeti",
-     "seen": 106,
-     "sprite": {
-      "file": "c31508.png",
+      "file": "c9828.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8261,11 +8534,11 @@
      }
     },
     {
-     "type": 9829,
-     "name": "Tundra Wolf",
-     "seen": 97,
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 240,
      "sprite": {
-      "file": "c9829.png",
+      "file": "c29459.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8273,108 +8546,11 @@
      }
     },
     {
-     "type": 9831,
-     "name": "Tundra Golem",
-     "seen": 78,
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 234,
      "sprite": {
-      "file": "c9831.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29442,
-     "name": "Tundra Giant",
-     "seen": 32,
-     "sprite": {
-      "file": "c29442.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29234,
-     "name": "Deep Sea Siren",
-     "seen": 18,
-     "sprite": {
-      "file": "c29234.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29232,
-     "name": "Deep Sea Squid",
-     "seen": 14,
-     "sprite": {
-      "file": "c29232.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29233,
-     "name": "Deep Sea Hydra",
-     "seen": 13,
-     "sprite": {
-      "file": "c29233.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 31509,
-     "name": "Deep Sea Submarine",
-     "seen": 12,
-     "sprite": {
-      "file": "c31509.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 34518,
-     "name": "Monstrous Grizzly",
-     "seen": 8,
-     "sprite": {
-      "file": "c34518.png",
-      "tile": 52,
-      "height": 52,
-      "frames": 2,
-      "size": 100
-     },
-     "role": "hero"
-    },
-    {
-     "type": 29209,
-     "name": "Deep Sea Jellyfish",
-     "seen": 7,
-     "sprite": {
-      "file": "c29209.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 7,
-     "sprite": {
-      "file": "c31637.png",
+      "file": "c9830.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8384,7 +8560,7 @@
     {
      "type": 9827,
      "name": "Floral Tiger",
-     "seen": 5,
+     "seen": 226,
      "sprite": {
       "file": "c9827.png",
       "tile": 36,
@@ -8396,7 +8572,402 @@
     {
      "type": 9826,
      "name": "Floral Dragon",
-     "seen": 4,
+     "seen": 217,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 4316,
+     "name": "EH Ev Red Fat Bees",
+     "seen": 58,
+     "sprite": {
+      "file": "c4316.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 4317,
+     "name": "EH Ev Blue Fat Bees",
+     "seen": 58,
+     "sprite": {
+      "file": "c4317.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 4240,
+     "name": "EH Small Bees",
+     "seen": 57,
+     "sprite": {
+      "file": "c4240.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 4318,
+     "name": "EH Ev Fat Bees",
+     "seen": 55,
+     "sprite": {
+      "file": "c4318.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 56086,
+     "name": "AI Alien Champion",
+     "seen": 44,
+     "sprite": {
+      "file": "c56086.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21958,
+     "name": "New Great Owl",
+     "seen": 38,
+     "sprite": {
+      "file": "c21958.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 34604,
+     "name": "Angry Hornet",
+     "seen": 31,
+     "sprite": {
+      "file": "c34604.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 4321,
+     "name": "EH Ev Chase Fat Bees",
+     "seen": 19,
+     "sprite": {
+      "file": "c4321.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 18,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29234,
+     "name": "Deep Sea Siren",
+     "seen": 17,
+     "sprite": {
+      "file": "c29234.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 14,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 14,
+     "sprite": {
+      "file": "c56087.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Corrupted Bramblethorn",
+     "art": "corrupted-bramblethorn.png"
+    },
+    {
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
+    },
+    {
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
+    },
+    {
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alluring Blossom",
+     "art": "alluring-blossom.png",
+     "onMap": true
+    },
+    {
+     "name": "Elder Ent Ancient",
+     "art": "elder-ent-ancient.png",
+     "onMap": true
+    },
+    {
+     "name": "Hornet’s Nest",
+     "art": "hornet-s-nest.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Commissioner",
+     "art": "legion-commissioner.png"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "biome": 8,
+   "tiles": 72322,
+   "at": [
+    1516,
+    635
+   ],
+   "box": [
+    1325,
+    393,
+    1729,
+    871
+   ],
+   "name": "Sanguine Forest",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Sanguine Forest",
+     "tiles": 1973
+    },
+    {
+     "biome": "Carboniferous",
+     "tiles": 3
+    },
+    {
+     "biome": "Floral Escape",
+     "tiles": 1
+    }
+   ],
+   "colour": "#30171f",
+   "madeOf": [
+    {
+     "ground": "Sanguine Forest Dark Dirt",
+     "tiles": 64075
+    },
+    {
+     "ground": "LH Main Tile",
+     "tiles": 1912
+    },
+    {
+     "ground": "Deep Sea Light Sand",
+     "tiles": 1049
+    },
+    {
+     "ground": "Low Forest Grass",
+     "tiles": 927
+    }
+   ],
+   "lives": [
+    {
+     "type": 9821,
+     "name": "Sanguine Thorn",
+     "seen": 483,
+     "sprite": {
+      "file": "c9821.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31636,
+     "name": "Sanguine Harpy",
+     "seen": 440,
+     "sprite": {
+      "file": "c31636.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 412,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31632,
+     "name": "Sanguine Ooze",
+     "seen": 339,
+     "sprite": {
+      "file": "c31632.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31634,
+     "name": "Sanguine Treant",
+     "seen": 271,
+     "sprite": {
+      "file": "c31634.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 261,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 253,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 767,
+     "name": "Sanguine Ooze Puddle",
+     "seen": 63,
+     "sprite": {
+      "file": "c767.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 29233,
+     "name": "Deep Sea Hydra",
+     "seen": 33,
+     "sprite": {
+      "file": "c29233.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 53013,
+     "name": "Beacon Guardian Sanguine Forest",
+     "seen": 26,
+     "sprite": {
+      "file": "c53013.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29232,
+     "name": "Deep Sea Squid",
+     "seen": 19,
+     "sprite": {
+      "file": "c29232.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 1984,
+     "name": "pD Blob Scout",
+     "seen": 13,
+     "sprite": {
+      "file": "c1984.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 13,
      "sprite": {
       "file": "c9826.png",
       "tile": 36,
@@ -8408,7 +8979,7 @@
     {
      "type": 29221,
      "name": "Deep Sea Kraken",
-     "seen": 3,
+     "seen": 13,
      "sprite": {
       "file": "c29221.png",
       "tile": 68,
@@ -8418,11 +8989,11 @@
      }
     },
     {
-     "type": 21956,
-     "name": "New Corsair Crab",
-     "seen": 3,
+     "type": 29234,
+     "name": "Deep Sea Siren",
+     "seen": 10,
      "sprite": {
-      "file": "c21956.png",
+      "file": "c29234.png",
       "tile": 36,
       "height": 36,
       "frames": 3,
@@ -8434,59 +9005,51 @@
    "rank": "Veteran",
    "encounters": [
     {
-     "name": "Aerial Warship",
-     "art": "aerial-warship.png"
+     "name": "Avatar of the Forgotten King",
+     "art": "avatar-of-the-forgotten-king.png"
     },
     {
-     "name": "Beer God",
-     "art": "beer-god.png"
+     "name": "Bloodroot Heart",
+     "art": "bloodroot-heart.png"
     },
     {
-     "name": "Crystal Worm Father",
-     "art": "crystal-worm-father.png"
-    },
-    {
-     "name": "Kogbold Expedition Engine",
-     "art": "kogbold-expedition-engine.png"
-    },
-    {
-     "name": "Lord of the Lost Lands",
-     "art": "lord-of-the-lost-lands.png"
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
     },
     {
      "name": "Lost Sentry",
      "art": "lost-sentry.png"
     },
     {
-     "name": "Sentient Monolith",
-     "art": "sentient-monolith.png"
+     "name": "Ravenous Rot",
+     "art": "ravenous-rot.png"
     },
     {
-     "name": "Commander Calbrik",
-     "art": "commander-calbrik.png"
+     "name": "Skeletal Centipede",
+     "art": "skeletal-centipede.png"
     }
    ],
    "heroes": [
     {
-     "name": "Assembled Giant",
-     "art": "assembled-giant.png"
+     "name": "Organ Harvester",
+     "art": "organ-harvester.png",
+     "onMap": true
     },
     {
-     "name": "Monstrous Grizzly",
-     "art": "monstrous-grizzly.png",
-     "onMap": true
+     "name": "Scout Colony",
+     "art": "scout-colony.png"
     }
    ],
    "guardians": [
     {
-     "name": "Legion Principal",
-     "art": "legion-principal.png"
+     "name": "Legion Missionary",
+     "art": "legion-missionary.png"
     }
    ]
   },
   {
-   "id": 5,
-   "biome": 4,
+   "id": 6,
+   "biome": 5,
    "tiles": 71351,
    "at": [
     874,
@@ -8786,17 +9349,17 @@
    ]
   },
   {
-   "id": 8,
-   "biome": 7,
-   "tiles": 59687,
+   "id": 10,
+   "biome": 9,
+   "tiles": 71198,
    "at": [
-    891,
-    804
+    938,
+    796
    ],
    "box": [
     556,
     673,
-    1295,
+    1298,
     918
    ],
    "name": "Floral Escape",
@@ -8816,32 +9379,32 @@
      "tiles": 10
     }
    ],
-   "colour": "#7d9831",
+   "colour": "#7d9931",
    "madeOf": [
     {
      "ground": "Low Forest Grass",
-     "tiles": 56268
-    },
-    {
-     "ground": "Carboniferous Grass",
-     "tiles": 1145
+     "tiles": 65818
     },
     {
      "ground": "Set Piece 275",
-     "tiles": 631
+     "tiles": 1893
+    },
+    {
+     "ground": "Carboniferous Grass",
+     "tiles": 1792
     },
     {
      "ground": "Hanami Grass 1 Dark",
-     "tiles": 361
+     "tiles": 453
     }
    ],
    "lives": [
     {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 197,
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 288,
      "sprite": {
-      "file": "c29459.png",
+      "file": "c9827.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8851,7 +9414,7 @@
     {
      "type": 29458,
      "name": "Floral Rafflesia",
-     "seen": 195,
+     "seen": 276,
      "sprite": {
       "file": "c29458.png",
       "tile": 36,
@@ -8863,7 +9426,7 @@
     {
      "type": 9830,
      "name": "Floral Rhino",
-     "seen": 193,
+     "seen": 268,
      "sprite": {
       "file": "c9830.png",
       "tile": 36,
@@ -8873,11 +9436,11 @@
      }
     },
     {
-     "type": 9827,
-     "name": "Floral Tiger",
-     "seen": 192,
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 251,
      "sprite": {
-      "file": "c9827.png",
+      "file": "c29459.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8887,7 +9450,7 @@
     {
      "type": 9825,
      "name": "Floral Hand",
-     "seen": 177,
+     "seen": 240,
      "sprite": {
       "file": "c9825.png",
       "tile": 36,
@@ -8897,21 +9460,9 @@
      }
     },
     {
-     "type": 9826,
-     "name": "Floral Dragon",
-     "seen": 176,
-     "sprite": {
-      "file": "c9826.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 9828,
      "name": "Floral Sunflower",
-     "seen": 169,
+     "seen": 240,
      "sprite": {
       "file": "c9828.png",
       "tile": 36,
@@ -8921,9 +9472,21 @@
      }
     },
     {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 237,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21958,
      "name": "New Great Owl",
-     "seen": 34,
+     "seen": 46,
      "sprite": {
       "file": "c21958.png",
       "tile": 36,
@@ -8935,7 +9498,7 @@
     {
      "type": 9820,
      "name": "Carboniferous Mantis",
-     "seen": 24,
+     "seen": 25,
      "sprite": {
       "file": "c9820.png",
       "tile": 36,
@@ -8945,21 +9508,9 @@
      }
     },
     {
-     "type": 9819,
-     "name": "Carboniferous Dinosaur",
-     "seen": 16,
-     "sprite": {
-      "file": "c9819.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 14714,
      "name": "Carboniferous Dragonfly",
-     "seen": 16,
+     "seen": 24,
      "sprite": {
       "file": "c14714.png",
       "tile": 36,
@@ -8969,11 +9520,11 @@
      }
     },
     {
-     "type": 34604,
-     "name": "Angry Hornet",
-     "seen": 11,
+     "type": 9819,
+     "name": "Carboniferous Dinosaur",
+     "seen": 19,
      "sprite": {
-      "file": "c34604.png",
+      "file": "c9819.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -8983,9 +9534,33 @@
     {
      "type": 31166,
      "name": "Carboniferous Flytrap",
-     "seen": 9,
+     "seen": 15,
      "sprite": {
       "file": "c31166.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 12,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34604,
+     "name": "Angry Hornet",
+     "seen": 9,
+     "sprite": {
+      "file": "c34604.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -9005,9 +9580,21 @@
      }
     },
     {
+     "type": 30575,
+     "name": "Carboniferous Bush Monster",
+     "seen": 8,
+     "sprite": {
+      "file": "c30575.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 51055,
      "name": "Elder Ent Ancient",
-     "seen": 6,
+     "seen": 7,
      "sprite": {
       "file": "c51055.png",
       "tile": 36,
@@ -9018,9 +9605,333 @@
      "role": "hero"
     },
     {
+     "type": 51058,
+     "name": "Elder Ent Ancient Explosion 2",
+     "seen": 6,
+     "sprite": {
+      "file": "c51058.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 16999,
+     "name": "Alluring Blossom",
+     "seen": 5,
+     "sprite": {
+      "file": "c16999.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     },
+     "role": "hero"
+    }
+   ],
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Corrupted Bramblethorn",
+     "art": "corrupted-bramblethorn.png"
+    },
+    {
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
+    },
+    {
+     "name": "Ethereal Shrine",
+     "art": "ethereal-shrine.png"
+    },
+    {
+     "name": "Kogbold Expedition Engine",
+     "art": "kogbold-expedition-engine.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Alluring Blossom",
+     "art": "alluring-blossom.png",
+     "onMap": true
+    },
+    {
+     "name": "Elder Ent Ancient",
+     "art": "elder-ent-ancient.png",
+     "onMap": true
+    },
+    {
+     "name": "Hornet’s Nest",
+     "art": "hornet-s-nest.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Commissioner",
+     "art": "legion-commissioner.png"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "biome": 10,
+   "tiles": 68006,
+   "at": [
+    1297,
+    534
+   ],
+   "box": [
+    1136,
+    338,
+    1488,
+    733
+   ],
+   "name": "Floral Escape",
+   "named": true,
+   "from": "walked",
+   "roadSplit": [
+    {
+     "biome": "Floral Escape",
+     "tiles": 1232
+    },
+    {
+     "biome": "Sanguine Forest",
+     "tiles": 99
+    },
+    {
+     "biome": "Runic Tundra",
+     "tiles": 13
+    }
+   ],
+   "colour": "#7c9732",
+   "madeOf": [
+    {
+     "ground": "Low Forest Grass",
+     "tiles": 63228
+    },
+    {
+     "ground": "Carboniferous Grass",
+     "tiles": 918
+    },
+    {
+     "ground": "Sanguine Forest Dark Dirt",
+     "tiles": 797
+    },
+    {
+     "ground": "Set Piece 275",
+     "tiles": 631
+    }
+   ],
+   "lives": [
+    {
+     "type": 29458,
+     "name": "Floral Rafflesia",
+     "seen": 269,
+     "sprite": {
+      "file": "c29458.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 237,
+     "sprite": {
+      "file": "c29459.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 225,
+     "sprite": {
+      "file": "c9828.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 219,
+     "sprite": {
+      "file": "c9830.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9825,
+     "name": "Floral Hand",
+     "seen": 214,
+     "sprite": {
+      "file": "c9825.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 213,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 182,
+     "sprite": {
+      "file": "c9827.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 27,
+     "sprite": {
+      "file": "c56087.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 26,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21958,
+     "name": "New Great Owl",
+     "seen": 24,
+     "sprite": {
+      "file": "c21958.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 23,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 16,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 16,
+     "sprite": {
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 13,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 56086,
+     "name": "AI Alien Champion",
+     "seen": 13,
+     "sprite": {
+      "file": "c56086.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 12,
+     "sprite": {
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34604,
+     "name": "Angry Hornet",
+     "seen": 12,
+     "sprite": {
+      "file": "c34604.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 30575,
      "name": "Carboniferous Bush Monster",
-     "seen": 5,
+     "seen": 10,
      "sprite": {
       "file": "c30575.png",
       "tile": 36,
@@ -9030,47 +9941,23 @@
      }
     },
     {
-     "type": 44337,
-     "name": "SpecPen Spectral Jailer",
-     "seen": 5,
+     "type": 29209,
+     "name": "Deep Sea Jellyfish",
+     "seen": 10,
      "sprite": {
-      "file": "c44337.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 2,
+      "file": "c29209.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     },
     {
-     "type": 34603,
-     "name": "Hornet's Nest",
-     "seen": 4,
+     "type": 29232,
+     "name": "Deep Sea Squid",
+     "seen": 9,
      "sprite": {
-      "file": "c34603.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 53011,
-     "name": "Beacon Guardian Floral Escape Teleport Point",
-     "seen": 4,
-     "sprite": {
-      "file": "c53011.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 3,
-     "sprite": {
-      "file": "c31636.png",
+      "file": "c29232.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -9101,7 +9988,8 @@
    "heroes": [
     {
      "name": "Alluring Blossom",
-     "art": "alluring-blossom.png"
+     "art": "alluring-blossom.png",
+     "onMap": true
     },
     {
      "name": "Elder Ent Ancient",
@@ -9121,8 +10009,8 @@
    ]
   },
   {
-   "id": 9,
-   "biome": 8,
+   "id": 12,
+   "biome": 11,
    "tiles": 50953,
    "at": [
     763,
@@ -9428,8 +10316,8 @@
    ]
   },
   {
-   "id": 10,
-   "biome": 9,
+   "id": 13,
+   "biome": 12,
    "tiles": 47443,
    "at": [
     1177,
@@ -9763,342 +10651,8 @@
    ]
   },
   {
-   "id": 11,
-   "biome": 10,
-   "tiles": 45614,
-   "at": [
-    801,
-    569
-   ],
-   "box": [
-    564,
-    454,
-    967,
-    675
-   ],
-   "name": "Floral Escape",
-   "named": true,
-   "from": "walked",
-   "roadSplit": [
-    {
-     "biome": "Floral Escape",
-     "tiles": 2920
-    },
-    {
-     "biome": "Carboniferous",
-     "tiles": 69
-    },
-    {
-     "biome": "Sanguine Forest",
-     "tiles": 36
-    }
-   ],
-   "colour": "#7d9931",
-   "madeOf": [
-    {
-     "ground": "Low Forest Grass",
-     "tiles": 43091
-    },
-    {
-     "ground": "Carboniferous Grass",
-     "tiles": 974
-    },
-    {
-     "ground": "Set Piece 275",
-     "tiles": 648
-    },
-    {
-     "ground": "Castle Stone Floor Tile Dark",
-     "tiles": 249
-    }
-   ],
-   "lives": [
-    {
-     "type": 9825,
-     "name": "Floral Hand",
-     "seen": 163,
-     "sprite": {
-      "file": "c9825.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 163,
-     "sprite": {
-      "file": "c9828.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9827,
-     "name": "Floral Tiger",
-     "seen": 152,
-     "sprite": {
-      "file": "c9827.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 132,
-     "sprite": {
-      "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9830,
-     "name": "Floral Rhino",
-     "seen": 132,
-     "sprite": {
-      "file": "c9830.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29458,
-     "name": "Floral Rafflesia",
-     "seen": 127,
-     "sprite": {
-      "file": "c29458.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9826,
-     "name": "Floral Dragon",
-     "seen": 117,
-     "sprite": {
-      "file": "c9826.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21958,
-     "name": "New Great Owl",
-     "seen": 25,
-     "sprite": {
-      "file": "c21958.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 34604,
-     "name": "Angry Hornet",
-     "seen": 24,
-     "sprite": {
-      "file": "c34604.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9820,
-     "name": "Carboniferous Mantis",
-     "seen": 16,
-     "sprite": {
-      "file": "c9820.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 9,
-     "sprite": {
-      "file": "c30573.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30575,
-     "name": "Carboniferous Bush Monster",
-     "seen": 7,
-     "sprite": {
-      "file": "c30575.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 34603,
-     "name": "Hornet's Nest",
-     "seen": 5,
-     "sprite": {
-      "file": "c34603.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 5,
-     "sprite": {
-      "file": "c14714.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21957,
-     "name": "New Sting Spider",
-     "seen": 4,
-     "sprite": {
-      "file": "c21957.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 22124,
-     "name": "New Train Cart 1",
-     "seen": 3,
-     "sprite": {
-      "file": "c22124.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 4,
-      "size": 100
-     }
-    },
-    {
-     "type": 22125,
-     "name": "New Train Cart 2",
-     "seen": 3,
-     "sprite": {
-      "file": "c22125.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 4,
-      "size": 100
-     }
-    },
-    {
-     "type": 9819,
-     "name": "Carboniferous Dinosaur",
-     "seen": 3,
-     "sprite": {
-      "file": "c9819.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31166,
-     "name": "Carboniferous Flytrap",
-     "seen": 3,
-     "sprite": {
-      "file": "c31166.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9821,
-     "name": "Sanguine Thorn",
-     "seen": 2,
-     "sprite": {
-      "file": "c9821.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "rank": "Veteran",
-   "encounters": [
-    {
-     "name": "Corrupted Bramblethorn",
-     "art": "corrupted-bramblethorn.png"
-    },
-    {
-     "name": "Killer Bee Nest",
-     "art": "killer-bee-nest.png"
-    },
-    {
-     "name": "Ethereal Shrine",
-     "art": "ethereal-shrine.png"
-    },
-    {
-     "name": "Kogbold Expedition Engine",
-     "art": "kogbold-expedition-engine.png"
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Alluring Blossom",
-     "art": "alluring-blossom.png"
-    },
-    {
-     "name": "Elder Ent Ancient",
-     "art": "elder-ent-ancient.png",
-     "onMap": true
-    },
-    {
-     "name": "Hornet’s Nest",
-     "art": "hornet-s-nest.png"
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Commissioner",
-     "art": "legion-commissioner.png"
-    }
-   ]
-  },
-  {
-   "id": 12,
-   "biome": 11,
+   "id": 14,
+   "biome": 13,
    "tiles": 42769,
    "at": [
     737,
@@ -10422,310 +10976,8 @@
    ]
   },
   {
-   "id": 13,
-   "biome": 12,
-   "tiles": 42110,
-   "at": [
-    1488,
-    610
-   ],
-   "box": [
-    1328,
-    393,
-    1650,
-    871
-   ],
-   "name": "Sanguine Forest",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Sanguine Forest",
-     "tiles": 1973
-    },
-    {
-     "biome": "Carboniferous",
-     "tiles": 3
-    },
-    {
-     "biome": "Floral Escape",
-     "tiles": 1
-    }
-   ],
-   "colour": "#2e131b",
-   "madeOf": [
-    {
-     "ground": "Sanguine Forest Dark Dirt",
-     "tiles": 38469
-    },
-    {
-     "ground": "Low Forest Grass",
-     "tiles": 511
-    },
-    {
-     "ground": "pD Cobble",
-     "tiles": 485
-    },
-    {
-     "ground": "pD Creepasite",
-     "tiles": 462
-    }
-   ],
-   "lives": [
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 125,
-     "sprite": {
-      "file": "c31636.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 124,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9821,
-     "name": "Sanguine Thorn",
-     "seen": 119,
-     "sprite": {
-      "file": "c9821.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31632,
-     "name": "Sanguine Ooze",
-     "seen": 96,
-     "sprite": {
-      "file": "c31632.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 78,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31633,
-     "name": "Sanguine Hound",
-     "seen": 71,
-     "sprite": {
-      "file": "c31633.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31634,
-     "name": "Sanguine Treant",
-     "seen": 63,
-     "sprite": {
-      "file": "c31634.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 19,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 2397,
-     "name": "pD Daggers Scout",
-     "seen": 7,
-     "sprite": {
-      "file": "c2397.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9820,
-     "name": "Carboniferous Mantis",
-     "seen": 7,
-     "sprite": {
-      "file": "c9820.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 1984,
-     "name": "pD Blob Scout",
-     "seen": 6,
-     "sprite": {
-      "file": "c1984.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 54296,
-     "name": "Legion Watchmaster",
-     "seen": 5,
-     "sprite": {
-      "file": "c54296.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29233,
-     "name": "Deep Sea Hydra",
-     "seen": 5,
-     "sprite": {
-      "file": "c29233.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29209,
-     "name": "Deep Sea Jellyfish",
-     "seen": 5,
-     "sprite": {
-      "file": "c29209.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 2399,
-     "name": "pD Katanas Scout",
-     "seen": 4,
-     "sprite": {
-      "file": "c2399.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 1993,
-     "name": "pD Stalker Scout",
-     "seen": 4,
-     "sprite": {
-      "file": "c1993.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 31509,
-     "name": "Deep Sea Submarine",
-     "seen": 4,
-     "sprite": {
-      "file": "c31509.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 3,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "rank": "Veteran",
-   "encounters": [
-    {
-     "name": "Avatar of the Forgotten King",
-     "art": "avatar-of-the-forgotten-king.png"
-    },
-    {
-     "name": "Bloodroot Heart",
-     "art": "bloodroot-heart.png"
-    },
-    {
-     "name": "Killer Bee Nest",
-     "art": "killer-bee-nest.png"
-    },
-    {
-     "name": "Lost Sentry",
-     "art": "lost-sentry.png"
-    },
-    {
-     "name": "Ravenous Rot",
-     "art": "ravenous-rot.png"
-    },
-    {
-     "name": "Skeletal Centipede",
-     "art": "skeletal-centipede.png"
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Organ Harvester",
-     "art": "organ-harvester.png",
-     "onMap": true
-    },
-    {
-     "name": "Scout Colony",
-     "art": "scout-colony.png"
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Missionary",
-     "art": "legion-missionary.png"
-    }
-   ]
-  },
-  {
-   "id": 14,
-   "biome": 13,
+   "id": 15,
+   "biome": 14,
    "tiles": 41368,
    "at": [
     661,
@@ -11025,8 +11277,8 @@
    ]
   },
   {
-   "id": 15,
-   "biome": 14,
+   "id": 16,
+   "biome": 15,
    "tiles": 40160,
    "at": [
     1342,
@@ -11362,8 +11614,8 @@
    ]
   },
   {
-   "id": 16,
-   "biome": 15,
+   "id": 17,
+   "biome": 16,
    "tiles": 39195,
    "at": [
     903,
@@ -11661,343 +11913,9 @@
    ]
   },
   {
-   "id": 17,
-   "biome": 16,
-   "tiles": 37865,
-   "at": [
-    1296,
-    462
-   ],
-   "box": [
-    1136,
-    338,
-    1488,
-    613
-   ],
-   "name": "Floral Escape",
-   "named": true,
-   "from": "walked",
-   "roadSplit": [
-    {
-     "biome": "Floral Escape",
-     "tiles": 1232
-    },
-    {
-     "biome": "Sanguine Forest",
-     "tiles": 99
-    },
-    {
-     "biome": "Runic Tundra",
-     "tiles": 13
-    }
-   ],
-   "colour": "#7c9733",
-   "madeOf": [
-    {
-     "ground": "Low Forest Grass",
-     "tiles": 35364
-    },
-    {
-     "ground": "Sanguine Forest Dark Dirt",
-     "tiles": 446
-    },
-    {
-     "ground": "Runic Tundra Dark Ice Textured",
-     "tiles": 375
-    },
-    {
-     "ground": "AI Alien Ashen Ground",
-     "tiles": 339
-    }
-   ],
-   "lives": [
-    {
-     "type": 29458,
-     "name": "Floral Rafflesia",
-     "seen": 127,
-     "sprite": {
-      "file": "c29458.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9827,
-     "name": "Floral Tiger",
-     "seen": 123,
-     "sprite": {
-      "file": "c9827.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9825,
-     "name": "Floral Hand",
-     "seen": 113,
-     "sprite": {
-      "file": "c9825.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 104,
-     "sprite": {
-      "file": "c9828.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9830,
-     "name": "Floral Rhino",
-     "seen": 102,
-     "sprite": {
-      "file": "c9830.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 99,
-     "sprite": {
-      "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9826,
-     "name": "Floral Dragon",
-     "seen": 95,
-     "sprite": {
-      "file": "c9826.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 13,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 13,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21958,
-     "name": "New Great Owl",
-     "seen": 12,
-     "sprite": {
-      "file": "c21958.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29209,
-     "name": "Deep Sea Jellyfish",
-     "seen": 10,
-     "sprite": {
-      "file": "c29209.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29232,
-     "name": "Deep Sea Squid",
-     "seen": 9,
-     "sprite": {
-      "file": "c29232.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 56087,
-     "name": "AI Alien Sage",
-     "seen": 9,
-     "sprite": {
-      "file": "c56087.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9832,
-     "name": "Tundra Troll",
-     "seen": 7,
-     "sprite": {
-      "file": "c9832.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29234,
-     "name": "Deep Sea Siren",
-     "seen": 5,
-     "sprite": {
-      "file": "c29234.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 56088,
-     "name": "AI Alien Shadow",
-     "seen": 5,
-     "sprite": {
-      "file": "c56088.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 5,
-     "sprite": {
-      "file": "c31636.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 5,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 29221,
-     "name": "Deep Sea Kraken",
-     "seen": 4,
-     "sprite": {
-      "file": "c29221.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 53011,
-     "name": "Beacon Guardian Floral Escape Teleport Point",
-     "seen": 4,
-     "sprite": {
-      "file": "c53011.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "rank": "Veteran",
-   "encounters": [
-    {
-     "name": "Corrupted Bramblethorn",
-     "art": "corrupted-bramblethorn.png"
-    },
-    {
-     "name": "Killer Bee Nest",
-     "art": "killer-bee-nest.png"
-    },
-    {
-     "name": "Ethereal Shrine",
-     "art": "ethereal-shrine.png"
-    },
-    {
-     "name": "Kogbold Expedition Engine",
-     "art": "kogbold-expedition-engine.png"
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Alluring Blossom",
-     "art": "alluring-blossom.png"
-    },
-    {
-     "name": "Elder Ent Ancient",
-     "art": "elder-ent-ancient.png",
-     "onMap": true
-    },
-    {
-     "name": "Hornet’s Nest",
-     "art": "hornet-s-nest.png"
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Commissioner",
-     "art": "legion-commissioner.png"
-    }
-   ]
-  },
-  {
    "id": 18,
    "biome": 17,
-   "tiles": 37720,
+   "tiles": 37725,
    "at": [
     489,
     848
@@ -12029,7 +11947,7 @@
    "madeOf": [
     {
      "ground": "Sanguine Forest Dark Dirt",
-     "tiles": 33218
+     "tiles": 34309
     },
     {
      "ground": "Carboniferous Grass",
@@ -12037,18 +11955,18 @@
     },
     {
      "ground": "Deep Sea Light Sand",
-     "tiles": 350
+     "tiles": 352
     },
     {
-     "ground": "Shatters Castle Brick Damaged",
-     "tiles": 227
+     "ground": "AI Alien Ashen Ground",
+     "tiles": 339
     }
    ],
    "lives": [
     {
      "type": 31636,
      "name": "Sanguine Harpy",
-     "seen": 215,
+     "seen": 246,
      "sprite": {
       "file": "c31636.png",
       "tile": 36,
@@ -12060,7 +11978,7 @@
     {
      "type": 9821,
      "name": "Sanguine Thorn",
-     "seen": 193,
+     "seen": 226,
      "sprite": {
       "file": "c9821.png",
       "tile": 36,
@@ -12072,7 +11990,7 @@
     {
      "type": 31637,
      "name": "Sanguine Ghoul",
-     "seen": 169,
+     "seen": 197,
      "sprite": {
       "file": "c31637.png",
       "tile": 36,
@@ -12084,7 +12002,7 @@
     {
      "type": 31633,
      "name": "Sanguine Hound",
-     "seen": 131,
+     "seen": 167,
      "sprite": {
       "file": "c31633.png",
       "tile": 36,
@@ -12096,7 +12014,7 @@
     {
      "type": 31635,
      "name": "Sanguine Archer",
-     "seen": 113,
+     "seen": 141,
      "sprite": {
       "file": "c31635.png",
       "tile": 36,
@@ -12108,7 +12026,7 @@
     {
      "type": 31634,
      "name": "Sanguine Treant",
-     "seen": 104,
+     "seen": 127,
      "sprite": {
       "file": "c31634.png",
       "tile": 36,
@@ -12120,7 +12038,7 @@
     {
      "type": 31632,
      "name": "Sanguine Ooze",
-     "seen": 101,
+     "seen": 126,
      "sprite": {
       "file": "c31632.png",
       "tile": 36,
@@ -12128,6 +12046,19 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 34509,
+     "name": "Organ Harvester",
+     "seen": 18,
+     "sprite": {
+      "file": "c34509.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "hero"
     },
     {
      "type": 1984,
@@ -12142,17 +12073,16 @@
      }
     },
     {
-     "type": 34509,
-     "name": "Organ Harvester",
+     "type": 767,
+     "name": "Sanguine Ooze Puddle",
      "seen": 15,
      "sprite": {
-      "file": "c34509.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
+      "file": "c767.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
       "size": 100
-     },
-     "role": "hero"
+     }
     },
     {
      "type": 2397,
@@ -12163,18 +12093,6 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 14,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
       "size": 100
      }
     },
@@ -12288,7 +12206,7 @@
   {
    "id": 19,
    "biome": 18,
-   "tiles": 35076,
+   "tiles": 35094,
    "at": [
     1863,
     1602
@@ -12316,7 +12234,7 @@
    "madeOf": [
     {
      "ground": "Shipwreck Cove Grassy Dirt",
-     "tiles": 29782
+     "tiles": 29664
     },
     {
      "ground": "Set Piece 853",
@@ -12412,6 +12330,18 @@
       "file": "c34499.png",
       "tile": 36,
       "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 24019,
+     "name": "Illegal Animal Parrot",
+     "seen": 17,
+     "sprite": {
+      "file": "c24019.png",
+      "tile": 20,
+      "height": 20,
       "frames": 2,
       "size": 100
      }
@@ -12513,6 +12443,30 @@
      }
     },
     {
+     "type": 47931,
+     "name": "Barnacle Rock",
+     "seen": 6,
+     "sprite": {
+      "file": "c47931.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 24023,
+     "name": "Illegal Animal Merchant",
+     "seen": 5,
+     "sprite": {
+      "file": "c24023.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 34500,
      "name": "Pirate's Tavern Bartender",
      "seen": 5,
@@ -12533,30 +12487,6 @@
       "tile": 36,
       "height": 36,
       "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 16926,
-     "name": "Beached Cannon",
-     "seen": 5,
-     "sprite": {
-      "file": "c16926.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 24023,
-     "name": "Illegal Animal Merchant",
-     "seen": 4,
-     "sprite": {
-      "file": "c24023.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
       "size": 100
      }
     }
@@ -12750,6 +12680,18 @@
      }
     },
     {
+     "type": 47957,
+     "name": "Small Stygian Mirror",
+     "seen": 24,
+     "sprite": {
+      "file": "c47957.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 50130,
      "name": "Hell Dog 3",
      "seen": 17,
@@ -12824,7 +12766,7 @@
     {
      "type": 21897,
      "name": "New Red Demon",
-     "seen": 7,
+     "seen": 8,
      "sprite": {
       "file": "c21897.png",
       "tile": 36,
@@ -12867,18 +12809,6 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21895,
-     "name": "City Djinn",
-     "seen": 7,
-     "sprite": {
-      "file": "c21895.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
       "size": 100
      }
     }
@@ -13554,7 +13484,7 @@
   {
    "id": 23,
    "biome": 22,
-   "tiles": 31995,
+   "tiles": 31994,
    "at": [
     1845,
     1241
@@ -13586,11 +13516,11 @@
    "madeOf": [
     {
      "ground": "Shipwreck Cove Grassy Dirt",
-     "tiles": 28971
+     "tiles": 28981
     },
     {
      "ground": "Coral Reefs Sand",
-     "tiles": 586
+     "tiles": 575
     },
     {
      "ground": "Dead Church Grass Dark",
@@ -13605,7 +13535,7 @@
     {
      "type": 49901,
      "name": "Shipwreck Ghost",
-     "seen": 295,
+     "seen": 301,
      "sprite": {
       "file": "c49901.png",
       "tile": 20,
@@ -13617,7 +13547,7 @@
     {
      "type": 49902,
      "name": "Shipwreck Pirate",
-     "seen": 221,
+     "seen": 233,
      "sprite": {
       "file": "c49902.png",
       "tile": 20,
@@ -13629,7 +13559,7 @@
     {
      "type": 49905,
      "name": "Shipwreck Sailor",
-     "seen": 186,
+     "seen": 197,
      "sprite": {
       "file": "c49905.png",
       "tile": 20,
@@ -13641,7 +13571,7 @@
     {
      "type": 49906,
      "name": "Shipwreck Elemental",
-     "seen": 65,
+     "seen": 69,
      "sprite": {
       "file": "c49906.png",
       "tile": 36,
@@ -13663,6 +13593,18 @@
      }
     },
     {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "seen": 11,
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 34501,
      "name": "Pirate's Tavern Drunk Sailor",
      "seen": 11,
@@ -13670,18 +13612,6 @@
       "file": "c34501.png",
       "tile": 20,
       "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49341,
-     "name": "Reef Turtle",
-     "seen": 10,
-     "sprite": {
-      "file": "c49341.png",
-      "tile": 36,
-      "height": 36,
       "frames": 2,
       "size": 100
      }
@@ -13735,6 +13665,18 @@
      }
     },
     {
+     "type": 49344,
+     "name": "Reef Walrus",
+     "seen": 4,
+     "sprite": {
+      "file": "c49344.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 49415,
      "name": "Dead Church Skeleton",
      "seen": 4,
@@ -13771,11 +13713,11 @@
      }
     },
     {
-     "type": 17736,
-     "name": "Sprite Forest Electric God",
+     "type": 24023,
+     "name": "Illegal Animal Merchant",
      "seen": 3,
      "sprite": {
-      "file": "c17736.png",
+      "file": "c24023.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -13783,11 +13725,11 @@
      }
     },
     {
-     "type": 53001,
-     "name": "Beacon Guardian Shipwreck Cove",
-     "seen": 2,
+     "type": 17736,
+     "name": "Sprite Forest Electric God",
+     "seen": 3,
      "sprite": {
-      "file": "c53001.png",
+      "file": "c17736.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -13912,6 +13854,18 @@
      }
     },
     {
+     "type": 51030,
+     "name": "Daughter of Limon Portal",
+     "seen": 77,
+     "sprite": {
+      "file": "c51030.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 17735,
      "name": "Sprite Forest Poison God",
      "seen": 73,
@@ -13920,18 +13874,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 60,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
       "size": 100
      }
     },
@@ -14208,7 +14150,7 @@
      "tiles": 970
     }
    ],
-   "cleftFrom": 5,
+   "cleftFrom": 6,
    "lives": [
     {
      "type": 49415,
@@ -14511,15 +14453,15 @@
      "tiles": 21
     }
    ],
-   "colour": "#353f22",
+   "colour": "#353f23",
    "madeOf": [
     {
      "ground": "Dark Grass",
-     "tiles": 22729
+     "tiles": 22559
     },
     {
      "ground": "Rock",
-     "tiles": 1072
+     "tiles": 1242
     },
     {
      "ground": "Desert Rough Sand",
@@ -14558,7 +14500,7 @@
     {
      "type": 21884,
      "name": "New Dark Elf Swordsman",
-     "seen": 57,
+     "seen": 59,
      "sprite": {
       "file": "c21884.png",
       "tile": 20,
@@ -14570,7 +14512,7 @@
     {
      "type": 21883,
      "name": "New Dark Elf Scout",
-     "seen": 55,
+     "seen": 58,
      "sprite": {
       "file": "c21883.png",
       "tile": 20,
@@ -14582,9 +14524,21 @@
     {
      "type": 21872,
      "name": "New Night Elf Warrior",
-     "seen": 40,
+     "seen": 41,
      "sprite": {
       "file": "c21872.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21871,
+     "name": "New Night Elf Archer",
+     "seen": 41,
+     "sprite": {
+      "file": "c21871.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -14604,21 +14558,9 @@
      }
     },
     {
-     "type": 21871,
-     "name": "New Night Elf Archer",
-     "seen": 40,
-     "sprite": {
-      "file": "c21871.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 21873,
      "name": "New Night Elf Mage",
-     "seen": 39,
+     "seen": 40,
      "sprite": {
       "file": "c21873.png",
       "tile": 20,
@@ -14642,7 +14584,7 @@
     {
      "type": 54291,
      "name": "Legion Surveyor",
-     "seen": 28,
+     "seen": 31,
      "sprite": {
       "file": "c54291.png",
       "tile": 36,
@@ -14676,6 +14618,18 @@
      }
     },
     {
+     "type": 21877,
+     "name": "New Dragon Egg",
+     "seen": 26,
+     "sprite": {
+      "file": "c21877.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
      "type": 21886,
      "name": "New Dark Elf Royal Guard",
      "seen": 25,
@@ -14688,21 +14642,9 @@
      }
     },
     {
-     "type": 21877,
-     "name": "New Dragon Egg",
-     "seen": 24,
-     "sprite": {
-      "file": "c21877.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 21887,
      "name": "New Dark Elf Queen",
-     "seen": 16,
+     "seen": 17,
      "sprite": {
       "file": "c21887.png",
       "tile": 20,
@@ -14829,7 +14771,7 @@
     {
      "type": 17733,
      "name": "Sprite Forest Child",
-     "seen": 223,
+     "seen": 229,
      "sprite": {
       "file": "c17733.png",
       "tile": 20,
@@ -14841,7 +14783,7 @@
     {
      "type": 49967,
      "name": "Sprite Forest Dog",
-     "seen": 117,
+     "seen": 121,
      "sprite": {
       "file": "c49967.png",
       "tile": 36,
@@ -14853,7 +14795,7 @@
     {
      "type": 17735,
      "name": "Sprite Forest Poison God",
-     "seen": 62,
+     "seen": 66,
      "sprite": {
       "file": "c17735.png",
       "tile": 36,
@@ -14877,7 +14819,7 @@
     {
      "type": 17732,
      "name": "Sprite Forest God",
-     "seen": 51,
+     "seen": 52,
      "sprite": {
       "file": "c17732.png",
       "tile": 36,
@@ -14889,7 +14831,7 @@
     {
      "type": 17736,
      "name": "Sprite Forest Electric God",
-     "seen": 45,
+     "seen": 48,
      "sprite": {
       "file": "c17736.png",
       "tile": 36,
@@ -14901,7 +14843,7 @@
     {
      "type": 17738,
      "name": "Sprite Forest Nature God",
-     "seen": 43,
+     "seen": 45,
      "sprite": {
       "file": "c17738.png",
       "tile": 36,
@@ -14913,12 +14855,24 @@
     {
      "type": 17734,
      "name": "Sprite Forest Fire God",
-     "seen": 38,
+     "seen": 39,
      "sprite": {
       "file": "c17734.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 51030,
+     "name": "Daughter of Limon Portal",
+     "seen": 15,
+     "sprite": {
+      "file": "c51030.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
       "size": 100
      }
     },
@@ -14961,7 +14915,7 @@
     {
      "type": 49341,
      "name": "Reef Turtle",
-     "seen": 5,
+     "seen": 6,
      "sprite": {
       "file": "c49341.png",
       "tile": 36,
@@ -14983,14 +14937,14 @@
      }
     },
     {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 5,
+     "type": 22009,
+     "name": "New Cube God",
+     "seen": 4,
      "sprite": {
-      "file": "c51030.png",
+      "file": "c22009.png",
       "tile": 36,
       "height": 36,
-      "frames": 1,
+      "frames": 2,
       "size": 100
      }
     },
@@ -15031,24 +14985,11 @@
      }
     },
     {
-     "type": 2907,
-     "name": "Elder Sprite Tree",
-     "seen": 3,
+     "type": 49342,
+     "name": "Reef Octopus",
+     "seen": 4,
      "sprite": {
-      "file": "c2907.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 1,
-      "size": 100
-     },
-     "role": "hero"
-    },
-    {
-     "type": 53002,
-     "name": "Beacon Guardian Sprite Forest",
-     "seen": 3,
-     "sprite": {
-      "file": "c53002.png",
+      "file": "c49342.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -15715,7 +15656,7 @@
     {
      "type": 21770,
      "name": "New Pirate",
-     "seen": 170,
+     "seen": 171,
      "sprite": {
       "file": "c21770.png",
       "tile": 20,
@@ -15727,7 +15668,7 @@
     {
      "type": 21764,
      "name": "New Green Gelatinous Cube",
-     "seen": 87,
+     "seen": 96,
      "sprite": {
       "file": "c21764.png",
       "tile": 20,
@@ -15775,7 +15716,7 @@
     {
      "type": 21763,
      "name": "New Purple Gelatinous Cube",
-     "seen": 42,
+     "seen": 44,
      "sprite": {
       "file": "c21763.png",
       "tile": 20,
@@ -15799,7 +15740,7 @@
     {
      "type": 21772,
      "name": "New Snake",
-     "seen": 33,
+     "seen": 35,
      "sprite": {
       "file": "c21772.png",
       "tile": 20,
@@ -15883,7 +15824,7 @@
     {
      "type": 21777,
      "name": "New Elf Archer",
-     "seen": 11,
+     "seen": 12,
      "sprite": {
       "file": "c21777.png",
       "tile": 20,
@@ -15895,7 +15836,7 @@
     {
      "type": 21769,
      "name": "New Sand Devil",
-     "seen": 9,
+     "seen": 10,
      "sprite": {
       "file": "c21769.png",
       "tile": 20,
@@ -15907,7 +15848,7 @@
     {
      "type": 21779,
      "name": "New Elf Mage",
-     "seen": 9,
+     "seen": 10,
      "sprite": {
       "file": "c21779.png",
       "tile": 20,
@@ -15939,6 +15880,18 @@
       "frames": 1,
       "size": 100
      }
+    },
+    {
+     "type": 21768,
+     "name": "New Giant Crab",
+     "seen": 7,
+     "sprite": {
+      "file": "c21768.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -15953,6 +15906,284 @@
   {
    "id": 30,
    "biome": 29,
+   "tiles": 19024,
+   "at": [
+    956,
+    429
+   ],
+   "box": [
+    847,
+    340,
+    1057,
+    511
+   ],
+   "name": "Sanguine Forest",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Sanguine Forest",
+     "tiles": 596
+    },
+    {
+     "biome": "Carboniferous",
+     "tiles": 9
+    },
+    {
+     "biome": "Runic Tundra",
+     "tiles": 6
+    }
+   ],
+   "colour": "#321821",
+   "madeOf": [
+    {
+     "ground": "Sanguine Forest Dark Dirt",
+     "tiles": 17076
+    },
+    {
+     "ground": "Runic Tundra Dark Ice Textured",
+     "tiles": 509
+    },
+    {
+     "ground": "Low Forest Grass",
+     "tiles": 322
+    },
+    {
+     "ground": "Castle Stone Floor Tile",
+     "tiles": 212
+    }
+   ],
+   "lives": [
+    {
+     "type": 9821,
+     "name": "Sanguine Thorn",
+     "seen": 143,
+     "sprite": {
+      "file": "c9821.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31636,
+     "name": "Sanguine Harpy",
+     "seen": 92,
+     "sprite": {
+      "file": "c31636.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31632,
+     "name": "Sanguine Ooze",
+     "seen": 68,
+     "sprite": {
+      "file": "c31632.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 59,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31634,
+     "name": "Sanguine Treant",
+     "seen": 57,
+     "sprite": {
+      "file": "c31634.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 48,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31633,
+     "name": "Sanguine Hound",
+     "seen": 45,
+     "sprite": {
+      "file": "c31633.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 7,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 1984,
+     "name": "pD Blob Scout",
+     "seen": 6,
+     "sprite": {
+      "file": "c1984.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 767,
+     "name": "Sanguine Ooze Puddle",
+     "seen": 6,
+     "sprite": {
+      "file": "c767.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 53013,
+     "name": "Beacon Guardian Sanguine Forest",
+     "seen": 4,
+     "sprite": {
+      "file": "c53013.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21960,
+     "name": "New Encounter Bomb",
+     "seen": 4,
+     "sprite": {
+      "file": "c21960.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 16992,
+     "name": "Ravenous Rot Path",
+     "seen": 4,
+     "sprite": {
+      "file": "c16992.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 4,
+      "size": 100
+     }
+    },
+    {
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 4,
+     "sprite": {
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 2396,
+     "name": "pD Bows Scout",
+     "seen": 4,
+     "sprite": {
+      "file": "c2396.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "rank": "Veteran",
+   "encounters": [
+    {
+     "name": "Avatar of the Forgotten King",
+     "art": "avatar-of-the-forgotten-king.png"
+    },
+    {
+     "name": "Bloodroot Heart",
+     "art": "bloodroot-heart.png"
+    },
+    {
+     "name": "Killer Bee Nest",
+     "art": "killer-bee-nest.png"
+    },
+    {
+     "name": "Lost Sentry",
+     "art": "lost-sentry.png"
+    },
+    {
+     "name": "Ravenous Rot",
+     "art": "ravenous-rot.png"
+    },
+    {
+     "name": "Skeletal Centipede",
+     "art": "skeletal-centipede.png"
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Organ Harvester",
+     "art": "organ-harvester.png",
+     "onMap": true
+    },
+    {
+     "name": "Scout Colony",
+     "art": "scout-colony.png"
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Missionary",
+     "art": "legion-missionary.png"
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "biome": 30,
    "tiles": 14721,
    "at": [
     530,
@@ -16252,12 +16483,12 @@
    ]
   },
   {
-   "id": 31,
-   "biome": 30,
-   "tiles": 14442,
+   "id": 32,
+   "biome": 31,
+   "tiles": 14139,
    "at": [
     1028,
-    1675
+    1677
    ],
    "box": [
     945,
@@ -16278,30 +16509,30 @@
      "tiles": 9
     }
    ],
-   "colour": "#deb98c",
+   "colour": "#d5b387",
    "madeOf": [
     {
      "ground": "Desert Rough Sand",
-     "tiles": 12904
+     "tiles": 12024
     },
     {
      "ground": "Dark Grass",
      "tiles": 523
     },
     {
-     "ground": "Nature Ruins Grass",
-     "tiles": 242
+     "ground": "Light Grass",
+     "tiles": 473
     },
     {
-     "ground": "Light Grass",
-     "tiles": 239
+     "ground": "Scorch",
+     "tiles": 426
     }
    ],
    "lives": [
     {
      "type": 21797,
      "name": "New Demon Warg",
-     "seen": 107,
+     "seen": 147,
      "sprite": {
       "file": "c21797.png",
       "tile": 20,
@@ -16313,7 +16544,7 @@
     {
      "type": 21796,
      "name": "New Tawny Warg",
-     "seen": 96,
+     "seen": 114,
      "sprite": {
       "file": "c21796.png",
       "tile": 20,
@@ -16325,7 +16556,7 @@
     {
      "type": 21807,
      "name": "New Sand Phantom",
-     "seen": 52,
+     "seen": 65,
      "sprite": {
       "file": "c21807.png",
       "tile": 20,
@@ -16337,7 +16568,7 @@
     {
      "type": 21809,
      "name": "New Nomadic Shaman",
-     "seen": 40,
+     "seen": 46,
      "sprite": {
       "file": "c21809.png",
       "tile": 20,
@@ -16349,7 +16580,7 @@
     {
      "type": 21799,
      "name": "New Fire Golem",
-     "seen": 29,
+     "seen": 35,
      "sprite": {
       "file": "c21799.png",
       "tile": 20,
@@ -16361,7 +16592,7 @@
     {
      "type": 21800,
      "name": "New Darkness Golem",
-     "seen": 24,
+     "seen": 30,
      "sprite": {
       "file": "c21800.png",
       "tile": 20,
@@ -16373,11 +16604,23 @@
     {
      "type": 21810,
      "name": "New Great Lizard",
-     "seen": 16,
+     "seen": 17,
      "sprite": {
       "file": "c21810.png",
       "tile": 36,
       "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21798,
+     "name": "New Desert Werewolf",
+     "seen": 16,
+     "sprite": {
+      "file": "c21798.png",
+      "tile": 20,
+      "height": 20,
       "frames": 2,
       "size": 100
      }
@@ -16388,18 +16631,6 @@
      "seen": 16,
      "sprite": {
       "file": "c21841.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21798,
-     "name": "New Desert Werewolf",
-     "seen": 14,
-     "sprite": {
-      "file": "c21798.png",
       "tile": 20,
       "height": 20,
       "frames": 2,
@@ -16419,14 +16650,14 @@
      }
     },
     {
-     "type": 21903,
-     "name": "New Birdman",
-     "seen": 12,
+     "type": 54291,
+     "name": "Legion Surveyor",
+     "seen": 8,
      "sprite": {
-      "file": "c21903.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
+      "file": "c54291.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     },
@@ -16439,30 +16670,6 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 54291,
-     "name": "Legion Surveyor",
-     "seen": 7,
-     "sprite": {
-      "file": "c54291.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21902,
-     "name": "New Birdman Chief",
-     "seen": 7,
-     "sprite": {
-      "file": "c21902.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
       "size": 100
      }
     },
@@ -16513,14 +16720,38 @@
       "frames": 3,
       "size": 100
      }
+    },
+    {
+     "type": 21846,
+     "name": "New Black Bat",
+     "seen": 2,
+     "sprite": {
+      "file": "c21846.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21837,
+     "name": "New Metal Golem",
+     "seen": 2,
+     "sprite": {
+      "file": "c21837.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
    "rank": "Rookie"
   },
   {
-   "id": 32,
-   "biome": 31,
+   "id": 33,
+   "biome": 32,
    "tiles": 13715,
    "at": [
     1034,
@@ -16806,8 +17037,8 @@
    ]
   },
   {
-   "id": 33,
-   "biome": 32,
+   "id": 34,
+   "biome": 33,
    "tiles": 13670,
    "at": [
     1119,
@@ -17069,8 +17300,8 @@
    ]
   },
   {
-   "id": 34,
-   "biome": 33,
+   "id": 35,
+   "biome": 34,
    "tiles": 10279,
    "at": [
     598,
@@ -17314,224 +17545,6 @@
    ]
   },
   {
-   "id": 35,
-   "biome": 34,
-   "tiles": 9228,
-   "at": [
-    968,
-    440
-   ],
-   "box": [
-    894,
-    364,
-    1037,
-    506
-   ],
-   "name": "Sanguine Forest",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Sanguine Forest",
-     "tiles": 596
-    },
-    {
-     "biome": "Carboniferous",
-     "tiles": 9
-    },
-    {
-     "biome": "Runic Tundra",
-     "tiles": 6
-    }
-   ],
-   "colour": "#311821",
-   "madeOf": [
-    {
-     "ground": "Sanguine Forest Dark Dirt",
-     "tiles": 7799
-    },
-    {
-     "ground": "Castle Stone Floor Tile",
-     "tiles": 212
-    },
-    {
-     "ground": "Castle Stone Floor Tile Dark",
-     "tiles": 152
-    },
-    {
-     "ground": "Legion Smooth Stone",
-     "tiles": 152
-    }
-   ],
-   "lives": [
-    {
-     "type": 9821,
-     "name": "Sanguine Thorn",
-     "seen": 62,
-     "sprite": {
-      "file": "c9821.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31632,
-     "name": "Sanguine Ooze",
-     "seen": 23,
-     "sprite": {
-      "file": "c31632.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 23,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 16,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31633,
-     "name": "Sanguine Hound",
-     "seen": 14,
-     "sprite": {
-      "file": "c31633.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31634,
-     "name": "Sanguine Treant",
-     "seen": 11,
-     "sprite": {
-      "file": "c31634.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 6,
-     "sprite": {
-      "file": "c31636.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29593,
-     "name": "Tundra Wizard",
-     "seen": 4,
-     "sprite": {
-      "file": "c29593.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29557,
-     "name": "Tundra Knight",
-     "seen": 3,
-     "sprite": {
-      "file": "c29557.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 54295,
-     "name": "Legion Veteran Guard",
-     "seen": 2,
-     "sprite": {
-      "file": "c54295.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "rank": "Veteran",
-   "encounters": [
-    {
-     "name": "Avatar of the Forgotten King",
-     "art": "avatar-of-the-forgotten-king.png"
-    },
-    {
-     "name": "Bloodroot Heart",
-     "art": "bloodroot-heart.png"
-    },
-    {
-     "name": "Killer Bee Nest",
-     "art": "killer-bee-nest.png"
-    },
-    {
-     "name": "Lost Sentry",
-     "art": "lost-sentry.png"
-    },
-    {
-     "name": "Ravenous Rot",
-     "art": "ravenous-rot.png"
-    },
-    {
-     "name": "Skeletal Centipede",
-     "art": "skeletal-centipede.png"
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Organ Harvester",
-     "art": "organ-harvester.png",
-     "onMap": true
-    },
-    {
-     "name": "Scout Colony",
-     "art": "scout-colony.png"
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Missionary",
-     "art": "legion-missionary.png"
-    }
-   ]
-  },
-  {
    "id": 36,
    "biome": 35,
    "tiles": 2094,
@@ -17768,7 +17781,7 @@
    "y": 1444,
    "name": "Shore",
    "state": "active",
-   "zone": 34,
+   "zone": 35,
    "guards": [
     {
      "type": 21784,
@@ -17791,6 +17804,18 @@
    "state": "active",
    "zone": 29,
    "guards": [
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "seen": 9,
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
     {
      "type": 21762,
      "name": "New Red Gelatinous Cube",
@@ -17816,14 +17841,14 @@
      }
     },
     {
-     "type": 21764,
-     "name": "New Green Gelatinous Cube",
-     "seen": 3,
+     "type": 21769,
+     "name": "New Sand Devil",
+     "seen": 4,
      "sprite": {
-      "file": "c21764.png",
+      "file": "c21769.png",
       "tile": 20,
       "height": 20,
-      "frames": 3,
+      "frames": 2,
       "size": 100
      }
     },
@@ -17836,18 +17861,6 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21769,
-     "name": "New Sand Devil",
-     "seen": 3,
-     "sprite": {
-      "file": "c21769.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
       "size": 100
      }
     },
@@ -17876,11 +17889,11 @@
      }
     },
     {
-     "type": 21767,
-     "name": "New Sandsman King",
-     "seen": 1,
+     "type": 21772,
+     "name": "New Snake",
+     "seen": 2,
      "sprite": {
-      "file": "c21767.png",
+      "file": "c21772.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -17894,7 +17907,7 @@
    "y": 1692,
    "name": "Forest",
    "state": "active",
-   "zone": 16,
+   "zone": 17,
    "guards": [
     {
      "type": 21845,
@@ -17982,11 +17995,11 @@
    "zone": 25,
    "guards": [
     {
-     "type": 21884,
-     "name": "New Dark Elf Swordsman",
-     "seen": 5,
+     "type": 21883,
+     "name": "New Dark Elf Scout",
+     "seen": 6,
      "sprite": {
-      "file": "c21884.png",
+      "file": "c21883.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -17994,11 +18007,11 @@
      }
     },
     {
-     "type": 21883,
-     "name": "New Dark Elf Scout",
-     "seen": 4,
+     "type": 21884,
+     "name": "New Dark Elf Swordsman",
+     "seen": 5,
      "sprite": {
-      "file": "c21883.png",
+      "file": "c21884.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -18088,7 +18101,7 @@
    "y": 1684,
    "name": "Desert",
    "state": "teleport",
-   "zone": 31,
+   "zone": 32,
    "guards": [
     {
      "type": 21797,
@@ -18117,7 +18130,7 @@
     {
      "type": 21807,
      "name": "New Sand Phantom",
-     "seen": 12,
+     "seen": 16,
      "sprite": {
       "file": "c21807.png",
       "tile": 20,
@@ -18127,21 +18140,9 @@
      }
     },
     {
-     "type": 21799,
-     "name": "New Fire Golem",
-     "seen": 5,
-     "sprite": {
-      "file": "c21799.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 21800,
      "name": "New Darkness Golem",
-     "seen": 5,
+     "seen": 7,
      "sprite": {
       "file": "c21800.png",
       "tile": 20,
@@ -18151,9 +18152,21 @@
      }
     },
     {
+     "type": 21799,
+     "name": "New Fire Golem",
+     "seen": 6,
+     "sprite": {
+      "file": "c21799.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21809,
      "name": "New Nomadic Shaman",
-     "seen": 4,
+     "seen": 5,
      "sprite": {
       "file": "c21809.png",
       "tile": 20,
@@ -18181,7 +18194,7 @@
    "y": 1575,
    "name": "Plains",
    "state": "teleport",
-   "zone": 9,
+   "zone": 12,
    "guards": [
     {
      "type": 21821,
@@ -18266,7 +18279,7 @@
    "y": 1436,
    "name": "Undead Forest",
    "state": "teleport",
-   "zone": 14,
+   "zone": 15,
    "guards": [
     {
      "type": 21792,
@@ -18332,7 +18345,7 @@
     {
      "type": 31637,
      "name": "Sanguine Ghoul",
-     "seen": 15,
+     "seen": 17,
      "sprite": {
       "file": "c31637.png",
       "tile": 36,
@@ -18344,7 +18357,7 @@
     {
      "type": 31633,
      "name": "Sanguine Hound",
-     "seen": 13,
+     "seen": 14,
      "sprite": {
       "file": "c31633.png",
       "tile": 36,
@@ -18380,9 +18393,21 @@
     {
      "type": 31634,
      "name": "Sanguine Treant",
-     "seen": 9,
+     "seen": 11,
      "sprite": {
       "file": "c31634.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31636,
+     "name": "Sanguine Harpy",
+     "seen": 7,
+     "sprite": {
+      "file": "c31636.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -18400,18 +18425,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 31636,
-     "name": "Sanguine Harpy",
-     "seen": 4,
-     "sprite": {
-      "file": "c31636.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
     }
    ],
    "guardian": {
@@ -18424,24 +18437,12 @@
    "y": 1258,
    "name": "Coral Reefs",
    "state": "teleport",
-   "zone": 4,
+   "zone": 5,
    "guards": [
-    {
-     "type": 49342,
-     "name": "Reef Octopus",
-     "seen": 9,
-     "sprite": {
-      "file": "c49342.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
     {
      "type": 49341,
      "name": "Reef Turtle",
-     "seen": 8,
+     "seen": 12,
      "sprite": {
       "file": "c49341.png",
       "tile": 36,
@@ -18451,35 +18452,11 @@
      }
     },
     {
-     "type": 21888,
-     "name": "Reef Leviathan",
-     "seen": 5,
+     "type": 49342,
+     "name": "Reef Octopus",
+     "seen": 10,
      "sprite": {
-      "file": "c21888.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 49344,
-     "name": "Reef Walrus",
-     "seen": 3,
-     "sprite": {
-      "file": "c49344.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49343,
-     "name": "Reef Narwhal",
-     "seen": 3,
-     "sprite": {
-      "file": "c49343.png",
+      "file": "c49342.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -18489,9 +18466,45 @@
     {
      "type": 49340,
      "name": "Reef Seahorse",
-     "seen": 3,
+     "seen": 7,
      "sprite": {
       "file": "c49340.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21888,
+     "name": "Reef Leviathan",
+     "seen": 7,
+     "sprite": {
+      "file": "c21888.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49343,
+     "name": "Reef Narwhal",
+     "seen": 6,
+     "sprite": {
+      "file": "c49343.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49344,
+     "name": "Reef Walrus",
+     "seen": 5,
+     "sprite": {
+      "file": "c49344.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -18517,7 +18530,7 @@
    "y": 1661,
    "name": "Coral Reefs",
    "state": "teleport",
-   "zone": 4,
+   "zone": 5,
    "guards": [
     {
      "type": 49341,
@@ -18598,12 +18611,12 @@
    "y": 1016,
    "name": "Coral Reefs",
    "state": "teleport",
-   "zone": 4,
+   "zone": 5,
    "guards": [
     {
      "type": 49340,
      "name": "Reef Seahorse",
-     "seen": 24,
+     "seen": 27,
      "sprite": {
       "file": "c49340.png",
       "tile": 36,
@@ -18615,7 +18628,7 @@
     {
      "type": 49344,
      "name": "Reef Walrus",
-     "seen": 22,
+     "seen": 24,
      "sprite": {
       "file": "c49344.png",
       "tile": 36,
@@ -18627,7 +18640,7 @@
     {
      "type": 49341,
      "name": "Reef Turtle",
-     "seen": 17,
+     "seen": 19,
      "sprite": {
       "file": "c49341.png",
       "tile": 36,
@@ -18639,7 +18652,7 @@
     {
      "type": 49342,
      "name": "Reef Octopus",
-     "seen": 11,
+     "seen": 12,
      "sprite": {
       "file": "c49342.png",
       "tile": 36,
@@ -18906,7 +18919,7 @@
     {
      "type": 21764,
      "name": "New Green Gelatinous Cube",
-     "seen": 6,
+     "seen": 7,
      "sprite": {
       "file": "c21764.png",
       "tile": 20,
@@ -18985,9 +18998,21 @@
    "zone": 1,
    "guards": [
     {
+     "type": 29221,
+     "name": "Deep Sea Kraken",
+     "seen": 8,
+     "sprite": {
+      "file": "c29221.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
      "type": 29234,
      "name": "Deep Sea Siren",
-     "seen": 3,
+     "seen": 6,
      "sprite": {
       "file": "c29234.png",
       "tile": 36,
@@ -18999,12 +19024,24 @@
     {
      "type": 29232,
      "name": "Deep Sea Squid",
-     "seen": 3,
+     "seen": 4,
      "sprite": {
       "file": "c29232.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29233,
+     "name": "Deep Sea Hydra",
+     "seen": 4,
+     "sprite": {
+      "file": "c29233.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     },
@@ -19021,26 +19058,14 @@
      }
     },
     {
-     "type": 29221,
-     "name": "Deep Sea Kraken",
-     "seen": 1,
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 2,
      "sprite": {
-      "file": "c29221.png",
-      "tile": 68,
-      "height": 68,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 29233,
-     "name": "Deep Sea Hydra",
-     "seen": 1,
-     "sprite": {
-      "file": "c29233.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     },
@@ -19063,24 +19088,12 @@
    "y": 724,
    "name": "Sanguine Forest",
    "state": "teleport",
-   "zone": 13,
+   "zone": 9,
    "guards": [
-    {
-     "type": 31637,
-     "name": "Sanguine Ghoul",
-     "seen": 4,
-     "sprite": {
-      "file": "c31637.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
     {
      "type": 31636,
      "name": "Sanguine Harpy",
-     "seen": 2,
+     "seen": 12,
      "sprite": {
       "file": "c31636.png",
       "tile": 36,
@@ -19090,9 +19103,45 @@
      }
     },
     {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 11,
+     "sprite": {
+      "file": "c31637.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31635,
+     "name": "Sanguine Archer",
+     "seen": 6,
+     "sprite": {
+      "file": "c31635.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31632,
+     "name": "Sanguine Ooze",
+     "seen": 5,
+     "sprite": {
+      "file": "c31632.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 31633,
      "name": "Sanguine Hound",
-     "seen": 2,
+     "seen": 3,
      "sprite": {
       "file": "c31633.png",
       "tile": 36,
@@ -19104,7 +19153,7 @@
     {
      "type": 31634,
      "name": "Sanguine Treant",
-     "seen": 1,
+     "seen": 3,
      "sprite": {
       "file": "c31634.png",
       "tile": 36,
@@ -19114,38 +19163,26 @@
      }
     },
     {
-     "type": 31632,
-     "name": "Sanguine Ooze",
-     "seen": 1,
-     "sprite": {
-      "file": "c31632.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31635,
-     "name": "Sanguine Archer",
-     "seen": 1,
-     "sprite": {
-      "file": "c31635.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 9821,
      "name": "Sanguine Thorn",
-     "seen": 1,
+     "seen": 3,
      "sprite": {
       "file": "c9821.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 767,
+     "name": "Sanguine Ooze Puddle",
+     "seen": 2,
+     "sprite": {
+      "file": "c767.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
       "size": 100
      }
     }
@@ -19379,7 +19416,7 @@
    "y": 1395,
    "name": "Haunted Hallows",
    "state": "teleport",
-   "zone": 10,
+   "zone": 13,
    "guards": [],
    "guardian": {
     "name": "Legion Graveyard Guardian",
@@ -19464,7 +19501,7 @@
    "y": 951,
    "name": "Risen Hell",
    "state": "teleport",
-   "zone": 33,
+   "zone": 34,
    "guards": [
     {
      "type": 21896,
@@ -19554,7 +19591,7 @@
     {
      "type": 49967,
      "name": "Sprite Forest Dog",
-     "seen": 14,
+     "seen": 15,
      "sprite": {
       "file": "c49967.png",
       "tile": 36,
@@ -19634,7 +19671,7 @@
    "y": 1262,
    "name": "Plains",
    "state": "teleport",
-   "zone": 5,
+   "zone": 6,
    "guards": [
     {
      "type": 21853,
@@ -19889,7 +19926,7 @@
    "y": 1103,
    "name": "Desert",
    "state": "teleport",
-   "zone": 30,
+   "zone": 31,
    "guards": [
     {
      "type": 21903,
@@ -19986,7 +20023,7 @@
    "y": 1084,
    "name": "Haunted Hallows",
    "state": "teleport",
-   "zone": 12,
+   "zone": 14,
    "guards": [
     {
      "type": 17900,
@@ -20023,7 +20060,7 @@
    "y": 1392,
    "name": "Dead Church",
    "state": "teleport",
-   "zone": 15,
+   "zone": 16,
    "guards": [
     {
      "type": 49629,
@@ -20229,7 +20266,7 @@
    "y": 1445,
    "name": "Desert",
    "state": "teleport",
-   "zone": 32,
+   "zone": 33,
    "guards": [
     {
      "type": 21849,
@@ -20326,7 +20363,7 @@
    "y": 1039,
    "name": "Abandoned City",
    "state": "teleport",
-   "zone": 3,
+   "zone": 4,
    "guards": [
     {
      "type": 21893,
@@ -20377,6 +20414,18 @@
      }
     },
     {
+     "type": 18001,
+     "name": "Small City Rat",
+     "seen": 4,
+     "sprite": {
+      "file": "c18001.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 21890,
      "name": "City Beholder",
      "seen": 3,
@@ -20409,18 +20458,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21891,
-     "name": "City Flying Brain",
-     "seen": 3,
-     "sprite": {
-      "file": "c21891.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
       "size": 100
      }
     }
@@ -20544,12 +20581,24 @@
    "y": 512,
    "name": "Floral Escape",
    "state": "teleport",
-   "zone": 11,
+   "zone": 8,
    "guards": [
+    {
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 9,
+     "sprite": {
+      "file": "c9828.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
     {
      "type": 9827,
      "name": "Floral Tiger",
-     "seen": 8,
+     "seen": 9,
      "sprite": {
       "file": "c9827.png",
       "tile": 36,
@@ -20559,11 +20608,23 @@
      }
     },
     {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 6,
+     "type": 56086,
+     "name": "AI Alien Champion",
+     "seen": 5,
      "sprite": {
-      "file": "c9828.png",
+      "file": "c56086.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 1,
+     "sprite": {
+      "file": "c9830.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -20596,21 +20657,9 @@
    "zone": 2,
    "guards": [
     {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 3,
-     "sprite": {
-      "file": "c30573.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 14714,
      "name": "Carboniferous Dragonfly",
-     "seen": 2,
+     "seen": 10,
      "sprite": {
       "file": "c14714.png",
       "tile": 36,
@@ -20622,9 +20671,57 @@
     {
      "type": 31166,
      "name": "Carboniferous Flytrap",
-     "seen": 1,
+     "seen": 7,
      "sprite": {
       "file": "c31166.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 6,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 5,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 30575,
+     "name": "Carboniferous Bush Monster",
+     "seen": 2,
+     "sprite": {
+      "file": "c30575.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9819,
+     "name": "Carboniferous Dinosaur",
+     "seen": 1,
+     "sprite": {
+      "file": "c9819.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -20654,7 +20751,7 @@
    "y": 312,
    "name": "Runic Tundra",
    "state": "teleport",
-   "zone": 7,
+   "zone": 3,
    "guards": [
     {
      "type": 29593,
@@ -20695,7 +20792,7 @@
     {
      "type": 9832,
      "name": "Tundra Troll",
-     "seen": 4,
+     "seen": 5,
      "sprite": {
       "file": "c9832.png",
       "tile": 36,
@@ -20707,7 +20804,7 @@
     {
      "type": 31508,
      "name": "Tundra Yeti",
-     "seen": 3,
+     "seen": 4,
      "sprite": {
       "file": "c31508.png",
       "tile": 36,
@@ -20719,7 +20816,7 @@
     {
      "type": 29443,
      "name": "Tundra Dragon",
-     "seen": 3,
+     "seen": 4,
      "sprite": {
       "file": "c29443.png",
       "tile": 36,
@@ -20768,9 +20865,21 @@
     {
      "type": 9820,
      "name": "Carboniferous Mantis",
-     "seen": 11,
+     "seen": 12,
      "sprite": {
       "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 8,
+     "sprite": {
+      "file": "c14714.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -20802,11 +20911,11 @@
      }
     },
     {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 7,
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 5,
      "sprite": {
-      "file": "c14714.png",
+      "file": "c30573.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -20814,11 +20923,11 @@
      }
     },
     {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 5,
+     "type": 56087,
+     "name": "AI Alien Sage",
+     "seen": 4,
      "sprite": {
-      "file": "c30573.png",
+      "file": "c56087.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -20848,7 +20957,7 @@
    "y": 1370,
    "name": "Haunted Hallows",
    "state": "teleport",
-   "zone": 6,
+   "zone": 7,
    "guards": [
     {
      "type": 17900,
@@ -20945,7 +21054,7 @@
    "y": 431,
    "name": "Sanguine Forest",
    "state": "active",
-   "zone": 35,
+   "zone": 30,
    "guards": [
     {
      "type": 9821,
@@ -20962,7 +21071,7 @@
     {
      "type": 31635,
      "name": "Sanguine Archer",
-     "seen": 11,
+     "seen": 12,
      "sprite": {
       "file": "c31635.png",
       "tile": 36,
@@ -20974,7 +21083,7 @@
     {
      "type": 31633,
      "name": "Sanguine Hound",
-     "seen": 5,
+     "seen": 6,
      "sprite": {
       "file": "c31633.png",
       "tile": 36,
@@ -20984,9 +21093,21 @@
      }
     },
     {
+     "type": 31634,
+     "name": "Sanguine Treant",
+     "seen": 4,
+     "sprite": {
+      "file": "c31634.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 31632,
      "name": "Sanguine Ooze",
-     "seen": 2,
+     "seen": 4,
      "sprite": {
       "file": "c31632.png",
       "tile": 36,
@@ -20998,9 +21119,21 @@
     {
      "type": 31636,
      "name": "Sanguine Harpy",
-     "seen": 1,
+     "seen": 3,
      "sprite": {
       "file": "c31636.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31637,
+     "name": "Sanguine Ghoul",
+     "seen": 2,
+     "sprite": {
+      "file": "c31637.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -21018,14 +21151,26 @@
    "y": 804,
    "name": "Floral Escape",
    "state": "teleport",
-   "zone": 8,
+   "zone": 10,
    "guards": [
     {
      "type": 9826,
      "name": "Floral Dragon",
-     "seen": 6,
+     "seen": 7,
      "sprite": {
       "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 6,
+     "sprite": {
+      "file": "c9828.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -21038,18 +21183,6 @@
      "seen": 5,
      "sprite": {
       "file": "c9830.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9828,
-     "name": "Floral Sunflower",
-     "seen": 4,
-     "sprite": {
-      "file": "c9828.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -21071,155 +21204,9 @@
     {
      "type": 29459,
      "name": "Floral Lily",
-     "seen": 1,
+     "seen": 2,
      "sprite": {
       "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ],
-   "guardian": {
-    "name": "Legion Commissioner",
-    "art": "legion-commissioner.png"
-   }
-  },
-  {
-   "x": 1048,
-   "y": 593,
-   "name": "Carboniferous",
-   "state": "captured",
-   "zone": 2,
-   "guards": [
-    {
-     "type": 14714,
-     "name": "Carboniferous Dragonfly",
-     "seen": 10,
-     "sprite": {
-      "file": "c14714.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9820,
-     "name": "Carboniferous Mantis",
-     "seen": 9,
-     "sprite": {
-      "file": "c9820.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 30575,
-     "name": "Carboniferous Bush Monster",
-     "seen": 7,
-     "sprite": {
-      "file": "c30575.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 31166,
-     "name": "Carboniferous Flytrap",
-     "seen": 5,
-     "sprite": {
-      "file": "c31166.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21957,
-     "name": "New Sting Spider",
-     "seen": 3,
-     "sprite": {
-      "file": "c21957.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 30573,
-     "name": "Carboniferous Spider",
-     "seen": 3,
-     "sprite": {
-      "file": "c30573.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9819,
-     "name": "Carboniferous Dinosaur",
-     "seen": 3,
-     "sprite": {
-      "file": "c9819.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ],
-   "guardian": {
-    "name": "Legion Colonel",
-    "art": "legion-colonel.png"
-   }
-  },
-  {
-   "x": 1247,
-   "y": 531,
-   "name": "Floral Escape",
-   "state": "captured",
-   "zone": 17,
-   "guards": [
-    {
-     "type": 9830,
-     "name": "Floral Rhino",
-     "seen": 7,
-     "sprite": {
-      "file": "c9830.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 29459,
-     "name": "Floral Lily",
-     "seen": 4,
-     "sprite": {
-      "file": "c29459.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 9826,
-     "name": "Floral Dragon",
-     "seen": 3,
-     "sprite": {
-      "file": "c9826.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -21239,6 +21226,200 @@
      }
     },
     {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 1,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21958,
+     "name": "New Great Owl",
+     "seen": 1,
+     "sprite": {
+      "file": "c21958.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    }
+   ],
+   "guardian": {
+    "name": "Legion Commissioner",
+    "art": "legion-commissioner.png"
+   }
+  },
+  {
+   "x": 1048,
+   "y": 593,
+   "name": "Carboniferous",
+   "state": "captured",
+   "zone": 2,
+   "guards": [
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 13,
+     "sprite": {
+      "file": "c14714.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 12,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 8,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31166,
+     "name": "Carboniferous Flytrap",
+     "seen": 7,
+     "sprite": {
+      "file": "c31166.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 30575,
+     "name": "Carboniferous Bush Monster",
+     "seen": 7,
+     "sprite": {
+      "file": "c30575.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9819,
+     "name": "Carboniferous Dinosaur",
+     "seen": 5,
+     "sprite": {
+      "file": "c9819.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21957,
+     "name": "New Sting Spider",
+     "seen": 3,
+     "sprite": {
+      "file": "c21957.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    }
+   ],
+   "guardian": {
+    "name": "Legion Colonel",
+    "art": "legion-colonel.png"
+   }
+  },
+  {
+   "x": 1247,
+   "y": 531,
+   "name": "Floral Escape",
+   "state": "captured",
+   "zone": 11,
+   "guards": [
+    {
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 9,
+     "sprite": {
+      "file": "c9830.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29459,
+     "name": "Floral Lily",
+     "seen": 6,
+     "sprite": {
+      "file": "c29459.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9827,
+     "name": "Floral Tiger",
+     "seen": 4,
+     "sprite": {
+      "file": "c9827.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 3,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9825,
+     "name": "Floral Hand",
+     "seen": 2,
+     "sprite": {
+      "file": "c9825.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
      "type": 29458,
      "name": "Floral Rafflesia",
      "seen": 2,
@@ -21251,11 +21432,11 @@
      }
     },
     {
-     "type": 9825,
-     "name": "Floral Hand",
-     "seen": 1,
+     "type": 9828,
+     "name": "Floral Sunflower",
+     "seen": 2,
      "sprite": {
-      "file": "c9825.png",
+      "file": "c9828.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -21269,8 +21450,8 @@
    }
   }
  ],
- "roads": 53826,
- "tiles": 2060745,
+ "roads": 53825,
+ "tiles": 2362491,
  "things": true,
  "sky": true,
  "water": true,

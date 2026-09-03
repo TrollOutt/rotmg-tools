@@ -103,9 +103,34 @@ function artFor(name) {
   return null;
 }
 
-const realmEye = JSON.parse(fs.readFileSync(path.join(root, 'web', 'realmeye-data.json'), 'utf8'));
+/*
+ * Patient writing.
+ *
+ * This runs straight after the atlas has been built, and on Windows the virus
+ * scanner is still holding some of what was just written. It comes back as
+ * UNKNOWN rather than as a sharing violation, it lands on a different file
+ * each time, and it is over in a moment - so it is waited out. Failing here
+ * is worse than slow: the chain carries on to the next tool, which then works
+ * on an atlas that was never merged. refine-outline.js does the same thing
+ * for the same reason.
+ */
+function patiently(what) {
+  let waited = 0;
+  for (;;) {
+    try { return what(); } catch (bad) {
+      if (waited >= 8000 || !['UNKNOWN', 'EBUSY', 'EPERM'].includes(bad.code)) throw bad;
+      const wait = waited < 500 ? 50 : 250;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait);
+      waited += wait;
+    }
+  }
+}
+const writeFile = (file, body) => patiently(() => fs.writeFileSync(file, body));
+const readFile = (file, how) => patiently(() => fs.readFileSync(file, how));
+
+const realmEye = JSON.parse(readFile(path.join(root, 'web', 'realmeye-data.json'), 'utf8'));
 const atlasFile = path.join(ATLAS, 'atlas.json');
-const atlas = JSON.parse(fs.readFileSync(atlasFile, 'utf8'));
+const atlas = JSON.parse(readFile(atlasFile, 'utf8'));
 
 fs.mkdirSync(BOSS, { recursive: true });
 const carried = new Map();                       // file -> bytes, copied once
@@ -195,16 +220,16 @@ for (const zone of atlas.zones) {
   }
 }
 
-fs.writeFileSync(atlasFile, JSON.stringify(atlas, null, 1).replace(/\n/g, '\r\n') + '\r\n');
+writeFile(atlasFile, JSON.stringify(atlas, null, 1).replace(/\n/g, '\r\n') + '\r\n');
 
 const pageFile = path.join(ATLAS, 'index.html');
-const page = fs.readFileSync(pageFile, 'utf8');
+const page = readFile(pageFile, 'utf8');
 const inlined = /^const A = (\{.*\});$/m;
 if (!inlined.test(page)) {
   console.error('index.html no longer carries "const A = {...};" on a line of its own.');
   process.exit(1);
 }
-fs.writeFileSync(pageFile, page.replace(inlined, () => 'const A = ' + JSON.stringify(atlas) + ';'));
+writeFile(pageFile, page.replace(inlined, () => 'const A = ' + JSON.stringify(atlas) + ';'));
 
 /* ---------------- what happened ---------------- */
 const count = (key) => atlas.zones.reduce((n, z) => n + ((z[key] || []).length), 0);
