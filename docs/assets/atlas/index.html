@@ -210,6 +210,54 @@ const PLANET = 1250;
  * when one side has a texture and the other has none.
  */
 const OCEAN = [62, 102, 178];
+/*
+ * The painted ocean, mottled like the recorded one.
+ *
+ * The chart and the paint have been the same blue for a while and the join
+ * still showed, because what gives it away is not the colour but the grain:
+ * recorded water is a different shade in every tile and flat paint is the
+ * same shade everywhere, and the eye finds that border instantly even when
+ * it cannot name a colour difference.
+ *
+ * Rubbing the edge of the chart away was the first answer and it was aimed at
+ * the wrong place twice - first at the recorded bounds, then at the chunk
+ * grid, and the ground turns out to end at neither: it stops where the
+ * recording stopped, which is a ragged line inside the rectangle that no
+ * arithmetic here can predict. Any gradient laid down by guesswork leaves the
+ * real edge bare somewhere.
+ *
+ * So the paint is given the grain instead, and then it does not matter where
+ * the border falls: both sides mottle, and the only thing left to match is
+ * the colour, which already did. Measured off the recorded sea, its shade
+ * wanders by about one part in a channel of red and two in green and blue,
+ * so that is what is put back - as a small tile of noise, laid down once per
+ * disc and scaled so its cells are game tiles at whatever zoom is current.
+ */
+const SEA_GRAIN = [1.0, 2.3, 2.1];       // how far the sea wanders, per channel
+const SEA_TILE = 96;                     // tiles across the patch of noise
+
+const seaPatch = (() => {
+  const pad = document.createElement('canvas');
+  pad.width = SEA_TILE; pad.height = SEA_TILE;
+  const pen = pad.getContext('2d');
+  const skin = pen.createImageData(SEA_TILE, SEA_TILE);
+  let seed = 24681357;
+  const roll = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  for (let i = 0; i < SEA_TILE * SEA_TILE; i++) {
+    for (let k = 0; k < 3; k++) {
+      // Two rolls added, which is nearer a bell than one and keeps the odd
+      // extreme tile from standing out as a speck.
+      const wander = (roll() + roll() - 1) * SEA_GRAIN[k] * 1.9;
+      skin.data[i * 4 + k] = Math.max(0, Math.min(255, Math.round(OCEAN[k] + wander)));
+    }
+    skin.data[i * 4 + 3] = 255;
+  }
+  pen.putImageData(skin, 0, 0);
+  return pad;
+})();
 const SEA_FADE = 50;                     // tiles of chart edge given to the fade
 
 /*
@@ -704,6 +752,220 @@ function drawWater(box, time) {
   return drawn;
 }
 
+
+/* ------------------------------------------------------------------ *
+ * What is behind the world                                            *
+ * ------------------------------------------------------------------ */
+/*
+ * A planet in a flat black field reads as a diagram of a planet. So there is
+ * something behind it: stars, three galaxies, and the occasional thing
+ * falling through.
+ *
+ * It is fixed to the glass and nothing moves it. That is not laziness - it
+ * is what distance means. The realm is a couple of thousand tiles across and
+ * the nearest star is not, so panning the camera a few hundred tiles cannot
+ * shift a star by a pixel, and neither can zooming. What moves is the world
+ * in front of it. The only things that do move are the ones that are
+ * genuinely close: the meteors.
+ *
+ * Drawn first of everything, so it is behind the world, behind his head and
+ * behind his hands - it is the back of the room, and everything else is in
+ * the room.
+ *
+ * It costs one blit. The stars and the galaxies are painted once into a
+ * canvas of their own and kept until the window changes shape; only the few
+ * that twinkle and whatever is falling are drawn live.
+ */
+const STARS = 460;                       // points of light
+const STAR_TWINKLE = 54;                 // of them that are drawn live and breathe
+const GALAXIES = 3;
+const METEORS = 4;                       // slots, each one mostly idle
+
+/*
+ * Settled once from a fixed roll, so it is the same sky every time the page
+ * is opened rather than a new one every visit. Positions are shares of the
+ * window rather than pixels, so a resize moves nothing about relative to
+ * anything else - it only redraws it larger.
+ */
+const space = (() => {
+  let seed = 987654321;
+  const roll = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const stars = [];
+  for (let i = 0; i < STARS; i++) {
+    /*
+     * Mostly faint, a few bright. A flat spread of brightness gives a field
+     * of identical dots, which is what a starfield never looks like; the
+     * fourth power puts nearly all of them at the threshold of visible and
+     * leaves a handful to carry the picture.
+     */
+    const lit = Math.pow(roll(), 4);
+    stars.push({
+      x: roll(), y: roll(),
+      lit: 0.16 + lit * 0.84,
+      size: 0.5 + lit * 1.5,
+      // Faintly coloured, the way stars are: cold blue-white through to a
+      // dull orange, and never saturated enough to read as a pixel fault.
+      warm: roll(),
+      breathAt: roll() * Math.PI * 2,
+      breathRate: 0.35 + roll() * 1.1
+    });
+  }
+  const galaxies = [];
+  for (let i = 0; i < GALAXIES; i++) {
+    galaxies.push({
+      x: 0.1 + roll() * 0.8, y: 0.1 + roll() * 0.8,
+      wide: 0.09 + roll() * 0.13,        // of the shorter side
+      thin: 0.22 + roll() * 0.4,         // how flat on, edge to face
+      turn: roll() * Math.PI,
+      lit: 0.05 + roll() * 0.05,
+      warm: roll()
+    });
+  }
+  /*
+   * The meteors are scheduled rather than remembered: each slot has a period
+   * and a phase, so whether one is falling at any moment is a sum rather than
+   * a state, and there is nothing to keep in step or to reset.
+   */
+  const meteors = [];
+  for (let i = 0; i < METEORS; i++) {
+    const heading = (roll() - 0.5) * 1.1 + (roll() < 0.5 ? 2.55 : 0.6);
+    meteors.push({
+      from: { x: roll(), y: roll() * 0.55 },
+      dx: Math.cos(heading), dy: Math.sin(heading),
+      reach: 0.1 + roll() * 0.16,        // of the shorter side, end to end
+      life: 0.55 + roll() * 0.7,         // seconds it takes to cross
+      every: 11 + roll() * 26,           // and how long between goes
+      at: roll() * 30
+    });
+  }
+  return { stars, galaxies, meteors };
+})();
+
+/* A star's colour, from cold to warm. */
+const starInk = warm => warm < 0.62
+  ? '198, 214, 255'
+  : (warm < 0.86 ? '255, 248, 232' : '255, 214, 178');
+
+const starField = document.createElement('canvas');
+const starCtx = starField.getContext('2d');
+let starKey = null;
+
+function paintSpace(box, grain) {
+  const key = Math.round(box.w) + 'x' + Math.round(box.h) + '@' + grain;
+  if (key === starKey) return;
+  starField.width = Math.max(1, Math.round(box.w * grain));
+  starField.height = Math.max(1, Math.round(box.h * grain));
+  starCtx.setTransform(grain, 0, 0, grain, 0, 0);
+  starCtx.clearRect(0, 0, box.w, box.h);
+  const short = Math.min(box.w, box.h);
+
+  /*
+   * The galaxies first, under everything. A round gradient squashed and
+   * turned, which is a galaxy seen from an angle - and at five per cent of
+   * white it is a smudge you notice rather than a shape you look at.
+   */
+  for (const one of space.galaxies) {
+    const r = one.wide * short;
+    starCtx.save();
+    starCtx.translate(one.x * box.w, one.y * box.h);
+    starCtx.rotate(one.turn);
+    starCtx.scale(1, one.thin);
+    const glow = starCtx.createRadialGradient(0, 0, 0, 0, 0, r);
+    glow.addColorStop(0, 'rgba(' + starInk(one.warm) + ',' + one.lit.toFixed(3) + ')');
+    glow.addColorStop(0.45, 'rgba(' + starInk(one.warm) + ',' + (one.lit * 0.4).toFixed(3) + ')');
+    glow.addColorStop(1, 'rgba(' + starInk(one.warm) + ',0)');
+    starCtx.fillStyle = glow;
+    starCtx.beginPath();
+    starCtx.arc(0, 0, r, 0, Math.PI * 2);
+    starCtx.fill();
+    starCtx.restore();
+  }
+
+  // Then the stars that hold still, which is most of them.
+  for (let i = STAR_TWINKLE; i < space.stars.length; i++) {
+    const one = space.stars[i];
+    starCtx.fillStyle = 'rgba(' + starInk(one.warm) + ',' + one.lit.toFixed(3) + ')';
+    starCtx.beginPath();
+    starCtx.arc(one.x * box.w, one.y * box.h, one.size, 0, Math.PI * 2);
+    starCtx.fill();
+  }
+  starKey = key;
+}
+
+/*
+ * How much of space there is to see, which is how little of the window the
+ * world takes up. Once the planet overflows the frame there is no sky behind
+ * it and the whole layer is skipped.
+ */
+const spaceLeft = box => {
+  const reach = Math.hypot(box.w, box.h) / 2;
+  const t = 1 - globe() / reach;
+  return Math.max(0, Math.min(1, t * 1.4));
+};
+
+function drawSpace(box, now) {
+  const showing = spaceLeft(box);
+  if (showing <= 0.01) return 0;
+  const grain = Math.min(2, window.devicePixelRatio || 1);
+  paintSpace(box, grain);
+  const t = now / 1000;
+  const short = Math.min(box.w, box.h);
+
+  ctx.save();
+  ctx.globalAlpha = showing;
+  ctx.drawImage(starField, 0, 0, box.w, box.h);
+
+  /*
+   * The few that breathe. Air is what makes a star twinkle and there is no
+   * air out here, so this is a liberty - but a field in which absolutely
+   * nothing changes reads as a printed backdrop, and fifty of them moving
+   * slowly is enough to stop that without anyone catching one at it.
+   */
+  for (let i = 0; i < STAR_TWINKLE && i < space.stars.length; i++) {
+    const one = space.stars[i];
+    const breath = 0.72 + 0.28 * Math.sin(t * one.breathRate + one.breathAt);
+    ctx.fillStyle = 'rgba(' + starInk(one.warm) + ',' + (one.lit * breath).toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(one.x * box.w, one.y * box.h, one.size * breath, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /*
+   * And whatever is falling. A slot is idle almost all of the time; when it
+   * is not, the streak is a line from where the head has got to back to where
+   * it came from, fading along its length and fading again at both ends of
+   * its run so it neither appears nor vanishes at full brightness.
+   */
+  for (const one of space.meteors) {
+    const cycle = (t + one.at) % one.every;
+    if (cycle > one.life) continue;
+    const k = cycle / one.life;
+    const reach = one.reach * short;
+    const x0 = one.from.x * box.w, y0 = one.from.y * box.h;
+    const headX = x0 + one.dx * reach * k, headY = y0 + one.dy * reach * k;
+    const tailBy = Math.min(k, 0.38);
+    const tailX = headX - one.dx * reach * tailBy, tailY = headY - one.dy * reach * tailBy;
+    // Brightest in the middle of the run, gone at both ends of it.
+    const bright = Math.sin(Math.PI * k) * showing;
+    if (bright <= 0.01) continue;
+    const trail = ctx.createLinearGradient(tailX, tailY, headX, headY);
+    trail.addColorStop(0, 'rgba(190, 210, 255, 0)');
+    trail.addColorStop(1, 'rgba(236, 244, 255,' + bright.toFixed(3) + ')');
+    ctx.strokeStyle = trail;
+    ctx.lineWidth = 1.35;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(tailX, tailY);
+    ctx.lineTo(headX, headY);
+    ctx.stroke();
+  }
+  ctx.restore();
+  return 1;
+}
+
 /* ------------------------------------------------------------------ *
  * Weather, and things with wings                                      *
  * ------------------------------------------------------------------ */
@@ -733,7 +995,22 @@ function drawWater(box, time) {
  *
  * It costs twenty pictures on one sheet, blitted about a hundred times.
  */
-const CLOUD_GONE = 7;                    // zoom by which the sky has cleared
+/*
+ * The sky is done with by the time one zone fills the window.
+ *
+ * This has come down twice and for the same reason each time. At seven the
+ * weather was still thinning at three tiles to the pixel; at three and a
+ * half there was still cloud over a zone you had gone in to read, which is
+ * the one thing the sky must never be doing. The map is read from about
+ * one and a half tiles to the pixel upwards, so the weather is finished
+ * before that and the last of it goes while you are still looking at the
+ * whole realm rather than at a part of it.
+ *
+ * That leaves about a dozen turns of the wheel between the thickest
+ * weather and none, which is plenty to come down through - the range only
+ * looks short written as two numbers because every turn multiplies.
+ */
+const CLOUD_GONE = 1.9;                  // zoom by which the sky has cleared
 const CLOUD_FULL = 0.5;                  // and below which it is at its thickest
 /*
  * How large the sky is, and what the approach does to it.
@@ -747,21 +1024,37 @@ const CLOUD_FULL = 0.5;                  // and below which it is at its thickes
  * to lift, so the handover happens under a sky that is still whole.
  */
 const SKY_SPAN = 0.55;                   // of the screen diagonal, the sky's radius
-const SKY_PUSH = 3.4;                    // how far out the approach shoves a bank
+const SKY_PUSH = 5.5;                    // how far out the approach shoves a bank
 const SKY_INK = 0.9;                     // how solid the thickest weather is
-const SKY_WRAP = 2.7;                    // sky radii a bank drifts before it returns
 /*
- * How many banks there are.
+ * How far a front travels before it comes round again.
  *
- * Enough for weather, not enough to hide the world under it - and the line
- * between the two is narrower than it looks. Seventy-eight of the drawn
- * clouds came to twice the area of the planet they were over and left the
- * realm as glimpses between them; the arithmetic ones they replaced were
- * faint enough that seventy-eight of those read as haze. Half that many,
- * at two thirds the width, covers about half the disc, which is what a
- * planet with weather on it looks like from a long way off.
+ * Wide enough that a whole system is well clear of the window before it
+ * wraps, which is what lets the wrap happen with nothing to hide it. The
+ * banks used to thin away and return one at a time over the last of their
+ * own run - fine when each drifted alone, and no use at all now that they
+ * travel together, because a group fading through its own tail tears in half
+ * in plain sight. Nothing fades at the edges any more; a front simply leaves
+ * on one side and arrives on the other, off camera.
  */
-const BANKS = 44;
+const SKY_WRAP = 3.6;                    // sky radii a front drifts before it returns
+/*
+ * How many banks there are, and how many weather systems they make up.
+ *
+ * A cloud does not wander the sky on its own. Given a drift each, they
+ * spread evenly across the glass within a minute or two and what was left
+ * looked less like weather than like a screensaver - and the drifts
+ * themselves were four times too quick, crossing the window in half a minute
+ * when weather takes a few. So the banks belong to fronts: a front has one
+ * drift and every bank in it keeps its place in the group, so they arrive
+ * together, cross together and leave together.
+ *
+ * There are more banks than there used to be because most of them are off
+ * camera at any moment - the wrap is three and a half skies wide and the
+ * window is about one. They cost a rejected bounds test each.
+ */
+const BANKS = 96;
+const FRONTS = 9;
 const BIRDS_FROM = 2.4, BIRDS_TO = 26;   // the zooms a bird makes sense at
 
 /*
@@ -1053,11 +1346,11 @@ const weather = (() => {
   /*
    * Which picture each bank wears, dealt rather than rolled.
    *
-   * Rolled independently, twenty shapes over seventy-eight banks left some
-   * of them used six times and two of them not at all - and the two that go
-   * missing are missing for good, since the roll is fixed. Dealt round and
-   * then shuffled, every drawing is on the world three or four times and the
-   * sky is as varied as the folder it came from.
+   * Rolled independently, twenty shapes over ninety-six banks left some of
+   * them used far more than others and one or two not at all - and the ones
+   * that go missing are missing for good, since the roll is fixed. Dealt
+   * round and then shuffled, every drawing is on the world about five times
+   * and the sky is as varied as the folder it came from.
    */
   const shapes = [];
   for (let i = 0; i < BANKS; i++) shapes.push(i);
@@ -1065,16 +1358,47 @@ const weather = (() => {
     const j = Math.floor(roll() * (i + 1));
     const swap = shapes[i]; shapes[i] = shapes[j]; shapes[j] = swap;
   }
+  /*
+   * The fronts, laid out along the run rather than dropped anywhere on it.
+   *
+   * Nine of them, one to each ninth of the wrap and jittered within it, so
+   * that the sky is never empty and never all arrives at once. Rolled freely
+   * they clumped: two systems overlapping and then four skies of nothing.
+   */
+  const fronts = [];
+  for (let i = 0; i < FRONTS; i++) {
+    fronts.push({
+      x: ((i + 0.15 + roll() * 0.7) / FRONTS) * SKY_WRAP - SKY_WRAP / 2,
+      y: (roll() - 0.5) * 1.4,
+      /*
+       * Sky radii a second, westward - so the pace is the same fraction of
+       * what you can see at every zoom, which is the only reading that makes
+       * sense when the sky is the planet at one end of the range and the
+       * window at the other. A front crosses the whole sky in a minute or
+       * two: gentle, and still plainly moving. Real weather from orbit is
+       * slower than this and looks like a photograph.
+       */
+      drift: 0.020 + roll() * 0.018,
+      spread: 0.45 + roll() * 0.6
+    });
+  }
   for (let i = 0; i < BANKS; i++) {
-    // Somewhere on the disc of sky, spread evenly over it rather than
-    // bunched in the middle, and flattened a little the way a sky is.
+    const front = fronts[i % FRONTS];
+    // Its place in the group, kept for good: the group is rigid, and what
+    // stops it looking pasted together is the sway below rather than a drift
+    // of its own, which would pull the group apart over a few crossings.
     const a = roll() * Math.PI * 2, r = Math.sqrt(roll());
     banks.push({
-      x: Math.cos(a) * r,               // where it sits on the glass, -1 to 1
-      y: Math.sin(a) * r * 0.86,
+      front,
+      ox: Math.cos(a) * r * front.spread,
+      oy: Math.sin(a) * r * front.spread * 0.62,
       wide: 0.10 + roll() * 0.22,       // of the sky's radius, across
       shape: shapes[i],
-      drift: 0.028 + roll() * 0.055,    // sky radii a second, westward
+      // A slow breath, so a bank is not welded to its neighbours. Small
+      // enough and long enough that you never catch it going round.
+      swayAmp: 0.005 + roll() * 0.012,
+      swayRate: 0.057 + roll() * 0.1,
+      swayAt: roll() * Math.PI * 2,
       // How much the approach moves it, which is how near it is. The far
       // ones hold the middle of the view while the near ones stream past.
       depth: 0.45 + roll() * 1.05,
@@ -1125,11 +1449,64 @@ const skyGone = () => Math.max(0, Math.min(1, 1 -
  */
 const skyLeft = () => 1 - Math.pow(skyGone(), 2.2);
 
+
+/*
+ * Each cloud, cut off the sheet and kept at four sizes.
+ *
+ * A bank is drawn anywhere from thirty pixels across at the far view to five
+ * hundred coming down through it, off art that is a hundred and twenty-eight
+ * wide - so at the far end the browser was throwing away three pixels in
+ * four in a single step. One step of bilinear does that badly: it samples
+ * rather than averages, so half the detail of the drawing turns into a fine
+ * crawling sparkle instead of into a smooth small cloud, and the sparkle is
+ * worst exactly where the cloud is smallest and there is most sky full of
+ * them. Standing back should give a simpler cloud, not a noisier one.
+ *
+ * So each is halved and halved again with the good filter, once, at load;
+ * drawing picks the smallest copy still larger than the size it wants, and
+ * never has to shrink by more than half. Coming down the range it walks back
+ * up the copies and the detail returns with the size.
+ *
+ * Cutting them out separately also ends any argument about the single pixel
+ * between neighbours on the sheet: halved twice that gap is a quarter of a
+ * pixel, and the cloud next door starts bleeding into the edge of this one.
+ */
+let skyMips = null;
+function cloudArt() {
+  if (skyMips) return skyMips;
+  if (!skyArt || !skyArt.clouds) return null;
+  if (!skySheet.complete || !skySheet.naturalWidth) return null;
+  skyMips = skyArt.clouds.map(cut => {
+    const steps = [];
+    let wide = cut[2], tall = cut[3], from = null;
+    for (let i = 0; i < 4; i++) {
+      const pad = document.createElement('canvas');
+      pad.width = Math.max(1, Math.round(wide));
+      pad.height = Math.max(1, Math.round(tall));
+      const pen = pad.getContext('2d');
+      pen.imageSmoothingEnabled = true;
+      pen.imageSmoothingQuality = 'high';
+      if (from) {
+        pen.drawImage(from.art, 0, 0, from.w, from.h, 0, 0, pad.width, pad.height);
+      } else {
+        pen.drawImage(skySheet, cut[0], cut[1], cut[2], cut[3], 0, 0, pad.width, pad.height);
+      }
+      const step = { art: pad, w: pad.width, h: pad.height };
+      steps.push(step);
+      from = step;
+      if (pad.width <= 10 || pad.height <= 10) break;
+      wide /= 2; tall /= 2;
+    }
+    return steps;
+  });
+  return skyMips;
+}
 function drawSky(box, now) {
   const gone = skyGone();
   const left = skyLeft();
   if (gone >= 1 || left <= 0.01) return 0;
-  if (!skyArt || !skySheet.complete || !skySheet.naturalWidth) return 0;
+  const clouds = cloudArt();
+  if (!clouds) return 0;
   const t = now / 1000;
   const cx = box.w / 2, cy = box.h / 2;
   /*
@@ -1156,8 +1533,20 @@ function drawSky(box, now) {
    * you, which is the thing being drawn.
    */
   const push = 1 + SKY_PUSH * gone * gone;
-  // Coming at you as well as parting, but not as fast, or they only swell.
-  const grow = 1 + (push - 1) * 0.45;
+  /*
+   * And coming at you as they part, which is the other half of coming down
+   * through them.
+   *
+   * A bank is drawn at a share of the sky, and the sky stops growing once
+   * it is the window rather than the planet - so from about two thirds of a
+   * tile to the pixel upwards the clouds held one size in pixels however
+   * far you came in, which reads as flying towards a painted backdrop. They
+   * swell with the approach now, by rather more than half of what it shoves
+   * them: they grow, they part, and between the two they are out of the
+   * frame well before the last of their weight goes. That is what makes it
+   * the camera pushing them aside rather than the weather thinning out.
+   */
+  const grow = 1 + (push - 1) * 0.6;
 
   ctx.save();
   if (onDisc) {
@@ -1171,26 +1560,42 @@ function drawSky(box, now) {
 
   let drawn = 0;
   for (const one of weather.banks) {
-    const cut = skyArt.clouds[one.shape % skyArt.clouds.length];
-    if (!cut) continue;
+    const steps = clouds[one.shape % clouds.length];
+    if (!steps || !steps.length) continue;
     /*
-     * Carried west and brought round again. A bank that simply reappeared
-     * on the far side jumped in plain sight, so it thins away over the last
-     * of its run and comes back out of nothing.
+     * Carried west with its own front and brought round again. The front is
+     * wrapped and the bank sits at its offset from it, rather than each bank
+     * wrapping on its own - which would take a group apart at the seam, one
+     * cloud at a time, in the middle of the sky.
      */
-    let sx = one.x - t * one.drift;
-    sx = ((sx % SKY_WRAP) + SKY_WRAP * 1.5) % SKY_WRAP - SKY_WRAP / 2;
-    const edge = Math.min(1, (SKY_WRAP / 2 - Math.abs(sx)) / 0.42);
-    if (edge <= 0) continue;
+    const front = one.front;
+    let fx = front.x - t * front.drift;
+    fx = ((fx % SKY_WRAP) + SKY_WRAP * 1.5) % SKY_WRAP - SKY_WRAP / 2;
+    const sway = Math.sin(t * one.swayRate + one.swayAt) * one.swayAmp;
+    const sx = fx + one.ox + sway;
+    const sy = front.y + one.oy + sway * 0.5;
     // Shoved out from the middle, the near ones further than the far ones.
     const out = 1 + (push - 1) * one.depth;
     const w = one.wide * R * grow;
-    const h = w * cut[3] / cut[2];
-    const x = cx + sx * R * out, y = cy + one.y * R * out;
+    const h = w * steps[0].h / steps[0].w;
+    const x = cx + sx * R * out, y = cy + sy * R * out;
     if (x + w < 0 || x - w > box.w || y + h < 0 || y - h > box.h) continue;
-    ctx.globalAlpha = Math.min(1, left * one.dim * edge * SKY_INK);
-    ctx.drawImage(skySheet, cut[0], cut[1], cut[2], cut[3],
-      x - w / 2, y - h / 2, w, h);
+    /*
+     * And against the world itself when the sky is clipped to it. Standing
+     * right back the whole run of the wrap fits inside the window, so the
+     * test above passed every bank and two thirds of them were blitted only
+     * to be thrown away by the clip: ninety-six draws to show thirty.
+     */
+    if (onDisc) {
+      const far = Math.hypot(x - cx, y - cy) - Math.max(w, h) / 2;
+      if (far > globe()) continue;
+    }
+    ctx.globalAlpha = Math.min(1, left * one.dim * SKY_INK);
+    // The smallest copy still bigger than what is wanted.
+    let pick = 0;
+    while (pick + 1 < steps.length && steps[pick + 1].w >= w) pick++;
+    const use = steps[pick];
+    ctx.drawImage(use.art, 0, 0, use.w, use.h, x - w / 2, y - h / 2, w, h);
     drawn++;
   }
   ctx.globalAlpha = 1;
@@ -2338,22 +2743,33 @@ function overOcean() {
 }
 
 /*
- * Coming home is a walk, not a step.
+ * Coming home is a walk, not a step - and it waits to be sure you have
+ * stopped.
  *
  * Asking every frame whether the pin is over water, and drifting only while
- * the answer is yes, meant the walk ended the moment the answer changed -
- * and the first thing the pin meets on its way in from open sea is the coast.
- * So the view came back as far as the edge of the map and stopped there, with
- * the realm hanging off one side of the window: rescued from looking at
- * nothing and left looking at a corner.
+ * the answer is yes, ended the walk the moment the answer changed - and the
+ * first thing the pin meets coming in from open sea is the coast. So the view
+ * came back as far as the edge of the map and stopped there, with the realm
+ * hanging off one side of the window: rescued from looking at nothing and
+ * left looking at a corner. The question is asked once, to start the walk,
+ * and after that the walk finishes what it began.
  *
- * The question is asked once, to start the walk, and after that the walk
- * finishes what it began. It ends when it arrives, or the moment a hand goes
- * on the map or the wheel is turned - because being taken somewhere you did
- * not ask for is worse than being lost, and the walk re-arms by itself as
- * soon as the pin is over open water again.
+ * But starting it the instant the pin crossed into open water was worse than
+ * the bug it fixed. Pushing out over the sea to look at the coast from
+ * outside, or panning across open water on the way to somewhere else, is a
+ * thing you do on purpose, and the camera hauling itself back mid-gesture
+ * reads as the map fighting you. So it waits for three seconds of stillness
+ * first, and stillness means the view has actually stopped: no hand on it, no
+ * wheel just turned, and the easing settled. Look at open water as long as
+ * you like, so long as you are looking.
+ *
+ * Once walking, a hand or the wheel ends it, and it re-arms by itself after
+ * another three seconds - because being taken somewhere you did not ask for
+ * is worse than being lost.
  */
+const HOME_AFTER = 3;                    // seconds of stillness before it walks back
 let walkingHome = false;
+let resting = 0;                         // seconds since the view last moved
 
 function keepInSight(box, delta) {
   /*
@@ -2364,9 +2780,22 @@ function keepInSight(box, delta) {
   if (want.scale < least) want.scale = least;
   if (view.scale < least) view.scale = least;
 
-  if (from) { walkingHome = false; return; }   // a hand on it, so leave it be
+  if (from) { walkingHome = false; resting = 0; return; }   // a hand on it
   if (!mask) return;
-  if (!walkingHome && overOcean()) walkingHome = true;
+
+  /*
+   * Still, in the units that matter: half a pixel on the glass rather than
+   * half a tile, since a tile is a different distance at every zoom and the
+   * easing closes the last of any gap by ever smaller fractions for ever.
+   */
+  if (!walkingHome) {
+    const near = 0.5 / Math.max(1e-6, view.scale);
+    const settling = Math.abs(want.x - view.x) > near
+      || Math.abs(want.y - view.y) > near
+      || Math.abs(want.scale / Math.max(1e-6, view.scale) - 1) > 0.002;
+    resting = settling ? 0 : resting + delta;
+    if (resting >= HOME_AFTER && overOcean()) { walkingHome = true; resting = 0; }
+  }
   if (!walkingHome) return;
 
   const home = homeView(box);
@@ -2374,15 +2803,14 @@ function keepInSight(box, delta) {
   want.x += (home.x - want.x) * step;
   want.y += (home.y - want.y) * step;
   /*
-   * Arrived when what is left to close is under a couple of pixels. Reckoned
-   * in pixels rather than in tiles, because a tile is a different distance
-   * at every zoom and a fixed number of tiles would either stop the walk
-   * short close in or leave it creeping for ever from far off.
+   * Arrived when what is left to close is under a couple of pixels, reckoned
+   * in pixels for the same reason as above.
    */
-  const near = 2 / Math.max(1e-6, view.scale);
-  if (Math.abs(home.x - want.x) < near && Math.abs(home.y - want.y) < near) {
+  const close = 2 / Math.max(1e-6, view.scale);
+  if (Math.abs(home.x - want.x) < close && Math.abs(home.y - want.y) < close) {
     want.x = home.x; want.y = home.y;
     walkingHome = false;
+    resting = 0;
   }
 }
 
@@ -2503,12 +2931,27 @@ function groundGlobe(box, now) {
    * And the chart's own edge taken off, so it dissolves into the ocean
    * painted under it instead of ending at a line.
    *
-   * The chart is a rectangle of recorded ground and it stops dead where the
-   * recording stopped, eighty tiles out from the last coast. Beyond that the
-   * page paints flat water. Even in the same blue the join shows, because
-   * the recorded water is mottled tile by tile and flat paint is not - so the
-   * last fifty tiles of it are rubbed away to nothing and the two meet
-   * through a gradient rather than at a border.
+   * The chart stops dead where the recording stopped and the page paints
+   * flat water beyond it. Even in the same blue the join shows, because the
+   * recorded water is mottled tile by tile and flat paint is not - so the
+   * last of the chart is rubbed away to nothing and the two meet through a
+   * gradient rather than at a border.
+   *
+   * Where the chart stops is the thing this got wrong, twice.
+   *
+   * The recorded bounds are not where the ground ends. The floor is drawn
+   * by whole chunks of a hundred and twenty-eight tiles and the bounds are
+   * nowhere near a chunk boundary, so the pyramid carries ground well past
+   * them: a hundred and seventeen tiles west of minX, seventy-six north,
+   * seventy-seven south, and none at all east, where maxX happens to land
+   * on a boundary. Rubbing at the bounds put the gradient a hundred and
+   * seventeen pixels inside the picture at one tile to the pixel and left
+   * the actual edge as bare as it started - a hard vertical line with
+   * mottled water on one side of it and flat paint on the other, which is
+   * exactly what was reported and is nothing to do with the colour.
+   *
+   * So the rectangle is the chunk grid, not the bounds. It is the same four
+   * gradients over the same fifty tiles; they are simply in the right place.
    *
    * Done here, inside the turn, because that is the frame the chart is square
    * in; done after the ground so nothing standing on it is touched; and only
@@ -2516,10 +2959,15 @@ function groundGlobe(box, now) {
    */
   {
     const edge = Math.max(2, SEA_FADE * view.scale);
-    const left = wide / 2 + (B.minX - view.x) * view.scale;
-    const right = wide / 2 + (B.maxX - view.x) * view.scale;
-    const top = tall / 2 + (B.minY - view.y) * view.scale;
-    const bottom = tall / 2 + (B.maxY - view.y) * view.scale;
+    const grid = A.chunk;
+    const westAt = Math.floor(B.minX / grid) * grid;
+    const eastAt = Math.ceil((B.maxX + 1) / grid) * grid;
+    const northAt = Math.floor(B.minY / grid) * grid;
+    const southAt = Math.ceil((B.maxY + 1) / grid) * grid;
+    const left = wide / 2 + (westAt - view.x) * view.scale;
+    const right = wide / 2 + (eastAt - view.x) * view.scale;
+    const top = tall / 2 + (northAt - view.y) * view.scale;
+    const bottom = tall / 2 + (southAt - view.y) * view.scale;
     globeCtx.globalCompositeOperation = 'destination-out';
     const rub = (x0, y0, x1, y1, w, h) => {
       const wash = globeCtx.createLinearGradient(x0, y0, x1, y1);
@@ -2557,7 +3005,23 @@ function groundGlobe(box, now) {
 
   // Ocean first, so the chart has water to sit in wherever nothing was
   // recorded - which past the eighty tiles of sea is everywhere.
+  /*
+   * One tile of noise is a game tile across, so the paint mottles at the
+   * same pitch the chart does at every zoom. If the pattern cannot be made
+   * - or its transform cannot be set, which is the newer half of the
+   * interface - the flat colour is drawn instead and the worst that
+   * happens is the join being visible again.
+   */
   ctx.fillStyle = 'rgb(' + OCEAN.join(',') + ')';
+  try {
+    const wash = ctx.createPattern(seaPatch, 'repeat');
+    if (wash && wash.setTransform) {
+      wash.setTransform(new DOMMatrix([view.scale, 0, 0, view.scale, 0, 0]));
+      ctx.fillStyle = wash;
+    }
+  } catch (error) {
+    /* the flat colour, set above, stands */
+  }
   ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
 
   ctx.imageSmoothingEnabled = true;
@@ -2752,41 +3216,6 @@ function groundTilted(box, now) {
  * for first, a bad frame is a bad frame and the next one is fine.
  */
 
-/*
- * Holding still, when the site says so.
- *
- * The site has one switch for everything that moves, and until now it only
- * reached the drifting realms behind the interface - the atlas is a frame
- * with a render loop of its own and heard nothing, so on the one page where
- * there was most to see moving, the switch did nothing at all.
- *
- * What is stopped is time, not drawing. The frame still runs, so dragging,
- * zooming, hovering and picking a zone all work exactly as before and the
- * easing still settles - what freezes is the clock every moving thing reads
- * from: the weather drifts no further, the water stops shimmering, the birds
- * stop flapping, the torches stop guttering and Oryx stops breathing. Turn it
- * back on and the clock picks up where it left off rather than jumping
- * forward by however long it was off, which would fling every cloud across
- * the sky at once.
- *
- * Nothing is trusted from the message but the shape of it, and only the flag
- * is read - a frame can be pointed at by anyone.
- */
-let animating = true;
-let heldAt = 0;                          // the clock, at the moment it stopped
-let heldFor = 0;                         // and how much of it has been skipped
-window.addEventListener('message', event => {
-  const said = event.data;
-  if (!said || said.rotmg !== 'animate') return;
-  const on = !!said.on;
-  if (on === animating) return;
-  animating = on;
-  if (!on) heldAt = performance.now() - heldFor;
-  else heldFor = performance.now() - heldAt;
-});
-
-/* The clock the moving things read, which is not the one the easing reads. */
-const moment = now => animating ? now - heldFor : heldAt;
 function frame(now) {
   requestAnimationFrame(frame);
   /*
@@ -2815,14 +3244,13 @@ function frame(now) {
   // Whatever else happens, the world has a positive size.
   if (!(view.scale > 0.001)) view.scale = 0.02;
   if (!(want.scale > 0.001)) want.scale = 0.02;
-  const when = moment(now);
-  const step = animating ? delta : 0;
   const box = size();
   keepInSight(box, delta);
   warmAhead(box);
   ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, box.w, box.h);
-  drawOryxBehind(box, when);
+  drawSpace(box, now);
+  drawOryxBehind(box, now);
 
   /*
    * Leaning is the only thing that flattens the world - it is a different
@@ -2830,20 +3258,20 @@ function frame(now) {
    * with it.
    */
   let ground;
-  if (tilting()) ground = groundTilted(box, when);
-  else if (roundWorld(box)) ground = groundGlobe(box, when);
-  else if (turning()) ground = groundTilted(box, when);
-  else ground = groundFlat(box, when);
-  stepLife(step);
-  const close = drawThings(box, when);
+  if (tilting()) ground = groundTilted(box, now);
+  else if (roundWorld(box)) ground = groundGlobe(box, now);
+  else if (turning()) ground = groundTilted(box, now);
+  else ground = groundFlat(box, now);
+  stepLife(delta);
+  const close = drawThings(box, now);
   const living = close ? close.living : drawLife(box);
   const marks = drawLandmarks(box);
-  drawBeacons(box, when);
+  drawBeacons(box, now);
   drawNames(box);
-  stepBirds(step);
+  stepBirds(delta);
   drawBirds(box);
-  drawSky(box, when);
-  drawOryxHands(box, when);
+  drawSky(box, now);
+  drawOryxHands(box, now);
 
   if (pointer) {
     const t = toTile(pointer.x, pointer.y, box);
@@ -2945,6 +3373,7 @@ canvas.addEventListener('wheel', event => {
     want.y += under.y - after.y;
   }
   walkingHome = false;                   // the wheel is a hand on it too
+  resting = 0;
   view.x = keep.x; view.y = keep.y; view.scale = keep.scale;
 }, { passive: false });
 

@@ -1111,13 +1111,19 @@ table.mini td { padding: 3px 8px; border: 0; }
   position: fixed; inset: 0; margin: 0; padding: 0;
   max-width: none; width: 100%; height: 100%; overflow: hidden;
 }
+/*
+ * Nothing over the map but the way back.
+ *
+ * This carried a title and a sentence of instructions and needed a gradient
+ * behind them to be readable over the sky. With only the back button left it
+ * needs a fraction of the height and much less of the wash - enough to keep
+ * one small button legible over whatever the map puts underneath it.
+ */
 #pageRealm .realm-head {
   position: absolute; left: 0; right: 0; top: 0; z-index: 3;
-  /* Room on the right for the animation switch, which is fixed there. */
-  margin: 0; padding: 12px 172px 26px 16px;
+  margin: 0; padding: 12px 16px 14px;
   display: flex; align-items: center; gap: 14px;
-  /* Faded rather than filled, so the map keeps running under the title. */
-  background: linear-gradient(180deg, rgba(8, 11, 18, .82) 0%, rgba(8, 11, 18, .55) 45%, transparent 100%);
+  background: linear-gradient(180deg, rgba(8, 11, 18, .7) 0%, rgba(8, 11, 18, .32) 55%, transparent 100%);
   pointer-events: none;
 }
 #pageRealm .realm-head > * { pointer-events: auto; }
@@ -1819,7 +1825,7 @@ table.mini td { padding: 3px 8px; border: 0; }
   rather than leaving you to read it off the opacity.
 -->
 <button id="ambienceToggle" type="button" class="ambience-toggle" aria-pressed="true"
-  title="Stop or start everything that moves: the drifting background, and the weather and water on the atlas">
+  title="Stop or start the drifting realms behind the interface">
   <span class="ambience-toggle-glyph" aria-hidden="true">◐</span>
   <span class="ambience-toggle-text">Animations on</span>
 </button>
@@ -1886,10 +1892,17 @@ table.mini td { padding: 3px 8px; border: 0; }
 
 <!-- Realm Atlas ------------------------------------------------------ -->
 <div id="pageRealm" class="app page" hidden>
+  <!--
+    No heading over the map.
+
+    The title and its sentence sat across the top of the atlas, over the sky,
+    telling you the name of the page you had just chosen and then how to use a
+    mouse. The atlas says both itself: the map is unmistakably the map, and
+    the line along the bottom of it already gives the controls. All that is
+    left is the way back.
+  -->
   <header class="masthead realm-head">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
-    <h1>Realm Atlas</h1>
-    <p>The New Realm at full size, tile for tile. Hover a zone to pick it out, click it to go there and see what lives in it; scroll to zoom, drag to pan.</p>
   </header>
   <main class="realm-stage-full">
     <iframe id="realmFrame" title="Realm Atlas" loading="lazy"></iframe>
@@ -6538,28 +6551,21 @@ function handleAmbienceResize() {
 }
 
 /*
- * Everything that moves, on or off.
+ * The drifting realms behind the interface, on or off.
  *
- * Two things listen. The drifting realms behind the interface are this
- * page's own and are simply hidden; the weather and the water on the
- * atlas belong to a frame with a render loop of its own, so it is told.
- * It is told on every change and again whenever the frame loads, because
- * a frame that has not finished loading cannot hear anything yet.
+ * This and nothing else. It reached into the atlas for a while and froze
+ * the clock its weather reads, which worked, and is not what the switch is
+ * for: the atlas is a map you are looking at rather than decoration behind
+ * something you are reading, and its weather is part of the map. So the
+ * switch governs the background of the interface, on every page, and the
+ * atlas keeps its own weather running whatever it is set to.
  */
-function tellAtlas(enabled) {
-  const frame = $('realmFrame');
-  if (!frame || !frame.contentWindow) return;
-  try { frame.contentWindow.postMessage({ rotmg: 'animate', on: !!enabled }, '*'); }
-  catch (error) { /* not loaded, or not ours: the next load asks again */ }
-}
-
 function setAmbience(enabled) {
   ambience.enabled = enabled;
   $('ambience').hidden = !enabled;
   $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
   const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
   if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
-  tellAtlas(enabled);
   try { localStorage.setItem(AMBIENCE_KEY, enabled ? 'on' : 'off'); } catch (error) { /* not essential */ }
   if (enabled && !ambience.started) startAmbience();
 }
@@ -7129,7 +7135,6 @@ function showPage(name) {
       fetch(base + 'atlas.json', { method: 'HEAD' })
         .then(response => {
           if (!response.ok) throw new Error('no atlas');
-          frame.addEventListener('load', () => tellAtlas(ambience.enabled));
           frame.src = base + 'index.html';
         })
         .catch(() => { frame.hidden = true; $('realmMissing').hidden = false; });

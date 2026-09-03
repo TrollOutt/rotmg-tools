@@ -1863,28 +1863,21 @@ function handleAmbienceResize() {
 }
 
 /*
- * Everything that moves, on or off.
+ * The drifting realms behind the interface, on or off.
  *
- * Two things listen. The drifting realms behind the interface are this
- * page's own and are simply hidden; the weather and the water on the
- * atlas belong to a frame with a render loop of its own, so it is told.
- * It is told on every change and again whenever the frame loads, because
- * a frame that has not finished loading cannot hear anything yet.
+ * This and nothing else. It reached into the atlas for a while and froze
+ * the clock its weather reads, which worked, and is not what the switch is
+ * for: the atlas is a map you are looking at rather than decoration behind
+ * something you are reading, and its weather is part of the map. So the
+ * switch governs the background of the interface, on every page, and the
+ * atlas keeps its own weather running whatever it is set to.
  */
-function tellAtlas(enabled) {
-  const frame = $('realmFrame');
-  if (!frame || !frame.contentWindow) return;
-  try { frame.contentWindow.postMessage({ rotmg: 'animate', on: !!enabled }, '*'); }
-  catch (error) { /* not loaded, or not ours: the next load asks again */ }
-}
-
 function setAmbience(enabled) {
   ambience.enabled = enabled;
   $('ambience').hidden = !enabled;
   $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
   const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
   if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
-  tellAtlas(enabled);
   try { localStorage.setItem(AMBIENCE_KEY, enabled ? 'on' : 'off'); } catch (error) { /* not essential */ }
   if (enabled && !ambience.started) startAmbience();
 }
@@ -2454,7 +2447,6 @@ function showPage(name) {
       fetch(base + 'atlas.json', { method: 'HEAD' })
         .then(response => {
           if (!response.ok) throw new Error('no atlas');
-          frame.addEventListener('load', () => tellAtlas(ambience.enabled));
           frame.src = base + 'index.html';
         })
         .catch(() => { frame.hidden = true; $('realmMissing').hidden = false; });

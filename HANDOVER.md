@@ -632,6 +632,124 @@ number that trades detail for frames there.
   everything downstream multiplies by it, so a clock that went backwards drove
   the easing, the walk home and the creatures backwards with it.
 
+### What came back from showing it — and the sea, finally
+
+Everything above was looked at and sent back with notes. The notes were
+right in every case, and two of them found things no amount of reading the
+code would have.
+
+**A cloud does not wander the sky on its own.** Given a drift each they
+spread evenly across the glass within a minute or two, and what was left
+looked less like weather than like a screensaver. So the banks belong to
+fronts: nine systems, one drift each, and every bank keeps its place in its
+group for good, so they arrive together, cross together and leave together.
+What stops a group looking welded is a slow sway of its own per bank - not a
+drift of its own, which is the obvious thing to reach for and pulls the
+group apart over a few crossings.
+
+The wrap goes with it. Banks used to thin away and return one at a time over
+the last of their own run, which is fine when each drifts alone and no use at
+all for a group - a front fading through its own tail tears in half in plain
+sight. The run is three and a half skies wide now, so a front is well clear
+of the window before it wraps, and nothing fades at the edges at all.
+
+**Drift is in sky radii a second, and that is the only reading that works.**
+The sky is the planet at one end of the range and the window at the other, so
+anything in pixels is four times too fast at one end or invisible at the
+other. A front crosses the whole sky in a minute or two at any zoom.
+
+**The weather is finished before you are reading a zone.** `CLOUD_GONE` has
+come down twice for the same reason - seven left cloud at three tiles to the
+pixel, three and a half still left it over a zone gone into on purpose. It is
+1.9, and the map is read from about 1.5 upwards. That still leaves a dozen
+turns of the wheel between thickest and none: the range looks short written
+as two numbers only because every turn multiplies.
+
+**They swell as they part.** A bank is drawn at a share of the sky and the
+sky stops growing once it is the window rather than the planet - so above
+about two thirds of a tile to the pixel the clouds held one size in pixels
+however far you came in, which reads as flying towards a painted backdrop.
+Between growing and being shoved outwards they are out of frame well before
+the last of their weight goes, which is what makes it the camera pushing them
+aside rather than the weather thinning out. Thirty-three pixels at the far
+view to nearly seven hundred coming down through them.
+
+**Each cloud is kept at four sizes.** Drawn at thirty pixels off art that is
+a hundred and twenty-eight wide, the browser throws away three pixels in four
+in one step - and one step of bilinear samples rather than averages, so half
+the drawing becomes a fine crawling sparkle exactly where the clouds are
+smallest and there are most of them. Halved twice with the good filter at
+load, and drawing takes the smallest copy still larger than what it wants.
+Standing back now gives a simpler cloud rather than a noisier one. Cutting
+them out separately also settles the single pixel between neighbours on the
+sheet, which at a quarter of its size starts bleeding into its neighbour.
+
+**Coming home waits three seconds.** Starting the walk the instant the pin
+crossed into open water was worse than the bug it fixed: pushing out over the
+sea to look at the coast from outside is a thing you do on purpose, and the
+camera hauling itself back mid-gesture reads as the map fighting you. It waits
+for three seconds of stillness, and stillness means the view has stopped - no
+hand, no wheel just turned, and the easing settled to under half a pixel on
+the glass. Measured: it starts at 2.92 s left alone, and 3 s after any nudge.
+
+**The animation switch does not reach the atlas.** It did for a while, and it
+worked, and it is not what the switch is for: the atlas is a map you are
+looking at rather than decoration behind something you are reading, and its
+weather is part of the map. Both halves of that wiring are gone rather than
+just the sending, since the other half was then dead code.
+
+**And the atlas has no heading.** A title and a sentence of mouse
+instructions sat across the top of it, over the sky. The map says both
+itself. All that is left is the way back.
+
+#### The line round the chart, for the third and last time
+
+This has now been diagnosed wrongly twice, by two different sessions, and it
+is worth writing down why - the same trap is waiting in anything that draws a
+boundary between the chart and the paint.
+
+The complaint is a hard vertical line in open sea with mottled water on one
+side and flat water on the other. **It is not the colour.** The chart and the
+paint have been the same blue for a while; measured across the recorded sea,
+mean 62.5/103.3/178.4 against 62/102/178 painted. What gives it away is the
+*grain*: recorded water is a different shade in every tile and flat paint is
+the same shade everywhere, and the eye finds that border instantly without
+being able to name a colour difference.
+
+The first answer was to rub the last fifty tiles of the chart away into the
+paint, at `B.minX` and its three companions. That was aimed at the wrong
+place, and finding out where the right place is took a scan of the picture
+rather than a reading of the code:
+
+- `B` is the recorded bounds, and the floor is drawn by whole chunks of a
+  hundred and twenty-eight tiles. `B.minX` is 245 and the chunk boundary is
+  128, so the pyramid carries ground a hundred and seventeen tiles west of
+  the bounds - seventy-six north, seventy-seven south, and none east, where
+  `maxX` happens to land on a boundary. At one tile to the pixel the gradient
+  was a hundred and seventeen pixels inside the picture and the real edge was
+  as bare as it started.
+- Aligning it to the chunk grid did not fix it either. Scanned a column at a
+  time, the ground on that row begins at tile 162 - neither the bounds nor a
+  chunk boundary. The chart ends where the *recording* ended, which is a
+  ragged line inside the rectangle, and no arithmetic in the page can
+  predict it. Any gradient laid down by guesswork leaves the real edge bare
+  somewhere along its length.
+
+So the paint is given the grain instead, and then it does not matter where the
+border falls. A small tile of noise at the measured wander - about one part in
+a channel of red and two in green and blue - laid down once per disc and
+scaled so its cells are game tiles at whatever zoom is current. Measured
+after: the grain across the whole width is 3.1 to 3.7 at one tile to the
+pixel, against 2.4 to 4.2 for the chart beside it, with no step anywhere.
+Before, it went from 0.00 to 2.75 between two adjacent columns.
+
+**If you touch this again: measure the grain, not the colour.** Mean absolute
+difference between a pixel and its neighbour two along, over a tall thin
+column, is the whole diagnostic - and it must be a *difference*, not a
+standard deviation, or the limb shading reads as texture and you will chase
+it for an hour. The rubbing at the edge is still there and still does no
+harm, but it is no longer what is holding the join together.
+
 ## Still to do
 
 Roughly in the order it was asked for.
