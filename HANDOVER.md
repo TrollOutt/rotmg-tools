@@ -314,6 +314,42 @@ naming; neither has been checked against the wiki.
 
 ---
 
+## The camera, and what is standing behind the world
+
+The camera used to be fenced inside the charted ground. It is not any more:
+the world rolls freely, at any distance and at any turn. What keeps you from
+losing it is `keepInSight`, which measures how much of the realm is actually
+on the glass and, if that falls to a fifth or less for three quarters of a
+second with nothing held down, walks the view all the way back to the distance
+and the place the map opens at.
+
+That measure is the part worth knowing about. Reckoned flat it is useless -
+pulled back, the window is thousands of tiles across and always contains a
+realm one thousand tiles wide, however far the camera has been walked from it.
+What really happens on a ball is that the realm rolls round the side. So
+`realmInView` sprinkles the realm with a grid of points, puts every one of
+them through the same `place()` the ground is drawn with, and adds up those
+that land on the screen, each weighed by its own `k` so ground crushed into
+the limb counts for the little of it you can see. Then it does the whole thing
+again from directly over the realm, and returns the ratio. The second count is
+what stops the rule from firing when you are simply standing close: nose
+against a field, you see one field's worth of realm and there is no more to be
+had, so both counts are small and the ratio is one.
+
+The one limit still kept is `floorZoom`, and it is now `FURTHEST = 0.22`
+rather than 0.3, which leaves room above the world for Oryx.
+
+He is built, not borrowed - `buildOryx()` in the render tool. The client has
+him at sixteen pixels square holding a sword, which at the width of a planet
+is a smear, so the head and the hands are sculpted instead: strokes stamped
+into a field that keeps how deep below the surface each pixel lies and how
+thick the stroke was there, a height from those two, a normal from the slope
+of the height, and one lamp. Pressing the height to about a third of its true
+value is what keeps a face from being a heap of shiny balloons. He is the only
+thing on the map that is not the game's own art, and `ORYX_FROM` is written in
+floors rather than in zooms so that he is never showing at the distance the
+map opens at, whatever the window is shaped like.
+
 ## Still to do
 
 Roughly in the order it was asked for.
