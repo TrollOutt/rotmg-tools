@@ -197,10 +197,20 @@ const toScreen = (tx, ty, box) => ({
  */
 const PLANET = 1250;
 
-// The blue the sea is drawn in the ground pictures - counted off the
-// coarsest of them, where it is the commonest colour there is - so the
-// ocean painted beyond the recorded water is the same water.
-const OCEAN = [64, 105, 181];
+/*
+ * The blue the sea is drawn in the ground pictures, counted off the coarsest
+ * of them where it is the commonest colour there is, so that the ocean
+ * painted beyond the recorded water is the same water.
+ *
+ * It is not quite one colour: every sea tile is jittered a shade or two, and
+ * what is wanted here is the middle of that spread rather than any one of
+ * them. Taking one of the brighter ones drew a line all the way round the
+ * chart where the flat paint met the mottled water - which is what the fade
+ * below is for as well, because matching the colour is not enough on its own
+ * when one side has a texture and the other has none.
+ */
+const OCEAN = [62, 102, 178];
+const SEA_FADE = 50;                     // tiles of chart edge given to the fade
 
 /*
  * Curvature costs nothing when you are close, and that falls out of the
@@ -694,9 +704,23 @@ const skySheet = new Image();
 const oryxSheet = new Image();
 if (A.sky) {
   skySheet.src = BASE + 'sky.png';
-  oryxSheet.src = BASE + 'oryx.png';
   fetch(BASE + 'sky.json').then(r => r.json())
     .then(one => { skyArt = one; }).catch(() => { skyArt = null; });
+}
+
+/*
+ * He is not fetched until he is wanted.
+ *
+ * His picture is the largest single thing the map carries and it is seen at
+ * one distance only - the furthest one, which most people opening the atlas
+ * will never go to. Asking for it on the way in would put a megabyte and more
+ * in front of the ground, which is the thing they did come for.
+ */
+let sentFor = false;
+function callForOryx() {
+  if (sentFor || !A.sky) return;
+  sentFor = true;
+  oryxSheet.src = BASE + 'oryx.png';
 }
 
 /*
@@ -721,10 +745,12 @@ const ORYX_FROM = 1.75;                  // in floors, the distance he starts at
 
 function oryxShows(box) {
   if (!A.sky || !skyArt || !skyArt.oryx) return 0;
-  if (!oryxSheet.complete || !oryxSheet.naturalWidth) return 0;
   if (!roundWorld(box)) return 0;
   const least = floorZoom(box), from = least * ORYX_FROM;
   if (view.scale >= from) return 0;
+  // Sent for a little before he is due, so he has arrived by the time he is.
+  if (view.scale < from * 1.6) callForOryx();
+  if (!oryxSheet.complete || !oryxSheet.naturalWidth) return 0;
   return Math.max(0, Math.min(1, (from - view.scale) / Math.max(0.01, from - least)));
 }
 
@@ -767,23 +793,27 @@ function drawOryxBehind(box, now) {
 function drawOryxHands(box, now) {
   const showing = oryxShows(box);
   if (showing <= 0.01) return;
-  const cut = skyArt.oryx.hand;
   const R = globe();
-  const tall = R * 2 * 0.66, wide = tall * cut[2] / cut[3];
-  const cy = box.h / 2 + R * 0.10;
+  const cy = box.h / 2 + R * 0.14;
   // Closing on it as you draw back, and never quite still.
-  const reach = R * (1.55 - 0.35 * showing);
+  const reach = R * (1.34 - 0.22 * showing);
   ctx.save();
   ctx.globalAlpha = showing;
   for (const side of [-1, 1]) {
+    /*
+     * Each hand is its own picture, drawn the way round it was drawn. They
+     * were one picture of a pair facing each other and they are not quite
+     * mirror images, so turning one of them over to serve as the other put a
+     * left hand on the right of the world.
+     */
+    const cut = side < 0 ? skyArt.oryx.handL : skyArt.oryx.handR;
+    if (!cut) continue;
+    const tall = R * 2 * 1.02, wide = tall * cut[2] / cut[3];
     const bob = Math.sin(now / 1300 + (side > 0 ? 1.7 : 0)) * R * 0.022;
-    ctx.save();
-    ctx.translate(box.w / 2 + side * reach, cy + bob);
-    // The picture is drawn reaching left; the other hand is it turned over.
-    if (side < 0) ctx.scale(-1, 1);
+    // Anchored by the edge that reaches, which is the one facing the world.
+    const edge = box.w / 2 + side * reach;
     ctx.drawImage(oryxSheet, cut[0], cut[1], cut[2], cut[3],
-      -wide * 0.18, -tall / 2, wide, tall);
-    ctx.restore();
+      side < 0 ? edge - wide : edge, cy + bob - tall / 2, wide, tall);
   }
   ctx.restore();
 }
@@ -1936,78 +1966,25 @@ const FURTHEST = 0.22;                   // of the shorter side, filled by the w
 const floorZoom = box => FURTHEST * Math.min(box.w, box.h) / PLANET;
 
 /*
- * How much of the realm is in front of you.
+ * A pin in the middle of the glass.
  *
- * Asked of the projection rather than of the numbers, because on a ball the
- * two disagree. Reckoned flat, a window pulled right back holds the realm
- * however far the camera is walked from it - the rectangle is thousands of
- * tiles across and the realm is one thousand. What actually happens is that
- * the realm rolls away round the side: still inside the rectangle, squashed
- * into the limb, and then gone over the horizon altogether. So the realm is
- * sprinkled with points, each one put through the same projection the ground
- * is drawn with, and what is counted is how much of it lands on the glass -
- * each point weighed by how square-on it is, so ground crushed into the limb
- * counts for the little of it you can really see.
+ * The question of whether you have lost the realm was being answered by
+ * measuring how much of it was on the screen, weighed by how square-on it
+ * was, counted twice and compared - and it was wrong twice over before it was
+ * right. The simple question turns out to be the right one: what is directly
+ * under the middle of the window? If the answer is open ocean then you are
+ * looking at nothing, whatever else is at the edges of the frame, and the
+ * view should drift back until the middle of the realm is under the pin
+ * again.
  *
- * And counted twice: once from where you are standing, and once from
- * directly over the realm, the second being the answer to "how much of it
- * could possibly be on the screen from this far away". Their ratio is how
- * much of the realm you are getting of what there is to get.
- *
- * That one number is not enough on its own, though, and the second half of
- * this is the correction for why. Standing close, the ratio is small however
- * well you are doing - a hundred tiles of ground is all that fits, so of
- * course the other thousand are missing - and reading that as being lost
- * would haul the camera home every time anybody looked at anything closely.
- * The first attempt at fixing it simply switched the rule off whenever little
- * of the realm could be seen at once, which threw out the case that matters:
- * close in over open water, far from any coast, is exactly as lost as it gets
- * and it was being waved through as though it were a close look at a field.
- *
- * So the other question is asked as well - how much of the *glass* has realm
- * behind it - and the better of the two answers wins. Nose against the
- * ground, the screen is all realm. Standing right back with the realm in the
- * middle, the screen is mostly ocean but the realm is all there. Out over
- * open water at any distance at all, both are nothing, and only then does the
- * camera come home.
+ * The middle of the window is always exactly the point the camera is over,
+ * in every mode - flat, leaning, or round - so no projection needs asking.
+ * And the chart already knows what is at a tile: everything that was walked
+ * carries a biome, and everything that was not is 255.
  */
-const LOOK_GRID = 11;
-function realmInView(box) {
-  const wide = B.maxX - B.minX, high = B.maxY - B.minY;
-  const keepX = view.x, keepY = view.y;
-  const tally = () => {
-    let sum = 0;
-    for (let j = 0; j < LOOK_GRID; j++) {
-      for (let i = 0; i < LOOK_GRID; i++) {
-        const at = place(B.minX + wide * i / (LOOK_GRID - 1),
-          B.minY + high * j / (LOOK_GRID - 1), box);
-        if (!at || at.x < 0 || at.y < 0 || at.x >= box.w || at.y >= box.h) continue;
-        sum += Math.max(0, Math.min(1, at.k));
-      }
-    }
-    return sum;
-  };
-  const seen = tally();
-  view.x = (B.minX + B.maxX) / 2; view.y = (B.minY + B.maxY) / 2;
-  const could = tally();
-  view.x = keepX; view.y = keepY;
-  const ofRealm = could > 0 ? Math.min(1, seen / could) : 1;
+const NOWHERE = 255;                     // the chart's word for unwalked water
 
-  // And the other way about: how much of the window has realm behind it.
-  let onGlass = 0;
-  for (let j = 0; j < LOOK_GRID; j++) {
-    for (let i = 0; i < LOOK_GRID; i++) {
-      const t = fromScreen(box.w * (i + 0.5) / LOOK_GRID,
-        box.h * (j + 0.5) / LOOK_GRID, box);
-      if (!t || !(t.x === t.x) || !(t.y === t.y)) continue;      // off the world
-      if (t.x < B.minX || t.x > B.maxX || t.y < B.minY || t.y > B.maxY) continue;
-      onGlass++;
-    }
-  }
-  return Math.max(ofRealm, onGlass / (LOOK_GRID * LOOK_GRID));
-}
-
-// Where the map opens, and where it comes back to.
+// Where the map opens, and where it drifts back to.
 function homeView(box) {
   const f = A.focus || [B.minX, B.minY, B.maxX, B.maxY];
   const room = Math.min(Math.max(1, box.w), Math.max(1, box.h - 34));
@@ -2018,23 +1995,10 @@ function homeView(box) {
   };
 }
 
-/*
- * The world turns whichever way you push it.
- *
- * It used to be fenced: you could walk the camera to the edge of the recorded
- * ground and no further, which on a globe is an odd thing to be stopped by -
- * there is no edge to a sphere, and being held off one you cannot see reads
- * as the map having seized rather than as a kindness. So the fence is gone
- * and the world may be rolled right round.
- *
- * What is left is a way back. Drift out until the realm is a fifth or less of
- * what you could be looking at, let go, and after a moment the camera walks
- * itself home - slowly, so it reads as the view settling rather than as being
- * snatched away, and it gives up the moment you take hold again.
- */
-const LOST = 0.2;                        // of what could be seen from over it
-const LOST_FOR = 0.7;                    // seconds adrift before the walk back
-let adrift = 0, walkingHome = false;
+function overOcean() {
+  const here = atTile(view.x, view.y);
+  return !here || here.biome === NOWHERE;
+}
 
 function keepInSight(box, delta) {
   /*
@@ -2045,27 +2009,12 @@ function keepInSight(box, delta) {
   if (want.scale < least) want.scale = least;
   if (view.scale < least) view.scale = least;
 
-  if (from) { adrift = 0; walkingHome = false; return; }   // a hand on it
-  if (!walkingHome) {
-    if (realmInView(box) > LOST) { adrift = 0; return; }
-    adrift += delta;
-    if (adrift < LOST_FOR) return;
-    walkingHome = true;
-  }
-  /*
-   * Once it has started it goes the whole way, to the place and the distance
-   * the map opens at. Stopping as soon as the realm was back in sight left
-   * the camera adrift at some angle nobody chose, which is worse than either
-   * end of the journey.
-   */
+  if (from) return;                      // a hand on it, so leave it be
+  if (!mask || !overOcean()) return;
   const home = homeView(box);
-  const step = Math.min(1, delta * 0.8);
-  for (const key of ['x', 'y', 'scale']) want[key] += (home[key] - want[key]) * step;
-  if (Math.abs(want.x - home.x) < 1 && Math.abs(want.y - home.y) < 1
-    && Math.abs(want.scale - home.scale) < home.scale * 0.004) {
-    want.x = home.x; want.y = home.y; want.scale = home.scale;
-    walkingHome = false; adrift = 0;
-  }
+  const step = Math.min(1, delta * 0.7);
+  want.x += (home.x - want.x) * step;
+  want.y += (home.y - want.y) * step;
 }
 
 /*
@@ -2173,6 +2122,42 @@ function groundGlobe(box, now) {
   drawRoads(big);
   if (chosen) drawLit(big, chosen, 0.16);
   else if (hovered) drawLit(big, hovered, 0.1);
+  /*
+   * And the chart's own edge taken off, so it dissolves into the ocean
+   * painted under it instead of ending at a line.
+   *
+   * The chart is a rectangle of recorded ground and it stops dead where the
+   * recording stopped, eighty tiles out from the last coast. Beyond that the
+   * page paints flat water. Even in the same blue the join shows, because
+   * the recorded water is mottled tile by tile and flat paint is not - so the
+   * last fifty tiles of it are rubbed away to nothing and the two meet
+   * through a gradient rather than at a border.
+   *
+   * Done here, inside the turn, because that is the frame the chart is square
+   * in; done after the ground so nothing standing on it is touched; and only
+   * on the ball, since flat there is night behind the chart and not water.
+   */
+  {
+    const edge = Math.max(2, SEA_FADE * view.scale);
+    const left = wide / 2 + (B.minX - view.x) * view.scale;
+    const right = wide / 2 + (B.maxX - view.x) * view.scale;
+    const top = tall / 2 + (B.minY - view.y) * view.scale;
+    const bottom = tall / 2 + (B.maxY - view.y) * view.scale;
+    globeCtx.globalCompositeOperation = 'destination-out';
+    const rub = (x0, y0, x1, y1, w, h) => {
+      const wash = globeCtx.createLinearGradient(x0, y0, x1, y1);
+      wash.addColorStop(0, 'rgba(0,0,0,1)');
+      wash.addColorStop(1, 'rgba(0,0,0,0)');
+      globeCtx.fillStyle = wash;
+      globeCtx.fillRect(Math.min(x0, x1), Math.min(y0, y1), w, h);
+    };
+    const across = right - left, down = bottom - top;
+    rub(left, top, left + edge, top, edge, down);
+    rub(right, top, right - edge, top, edge, down);
+    rub(left, top, left, top + edge, across, edge);
+    rub(left, bottom, left, bottom - edge, across, edge);
+    globeCtx.globalCompositeOperation = 'source-over';
+  }
   globeCtx.restore();
   ctx = real;
 
@@ -2340,10 +2325,22 @@ function frame(now) {
   requestAnimationFrame(frame);
   const delta = Math.min(0.1, (now - last) / 1000);
   last = now;
-  // The view eases to where it was asked to go rather than jumping.
-  for (const key of ['x', 'y', 'scale']) {
-    view[key] += (want[key] - view[key]) * Math.min(1, delta * 7);
-  }
+  /*
+   * The view eases to where it was asked to go rather than jumping.
+   *
+   * The distance closes by the same fraction every second, so it is quick
+   * while there is a long way to go and slow as it arrives. Position is eased
+   * straight and the zoom by ratio: halfway between one tile to the pixel and
+   * a hundred is ten, not fifty, and easing the zoom straight spends most of
+   * the movement almost stationary at the far end.
+   */
+  const ease = Math.min(1, delta * 5.5);
+  view.x += (want.x - view.x) * ease;
+  view.y += (want.y - view.y) * ease;
+  if (view.scale > 0 && want.scale > 0) {
+    const apart = want.scale / view.scale;
+    view.scale *= Math.abs(apart - 1) < 1e-4 ? 1 : Math.pow(apart, ease);
+  } else view.scale = want.scale;
   // Whatever else happens, the world has a positive size.
   if (!(view.scale > 0.001)) view.scale = 0.02;
   if (!(want.scale > 0.001)) want.scale = 0.02;
@@ -2421,26 +2418,47 @@ function frame(now) {
 function fit() {
   const home = homeView(size());
   want.x = home.x; want.y = home.y; want.scale = home.scale;
-  adrift = 0; walkingHome = false;
 }
+/*
+ * The wheel.
+ *
+ * A notch used to be a fifth again and it was applied to the view itself, so
+ * every click of it was a jump and four of them took you the whole way from
+ * the ground to the far side of the sky. Now a notch is a tenth, and it moves
+ * only where the view is *going* - the view walks there over the next few
+ * frames of its own accord. Rolling quickly still crosses the same distance,
+ * because the notches pile onto a target that is already ahead of you, but it
+ * arrives as one movement rather than as a series of steps.
+ *
+ * How far a notch is worth is taken from the event rather than assumed. A
+ * wheel reports a hundred or so at a time and a trackpad reports a handful,
+ * and treating both as one notch made the trackpad unusable.
+ */
+const WHEEL = 1.1;
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
-  adrift = 0; walkingHome = false;
   const box = size();
+  /*
+   * Reckoned where the view is going rather than where it is, so that a quick
+   * roll of several notches still leaves the thing under the pointer under
+   * the pointer when it all settles.
+   */
+  const keep = { x: view.x, y: view.y, scale: view.scale };
+  view.x = want.x; view.y = want.y; view.scale = want.scale;
   const under = toTile(event.offsetX, event.offsetY, box);
-  want.scale = view.scale = Math.max(floorZoom(box), Math.min(40,
-    view.scale * (event.deltaY > 0 ? 1 / 1.22 : 1.22)));
+  const notch = Math.max(-1.5, Math.min(1.5, event.deltaY / 100));
+  view.scale = want.scale = Math.max(floorZoom(box),
+    Math.min(40, want.scale * Math.pow(WHEEL, -notch)));
   const after = toTile(event.offsetX, event.offsetY, box);
-  view.x += under.x - after.x;
-  view.y += under.y - after.y;
-  want.x = view.x; want.y = view.y;
+  want.x += under.x - after.x;
+  want.y += under.y - after.y;
+  view.x = keep.x; view.y = keep.y; view.scale = keep.scale;
 }, { passive: false });
 
 let from = null, moved = 0;
 canvas.addEventListener('pointerdown', event => {
   from = { x: event.offsetX, y: event.offsetY, vx: view.x, vy: view.y };
   moved = 0;
-  adrift = 0; walkingHome = false;
   canvas.classList.add('drag');
   canvas.setPointerCapture(event.pointerId);
 });

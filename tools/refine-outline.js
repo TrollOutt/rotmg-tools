@@ -240,12 +240,39 @@ function checkCells(image, pics) {
 }
 
 /* ---------------- run ---------------- */
-const readJson = file => JSON.parse(fs.readFileSync(path.join(ATLAS, file), 'utf8'));
+/*
+ * Patient reading and writing.
+ *
+ * This runs immediately after the atlas has been built, which means several
+ * hundred freshly written pictures, and on Windows the virus scanner is still
+ * holding a good many of them when it comes to open them again. The failure
+ * is reported as UNKNOWN rather than as a sharing violation, it lands on a
+ * different file every time, and it is over in a few hundred milliseconds -
+ * so it is waited out rather than diagnosed. Failing here is expensive: the
+ * job is not one that can be halfway done, and stopping in the middle leaves
+ * the sheet doubled and the page describing the old one.
+ */
+function patiently(what, why) {
+  let waited = 0;
+  for (;;) {
+    try { return what(); } catch (bad) {
+      if (waited >= 8000 || (bad.code !== 'UNKNOWN' && bad.code !== 'EBUSY' && bad.code !== 'EPERM')) throw bad;
+      const wait = waited < 500 ? 50 : 250;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait);
+      waited += wait;
+      if (waited === 1000) console.log('  waiting on ' + why + ', something else has it');
+    }
+  }
+}
+const readFile = (file, how) => patiently(() => fs.readFileSync(file, how), file);
+const writeFile = (file, body) => patiently(() => fs.writeFileSync(file, body), file);
+
+const readJson = file => JSON.parse(readFile(path.join(ATLAS, file), 'utf8'));
 // atlas.json is written a space to the level with Windows line endings, and
 // things.json all on one line. Both are left exactly as they were found.
-const writeAtlasJson = value => fs.writeFileSync(path.join(ATLAS, 'atlas.json'),
+const writeAtlasJson = value => writeFile(path.join(ATLAS, 'atlas.json'),
   JSON.stringify(value, null, 1).replace(/\n/g, '\r\n') + '\r\n');
-const writeThingsJson = value => fs.writeFileSync(path.join(ATLAS, 'things.json'),
+const writeThingsJson = value => writeFile(path.join(ATLAS, 'things.json'),
   JSON.stringify(value));
 
 const things = readJson('things.json');
@@ -264,7 +291,7 @@ console.log('A line one pixel wide at ' + SS + ' sheet pixels to the pixel, inke
 
 /* The scenery. */
 const thingsFile = path.join(ATLAS, 'things.png');
-const sheet = readPng(fs.readFileSync(thingsFile));
+const sheet = readPng(readFile(thingsFile));
 const wasThings = fs.statSync(thingsFile).size;
 const wide = sheet.width, tall = sheet.height;
 
@@ -278,7 +305,7 @@ if (bad.length) {
 }
 const big = magnify(sheet, SS);
 const laid = outline(big);
-fs.writeFileSync(thingsFile, writePng(big.width, big.height, big.pixels));
+writeFile(thingsFile, writePng(big.width, big.height, big.pixels));
 console.log('  things.png  ' + wide + 'x' + tall + ' -> ' + big.width + 'x' + big.height
   + ', ' + gone + ' pixels of the old line off and ' + laid + ' of the new one on, '
   + Math.round(wasThings / 1024) + 'K -> '
@@ -300,8 +327,8 @@ let files = 0, lifeGone = 0, lifeLaid = 0, wasLife = 0, isLife = 0;
 for (const name of fs.readdirSync(lifeDir).filter(n => n.endsWith('.png'))) {
   const file = path.join(lifeDir, name);
   wasLife += fs.statSync(file).size;
-  const out = relined(readPng(fs.readFileSync(file)));
-  fs.writeFileSync(file, writePng(out.image.width, out.image.height, out.image.pixels));
+  const out = relined(readPng(readFile(file)));
+  writeFile(file, writePng(out.image.width, out.image.height, out.image.pixels));
   isLife += fs.statSync(file).size;
   files++; lifeGone += out.gone; lifeLaid += out.laid;
 }
@@ -340,12 +367,12 @@ console.log('  atlas.json  ' + sprites + ' frame sizes doubled');
  * from the one just written rather than edited.
  */
 const pageFile = path.join(ATLAS, 'index.html');
-const page = fs.readFileSync(pageFile, 'utf8');
+const page = readFile(pageFile, 'utf8');
 const inlined = /^const A = (\{.*\});$/m;
 if (!inlined.test(page)) {
   console.error('  index.html no longer carries "const A = {...};" on a line of its own.'
     + ' The page has not been touched, and is now out of step with atlas.json.');
   process.exit(1);
 }
-fs.writeFileSync(pageFile, page.replace(inlined, () => 'const A = ' + JSON.stringify(atlas) + ';'));
+writeFile(pageFile, page.replace(inlined, () => 'const A = ' + JSON.stringify(atlas) + ';'));
 console.log('  index.html  the inlined copy replaced');
