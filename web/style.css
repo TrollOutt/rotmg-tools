@@ -1167,6 +1167,18 @@ body.globe-wide .globe-shut {
 body.globe-wide .globe-shut:hover { border-color: var(--accent); color: #fff; }
 /* Nothing behind it scrolls while it is open. */
 body.globe-wide { overflow: hidden; }
+/*
+ * And nothing behind it moves. The canvases are hidden by script, which stops
+ * them being painted at all; this is for everything else with a keyframe on
+ * it, none of which is visible under a full-page map and all of which costs
+ * the map frames.
+ */
+body.globe-wide .ambience canvas,
+body.globe-wide .ambience-dom img,
+body.globe-wide .aurora span,
+body.globe-wide .news-bell-glyph,
+body.globe-wide .news-bell-dot,
+body.globe-wide .home-card-art { animation: none !important; }
 .home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
 .home-head h1 { font-size: clamp(28px, 5vw, 52px); }
 

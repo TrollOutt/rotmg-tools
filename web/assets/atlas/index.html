@@ -1353,16 +1353,21 @@ function oryxPaint() {
  * Come down towards the ground and he lets go.
  */
 /*
- * He begins where the opening view ends.
+ * He begins at the very end of the wheel.
  *
  * Reckoned as a multiple of the furthest you may stand rather than as a zoom
  * of its own, because both the floor and the view the map opens at are set
  * from the size of the window: written as a plain number he would be half
- * out already on a tall screen and nowhere to be seen on a short one. The map
- * opens at about twice the floor, so he starts a little inside that, and you
- * have to take a step back to meet him.
+ * out already on a tall screen and nowhere to be seen on a short one.
+ *
+ * At one and three quarter floors he was a step back from the opening view,
+ * which is another way of saying he was on screen most of the time anyone
+ * opened the map. He is supposed to be something you find. So he is inside
+ * the last tenth of the range now: you have to pull back until the wheel
+ * stops, which is seven or eight notches past where the realm fits the
+ * window, and there he is.
  */
-const ORYX_FROM = 1.75;                  // in floors, the distance he starts at
+const ORYX_FROM = 1.12;                  // in floors, the distance he starts at
 
 function oryxShows(box) {
   if (!A.sky || !skyArt || !skyArt.oryx) return 0;
@@ -2899,12 +2904,29 @@ const HOME_AFTER = 3;                    // seconds of stillness before it walks
 let walkingHome = false;
 let resting = 0;                         // seconds since the view last moved
 
+/*
+ * The shape of the window, as it was last frame.
+ *
+ * A box that grows raises the floor with it, and a zoom that was fine under
+ * the old floor is under the new one - at which point the clamp below puts
+ * it exactly on the floor, which is the one distance the map is not meant to
+ * sit at, because that is where he is. Embedded in a panel that opens out to
+ * four times its size, that happened every time. So a box that has changed
+ * shape and left the zoom below its floor gets a fresh fit instead of a
+ * clamp: it is the window that invalidated the view, not the reader.
+ */
+const lastBox = { w: 0, h: 0 };
+
 function keepInSight(box, delta) {
+  const least = floorZoom(box);
+  if (box.w !== lastBox.w || box.h !== lastBox.h) {
+    lastBox.w = box.w; lastBox.h = box.h;
+    if (want.scale < least && lastBox.w > 1) settleInto(box);
+  }
   /*
    * The one limit kept: pulled back past the point where the world fills the
    * window there is nothing further to see, only a smaller world.
    */
-  const least = floorZoom(box);
   if (want.scale < least) want.scale = least;
   if (view.scale < least) view.scale = least;
 
@@ -3337,6 +3359,12 @@ window.addEventListener('message', event => {
 });
 
 function settleInto(box) {
+  /*
+   * Whatever zone was picked goes with it. The panel is a sidebar in a frame
+   * that is about to be a different size, and a panel left open across that
+   * is a panel covering a third of a map nobody asked it to cover.
+   */
+  shutPanel();
   fit();
   const least = floorZoom(box);
   const past = least * ORYX_FROM * 1.06;

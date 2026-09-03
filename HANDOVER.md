@@ -750,6 +750,27 @@ standard deviation, or the limb shading reads as texture and you will chase
 it for an hour. The rubbing at the edge is still there and still does no
 harm, but it is no longer what is holding the join together.
 
+### Two traps in the atlas worth not falling into twice
+
+**A window that grows pins the zoom to the floor.** `keepInSight` clamps the
+zoom up to `floorZoom(box)`, and `floorZoom` rises with the window - so a view
+that was fine under the old floor is under the new one, and the clamp lands it
+exactly *on* the floor. That is the one distance the map is not meant to sit
+at, because the floor is where Oryx lives. Embedded in a panel that opens out
+to four times its size it happened every time, and it looked like the easter
+egg being broken rather than like a resize bug. A box that has changed shape
+and left the zoom below its floor now gets a fresh fit rather than a clamp: it
+is the window that invalidated the view, not the reader.
+
+**Do not give an embedded atlas a deadline; give it a number of frames.**
+Telling it to re-fit "for six hundred milliseconds" while a host panel opens
+out does not work, and it looks like it does. The half second the panel takes
+is also the half second the atlas spends fetching and decoding ground for a
+box that just quadrupled, so the window can pass with no frame drawn inside it
+at all. A count comes off one frame at a time and cannot be skipped however
+busy the browser is. The message is `{ rotmg: "settle", frames: N }`; it also
+shuts the zone panel, since the frame it was sized for is about to change.
+
 ## Still to do
 
 Roughly in the order it was asked for.
