@@ -223,6 +223,46 @@ PNG that changes at all is stored whole and there are 391 of them in two copies.
 The builds are deterministic, so a rebuild that changes nothing costs nothing —
 but every real growth of the map pays for the whole pyramid again.
 
+### What is not the realm
+
+Three mechanisms now, and they answer different questions. Keeping them
+straight matters, because two of them look interchangeable and are not.
+
+**`data/Realm/off-the-map.txt`, `class` and `id` lines** — turned away while
+the map is drawn, so they never come back when more of it is walked. A star in
+a name matches any middle, and a `keep` line beats everything. This is the one
+for scenery that has overgrown the place.
+
+**The same file's `life` lines** — these do not touch the drawing at all. They
+say "this is not wildlife", and they are read by the atlas builder when it
+works out who lives in a zone. They exist because a satellite has a thousand
+hit points and a trap has a hundred thousand, so as far as the client is
+concerned both are perfectly fightable and nothing but a person can tell.
+
+**The same file's `blank` line** — one word, no argument. Anything drawn from a
+square with no opaque pixels in it is not a thing on the map. Most of the
+machinery of the realm is placed as an object, because placing an object is
+the only way the client knows to put something on a tile: the spawner that
+puts the monsters there, the anchor a guardian paces round, the beam it
+throws, the marker where the loot fell. Nine thousand of them were being
+sorted by depth and written into the standing layer every build in order to
+draw nothing at all. The beacons are drawn from an empty square too and are
+*not* lost with them — they are read out of the store by name into
+`atlas.json`, and the page draws them from there, never from the standing
+layer. That was checked before the directive was added, and it is the one
+thing to check again if it is ever widened.
+
+**And a rule rather than a list: `readUnfightable()` in the atlas builder.**
+Two hundred and ten kinds on this map carry `<Enemy/>` and were being listed
+as a zone's wildlife. No amount of guessing from names sorts them out — among
+the ones that read most like machinery are Carboniferous Flytrap, which is a
+monster with three thousand hit points, and the beacon guardians' own minions,
+which are monsters too. The client answers plainly if it is asked the right
+question: a thing you are meant to fight has hit points, and a thing that only
+has to exist is marked `<Invincible/>` and given none. Not one kind with hit
+points is caught by it, so it costs nothing that was wanted. Prefer widening
+this rule to lengthening the `life` list.
+
 ## What is not available here
 
 Two data sources the repository is designed around were out of reach, which

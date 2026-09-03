@@ -225,6 +225,46 @@ function readEnemies() {
   return out;
 }
 
+/*
+ * The things that carry <Enemy/> and cannot be fought.
+ *
+ * A great deal of the machinery of an encounter is filed as an enemy because
+ * that is the only kind of thing the client knows how to put on a tile and
+ * make do something: the spawner that puts the monsters there, the anchor a
+ * guardian paces around, the beam it throws, the invisible bomb that is
+ * really the explosion, the marker that says where the loot fell. Listing
+ * them among a place's wildlife invents two hundred creatures that nobody has
+ * ever met, and no amount of guessing from their names gets it right - among
+ * the ones that look most like machinery are Carboniferous Flytrap, which is
+ * a monster with three thousand hit points, and the beacon guardians' own
+ * minions, which are monsters too.
+ *
+ * The client says it plainly, though, if it is asked the right question. A
+ * thing you are meant to fight has hit points. A thing that only has to exist
+ * is marked <Invincible/> and given none at all. Two hundred and ten of the
+ * kinds standing on this map answer to that, and not one thing with hit
+ * points does, so it costs nothing that was wanted.
+ *
+ * This is not the same list as the life lines in off-the-map.txt and does not
+ * replace them: a satellite has a thousand hit points and a trap has a
+ * hundred thousand, so both are perfectly fightable as far as the client is
+ * concerned and both still have to be named by hand.
+ */
+function readUnfightable() {
+  const out = new Set();
+  const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      if (!/<Enemy\s*\/>/.test(m[2])) continue;
+      if (!/<Invincible\s*\/>/.test(m[2])) continue;
+      if (/<MaxHitPoints>/.test(m[2])) continue;
+      const type = /type="([^"]+)"/.exec(m[1]);
+      if (type) out.add(Number(type[1]) & 0xffff);
+    }
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ *
  * The sprite registry, and the frames of everything that moves        *
  * ------------------------------------------------------------------ */
@@ -1364,7 +1404,17 @@ function main() {
       }
     }
   }
-  const isCreature = type => enemyKinds.has(type) && !notCreatures.has(objectName.get(type));
+  /*
+   * Only the beacons are spared, and they are not spared here: they are found
+   * by name in the block below, straight out of the store, before any of this
+   * runs. What this governs is who is listed as living somewhere.
+   */
+  const unfightable = readUnfightable();
+  const isCreature = type => enemyKinds.has(type)
+    && !unfightable.has(type)
+    && !notCreatures.has(objectName.get(type));
+  console.log('  ' + unfightable.size + ' kinds the client marks invincible and gives no hit '
+    + 'points, so they are machinery rather than wildlife');
 
   /*
    * The beacons, and what stands round them.

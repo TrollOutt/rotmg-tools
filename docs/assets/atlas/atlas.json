@@ -971,6 +971,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 34486,
+     "name": "Assembled Giant Arm",
+     "seen": 19,
+     "sprite": {
+      "file": "c34486.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ]
   },
@@ -1314,6 +1326,18 @@
      "seen": 19,
      "sprite": {
       "file": "c17735.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49967,
+     "name": "Sprite Forest Dog",
+     "seen": 15,
+     "sprite": {
+      "file": "c49967.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -1844,6 +1868,18 @@
       "frames": 3,
       "size": 100
      }
+    },
+    {
+     "type": 34604,
+     "name": "Angry Hornet",
+     "seen": 31,
+     "sprite": {
+      "file": "c34604.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ]
   },
@@ -1941,18 +1977,6 @@
      }
     },
     {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 63,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 29233,
      "name": "Deep Sea Hydra",
      "seen": 33,
@@ -1973,6 +1997,66 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29232,
+     "name": "Deep Sea Squid",
+     "seen": 19,
+     "sprite": {
+      "file": "c29232.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 1984,
+     "name": "pD Blob Scout",
+     "seen": 13,
+     "sprite": {
+      "file": "c1984.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9826,
+     "name": "Floral Dragon",
+     "seen": 13,
+     "sprite": {
+      "file": "c9826.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29221,
+     "name": "Deep Sea Kraken",
+     "seen": 13,
+     "sprite": {
+      "file": "c29221.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 29234,
+     "name": "Deep Sea Siren",
+     "seen": 10,
+     "sprite": {
+      "file": "c29234.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     }
@@ -2800,18 +2884,6 @@
      }
     },
     {
-     "type": 34602,
-     "name": "Sinister Pumpkin",
-     "seen": 8,
-     "sprite": {
-      "file": "c34602.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 21807,
      "name": "New Sand Phantom",
      "seen": 7,
@@ -2856,6 +2928,30 @@
       "file": "c24014.png",
       "tile": 20,
       "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21855,
+     "name": "New Undead Dwarf Mage",
+     "seen": 4,
+     "sprite": {
+      "file": "c21855.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 24013,
+     "name": "Beta Werewolf",
+     "seen": 3,
+     "sprite": {
+      "file": "c24013.png",
+      "tile": 28,
+      "height": 28,
       "frames": 2,
       "size": 100
      }
@@ -3384,6 +3480,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 21843,
+     "name": "New Horned Drake",
+     "seen": 24,
+     "sprite": {
+      "file": "c21843.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ]
   },
@@ -3506,14 +3614,62 @@
      }
     },
     {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 15,
+     "type": 2397,
+     "name": "pD Daggers Scout",
+     "seen": 14,
      "sprite": {
-      "file": "c767.png",
+      "file": "c2397.png",
       "tile": 20,
       "height": 20,
-      "frames": 1,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 2395,
+     "name": "pD Wands Scout",
+     "seen": 10,
+     "sprite": {
+      "file": "c2395.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 10,
+     "sprite": {
+      "file": "c14714.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29232,
+     "name": "Deep Sea Squid",
+     "seen": 9,
+     "sprite": {
+      "file": "c29232.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29233,
+     "name": "Deep Sea Hydra",
+     "seen": 8,
+     "sprite": {
+      "file": "c29233.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
       "size": 100
      }
     }
@@ -4387,6 +4543,30 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 49415,
+     "name": "Dead Church Skeleton",
+     "seen": 4,
+     "sprite": {
+      "file": "c49415.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 3,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ]
   },
@@ -4420,18 +4600,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 77,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
       "size": 100
      }
     },
@@ -4564,6 +4732,18 @@
       "tile": 20,
       "height": 20,
       "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "seen": 6,
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
       "size": 100
      }
     }
@@ -4854,18 +5034,6 @@
      }
     },
     {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 15,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34572,
      "name": "Artificial Sprite Child",
      "seen": 10,
@@ -4907,6 +5075,30 @@
      "seen": 6,
      "sprite": {
       "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 14714,
+     "name": "Carboniferous Dragonfly",
+     "seen": 5,
+     "sprite": {
+      "file": "c14714.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 22009,
+     "name": "New Cube God",
+     "seen": 4,
+     "sprite": {
+      "file": "c22009.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -5079,6 +5271,18 @@
       "frames": 3,
       "size": 100
      }
+    },
+    {
+     "type": 377,
+     "name": "Yellow Sprite Tree",
+     "seen": 8,
+     "sprite": {
+      "file": "c377.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
     }
    ]
   },
@@ -5217,6 +5421,18 @@
      "seen": 3,
      "sprite": {
       "file": "c49628.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 3,
+     "sprite": {
+      "file": "c49627.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -5517,6 +5733,66 @@
       "file": "c1984.png",
       "tile": 20,
       "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 53013,
+     "name": "Beacon Guardian Sanguine Forest",
+     "seen": 4,
+     "sprite": {
+      "file": "c53013.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29593,
+     "name": "Tundra Wizard",
+     "seen": 4,
+     "sprite": {
+      "file": "c29593.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 2396,
+     "name": "pD Bows Scout",
+     "seen": 4,
+     "sprite": {
+      "file": "c2396.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 3,
+     "sprite": {
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31508,
+     "name": "Tundra Yeti",
+     "seen": 3,
+     "sprite": {
+      "file": "c31508.png",
+      "tile": 36,
+      "height": 36,
       "frames": 2,
       "size": 100
      }
@@ -6033,6 +6309,30 @@
       "frames": 3,
       "size": 100
      }
+    },
+    {
+     "type": 21876,
+     "name": "New Lizard God",
+     "seen": 4,
+     "sprite": {
+      "file": "c21876.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21871,
+     "name": "New Night Elf Archer",
+     "seen": 4,
+     "sprite": {
+      "file": "c21871.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ]
   },
@@ -6354,6 +6654,18 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21784,
+     "name": "New Low Skeleton",
+     "seen": 3,
+     "sprite": {
+      "file": "c21784.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -7407,6 +7719,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 34485,
+     "name": "Assembled Giant Body",
+     "seen": 11,
+     "sprite": {
+      "file": "c34485.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -7696,18 +8020,6 @@
      }
     },
     {
-     "type": 45864,
-     "name": "AI Alien UFO Bomb",
-     "seen": 25,
-     "sprite": {
-      "file": "c45864.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
      "type": 49414,
      "name": "Dead Church Cleric",
      "seen": 13,
@@ -7752,6 +8064,18 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49630,
+     "name": "Dead Church Nun",
+     "seen": 9,
+     "sprite": {
+      "file": "c49630.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -8093,6 +8417,18 @@
       "frames": 1,
       "size": 100
      }
+    },
+    {
+     "type": 17734,
+     "name": "Sprite Forest Fire God",
+     "seen": 6,
+     "sprite": {
+      "file": "c17734.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -8398,6 +8734,18 @@
       "file": "c54327.png",
       "tile": 36,
       "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 54320,
+     "name": "Legion Guard",
+     "seen": 9,
+     "sprite": {
+      "file": "c54320.png",
+      "tile": 20,
+      "height": 20,
       "frames": 3,
       "size": 100
      }
@@ -8724,6 +9072,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 4322,
+     "name": "EH Ev Chase Red Fat Bees",
+     "seen": 11,
+     "sprite": {
+      "file": "c4322.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -8905,18 +9265,6 @@
      }
     },
     {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 63,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 29233,
      "name": "Deep Sea Hydra",
      "seen": 33,
@@ -8997,6 +9345,79 @@
       "tile": 36,
       "height": 36,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 29209,
+     "name": "Deep Sea Jellyfish",
+     "seen": 9,
+     "sprite": {
+      "file": "c29209.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 9830,
+     "name": "Floral Rhino",
+     "seen": 8,
+     "sprite": {
+      "file": "c9830.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34509,
+     "name": "Organ Harvester",
+     "seen": 8,
+     "sprite": {
+      "file": "c34509.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "hero"
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 8,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31509,
+     "name": "Deep Sea Submarine",
+     "seen": 8,
+     "sprite": {
+      "file": "c31509.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 2397,
+     "name": "pD Daggers Scout",
+     "seen": 7,
+     "sprite": {
+      "file": "c2397.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     }
@@ -9605,18 +10026,6 @@
      "role": "hero"
     },
     {
-     "type": 51058,
-     "name": "Elder Ent Ancient Explosion 2",
-     "seen": 6,
-     "sprite": {
-      "file": "c51058.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 16999,
      "name": "Alluring Blossom",
      "seen": 5,
@@ -9628,6 +10037,30 @@
       "size": 100
      },
      "role": "hero"
+    },
+    {
+     "type": 44337,
+     "name": "SpecPen Spectral Jailer",
+     "seen": 5,
+     "sprite": {
+      "file": "c44337.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 34603,
+     "name": "Hornet's Nest",
+     "seen": 3,
+     "sprite": {
+      "file": "c34603.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 1,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -10571,18 +11004,6 @@
      }
     },
     {
-     "type": 34602,
-     "name": "Sinister Pumpkin",
-     "seen": 7,
-     "sprite": {
-      "file": "c34602.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 49414,
      "name": "Dead Church Cleric",
      "seen": 6,
@@ -10603,6 +11024,18 @@
       "tile": 20,
       "height": 20,
       "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 17733,
+     "name": "Sprite Forest Child",
+     "seen": 5,
+     "sprite": {
+      "file": "c17733.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
       "size": 100
      }
     }
@@ -10798,18 +11231,6 @@
      }
     },
     {
-     "type": 34602,
-     "name": "Sinister Pumpkin",
-     "seen": 8,
-     "sprite": {
-      "file": "c34602.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 21807,
      "name": "New Sand Phantom",
      "seen": 7,
@@ -10930,6 +11351,30 @@
       "size": 100
      },
      "role": "hero"
+    },
+    {
+     "type": 21812,
+     "name": "New Ice Sprite",
+     "seen": 2,
+     "sprite": {
+      "file": "c21812.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21821,
+     "name": "New Gray Blob",
+     "seen": 2,
+     "sprite": {
+      "file": "c21821.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -11891,6 +12336,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 21789,
+     "name": "New Hobbit Archer",
+     "seen": 11,
+     "sprite": {
+      "file": "c21789.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -12073,18 +12530,6 @@
      }
     },
     {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 15,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 2397,
      "name": "pD Daggers Scout",
      "seen": 14,
@@ -12093,18 +12538,6 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21966,
-     "name": "New Blobomb Grave",
-     "seen": 12,
-     "sprite": {
-      "file": "c21966.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
       "size": 100
      }
     },
@@ -12145,14 +12578,86 @@
      }
     },
     {
-     "type": 16992,
-     "name": "Ravenous Rot Path",
+     "type": 29233,
+     "name": "Deep Sea Hydra",
      "seen": 8,
      "sprite": {
-      "file": "c16992.png",
+      "file": "c29233.png",
       "tile": 36,
       "height": 36,
-      "frames": 4,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 30575,
+     "name": "Carboniferous Bush Monster",
+     "seen": 8,
+     "sprite": {
+      "file": "c30575.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 2394,
+     "name": "pD Swords Scout",
+     "seen": 7,
+     "sprite": {
+      "file": "c2394.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9819,
+     "name": "Carboniferous Dinosaur",
+     "seen": 7,
+     "sprite": {
+      "file": "c9819.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 30573,
+     "name": "Carboniferous Spider",
+     "seen": 7,
+     "sprite": {
+      "file": "c30573.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29234,
+     "name": "Deep Sea Siren",
+     "seen": 6,
+     "sprite": {
+      "file": "c29234.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 2398,
+     "name": "pD Staves Scout",
+     "seen": 6,
+     "sprite": {
+      "file": "c2398.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
       "size": 100
      }
     }
@@ -12467,18 +12972,6 @@
      }
     },
     {
-     "type": 34500,
-     "name": "Pirate's Tavern Bartender",
-     "seen": 5,
-     "sprite": {
-      "file": "c34500.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 34502,
      "name": "Pirate's Tavern Piano",
      "seen": 5,
@@ -12487,6 +12980,18 @@
       "tile": 36,
       "height": 36,
       "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 16926,
+     "name": "Beached Cannon",
+     "seen": 5,
+     "sprite": {
+      "file": "c16926.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -13735,6 +14240,42 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 53001,
+     "name": "Beacon Guardian Shipwreck Cove",
+     "seen": 2,
+     "sprite": {
+      "file": "c53001.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49343,
+     "name": "Reef Narwhal",
+     "seen": 2,
+     "sprite": {
+      "file": "c49343.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49414,
+     "name": "Dead Church Cleric",
+     "seen": 2,
+     "sprite": {
+      "file": "c49414.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -13850,18 +14391,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 77,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
       "size": 100
      }
     },
@@ -14069,6 +14598,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 22009,
+     "name": "New Cube God",
+     "seen": 3,
+     "sprite": {
+      "file": "c22009.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -14084,13 +14625,15 @@
     },
     {
      "name": "Daughter of Limon",
-     "art": "daughter-of-limon.png"
+     "art": "daughter-of-limon.png",
+     "onMap": true
     }
    ],
    "heroes": [
     {
      "name": "Artificial Sprite God",
-     "art": "artificial-sprite-god.png"
+     "art": "artificial-sprite-god.png",
+     "onMap": true
     },
     {
      "name": "Celestial Sprite",
@@ -14098,7 +14641,8 @@
     },
     {
      "name": "Cosmic Sprite",
-     "art": "cosmic-sprite.png"
+     "art": "cosmic-sprite.png",
+     "onMap": true
     },
     {
      "name": "Elder Sprite Tree",
@@ -14345,18 +14889,6 @@
      }
     },
     {
-     "type": 21014,
-     "name": "Shady Sect Spirit",
-     "seen": 4,
-     "sprite": {
-      "file": "c21014.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
      "type": 50130,
      "name": "Hell Dog 3",
      "seen": 3,
@@ -14374,6 +14906,30 @@
      "seen": 3,
      "sprite": {
       "file": "c50131.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 49901,
+     "name": "Shipwreck Ghost",
+     "seen": 2,
+     "sprite": {
+      "file": "c49901.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49897,
+     "name": "Hell Ghost",
+     "seen": 2,
+     "sprite": {
+      "file": "c49897.png",
       "tile": 36,
       "height": 36,
       "frames": 3,
@@ -14865,18 +15421,6 @@
      }
     },
     {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 15,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 34572,
      "name": "Artificial Sprite Child",
      "seen": 10,
@@ -14995,6 +15539,32 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 34605,
+     "name": "Daughter of Limon",
+     "seen": 3,
+     "sprite": {
+      "file": "c34605.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "encounter"
+    },
+    {
+     "type": 2907,
+     "name": "Elder Sprite Tree",
+     "seen": 3,
+     "sprite": {
+      "file": "c2907.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 1,
+      "size": 100
+     },
+     "role": "hero"
     }
    ],
    "met": true,
@@ -15010,13 +15580,15 @@
     },
     {
      "name": "Daughter of Limon",
-     "art": "daughter-of-limon.png"
+     "art": "daughter-of-limon.png",
+     "onMap": true
     }
    ],
    "heroes": [
     {
      "name": "Artificial Sprite God",
-     "art": "artificial-sprite-god.png"
+     "art": "artificial-sprite-god.png",
+     "onMap": true
     },
     {
      "name": "Celestial Sprite",
@@ -15024,7 +15596,8 @@
     },
     {
      "name": "Cosmic Sprite",
-     "art": "cosmic-sprite.png"
+     "art": "cosmic-sprite.png",
+     "onMap": true
     },
     {
      "name": "Elder Sprite Tree",
@@ -15305,6 +15878,32 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 34570,
+     "name": "Artificial Sprite God",
+     "seen": 3,
+     "sprite": {
+      "file": "c34570.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     },
+     "role": "hero"
+    },
+    {
+     "type": 44153,
+     "name": "Cosmic Sprite",
+     "seen": 3,
+     "sprite": {
+      "file": "c44153.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 4,
+      "size": 100
+     },
+     "role": "hero"
     }
    ],
    "met": true,
@@ -15320,13 +15919,15 @@
     },
     {
      "name": "Daughter of Limon",
-     "art": "daughter-of-limon.png"
+     "art": "daughter-of-limon.png",
+     "onMap": true
     }
    ],
    "heroes": [
     {
      "name": "Artificial Sprite God",
-     "art": "artificial-sprite-god.png"
+     "art": "artificial-sprite-god.png",
+     "onMap": true
     },
     {
      "name": "Celestial Sprite",
@@ -15334,7 +15935,8 @@
     },
     {
      "name": "Cosmic Sprite",
-     "art": "cosmic-sprite.png"
+     "art": "cosmic-sprite.png",
+     "onMap": true
     },
     {
      "name": "Elder Sprite Tree",
@@ -16063,18 +16665,6 @@
      }
     },
     {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 6,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 53013,
      "name": "Beacon Guardian Sanguine Forest",
      "seen": 4,
@@ -16083,30 +16673,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21960,
-     "name": "New Encounter Bomb",
-     "seen": 4,
-     "sprite": {
-      "file": "c21960.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
-     "type": 16992,
-     "name": "Ravenous Rot Path",
-     "seen": 4,
-     "sprite": {
-      "file": "c16992.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 4,
       "size": 100
      }
     },
@@ -16130,6 +16696,102 @@
       "file": "c2396.png",
       "tile": 20,
       "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29557,
+     "name": "Tundra Knight",
+     "seen": 3,
+     "sprite": {
+      "file": "c29557.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31508,
+     "name": "Tundra Yeti",
+     "seen": 3,
+     "sprite": {
+      "file": "c31508.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 9832,
+     "name": "Tundra Troll",
+     "seen": 3,
+     "sprite": {
+      "file": "c9832.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 29443,
+     "name": "Tundra Dragon",
+     "seen": 3,
+     "sprite": {
+      "file": "c29443.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 31166,
+     "name": "Carboniferous Flytrap",
+     "seen": 3,
+     "sprite": {
+      "file": "c31166.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 52735,
+     "name": "New Scout Colony",
+     "seen": 2,
+     "sprite": {
+      "file": "c52735.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 54295,
+     "name": "Legion Veteran Guard",
+     "seen": 2,
+     "sprite": {
+      "file": "c54295.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 9820,
+     "name": "Carboniferous Mantis",
+     "seen": 2,
+     "sprite": {
+      "file": "c9820.png",
+      "tile": 36,
+      "height": 36,
       "frames": 2,
       "size": 100
      }
@@ -16744,6 +17406,30 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 21884,
+     "name": "New Dark Elf Swordsman",
+     "seen": 2,
+     "sprite": {
+      "file": "c21884.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21872,
+     "name": "New Night Elf Warrior",
+     "seen": 2,
+     "sprite": {
+      "file": "c21872.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
     }
    ],
    "met": true,
@@ -17010,6 +17696,30 @@
      "seen": 2,
      "sprite": {
       "file": "c21887.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21872,
+     "name": "New Night Elf Warrior",
+     "seen": 2,
+     "sprite": {
+      "file": "c21872.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21873,
+     "name": "New Night Elf Mage",
+     "seen": 2,
+     "sprite": {
+      "file": "c21873.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -18186,6 +18896,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 21810,
+     "name": "New Great Lizard",
+     "seen": 1,
+     "sprite": {
+      "file": "c21810.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
     }
    ]
   },
@@ -18882,6 +19604,18 @@
       "frames": 3,
       "size": 100
      }
+    },
+    {
+     "type": 44337,
+     "name": "SpecPen Spectral Jailer",
+     "seen": 1,
+     "sprite": {
+      "file": "c44337.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 2,
+      "size": 100
+     }
     }
    ]
   },
@@ -19080,6 +19814,18 @@
       "frames": 2,
       "size": 100
      }
+    },
+    {
+     "type": 31509,
+     "name": "Deep Sea Submarine",
+     "seen": 1,
+     "sprite": {
+      "file": "c31509.png",
+      "tile": 68,
+      "height": 68,
+      "frames": 3,
+      "size": 100
+     }
     }
    ]
   },
@@ -19171,18 +19917,6 @@
       "tile": 36,
       "height": 36,
       "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 767,
-     "name": "Sanguine Ooze Puddle",
-     "seen": 2,
-     "sprite": {
-      "file": "c767.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
       "size": 100
      }
     }
@@ -19399,6 +20133,18 @@
      "seen": 1,
      "sprite": {
       "file": "c17734.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 17735,
+     "name": "Sprite Forest Poison God",
+     "seen": 1,
+     "sprite": {
+      "file": "c17735.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -19647,18 +20393,6 @@
       "frames": 2,
       "size": 100
      }
-    },
-    {
-     "type": 51030,
-     "name": "Daughter of Limon Portal",
-     "seen": 2,
-     "sprite": {
-      "file": "c51030.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 1,
-      "size": 100
-     }
     }
    ],
    "guardian": {
@@ -19783,18 +20517,6 @@
      }
     },
     {
-     "type": 21942,
-     "name": "New KageSpawner",
-     "seen": 1,
-     "sprite": {
-      "file": "c21942.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 1,
-      "size": 100
-     }
-    },
-    {
      "type": 21943,
      "name": "New Kage Kami",
      "seen": 1,
@@ -19803,6 +20525,18 @@
       "tile": 20,
       "height": 20,
       "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 49627,
+     "name": "Dead Church Necromancer",
+     "seen": 1,
+     "sprite": {
+      "file": "c49627.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
@@ -20009,6 +20743,18 @@
       "tile": 20,
       "height": 20,
       "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21807,
+     "name": "New Sand Phantom",
+     "seen": 1,
+     "sprite": {
+      "file": "c21807.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }

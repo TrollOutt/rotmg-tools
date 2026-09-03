@@ -50,6 +50,20 @@ life New 45-225 Diagonal Trap
 life New Blue Satellite
 life New Sand Phantom Wisp
 
+## Anything drawn from an empty square.
+##
+## Most of the machinery of the realm is placed as an object, because that is
+## the only way the client knows to put something on a tile: the spawner that
+## puts the monsters there, the anchor a guardian paces round, the beam it
+## throws, the marker where the loot fell. All of them are drawn from nothing,
+## so nine thousand of them were being sorted by depth and written into the
+## standing layer every build in order to draw exactly nothing.
+##
+## The beacons are drawn from nothing as well and are not lost with them: they
+## are read out of the store by name and carried in atlas.json, and the page
+## draws them from there.
+blank
+
 ## Somewhere else entirely: a fifty-tile room of wood plank floor and Space,
 ## eight hundred tiles off the coast in the corner of the chart, with nothing
 ## ever met in it. Walked into by accident and recorded along with the realm.
