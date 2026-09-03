@@ -274,7 +274,33 @@ const seaPatch = (() => {
   pen.putImageData(skin, 0, 0);
   return pad;
 })();
-const SEA_FADE = 50;                     // tiles of chart edge given to the fade
+const SEA_FADE = 50;
+/*
+ * Set a pen to paint sea with.
+ *
+ * One tile of noise is one game tile across, and it is anchored to the world
+ * rather than to the canvas - so panning slides the paint along with the
+ * chart instead of the two grains sliding against each other at the join.
+ *
+ * The pattern is reduced modulo its own size before being handed over. Left
+ * as the raw offset it is a number in the millions at the closest zoom, and
+ * a pattern transform that large loses its precision and starts to shimmer.
+ */
+function seaInk(pen, box) {
+  pen.fillStyle = 'rgb(' + OCEAN.join(',') + ')';
+  try {
+    const wash = pen.createPattern(seaPatch, 'repeat');
+    if (!wash || !wash.setTransform) return;
+    const cell = SEA_TILE * view.scale;
+    const wrap = at => ((at % cell) + cell) % cell;
+    wash.setTransform(new DOMMatrix([view.scale, 0, 0, view.scale,
+      wrap(box.w / 2 - view.x * view.scale), wrap(box.h / 2 - view.y * view.scale)]));
+    pen.fillStyle = wash;
+  } catch (error) {
+    /* the flat colour, set above, stands */
+  }
+}
+                     // tiles of chart edge given to the fade
 
 /*
  * Curvature costs nothing when you are close, and that falls out of the
@@ -548,7 +574,7 @@ function levelFor(scale) {
  * Returns what it managed to draw and what it wanted and did not have, so
  * the caller can decide whether the picture needs propping up underneath.
  */
-function drawLevel(z, box) {
+function drawLevel(z, box, holes) {
   const have = haveChunk.get(z);
   if (!have) return { drawn: 0, missing: 0 };
   const span = A.chunk * (1 << z);
@@ -564,8 +590,13 @@ function drawLevel(z, box) {
       const name = c + '_' + r;
       if (!have.has(name)) continue;
       const img = chunkImage(z, name);
-      if (!img.complete || !img.naturalWidth) { missing++; continue; }
       const at = toScreen(c * span, r * span, box);
+      if (!img.complete || !img.naturalWidth) {
+        missing++;
+        // Where it should have been, for whatever is standing in for it.
+        if (holes) holes.push([at.x, at.y, on + 1, on + 1]);
+        continue;
+      }
       ctx.drawImage(img, at.x, at.y, on + 1, on + 1);
       drawn++;
     }
@@ -645,14 +676,37 @@ function warmAhead(box) {
 function drawGround(box) {
   const z = levelFor(view.scale);
   ctx.imageSmoothingEnabled = view.scale < A.px / 2;
-  let wanted = drawLevel(z, box);
-  if (wanted.missing && z !== COARSEST) {
-    // Underneath, then the wanted level again over the top of it.
+  const holes = [];
+  const wanted = drawLevel(z, box, holes);
+  /*
+   * The stand-in goes in the holes, and nowhere else.
+   *
+   * It used to be laid across the whole view whenever anything anywhere in
+   * it was still loading, with the wanted level put back over the top. That
+   * is fine where the wanted level has a picture to put back - and open sea
+   * is exactly where it has none. A chunk of nothing but water is not in the
+   * pyramid at all, so out there the coarsest level was what you were left
+   * looking at: soft, and by its own admission too dark in places. Against
+   * the sharp chunk next door that is a hard chunk-aligned band of slightly
+   * wrong sea, and since panning always has something loading somewhere, it
+   * never went away. Three shades of water in one stretch of ocean with two
+   * straight vertical joins between them, which is what was reported.
+   *
+   * Clipped to the missing chunks it does the job it was written for -
+   * covering a chunk that is on its way - and leaves everywhere else to the
+   * painted ocean, which is one colour and one grain at every zoom. It is
+   * also cheaper: the wanted level no longer has to be drawn twice.
+   */
+  if (holes.length && z !== COARSEST) {
     const smooth = ctx.imageSmoothingEnabled;
+    ctx.save();
+    ctx.beginPath();
+    for (const hole of holes) ctx.rect(hole[0], hole[1], hole[2], hole[3]);
+    ctx.clip();
     ctx.imageSmoothingEnabled = true;
     drawLevel(COARSEST, box);
+    ctx.restore();
     ctx.imageSmoothingEnabled = smooth;
-    wanted = drawLevel(z, box);
   }
   return { z, drawn: wanted.drawn };
 }
@@ -1055,6 +1109,37 @@ const SKY_INK = 0.9;                     // how solid the thickest weather is
  */
 const SKY_WRAP = 3.6;                    // sky radii a front drifts before it returns
 /*
+ * How the sky answers the world being turned under it.
+ *
+ * Fixed to the glass was right and it was not the whole story. Weather sits
+ * on a world and a world that turns takes its air with it - not at once and
+ * not exactly, because air slips. So the sky is hung off a lagging copy of
+ * the camera: shove the realm and the cloud is pulled after it a beat late,
+ * and when the realm stops the cloud arrives, overshoots nothing, and
+ * settles back onto the glass over a second or so.
+ *
+ * That is not the thing this started out doing. Weather laid out in tiles
+ * moved exactly with the map, which read as a sky painted on the map. What
+ * is different here is that the coupling is temporary: while you are moving,
+ * the sky is being dragged; once you stop, it is in front of the camera
+ * again, and nothing about where you have panned to is written into it.
+ */
+const SKY_DRAG = 0.8;                    // how much of the movement pulls it
+const SKY_CATCH = 1.6;                   // and how quickly it catches up
+const SKY_SLIP = 0.6;                    // sky radii it may ever fall behind
+
+/* The lagging copy of the camera that the sky hangs off. */
+const skyBehind = { x: 0, y: 0, set: false };
+function stepSky(delta) {
+  if (!skyBehind.set) {
+    skyBehind.x = view.x; skyBehind.y = view.y; skyBehind.set = true;
+    return;
+  }
+  const catchUp = Math.min(1, delta * SKY_CATCH);
+  skyBehind.x += (view.x - skyBehind.x) * catchUp;
+  skyBehind.y += (view.y - skyBehind.y) * catchUp;
+}
+/*
  * How many banks there are, and how many weather systems they make up.
  *
  * A cloud does not wander the sky on its own. Given a drift each, they
@@ -1375,17 +1460,30 @@ const weather = (() => {
     const swap = shapes[i]; shapes[i] = shapes[j]; shapes[j] = swap;
   }
   /*
-   * The fronts, laid out along the run rather than dropped anywhere on it.
+   * The fronts, laid out along the run and down the sky rather than dropped
+   * anywhere on either.
    *
-   * Nine of them, one to each ninth of the wrap and jittered within it, so
-   * that the sky is never empty and never all arrives at once. Rolled freely
-   * they clumped: two systems overlapping and then four skies of nothing.
+   * One to each ninth of the wrap and jittered within it, so the sky is
+   * never empty and never all arrives at once - rolled freely they clumped,
+   * two systems overlapping and then four skies of nothing.
+   *
+   * Latitude needed the same treatment and did not have it: nine free rolls
+   * put six of the nine in the top half, which is exactly what it looked
+   * like. Bands again, and shuffled independently of the along-the-run
+   * order - taking them in the same order would lay every front on one
+   * diagonal, which is tidier than clumping and just as wrong.
    */
+  const bands = [];
+  for (let i = 0; i < FRONTS; i++) bands.push(i);
+  for (let i = bands.length - 1; i > 0; i--) {
+    const j = Math.floor(roll() * (i + 1));
+    const swap = bands[i]; bands[i] = bands[j]; bands[j] = swap;
+  }
   const fronts = [];
   for (let i = 0; i < FRONTS; i++) {
     fronts.push({
       x: ((i + 0.15 + roll() * 0.7) / FRONTS) * SKY_WRAP - SKY_WRAP / 2,
-      y: (roll() - 0.5) * 1.4,
+      y: ((bands[i] + 0.15 + roll() * 0.7) / FRONTS - 0.5) * 1.55,
       /*
        * Sky radii a second, westward - so the pace is the same fraction of
        * what you can see at every zoom, which is the only reading that makes
@@ -1548,6 +1646,16 @@ function drawSky(box, now) {
    * of the window: you come down into a full sky and it opens up in front of
    * you, which is the thing being drawn.
    */
+  /*
+   * How far behind the sky has fallen, in pixels of glass. Clamped, because
+   * a fast drag across the whole realm would otherwise fling the weather
+   * clean out of the frame and leave a bare planet until it caught up.
+   */
+  const slip = SKY_SLIP * R;
+  const lagX = Math.max(-slip, Math.min(slip,
+    (skyBehind.x - view.x) * view.scale * SKY_DRAG));
+  const lagY = Math.max(-slip, Math.min(slip,
+    (skyBehind.y - view.y) * view.scale * SKY_DRAG));
   const push = 1 + SKY_PUSH * gone * gone;
   /*
    * And coming at you as they part, which is the other half of coming down
@@ -1594,7 +1702,7 @@ function drawSky(box, now) {
     const out = 1 + (push - 1) * one.depth;
     const w = one.wide * R * grow;
     const h = w * steps[0].h / steps[0].w;
-    const x = cx + sx * R * out, y = cy + sy * R * out;
+    const x = cx + sx * R * out + lagX, y = cy + sy * R * out + lagY;
     if (x + w < 0 || x - w > box.w || y + h < 0 || y - h > box.h) continue;
     /*
      * And against the world itself when the sky is clipped to it. Standing
@@ -2850,7 +2958,21 @@ function turnBy(by) {
   }
 }
 
+/*
+ * The ocean, under the flat view as well.
+ *
+ * This is where the map went black. Zoom past the point the world stops
+ * being worth bending and the disc goes with it - and with the disc went the
+ * only sea the page ever painted, because the sea was drawn inside it. Over
+ * land nothing showed, which is why it stood so long; over open water there
+ * was nothing to draw at all and the map fell through to the night behind
+ * everything. Flat only ever happens when the world is many times the size
+ * of the window, so no space can be in view and the whole canvas is sea
+ * until the chart says otherwise.
+ */
 function groundFlat(box, now) {
+  seaInk(ctx, box);
+  ctx.fillRect(0, 0, box.w, box.h);
   const ground = drawGround(box);
   drawWater(box, now);
   drawRoads(box);
@@ -3021,23 +3143,7 @@ function groundGlobe(box, now) {
 
   // Ocean first, so the chart has water to sit in wherever nothing was
   // recorded - which past the eighty tiles of sea is everywhere.
-  /*
-   * One tile of noise is a game tile across, so the paint mottles at the
-   * same pitch the chart does at every zoom. If the pattern cannot be made
-   * - or its transform cannot be set, which is the newer half of the
-   * interface - the flat colour is drawn instead and the worst that
-   * happens is the join being visible again.
-   */
-  ctx.fillStyle = 'rgb(' + OCEAN.join(',') + ')';
-  try {
-    const wash = ctx.createPattern(seaPatch, 'repeat');
-    if (wash && wash.setTransform) {
-      wash.setTransform(new DOMMatrix([view.scale, 0, 0, view.scale, 0, 0]));
-      ctx.fillStyle = wash;
-    }
-  } catch (error) {
-    /* the flat colour, set above, stands */
-  }
+  seaInk(ctx, box);
   ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
 
   ctx.imageSmoothingEnabled = true;
@@ -3174,7 +3280,8 @@ function groundTilted(box, now) {
     flatMap.height = Math.round(tall * dpr);
   }
   flatCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  flatCtx.fillStyle = '#070a10';
+  // Sea rather than night, for the reason given above groundFlat.
+  seaInk(flatCtx, { w: wide, h: tall });
   flatCtx.fillRect(0, 0, wide, tall);
 
   const big = { w: wide, h: tall };
@@ -3284,6 +3391,7 @@ function frame(now) {
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);
+  stepSky(delta);
   stepBirds(delta);
   drawBirds(box);
   drawSky(box, now);

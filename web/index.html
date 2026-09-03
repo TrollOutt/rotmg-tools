@@ -54,19 +54,38 @@
       <em class="home-card-go">Open →</em>
     </button>
 
-    <button type="button" class="home-card" data-go="realm" style="--i:2">
-      <span class="home-card-art realm-card-glyph" aria-hidden="true">✦</span>
-      <span class="home-card-title">Realm Atlas</span>
-      <span class="home-card-line">A living view of the New Realm.</span>
-      <small>Explore a topological atlas of the realm, its biomes, encounters, beacon guardians and the creatures that inhabit each region.</small>
-      <em class="home-card-go">Explore →</em>
-    </button>
 
   </div>
 
+  <!--
+    The realm, on this page.
+
+    It was a card like the other two, which is a fair description of a tool
+    and a poor one of a place: the other two are forms you fill in and this
+    is a world you look at. So it is here, turning, at whatever size the
+    window has left once the two cards have had theirs - and clicking it
+    opens it out to the whole page rather than going anywhere. It keeps its
+    border when it does, so it still reads as a panel on this page rather
+    than as somewhere you have been taken. Click off it to put it back.
+  -->
+  <div id="globeBack" class="globe-back" hidden></div>
+  <section class="globe-stage">
+    <div id="globeBox" class="globe-box" role="button" tabindex="0"
+      aria-expanded="false" aria-label="Realm Atlas — open it full size">
+      <iframe id="realmFrame" title="Realm Atlas" loading="lazy"></iframe>
+      <span class="globe-glass" aria-hidden="true"></span>
+      <span class="globe-name">
+        <b>Realm Atlas</b>
+        <em>A living view of the New Realm — click to open it</em>
+      </span>
+      <button type="button" id="globeShut" class="globe-shut" aria-label="Close the atlas">✕</button>
+      <p id="realmMissing" class="note" hidden>The atlas is unavailable just now.</p>
+    </div>
+  </section>
+
   <footer class="app-foot">
     Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
-    by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
+    by brendanbrubacher ·
     <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOnHome"></span>.
   </footer>
 </div>
@@ -85,36 +104,14 @@
   </main>
 </div>
 
-<!-- Realm Atlas ------------------------------------------------------ -->
-<div id="pageRealm" class="app page" hidden>
-  <!--
-    No heading over the map.
-
-    The title and its sentence sat across the top of the atlas, over the sky,
-    telling you the name of the page you had just chosen and then how to use a
-    mouse. The atlas says both itself: the map is unmistakably the map, and
-    the line along the bottom of it already gives the controls. All that is
-    left is the way back.
-  -->
-  <header class="masthead realm-head">
-    <button type="button" class="link-button back" data-go="home">← All tools</button>
-  </header>
-  <main class="realm-stage-full">
-    <iframe id="realmFrame" title="Realm Atlas" loading="lazy"></iframe>
-    <p id="realmMissing" class="note" hidden>The atlas is unavailable just now.</p>
-  </main>
-</div>
-
 <!-- Enchant Calculator ----------------------------------------------- -->
 <div id="pageEnchant" class="app page" hidden>
 
   <header class="masthead">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Enchant Calculator</h1>
-    <p>Describe the item you actually hold, mark what you keep and what you still want, then compare every artifact and every route.</p>
     <div class="masthead-row">
       <div id="status" class="status">Game data</div>
-      <button id="reset" type="button" class="link-button">Reset everything</button>
     </div>
   </header>
 
@@ -208,8 +205,8 @@
         </div>
 
         <div id="slotList" class="slot-list"></div>
-        <p id="slotHint" class="note">Choose a rarity to reveal the enchantment slots.</p>
-        <p id="calculateHint" class="note">Rarity, item type, dust type and at least one wanted enchantment are required.</p>
+        <p id="slotHint" class="note" hidden></p>
+        <p id="calculateHint" class="note" hidden></p>
 
         <fieldset id="tiers" class="tiers" hidden disabled>
           <legend>Accepted tiers of the target</legend>
@@ -263,16 +260,6 @@
     </section>
   </main>
 
-  <!-- Out of the control column and along the bottom of the shell: it is a
-       credit and a licence notice, not something you act on, and in the column
-       it was costing the slot list fifty pixels it needed more. -->
-  <footer class="app-foot">
-    Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
-    by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
-    <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOn"></span>.
-    Everything runs in your browser; your setup is remembered locally and nothing is ever sent anywhere.
-    <span id="offlineCopy" hidden></span>
-  </footer>
 </div>
 
 
@@ -281,8 +268,6 @@
   <header class="masthead">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Fame Sweep</h1>
-    <p>Every dungeon pays fame the first time you finish it, and finishing a whole
-      era or group pays far more — a flat sum and a share of the fame you already have.</p>
     <div class="masthead-row">
       <label class="base-fame">Your base fame
         <input id="fameBase" type="number" min="0" step="100" value="0" inputmode="numeric">
@@ -292,7 +277,7 @@
         <button type="button" class="filter-chip" data-avail="seasonal">Seasonal</button>
         <button type="button" class="filter-chip" data-avail="other">Event</button>
       </div>
-      <button id="fameReset" type="button" class="link-button">Clear the ticks</button>
+      <button id="fameReset" type="button" class="act-button">Clear the ticks</button>
     </div>
   </header>
 
@@ -300,7 +285,6 @@
     <section class="column config" aria-label="What to go for">
       <section class="card step">
         <header><span class="step-badge">1</span><h2>Pick a collection</h2></header>
-        <p class="note">Click one and its dungeons light up in the grid. Click it again to stop.</p>
         <div id="fameCollections" class="fame-collections"></div>
       </section>
 

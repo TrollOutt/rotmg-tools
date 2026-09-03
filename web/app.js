@@ -327,9 +327,10 @@ function renderSlots() {
   const list = $('slotList');
   const visible = config.slots;
   const hint = $('slotHint');
-  hint.hidden = visible > 0;
+  // Silent unless there is something to say; see the markup.
+  hint.hidden = true;
   hint.className = 'note';
-  hint.textContent = 'Choose a rarity to reveal the enchantment slots.';
+  hint.textContent = '';
   list.replaceChildren();
 
   for (let index = 1; index <= visible; index++) {
@@ -593,11 +594,16 @@ function whatIsMissing(config) {
 function renderCalculateState(config) {
   const { missing, overloaded, ready } = whatIsMissing(config);
   const hint = $('calculateHint');
-  // Nothing to say once it is running on its own and the answer is on screen.
-  hint.hidden = ready;
+  /*
+   * Only the one thing worth interrupting for. Listing what has not been
+   * filled in yet is the interface reading its own form back at you, and
+   * the form is right there; asking for more slots than the item has is a
+   * dead end you cannot see from the slots themselves.
+   */
+  hint.hidden = !overloaded;
   hint.textContent = overloaded
     ? 'The locked and wanted enchantments together need more slots than the item has.'
-    : `Still missing: ${missing.join(', ')}.`;
+    : '';
   hint.className = `note${overloaded ? ' warn' : ''}`;
   return ready;
 }
@@ -1490,7 +1496,6 @@ function bind() {
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('pickerBackdrop').hidden) closePicker(); });
 
   window.addEventListener('resize', handleAmbienceResize);
-  $('reset').addEventListener('click', resetSetup);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
     if (event.target.closest('#changeItem')) { openItemPicker(); return; }
@@ -1504,6 +1509,31 @@ function bind() {
     if (tab) switchTab(tab.dataset.tab);
   });
   $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
+
+  /*
+   * The atlas frame. Shut, it swallows nothing: the map inside it takes no
+   * pointer at all, so a click anywhere on it opens it out rather than
+   * panning a map the size of a postcard. Open, the map has the pointer and
+   * the ways out are the cross, the key, and anywhere off the frame.
+   */
+  const globeBox = document.getElementById('globeBox');
+  if (globeBox) {
+    globeBox.addEventListener('click', () => { if (!globeWide()) setGlobe(true); });
+    globeBox.addEventListener('keydown', event => {
+      if (globeWide() || (event.key !== 'Enter' && event.key !== ' ')) return;
+      event.preventDefault();
+      setGlobe(true);
+    });
+  }
+  const globeBack = document.getElementById('globeBack');
+  if (globeBack) globeBack.addEventListener('click', () => setGlobe(false));
+  const globeShut = document.getElementById('globeShut');
+  if (globeShut) {
+    globeShut.addEventListener('click', event => { event.stopPropagation(); setGlobe(false); });
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && globeWide()) setGlobe(false);
+  });
   $('summary').addEventListener('click', event => { if (event.target.id === 'showAudit') toggleAudit(); });
   $('auditClose').addEventListener('click', hideAudit);
   // A greyed row is an invitation: clicking it adds its group to the selection.
@@ -2321,10 +2351,15 @@ function renderClientNews(reading) {
     line.title = 'No game client has been read against these numbers yet.';
     return;
   }
-  const bits = [];
-  if (made) bits.push(`update of ${newsDate(made)}`);
-  bits.push(`client of ${newsDate(reading.date)}`);
-  line.textContent = 'Game data · ' + bits.join(' · ');
+  /*
+   * The update, and only the update. The client reading and its build id
+   * are what the numbers were taken from rather than what they are about,
+   * and neither means anything to anyone reading the page - so both live in
+   * the tooltip, where the one person who wants them can find them.
+   */
+  line.textContent = made
+    ? `Game data · update of ${newsDate(made)}`
+    : `Game data · client of ${newsDate(reading.date)}`;
   line.title = (made ? `The items and the notes cover the update of ${newsDate(made)}. ` : '')
     + `The enchanting odds were read from an installed RotMG client of `
     + `${newsDate(reading.date)}, build ${reading.build}.`;
@@ -2348,12 +2383,21 @@ async function readSources() {
 // GPL-3.0 §5(a) asks a modified work to carry a notice that it was changed and
 // "a relevant date". The date comes from the build; it identifies the version,
 // not the author — the licence never requires naming yourself.
+/*
+ * The licence notice, wherever it is still shown. The calculator no longer
+ * carries one - the way in does, once, for the whole site.
+ */
 function renderModifiedDate() {
-  $('modifiedOn').textContent = BUNDLE && BUNDLE.built ? ` on ${BUNDLE.built}` : '';
+  const when = BUNDLE && BUNDLE.built ? ` on ${BUNDLE.built}` : '';
+  for (const id of ['modifiedOn', 'modifiedOnHome']) {
+    const node = document.getElementById(id);
+    if (node) node.textContent = when;
+  }
 }
 
 function renderOfflineOffer() {
-  const note = $('offlineCopy');
+  const note = document.getElementById('offlineCopy');
+  if (!note) return;                     // the footer that held it is gone
   if (!BUNDLE || !/^https?:$/.test(location.protocol)) { note.hidden = true; return; }
   note.hidden = false;
   note.innerHTML = '<a href="RotMG-Enchant-Calculator.html" download>Download this page</a> to keep it and use it offline — it is one self-contained file.';
@@ -2396,7 +2440,49 @@ async function load() {
  * couple of hundred milliseconds and it means the page is ready when
  * you pick it. Fame Sweep loads its own the first time you open it.
  */
-const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', realm: 'pageRealm', news: 'pageNews' };
+/*
+ * The atlas has no page of its own any more: it is a frame on the way in,
+ * and 'realm' means the way in with that frame opened out.
+ */
+const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', news: 'pageNews' };
+
+/*
+ * Pointed at the atlas once, and not before the way in has painted.
+ *
+ * It is a megabyte or two of ground and it is now on the landing page, so
+ * it waits for the browser to be idle rather than joining the queue in
+ * front of the thing people came for. Opening it out asks for it at once,
+ * since by then it is the thing people came for.
+ */
+let atlasAsked = false;
+function pointAtAtlas() {
+  if (atlasAsked) return;
+  atlasAsked = true;
+  const frame = document.getElementById('realmFrame');
+  if (!frame || frame.src) return;
+  const base = (window.ATLAS_BASE || 'assets/atlas/');
+  fetch(base + 'atlas.json', { method: 'HEAD' })
+    .then(response => {
+      if (!response.ok) throw new Error('no atlas');
+      frame.src = base + 'index.html';
+    })
+    .catch(() => {
+      frame.hidden = true;
+      const missing = document.getElementById('realmMissing');
+      if (missing) missing.hidden = false;
+    });
+}
+
+/* Open out, or put back. */
+function setGlobe(open) {
+  document.body.classList.toggle('globe-wide', open);
+  const back = document.getElementById('globeBack');
+  if (back) back.hidden = !open;
+  const box = document.getElementById('globeBox');
+  if (box) box.setAttribute('aria-expanded', String(open));
+  if (open) pointAtAtlas();
+}
+const globeWide = () => document.body.classList.contains('globe-wide');
 let famePageReady = false;
 
 async function openFamePage() {
@@ -2423,7 +2509,8 @@ async function openFamePage() {
 }
 
 function showPage(name) {
-  const page = PAGES[name] ? name : 'home';
+  const wideOpen = name === 'realm';
+  const page = wideOpen ? 'home' : (PAGES[name] ? name : 'home');
   for (const [key, id] of Object.entries(PAGES)) $(id).hidden = key !== page;
   document.body.dataset.page = page;
   pinRealm(page);
@@ -2436,22 +2523,14 @@ function showPage(name) {
     WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
   }
   /*
-   * The atlas is its own page, held in a frame. It is pointed at the first
-   * time the tab is opened and left alone after that, so panning and zooming
-   * survive a switch to another tool and back.
+   * The frame is asked for while the browser is idle, and only on the page
+   * that holds it. Anything else that was open is put away.
    */
-  if (page === 'realm') {
-    const frame = $('realmFrame');
-    if (frame && !frame.src) {
-      const base = (window.ATLAS_BASE || 'assets/atlas/');
-      fetch(base + 'atlas.json', { method: 'HEAD' })
-        .then(response => {
-          if (!response.ok) throw new Error('no atlas');
-          frame.src = base + 'index.html';
-        })
-        .catch(() => { frame.hidden = true; $('realmMissing').hidden = false; });
-    }
+  if (page === 'home') {
+    if (window.requestIdleCallback) requestIdleCallback(pointAtAtlas, { timeout: 1500 });
+    else setTimeout(pointAtAtlas, 700);
   }
+  setGlobe(wideOpen);
   window.scrollTo(0, 0);
 
   /*

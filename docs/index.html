@@ -835,7 +835,23 @@ table.mini td { padding: 3px 8px; border: 0; }
   /* The column is bounded, never scrolled: scrolling it would take the item or
      Calculate off screen, which is the whole thing being fixed. The slot list
      absorbs the difference and scrolls inside itself instead. */
-  .column.config { overflow: hidden; }
+  /*
+   * Scoped to the calculator, which is the page it was written for. Fame
+   * Sweep uses the same class for its left-hand column and inherited the
+   * one rule that column cannot live with: bounded, with nothing inside it
+   * set up to scroll. Its third card - the sum, which is the answer - was
+   * simply cut off at the bottom of the window with no way to reach it.
+   * Unscoped, it scrolls like any other column.
+   */
+  #pageEnchant .column.config { overflow: hidden; }
+  /*
+   * And its cards keep their own height rather than being squeezed to fit.
+   * A flex child shrinks by default, so with the column bounded they each gave
+   * up a few pixels and the column then reported that everything fitted - so
+   * no scrollbar appeared and the last rows of the collection list were
+   * clipped by a column that did not believe it had anything to scroll.
+   */
+  #pageFame .column.config > .card { flex: none; }
   .column.config > .card.step[data-step="2"] {
     flex: 1 1 auto;
     min-height: 0;
@@ -1044,15 +1060,100 @@ table.mini td { padding: 3px 8px; border: 0; }
  * the pair between them, which centres it without the footer being dragged
  * up with it.
  */
+/*
+ * The way in shares its height out rather than centring a block in it.
+ *
+ * It used to push the heading and the cards into the middle with a pair of
+ * auto margins, which is right for a short row of cards and wrong the
+ * moment one of the three things on the page is a world you look at. The
+ * heading and the cards take what they need, the frame takes everything
+ * that is left, and the credit line sits under it - so on a tall window the
+ * world is large and on a short one it is still there.
+ */
 #pageHome {
-  min-height: 100vh; display: flex; flex-direction: column;
-  gap: clamp(16px, 4vh, 40px);
+  min-height: 100vh; height: 100vh; display: flex; flex-direction: column;
+  gap: clamp(10px, 2vh, 22px);
 }
-#pageHome > .home-head { margin-top: auto; }
-#pageHome > .home-cards { margin-bottom: auto; }
+#pageHome > .home-head, #pageHome > .home-cards, #pageHome > .news-bell { flex: none; }
 #pageHome > .app-foot {
-  margin-top: 0; text-align: center; font-size: 10.5px; opacity: .5;
+  flex: none; margin-top: 0; text-align: center; font-size: 10.5px; opacity: .45;
 }
+
+/* ---------------- the world, in a frame ---------------- */
+/*
+ * The frame takes the leftover height, and never less than enough to be a
+ * planet rather than a stripe.
+ */
+.globe-stage { flex: 1 1 auto; min-height: min(300px, 34vh); display: flex; }
+.globe-box {
+  position: relative; flex: 1 1 auto; min-height: 0;
+  width: min(1100px, 100%); margin: 0 auto;
+  background: #05070c; border: 2px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; cursor: zoom-in;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.globe-box:hover, .globe-box:focus-visible {
+  border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset;
+  outline: none;
+}
+.globe-box iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: 0; display: block;
+  /* Shut, the map takes no pointer, so a click opens the frame instead of
+     nudging a map the size of a postcard. */
+  pointer-events: none;
+}
+/* A breath of shade at the foot of it, for the name to sit on. */
+.globe-glass {
+  position: absolute; inset: 0; pointer-events: none;
+  /* Opaque at the very bottom, because the atlas has a status bar of its own
+     down there and shut it is not information, it is a line of small print
+     showing through a picture. */
+  background: linear-gradient(0deg, rgba(5, 7, 12, .98) 0%, rgba(5, 7, 12, .94) 8%,
+    rgba(5, 7, 12, .5) 24%, transparent 52%);
+  transition: opacity .18s ease;
+}
+.globe-name {
+  position: absolute; left: clamp(14px, 2vw, 26px); bottom: clamp(12px, 1.8vh, 22px);
+  display: grid; gap: 2px; pointer-events: none; text-align: left;
+}
+.globe-name b { font-size: clamp(17px, 1.9vw, 23px); font-weight: 600; color: #f6ecd2; }
+.globe-name em { font-style: normal; font-size: clamp(12px, 1.1vw, 14px); color: var(--muted); }
+.globe-shut { display: none; }
+
+/*
+ * Opened out.
+ *
+ * It keeps an inset and it keeps its border, which is the whole point: you
+ * are still on the way in, with the atlas opened out on it, rather than
+ * somewhere else. The inset is also what you click to put it back, so it
+ * has to be wide enough to hit.
+ */
+.globe-back {
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(4, 5, 9, .72); cursor: zoom-out;
+}
+body.globe-wide .globe-box {
+  position: fixed; inset: clamp(18px, 3.2vh, 44px); z-index: 56;
+  width: auto; margin: 0; cursor: default;
+  border-color: var(--accent);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .7);
+}
+body.globe-wide .globe-box iframe { pointer-events: auto; }
+body.globe-wide .globe-glass { opacity: 0; }
+body.globe-wide .globe-name { display: none; }
+/* The switch governs a background nobody can see behind a full-page map. */
+body.globe-wide .ambience-toggle { display: none; }
+body.globe-wide .globe-shut {
+  display: grid; place-items: center; position: absolute;
+  top: 10px; right: 10px; z-index: 2; width: 34px; height: 34px;
+  font: inherit; font-size: 15px; cursor: pointer;
+  color: var(--text); background: rgba(12, 11, 18, .88);
+  border: 1px solid var(--line); border-radius: 999px;
+}
+body.globe-wide .globe-shut:hover { border-color: var(--accent); color: #fff; }
+/* Nothing behind it scrolls while it is open. */
+body.globe-wide { overflow: hidden; }
 .home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
 .home-head h1 { font-size: clamp(28px, 5vw, 52px); }
 
@@ -1420,14 +1521,35 @@ table.mini td { padding: 3px 8px; border: 0; }
  * The controls you are meant to notice                                *
  * ------------------------------------------------------------------ */
 
-/* The way back. It was a faint link nobody found. */
+/*
+ * The way back, which is the one control on these pages that everybody
+ * needs and nobody could find. It was a thirteen-point pill in the same
+ * grey as the prose beside it; it is now the size of a thing you press.
+ */
 .masthead .back {
-  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
-  font-size: 13px; color: var(--text); text-decoration: none;
-  background: rgba(26, 24, 36, .9); border: 1px solid var(--line);
-  border-radius: 999px; padding: 5px 14px;
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none;
+  background: rgba(38, 34, 51, .95); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 18px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .35);
 }
-.masthead .back:hover { border-color: var(--locked); color: var(--locked); background: rgba(38, 34, 51, .95); }
+.masthead .back:hover {
+  border-color: var(--accent); color: #fff; background: rgba(52, 46, 70, .98);
+}
+.masthead .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/*
+ * And a button that does something to what is on screen, as against a
+ * link that takes you elsewhere. Clearing the ticks was a faint link in a
+ * row of lit chips and read as a caption.
+ */
+.act-button {
+  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  color: var(--text); background: rgba(38, 34, 51, .95);
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px;
+}
+.act-button:hover { border-color: var(--bad); color: #fff; }
+.act-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* The dungeon filters: chunky, and lit when they are on, the way a game
    menu marks a choice rather than whispering it. */
@@ -1859,19 +1981,38 @@ table.mini td { padding: 3px 8px; border: 0; }
       <em class="home-card-go">Open →</em>
     </button>
 
-    <button type="button" class="home-card" data-go="realm" style="--i:2">
-      <span class="home-card-art realm-card-glyph" aria-hidden="true">✦</span>
-      <span class="home-card-title">Realm Atlas</span>
-      <span class="home-card-line">A living view of the New Realm.</span>
-      <small>Explore a topological atlas of the realm, its biomes, encounters, beacon guardians and the creatures that inhabit each region.</small>
-      <em class="home-card-go">Explore →</em>
-    </button>
 
   </div>
 
+  <!--
+    The realm, on this page.
+
+    It was a card like the other two, which is a fair description of a tool
+    and a poor one of a place: the other two are forms you fill in and this
+    is a world you look at. So it is here, turning, at whatever size the
+    window has left once the two cards have had theirs - and clicking it
+    opens it out to the whole page rather than going anywhere. It keeps its
+    border when it does, so it still reads as a panel on this page rather
+    than as somewhere you have been taken. Click off it to put it back.
+  -->
+  <div id="globeBack" class="globe-back" hidden></div>
+  <section class="globe-stage">
+    <div id="globeBox" class="globe-box" role="button" tabindex="0"
+      aria-expanded="false" aria-label="Realm Atlas — open it full size">
+      <iframe id="realmFrame" title="Realm Atlas" loading="lazy"></iframe>
+      <span class="globe-glass" aria-hidden="true"></span>
+      <span class="globe-name">
+        <b>Realm Atlas</b>
+        <em>A living view of the New Realm — click to open it</em>
+      </span>
+      <button type="button" id="globeShut" class="globe-shut" aria-label="Close the atlas">✕</button>
+      <p id="realmMissing" class="note" hidden>The atlas is unavailable just now.</p>
+    </div>
+  </section>
+
   <footer class="app-foot">
     Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
-    by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
+    by brendanbrubacher ·
     <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOnHome"></span>.
   </footer>
 </div>
@@ -1890,36 +2031,14 @@ table.mini td { padding: 3px 8px; border: 0; }
   </main>
 </div>
 
-<!-- Realm Atlas ------------------------------------------------------ -->
-<div id="pageRealm" class="app page" hidden>
-  <!--
-    No heading over the map.
-
-    The title and its sentence sat across the top of the atlas, over the sky,
-    telling you the name of the page you had just chosen and then how to use a
-    mouse. The atlas says both itself: the map is unmistakably the map, and
-    the line along the bottom of it already gives the controls. All that is
-    left is the way back.
-  -->
-  <header class="masthead realm-head">
-    <button type="button" class="link-button back" data-go="home">← All tools</button>
-  </header>
-  <main class="realm-stage-full">
-    <iframe id="realmFrame" title="Realm Atlas" loading="lazy"></iframe>
-    <p id="realmMissing" class="note" hidden>The atlas is unavailable just now.</p>
-  </main>
-</div>
-
 <!-- Enchant Calculator ----------------------------------------------- -->
 <div id="pageEnchant" class="app page" hidden>
 
   <header class="masthead">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Enchant Calculator</h1>
-    <p>Describe the item you actually hold, mark what you keep and what you still want, then compare every artifact and every route.</p>
     <div class="masthead-row">
       <div id="status" class="status">Game data</div>
-      <button id="reset" type="button" class="link-button">Reset everything</button>
     </div>
   </header>
 
@@ -2013,8 +2132,8 @@ table.mini td { padding: 3px 8px; border: 0; }
         </div>
 
         <div id="slotList" class="slot-list"></div>
-        <p id="slotHint" class="note">Choose a rarity to reveal the enchantment slots.</p>
-        <p id="calculateHint" class="note">Rarity, item type, dust type and at least one wanted enchantment are required.</p>
+        <p id="slotHint" class="note" hidden></p>
+        <p id="calculateHint" class="note" hidden></p>
 
         <fieldset id="tiers" class="tiers" hidden disabled>
           <legend>Accepted tiers of the target</legend>
@@ -2068,16 +2187,6 @@ table.mini td { padding: 3px 8px; border: 0; }
     </section>
   </main>
 
-  <!-- Out of the control column and along the bottom of the shell: it is a
-       credit and a licence notice, not something you act on, and in the column
-       it was costing the slot list fifty pixels it needed more. -->
-  <footer class="app-foot">
-    Based on <a href="https://github.com/brendanbrubacher/rotmg-enchant-calculator" target="_blank" rel="noopener">rotmg-enchant-calculator</a>
-    by brendanbrubacher — thanks. Coded with OpenAI Codex and Anthropic Claude.
-    <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOn"></span>.
-    Everything runs in your browser; your setup is remembered locally and nothing is ever sent anywhere.
-    <span id="offlineCopy" hidden></span>
-  </footer>
 </div>
 
 
@@ -2086,8 +2195,6 @@ table.mini td { padding: 3px 8px; border: 0; }
   <header class="masthead">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Fame Sweep</h1>
-    <p>Every dungeon pays fame the first time you finish it, and finishing a whole
-      era or group pays far more — a flat sum and a share of the fame you already have.</p>
     <div class="masthead-row">
       <label class="base-fame">Your base fame
         <input id="fameBase" type="number" min="0" step="100" value="0" inputmode="numeric">
@@ -2097,7 +2204,7 @@ table.mini td { padding: 3px 8px; border: 0; }
         <button type="button" class="filter-chip" data-avail="seasonal">Seasonal</button>
         <button type="button" class="filter-chip" data-avail="other">Event</button>
       </div>
-      <button id="fameReset" type="button" class="link-button">Clear the ticks</button>
+      <button id="fameReset" type="button" class="act-button">Clear the ticks</button>
     </div>
   </header>
 
@@ -2105,7 +2212,6 @@ table.mini td { padding: 3px 8px; border: 0; }
     <section class="column config" aria-label="What to go for">
       <section class="card step">
         <header><span class="step-badge">1</span><h2>Pick a collection</h2></header>
-        <p class="note">Click one and its dungeons light up in the grid. Click it again to stop.</p>
         <div id="fameCollections" class="fame-collections"></div>
       </section>
 
@@ -5015,9 +5121,10 @@ function renderSlots() {
   const list = $('slotList');
   const visible = config.slots;
   const hint = $('slotHint');
-  hint.hidden = visible > 0;
+  // Silent unless there is something to say; see the markup.
+  hint.hidden = true;
   hint.className = 'note';
-  hint.textContent = 'Choose a rarity to reveal the enchantment slots.';
+  hint.textContent = '';
   list.replaceChildren();
 
   for (let index = 1; index <= visible; index++) {
@@ -5281,11 +5388,16 @@ function whatIsMissing(config) {
 function renderCalculateState(config) {
   const { missing, overloaded, ready } = whatIsMissing(config);
   const hint = $('calculateHint');
-  // Nothing to say once it is running on its own and the answer is on screen.
-  hint.hidden = ready;
+  /*
+   * Only the one thing worth interrupting for. Listing what has not been
+   * filled in yet is the interface reading its own form back at you, and
+   * the form is right there; asking for more slots than the item has is a
+   * dead end you cannot see from the slots themselves.
+   */
+  hint.hidden = !overloaded;
   hint.textContent = overloaded
     ? 'The locked and wanted enchantments together need more slots than the item has.'
-    : `Still missing: ${missing.join(', ')}.`;
+    : '';
   hint.className = `note${overloaded ? ' warn' : ''}`;
   return ready;
 }
@@ -6178,7 +6290,6 @@ function bind() {
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('pickerBackdrop').hidden) closePicker(); });
 
   window.addEventListener('resize', handleAmbienceResize);
-  $('reset').addEventListener('click', resetSetup);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
     if (event.target.closest('#changeItem')) { openItemPicker(); return; }
@@ -6192,6 +6303,31 @@ function bind() {
     if (tab) switchTab(tab.dataset.tab);
   });
   $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
+
+  /*
+   * The atlas frame. Shut, it swallows nothing: the map inside it takes no
+   * pointer at all, so a click anywhere on it opens it out rather than
+   * panning a map the size of a postcard. Open, the map has the pointer and
+   * the ways out are the cross, the key, and anywhere off the frame.
+   */
+  const globeBox = document.getElementById('globeBox');
+  if (globeBox) {
+    globeBox.addEventListener('click', () => { if (!globeWide()) setGlobe(true); });
+    globeBox.addEventListener('keydown', event => {
+      if (globeWide() || (event.key !== 'Enter' && event.key !== ' ')) return;
+      event.preventDefault();
+      setGlobe(true);
+    });
+  }
+  const globeBack = document.getElementById('globeBack');
+  if (globeBack) globeBack.addEventListener('click', () => setGlobe(false));
+  const globeShut = document.getElementById('globeShut');
+  if (globeShut) {
+    globeShut.addEventListener('click', event => { event.stopPropagation(); setGlobe(false); });
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && globeWide()) setGlobe(false);
+  });
   $('summary').addEventListener('click', event => { if (event.target.id === 'showAudit') toggleAudit(); });
   $('auditClose').addEventListener('click', hideAudit);
   // A greyed row is an invitation: clicking it adds its group to the selection.
@@ -7009,10 +7145,15 @@ function renderClientNews(reading) {
     line.title = 'No game client has been read against these numbers yet.';
     return;
   }
-  const bits = [];
-  if (made) bits.push(`update of ${newsDate(made)}`);
-  bits.push(`client of ${newsDate(reading.date)}`);
-  line.textContent = 'Game data · ' + bits.join(' · ');
+  /*
+   * The update, and only the update. The client reading and its build id
+   * are what the numbers were taken from rather than what they are about,
+   * and neither means anything to anyone reading the page - so both live in
+   * the tooltip, where the one person who wants them can find them.
+   */
+  line.textContent = made
+    ? `Game data · update of ${newsDate(made)}`
+    : `Game data · client of ${newsDate(reading.date)}`;
   line.title = (made ? `The items and the notes cover the update of ${newsDate(made)}. ` : '')
     + `The enchanting odds were read from an installed RotMG client of `
     + `${newsDate(reading.date)}, build ${reading.build}.`;
@@ -7036,12 +7177,21 @@ async function readSources() {
 // GPL-3.0 §5(a) asks a modified work to carry a notice that it was changed and
 // "a relevant date". The date comes from the build; it identifies the version,
 // not the author — the licence never requires naming yourself.
+/*
+ * The licence notice, wherever it is still shown. The calculator no longer
+ * carries one - the way in does, once, for the whole site.
+ */
 function renderModifiedDate() {
-  $('modifiedOn').textContent = BUNDLE && BUNDLE.built ? ` on ${BUNDLE.built}` : '';
+  const when = BUNDLE && BUNDLE.built ? ` on ${BUNDLE.built}` : '';
+  for (const id of ['modifiedOn', 'modifiedOnHome']) {
+    const node = document.getElementById(id);
+    if (node) node.textContent = when;
+  }
 }
 
 function renderOfflineOffer() {
-  const note = $('offlineCopy');
+  const note = document.getElementById('offlineCopy');
+  if (!note) return;                     // the footer that held it is gone
   if (!BUNDLE || !/^https?:$/.test(location.protocol)) { note.hidden = true; return; }
   note.hidden = false;
   note.innerHTML = '<a href="RotMG-Enchant-Calculator.html" download>Download this page</a> to keep it and use it offline — it is one self-contained file.';
@@ -7084,7 +7234,49 @@ async function load() {
  * couple of hundred milliseconds and it means the page is ready when
  * you pick it. Fame Sweep loads its own the first time you open it.
  */
-const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', realm: 'pageRealm', news: 'pageNews' };
+/*
+ * The atlas has no page of its own any more: it is a frame on the way in,
+ * and 'realm' means the way in with that frame opened out.
+ */
+const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', news: 'pageNews' };
+
+/*
+ * Pointed at the atlas once, and not before the way in has painted.
+ *
+ * It is a megabyte or two of ground and it is now on the landing page, so
+ * it waits for the browser to be idle rather than joining the queue in
+ * front of the thing people came for. Opening it out asks for it at once,
+ * since by then it is the thing people came for.
+ */
+let atlasAsked = false;
+function pointAtAtlas() {
+  if (atlasAsked) return;
+  atlasAsked = true;
+  const frame = document.getElementById('realmFrame');
+  if (!frame || frame.src) return;
+  const base = (window.ATLAS_BASE || 'assets/atlas/');
+  fetch(base + 'atlas.json', { method: 'HEAD' })
+    .then(response => {
+      if (!response.ok) throw new Error('no atlas');
+      frame.src = base + 'index.html';
+    })
+    .catch(() => {
+      frame.hidden = true;
+      const missing = document.getElementById('realmMissing');
+      if (missing) missing.hidden = false;
+    });
+}
+
+/* Open out, or put back. */
+function setGlobe(open) {
+  document.body.classList.toggle('globe-wide', open);
+  const back = document.getElementById('globeBack');
+  if (back) back.hidden = !open;
+  const box = document.getElementById('globeBox');
+  if (box) box.setAttribute('aria-expanded', String(open));
+  if (open) pointAtAtlas();
+}
+const globeWide = () => document.body.classList.contains('globe-wide');
 let famePageReady = false;
 
 async function openFamePage() {
@@ -7111,7 +7303,8 @@ async function openFamePage() {
 }
 
 function showPage(name) {
-  const page = PAGES[name] ? name : 'home';
+  const wideOpen = name === 'realm';
+  const page = wideOpen ? 'home' : (PAGES[name] ? name : 'home');
   for (const [key, id] of Object.entries(PAGES)) $(id).hidden = key !== page;
   document.body.dataset.page = page;
   pinRealm(page);
@@ -7124,22 +7317,14 @@ function showPage(name) {
     WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
   }
   /*
-   * The atlas is its own page, held in a frame. It is pointed at the first
-   * time the tab is opened and left alone after that, so panning and zooming
-   * survive a switch to another tool and back.
+   * The frame is asked for while the browser is idle, and only on the page
+   * that holds it. Anything else that was open is put away.
    */
-  if (page === 'realm') {
-    const frame = $('realmFrame');
-    if (frame && !frame.src) {
-      const base = (window.ATLAS_BASE || 'assets/atlas/');
-      fetch(base + 'atlas.json', { method: 'HEAD' })
-        .then(response => {
-          if (!response.ok) throw new Error('no atlas');
-          frame.src = base + 'index.html';
-        })
-        .catch(() => { frame.hidden = true; $('realmMissing').hidden = false; });
-    }
+  if (page === 'home') {
+    if (window.requestIdleCallback) requestIdleCallback(pointAtAtlas, { timeout: 1500 });
+    else setTimeout(pointAtAtlas, 700);
   }
+  setGlobe(wideOpen);
   window.scrollTo(0, 0);
 
   /*

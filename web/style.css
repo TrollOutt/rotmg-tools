@@ -827,7 +827,23 @@ table.mini td { padding: 3px 8px; border: 0; }
   /* The column is bounded, never scrolled: scrolling it would take the item or
      Calculate off screen, which is the whole thing being fixed. The slot list
      absorbs the difference and scrolls inside itself instead. */
-  .column.config { overflow: hidden; }
+  /*
+   * Scoped to the calculator, which is the page it was written for. Fame
+   * Sweep uses the same class for its left-hand column and inherited the
+   * one rule that column cannot live with: bounded, with nothing inside it
+   * set up to scroll. Its third card - the sum, which is the answer - was
+   * simply cut off at the bottom of the window with no way to reach it.
+   * Unscoped, it scrolls like any other column.
+   */
+  #pageEnchant .column.config { overflow: hidden; }
+  /*
+   * And its cards keep their own height rather than being squeezed to fit.
+   * A flex child shrinks by default, so with the column bounded they each gave
+   * up a few pixels and the column then reported that everything fitted - so
+   * no scrollbar appeared and the last rows of the collection list were
+   * clipped by a column that did not believe it had anything to scroll.
+   */
+  #pageFame .column.config > .card { flex: none; }
   .column.config > .card.step[data-step="2"] {
     flex: 1 1 auto;
     min-height: 0;
@@ -1036,15 +1052,100 @@ table.mini td { padding: 3px 8px; border: 0; }
  * the pair between them, which centres it without the footer being dragged
  * up with it.
  */
+/*
+ * The way in shares its height out rather than centring a block in it.
+ *
+ * It used to push the heading and the cards into the middle with a pair of
+ * auto margins, which is right for a short row of cards and wrong the
+ * moment one of the three things on the page is a world you look at. The
+ * heading and the cards take what they need, the frame takes everything
+ * that is left, and the credit line sits under it - so on a tall window the
+ * world is large and on a short one it is still there.
+ */
 #pageHome {
-  min-height: 100vh; display: flex; flex-direction: column;
-  gap: clamp(16px, 4vh, 40px);
+  min-height: 100vh; height: 100vh; display: flex; flex-direction: column;
+  gap: clamp(10px, 2vh, 22px);
 }
-#pageHome > .home-head { margin-top: auto; }
-#pageHome > .home-cards { margin-bottom: auto; }
+#pageHome > .home-head, #pageHome > .home-cards, #pageHome > .news-bell { flex: none; }
 #pageHome > .app-foot {
-  margin-top: 0; text-align: center; font-size: 10.5px; opacity: .5;
+  flex: none; margin-top: 0; text-align: center; font-size: 10.5px; opacity: .45;
 }
+
+/* ---------------- the world, in a frame ---------------- */
+/*
+ * The frame takes the leftover height, and never less than enough to be a
+ * planet rather than a stripe.
+ */
+.globe-stage { flex: 1 1 auto; min-height: min(300px, 34vh); display: flex; }
+.globe-box {
+  position: relative; flex: 1 1 auto; min-height: 0;
+  width: min(1100px, 100%); margin: 0 auto;
+  background: #05070c; border: 2px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; cursor: zoom-in;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.globe-box:hover, .globe-box:focus-visible {
+  border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset;
+  outline: none;
+}
+.globe-box iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: 0; display: block;
+  /* Shut, the map takes no pointer, so a click opens the frame instead of
+     nudging a map the size of a postcard. */
+  pointer-events: none;
+}
+/* A breath of shade at the foot of it, for the name to sit on. */
+.globe-glass {
+  position: absolute; inset: 0; pointer-events: none;
+  /* Opaque at the very bottom, because the atlas has a status bar of its own
+     down there and shut it is not information, it is a line of small print
+     showing through a picture. */
+  background: linear-gradient(0deg, rgba(5, 7, 12, .98) 0%, rgba(5, 7, 12, .94) 8%,
+    rgba(5, 7, 12, .5) 24%, transparent 52%);
+  transition: opacity .18s ease;
+}
+.globe-name {
+  position: absolute; left: clamp(14px, 2vw, 26px); bottom: clamp(12px, 1.8vh, 22px);
+  display: grid; gap: 2px; pointer-events: none; text-align: left;
+}
+.globe-name b { font-size: clamp(17px, 1.9vw, 23px); font-weight: 600; color: #f6ecd2; }
+.globe-name em { font-style: normal; font-size: clamp(12px, 1.1vw, 14px); color: var(--muted); }
+.globe-shut { display: none; }
+
+/*
+ * Opened out.
+ *
+ * It keeps an inset and it keeps its border, which is the whole point: you
+ * are still on the way in, with the atlas opened out on it, rather than
+ * somewhere else. The inset is also what you click to put it back, so it
+ * has to be wide enough to hit.
+ */
+.globe-back {
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(4, 5, 9, .72); cursor: zoom-out;
+}
+body.globe-wide .globe-box {
+  position: fixed; inset: clamp(18px, 3.2vh, 44px); z-index: 56;
+  width: auto; margin: 0; cursor: default;
+  border-color: var(--accent);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .7);
+}
+body.globe-wide .globe-box iframe { pointer-events: auto; }
+body.globe-wide .globe-glass { opacity: 0; }
+body.globe-wide .globe-name { display: none; }
+/* The switch governs a background nobody can see behind a full-page map. */
+body.globe-wide .ambience-toggle { display: none; }
+body.globe-wide .globe-shut {
+  display: grid; place-items: center; position: absolute;
+  top: 10px; right: 10px; z-index: 2; width: 34px; height: 34px;
+  font: inherit; font-size: 15px; cursor: pointer;
+  color: var(--text); background: rgba(12, 11, 18, .88);
+  border: 1px solid var(--line); border-radius: 999px;
+}
+body.globe-wide .globe-shut:hover { border-color: var(--accent); color: #fff; }
+/* Nothing behind it scrolls while it is open. */
+body.globe-wide { overflow: hidden; }
 .home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
 .home-head h1 { font-size: clamp(28px, 5vw, 52px); }
 
@@ -1412,14 +1513,35 @@ table.mini td { padding: 3px 8px; border: 0; }
  * The controls you are meant to notice                                *
  * ------------------------------------------------------------------ */
 
-/* The way back. It was a faint link nobody found. */
+/*
+ * The way back, which is the one control on these pages that everybody
+ * needs and nobody could find. It was a thirteen-point pill in the same
+ * grey as the prose beside it; it is now the size of a thing you press.
+ */
 .masthead .back {
-  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
-  font-size: 13px; color: var(--text); text-decoration: none;
-  background: rgba(26, 24, 36, .9); border: 1px solid var(--line);
-  border-radius: 999px; padding: 5px 14px;
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none;
+  background: rgba(38, 34, 51, .95); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 18px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .35);
 }
-.masthead .back:hover { border-color: var(--locked); color: var(--locked); background: rgba(38, 34, 51, .95); }
+.masthead .back:hover {
+  border-color: var(--accent); color: #fff; background: rgba(52, 46, 70, .98);
+}
+.masthead .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/*
+ * And a button that does something to what is on screen, as against a
+ * link that takes you elsewhere. Clearing the ticks was a faint link in a
+ * row of lit chips and read as a caption.
+ */
+.act-button {
+  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  color: var(--text); background: rgba(38, 34, 51, .95);
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px;
+}
+.act-button:hover { border-color: var(--bad); color: #fff; }
+.act-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* The dungeon filters: chunky, and lit when they are on, the way a game
    menu marks a choice rather than whispering it. */
