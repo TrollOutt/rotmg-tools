@@ -1096,12 +1096,19 @@ table.mini td { padding: 3px 8px; border: 0; }
   overflow: hidden; cursor: zoom-in;
   transition: border-color .3s ease, box-shadow .3s ease;
 }
+/*
+ * Longer and softer than it was. Half a second on a bezier that is already
+ * moving when it starts reads as a snap with a tail on it; three quarters of
+ * a second easing out of rest and back into it reads as the panel being
+ * opened. The map inside re-fits itself over the same stretch, so the two
+ * arrive together rather than the zoom finishing under a frame still moving.
+ */
 .globe-box.is-moving {
-  transition: top .56s cubic-bezier(.33, .74, .21, 1),
-    left .56s cubic-bezier(.33, .74, .21, 1),
-    width .56s cubic-bezier(.33, .74, .21, 1),
-    height .56s cubic-bezier(.33, .74, .21, 1),
-    border-color .4s ease, box-shadow .4s ease;
+  transition: top .78s cubic-bezier(.4, .01, .2, 1),
+    left .78s cubic-bezier(.4, .01, .2, 1),
+    width .78s cubic-bezier(.4, .01, .2, 1),
+    height .78s cubic-bezier(.4, .01, .2, 1),
+    border-color .6s ease, box-shadow .6s ease;
 }
 .globe-box:hover, .globe-box:focus-visible {
   border-color: rgba(255, 255, 255, .3); outline: none;
@@ -1173,7 +1180,19 @@ body.globe-wide { overflow: hidden; }
  * it, none of which is visible under a full-page map and all of which costs
  * the map frames.
  */
-body.globe-wide .ambience canvas,
+/*
+ * The realms behind the interface fade out as the frame opens and fade back
+ * as it closes, on the same three quarters of a second. Script hides them
+ * once the fade is done, which is what saves the painting; the fade is only
+ * so that the saving does not arrive as a blink.
+ */
+.ambience { transition: opacity .78s ease; }
+body.globe-wide .ambience { opacity: 0; }
+/*
+ * Everything else with a keyframe on it stops once the frame is open. These
+ * are behind a full-page map and invisible, so there is nothing to fade -
+ * and they are costing the map the frames they animate in.
+ */
 body.globe-wide .ambience-dom img,
 body.globe-wide .aurora span,
 body.globe-wide .news-bell-glyph,

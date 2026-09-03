@@ -2490,14 +2490,14 @@ function pointAtAtlas() {
  * inside his reach and he ends up most of the picture, which is no use in
  * front of a map somebody is about to read.
  */
-const GLOBE_TAKES = 560;                 // milliseconds the frame takes
+const GLOBE_TAKES = 780;                 // milliseconds the frame takes
 /*
  * And what the atlas is given to settle into it, counted in its own frames.
  * Rather more than half a second of them, because the frame it is being
  * given is four times the one it had and it will be busy fetching ground
  * for it - a count it draws through cannot be missed the way a deadline can.
  */
-const GLOBE_FRAMES = 48;
+const GLOBE_FRAMES = 66;
 
 function tellAtlas(what) {
   const frame = document.getElementById('realmFrame');
@@ -2531,19 +2531,37 @@ function placeGlobe(box, at) {
  * not touched, so putting the frame back brings them back exactly as they
  * were left.
  */
+let ambienceGoing = 0;
 function holdAmbience(hold) {
   const host = document.getElementById('ambience');
   if (!host) return;
+  clearTimeout(ambienceGoing);
   if (hold) {
-    host.hidden = true;
-    clearInterval(ambience.timer);
-    clearInterval(ambience.scatterTimer);
-    ambience.timer = 0; ambience.scatterTimer = 0;
+    /*
+     * Faded, then stopped. The stylesheet takes the opacity down over the
+     * same time the frame takes to open; hiding it outright is what
+     * actually saves the work, so that waits until there is nothing left
+     * to see. Switched off on the spot it was a visible blink at the
+     * moment the frame started moving, which is the one moment there
+     * should be nothing to notice but the frame.
+     */
+    ambienceGoing = setTimeout(() => {
+      if (!globeWide()) return;          // put back before the fade ended
+      host.hidden = true;
+      clearInterval(ambience.timer);
+      clearInterval(ambience.scatterTimer);
+      ambience.timer = 0; ambience.scatterTimer = 0;
+    }, GLOBE_TAKES);
     return;
   }
   if (!ambience.enabled) return;
+  /*
+   * And back the other way: there before it is asked to be seen, so the
+   * stylesheet has something to fade up. Restarted only if it was actually
+   * stopped, since the fade may never have finished.
+   */
   host.hidden = false;
-  startAmbience();
+  if (!ambience.timer) startAmbience();
 }
 
 let globeSettling = 0;
