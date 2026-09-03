@@ -250,6 +250,29 @@ function readEnemies() {
  * hundred thousand, so both are perfectly fightable as far as the client is
  * concerned and both still have to be named by hand.
  */
+/*
+ * The ground each creature says it belongs on.
+ *
+ * Every creature in the client declares a Terrain, and some declare several.
+ * This is the only authority on where a thing belongs; where it happened to
+ * be standing when somebody walked past is only where it was.
+ */
+function readTerrain() {
+  const out = new Map();
+  const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      const said = /<Terrain>([^<]+)<\/Terrain>/.exec(m[2]);
+      if (!said) continue;
+      const type = /type="([^"]+)"/.exec(m[1]);
+      if (!type) continue;
+      const on = said[1].split(',').map(one => one.trim()).filter(Boolean);
+      if (on.length) out.set(Number(type[1]) & 0xffff, new Set(on));
+    }
+  }
+  return out;
+}
+
 function readUnfightable() {
   const out = new Set();
   const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
@@ -1465,8 +1488,12 @@ function main() {
       if (/beacon/i.test(objectName.get(object.type) || '')) continue;
       near.set(object.type, (near.get(object.type) || 0) + 1);
     }
-    beacon.guards = [...near].sort((a, b) => b[1] - a[1]).slice(0, 8)
-      .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
+    /*
+     * Kept until the grounds are known, then sifted the same way the places
+     * are: a guard that says it belongs on other ground was standing near the
+     * beacon, not guarding it.
+     */
+    beacon.near = [...near].sort((a, b) => b[1] - a[1]);
   }
 
   /*
@@ -1496,17 +1523,65 @@ function main() {
     if (!perZone.has(zone)) perZone.set(zone, new Map());
     perZone.get(zone).set(object.type, (perZone.get(zone).get(object.type) || 0) + 1);
   }
-  let livesHere = 0;
+  /*
+   * What ground each patch actually is, asked of the creatures standing on it.
+   *
+   * A recording holds every creature the client mentioned while it was walked
+   * past, and that is a wider net than the place: a monster three tiles the
+   * other side of a border is in the recording, and so is one that wandered.
+   * Counted raw, the Deep Sea kept Carboniferous monsters, the Ancient City
+   * kept Risen Hell ones and the Runic Tundra kept Floral Escape ones.
+   *
+   * The fix is not a table of my own devising. Every creature declares the
+   * ground it belongs on, so each patch is asked what the things counted on it
+   * declare, weighted by how often each was seen - and the answer is never
+   * close: between ninety and ninety-eight per cent of every patch agrees on
+   * one ground. That majority is what the patch is; the few per cent that
+   * disagree are the strays, and they are the whole of the error.
+   */
+  const groundOf = readTerrain();
+  const biomeGround = new Map();
   for (const biome of map.found) {
     const bag = census.get(biome.index);
+    if (!bag) continue;
+    const votes = new Map();
+    for (const [type, n] of bag) {
+      if (!isCreature(type)) continue;
+      for (const on of groundOf.get(type) || []) votes.set(on, (votes.get(on) || 0) + n);
+    }
+    let best = null, most = 0, all = 0;
+    for (const [on, n] of votes) { all += n; if (n > most) { most = n; best = on; } }
+    if (best && most / all >= 0.5) biomeGround.set(biome.index, best);
+  }
+
+  /*
+   * And nothing is listed as living somewhere it says it does not live. A
+   * creature that declares no ground at all is left alone: it was seen there,
+   * and there is nothing to contradict it with.
+   */
+  const belongs = (type, index) => {
+    const here = biomeGround.get(index);
+    if (!here) return true;
+    const on = groundOf.get(type);
+    return !on || on.has(here);
+  };
+
+  let livesHere = 0, strays = 0;
+  for (const biome of map.found) {
+    biome.ground = biomeGround.get(biome.index) || '';
+    const bag = census.get(biome.index);
     if (!bag) { biome.lives = []; continue; }
-    biome.lives = [...bag]
-      .filter(([type, n]) => n >= 3 && isCreature(type))
+    const all = [...bag].filter(([type, n]) => n >= 3 && isCreature(type));
+    const mine = all.filter(([type]) => belongs(type, biome.index));
+    strays += all.length - mine.length;
+    biome.lives = mine
       .sort((a, b) => b[1] - a[1])
       .slice(0, 14)
       .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
     livesHere += biome.lives.length;
   }
+  console.log('  ' + biomeGround.size + ' patches know what ground they are, and '
+    + strays + ' creatures that say they belong elsewhere were struck off them');
 
   /*
    * A picture for each of them, moving where the client draws them moving.
@@ -1625,15 +1700,60 @@ function main() {
    * difference between a monster in the desert and a monster in *this*
    * desert.
    */
+  /*
+   * A place whose ground nobody worked out asks its own creatures instead.
+   *
+   * One place does: the second Dead Church, cleaved out of the first, carries
+   * a biome index that has no record of its own, so there was nothing to
+   * inherit a ground from. Its cast is not in the least ambiguous - Dead
+   * Church Skeleton, Nun, Necromancer, Bat, Vampire, Cleric, Revenant - so it
+   * is put to the same vote the patches were, on its own count.
+   */
   for (const zone of map.zones) {
+    if (biomeGround.has(zone.biome)) continue;
+    const bag = perZone.get(zone.id);
+    if (!bag) continue;
+    const votes = new Map();
+    for (const [type, n] of bag) {
+      if (!isCreature(type)) continue;
+      for (const on of groundOf.get(type) || []) votes.set(on, (votes.get(on) || 0) + n);
+    }
+    let best = null, most = 0, all = 0;
+    for (const [on, n] of votes) { all += n; if (n > most) { most = n; best = on; } }
+    if (best && most / all >= 0.5) {
+      biomeGround.set(zone.biome, best);
+      console.log('  ' + zone.name + ' had no patch to take a ground from; its own '
+        + 'creatures say ' + best);
+    }
+  }
+
+  let zoneStrays = 0;
+  for (const zone of map.zones) {
+    zone.ground = biomeGround.get(zone.biome) || '';
     const bag = perZone.get(zone.id);
     if (!bag) { zone.lives = []; continue; }
-    zone.lives = [...bag]
-      .filter(([type, n]) => n >= 2 && isCreature(type))
+    const all = [...bag].filter(([type, n]) => n >= 2 && isCreature(type));
+    const mine = all.filter(([type]) => belongs(type, zone.biome));
+    zoneStrays += all.length - mine.length;
+    zone.lives = mine
       .sort((a, b) => b[1] - a[1])
       .slice(0, 20)
       .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
   }
+  console.log('  ' + zoneStrays + ' more struck off the places, for the same reason');
+
+  let guardStrays = 0;
+  for (const beacon of beacons) {
+    const zone = map.zones.find(one => one.id === beacon.zone);
+    const index = zone ? zone.biome : -1;
+    const all = beacon.near || [];
+    const mine = all.filter(([type]) => belongs(type, index));
+    guardStrays += all.length - mine.length;
+    beacon.guards = mine.slice(0, 8)
+      .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
+    delete beacon.near;
+  }
+  console.log('  ' + guardStrays + ' would-be beacon guards were only standing nearby');
   /*
    * A patch with no name of its own asks what lives in it.
    *
