@@ -1077,16 +1077,34 @@ table.mini td { padding: 3px 8px; border: 0; }
  * planet rather than a stripe.
  */
 .globe-stage { flex: 1 1 auto; min-height: min(300px, 34vh); display: flex; }
+/*
+ * The frame, and its edge.
+ *
+ * The edge is a plain light line. It was the accent blue, which against an
+ * ocean is simply another blue in a worse shade; a line says "panel" and
+ * then gets out of the way of what is in it.
+ *
+ * The four edges are what animates when it opens out - see setGlobe. Only
+ * while it is moving, because a transition left on top and left would also
+ * catch the window being resized and make that lag.
+ */
 .globe-box {
   position: relative; flex: 1 1 auto; min-height: 0;
   width: min(1100px, 100%); margin: 0 auto;
-  background: #05070c; border: 2px solid var(--line); border-radius: var(--radius);
+  background: #05070c; border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, .12);
   overflow: hidden; cursor: zoom-in;
-  transition: border-color .18s ease, box-shadow .18s ease;
+  transition: border-color .3s ease, box-shadow .3s ease;
+}
+.globe-box.is-moving {
+  transition: top .56s cubic-bezier(.33, .74, .21, 1),
+    left .56s cubic-bezier(.33, .74, .21, 1),
+    width .56s cubic-bezier(.33, .74, .21, 1),
+    height .56s cubic-bezier(.33, .74, .21, 1),
+    border-color .4s ease, box-shadow .4s ease;
 }
 .globe-box:hover, .globe-box:focus-visible {
-  border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset;
-  outline: none;
+  border-color: rgba(255, 255, 255, .3); outline: none;
 }
 .globe-box iframe {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -1124,13 +1142,16 @@ table.mini td { padding: 3px 8px; border: 0; }
 .globe-back {
   position: fixed; inset: 0; z-index: 55;
   background: rgba(4, 5, 9, .72); cursor: zoom-out;
+  animation: globe-dim .45s ease both;
 }
+@keyframes globe-dim { from { opacity: 0; } to { opacity: 1; } }
 body.globe-wide .globe-box {
-  position: fixed; inset: clamp(18px, 3.2vh, 44px); z-index: 56;
-  width: auto; margin: 0; cursor: default;
-  border-color: var(--accent);
+  z-index: 56; margin: 0; cursor: default;
+  border-color: rgba(255, 255, 255, .22);
   box-shadow: 0 24px 70px rgba(0, 0, 0, .7);
 }
+/* Pinned by script while it moves, and while it is open. */
+.globe-box.is-moving, body.globe-wide .globe-box { position: fixed; z-index: 56; }
 body.globe-wide .globe-box iframe { pointer-events: auto; }
 body.globe-wide .globe-glass { opacity: 0; }
 body.globe-wide .globe-name { display: none; }
