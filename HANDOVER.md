@@ -278,11 +278,19 @@ things they blocked have since been done: the encounters and heroes were cut
 out of the client (see `tools/boss-sprites.js`), and the merged Dead Church
 was split along its wildlife.
 
-**`realmeye.com` is unreachable from the machine this was done on** —
-connection reset on every path, any user agent, in Node and in a browser
-alike, while other hosts answer normally. So `tools/fetch-realmeye-realm.js`
-cannot be run here. `web/realmeye-data.json` therefore still has `detail` for
-only 2 of its 284 creatures.
+**`realmeye.com` was unreachable from one of the two machines** — connection
+reset on every path, any user agent, in Node and in a browser alike. It
+answers from the other one, and the fetch has been run:
+
+```bash
+node tools/fetch-realmeye-realm.js --details --assets
+```
+
+`web/realmeye-data.json` now carries all 284 creatures with `hp`, `defense`,
+`exp` and **`drops`**, 279 of them with a drop table, across 53 tier lines
+(`Tier 8 Weapons`, `Tier 11 Armor`, `Tier 4 Abilities`, `Tier 9 Alternate
+Weapons` and so on) plus named items, potions and pet eggs. It overwrites in
+place, so copy it aside before running it again.
 
 *If you are on a network that can reach it,* this is the single highest-value
 thing to do:
