@@ -775,6 +775,24 @@ shuts the zone panel, since the frame it was sized for is about to change.
 
 Roughly in the order it was asked for.
 
+- **Meteors that pass close, drawn as a white bag.** Asked for and not done:
+  some of the shooting stars behind the planet should come near the camera,
+  and those ones should be a white loot bag rather than a streak of light. The
+  work left is finding the sprite. It is **not** in the tree any more: bags
+  are turned away by `class Container` in `off-the-map.txt`, so the pruned
+  `things.png` no longer carries them. It is in history, in the sheet at
+  `7d917a2:web/assets/atlas/things.png` (2048 pictures, against 2029 now),
+  with its table beside it at `7d917a2:web/assets/atlas/things.json`.
+  Searching that sheet for small pale sprites turns up twelve candidates and
+  **picture 1238 is the pet egg, not a bag** - white, black-outlined, 14x18 on
+  the sheet, which is 7x9 of art at `ss` 2. The bag is somewhere else in those
+  2048; a contact sheet of every picture under 24 pixels is the way to find
+  it, since the table holds no names. Once found: cut it out to
+  `data/Realm/white-bag.png` and have `tools/build-sky.js` pack it into
+  `sky.png` with its own rectangle in `sky.json` - that file is already
+  fetched by the page and already written by a tool in the repository, which
+  no other atlas asset is.
+
 - **The client has not been read since 23 August.** The data line says so
   honestly and now shows the update it covers beside it, but the enchanting
   odds themselves are still that reading. `npm run scrape` and
