@@ -46,6 +46,31 @@ const OUT = process.argv.includes('--publish')
   ? path.join(root, 'web', 'assets', 'atlas')
   : path.join(root, 'local', 'atlas');
 
+/*
+ * Only the page, into an atlas that is already there.
+ *
+ * Everything else this tool writes wants the client and the recordings,
+ * and neither is on every machine the page gets worked on. The page itself
+ * wants nothing but the template and an atlas.json to inline - so
+ * --page-only reads the atlas already sitting in OUT and puts a fresh page
+ * beside it, through the same writePage() a full build ends with. There is
+ * no second copy of the inlining and no second guess at what the bench cut
+ * takes out, and no data is touched: the pyramid, the things standing on
+ * it and the sky are left exactly as they were.
+ */
+if (process.argv.includes('--page-only')) {
+  const already = path.join(OUT, 'atlas.json');
+  if (!fs.existsSync(already)) {
+    console.error('--page-only wants an atlas already built at '
+      + path.relative(root, OUT));
+    process.exit(1);
+  }
+  writePage(JSON.parse(fs.readFileSync(already, 'utf8')));
+  console.log('  page written from the template -> '
+    + path.relative(root, path.join(OUT, 'index.html')));
+  process.exit(0);
+}
+
 const PX = 8;                    // pixels a game tile is drawn at, at level 0
 const CHUNK = 128;               // tiles across a level-0 chunk
 const LEVELS = 5;                // 0 is one-to-one, each one after is half
@@ -1157,6 +1182,50 @@ function buildPyramid() {
 /* ------------------------------------------------------------------ *
  * Do it                                                               *
  * ------------------------------------------------------------------ */
+/*
+ * The viewer, with the atlas written into it. The template lives beside
+ * this tool as its own file so it can be read and edited as HTML rather
+ * than as a string inside a string.
+ *
+ * A function of its own because it is wanted twice: at the end of a full
+ * build, and on its own when nothing but the page has changed. It is the
+ * whole of what turns the template into the page, so there is one copy.
+ */
+function writePage(summary) {
+let template = fs.readFileSync(path.join(__dirname, 'atlas-viewer.html'), 'utf8');
+
+/*
+ * The bench comes out of anything published. It is a thing for trying
+ * questions on this machine - it hides itself anywhere else - but hidden is
+ * not the same as absent, and a copy that goes out to be read by anyone
+ * should not be carrying it at all.
+ */
+if (OUT !== path.join(root, 'local', 'atlas')) {
+  /*
+   * Every line ending is spelled \r?\n, because the template's are not
+   * the ones it was written with. It was authored with bare newlines and
+   * is checked out with carriage returns, and a cut looking for \n} finds
+   * nothing in \r\n} - so all three cuts missed, the guard below fired,
+   * and publishing stopped dead on a fresh clone.
+   */
+  const cuts = [
+    /<aside id="bench">[\s\S]*?<\/aside>\r?\n/,
+    /  \/\* The bench, for trying things[\s\S]*?#bench p \{[^}]*\}\r?\n/,
+    /\/\* -+ the bench, wired up -+ \*\/[\s\S]*?\r?\n\}\r?\n\r?\n(?=requestAnimationFrame)/
+  ];
+  for (const what of cuts) template = template.replace(what, '');
+  // What must not go out is the panel itself. The camera still answers to
+  // a and e in a published copy, and the code that does looks for the
+  // slider and shrugs when it is not there.
+  if (/id="bench"/.test(template) || /the bench, wired up/.test(template)) {
+    throw new Error('the bench is still in the published page');
+  }
+}
+
+fs.writeFileSync(path.join(OUT, 'index.html'),
+  template.replace('/*ATLAS*/null', JSON.stringify(summary)));
+}
+
 function main() {
   const store = loadStore();
   const groundName = nameById('GroundTypes');
@@ -1673,36 +1742,7 @@ function main() {
 
   fs.writeFileSync(path.join(OUT, 'atlas.json'), JSON.stringify(summary, null, 1) + '\n');
 
-  /*
-   * The viewer, with the atlas written into it. The template lives beside
-   * this tool as its own file so it can be read and edited as HTML rather
-   * than as a string inside a string.
-   */
-  let template = fs.readFileSync(path.join(__dirname, 'atlas-viewer.html'), 'utf8');
-
-  /*
-   * The bench comes out of anything published. It is a thing for trying
-   * questions on this machine - it hides itself anywhere else - but hidden is
-   * not the same as absent, and a copy that goes out to be read by anyone
-   * should not be carrying it at all.
-   */
-  if (OUT !== path.join(root, 'local', 'atlas')) {
-    const cuts = [
-      new RegExp('<aside id="bench">[\\s\\S]*?</aside>\\n'),
-      new RegExp('  /\\* The bench, for trying things[\\s\\S]*?#bench p \\{[^}]*\\}\\n'),
-      new RegExp('/\\* -+ the bench, wired up -+ \\*/[\\s\\S]*?\\n\\}\\n\\n(?=requestAnimationFrame)')
-    ];
-    for (const what of cuts) template = template.replace(what, '');
-    // What must not go out is the panel itself. The camera still answers to
-    // a and e in a published copy, and the code that does looks for the
-    // slider and shrugs when it is not there.
-    if (/id="bench"/.test(template) || /the bench, wired up/.test(template)) {
-      throw new Error('the bench is still in the published page');
-    }
-  }
-
-  fs.writeFileSync(path.join(OUT, 'index.html'),
-    template.replace('/*ATLAS*/null', JSON.stringify(summary)));
+  writePage(summary);
 
   const drew = [...drawnAlready.values()].filter(Boolean).length;
   console.log('\n  ' + beacons.length + ' beacons, ' + livesHere

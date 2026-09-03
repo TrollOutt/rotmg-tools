@@ -170,13 +170,46 @@ img { image-rendering: pixelated; }
 }
 .status.bad { color: var(--bad); border-color: rgba(255, 69, 66, .45); }
 
+/*
+ * The animation switch, in the same corner of every page.
+ *
+ * Fixed rather than in a masthead, because there are five mastheads and it
+ * belongs to all of them; top right, because every page puts its own
+ * heading and its way back on the left; and above the atlas, which fills
+ * its whole page with a frame of its own.
+ */
 .ambience-toggle {
-  font: inherit; font-size: 12px; color: var(--dim); cursor: pointer;
-  background: rgba(26, 24, 36, .85); border: 1px solid var(--line);
-  border-radius: 999px; padding: 4px 12px;
+  position: fixed; top: 12px; right: 14px; z-index: 40;
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--text); cursor: pointer;
+  background: rgba(26, 24, 36, .92); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
 }
 .ambience-toggle:hover { color: var(--text); border-color: var(--accent); }
-.ambience-toggle[aria-pressed="false"] { opacity: .55; }
+.ambience-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ambience-toggle-glyph { font-size: 16px; line-height: 1; }
+.ambience-toggle[aria-pressed="false"] { color: var(--dim); }
+.ambience-toggle[aria-pressed="false"] .ambience-toggle-glyph { opacity: .45; }
+@media (max-width: 760px) {
+  .ambience-toggle { top: 8px; right: 8px; padding: 7px 12px; font-size: 13px; }
+}
+/*
+ * And the room it takes, given back to the mastheads.
+ *
+ * Fixed means out of the flow, and out of the flow means the row it floats
+ * over does not know it is there. On a wide window the calculator puts its
+ * title, summary, data line and Reset on one row across the full width - so
+ * the switch landed on top of Reset and made it unclickable. Every masthead
+ * stops short by the width of the switch instead.
+ *
+ * The way in is the exception: its heading is centred and short, so there is
+ * nothing under that corner and taking the padding would shift the title.
+ */
+.masthead { padding-right: 172px; }
+#pageHome .masthead { padding-right: 0; }
+@media (max-width: 760px) { .masthead { padding-right: 130px; } }
 
 /* ---------------- layout ---------------- */
 
@@ -1072,7 +1105,8 @@ table.mini td { padding: 3px 8px; border: 0; }
 }
 #pageRealm .realm-head {
   position: absolute; left: 0; right: 0; top: 0; z-index: 3;
-  margin: 0; padding: 12px 16px 26px;
+  /* Room on the right for the animation switch, which is fixed there. */
+  margin: 0; padding: 12px 172px 26px 16px;
   display: flex; align-items: center; gap: 14px;
   /* Faded rather than filled, so the map keeps running under the title. */
   background: linear-gradient(180deg, rgba(8, 11, 18, .82) 0%, rgba(8, 11, 18, .55) 45%, transparent 100%);

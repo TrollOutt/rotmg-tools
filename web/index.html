@@ -10,6 +10,21 @@
 <div id="ambience" class="ambience" aria-hidden="true"></div>
 <div id="realmName" class="realm-name" aria-hidden="true"></div>
 
+<!-- The one control that belongs to every page ----------------------- -->
+<!--
+  It used to sit in the Enchant Calculator's masthead, in twelve-point
+  grey, saying "Realm" - so on four of the five pages there was no way to
+  stop the movement at all, and on the fifth you had to know that the word
+  meant the background. It is one switch for the whole site now, always in
+  the same corner, big enough to find, and it says which way it is set
+  rather than leaving you to read it off the opacity.
+-->
+<button id="ambienceToggle" type="button" class="ambience-toggle" aria-pressed="true"
+  title="Stop or start everything that moves: the drifting background, and the weather and water on the atlas">
+  <span class="ambience-toggle-glyph" aria-hidden="true">◐</span>
+  <span class="ambience-toggle-text">Animations on</span>
+</button>
+
 <!-- The way in ------------------------------------------------------- -->
 <div id="pageHome" class="app page">
   <header class="masthead home-head">
@@ -56,7 +71,7 @@
   </footer>
 </div>
 
-<!-- Realm Atlas ------------------------------------------------------ -->
+<!-- What's New -------------------------------------------------------- -->
 <div id="pageNews" class="app page" hidden>
   <header class="masthead news-head">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
@@ -70,6 +85,7 @@
   </main>
 </div>
 
+<!-- Realm Atlas ------------------------------------------------------ -->
 <div id="pageRealm" class="app page" hidden>
   <header class="masthead realm-head">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
@@ -82,7 +98,7 @@
   </main>
 </div>
 
-nchant Calculator ---------------------------------------------- -->
+<!-- Enchant Calculator ----------------------------------------------- -->
 <div id="pageEnchant" class="app page" hidden>
 
   <header class="masthead">
@@ -92,7 +108,6 @@ nchant Calculator ---------------------------------------------- -->
     <div class="masthead-row">
       <div id="status" class="status">Game data</div>
       <button id="reset" type="button" class="link-button">Reset everything</button>
-      <button id="ambienceToggle" type="button" class="ambience-toggle" aria-pressed="true" title="Turn the drifting realm background on or off">◐ Realm</button>
     </div>
   </header>
 

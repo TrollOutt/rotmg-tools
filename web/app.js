@@ -48,6 +48,7 @@ const state = {
   picker: null,
   tabs: [],
   itemSprites: {},
+  updateMade: null,   // when the update the data covers went out
   activeTab: null,
   loadingTab: false,
   lastCardItem: null,
@@ -1861,10 +1862,29 @@ function handleAmbienceResize() {
   }, 250);
 }
 
+/*
+ * Everything that moves, on or off.
+ *
+ * Two things listen. The drifting realms behind the interface are this
+ * page's own and are simply hidden; the weather and the water on the
+ * atlas belong to a frame with a render loop of its own, so it is told.
+ * It is told on every change and again whenever the frame loads, because
+ * a frame that has not finished loading cannot hear anything yet.
+ */
+function tellAtlas(enabled) {
+  const frame = $('realmFrame');
+  if (!frame || !frame.contentWindow) return;
+  try { frame.contentWindow.postMessage({ rotmg: 'animate', on: !!enabled }, '*'); }
+  catch (error) { /* not loaded, or not ours: the next load asks again */ }
+}
+
 function setAmbience(enabled) {
   ambience.enabled = enabled;
   $('ambience').hidden = !enabled;
   $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
+  const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
+  if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
+  tellAtlas(enabled);
   try { localStorage.setItem(AMBIENCE_KEY, enabled ? 'on' : 'off'); } catch (error) { /* not essential */ }
   if (enabled && !ambience.started) startAmbience();
 }
@@ -1873,6 +1893,8 @@ async function initAmbience() {
   let enabled = true;
   try { enabled = localStorage.getItem(AMBIENCE_KEY) !== 'off'; } catch (error) { /* default on */ }
   $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
+  const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
+  if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
   ambience.enabled = enabled;
   $('ambience').hidden = !enabled;
   if (!enabled) return;
@@ -2163,16 +2185,82 @@ function onFieldChange(element) {
 }
 
 
+/*
+ * One base of item artwork, joined here and nowhere else.
+ *
+ * There were two sets and neither knew about the other.
+ * assets/items holds sixteen hundred still icons keyed by item name and is
+ * what the calculator reads; assets/whats-new holds the hundred-odd pieces
+ * cut from the newest client - which is to say every item the last update
+ * added - and was read only by the What's New page. So the moment an update
+ * landed, its own items were the only ones in the picker with no picture:
+ * the twelve Venerable weapons, armours and rings went in as a blank slot
+ * glyph each, while nine of those sprites sat one folder away being shown
+ * on another page of the same site.
+ *
+ * So the two are folded into one lookup, and this is the only place that
+ * happens. Nothing is copied and nothing is moved: the curated icon wins
+ * wherever there is one, since it was drawn to sit in a list, and anything
+ * the update brought that the icon set has not caught up with comes from
+ * the art the update itself shipped. The next update needs no work: its
+ * items arrive in the picker wearing the pictures it came with.
+ *
+ * The three Venerable rings have no art in either set - the client draws
+ * them from a sheet the cutter did not reach - so they keep the slot glyph.
+ */
+function foldNewsSprites(map, index, urlFor) {
+  for (const drawer of Object.values((index && index.drawers) || {})) {
+    for (const why of ['added', 'changed']) {
+      for (const thing of drawer[why] || []) {
+        if (!thing.id || map[thing.id]) continue;
+        const clip = thing.sprite && thing.sprite.clips && thing.sprite.clips.stand;
+        /*
+         * Stills only. A clip of several frames is one strip in one file,
+         * and an <img> pointed at a strip shows the whole run side by side
+         * - which is right on the What's New page, where the frames are
+         * stepped through in a window of their own, and wrong in a list.
+         */
+        if (!clip || !clip.file || (clip.frames || 1) > 1) continue;
+        const url = urlFor(clip.file);
+        if (url) map[thing.id] = url;
+      }
+    }
+  }
+  return map;
+}
+
+/*
+ * Reading that index also settles when the update it describes went out,
+ * which the status line wants and has no other cheap way to learn. Kept
+ * here so that the line costs no fetch of its own.
+ */
+function newsMadeOn(index) {
+  if (!index) return null;
+  return (index.notes && index.notes.date) || index.made || null;
+}
+
 async function loadItemSprites() {
-  if (BUNDLE) return BUNDLE.itemSprites || {};
+  if (BUNDLE) {
+    const news = BUNDLE.whatsNew || {};
+    state.updateMade = newsMadeOn(news.index);
+    return foldNewsSprites(Object.assign({}, BUNDLE.itemSprites || {}),
+      news.index, file => (news.art || {})[file]);
+  }
+  let map = {};
   try {
     const index = await fetch('assets/items/index.json').then(response => response.json());
-    const map = {};
     for (const [name, file] of Object.entries(index)) map[name] = 'assets/items/' + encodeURIComponent(file);
-    return map;
   } catch (error) {
-    return {};   // sprites are decoration; the calculator does not need them
+    /* sprites are decoration; the calculator does not need them */
   }
+  try {
+    const news = await fetch('assets/whats-new/index.json').then(response => response.json());
+    state.updateMade = newsMadeOn(news);
+    map = foldNewsSprites(map, news, file => 'assets/whats-new/' + encodeURIComponent(file));
+  } catch (error) {
+    /* the same: the update's items fall back to their slot glyph */
+  }
+  return map;
 }
 
 
@@ -2213,15 +2301,40 @@ function newsDate(iso) {
   return `${Number(parts[3])} ${months[Number(parts[2]) - 1]} ${parts[1]}`;
 }
 
+/*
+ * How old the news is, and how old the numbers are.
+ *
+ * Two different dates, and the line used to carry only the second of them
+ * with a build id after it - so a visitor reading "client of 23 Aug" had
+ * no way to tell whether the site knew about the update that shipped on
+ * the first of September, and the build id, which is the one thing here
+ * that means nothing to anybody, had the most room. The build has gone to
+ * the tooltip and the update the data has been brought up to is on the
+ * line instead.
+ *
+ * Both dates rather than the newer of the two, because they are not
+ * interchangeable: the update date says which patch the items and the
+ * notes cover, the client date says when the enchanting odds themselves
+ * were last read out of a client, and showing only the newer would claim
+ * the odds are as fresh as the news.
+ */
 function renderClientNews(reading) {
   const line = $('status');
+  const made = state.updateMade;
   if (!reading) {
-    line.textContent = 'Game data from the enchantment documents';
+    line.textContent = made
+      ? `Game data · update of ${newsDate(made)}`
+      : 'Game data from the enchantment documents';
     line.title = 'No game client has been read against these numbers yet.';
     return;
   }
-  line.textContent = `Game data · client of ${newsDate(reading.date)} · build ${reading.build.slice(0, 8)}`;
-  line.title = `Read from an installed RotMG client, build ${reading.build}.`;
+  const bits = [];
+  if (made) bits.push(`update of ${newsDate(made)}`);
+  bits.push(`client of ${newsDate(reading.date)}`);
+  line.textContent = 'Game data · ' + bits.join(' · ');
+  line.title = (made ? `The items and the notes cover the update of ${newsDate(made)}. ` : '')
+    + `The enchanting odds were read from an installed RotMG client of `
+    + `${newsDate(reading.date)}, build ${reading.build}.`;
 }
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
@@ -2341,6 +2454,7 @@ function showPage(name) {
       fetch(base + 'atlas.json', { method: 'HEAD' })
         .then(response => {
           if (!response.ok) throw new Error('no atlas');
+          frame.addEventListener('load', () => tellAtlas(ambience.enabled));
           frame.src = base + 'index.html';
         })
         .catch(() => { frame.hidden = true; $('realmMissing').hidden = false; });

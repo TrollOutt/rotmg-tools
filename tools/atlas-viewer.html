@@ -248,7 +248,39 @@ const globe = () => PLANET * view.scale;
  * the ground and the things standing on it agree about it because they ask
  * the same question.
  */
-const FLAT_ENOUGH = 0.5;
+/*
+ * Half a pixel was too much to pay for.
+ *
+ * The number is a distance on the glass: how far the sphere moves the
+ * corner of the window away from where a flat chart would put it. At a
+ * half it stayed round until about nine tiles to the pixel - which is
+ * past the point where the closest level of ground comes in, and the
+ * closest level is the one whose water drifts, so the disc could no
+ * longer be kept between frames and a couple of thousand strips were
+ * being laid down sixty times a second. Measured on a 1280 by 720
+ * window: five to eight milliseconds of ground per frame through that
+ * band, against three hundredths of a millisecond on either side of it.
+ *
+ * A pixel and a half puts the changeover just below the closest level
+ * instead, and a pixel and a half is a distance nobody can see. It is
+ * nought in the middle of the window and grows to that only in the very
+ * corners; the ground and everything standing on it ask this same
+ * question, so they cannot disagree about the answer; and it is asked
+ * while the wheel is turning, which is not when anyone is measuring the
+ * position of a corner.
+ *
+ * And the round silhouette is never what is given up, at any tolerance.
+ * Setting the two sides equal, the world is this many pixels across at the
+ * moment it flattens:
+ *
+ *     R = reach^1.5 / sqrt(6 * FLAT_ENOUGH)
+ *
+ * which is larger than reach itself for any window wider than a few dozen
+ * pixels - so by the time the bend is dropped the limb is far outside the
+ * frame and there is nothing round left in view to lose. What flattens is
+ * always a patch of ground in the middle of a very large ball.
+ */
+const FLAT_ENOUGH = 1.5;
 function roundWorld(box) {
   const R = globe();
   const reach = Math.hypot(box.w, box.h) / 2;
@@ -697,17 +729,55 @@ function drawWater(box, time) {
  * the light catches the water, and birds once you are near enough for a bird
  * to make sense.
  *
- * All of it thins out as you come down. The cloud is what you see of a planet
- * from far off and the last thing you want between you and the ground, so as
- * the zoom rises each bank is pushed outwards from the middle of the view and
- * faded, and by the time the realm is worth reading the sky is clear. The
- * birds arrive as the cloud leaves.
+ * The weather is in front of the camera, not on the map.
  *
- * It costs one picture drawn a hundred-odd times. The puff is rendered once
- * into a canvas of its own; everything after that is a blit.
+ * It used to be laid out in tiles and put through the same projection as the
+ * ground, which is defensible - weather is somewhere - and wrong to look at:
+ * drag the realm and the sky came with it, as though the whole sky were
+ * painted on the glass of the map rather than hanging in front of it. Nothing
+ * about a cloud says which tile it is over. So a bank now has a place on the
+ * glass instead, on a disc of its own, and the realm slides about underneath
+ * it while the cloud keeps drifting west at its own pace.
+ *
+ * Coming down through it is the whole of the effect. Each bank is shoved out
+ * from the middle of the view as the zoom rises, and further the nearer it is
+ * - so they part and stream past the edges of the window rather than dissolve
+ * where they stand, and the ground opens up through the gap between them.
+ * They keep most of their weight while that happens and only give it up at
+ * the end, because a cloud that fades while it moves reads as a cloud that
+ * was never there. The birds arrive as the last of it leaves.
+ *
+ * It costs twenty pictures on one sheet, blitted about a hundred times.
  */
 const CLOUD_GONE = 7;                    // zoom by which the sky has cleared
 const CLOUD_FULL = 0.5;                  // and below which it is at its thickest
+/*
+ * How large the sky is, and what the approach does to it.
+ *
+ * The sky is the smaller of the world and the window. Stood right back the
+ * planet is a disc in the middle of a black field and weather belongs on the
+ * disc, so the sky is the disc; come close enough that the world overflows
+ * the window and there is no disc to speak of, so the sky is the window. The
+ * two are the same size at the moment they change over, which is why nothing
+ * jumps: the disc reaches this share of the screen just as the weather starts
+ * to lift, so the handover happens under a sky that is still whole.
+ */
+const SKY_SPAN = 0.55;                   // of the screen diagonal, the sky's radius
+const SKY_PUSH = 3.4;                    // how far out the approach shoves a bank
+const SKY_INK = 0.9;                     // how solid the thickest weather is
+const SKY_WRAP = 2.7;                    // sky radii a bank drifts before it returns
+/*
+ * How many banks there are.
+ *
+ * Enough for weather, not enough to hide the world under it - and the line
+ * between the two is narrower than it looks. Seventy-eight of the drawn
+ * clouds came to twice the area of the planet they were over and left the
+ * realm as glimpses between them; the arithmetic ones they replaced were
+ * faint enough that seventy-eight of those read as haze. Half that many,
+ * at two thirds the width, covers about half the disc, which is what a
+ * planet with weather on it looks like from a long way off.
+ */
+const BANKS = 44;
 const BIRDS_FROM = 2.4, BIRDS_TO = 26;   // the zooms a bird makes sense at
 
 /*
@@ -737,6 +807,156 @@ function callForOryx() {
   if (sentFor || !A.sky) return;
   sentFor = true;
   oryxSheet.src = BASE + 'oryx.png';
+}
+
+/*
+ * Out of the blue, and into the dark.
+ *
+ * The picture arrives lit for space - dimmed and tinted by how far each
+ * part of him lies from the two things that throw any light, the face of the
+ * world below and the lamps in his helm. The idea is right and the amount
+ * was wrong in both directions. The world is a blue planet, so the light it
+ * throws is blue, and a gauntlet holding a blue planet came back the colour
+ * of cold steel: nearly half the pixels of a hand are bluer than they are
+ * red, and the rims of the claws peak at 179,227,253, which is not armour
+ * but chrome. And the head, lit from the front by its own fire, ended with a
+ * bright crimson silhouette cut cleanly out of the night - a sticker of a
+ * head rather than a head with a night behind it.
+ *
+ * So the sheet is re-lit once, when it arrives, into a canvas of its own.
+ * Both hands are pulled towards neutral and taken down, hardest where they
+ * were brightest, so what was chrome is dark iron. The head keeps its fire
+ * and loses its outline: everything within a rim of the silhouette is dimmed
+ * towards nothing, so the horns come out of the dark instead of being drawn
+ * on top of it.
+ *
+ * Done here rather than in the picture because the picture is baked on the
+ * machine that has the client, and the amount of it is a thing to be looked
+ * at and changed. It costs one pass over a megapixel and a bit, once.
+ */
+const HAND_CAST = 0.3;                   // how much of the cold cast is kept
+const HAND_LIGHT = 0.72;                 // and how much of the light
+const HAND_SHEEN = 0.42;                 // extra taken off where it was brightest
+const HEAD_RIM = 0.14;                   // what is left of him at the silhouette
+const HEAD_DEEP = 55;                    // pixels of the picture the rim reaches in
+
+/*
+ * A hand, pulled to neutral and dimmed.
+ *
+ * Neutral means towards the darkest of its own three channels rather than
+ * towards its red: half of these pixels are warmer than they are cold, and
+ * pulling those towards red would have brightened them. Towards the least
+ * channel always darkens, and it takes any cast out whichever way it leans.
+ */
+function ironOut(px, wide, cut) {
+  for (let y = cut[1]; y < cut[1] + cut[3]; y++) {
+    for (let x = cut[0]; x < cut[0] + cut[2]; x++) {
+      const at = (y * wide + x) * 4;
+      if (!px[at + 3]) continue;
+      const r = px[at], g = px[at + 1], b = px[at + 2];
+      const lo = Math.min(r, g, b);
+      const nr = lo + (r - lo) * HAND_CAST;
+      const ng = lo + (g - lo) * HAND_CAST;
+      const nb = lo + (b - lo) * HAND_CAST;
+      const down = HAND_LIGHT * (1 - (Math.max(nr, ng, nb) / 255) * HAND_SHEEN);
+      px[at] = nr * down;
+      px[at + 1] = ng * down;
+      px[at + 2] = nb * down;
+    }
+  }
+}
+
+/*
+ * And the head, given a night to come out of.
+ *
+ * How far in from the silhouette each pixel lies, by the usual two passes -
+ * out from the clear edge and back again - and then dimmed by that. The fire
+ * is spared: a pixel that is much redder than it is anything else is one of
+ * the seams or one of the eyes, and those are the light in the picture rather
+ * than the thing being lit.
+ */
+function intoTheDark(px, wide, cut) {
+  const x0 = cut[0], y0 = cut[1], w = cut[2], h = cut[3];
+  const far = new Float32Array(w * h);
+  const FAR = 1e6;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      far[y * w + x] = px[((y0 + y) * wide + x0 + x) * 4 + 3] < 24 ? 0 : FAR;
+    }
+  }
+  const D = 1, DD = 1.4142;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (!far[i]) continue;
+      let d = far[i];
+      if (x > 0) d = Math.min(d, far[i - 1] + D);
+      if (y > 0) d = Math.min(d, far[i - w] + D);
+      if (x > 0 && y > 0) d = Math.min(d, far[i - w - 1] + DD);
+      if (x < w - 1 && y > 0) d = Math.min(d, far[i - w + 1] + DD);
+      far[i] = d;
+    }
+  }
+  for (let y = h - 1; y >= 0; y--) {
+    for (let x = w - 1; x >= 0; x--) {
+      const i = y * w + x;
+      if (!far[i]) continue;
+      let d = far[i];
+      if (x < w - 1) d = Math.min(d, far[i + 1] + D);
+      if (y < h - 1) d = Math.min(d, far[i + w] + D);
+      if (x < w - 1 && y < h - 1) d = Math.min(d, far[i + w + 1] + DD);
+      if (x > 0 && y < h - 1) d = Math.min(d, far[i + w - 1] + DD);
+      far[i] = d;
+    }
+  }
+  // The edge of the picture is not the edge of him, so it does not count.
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const at = ((y0 + y) * wide + x0 + x) * 4;
+      if (!px[at + 3]) continue;
+      const r = px[at], g = px[at + 1], b = px[at + 2];
+      const t = Math.min(1, far[y * w + x] / HEAD_DEEP);
+      let keep = HEAD_RIM + (1 - HEAD_RIM) * (t * t * (3 - 2 * t));
+      const fire = Math.max(0, (r - Math.max(g, b)) / 255);
+      keep += (1 - keep) * Math.min(1, fire * 2.6);
+      px[at] = r * keep;
+      px[at + 1] = g * keep;
+      px[at + 2] = b * keep;
+    }
+  }
+}
+
+/*
+ * The sheet as it is actually drawn, re-lit on first use.
+ *
+ * On first use rather than on load, because it wants both the picture and
+ * the table of rectangles within it, and those arrive down two different
+ * wires in whichever order the network feels like. Null until both are here,
+ * which is the same answer the callers already handle.
+ */
+let oryxArt = null, oryxLit = false;
+function oryxPaint() {
+  if (oryxLit) return oryxArt;
+  if (!skyArt || !skyArt.oryx) return null;
+  if (!oryxSheet.complete || !oryxSheet.naturalWidth) return null;
+  oryxLit = true;
+  oryxArt = oryxSheet;
+  try {
+    const wide = oryxSheet.naturalWidth, tall = oryxSheet.naturalHeight;
+    const pad = document.createElement('canvas');
+    pad.width = wide; pad.height = tall;
+    const pen = pad.getContext('2d', { willReadFrequently: true });
+    pen.drawImage(oryxSheet, 0, 0);
+    const sheet = pen.getImageData(0, 0, wide, tall);
+    const O = skyArt.oryx;
+    for (const cut of [O.handL, O.handR]) if (cut) ironOut(sheet.data, wide, cut);
+    if (O.head) intoTheDark(sheet.data, wide, O.head);
+    pen.putImageData(sheet, 0, 0);
+    oryxArt = pad;
+  } catch (e) {
+    // A sheet that cannot be read is drawn as it came.
+  }
+  return oryxArt;
 }
 
 /*
@@ -800,7 +1020,7 @@ function drawOryxBehind(box, now) {
   const y = sunk + (risen - sunk) * showing + breathe;
   ctx.save();
   ctx.globalAlpha = showing;
-  ctx.drawImage(oryxSheet, cut[0], cut[1], cut[2], cut[3],
+  ctx.drawImage(oryxPaint() || oryxSheet, cut[0], cut[1], cut[2], cut[3],
     box.w / 2 - wide / 2, y - tall / 2, wide, tall);
   ctx.restore();
 }
@@ -828,7 +1048,7 @@ function drawOryxHands(box, now) {
     const bob = Math.sin(now / 1300 + (side > 0 ? 1.7 : 0)) * R * 0.022;
     // Anchored by the edge that reaches, which is the one facing the world.
     const edge = box.w / 2 + side * reach;
-    ctx.drawImage(oryxSheet, cut[0], cut[1], cut[2], cut[3],
+    ctx.drawImage(oryxPaint() || oryxSheet, cut[0], cut[1], cut[2], cut[3],
       side < 0 ? edge - wide : edge, cy + bob - tall / 2, wide, tall);
   }
   ctx.restore();
@@ -846,17 +1066,34 @@ const weather = (() => {
   };
   const midX = (B.minX + B.maxX) / 2, midY = (B.minY + B.maxY) / 2;
   const banks = [];
-  // Enough for weather, not enough to hide the world under it.
-  for (let i = 0; i < 78; i++) {
-    // Spread over the near face of the world, not just over the island.
-    const a = roll() * Math.PI * 2, r = Math.sqrt(roll()) * PLANET * 0.92;
+  /*
+   * Which picture each bank wears, dealt rather than rolled.
+   *
+   * Rolled independently, twenty shapes over seventy-eight banks left some
+   * of them used six times and two of them not at all - and the two that go
+   * missing are missing for good, since the roll is fixed. Dealt round and
+   * then shuffled, every drawing is on the world three or four times and the
+   * sky is as varied as the folder it came from.
+   */
+  const shapes = [];
+  for (let i = 0; i < BANKS; i++) shapes.push(i);
+  for (let i = shapes.length - 1; i > 0; i--) {
+    const j = Math.floor(roll() * (i + 1));
+    const swap = shapes[i]; shapes[i] = shapes[j]; shapes[j] = swap;
+  }
+  for (let i = 0; i < BANKS; i++) {
+    // Somewhere on the disc of sky, spread evenly over it rather than
+    // bunched in the middle, and flattened a little the way a sky is.
+    const a = roll() * Math.PI * 2, r = Math.sqrt(roll());
     banks.push({
-      x: midX + Math.cos(a) * r,
-      y: midY + Math.sin(a) * r * 0.86,
-      wide: 60 + roll() * 130,           // tiles across
-      // Fair weather mostly; the dark ones are the odd storm cell.
-      shape: Math.floor(roll() * 18),
-      drift: 3.5 + roll() * 5,           // tiles a second, westward
+      x: Math.cos(a) * r,               // where it sits on the glass, -1 to 1
+      y: Math.sin(a) * r * 0.86,
+      wide: 0.10 + roll() * 0.22,       // of the sky's radius, across
+      shape: shapes[i],
+      drift: 0.028 + roll() * 0.055,    // sky radii a second, westward
+      // How much the approach moves it, which is how near it is. The far
+      // ones hold the middle of the view while the near ones stream past.
+      depth: 0.45 + roll() * 1.05,
       dim: 0.62 + roll() * 0.38
     });
   }
@@ -877,7 +1114,8 @@ const weather = (() => {
 })();
 
 /*
- * How much sky there is at this distance.
+ * How far down the approach we are: nought where the weather is thickest,
+ * one where it has gone.
  *
  * Measured across the zoom the way the zoom is actually worked - by ratio,
  * not by difference. Every notch of the wheel multiplies, so a straight
@@ -885,59 +1123,93 @@ const weather = (() => {
  * the whole sky in a moment; read as a ratio the same clearing is spread
  * evenly over every notch of the approach, which is a dozen of them rather
  * than three.
- *
- * Eased at the ends besides, so it neither starts nor finishes abruptly.
  */
-const skyLeft = () => {
-  const t = Math.max(0, Math.min(1,
-    Math.log(CLOUD_GONE / Math.max(CLOUD_FULL, view.scale))
-    / Math.log(CLOUD_GONE / CLOUD_FULL)));
-  return t * t * (3 - 2 * t);
-};
+const skyGone = () => Math.max(0, Math.min(1, 1 -
+  Math.log(CLOUD_GONE / Math.max(CLOUD_FULL, view.scale))
+  / Math.log(CLOUD_GONE / CLOUD_FULL)));
+
+/*
+ * And how much of it is left to see, which is not the same shape.
+ *
+ * The moving and the fading are deliberately out of step. If a bank thins
+ * at the rate it travels then by the time it has gone anywhere it is already
+ * half transparent, and coming down reads as the weather evaporating in
+ * place. Held at nearly full weight for the first half of the approach and
+ * given up over the second, the same movement reads as the camera pushing
+ * the cloud aside - the bank stays a cloud right up to the point where it
+ * leaves the frame.
+ */
+const skyLeft = () => 1 - Math.pow(skyGone(), 2.2);
 
 function drawSky(box, now) {
+  const gone = skyGone();
   const left = skyLeft();
-  if (left <= 0.01) return 0;
+  if (gone >= 1 || left <= 0.01) return 0;
   if (!skyArt || !skySheet.complete || !skySheet.naturalWidth) return 0;
   const t = now / 1000;
-  // Parted: each bank slides away from the middle as the ground comes up.
-  // Drifting apart gently as you come down, rather than being flung aside.
-  const apart = 1 + Math.max(0, view.scale - CLOUD_FULL) * 0.28;
-  const span = PLANET * 1.9;
+  const cx = box.w / 2, cy = box.h / 2;
+  /*
+   * The sky is the smaller of the world and the window, and it is clipped to
+   * the world only while the world is the smaller of the two - stood right
+   * back there is black space round the disc and no weather belongs in it,
+   * whereas close in the ground fills the window and a bank being shoved out
+   * of frame should leave by the edge of the glass.
+   */
+  const diag = Math.hypot(box.w, box.h);
+  const room = diag * SKY_SPAN;
+  const onDisc = !tilting() && roundWorld(box) && globe() < room;
+  const R = onDisc ? globe() : room;
+  /*
+   * How far out they have been shoved, squared rather than straight.
+   *
+   * Straight, the shoving starts at once - and because the approach is
+   * measured by ratio, the first few notches of the wheel are already a fifth
+   * of the way down it. So the sky was parting before there was any sense of
+   * coming down through it, and by the time the ground was worth reading only
+   * a handful of banks were still in frame. Squared, the first half of the
+   * approach barely moves them and the second half throws them past the edges
+   * of the window: you come down into a full sky and it opens up in front of
+   * you, which is the thing being drawn.
+   */
+  const push = 1 + SKY_PUSH * gone * gone;
+  // Coming at you as well as parting, but not as fast, or they only swell.
+  const grow = 1 + (push - 1) * 0.45;
 
   ctx.save();
-  if (roundWorld(box)) {
+  if (onDisc) {
     ctx.beginPath();
-    ctx.arc(box.w / 2, box.h / 2, globe(), 0, Math.PI * 2);
+    ctx.arc(cx, cy, globe(), 0, Math.PI * 2);
     ctx.clip();
   }
+  // Drawn art rather than pixels off the floor, so it is sampled smoothly.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'low';
 
-  ctx.imageSmoothingEnabled = false;
   let drawn = 0;
   for (const one of weather.banks) {
     const cut = skyArt.clouds[one.shape % skyArt.clouds.length];
     if (!cut) continue;
     /*
-     * Carried west and brought round again. A cloud that simply reappeared on
-     * the far side jumped in plain sight, so it thins away over the last of
-     * its run and comes back out of nothing.
+     * Carried west and brought round again. A bank that simply reappeared
+     * on the far side jumped in plain sight, so it thins away over the last
+     * of its run and comes back out of nothing.
      */
-    let wx = one.x - t * one.drift;
-    wx = weather.midX + (((wx - weather.midX) % span) + span * 1.5) % span - span / 2;
-    const edge = Math.min(1, (span / 2 - Math.abs(wx - weather.midX)) / (span * 0.16));
+    let sx = one.x - t * one.drift;
+    sx = ((sx % SKY_WRAP) + SKY_WRAP * 1.5) % SKY_WRAP - SKY_WRAP / 2;
+    const edge = Math.min(1, (SKY_WRAP / 2 - Math.abs(sx)) / 0.42);
     if (edge <= 0) continue;
-    const at = place(weather.midX + (wx - weather.midX) * apart,
-      weather.midY + (one.y - weather.midY) * apart, box);
-    if (!at) continue;
-    // Drawn at the shape's own proportions, so it is never stretched.
-    const w = one.wide * view.scale * at.k;
+    // Shoved out from the middle, the near ones further than the far ones.
+    const out = 1 + (push - 1) * one.depth;
+    const w = one.wide * R * grow;
     const h = w * cut[3] / cut[2];
-    if (at.x + w < 0 || at.x - w > box.w || at.y + h < 0 || at.y - h > box.h) continue;
-    ctx.globalAlpha = left * one.dim * edge * 0.4;
+    const x = cx + sx * R * out, y = cy + one.y * R * out;
+    if (x + w < 0 || x - w > box.w || y + h < 0 || y - h > box.h) continue;
+    ctx.globalAlpha = Math.min(1, left * one.dim * edge * SKY_INK);
     ctx.drawImage(skySheet, cut[0], cut[1], cut[2], cut[3],
-      Math.round(at.x - w / 2), Math.round(at.y - h / 2), Math.round(w), Math.round(h));
+      x - w / 2, y - h / 2, w, h);
     drawn++;
   }
+  ctx.globalAlpha = 1;
   ctx.restore();
   return drawn;
 }
@@ -1051,6 +1323,48 @@ function reachOf(index) {
 const standing = [];
 const mob = [];
 
+/*
+ * How much scenery is worth one frame.
+ *
+ * The whole of the standing layer is one drawImage per piece, and on this
+ * machine a piece costs about five microseconds however small it is - the
+ * mean piece at the zoom where scenery arrives covers seventy pixels, so
+ * nothing is being filled; it is the call itself. Measured on a 1920 by 1080
+ * window at the moment the closest level comes in: thirty-two thousand
+ * things scanned, seven thousand within the frame, five thousand three
+ * hundred drawn, twenty-seven milliseconds. Two and a half more for the
+ * scan and half for the sort - so ninety per cent of the frame is blits,
+ * and there is no arithmetic to take out of it. The only thing that can be
+ * done is to draw fewer.
+ *
+ * So the scenery is capped by how thickly it lies rather than by how much of
+ * it there is. Every chunk is allowed the same number of pieces per tile,
+ * and one that holds more than its share keeps a fixed fraction of them -
+ * so a crowded wood thins out and open ground, which was never the problem,
+ * is left exactly as it was. Because the allowance rises as the square of
+ * the zoom and every chunk's thickness is a constant, the fraction only ever
+ * grows as you come down: a piece that is being drawn stays drawn, and the
+ * rest arrive as you get closer. Nothing is ever taken away in front of you,
+ * and panning changes nothing at all.
+ *
+ * Which pieces are kept comes from a hash of where each one sits in the
+ * file, so it is the same set every frame and the same set on every machine.
+ * Anything drawn taller than THING_BIG is kept whatever the thickness: what
+ * is being thinned is the clutter, not the landmarks, and at the zoom this
+ * bites four fifths of the layer is one ten-pixel tuft.
+ */
+const THING_MANY = 2000;                 // pieces of scenery worth one frame
+const THING_BIG = 13;                    // pixels tall; above this, always drawn
+const THING_FINE = 4096;                 // how finely the fraction is cut
+
+/* Kept or not, decided once and the same way every time. */
+function thingRank(index) {
+  let h = Math.imul(index ^ 0x9e3779b9, 2654435761);
+  h ^= h >>> 15;
+  h = Math.imul(h, 2246822519);
+  h ^= h >>> 13;
+  return (h >>> 0) % THING_FINE;
+}
 function drawThings(box, time) {
   if (!things || !thingArt.complete || !thingArt.naturalWidth) return null;
   if (levelFor(view.scale) !== 0) return null;
@@ -1079,6 +1393,18 @@ const seen = seenRange(box, 80);
    * the last word.
    */
   const a = things.at;
+  const pics = things.index.pics;
+  const perPixel = view.scale / (A.px * SS);
+  /*
+   * The allowance, in pieces per tile: the budget spread over as many
+   * tiles as the window is showing. Four times as generous every time the
+   * zoom doubles, which is what makes the thinning lift as you come down.
+   */
+  const tilesShown = (box.w / view.scale) * (box.h / view.scale);
+  const allowed = THING_MANY / Math.max(1, tilesShown);
+  const chunkTiles = span * span;
+  // Compared against pic[3] * pic[4] directly, to keep a divide out of the loop.
+  const bigAt = (THING_BIG * 100) / perPixel;
   /*
    * The margin carries three things: half the widest thing, because a
    * thing is placed by the middle of its foot; its whole height on the
@@ -1100,10 +1426,22 @@ const seen = seenRange(box, 80);
       const where = things.index.chunks[c + '_' + r];
       if (!where) continue;
       const from = where[0], count = where[1];
+      /*
+       * This chunk's own share, from this chunk's own thickness. A chunk
+       * inside the allowance keeps everything and never looks at a hash.
+       */
+      const thick = count / chunkTiles;
+      const share = thick <= allowed
+        ? THING_FINE
+        : Math.max(1, Math.round(THING_FINE * allowed / thick));
       for (let i = 0; i < count; i++) {
         const at = (from + i) * 3;
         const tx = a[at + 1], ty = a[at + 2];
         if (tx < lowX || tx > highX || ty < lowY || ty > highY) continue;
+        if (share < THING_FINE) {
+          const pic = pics[a[at]];
+          if (pic && pic[3] * pic[4] < bigAt && thingRank(from + i) >= share) continue;
+        }
         standing.push(at);
       }
     }
@@ -1126,8 +1464,6 @@ const seen = seenRange(box, 80);
 
   ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = false;
-  const pics = things.index.pics;
-  const perPixel = view.scale / (A.px * SS);
   let drawn = 0, living = 0, m = 0;
   for (const at of standing) {
     const x = a[at + 1] / 8, y = a[at + 2] / 8;
@@ -1909,8 +2245,10 @@ let last = performance.now();
  * amount. How many pieces comes from how much of a turn is actually on
  * screen, so a close view takes one piece per band and pays nothing for
  * being on a globe at all.
+ *
+ * How deep a band is comes from the same question, asked of latitude, and is
+ * worked out band by band where the loop reaches it.
  */
-const SPHERE_STEP = 3;                              // rows per band
 
 /*
  * How near the truth a band has to be, in screen pixels.
@@ -1936,7 +2274,6 @@ const SPHERE_STEP = 3;                              // rows per band
  */
 const SPHERE_TRUE = 0.5;
 const SPHERE_LOOSE = 3;
-const SPHERE_STEP_LOOSE = 7;
 const globePlain = () => view.scale < SHOW_LIFE;
 
 /*
@@ -2016,6 +2353,24 @@ function overOcean() {
   return !here || here.biome === NOWHERE;
 }
 
+/*
+ * Coming home is a walk, not a step.
+ *
+ * Asking every frame whether the pin is over water, and drifting only while
+ * the answer is yes, meant the walk ended the moment the answer changed -
+ * and the first thing the pin meets on its way in from open sea is the coast.
+ * So the view came back as far as the edge of the map and stopped there, with
+ * the realm hanging off one side of the window: rescued from looking at
+ * nothing and left looking at a corner.
+ *
+ * The question is asked once, to start the walk, and after that the walk
+ * finishes what it began. It ends when it arrives, or the moment a hand goes
+ * on the map or the wheel is turned - because being taken somewhere you did
+ * not ask for is worse than being lost, and the walk re-arms by itself as
+ * soon as the pin is over open water again.
+ */
+let walkingHome = false;
+
 function keepInSight(box, delta) {
   /*
    * The one limit kept: pulled back past the point where the world fills the
@@ -2025,12 +2380,26 @@ function keepInSight(box, delta) {
   if (want.scale < least) want.scale = least;
   if (view.scale < least) view.scale = least;
 
-  if (from) return;                      // a hand on it, so leave it be
-  if (!mask || !overOcean()) return;
+  if (from) { walkingHome = false; return; }   // a hand on it, so leave it be
+  if (!mask) return;
+  if (!walkingHome && overOcean()) walkingHome = true;
+  if (!walkingHome) return;
+
   const home = homeView(box);
   const step = Math.min(1, delta * 0.7);
   want.x += (home.x - want.x) * step;
   want.y += (home.y - want.y) * step;
+  /*
+   * Arrived when what is left to close is under a couple of pixels. Reckoned
+   * in pixels rather than in tiles, because a tile is a different distance
+   * at every zoom and a fixed number of tiles would either stop the walk
+   * short close in or leave it creeping for ever from far off.
+   */
+  const near = 2 / Math.max(1e-6, view.scale);
+  if (Math.abs(home.x - want.x) < near && Math.abs(home.y - want.y) < near) {
+    want.x = home.x; want.y = home.y;
+    walkingHome = false;
+  }
 }
 
 /*
@@ -2066,13 +2435,21 @@ function groundGlobe(box, now) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const level = levelFor(view.scale);
   /*
-   * The drifting water is lifted out and drawn moving only at the closest
-   * level, so at every other one the ground layer is a still picture and
-   * the finished disc can be kept. The view is rounded into the key, so
-   * the easing settling by a thousandth of a pixel does not throw away a
-   * couple of thousand pieces of work.
+   * On the ball the water holds still, so the disc can always be kept.
+   *
+   * The ground layer is a still picture at every level but the closest,
+   * where the water drifts - and one drifting tile is enough to throw away
+   * the whole disc, which is a couple of thousand small pieces to lay down
+   * again. So the water is given a fixed moment while the world is round.
+   * It starts moving the instant the world goes flat, which is also the
+   * point at which you are close enough to look at a single tile of it, and
+   * flat costs nothing to redraw.
+   *
+   * On a window small enough that the changeover happens before the closest
+   * level this changes nothing at all. It is here for the large ones, where
+   * the world stays worth bending well past that point.
    */
-  const still = level !== 0;
+  const still = true;
   /*
    * The disc is built at the screen's own grain. Building it at half of that
    * saved a good deal of fill and made the whole map soft, which is not a
@@ -2134,7 +2511,7 @@ function groundGlobe(box, now) {
     globeCtx.translate(-wide / 2, -tall / 2);
   }
   const ground = drawGround(big);
-  drawWater(big, now);
+  drawWater(big, still ? 0 : now);
   drawRoads(big);
   if (chosen) drawLit(big, chosen, 0.16);
   else if (hovered) drawLit(big, hovered, 0.1);
@@ -2201,19 +2578,71 @@ function groundGlobe(box, now) {
 
   ctx.imageSmoothingEnabled = true;
   const top = Math.max(-R, -cy), bottom = Math.min(R, box.h - cy);
-  const step = plain ? SPHERE_STEP_LOOSE : SPHERE_STEP;
   const trueTo = plain ? SPHERE_LOOSE : SPHERE_TRUE;
-  for (let y = Math.floor(top); y < bottom; y += step) {
+  /*
+   * How deep a band of the world can be and still be laid down straight.
+   *
+   * It used to be three pixels, everywhere, and three pixels is the right
+   * answer in exactly one place: the far view, where the disc is small and
+   * the ground near the limb turns away almost vertically. Everywhere else
+   * it is far too careful. Come in to five tiles a pixel and the world is
+   * twelve thousand pixels across, the window covers a thirtieth of a
+   * radian of it, and the curve across that is measured in thousandths of a
+   * pixel - and it was being taken in three-pixel slices, three hundred and
+   * sixty of them, thirteen pieces each: four and a half thousand strips a
+   * frame to draw a patch of ground that is flat to a hair. On a 1080 window
+   * that came to ten to twelve milliseconds of every frame spent panning,
+   * and thirty-three at the zoom where the scenery arrives on top of it.
+   *
+   * So the depth is chosen the way the width beside it already is: from how
+   * far the straight version leaves the true one. Two things pull it in, and
+   * the smaller wins.
+   *
+   * The first is the bend down the band. A straight stretch leaves the true
+   * projection by about the square of the depth over eight, times the
+   * curvature of latitude against screen - so the depth that keeps that
+   * inside the tolerance is the square root of eight times the tolerance
+   * over that curvature.
+   *
+   * The second is subtler and it is what a naive version of this gets wrong.
+   * The whole band is drawn at one cos(lat), which sets how much longitude
+   * is squeezed across it - so a deep band squeezes its top and bottom by an
+   * amount that belongs to its middle. That error is the tangent of the
+   * latitude, times the depth, times how far round the band the window
+   * reaches, halved. Near the equator it is nothing and the first bound
+   * rules; out towards the limb it is everything, and it is the reason the
+   * far view still gets its two-pixel bands.
+   *
+   * Both are read at the deeper end of the band rather than at its start,
+   * since walking outwards from the middle the curvature ahead is always
+   * worse than the curvature behind. One guess and one correction is enough:
+   * the bound falls off smoothly and the correction only ever shortens.
+   */
+  const STEP_MOST = 64;                  // and no band deeper than this
+  const deepEnough = yAt => {
+    const s = Math.min(0.9995, Math.abs(yAt) / wide9);
+    const flat = Math.sqrt(Math.max(1e-9, 1 - s * s));
+    const curve = (s / wide9) / (flat * flat * flat);
+    const byBend = curve > 1e-12 ? Math.sqrt(8 * trueTo / curve) : STEP_MOST;
+    const tan = s / flat;
+    const round = Math.min(1, Math.max(cx, box.w - cx) / Math.max(1e-6, wide9 * flat));
+    const bySqueeze = tan * round > 1e-9 ? (2 * trueTo) / (tan * round) : STEP_MOST;
+    return Math.max(1, Math.min(STEP_MOST, byBend, bySqueeze));
+  };
+  for (let y = Math.floor(top); y < bottom; ) {
+    const guess = deepEnough(y);
+    const step = Math.min(guess, deepEnough(y + guess));
     const y2 = Math.min(y + step, bottom);
     const lat = Math.asin(Math.max(-1, Math.min(1, y / wide9)));
     const lat2 = Math.asin(Math.max(-1, Math.min(1, y2 / wide9)));
     const cosLat = Math.cos((lat + lat2) / 2);
-    if (cosLat < 0.02) continue;
+    // Stepping on before any of these, because the loop no longer does it.
+    if (cosLat < 0.02) { y = y2; continue; }
     const sv = wide9 * lat, sv2 = wide9 * lat2;
     // The stretch of longitude this band of the screen covers.
     const half = wide9 * cosLat;
     const fromX = Math.max(-half, -cx), toX = Math.min(half, box.w - cx);
-    if (toX <= fromX) continue;
+    if (toX <= fromX) { y = y2; continue; }
     const lonAt = px => Math.asin(Math.max(-1, Math.min(1, px / half)));
     const lon0 = lonAt(fromX), lon1 = lonAt(toX);
     const widest = Math.sqrt(4 * trueTo / half);
@@ -2229,6 +2658,7 @@ function groundGlobe(box, now) {
         Math.max(1, (su1 - su0) * grain), Math.max(1, (sv2 - sv) * grain),
         cx + dx0, cy + y, dx1 - dx0, Math.max(1, y2 - y));
     }
+    y = y2;
   }
   ctx.imageSmoothingEnabled = false;
 
@@ -2337,9 +2767,50 @@ function groundTilted(box, now) {
  * half-drawn, which is indistinguishable from the page having crashed. Asked
  * for first, a bad frame is a bad frame and the next one is fine.
  */
+
+/*
+ * Holding still, when the site says so.
+ *
+ * The site has one switch for everything that moves, and until now it only
+ * reached the drifting realms behind the interface - the atlas is a frame
+ * with a render loop of its own and heard nothing, so on the one page where
+ * there was most to see moving, the switch did nothing at all.
+ *
+ * What is stopped is time, not drawing. The frame still runs, so dragging,
+ * zooming, hovering and picking a zone all work exactly as before and the
+ * easing still settles - what freezes is the clock every moving thing reads
+ * from: the weather drifts no further, the water stops shimmering, the birds
+ * stop flapping, the torches stop guttering and Oryx stops breathing. Turn it
+ * back on and the clock picks up where it left off rather than jumping
+ * forward by however long it was off, which would fling every cloud across
+ * the sky at once.
+ *
+ * Nothing is trusted from the message but the shape of it, and only the flag
+ * is read - a frame can be pointed at by anyone.
+ */
+let animating = true;
+let heldAt = 0;                          // the clock, at the moment it stopped
+let heldFor = 0;                         // and how much of it has been skipped
+window.addEventListener('message', event => {
+  const said = event.data;
+  if (!said || said.rotmg !== 'animate') return;
+  const on = !!said.on;
+  if (on === animating) return;
+  animating = on;
+  if (!on) heldAt = performance.now() - heldFor;
+  else heldFor = performance.now() - heldAt;
+});
+
+/* The clock the moving things read, which is not the one the easing reads. */
+const moment = now => animating ? now - heldFor : heldAt;
 function frame(now) {
   requestAnimationFrame(frame);
-  const delta = Math.min(0.1, (now - last) / 1000);
+  /*
+   * Never negative. Everything downstream of this multiplies by it - the
+   * easing, the walk home, the creatures' step - so a clock that went
+   * backwards would drive all of them backwards with it.
+   */
+  const delta = Math.max(0, Math.min(0.1, (now - last) / 1000));
   last = now;
   /*
    * The view eases to where it was asked to go rather than jumping.
@@ -2360,12 +2831,14 @@ function frame(now) {
   // Whatever else happens, the world has a positive size.
   if (!(view.scale > 0.001)) view.scale = 0.02;
   if (!(want.scale > 0.001)) want.scale = 0.02;
+  const when = moment(now);
+  const step = animating ? delta : 0;
   const box = size();
   keepInSight(box, delta);
   warmAhead(box);
   ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, box.w, box.h);
-  drawOryxBehind(box, now);
+  drawOryxBehind(box, when);
 
   /*
    * Leaning is the only thing that flattens the world - it is a different
@@ -2373,20 +2846,20 @@ function frame(now) {
    * with it.
    */
   let ground;
-  if (tilting()) ground = groundTilted(box, now);
-  else if (roundWorld(box)) ground = groundGlobe(box, now);
-  else if (turning()) ground = groundTilted(box, now);
-  else ground = groundFlat(box, now);
-  stepLife(delta);
-  const close = drawThings(box, now);
+  if (tilting()) ground = groundTilted(box, when);
+  else if (roundWorld(box)) ground = groundGlobe(box, when);
+  else if (turning()) ground = groundTilted(box, when);
+  else ground = groundFlat(box, when);
+  stepLife(step);
+  const close = drawThings(box, when);
   const living = close ? close.living : drawLife(box);
   const marks = drawLandmarks(box);
-  drawBeacons(box, now);
+  drawBeacons(box, when);
   drawNames(box);
-  stepBirds(delta);
+  stepBirds(step);
   drawBirds(box);
-  drawSky(box, now);
-  drawOryxHands(box, now);
+  drawSky(box, when);
+  drawOryxHands(box, when);
 
   if (pointer) {
     const t = toTile(pointer.x, pointer.y, box);
@@ -2466,8 +2939,28 @@ canvas.addEventListener('wheel', event => {
   view.scale = want.scale = Math.max(floorZoom(box),
     Math.min(40, want.scale * Math.pow(WHEEL, -notch)));
   const after = toTile(event.offsetX, event.offsetY, box);
-  want.x += under.x - after.x;
-  want.y += under.y - after.y;
+  /*
+   * Keeping the thing under the pointer under the pointer, when there is
+   * one.
+   *
+   * Past the limb of the world there is no tile under the pointer and the
+   * projection says so by answering with nothing - which went straight
+   * into the middle of the view, and a view with no number for a middle
+   * draws no ground, no things and no weather. Standing right back, the
+   * whole outer half of the window is off the world and Oryx's hands are
+   * out there in it, so a roll of the wheel anywhere over a hand blacked
+   * the map out until the page was reloaded.
+   *
+   * With nothing under the pointer there is nothing to hold in place, so
+   * the zoom simply happens about the middle of the view.
+   */
+  const held = Number.isFinite(under.x) && Number.isFinite(under.y)
+    && Number.isFinite(after.x) && Number.isFinite(after.y);
+  if (held) {
+    want.x += under.x - after.x;
+    want.y += under.y - after.y;
+  }
+  walkingHome = false;                   // the wheel is a hand on it too
   view.x = keep.x; view.y = keep.y; view.scale = keep.scale;
 }, { passive: false });
 
