@@ -85,6 +85,7 @@ road, bit 1 impassable), blue is the zone id.
     node tools/realm-atlas-build.js         the pyramid, the zones, the page
     node tools/merge-realm-roles.js         the ranks and the cast
     node tools/refine-outline.js            the black line round everything, once
+    node tools/build-sky.js                 the weather sheet, from the drawn clouds
     npm run build                           web/ copied into docs/
 
 `--atlas=DIR` sends the third at a copy; `--publish` on the second writes into
@@ -92,6 +93,17 @@ road, bit 1 impassable), blue is the zone id.
 of this: what does not belong on the map is turned away while it is being
 built, from `data/Realm/off-the-map.txt`, so it never comes back when more of
 the realm is walked.
+
+**Changing only the page needs none of the above.** `--page-only` reads the
+`atlas.json` already sitting in the output directory and writes a fresh page
+beside it, through the same code a full build ends with:
+
+    node tools/realm-atlas-build.js --page-only --publish
+
+That is the whole loop for template work on a machine with no client, and it
+is exact rather than approximate — run against an unchanged template it
+reproduces the committed `index.html` byte for byte, which is worth checking
+first if you ever doubt the two are in step.
 
 Two of those four are in the repository and one is not, and the difference is
 worth being exact about.
@@ -134,6 +146,7 @@ is edited by hand, and an edit to any of it is lost on the next build:
     mask.png            R biome, G flags, B zone
     roads.png           water.png water.json water-art.png
     sky.png sky.json    the weather, and Oryx's rectangles within it
+                        (the clouds also by tools/build-sky.js — see below)
     oryx.png            his head and his two hands
     life/               316 creature portraits
     boss/               103 encounter portraits
@@ -153,29 +166,29 @@ The sources that are in the repository, and are edited by hand:
 
 ### The sky
 
-`sky.png` and `sky.json` are written by `buildSky()` in `realm-render.js`, and
-by nothing else. `sky.json` holds the rectangle of every cloud on the sheet and
-Oryx's three rectangles beside them; the page picks a cloud for each of its 78
-banks by index, so the *order* of the clouds is part of the contract.
+`sky.png` and `sky.json` hold the rectangle of every cloud on the sheet and
+Oryx's three rectangles beside them. Oryx's point into `oryx.png`, not into
+the cloud sheet, so the two halves of that file are independent.
 
-Until now they had no sources at all: the eighteen were arithmetic, stacks of
-ellipses shaded by how far each pixel lies under the crest of its own lobe.
-There is now a folder instead, and anything in it wins:
+The clouds are drawings now and they live in the repository:
 
-    data/Realm/clouds/01-name.png   one cloud per file, any name after the number
+    data/Realm/clouds/NN-name.png   one cloud per file
 
-Taken in the order the names sort — hence the numbers, because a bank that
-changes shape between builds is a bank that visibly jumps. Each file is cut
-from its paper by flooding in from the border (so white *inside* the drawing
-survives), trimmed to what is actually drawn, and eased down to at most 110
-pixels across by averaging whole blocks. Alpha already in the file is honoured,
-so a proper cut-out needs no keying. Drop nineteen files in and the eighteen
-built ones are skipped entirely; empty or remove the folder and they come back.
+Taken in the order the names sort — hence the numbers, because the page picks
+a cloud for each of its banks by index and a bank that changes shape between
+builds is a bank that visibly jumps. Each file is honoured for the alpha it
+already carries, trimmed to what is actually drawn, and eased down by
+averaging whole blocks. There are twenty of them, cut out at 1254 square,
+coming to a 904 by 294 sheet.
 
-Do not write a second sky tool. This is the only reader of that folder and the
-only writer of those two files.
-
----
+**Two things write those files, and that is deliberate.** `buildSky()` in
+`realm-render.js` does it as part of a full build, and `tools/build-sky.js`
+does the clouds alone. The second exists because the first reads the
+recordings and is only on the machine that has them, while the clouds are
+drawings that have nothing to do with either — so without it there was no way
+to put a new sky in front of anyone from anywhere else. It reads the same
+folder under the same rule and leaves the Oryx rectangles exactly as it found
+them, so the two agree; if you change how a cloud is cut, change it in both.
 
 ## What is not available here
 
@@ -424,9 +437,211 @@ thing on the map that is not the game's own art, and `ORYX_FROM` is written in
 floors rather than in zooms so that he is never showing at the distance the
 map opens at, whatever the window is shaped like.
 
+## The weather, the camera and the site — third session
+
+Ten things were asked for on the atlas and four on the site around it. Two of
+the ten had already been done from the other machine (the line round the
+chart, and everything that had overgrown the map), which is worth checking
+before starting: measure first, and the list may be shorter than it looks.
+
+### The weather is in front of the camera now, not on the map
+
+It used to be laid out in tiles and put through the same projection as the
+ground — defensible, and wrong to look at: drag the realm and the sky came
+with it, as though the whole sky were painted on the glass of the map rather
+than hanging in front of it. A bank has a place on a disc of sky instead, and
+the realm slides about underneath it.
+
+The sky is the smaller of the world and the window, and the handover between
+the two is invisible because they are the same size at the moment it happens:
+the disc reaches `SKY_SPAN` of the screen diagonal just as the weather starts
+to lift. Below that the sky is the disc and is clipped to it, since there is
+black space round a small planet and no weather belongs in it; above it the
+ground fills the window and a bank shoved out of frame should leave by the
+edge of the glass.
+
+Coming down through it is the whole of the effect, and two curves make it
+read. The shoving is the *square* of the approach, because the approach is
+measured by ratio and a straight reading has the sky parting within a notch
+or two of the wheel — squared, the first half barely moves them and the
+second half throws them past the edges. And the fading is deliberately out of
+step with the shoving: a bank holds nearly full weight for the first half and
+gives it up over the second, because a cloud that thins at the rate it
+travels reads as weather evaporating in place rather than being pushed aside.
+
+Forty-four banks, dealt the twenty drawings round and then shuffled rather
+than rolling one each — rolled, some shapes came up six times and two never
+came up at all, and a fixed seed means never is for ever. Seventy-eight banks
+of the drawn clouds came to twice the area of the planet and left the realm as
+glimpses between them; the arithmetic ones they replaced were faint enough
+that seventy-eight read as haze.
+
+### Oryx is re-lit in the page, not in the picture
+
+The sheet arrives lit for space — dimmed and tinted by how far each part of
+him lies from the world below and the lamps in his helm. Right idea, wrong
+amount, in both directions. The world is blue, so a gauntlet holding it came
+back the colour of cold steel: nearly half the pixels of a hand were bluer
+than red and the claw rims peaked at 179,227,253, which is chrome, not
+armour. And the head, lit from the front by its own fire, ended as a bright
+crimson silhouette cut cleanly out of the night.
+
+So `oryxPaint()` re-lights the sheet once, on first use, into a canvas of its
+own. The hands are pulled towards the darkest of their own three channels —
+not towards their red, since half of these pixels are warmer than they are
+cold and pulling those towards red would brighten them — and then dimmed
+hardest where they were brightest. Measured: peak 178,227,253 to 87,95,95,
+and pixels bluer than red from 47% to 10%. The head keeps its fire and loses
+its outline, by a two-pass distance transform from the silhouette: within
+`HEAD_DEEP` pixels of the edge it goes down towards nothing, and anything
+much redder than it is anything else is spared, so the seams and the eyes are
+untouched. Measured: the five-pixel rim from 45.3 to 28.3, the core from 41.0
+to 37.8.
+
+It is done in the page rather than in the picture because the picture is
+baked on the machine with the client, and the amount of it is a thing to be
+looked at and changed. `HAND_CAST`, `HAND_LIGHT`, `HAND_SHEEN`, `HEAD_RIM`
+and `HEAD_DEEP` are the five numbers.
+
+### Coming home is a walk, not a step
+
+Asking every frame whether the pin is over water, and drifting only while the
+answer is yes, ended the walk the moment the answer changed — and the first
+thing the pin meets coming in from open sea is the coast. So the view came
+back as far as the edge of the map and stopped, with the realm hanging off one
+side of the window: rescued from looking at nothing and left looking at a
+corner. The question is asked once now, to start the walk, and the walk
+finishes what it began; a hand on the map or a turn of the wheel ends it, and
+it re-arms by itself. Measured from three starting points: it lands within
+four to ten tiles of the middle of the focus box.
+
+### The wheel over nothing at all
+
+Past the limb of the world there is no tile under the pointer and the
+projection says so by answering with `NaN` — which went straight into the
+middle of the view, and a view with no number for a middle draws no ground,
+no things and no weather. Standing right back, the whole outer half of the
+window is off the world and Oryx's hands are out there in it, so a roll of the
+wheel anywhere over a hand blacked the map out until the page was reloaded.
+With nothing under the pointer there is nothing to hold in place, so the zoom
+now simply happens about the middle of the view.
+
+### What the map cost, and what it costs now
+
+Three things, and the first two are worth more than they sound.
+
+**A band of the world is as deep as the curve allows.** It used to be three
+pixels everywhere, and three pixels is the right answer in exactly one place:
+the far view, where the disc is small and the ground near the limb turns away
+almost vertically. Come in to five tiles a pixel and the world is twelve
+thousand pixels across, the window covers a thirtieth of a radian of it, and
+the curve across that is measured in thousandths of a pixel — and it was
+being taken in three-pixel slices, three hundred and sixty of them, thirteen
+pieces each. The depth is chosen from the error now, the way the width beside
+it already was, and two bounds pull it in: the bend down the band, and the
+squeeze from drawing a whole band at one `cos(lat)`. **The second is the one a
+naive version gets wrong** — leave it out and the far view, where it is the
+binding one, gets forty-pixel bands and eleven pixels of error.
+
+**`FLAT_ENOUGH` went from half a pixel to a pixel and a half.** At a half the
+world stayed round until about nine tiles to the pixel, which is past where
+the closest level of ground comes in — and that level's water drifts, so the
+disc could not be kept between frames. A pixel and a half puts the changeover
+just below it. The round silhouette is never what is given up: at the
+changeover the world is `reach^1.5 / sqrt(6 * FLAT_ENOUGH)` pixels across,
+which exceeds `reach` for any window bigger than a few dozen pixels, so the
+limb is always far outside the frame when it happens. The water is also given
+a fixed moment while the world is round, so the disc can be kept at the
+closest level too — that is for large windows, where the world stays worth
+bending well past the point the closest level arrives.
+
+**The scenery is capped by how thickly it lies.** The standing layer is one
+`drawImage` per piece and a piece costs about five microseconds however small
+it is — the mean piece where scenery arrives covers seventy pixels, so nothing
+is being filled; it is the call. Measured at 1920 by 1080 the moment the
+closest level comes in: 32,836 things scanned, 7,059 in frame, 5,335 drawn,
+27.3 ms of blits against 2.5 for the scan and 0.4 for the sort. Ninety per
+cent of the frame is blits and there is no arithmetic to take out of it, so
+the only move is to draw fewer. Every chunk is allowed the same pieces per
+tile and a chunk over its share keeps a fixed fraction, so a crowded wood
+thins and open ground is untouched. Because the allowance rises as the square
+of the zoom and a chunk's thickness is constant, the fraction only grows as
+you come down: a piece being drawn stays drawn, the rest arrive as you get
+closer, and panning changes nothing. Which pieces are kept is a hash of where
+they sit in the file. Anything taller than `THING_BIG` is kept regardless —
+what is thinned is the clutter, and where this bites four fifths of the layer
+is one ten-pixel tuft.
+
+Whole frames, mean over twelve, panning, on this machine:
+
+| zoom | 1280x720 before | after | 1920x1080 before | after |
+| --- | --- | --- | --- | --- |
+| 1 | 2.3 | 0.7 | 4.2 | 0.9 |
+| 3 | 7.2 | 1.2 | 12.3 | 1.5 |
+| 5 | 5.5 | 0.6 | 10.9 | 1.0 |
+| 5.7 | 19.0 | 9.8 | 35.7 | 12.3 |
+| 8 | 3.2 | 5.8 | 16.5 | 13.0 |
+| 20 | 3.5 | 1.2 | 2.8 | 2.5 |
+
+The band from one to five is ten times cheaper; the closest level is about
+twice. What is left at 5.7 to 8 is the blits, and `THING_MANY` is the one
+number that trades detail for frames there.
+
+### The site around it
+
+- **One switch for everything that moves.** It used to sit in the Enchant
+  Calculator's masthead, in twelve-point grey, saying "Realm" — so on four of
+  the five pages there was no way to stop the movement at all. It is fixed in
+  the top right of every page now, says which way it is set, and reaches the
+  atlas: the frame is sent `{rotmg: "animate", on}` and freezes the clock its
+  moving things read, while still drawing, so dragging and zooming carry on
+  working. Turning it back on picks the clock up where it left off rather
+  than jumping forward and flinging every cloud across the sky. Fixed means
+  out of the flow, so every masthead was given room on the right — without it
+  the switch sat on top of "Reset everything" and made it unclickable.
+- **One base of item artwork.** There were two sets and neither knew about
+  the other: `assets/items` holds sixteen hundred still icons and is what the
+  calculator reads, `assets/whats-new` holds the hundred-odd pieces cut from
+  the newest client — every item the last update added — and was read only by
+  the What's New page. So an update's own items were the only ones in the
+  picker with no picture. `foldNewsSprites()` joins them, and is the only
+  place that happens: nothing is copied and nothing is moved, the curated icon
+  wins where there is one, and stills only, since a multi-frame clip is one
+  strip in one file and an `<img>` pointed at a strip shows the whole run. The
+  next update needs no work. The three Venerable rings have art in neither set
+  and keep their slot glyph.
+- **The data line carries two dates.** The update the items and notes cover,
+  and the client the enchanting odds were read from. Both, because they are
+  not interchangeable and showing only the newer would claim the odds are as
+  fresh as the news. The build id, which means nothing to anybody, moved to
+  the tooltip. The update date is read out of the What's New index during the
+  sprite load, so the line costs no fetch of its own.
+- **A banner was cut in half.** `nchant Calculator ----- -->` was showing as
+  text at the top of every page: the Realm Atlas page had been inserted above
+  What's New and taken the banner belonging to it, and the opener of the next
+  one had gone with the edit. All three are back.
+
+### Two smaller things found on the way
+
+- **The bench cut assumed bare newlines.** `realm-atlas-build.js` strips the
+  bench out of any published copy with three patterns spelled `\n`, and the
+  template is checked out with carriage returns — so all three missed, the
+  guard behind them fired, and publishing stopped dead on a fresh clone. They
+  are `\r?\n` now. This would have bitten the next publish from anywhere.
+- **The frame clock cannot run backwards.** `delta` had no lower bound, and
+  everything downstream multiplies by it, so a clock that went backwards drove
+  the easing, the walk home and the creatures backwards with it.
+
 ## Still to do
 
 Roughly in the order it was asked for.
+
+- **The client has not been read since 23 August.** The data line says so
+  honestly and now shows the update it covers beside it, but the enchanting
+  odds themselves are still that reading. `npm run scrape` and
+  `node tools/read-client.js --snapshot` want an installed client, so this
+  can only be done from the machine that has one; the What's New index
+  already knows about a newer one, which is where the second date comes from.
 
 - **The side panel.** Small, cramped, low contrast. Should show the zone's
   monsters by role (encounters, Heroes of Oryx, regular — the roles are in the
