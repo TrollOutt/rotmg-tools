@@ -2976,7 +2976,20 @@ function drawOneLife(one, box) {
 
 function drawLife(box) {
   if (view.scale < SHOW_LIFE) return 0;
-  const fade = Math.min(1, (view.scale - SHOW_LIFE) / 1.2);
+  /*
+   * Faded in over a step of the wheel, not over three of them.
+   *
+   * The fade is there so two thousand creatures do not appear all at once,
+   * and at a fifth of the zoom range it was doing something else as well: a
+   * creature drawn at a quarter opacity has its black outline drawn at a
+   * quarter too, and a quarter of black on grass is grey. Measured off the
+   * canvas, the darkest pixel anywhere near a creature at 3.4 was ninety-five
+   * where it should be nought - so the whole standing layer looked soft and
+   * washed out for a good part of the way in, and only sharpened once past
+   * 4.2. Over a third of a zoom it is a blink, and everything below it is
+   * drawn properly.
+   */
+  const fade = Math.min(1, (view.scale - SHOW_LIFE) / 0.35);
   const seen = seenRange(box, 60);
   const near = { x: seen.x0, y: seen.y0 }, far = { x: seen.x1, y: seen.y1 };
   ctx.globalAlpha = fade;
