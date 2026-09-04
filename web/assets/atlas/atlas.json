@@ -16312,7 +16312,64 @@
     }
    ],
    "rank": "Rookie",
-   "wiki": "low-desert"
+   "wiki": "high-desert",
+   "regular": [
+    {
+     "name": "Flamer King",
+     "art": "flamer-king.png",
+     "hp": 1000,
+     "def": 7,
+     "exp": 80,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 2 Rings"
+     ]
+    },
+    {
+     "name": "Flayer God",
+     "art": "flayer-god.png",
+     "hp": 1400,
+     "def": 12,
+     "exp": 560,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 4 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Ancient Ruins"
+     ]
+    },
+    {
+     "name": "Minotaur",
+     "art": "minotaur.png",
+     "hp": 850,
+     "def": 7,
+     "exp": 288,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 5 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Adventurer’s Scarf",
+      "Ancient Ruins"
+     ]
+    }
+   ]
   },
   {
    "index": 31,
@@ -16434,7 +16491,64 @@
     }
    ],
    "rank": "Rookie",
-   "wiki": "low-desert"
+   "wiki": "high-desert",
+   "regular": [
+    {
+     "name": "Flamer King",
+     "art": "flamer-king.png",
+     "hp": 1000,
+     "def": 7,
+     "exp": 80,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 2 Rings"
+     ]
+    },
+    {
+     "name": "Flayer God",
+     "art": "flayer-god.png",
+     "hp": 1400,
+     "def": 12,
+     "exp": 560,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 4 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Ancient Ruins"
+     ]
+    },
+    {
+     "name": "Minotaur",
+     "art": "minotaur.png",
+     "hp": 850,
+     "def": 7,
+     "exp": 288,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 5 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Adventurer’s Scarf",
+      "Ancient Ruins"
+     ]
+    }
+   ]
   },
   {
    "index": 32,
@@ -18322,30 +18436,71 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Parasite Chambers",
+      "art": "parasite-chambers.gif"
+     },
+     {
+      "name": "The Third Dimension",
+      "art": "the-third-dimension.png"
+     },
+     {
+      "name": "Deadwater Docks",
+      "art": "deadwater-docks.gif"
+     },
+     {
+      "name": "Cnidarian Reef",
+      "art": "cnidarian-reef.png"
+     },
+     {
+      "name": "High Tech Terror",
+      "art": "high-tech-terror.png"
+     },
+     {
+      "name": "Fungal Cavern",
+      "art": "fungal-cavern.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Cloak of the Deep",
+      "art": "cloak-of-the-deep.png"
+     },
+     {
+      "name": "Crystallised Fang’s Venom",
+      "art": "crystallised-fang-s-venom.png"
+     }
+    ],
     "items": [
      "Potion of Mana",
-     "Cloak of the Deep",
      "Greater Health Potion",
      "Greater Magic Potion",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Potion of Attack",
      "Potion of Vitality",
-     "Davy Jones’ Locker",
-     "Ocean Trench",
      "Wine Cellar Incantation",
-     "Parasite Chambers",
-     "The Third Dimension",
-     "Deadwater Docks",
-     "Cnidarian Reef",
-     "High Tech Terror",
      "Pet Eggs",
      "Helmet Rune",
      "Stat Increase Potions",
      "Potion of Life",
-     "Fang’s Venom Blueprint",
-     "Crystallised Fang’s Venom",
-     "Fungal Cavern"
+     "Fang’s Venom Blueprint"
     ]
    }
   },
@@ -19080,9 +19235,95 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Moonlight Village",
+      "art": "moonlight-village.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Fungal Cavern",
+      "art": "fungal-cavern.png"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "Lair of Draconis",
+      "art": "lair-of-draconis.png"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Secluded Thicket",
+      "art": "secluded-thicket.png"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Evolutionary Records",
+      "art": "evolutionary-records.png"
+     },
+     {
+      "name": "Crystallised Fang’s Venom",
+      "art": "crystallised-fang-s-venom.png"
+     },
+     {
+      "name": "Token of Warmth",
+      "art": "token-of-warmth.png"
+     },
+     {
+      "name": "Token of Happiness",
+      "art": "token-of-happiness.png"
+     },
+     {
+      "name": "Tablet of the King’s Avatar",
+      "art": "tablet-of-the-king-s-avatar.png"
+     },
+     {
+      "name": "Angel’s Fanfare",
+      "art": "angel-s-fanfare.png"
+     },
+     {
+      "name": "Inferno Pick",
+      "art": "inferno-pick.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Mana",
-     "Evolutionary Records",
      "Greater Health Potion",
      "Greater Magic Potion",
      "Common Pet Eggs",
@@ -19092,34 +19333,16 @@
      "Potion of Life",
      "Potion of Speed",
      "Pet Eggs",
-     "Moonlight Village",
      "Potion of Wisdom",
-     "The Crawling Depths",
      "Helmet Rune",
      "Fang’s Venom Blueprint",
-     "Crystallised Fang’s Venom",
-     "Fungal Cavern",
-     "Tomb of the Ancients",
      "Potion of Vitality",
-     "Sulfurous Wetlands",
-     "Lair of Draconis",
-     "Woodland Labyrinth",
-     "Secluded Thicket",
-     "The Tavern",
      "Sword Rune",
      "Token of Warmth Blueprint",
      "Token of Happiness Blueprint",
-     "Token of Warmth",
-     "Token of Happiness",
      "King’s Blueprint",
-     "Tablet of the King’s Avatar",
      "Wine Cellar Incantation",
-     "Rare Pet Eggs",
-     "Angel’s Fanfare",
-     "Inferno Pick",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -20040,9 +20263,151 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Ice Citadel",
+      "art": "ice-citadel.png"
+     },
+     {
+      "name": "The Third Dimension",
+      "art": "the-third-dimension.png"
+     },
+     {
+      "name": "Kogbold Steamworks",
+      "art": "kogbold-steamworks.png"
+     },
+     {
+      "name": "Advanced Kogbold Steamworks",
+      "art": "advanced-kogbold-steamworks.png"
+     },
+     {
+      "name": "Fungal Cavern",
+      "art": "fungal-cavern.png"
+     },
+     {
+      "name": "Lair of Draconis",
+      "art": "lair-of-draconis.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     },
+     {
+      "name": "Heroic Undead Lair",
+      "art": "heroic-undead-lair.png"
+     },
+     {
+      "name": "Deadwater Docks",
+      "art": "deadwater-docks.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Lost Halls",
+      "art": "lost-halls.png"
+     },
+     {
+      "name": "Neo Malogia",
+      "art": "neo-malogia.png"
+     },
+     {
+      "name": "Neo Untaris",
+      "art": "neo-untaris.png"
+     },
+     {
+      "name": "Neo Katalund",
+      "art": "neo-katalund.png"
+     },
+     {
+      "name": "Neo Forax",
+      "art": "neo-forax.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Runes of Knowledge",
+      "art": "runes-of-knowledge.png"
+     },
+     {
+      "name": "Kogbold Multitool",
+      "art": "kogbold-multitool.png"
+     },
+     {
+      "name": "Crystallised Fang’s Venom",
+      "art": "crystallised-fang-s-venom.png"
+     },
+     {
+      "name": "Deadly Keg",
+      "art": "deadly-keg.png"
+     },
+     {
+      "name": "Mighty Stein",
+      "art": "mighty-stein.png"
+     },
+     {
+      "name": "Greaterhosen",
+      "art": "greaterhosen.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Cloak of Bloody Surprises",
+      "art": "cloak-of-bloody-surprises.png"
+     },
+     {
+      "name": "Fitted Protective Matrix",
+      "art": "fitted-protective-matrix.png"
+     },
+     {
+      "name": "Magic Protective Matrix",
+      "art": "magic-protective-matrix.png"
+     },
+     {
+      "name": "Heavy Protective Matrix",
+      "art": "heavy-protective-matrix.png"
+     },
+     {
+      "name": "Laser Rifle",
+      "art": "laser-rifle.png"
+     },
+     {
+      "name": "Harmonious Harp",
+      "art": "harmonious-harp.png"
+     },
+     {
+      "name": "Electric Guitar",
+      "art": "electric-guitar.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Mana",
-     "Runes of Knowledge",
      "Greater Health Potion",
      "Greater Magic Potion",
      "Common Pet Eggs",
@@ -20052,25 +20417,13 @@
      "Potion of Defense",
      "Potion of Life",
      "Pet Eggs",
-     "Ice Citadel",
-     "The Third Dimension",
      "Kogbold Multitool Blueprint",
-     "Kogbold Multitool",
-     "Kogbold Steamworks",
-     "Advanced Kogbold Steamworks",
      "Shield Rune",
      "Sword Rune",
      "Fang’s Venom Blueprint",
-     "Crystallised Fang’s Venom",
-     "Fungal Cavern",
      "Helmet Rune",
      "Wine Cellar Incantation",
-     "Lair of Draconis",
      "Potion of Vitality",
-     "Ocean Trench",
-     "Mountain Temple",
-     "Heroic Undead Lair",
-     "Deadwater Docks",
      "Oktoberfest Beer",
      "Lime Green Dyes",
      "Dark Orange Clothing Dye",
@@ -20078,32 +20431,12 @@
      "Deadly Keg Blueprint",
      "Mighty Stein Blueprint",
      "Greaterhosen Blueprint",
-     "Deadly Keg",
-     "Mighty Stein",
-     "Greaterhosen",
-     "The Tavern",
      "Mini Lord Pet Skin",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
      "Bloody Surprise Blueprint",
-     "Cloak of Bloody Surprises",
-     "Lost Halls",
      "Space Smuggler Rogue",
-     "Fitted Protective Matrix",
-     "Magic Protective Matrix",
-     "Heavy Protective Matrix",
-     "Laser Rifle",
      "Neo Essence",
-     "Neo Malogia",
-     "Neo Untaris",
-     "Neo Katalund",
-     "Neo Forax",
-     "Rare Pet Eggs",
-     "Harmonious Harp",
-     "Electric Guitar",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -21135,8 +21468,142 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "The Machine",
+      "art": "the-machine.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Candyland Hunting Grounds",
+      "art": "candyland-hunting-grounds.png"
+     },
+     {
+      "name": "Cave of a Thousand Treasures",
+      "art": "cave-of-a-thousand-treasures.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Abyss of Demons",
+      "art": "abyss-of-demons.gif"
+     },
+     {
+      "name": "The Third Dimension",
+      "art": "the-third-dimension.png"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     },
+     {
+      "name": "Lair of Draconis",
+      "art": "lair-of-draconis.png"
+     },
+     {
+      "name": "Malogia",
+      "art": "malogia.png"
+     },
+     {
+      "name": "Untaris",
+      "art": "untaris.png"
+     },
+     {
+      "name": "Katalund",
+      "art": "katalund.png"
+     },
+     {
+      "name": "Forax",
+      "art": "forax.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Cavalry Lance",
+      "art": "cavalry-lance.png"
+     },
+     {
+      "name": "Hama Yumi",
+      "art": "hama-yumi.png"
+     },
+     {
+      "name": "Traveler’s Trinket",
+      "art": "traveler-s-trinket.png"
+     },
+     {
+      "name": "Dirk of Cronus",
+      "art": "dirk-of-cronus.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Ray Katana",
+      "art": "ray-katana.png"
+     },
+     {
+      "name": "Fitted Protective Matrix",
+      "art": "fitted-protective-matrix.png"
+     },
+     {
+      "name": "Magic Protective Matrix",
+      "art": "magic-protective-matrix.png"
+     },
+     {
+      "name": "Heavy Protective Matrix",
+      "art": "heavy-protective-matrix.png"
+     },
+     {
+      "name": "Watarimono",
+      "art": "watarimono.png"
+     },
+     {
+      "name": "Reinforced Root Armor",
+      "art": "reinforced-root-armor.png"
+     },
+     {
+      "name": "Kiritsukeru",
+      "art": "kiritsukeru.png"
+     }
+    ],
     "items": [
-     "Cavalry Lance",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -21147,55 +21614,25 @@
      "Pet Eggs",
      "Shield Rune",
      "Potion of Speed",
-     "The Machine",
      "Wine Cellar Incantation",
-     "Snake Pit",
-     "Ancient Ruins",
      "Tarot Card Pack",
      "Hama Yumi Blueprint",
-     "Hama Yumi",
-     "Tomb of the Ancients",
      "Mini Beholder Pet Skin",
-     "Cursed Library",
      "Gumballs",
      "Rock Candy",
-     "Candyland Hunting Grounds",
      "Mini Djinn Pet Skin",
-     "Cave of a Thousand Treasures",
-     "Magic Woods",
      "Mini Flying Brain Pet Skin",
-     "Mad Lab",
      "Mini Medusa Pet Skin",
-     "Traveler’s Trinket",
      "Mini Slime God Pet Skin",
-     "Toxic Sewers",
-     "Puppet Master’s Theatre",
-     "Abyss of Demons",
      "Cronus Blueprint",
-     "Dirk of Cronus",
-     "The Third Dimension",
      "Mini Sphinx Pet Skin",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
      "King’s Blueprint",
      "Minotaur Mace",
-     "Puppet Master’s Encore",
      "Ray Katana Blueprint",
-     "Ray Katana",
-     "Lair of Draconis",
      "UFO Cloths",
      "Space Smuggler Rogue",
-     "Fitted Protective Matrix",
-     "Magic Protective Matrix",
-     "Heavy Protective Matrix",
      "Miniature Alien Generator",
-     "Malogia",
-     "Untaris",
-     "Katalund",
-     "Forax",
-     "Watarimono",
-     "Reinforced Root Armor",
-     "Kiritsukeru",
      "Rare Pet Eggs"
     ]
    }
@@ -21818,10 +22255,56 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Cnidarian Reef",
+      "art": "cnidarian-reef.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Cave of a Thousand Treasures",
+      "art": "cave-of-a-thousand-treasures.png"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Beachzone",
+      "art": "beachzone.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Torrential Staff",
+      "art": "torrential-staff.png"
+     },
+     {
+      "name": "Barnacle Basher",
+      "art": "barnacle-basher.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Torrential Staff",
      "Health Potion",
      "Magic Potion",
      "Potion of Wisdom",
@@ -21829,20 +22312,12 @@
      "Potion of Speed",
      "Stat Increase Potions",
      "Barnacle Blueprint",
-     "Barnacle Basher",
-     "Cnidarian Reef",
      "Potion of Life",
      "Potion of Mana",
-     "Snake Pit",
-     "Puppet Master’s Theatre",
-     "Cave of a Thousand Treasures",
-     "Toxic Sewers",
      "Pet Eggs",
      "Shield Rune",
      "Hermit Wizard Skin",
-     "Ocean Trench",
      "Davy’s Key",
-     "Beachzone",
      "Wine Cellar Incantation"
     ]
    }
@@ -22660,8 +23135,82 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Haunted Cemetery",
+      "art": "haunted-cemetery.gif"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Mace of the Pumpkin Effigy",
+      "art": "mace-of-the-pumpkin-effigy.png"
+     },
+     {
+      "name": "Orb of Conflict",
+      "art": "orb-of-conflict.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Kageboshi",
+      "art": "kageboshi.png"
+     },
+     {
+      "name": "Memento Mori",
+      "art": "memento-mori.png"
+     },
+     {
+      "name": "Interregnum",
+      "art": "interregnum.png"
+     }
+    ],
     "items": [
-     "Mace of the Pumpkin Effigy",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -22672,30 +23221,15 @@
      "Stat Increase Potions",
      "Pet Eggs",
      "Shield Rune",
-     "Undead Lair",
      "Wine Cellar Incantation",
-     "Puppet Master’s Theatre",
      "Conflict Blueprint",
-     "Orb of Conflict",
-     "Mad Lab",
-     "Cursed Library",
      "Potion of Speed",
      "Mini Ghost God Pet Skin",
      "Potion of Defense",
      "Potion of Attack",
      "Headless Rider Skin",
-     "Haunted Cemetery",
-     "Magic Woods",
-     "Snake Pit",
-     "Woodland Labyrinth",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
-     "The Tavern",
      "Kageboshi Blueprint",
-     "Kageboshi",
-     "Mountain Temple",
-     "Memento Mori",
-     "Interregnum",
      "Rare Pet Eggs"
     ]
    }
@@ -23478,9 +24012,103 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "The Nest",
+      "art": "the-nest.png"
+     },
+     {
+      "name": "Plagued Nest",
+      "art": "plagued-nest.png"
+     },
+     {
+      "name": "Moonlight Village",
+      "art": "moonlight-village.png"
+     },
+     {
+      "name": "Secluded Thicket",
+      "art": "secluded-thicket.png"
+     },
+     {
+      "name": "Lair of Draconis",
+      "art": "lair-of-draconis.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Infernal Abyss of Demons",
+      "art": "infernal-abyss-of-demons.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     },
+     {
+      "name": "Kogbold Steamworks",
+      "art": "kogbold-steamworks.png"
+     },
+     {
+      "name": "Advanced Kogbold Steamworks",
+      "art": "advanced-kogbold-steamworks.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Pollen Incendiary",
+      "art": "pollen-incendiary.png"
+     },
+     {
+      "name": "Token of Warmth",
+      "art": "token-of-warmth.png"
+     },
+     {
+      "name": "Token of Happiness",
+      "art": "token-of-happiness.png"
+     },
+     {
+      "name": "Kogbold Multitool",
+      "art": "kogbold-multitool.png"
+     },
+     {
+      "name": "Heavenly Halo",
+      "art": "heavenly-halo.png"
+     },
+     {
+      "name": "Pointy Tail",
+      "art": "pointy-tail.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Life",
-     "Pollen Incendiary",
      "Potion of Speed",
      "Greater Health Potion",
      "Greater Magic Potion",
@@ -23491,16 +24119,6 @@
      "Stat Increase Potions",
      "Pet Eggs",
      "Wine Cellar Incantation",
-     "Woodland Labyrinth",
-     "Sulfurous Wetlands",
-     "The Nest",
-     "Plagued Nest",
-     "Moonlight Village",
-     "Secluded Thicket",
-     "Lair of Draconis",
-     "The Crawling Depths",
-     "Infernal Abyss of Demons",
-     "Mountain Temple",
      "Helmet Rune",
      "Blue Beehemoth Blueprint",
      "Red Beehemoth Blueprint",
@@ -23510,19 +24128,9 @@
      "Yellow Beehemoth Quiver",
      "Token of Warmth Blueprint",
      "Token of Happiness Blueprint",
-     "Token of Warmth",
-     "Token of Happiness",
      "Sword Rune",
      "Kogbold Multitool Blueprint",
-     "Kogbold Multitool",
-     "Kogbold Steamworks",
-     "Advanced Kogbold Steamworks",
-     "Rare Pet Eggs",
-     "Heavenly Halo",
-     "Pointy Tail",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -24303,9 +24911,103 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Lost Halls",
+      "art": "lost-halls.png"
+     },
+     {
+      "name": "Parasite Chambers",
+      "art": "parasite-chambers.gif"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Lair of Shaitan",
+      "art": "lair-of-shaitan.png"
+     },
+     {
+      "name": "The Shatters",
+      "art": "the-shatters.png"
+     },
+     {
+      "name": "The Nest",
+      "art": "the-nest.png"
+     },
+     {
+      "name": "Plagued Nest",
+      "art": "plagued-nest.png"
+     },
+     {
+      "name": "Spectral Penitentiary",
+      "art": "spectral-penitentiary.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Bloodbath Blade",
+      "art": "bloodbath-blade.png"
+     },
+     {
+      "name": "Cloak of Bloody Surprises",
+      "art": "cloak-of-bloody-surprises.png"
+     },
+     {
+      "name": "Corruption Tether",
+      "art": "corruption-tether.png"
+     },
+     {
+      "name": "Tablet of the King’s Avatar",
+      "art": "tablet-of-the-king-s-avatar.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Wings of Sanctity",
+      "art": "wings-of-sanctity.png"
+     },
+     {
+      "name": "Wings of the Fallen",
+      "art": "wings-of-the-fallen.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Life",
-     "Bloodbath Blade",
      "Potion of Attack",
      "Potion of Wisdom",
      "Greater Health Potion",
@@ -24316,33 +25018,13 @@
      "Potion of Mana",
      "Pet Eggs",
      "Bloody Surprise Blueprint",
-     "Cloak of Bloody Surprises",
-     "Lost Halls",
-     "Parasite Chambers",
-     "Puppet Master’s Encore",
      "Helmet Rune",
      "Wine Cellar Incantation",
-     "The Crawling Depths",
-     "Woodland Labyrinth",
      "Sulferous Wetlands",
-     "Tomb of the Ancients",
-     "Lair of Shaitan",
      "Sword Rune",
      "King’s Blueprint",
-     "Corruption Tether",
-     "Tablet of the King’s Avatar",
-     "The Shatters",
-     "The Nest",
-     "Plagued Nest",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
-     "Spectral Penitentiary",
-     "Rare Pet Eggs",
-     "Wings of Sanctity",
-     "Wings of the Fallen",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -24360,7 +25042,7 @@
     1105,
     1508
    ],
-   "name": "High Plains",
+   "name": "Withered Plains",
    "named": true,
    "from": "walked",
    "roadSplit": [
@@ -24626,14 +25308,30 @@
       7
      ]
     },
+    "slots": {
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Health Potion",
      "Magic Potion",
-     "Adventurer’s Scarf",
      "Purple Drake Egg",
      "Common Pet Eggs",
-     "Uncommon Pet Eggs",
-     "Snake Pit"
+     "Uncommon Pet Eggs"
     ]
    }
   },
@@ -25394,9 +26092,103 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "The Nest",
+      "art": "the-nest.png"
+     },
+     {
+      "name": "Plagued Nest",
+      "art": "plagued-nest.png"
+     },
+     {
+      "name": "Moonlight Village",
+      "art": "moonlight-village.png"
+     },
+     {
+      "name": "Secluded Thicket",
+      "art": "secluded-thicket.png"
+     },
+     {
+      "name": "Lair of Draconis",
+      "art": "lair-of-draconis.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Infernal Abyss of Demons",
+      "art": "infernal-abyss-of-demons.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     },
+     {
+      "name": "Kogbold Steamworks",
+      "art": "kogbold-steamworks.png"
+     },
+     {
+      "name": "Advanced Kogbold Steamworks",
+      "art": "advanced-kogbold-steamworks.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Pollen Incendiary",
+      "art": "pollen-incendiary.png"
+     },
+     {
+      "name": "Token of Warmth",
+      "art": "token-of-warmth.png"
+     },
+     {
+      "name": "Token of Happiness",
+      "art": "token-of-happiness.png"
+     },
+     {
+      "name": "Kogbold Multitool",
+      "art": "kogbold-multitool.png"
+     },
+     {
+      "name": "Heavenly Halo",
+      "art": "heavenly-halo.png"
+     },
+     {
+      "name": "Pointy Tail",
+      "art": "pointy-tail.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Life",
-     "Pollen Incendiary",
      "Potion of Speed",
      "Greater Health Potion",
      "Greater Magic Potion",
@@ -25407,16 +26199,6 @@
      "Stat Increase Potions",
      "Pet Eggs",
      "Wine Cellar Incantation",
-     "Woodland Labyrinth",
-     "Sulfurous Wetlands",
-     "The Nest",
-     "Plagued Nest",
-     "Moonlight Village",
-     "Secluded Thicket",
-     "Lair of Draconis",
-     "The Crawling Depths",
-     "Infernal Abyss of Demons",
-     "Mountain Temple",
      "Helmet Rune",
      "Blue Beehemoth Blueprint",
      "Red Beehemoth Blueprint",
@@ -25426,19 +26208,9 @@
      "Yellow Beehemoth Quiver",
      "Token of Warmth Blueprint",
      "Token of Happiness Blueprint",
-     "Token of Warmth",
-     "Token of Happiness",
      "Sword Rune",
      "Kogbold Multitool Blueprint",
-     "Kogbold Multitool",
-     "Kogbold Steamworks",
-     "Advanced Kogbold Steamworks",
-     "Rare Pet Eggs",
-     "Heavenly Halo",
-     "Pointy Tail",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -26210,9 +26982,103 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "The Nest",
+      "art": "the-nest.png"
+     },
+     {
+      "name": "Plagued Nest",
+      "art": "plagued-nest.png"
+     },
+     {
+      "name": "Moonlight Village",
+      "art": "moonlight-village.png"
+     },
+     {
+      "name": "Secluded Thicket",
+      "art": "secluded-thicket.png"
+     },
+     {
+      "name": "Lair of Draconis",
+      "art": "lair-of-draconis.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Infernal Abyss of Demons",
+      "art": "infernal-abyss-of-demons.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     },
+     {
+      "name": "Kogbold Steamworks",
+      "art": "kogbold-steamworks.png"
+     },
+     {
+      "name": "Advanced Kogbold Steamworks",
+      "art": "advanced-kogbold-steamworks.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Pollen Incendiary",
+      "art": "pollen-incendiary.png"
+     },
+     {
+      "name": "Token of Warmth",
+      "art": "token-of-warmth.png"
+     },
+     {
+      "name": "Token of Happiness",
+      "art": "token-of-happiness.png"
+     },
+     {
+      "name": "Kogbold Multitool",
+      "art": "kogbold-multitool.png"
+     },
+     {
+      "name": "Heavenly Halo",
+      "art": "heavenly-halo.png"
+     },
+     {
+      "name": "Pointy Tail",
+      "art": "pointy-tail.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Life",
-     "Pollen Incendiary",
      "Potion of Speed",
      "Greater Health Potion",
      "Greater Magic Potion",
@@ -26223,16 +27089,6 @@
      "Stat Increase Potions",
      "Pet Eggs",
      "Wine Cellar Incantation",
-     "Woodland Labyrinth",
-     "Sulfurous Wetlands",
-     "The Nest",
-     "Plagued Nest",
-     "Moonlight Village",
-     "Secluded Thicket",
-     "Lair of Draconis",
-     "The Crawling Depths",
-     "Infernal Abyss of Demons",
-     "Mountain Temple",
      "Helmet Rune",
      "Blue Beehemoth Blueprint",
      "Red Beehemoth Blueprint",
@@ -26242,19 +27098,9 @@
      "Yellow Beehemoth Quiver",
      "Token of Warmth Blueprint",
      "Token of Happiness Blueprint",
-     "Token of Warmth",
-     "Token of Happiness",
      "Sword Rune",
      "Kogbold Multitool Blueprint",
-     "Kogbold Multitool",
-     "Kogbold Steamworks",
-     "Advanced Kogbold Steamworks",
-     "Rare Pet Eggs",
-     "Heavenly Halo",
-     "Pointy Tail",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -26272,7 +27118,7 @@
     960,
     1650
    ],
-   "name": "Mid Plains",
+   "name": "Lime Plains",
    "named": true,
    "from": "walked",
    "roadSplit": [
@@ -26804,15 +27650,40 @@
       6
      ]
     },
+    "slots": {
+     "Rings": "ring.png",
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png"
+    },
+    "dungeons": [
+     {
+      "name": "Spider Den",
+      "art": "spider-den.png"
+     },
+     {
+      "name": "The Hive",
+      "art": "the-hive.png"
+     },
+     {
+      "name": "Forbidden Jungle",
+      "art": "forbidden-jungle.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     },
+     {
+      "name": "Traveler’s Trinket",
+      "art": "traveler-s-trinket.png"
+     }
+    ],
     "items": [
      "Magic Potion",
      "Health Potion",
-     "Adventurer’s Scarf",
-     "Spider Den",
-     "The Hive",
-     "Forbidden Jungle",
-     "Magic Mushroom",
-     "Traveler’s Trinket"
+     "Magic Mushroom"
     ]
    }
   },
@@ -27630,8 +28501,82 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Haunted Cemetery",
+      "art": "haunted-cemetery.gif"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Mace of the Pumpkin Effigy",
+      "art": "mace-of-the-pumpkin-effigy.png"
+     },
+     {
+      "name": "Orb of Conflict",
+      "art": "orb-of-conflict.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Kageboshi",
+      "art": "kageboshi.png"
+     },
+     {
+      "name": "Memento Mori",
+      "art": "memento-mori.png"
+     },
+     {
+      "name": "Interregnum",
+      "art": "interregnum.png"
+     }
+    ],
     "items": [
-     "Mace of the Pumpkin Effigy",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -27642,30 +28587,15 @@
      "Stat Increase Potions",
      "Pet Eggs",
      "Shield Rune",
-     "Undead Lair",
      "Wine Cellar Incantation",
-     "Puppet Master’s Theatre",
      "Conflict Blueprint",
-     "Orb of Conflict",
-     "Mad Lab",
-     "Cursed Library",
      "Potion of Speed",
      "Mini Ghost God Pet Skin",
      "Potion of Defense",
      "Potion of Attack",
      "Headless Rider Skin",
-     "Haunted Cemetery",
-     "Magic Woods",
-     "Snake Pit",
-     "Woodland Labyrinth",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
-     "The Tavern",
      "Kageboshi Blueprint",
-     "Kageboshi",
-     "Mountain Temple",
-     "Memento Mori",
-     "Interregnum",
      "Rare Pet Eggs"
     ]
    }
@@ -28483,8 +29413,82 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Haunted Cemetery",
+      "art": "haunted-cemetery.gif"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Mountain Temple",
+      "art": "mountain-temple.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Mace of the Pumpkin Effigy",
+      "art": "mace-of-the-pumpkin-effigy.png"
+     },
+     {
+      "name": "Orb of Conflict",
+      "art": "orb-of-conflict.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Kageboshi",
+      "art": "kageboshi.png"
+     },
+     {
+      "name": "Memento Mori",
+      "art": "memento-mori.png"
+     },
+     {
+      "name": "Interregnum",
+      "art": "interregnum.png"
+     }
+    ],
     "items": [
-     "Mace of the Pumpkin Effigy",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -28495,30 +29499,15 @@
      "Stat Increase Potions",
      "Pet Eggs",
      "Shield Rune",
-     "Undead Lair",
      "Wine Cellar Incantation",
-     "Puppet Master’s Theatre",
      "Conflict Blueprint",
-     "Orb of Conflict",
-     "Mad Lab",
-     "Cursed Library",
      "Potion of Speed",
      "Mini Ghost God Pet Skin",
      "Potion of Defense",
      "Potion of Attack",
      "Headless Rider Skin",
-     "Haunted Cemetery",
-     "Magic Woods",
-     "Snake Pit",
-     "Woodland Labyrinth",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
-     "The Tavern",
      "Kageboshi Blueprint",
-     "Kageboshi",
-     "Mountain Temple",
-     "Memento Mori",
-     "Interregnum",
      "Rare Pet Eggs"
     ]
    }
@@ -28779,10 +29768,26 @@
       1
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Forest Maze",
+      "art": "forest-maze.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Magic Potion",
-     "Adventurer’s Scarf",
-     "Forest Maze",
      "Health Potion",
      "Kendo Stick (Shiny)"
     ]
@@ -29537,8 +30542,86 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Manor of the Immortals",
+      "art": "manor-of-the-immortals.png"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     },
+     {
+      "name": "Heroic Undead Lair",
+      "art": "heroic-undead-lair.png"
+     },
+     {
+      "name": "Haunted Cemetery",
+      "art": "haunted-cemetery.gif"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Skull of Restless Souls",
+      "art": "skull-of-restless-souls.png"
+     },
+     {
+      "name": "Seal of Blasphemous Prayer",
+      "art": "seal-of-blasphemous-prayer.png"
+     },
+     {
+      "name": "Ring of the Covetous Heart",
+      "art": "ring-of-the-covetous-heart.png"
+     },
+     {
+      "name": "Trap of the Vile Spirit",
+      "art": "trap-of-the-vile-spirit.png"
+     },
+     {
+      "name": "Soulless Robe",
+      "art": "soulless-robe.png"
+     },
+     {
+      "name": "Soul of the Bearer",
+      "art": "soul-of-the-bearer.png"
+     },
+     {
+      "name": "The Phylactery",
+      "art": "the-phylactery.png"
+     }
+    ],
     "items": [
-     "Skull of Restless Souls",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Potion of Attack",
@@ -29551,23 +30634,7 @@
      "Shield Rune",
      "Wine Cellar Incantation",
      "Blasphemous Blueprint",
-     "Seal of Blasphemous Prayer",
-     "Manor of the Immortals",
-     "Cursed Library",
-     "Ancient Ruins",
-     "Ring of the Covetous Heart",
-     "Undead Lair",
-     "Snake Pit",
-     "Tomb of the Ancients",
-     "Sulfurous Wetlands",
-     "Trap of the Vile Spirit",
-     "Davy Jones’ Locker",
      "Potion of Speed",
-     "Soulless Robe",
-     "Heroic Undead Lair",
-     "Soul of the Bearer",
-     "Haunted Cemetery",
-     "The Phylactery",
      "Rare Pet Eggs"
     ]
    }
@@ -30057,14 +31124,39 @@
       3
      ]
     },
+    "slots": {
+     "Armor": "armor.png",
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Spider Den",
+      "art": "spider-den.png"
+     },
+     {
+      "name": "Forbidden Jungle",
+      "art": "forbidden-jungle.png"
+     },
+     {
+      "name": "Forest Maze",
+      "art": "forest-maze.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Health Potion",
-     "Magic Potion",
-     "Adventurer’s Scarf",
-     "Spider Den",
-     "Forbidden Jungle",
-     "Forest Maze",
-     "Magic Woods"
+     "Magic Potion"
     ]
    }
   },
@@ -30845,9 +31937,103 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Lost Halls",
+      "art": "lost-halls.png"
+     },
+     {
+      "name": "Parasite Chambers",
+      "art": "parasite-chambers.gif"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Lair of Shaitan",
+      "art": "lair-of-shaitan.png"
+     },
+     {
+      "name": "The Shatters",
+      "art": "the-shatters.png"
+     },
+     {
+      "name": "The Nest",
+      "art": "the-nest.png"
+     },
+     {
+      "name": "Plagued Nest",
+      "art": "plagued-nest.png"
+     },
+     {
+      "name": "Spectral Penitentiary",
+      "art": "spectral-penitentiary.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Bloodbath Blade",
+      "art": "bloodbath-blade.png"
+     },
+     {
+      "name": "Cloak of Bloody Surprises",
+      "art": "cloak-of-bloody-surprises.png"
+     },
+     {
+      "name": "Corruption Tether",
+      "art": "corruption-tether.png"
+     },
+     {
+      "name": "Tablet of the King’s Avatar",
+      "art": "tablet-of-the-king-s-avatar.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Wings of Sanctity",
+      "art": "wings-of-sanctity.png"
+     },
+     {
+      "name": "Wings of the Fallen",
+      "art": "wings-of-the-fallen.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Life",
-     "Bloodbath Blade",
      "Potion of Attack",
      "Potion of Wisdom",
      "Greater Health Potion",
@@ -30858,33 +32044,13 @@
      "Potion of Mana",
      "Pet Eggs",
      "Bloody Surprise Blueprint",
-     "Cloak of Bloody Surprises",
-     "Lost Halls",
-     "Parasite Chambers",
-     "Puppet Master’s Encore",
      "Helmet Rune",
      "Wine Cellar Incantation",
-     "The Crawling Depths",
-     "Woodland Labyrinth",
      "Sulferous Wetlands",
-     "Tomb of the Ancients",
-     "Lair of Shaitan",
      "Sword Rune",
      "King’s Blueprint",
-     "Corruption Tether",
-     "Tablet of the King’s Avatar",
-     "The Shatters",
-     "The Nest",
-     "Plagued Nest",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
-     "Spectral Penitentiary",
-     "Rare Pet Eggs",
-     "Wings of Sanctity",
-     "Wings of the Fallen",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -31569,10 +32735,88 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Cave of a Thousand Treasures",
+      "art": "cave-of-a-thousand-treasures.png"
+     },
+     {
+      "name": "Deadwater Docks",
+      "art": "deadwater-docks.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Pirate’s Artillery",
+      "art": "pirate-s-artillery.png"
+     },
+     {
+      "name": "Torrential Staff",
+      "art": "torrential-staff.png"
+     },
+     {
+      "name": "Deadly Keg",
+      "art": "deadly-keg.png"
+     },
+     {
+      "name": "Mighty Stein",
+      "art": "mighty-stein.png"
+     },
+     {
+      "name": "Greaterhosen",
+      "art": "greaterhosen.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Quiver of Thunder",
+      "art": "quiver-of-thunder.png"
+     },
+     {
+      "name": "Trap of the Vile Spirit",
+      "art": "trap-of-the-vile-spirit.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Pirate’s Artillery",
      "Health Potion",
      "Magic Potion",
      "Potion of Speed",
@@ -31582,13 +32826,7 @@
      "Shield Rune",
      "Pet Eggs",
      "Wine Cellar Incantation",
-     "Cave of a Thousand Treasures",
-     "Deadwater Docks",
-     "Ancient Ruins",
      "Potion of Vitality",
-     "Torrential Staff",
-     "Magic Woods",
-     "Undead Lair",
      "Oktoberfest Beer",
      "Lime Green Dyes",
      "Dark Orange Clothing Dye",
@@ -31596,19 +32834,9 @@
      "Deadly Keg Blueprint",
      "Mighty Stein Blueprint",
      "Greaterhosen Blueprint",
-     "Deadly Keg",
-     "Mighty Stein",
-     "Greaterhosen",
-     "The Tavern",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
-     "Quiver of Thunder",
-     "Ocean Trench",
      "Ghost Pirate Rum",
-     "Trap of the Vile Spirit",
-     "Davy Jones’ Locker",
      "Rare Pet Eggs"
     ]
    }
@@ -32342,31 +33570,72 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Abyss of Demons",
+      "art": "abyss-of-demons.gif"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Manor of the Immortals",
+      "art": "manor-of-the-immortals.png"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Lair of Shaitan",
+      "art": "lair-of-shaitan.png"
+     },
+     {
+      "name": "Infernal Abyss of Demons",
+      "art": "infernal-abyss-of-demons.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Doom’s Emblem",
+      "art": "doom-s-emblem.png"
+     },
+     {
+      "name": "Orb of Conflict",
+      "art": "orb-of-conflict.png"
+     },
+     {
+      "name": "Ring of the Inferno",
+      "art": "ring-of-the-inferno.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Doom’s Emblem",
      "Potion of Attack",
      "Health Potion",
      "Magic Potion",
      "Potion of Defense",
      "Potion of Vitality",
      "Wine Cellar Incantation",
-     "Abyss of Demons",
-     "Toxic Sewers",
      "Stat Increase Potions",
-     "Undead Lair",
-     "Manor of the Immortals",
-     "Cursed Library",
-     "Lair of Shaitan",
      "Mini White Demon Pet Skin",
      "Pet Eggs",
      "Shield Rune",
      "Conflict Blueprint",
-     "Orb of Conflict",
-     "Infernal Abyss of Demons",
      "Potion of Speed",
-     "Ring of the Inferno",
      "Rare Pet Eggs"
     ]
    }
@@ -32626,11 +33895,27 @@
       1
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Forest Maze",
+      "art": "forest-maze.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Health Potion",
      "Magic Potion",
-     "Adventurer’s Scarf",
-     "Forest Maze",
      "Kendo Stick (Shiny)"
     ]
    }
@@ -33322,8 +34607,86 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Manor of the Immortals",
+      "art": "manor-of-the-immortals.png"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     },
+     {
+      "name": "Heroic Undead Lair",
+      "art": "heroic-undead-lair.png"
+     },
+     {
+      "name": "Haunted Cemetery",
+      "art": "haunted-cemetery.gif"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Skull of Restless Souls",
+      "art": "skull-of-restless-souls.png"
+     },
+     {
+      "name": "Seal of Blasphemous Prayer",
+      "art": "seal-of-blasphemous-prayer.png"
+     },
+     {
+      "name": "Ring of the Covetous Heart",
+      "art": "ring-of-the-covetous-heart.png"
+     },
+     {
+      "name": "Trap of the Vile Spirit",
+      "art": "trap-of-the-vile-spirit.png"
+     },
+     {
+      "name": "Soulless Robe",
+      "art": "soulless-robe.png"
+     },
+     {
+      "name": "Soul of the Bearer",
+      "art": "soul-of-the-bearer.png"
+     },
+     {
+      "name": "The Phylactery",
+      "art": "the-phylactery.png"
+     }
+    ],
     "items": [
-     "Skull of Restless Souls",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Potion of Attack",
@@ -33336,23 +34699,7 @@
      "Shield Rune",
      "Wine Cellar Incantation",
      "Blasphemous Blueprint",
-     "Seal of Blasphemous Prayer",
-     "Manor of the Immortals",
-     "Cursed Library",
-     "Ancient Ruins",
-     "Ring of the Covetous Heart",
-     "Undead Lair",
-     "Snake Pit",
-     "Tomb of the Ancients",
-     "Sulfurous Wetlands",
-     "Trap of the Vile Spirit",
-     "Davy Jones’ Locker",
      "Potion of Speed",
-     "Soulless Robe",
-     "Heroic Undead Lair",
-     "Soul of the Bearer",
-     "Haunted Cemetery",
-     "The Phylactery",
      "Rare Pet Eggs"
     ]
    }
@@ -34006,10 +35353,88 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Cave of a Thousand Treasures",
+      "art": "cave-of-a-thousand-treasures.png"
+     },
+     {
+      "name": "Deadwater Docks",
+      "art": "deadwater-docks.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Pirate’s Artillery",
+      "art": "pirate-s-artillery.png"
+     },
+     {
+      "name": "Torrential Staff",
+      "art": "torrential-staff.png"
+     },
+     {
+      "name": "Deadly Keg",
+      "art": "deadly-keg.png"
+     },
+     {
+      "name": "Mighty Stein",
+      "art": "mighty-stein.png"
+     },
+     {
+      "name": "Greaterhosen",
+      "art": "greaterhosen.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Quiver of Thunder",
+      "art": "quiver-of-thunder.png"
+     },
+     {
+      "name": "Trap of the Vile Spirit",
+      "art": "trap-of-the-vile-spirit.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Pirate’s Artillery",
      "Health Potion",
      "Magic Potion",
      "Potion of Speed",
@@ -34019,13 +35444,7 @@
      "Shield Rune",
      "Pet Eggs",
      "Wine Cellar Incantation",
-     "Cave of a Thousand Treasures",
-     "Deadwater Docks",
-     "Ancient Ruins",
      "Potion of Vitality",
-     "Torrential Staff",
-     "Magic Woods",
-     "Undead Lair",
      "Oktoberfest Beer",
      "Lime Green Dyes",
      "Dark Orange Clothing Dye",
@@ -34033,19 +35452,9 @@
      "Deadly Keg Blueprint",
      "Mighty Stein Blueprint",
      "Greaterhosen Blueprint",
-     "Deadly Keg",
-     "Mighty Stein",
-     "Greaterhosen",
-     "The Tavern",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
-     "Quiver of Thunder",
-     "Ocean Trench",
      "Ghost Pirate Rum",
-     "Trap of the Vile Spirit",
-     "Davy Jones’ Locker",
      "Rare Pet Eggs"
     ]
    }
@@ -34819,8 +36228,62 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Sprite World",
+      "art": "sprite-world.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "The Third Dimension",
+      "art": "the-third-dimension.png"
+     },
+     {
+      "name": "Abyss of Demons",
+      "art": "abyss-of-demons.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Celestial Recurve",
+      "art": "celestial-recurve.png"
+     },
+     {
+      "name": "Dirk of Cronus",
+      "art": "dirk-of-cronus.png"
+     },
+     {
+      "name": "Ray Katana",
+      "art": "ray-katana.png"
+     }
+    ],
     "items": [
-     "Celestial Recurve",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -34829,23 +36292,13 @@
      "Tarot Card Pack",
      "Potion of Dexterity",
      "Potion of Vitality",
-     "Sprite World",
      "Stat Increase Potions",
      "Wine Cellar Incantation",
      "Pet Eggs",
      "Shield Rune",
-     "Magic Woods",
-     "Mad Lab",
      "Cronus Blueprint",
-     "Dirk of Cronus",
-     "The Third Dimension",
-     "Abyss of Demons",
-     "Puppet Master’s Theatre",
-     "Toxic Sewers",
      "Mini Sprite God Pet Skin",
      "Ray Katana Blueprint",
-     "Ray Katana",
-     "Puppet Master’s Encore",
      "Potion of Defense",
      "Potion of Wisdom",
      "Potion of Attack",
@@ -35467,8 +36920,86 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Manor of the Immortals",
+      "art": "manor-of-the-immortals.png"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Sulfurous Wetlands",
+      "art": "sulfurous-wetlands.png"
+     },
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     },
+     {
+      "name": "Heroic Undead Lair",
+      "art": "heroic-undead-lair.png"
+     },
+     {
+      "name": "Haunted Cemetery",
+      "art": "haunted-cemetery.gif"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Skull of Restless Souls",
+      "art": "skull-of-restless-souls.png"
+     },
+     {
+      "name": "Seal of Blasphemous Prayer",
+      "art": "seal-of-blasphemous-prayer.png"
+     },
+     {
+      "name": "Ring of the Covetous Heart",
+      "art": "ring-of-the-covetous-heart.png"
+     },
+     {
+      "name": "Trap of the Vile Spirit",
+      "art": "trap-of-the-vile-spirit.png"
+     },
+     {
+      "name": "Soulless Robe",
+      "art": "soulless-robe.png"
+     },
+     {
+      "name": "Soul of the Bearer",
+      "art": "soul-of-the-bearer.png"
+     },
+     {
+      "name": "The Phylactery",
+      "art": "the-phylactery.png"
+     }
+    ],
     "items": [
-     "Skull of Restless Souls",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Potion of Attack",
@@ -35481,23 +37012,7 @@
      "Shield Rune",
      "Wine Cellar Incantation",
      "Blasphemous Blueprint",
-     "Seal of Blasphemous Prayer",
-     "Manor of the Immortals",
-     "Cursed Library",
-     "Ancient Ruins",
-     "Ring of the Covetous Heart",
-     "Undead Lair",
-     "Snake Pit",
-     "Tomb of the Ancients",
-     "Sulfurous Wetlands",
-     "Trap of the Vile Spirit",
-     "Davy Jones’ Locker",
      "Potion of Speed",
-     "Soulless Robe",
-     "Heroic Undead Lair",
-     "Soul of the Bearer",
-     "Haunted Cemetery",
-     "The Phylactery",
      "Rare Pet Eggs"
     ]
    }
@@ -35516,7 +37031,7 @@
     1204,
     1675
    ],
-   "name": "High Forest",
+   "name": "Dark Forest",
    "named": true,
    "from": "walked",
    "roadSplit": [
@@ -35946,17 +37461,42 @@
       3
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     },
+     {
+      "name": "Memento Mori",
+      "art": "memento-mori.png"
+     },
+     {
+      "name": "Interregnum",
+      "art": "interregnum.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Adventurer’s Scarf",
-     "Ancient Ruins",
      "Health Potion",
-     "Snake Pit",
      "Purple Drake Egg",
-     "Magic Potion",
-     "Memento Mori",
-     "Interregnum"
+     "Magic Potion"
     ]
    }
   },
@@ -36741,8 +38281,62 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Sprite World",
+      "art": "sprite-world.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "The Third Dimension",
+      "art": "the-third-dimension.png"
+     },
+     {
+      "name": "Abyss of Demons",
+      "art": "abyss-of-demons.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Celestial Recurve",
+      "art": "celestial-recurve.png"
+     },
+     {
+      "name": "Dirk of Cronus",
+      "art": "dirk-of-cronus.png"
+     },
+     {
+      "name": "Ray Katana",
+      "art": "ray-katana.png"
+     }
+    ],
     "items": [
-     "Celestial Recurve",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -36751,23 +38345,13 @@
      "Tarot Card Pack",
      "Potion of Dexterity",
      "Potion of Vitality",
-     "Sprite World",
      "Stat Increase Potions",
      "Wine Cellar Incantation",
      "Pet Eggs",
      "Shield Rune",
-     "Magic Woods",
-     "Mad Lab",
      "Cronus Blueprint",
-     "Dirk of Cronus",
-     "The Third Dimension",
-     "Abyss of Demons",
-     "Puppet Master’s Theatre",
-     "Toxic Sewers",
      "Mini Sprite God Pet Skin",
      "Ray Katana Blueprint",
-     "Ray Katana",
-     "Puppet Master’s Encore",
      "Potion of Defense",
      "Potion of Wisdom",
      "Potion of Attack",
@@ -37590,8 +39174,62 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Sprite World",
+      "art": "sprite-world.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Mad Lab",
+      "art": "mad-lab.gif"
+     },
+     {
+      "name": "The Third Dimension",
+      "art": "the-third-dimension.png"
+     },
+     {
+      "name": "Abyss of Demons",
+      "art": "abyss-of-demons.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Celestial Recurve",
+      "art": "celestial-recurve.png"
+     },
+     {
+      "name": "Dirk of Cronus",
+      "art": "dirk-of-cronus.png"
+     },
+     {
+      "name": "Ray Katana",
+      "art": "ray-katana.png"
+     }
+    ],
     "items": [
-     "Celestial Recurve",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
      "Health Potion",
@@ -37600,23 +39238,13 @@
      "Tarot Card Pack",
      "Potion of Dexterity",
      "Potion of Vitality",
-     "Sprite World",
      "Stat Increase Potions",
      "Wine Cellar Incantation",
      "Pet Eggs",
      "Shield Rune",
-     "Magic Woods",
-     "Mad Lab",
      "Cronus Blueprint",
-     "Dirk of Cronus",
-     "The Third Dimension",
-     "Abyss of Demons",
-     "Puppet Master’s Theatre",
-     "Toxic Sewers",
      "Mini Sprite God Pet Skin",
      "Ray Katana Blueprint",
-     "Ray Katana",
-     "Puppet Master’s Encore",
      "Potion of Defense",
      "Potion of Wisdom",
      "Potion of Attack",
@@ -38237,10 +39865,88 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Cave of a Thousand Treasures",
+      "art": "cave-of-a-thousand-treasures.png"
+     },
+     {
+      "name": "Deadwater Docks",
+      "art": "deadwater-docks.gif"
+     },
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "The Tavern",
+      "art": "the-tavern.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Davy Jones’ Locker",
+      "art": "davy-jones-locker.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Pirate’s Artillery",
+      "art": "pirate-s-artillery.png"
+     },
+     {
+      "name": "Torrential Staff",
+      "art": "torrential-staff.png"
+     },
+     {
+      "name": "Deadly Keg",
+      "art": "deadly-keg.png"
+     },
+     {
+      "name": "Mighty Stein",
+      "art": "mighty-stein.png"
+     },
+     {
+      "name": "Greaterhosen",
+      "art": "greaterhosen.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Helm of the Juggernaut",
+      "art": "helm-of-the-juggernaut.png"
+     },
+     {
+      "name": "Quiver of Thunder",
+      "art": "quiver-of-thunder.png"
+     },
+     {
+      "name": "Trap of the Vile Spirit",
+      "art": "trap-of-the-vile-spirit.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Pirate’s Artillery",
      "Health Potion",
      "Magic Potion",
      "Potion of Speed",
@@ -38250,13 +39956,7 @@
      "Shield Rune",
      "Pet Eggs",
      "Wine Cellar Incantation",
-     "Cave of a Thousand Treasures",
-     "Deadwater Docks",
-     "Ancient Ruins",
      "Potion of Vitality",
-     "Torrential Staff",
-     "Magic Woods",
-     "Undead Lair",
      "Oktoberfest Beer",
      "Lime Green Dyes",
      "Dark Orange Clothing Dye",
@@ -38264,19 +39964,9 @@
      "Deadly Keg Blueprint",
      "Mighty Stein Blueprint",
      "Greaterhosen Blueprint",
-     "Deadly Keg",
-     "Mighty Stein",
-     "Greaterhosen",
-     "The Tavern",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
      "Juggernaut Blueprint",
-     "Helm of the Juggernaut",
-     "Quiver of Thunder",
-     "Ocean Trench",
      "Ghost Pirate Rum",
-     "Trap of the Vile Spirit",
-     "Davy Jones’ Locker",
      "Rare Pet Eggs"
     ]
    }
@@ -38725,14 +40415,33 @@
       1
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Pirate Cave",
+      "art": "pirate-cave.png"
+     },
+     {
+      "name": "Forest Maze",
+      "art": "forest-maze.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Health Potion",
      "Magic Potion",
-     "Pirate Cave",
-     "Adventurer’s Scarf",
      "Kendo Stick (Shiny)",
-     "Pirate Rum",
-     "Forest Maze"
+     "Pirate Rum"
     ]
    }
   },
@@ -39477,9 +41186,103 @@
       12
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Lost Halls",
+      "art": "lost-halls.png"
+     },
+     {
+      "name": "Parasite Chambers",
+      "art": "parasite-chambers.gif"
+     },
+     {
+      "name": "Puppet Master’s Encore",
+      "art": "puppet-master-s-encore.png"
+     },
+     {
+      "name": "The Crawling Depths",
+      "art": "the-crawling-depths.gif"
+     },
+     {
+      "name": "Woodland Labyrinth",
+      "art": "woodland-labyrinth.gif"
+     },
+     {
+      "name": "Tomb of the Ancients",
+      "art": "tomb-of-the-ancients.png"
+     },
+     {
+      "name": "Lair of Shaitan",
+      "art": "lair-of-shaitan.png"
+     },
+     {
+      "name": "The Shatters",
+      "art": "the-shatters.png"
+     },
+     {
+      "name": "The Nest",
+      "art": "the-nest.png"
+     },
+     {
+      "name": "Plagued Nest",
+      "art": "plagued-nest.png"
+     },
+     {
+      "name": "Spectral Penitentiary",
+      "art": "spectral-penitentiary.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Bloodbath Blade",
+      "art": "bloodbath-blade.png"
+     },
+     {
+      "name": "Cloak of Bloody Surprises",
+      "art": "cloak-of-bloody-surprises.png"
+     },
+     {
+      "name": "Corruption Tether",
+      "art": "corruption-tether.png"
+     },
+     {
+      "name": "Tablet of the King’s Avatar",
+      "art": "tablet-of-the-king-s-avatar.png"
+     },
+     {
+      "name": "Shield of Ogmur",
+      "art": "shield-of-ogmur.png"
+     },
+     {
+      "name": "Wings of Sanctity",
+      "art": "wings-of-sanctity.png"
+     },
+     {
+      "name": "Wings of the Fallen",
+      "art": "wings-of-the-fallen.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Energized",
+      "art": "oryxmas-ornament-energized.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Exposed",
+      "art": "oryxmas-ornament-exposed.png"
+     },
+     {
+      "name": "Oryxmas Ornament: Weak",
+      "art": "oryxmas-ornament-weak.png"
+     }
+    ],
     "items": [
      "Potion of Life",
-     "Bloodbath Blade",
      "Potion of Attack",
      "Potion of Wisdom",
      "Greater Health Potion",
@@ -39490,33 +41293,13 @@
      "Potion of Mana",
      "Pet Eggs",
      "Bloody Surprise Blueprint",
-     "Cloak of Bloody Surprises",
-     "Lost Halls",
-     "Parasite Chambers",
-     "Puppet Master’s Encore",
      "Helmet Rune",
      "Wine Cellar Incantation",
-     "The Crawling Depths",
-     "Woodland Labyrinth",
      "Sulferous Wetlands",
-     "Tomb of the Ancients",
-     "Lair of Shaitan",
      "Sword Rune",
      "King’s Blueprint",
-     "Corruption Tether",
-     "Tablet of the King’s Avatar",
-     "The Shatters",
-     "The Nest",
-     "Plagued Nest",
      "Ogmur Blueprint",
-     "Shield of Ogmur",
-     "Spectral Penitentiary",
-     "Rare Pet Eggs",
-     "Wings of Sanctity",
-     "Wings of the Fallen",
-     "Oryxmas Ornament: Energized",
-     "Oryxmas Ornament: Exposed",
-     "Oryxmas Ornament: Weak"
+     "Rare Pet Eggs"
     ]
    }
   },
@@ -39534,7 +41317,7 @@
     653,
     1188
    ],
-   "name": "High Desert",
+   "name": "Mid Desert",
    "named": true,
    "from": "walked",
    "roadSplit": [
@@ -39803,7 +41586,123 @@
    ],
    "met": true,
    "rank": "Rookie",
-   "wiki": "low-desert"
+   "wiki": "high-desert",
+   "regular": [
+    {
+     "name": "Flamer King",
+     "art": "flamer-king.png",
+     "hp": 1000,
+     "def": 7,
+     "exp": 80,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 2 Rings"
+     ]
+    },
+    {
+     "name": "Flayer God",
+     "art": "flayer-god.png",
+     "hp": 1400,
+     "def": 12,
+     "exp": 560,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 4 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Ancient Ruins"
+     ]
+    },
+    {
+     "name": "Minotaur",
+     "art": "minotaur.png",
+     "hp": 850,
+     "def": 7,
+     "exp": 288,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 5 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Adventurer’s Scarf",
+      "Ancient Ruins"
+     ]
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Desert Guard",
+     "art": "legion-desert-guard.png",
+     "hp": 2800,
+     "def": 5,
+     "exp": 250,
+     "drops": [
+      "Adventurer’s Scarf"
+     ]
+    }
+   ],
+   "loot": {
+    "tiers": {
+     "Rings": [
+      2,
+      3
+     ],
+     "Weapons": [
+      5,
+      6,
+      7
+     ],
+     "Armor": [
+      4,
+      5,
+      6,
+      7
+     ],
+     "Abilities": [
+      3
+     ]
+    },
+    "slots": {
+     "Rings": "ring.png",
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png"
+    },
+    "dungeons": [
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
+    "items": [
+     "Purple Drake Egg",
+     "Common Pet Eggs",
+     "Uncommon Pet Eggs",
+     "Health Potion",
+     "Magic Potion"
+    ]
+   }
   },
   {
    "id": 32,
@@ -39819,7 +41718,7 @@
     1092,
     1762
    ],
-   "name": "Low Desert",
+   "name": "Mid Desert",
    "named": true,
    "from": "walked",
    "roadSplit": [
@@ -39964,7 +41863,123 @@
    ],
    "met": true,
    "rank": "Rookie",
-   "wiki": "low-desert"
+   "wiki": "high-desert",
+   "regular": [
+    {
+     "name": "Flamer King",
+     "art": "flamer-king.png",
+     "hp": 1000,
+     "def": 7,
+     "exp": 80,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 2 Rings"
+     ]
+    },
+    {
+     "name": "Flayer God",
+     "art": "flayer-god.png",
+     "hp": 1400,
+     "def": 12,
+     "exp": 560,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 4 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Ancient Ruins"
+     ]
+    },
+    {
+     "name": "Minotaur",
+     "art": "minotaur.png",
+     "hp": 850,
+     "def": 7,
+     "exp": 288,
+     "drops": [
+      "Tier 5 Weapons",
+      "Tier 6 Weapons",
+      "Tier 5 Armor",
+      "Tier 7 Weapons",
+      "Tier 3 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 3 Rings",
+      "Purple Drake Egg",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Adventurer’s Scarf",
+      "Ancient Ruins"
+     ]
+    }
+   ],
+   "guardians": [
+    {
+     "name": "Legion Desert Guard",
+     "art": "legion-desert-guard.png",
+     "hp": 2800,
+     "def": 5,
+     "exp": 250,
+     "drops": [
+      "Adventurer’s Scarf"
+     ]
+    }
+   ],
+   "loot": {
+    "tiers": {
+     "Rings": [
+      2,
+      3
+     ],
+     "Weapons": [
+      5,
+      6,
+      7
+     ],
+     "Armor": [
+      4,
+      5,
+      6,
+      7
+     ],
+     "Abilities": [
+      3
+     ]
+    },
+    "slots": {
+     "Rings": "ring.png",
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png"
+    },
+    "dungeons": [
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
+    "items": [
+     "Purple Drake Egg",
+     "Common Pet Eggs",
+     "Uncommon Pet Eggs",
+     "Health Potion",
+     "Magic Potion"
+    ]
+   }
   },
   {
    "id": 33,
@@ -39980,7 +41995,7 @@
     1107,
     1509
    ],
-   "name": "Mid Desert",
+   "name": "High Desert",
    "named": true,
    "from": "walked",
    "roadSplit": [
@@ -40184,12 +42199,28 @@
       3
      ]
     },
+    "slots": {
+     "Rings": "ring.png",
+     "Weapons": "weapon.png",
+     "Armor": "armor.png",
+     "Abilities": "ability.png"
+    },
+    "dungeons": [
+     {
+      "name": "Ancient Ruins",
+      "art": "ancient-ruins.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Purple Drake Egg",
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Ancient Ruins",
-     "Adventurer’s Scarf",
      "Health Potion",
      "Magic Potion"
     ]
@@ -40823,31 +42854,72 @@
       11
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Abyss of Demons",
+      "art": "abyss-of-demons.gif"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Undead Lair",
+      "art": "undead-lair.gif"
+     },
+     {
+      "name": "Manor of the Immortals",
+      "art": "manor-of-the-immortals.png"
+     },
+     {
+      "name": "Cursed Library",
+      "art": "cursed-library.gif"
+     },
+     {
+      "name": "Lair of Shaitan",
+      "art": "lair-of-shaitan.png"
+     },
+     {
+      "name": "Infernal Abyss of Demons",
+      "art": "infernal-abyss-of-demons.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Doom’s Emblem",
+      "art": "doom-s-emblem.png"
+     },
+     {
+      "name": "Orb of Conflict",
+      "art": "orb-of-conflict.png"
+     },
+     {
+      "name": "Ring of the Inferno",
+      "art": "ring-of-the-inferno.png"
+     }
+    ],
     "items": [
      "Common Pet Eggs",
      "Uncommon Pet Eggs",
-     "Doom’s Emblem",
      "Potion of Attack",
      "Health Potion",
      "Magic Potion",
      "Potion of Defense",
      "Potion of Vitality",
      "Wine Cellar Incantation",
-     "Abyss of Demons",
-     "Toxic Sewers",
      "Stat Increase Potions",
-     "Undead Lair",
-     "Manor of the Immortals",
-     "Cursed Library",
-     "Lair of Shaitan",
      "Mini White Demon Pet Skin",
      "Pet Eggs",
      "Shield Rune",
      "Conflict Blueprint",
-     "Orb of Conflict",
-     "Infernal Abyss of Demons",
      "Potion of Speed",
-     "Ring of the Inferno",
      "Rare Pet Eggs"
     ]
    }
@@ -41272,14 +43344,33 @@
       1
      ]
     },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Pirate Cave",
+      "art": "pirate-cave.png"
+     },
+     {
+      "name": "Forest Maze",
+      "art": "forest-maze.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Health Potion",
      "Magic Potion",
-     "Pirate Cave",
-     "Adventurer’s Scarf",
      "Kendo Stick (Shiny)",
-     "Pirate Rum",
-     "Forest Maze"
+     "Pirate Rum"
     ]
    }
   },
@@ -41668,14 +43759,39 @@
       3
      ]
     },
+    "slots": {
+     "Armor": "armor.png",
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Rings": "ring.png"
+    },
+    "dungeons": [
+     {
+      "name": "Spider Den",
+      "art": "spider-den.png"
+     },
+     {
+      "name": "Forbidden Jungle",
+      "art": "forbidden-jungle.png"
+     },
+     {
+      "name": "Forest Maze",
+      "art": "forest-maze.png"
+     },
+     {
+      "name": "Magic Woods",
+      "art": "magic-woods.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Adventurer’s Scarf",
+      "art": "adventurer-s-scarf.png"
+     }
+    ],
     "items": [
      "Health Potion",
-     "Magic Potion",
-     "Adventurer’s Scarf",
-     "Spider Den",
-     "Forbidden Jungle",
-     "Forest Maze",
-     "Magic Woods"
+     "Magic Potion"
     ]
    }
   }
@@ -42103,7 +44219,17 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Desert Guard",
+    "art": "legion-desert-guard.png",
+    "hp": 2800,
+    "def": 5,
+    "exp": 250,
+    "drops": [
+     "Adventurer’s Scarf"
+    ]
+   }
   },
   {
    "x": 759,
@@ -44134,7 +46260,17 @@
       "size": 100
      }
     }
-   ]
+   ],
+   "guardian": {
+    "name": "Legion Desert Guard",
+    "art": "legion-desert-guard.png",
+    "hp": 2800,
+    "def": 5,
+    "exp": 250,
+    "drops": [
+     "Adventurer’s Scarf"
+    ]
+   }
   },
   {
    "x": 779,
