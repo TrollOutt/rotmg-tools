@@ -38,6 +38,10 @@ const ATLAS = asked
 const BOSS = path.join(ATLAS, 'boss');
 const CATALOG = path.join(root, 'web', 'assets', 'realm-catalog');
 const MONSTERS = path.join(root, 'web', 'assets', 'realm-monsters');
+const ITEMS = path.join(root, 'web', 'assets', 'items');
+const DUNGEONS = path.join(root, 'data', 'GUI Files', 'Dungeon Icons');
+const SLOTS = path.join(root, 'data', 'GUI Files', 'Item Types');
+const LOOT = path.join(ATLAS, 'loot');
 
 /*
  * Which zone name answers to which imported biome.
@@ -74,7 +78,13 @@ const GROUND_BIOMES = {
   HighDesert: 'high-desert',
   HigherForest: 'high-forest',
   HigherPlains: 'high-plains',
-  MidDesert: 'low-desert',
+  /*
+   * The client knows two deserts and no third - HighDesert and MidDesert -
+   * and the reference's low-desert page is empty of everything. The owner of
+   * the map reports that its high-desert and mid-desert pages say the same
+   * things, so both grounds are read off the one that has anything on it.
+   */
+  MidDesert: 'high-desert',
   Nature: 'mid-forest',
   Plains: 'low-plains',
   RisenHell: 'risen-hell',
@@ -97,6 +107,39 @@ const GROUND_BIOMES = {
  */
 const TIER = /^Tier (\d+) (.+)$/;
 
+/*
+ * A picture for a thing that falls, carried into the atlas beside the map.
+ *
+ * Three places have them and they are not the same kind of picture. A dungeon
+ * has an icon the game draws in the portal list; a piece of gear has the
+ * sprite it is drawn with in an inventory; and the four slots - weapon,
+ * armour, ring, ability - have an icon apiece, which is what a tier line gets,
+ * because "Tier 8 Weapons" is not one item and cannot have one item's picture.
+ */
+const carriedLoot = new Map();
+function carry(from, file, as) {
+  if (carriedLoot.has(as)) return as;
+  if (!fs.existsSync(path.join(from, file))) return null;
+  fs.copyFileSync(path.join(from, file), path.join(LOOT, as));
+  carriedLoot.set(as, true);
+  return as;
+}
+
+// Built when first asked for, because slug is declared further down.
+let dungeonArt = null, itemArt = null;
+function artIndex(where, pattern) {
+  const out = new Map();
+  if (!fs.existsSync(where)) return out;
+  for (const file of fs.readdirSync(where)) out.set(slug(file.replace(pattern, '')), file);
+  return out;
+}
+const dungeons_ = () => (dungeonArt || (dungeonArt = artIndex(DUNGEONS, /[.](png|gif)$/i)));
+const items_ = () => (itemArt || (itemArt = artIndex(ITEMS, /[.](png|gif|webp)$/i)));
+const SLOT_OF = {
+  Weapons: 'weapon', 'Alternate Weapons': 'weapon',
+  Armor: 'armor', Rings: 'ring', Abilities: 'ability'
+};
+
 function sortTiers(loot) {
   const tiers = {}, items = new Map();
   for (const [name, times] of loot) {
@@ -113,10 +156,32 @@ function sortTiers(loot) {
   for (const kind of Object.keys(tiers)) {
     tiers[kind] = [...new Set(tiers[kind])].sort((a, b) => a - b);
   }
-  return {
-    tiers,
-    items: [...items].sort((a, b) => b[1] - a[1]).map(([name]) => name)
-  };
+  /*
+   * Everything that is not a tier, split three ways: the dungeons whose
+   * portals fall here, the gear that has a sprite, and the rest - potions,
+   * eggs, runes, blueprints - which have no art anywhere and stay as words.
+   */
+  const dungeons = [], gear = [], rest = [];
+  for (const [name] of [...items].sort((a, b) => b[1] - a[1])) {
+    const key = slug(name);
+    const den = dungeons_().get(key);
+    if (den) {
+      const art = carry(DUNGEONS, den, key + path.extname(den));
+      if (art) { dungeons.push({ name, art }); continue; }
+    }
+    const kit = items_().get(key);
+    if (kit) {
+      const art = carry(ITEMS, kit, kit);
+      if (art) { gear.push({ name, art }); continue; }
+    }
+    rest.push(name);
+  }
+  const slots = {};
+  for (const kind of Object.keys(tiers)) {
+    const which = SLOT_OF[kind];
+    if (which) slots[kind] = carry(SLOTS, which + '.png', which + '.png');
+  }
+  return { tiers, slots, dungeons, gear, items: rest };
 }
 
 
@@ -169,6 +234,7 @@ const atlasFile = path.join(ATLAS, 'atlas.json');
 const atlas = JSON.parse(readFile(atlasFile, 'utf8'));
 
 fs.mkdirSync(BOSS, { recursive: true });
+fs.mkdirSync(LOOT, { recursive: true });
 const carried = new Map();                       // file -> bytes, copied once
 function bring(name) {
   const art = artFor(name);

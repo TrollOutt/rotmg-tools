@@ -58,14 +58,21 @@
   .face { flex: none; width: 34px; height: 34px; object-fit: contain;
     image-rendering: pixelated; }
   /* How much of the floor is what. */
-  /* Tiers of gear, drawn as a run rather than as a list of numbers. */
-  .tiers { margin: 4px 0 10px; }
-  .tiers div { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-  .tiers b { flex: 0 0 116px; font-weight: 500; color: #9aa4ba; font-size: 11px; }
-  .tiers em { flex: 0 0 42px; font-style: normal; color: #d7c98a; font-size: 11px; }
-  .tiers u { display: flex; gap: 2px; text-decoration: none; }
-  .tiers s { text-decoration: none; font-size: 9px; line-height: 13px; min-width: 13px;
-    text-align: center; border-radius: 2px; background: #2a3346; color: #b9c4d8; }
+  /* Tiers of gear: the slot's own icon, and the run that falls here. */
+  .tiers { margin: 4px 0 12px; }
+  .tiers div { display: flex; align-items: center; gap: 9px; padding: 3px 0; }
+  .tiers .slot { width: 18px; height: 18px; image-rendering: pixelated; flex: none; opacity: .85; }
+  .tiers b { flex: 1; font-weight: 500; color: #9aa4ba; font-size: 11px; }
+  .tiers em { font-style: normal; color: #d7c98a; font-size: 12px; letter-spacing: .3px; }
+  .tiers em u { text-decoration: none; color: #6f7b90; padding: 0 2px; }
+  .panel h4 { margin: 10px 0 5px; font-size: 10px; font-weight: 600; letter-spacing: .09em;
+    text-transform: uppercase; color: #6f7b90; }
+  .haul { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 7px; margin-bottom: 10px; }
+  .haul figure { margin: 0; text-align: center; }
+  .haul img { width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
+  .haul figcaption { font-size: 9px; line-height: 1.25; color: #8b96ab; margin-top: 2px;
+    overflow-wrap: anywhere; }
   .drops { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 12px; }
   .drops span { font-size: 10px; padding: 2px 6px; border-radius: 9px;
     background: rgba(120,132,158,.14); color: #93a0b6; }
@@ -2785,18 +2792,39 @@ function castList(list, note) {
 const GEAR = ['Weapons', 'Alternate Weapons', 'Armor', 'Rings', 'Abilities'];
 function lootList(loot) {
   if (!loot) return '';
+  const art = file => BASE + 'loot/' + file;
+
+  /*
+   * A tier line is not an item and cannot be given an item's picture: "Tier 8
+   * Weapons" is a hundred different swords. What it can be given is the icon
+   * of the slot it goes in, which is the thing the reader is actually asking
+   * about - what can I put in my weapon hand from here, and how good - so the
+   * slot icon carries the run from the lowest tier that falls to the highest.
+   */
   const kinds = Object.keys(loot.tiers)
     .sort((a, b) => (GEAR.indexOf(a) + 1 || 99) - (GEAR.indexOf(b) + 1 || 99));
   const rows = kinds.map(kind => {
     const t = loot.tiers[kind];
-    const run = t.length > 1 ? t[0] + '\u2013' + t[t.length - 1] : String(t[0]);
-    return '<div><b>' + kind + '</b><em>' + run + '</em>'
-      + '<u>' + t.map(n => '<s>' + n + '</s>').join('') + '</u></div>';
+    const slot = (loot.slots || {})[kind];
+    const icon = slot ? '<img class="slot" src="' + art(slot) + '" alt="" loading="lazy">'
+      : '<span class="slot"></span>';
+    return '<div>' + icon + '<b>' + kind + '</b>'
+      + '<em>' + t[0] + (t.length > 1 ? '<u>\u2013</u>' + t[t.length - 1] : '') + '</em></div>';
   }).join('');
-  const items = (loot.items || []).length
-    ? '<p class="drops">' + loot.items.map(one => '<span>' + one + '</span>').join('') + '</p>'
+
+  // The things that have a picture of their own, each under it.
+  const shelf = (title, list) => (list && list.length)
+    ? '<h4>' + title + '</h4><div class="haul">' + list.map(one =>
+      '<figure><img src="' + art(one.art) + '" alt="" loading="lazy">'
+      + '<figcaption>' + one.name + '</figcaption></figure>').join('') + '</div>'
     : '';
-  return '<div class="tiers">' + rows + '</div>' + items;
+
+  return '<div class="tiers">' + rows + '</div>'
+    + shelf('Dungeons', loot.dungeons)
+    + shelf('Named gear', loot.gear)
+    + ((loot.items || []).length
+      ? '<p class="drops">' + loot.items.map(one => '<span>' + one + '</span>').join('') + '</p>'
+      : '');
 }
 
 function openZone(id) {
@@ -2847,26 +2875,14 @@ function openZone(id) {
     + roster('Monsters', zone.regular)
     + roster('Beacon guardians', zone.guardians)
 
-    + (zone.loot ? '<h3>What falls here</h3>' + lootList(zone.loot) : '')
-
-    + (here.length
-      ? '<h3>Beacons<span>' + here.length + '</span></h3>'
-        + here.map(b => '<div class="life"><div>'
-          + '<b>' + b.name + '</b><em>' + b.state + '</em></div></div>'
-          + (b.guardian
-            ? castList([b.guardian.name ? b.guardian : { name: b.guardian }], 'guardian')
-            : '')).join('')
-      : '')
-
     /*
-     * And last, what was actually walked past here, which is a different
-     * question and is worth keeping separate from the first. The names differ
-     * too - the client calls a thing Deep Sea Squid where the reference calls
-     * it an Abyssal Squid - so running the two lists together would read as
-     * twice as many creatures as there are.
+     * And it ends here. What used to follow - the beacons of the place, and
+     * everything met while walking it - said the same things over again in
+     * different words: the guardian was already under its own heading, and
+     * the walk's list is the roster with the client's names on it instead of
+     * the reference's, which reads as twice as many creatures as there are.
      */
-    + '<h3>Seen on the walk<span>' + (zone.lives ? zone.lives.length : 0) + '</span></h3>'
-      + livesList(zone.lives);
+    + (zone.loot ? '<h3>What falls here</h3>' + lootList(zone.loot) : '');
   panel.classList.add('is-open');
 }
 function shutPanel() { chosen = 0; chosenBeacon = null; panel.classList.remove('is-open'); }
