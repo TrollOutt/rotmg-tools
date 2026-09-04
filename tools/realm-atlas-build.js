@@ -226,53 +226,23 @@ function readEnemies() {
 }
 
 /*
- * The things that carry <Enemy/> and cannot be fought.
+ * A class, everything it is made of, and everything it carries.
  *
- * A great deal of the machinery of an encounter is filed as an enemy because
- * that is the only kind of thing the client knows how to put on a tile and
- * make do something: the spawner that puts the monsters there, the anchor a
- * guardian paces around, the beam it throws, the invisible bomb that is
- * really the explosion, the marker that says where the loot fell. Listing
- * them among a place's wildlife invents two hundred creatures that nobody has
- * ever met, and no amount of guessing from their names gets it right - among
- * the ones that look most like machinery are Carboniferous Flytrap, which is
- * a monster with three thousand hit points, and the beacon guardians' own
- * minions, which are monsters too.
+ * The client is unusually forthcoming here and none of this has to be guessed
+ * at. A class declares eight statistics, each with the value it starts life
+ * with and the value it can never pass - a Wizard begins on a hundred hit
+ * points and stops at seven hundred - and then declares, one line per
+ * statistic, how much of it a level is worth. That is enough to build any
+ * character at any level without inventing a curve: level twenty of anything
+ * is its base plus nineteen levels of its own increments.
  *
- * The client says it plainly, though, if it is asked the right question. A
- * thing you are meant to fight has hit points. A thing that only has to exist
- * is marked <Invincible/> and given none at all. Two hundred and ten of the
- * kinds standing on this map answer to that, and not one thing with hit
- * points does, so it costs nothing that was wanted.
- *
- * This is not the same list as the life lines in off-the-map.txt and does not
- * replace them: a satellite has a thousand hit points and a trap has a
- * hundred thousand, so both are perfectly fightable as far as the client is
- * concerned and both still have to be named by hand.
- */
-/*
- * The ground each creature says it belongs on.
- *
- * Every creature in the client declares a Terrain, and some declare several.
- * This is the only authority on where a thing belongs; where it happened to
- * be standing when somebody walked past is only where it was.
- */
-/*
- * The rules the client keeps for putting a creature in a realm.
- *
- * PerRealmMax is the one that matters here: how many of a thing may stand in
- * the world at once. SpawnProb is how likely it is to be used at all, and a
- * Spawn block says how many arrive together when one does. Three hundred and
- * forty-eight creatures carry a maximum, six hundred and seventy-two a
- * probability, a hundred and nine a group size.
- */
-/*
- * A class, and the kit it starts with.
- *
- * The Equipment line is a list of object types by slot: weapon first, then
- * ability, then armour, then ring. Each of the first two carries a Projectile
- * of its own, and that projectile is the attack - there is nothing else to
- * look up and nothing to invent.
+ * The Equipment line is a list of object types by slot - weapon, ability,
+ * armour, ring, and then whatever is in the pack - and each of those objects
+ * says what it does. A weapon and an ability each carry a Projectile, which
+ * is the attack: how much it hurts, how fast it flies, how long it lives,
+ * how many go at once and how wide they fan. An ability also says what it
+ * costs in magic. Armour and rings say which statistic they raise and by how
+ * much, so a Robe of the Neophyte is two points of defence and not a guess.
  */
 function readKit() {
   const byType = new Map();
@@ -283,48 +253,108 @@ function readKit() {
       if (Number.isFinite(ty)) byType.set(ty, { id: m[2], body: m[3] });
     }
   }
+
   const num = (body, tag, attr) => {
     const m = attr
       ? new RegExp('<' + tag + '[^>]*' + attr + '="([^"]+)"').exec(body)
-      : new RegExp('<' + tag + '>([^<]*)</' + tag + '>').exec(body);
+      // Allowing for attributes, because every statistic carries its ceiling
+      // on the tag itself: <MaxHitPoints max="700">100</MaxHitPoints>.
+      : new RegExp('<' + tag + '[^>]*>([^<]*)</' + tag + '>').exec(body);
     if (!m) return undefined;
     const n = Number(m[1]);
     return Number.isFinite(n) ? n : undefined;
   };
+
+  /*
+   * The shot an item throws. Speed is given in tenths of a tile a second and
+   * life in milliseconds, so the range is the two multiplied - which is how
+   * a Short Sword comes out at three and a half tiles and an Energy Staff at
+   * eight and a half, and why a warrior has to walk in and a wizard does not.
+   */
   const shotOf = body => {
     const p = /<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/.exec(body);
     if (!p) return undefined;
     const low = num(p[1], 'MinDamage'), high = num(p[1], 'MaxDamage');
+    const flat = num(p[1], 'Damage');
     const fast = num(p[1], 'Speed'), lives = num(p[1], 'LifetimeMS');
-    if (low === undefined && high === undefined) return undefined;
+    if (low === undefined && high === undefined && flat === undefined) return undefined;
     return {
-      low: low === undefined ? high : low,
-      high: high === undefined ? low : high,
-      // Tiles a second, and how far it gets before it expires.
+      low: low === undefined ? (high === undefined ? flat : high) : low,
+      high: high === undefined ? (low === undefined ? flat : low) : high,
       fast: fast === undefined ? undefined : fast / 10,
       reach: fast !== undefined && lives !== undefined
         ? Math.round(fast * lives / 1000) / 10 : undefined,
       many: num(body, 'NumProjectiles') || 1,
-      rate: num(body, 'RateOfFire') || 1
+      // How wide the fan is, in degrees, when more than one goes at once.
+      fan: num(body, 'ArcGap'),
+      rate: num(body, 'RateOfFire') || 1,
+      // A shot that carries through what it hits rather than stopping in it.
+      through: /<MultiHit\s*\/>/.test(body),
+      pierce: /<ArmorPiercing\s*\/>/.test(body)
     };
   };
+
+  /* What a piece of gear is worth just for being worn. */
+  const wornOf = body => {
+    const out = {};
+    for (const m of body.matchAll(
+      /<ActivateOnEquip\s+stat="([^"]+)"\s+amount="([^"]+)"[^>]*>IncrementStat</g)) {
+      const n = Number(m[2]);
+      if (Number.isFinite(n)) out[m[1]] = (out[m[1]] || 0) + n;
+    }
+    return Object.keys(out).length ? out : undefined;
+  };
+
+  const itemOf = type => {
+    const one = byType.get(type);
+    if (!one) return undefined;
+    return {
+      name: one.id,
+      tier: num(one.body, 'Tier'),
+      slot: num(one.body, 'SlotType'),
+      // Which colour of bag this falls in, straight from the client.
+      bag: num(one.body, 'BagType'),
+      mp: num(one.body, 'MpCost'),
+      worn: wornOf(one.body),
+      shot: shotOf(one.body)
+    };
+  };
+
   const out = new Map();
   for (const [, one] of byType) {
     if (!/<Player\s*\/>/.test(one.body)) continue;
     const gear = /<Equipment>([^<]*)<\/Equipment>/.exec(one.body);
     const kit = gear ? gear[1].split(',').map(x => Number.parseInt(x.trim(), 16)) : [];
-    const weapon = byType.get(kit[0]);
-    const ability = byType.get(kit[1]);
+
+    /* What a level is worth, one statistic at a time, in the client's words. */
+    const grow = {};
+    const named = {
+      MaxHitPoints: 'hp', MaxMagicPoints: 'mp', Attack: 'att', Defense: 'def',
+      Speed: 'pace', Dexterity: 'dex', HpRegen: 'vit', MpRegen: 'wis'
+    };
+    for (const m of one.body.matchAll(
+      /<LevelIncrease\s+min="(-?\d+)"\s+max="(-?\d+)"\s*>(\w+)<\/LevelIncrease>/g)) {
+      const key = named[m[3]];
+      if (key) grow[key] = (Number(m[1]) + Number(m[2])) / 2;
+    }
+
+    const stat = (tag, what) => num(one.body, tag, what);
     out.set(one.id, {
-      hp: num(one.body, 'MaxHitPoints', 'max'),
-      att: num(one.body, 'Attack', 'max'),
-      def: num(one.body, 'Defense', 'max'),
-      dex: num(one.body, 'Dexterity', 'max'),
-      pace: num(one.body, 'Speed', 'max'),
-      weapon: weapon ? { name: weapon.id, shot: shotOf(weapon.body) } : undefined,
-      ability: ability
-        ? { name: ability.id, cost: num(ability.body, 'MpCost'), shot: shotOf(ability.body) }
-        : undefined
+      // Where it starts, and the ceiling it may never pass.
+      hp: stat('MaxHitPoints'), hpTop: stat('MaxHitPoints', 'max'),
+      mp: stat('MaxMagicPoints'), mpTop: stat('MaxMagicPoints', 'max'),
+      att: stat('Attack'), attTop: stat('Attack', 'max'),
+      def: stat('Defense'), defTop: stat('Defense', 'max'),
+      pace: stat('Speed'), paceTop: stat('Speed', 'max'),
+      dex: stat('Dexterity'), dexTop: stat('Dexterity', 'max'),
+      vit: stat('HpRegen'), vitTop: stat('HpRegen', 'max'),
+      wis: stat('MpRegen'), wisTop: stat('MpRegen', 'max'),
+      grow,
+      weapon: itemOf(kit[0]),
+      ability: itemOf(kit[1]),
+      armour: itemOf(kit[2]),
+      ring: itemOf(kit[3]),
+      pack: kit.slice(4).map(itemOf).filter(Boolean).slice(0, 2)
     });
   }
   return out;
@@ -2231,6 +2261,34 @@ function main() {
     roads: map.roadCount,
     tiles: store.tiles.size
   };
+  /*
+   * And what the people in it say to each other, if a corpus has been left
+   * beside the project. The lines are filed by what they are for and carry
+   * slots - a dungeon, an item, a class, a name - that the page fills from
+   * this map, so a portal called out is a portal that really drops here.
+   */
+  {
+    const talkFile = path.join(root, 'rotmg_dialogue_corpus.json');
+    if (fs.existsSync(talkFile)) {
+      try {
+        const said = JSON.parse(fs.readFileSync(talkFile, 'utf8'));
+        const lines = (said.lines || [])
+          .filter(one => one && one.tag && one.text)
+          .map(one => ({ tag: one.tag, text: one.text }));
+        const talks = (said.conversations || [])
+          .filter(one => one && Array.isArray(one.turns) && one.turns.length)
+          .map(one => ({ turns: one.turns }));
+        if (lines.length) {
+          summary.chatter = { lines, talks };
+          console.log('  ' + lines.length + ' things to say and ' + talks.length
+            + ' exchanges');
+        }
+      } catch (e) {
+        console.log('  the corpus of dialogue could not be read: ' + e.message);
+      }
+    }
+  }
+
   /* What stands in the realm, cut and placed when the floor was drawn. */
   let standing = 0;
   for (const name of ['things.png', 'things.bin', 'things.json']) {

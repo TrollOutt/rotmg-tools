@@ -81399,6 +81399,1636 @@
  ],
  "roads": 53745,
  "tiles": 2362491,
+ "chatter": {
+  "lines": [
+   {
+    "tag": "call",
+    "text": "[dungeon] tp, safe portal"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] here, quick"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] on me, left glands"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] loc, no rush"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] tp if you want"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] popped at [location]"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] open, come in"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] in 3, 2, 1"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] by [player], follow arrow"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] no key, natural"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] from [boss], still up"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] last call before i enter"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] tp, portal is bottom left"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] anyone need?"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] free carry-ish, learning run"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] not rushing, full clear"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] fresh pop, plenty of slots"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] closing soon"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] at my mark"
+   },
+   {
+    "tag": "call",
+    "text": "[dungeon] tp now or miss it"
+   },
+   {
+    "tag": "realm",
+    "text": "sentry up east glands"
+   },
+   {
+    "tag": "realm",
+    "text": "miner spawned near lava"
+   },
+   {
+    "tag": "realm",
+    "text": "bees at [player]"
+   },
+   {
+    "tag": "realm",
+    "text": "avatar is alive, south"
+   },
+   {
+    "tag": "realm",
+    "text": "cube god on beach"
+   },
+   {
+    "tag": "realm",
+    "text": "keyper at mid, careful tp"
+   },
+   {
+    "tag": "realm",
+    "text": "please don't insta tp keyper"
+   },
+   {
+    "tag": "realm",
+    "text": "realm is almost done, save bosses"
+   },
+   {
+    "tag": "realm",
+    "text": "how many heroes left?"
+   },
+   {
+    "tag": "realm",
+    "text": "12 rem, should be o2 soon"
+   },
+   {
+    "tag": "realm",
+    "text": "wait for everyone on o2"
+   },
+   {
+    "tag": "realm",
+    "text": "oryx castle in a minute probably"
+   },
+   {
+    "tag": "realm",
+    "text": "who is clearing jungle?"
+   },
+   {
+    "tag": "realm",
+    "text": "ents are done, liches still up"
+   },
+   {
+    "tag": "realm",
+    "text": "this realm is getting speedrun"
+   },
+   {
+    "tag": "realm",
+    "text": "i just wanted pots and now we're at o2"
+   },
+   {
+    "tag": "realm",
+    "text": "why is everyone on the beach lol"
+   },
+   {
+    "tag": "realm",
+    "text": "natural wc after o2 maybe"
+   },
+   {
+    "tag": "realm",
+    "text": "got a wine cellar inc, popping after"
+   },
+   {
+    "tag": "realm",
+    "text": "stay together, those gods are stacked"
+   },
+   {
+    "tag": "o3",
+    "text": "runes?"
+   },
+   {
+    "tag": "o3",
+    "text": "all runes ready?"
+   },
+   {
+    "tag": "o3",
+    "text": "sword rune here"
+   },
+   {
+    "tag": "o3",
+    "text": "i have helm if someone has shield"
+   },
+   {
+    "tag": "o3",
+    "text": "shield popped"
+   },
+   {
+    "tag": "o3",
+    "text": "full rune, ty poppers"
+   },
+   {
+    "tag": "o3",
+    "text": "public o3?"
+   },
+   {
+    "tag": "o3",
+    "text": "is this a guild run or can i stay?"
+   },
+   {
+    "tag": "o3",
+    "text": "just here to learn, i'll stay safe"
+   },
+   {
+    "tag": "o3",
+    "text": "first o3, any quick tips?"
+   },
+   {
+    "tag": "o3",
+    "text": "watch exalted beams and don't greed"
+   },
+   {
+    "tag": "o3",
+    "text": "nexus is always cheaper than a new char"
+   },
+   {
+    "tag": "o3",
+    "text": "which mini did we get?"
+   },
+   {
+    "tag": "o3",
+    "text": "beisa, nice"
+   },
+   {
+    "tag": "o3",
+    "text": "leucoryx again? i'm cursed"
+   },
+   {
+    "tag": "o3",
+    "text": "gemsbok is free until it isn't"
+   },
+   {
+    "tag": "o3",
+    "text": "clean celestial pls"
+   },
+   {
+    "tag": "o3",
+    "text": "don't drag into the group"
+   },
+   {
+    "tag": "o3",
+    "text": "gg o3, that was smooth"
+   },
+   {
+    "tag": "o3",
+    "text": "o3 down, no white but i'll take it"
+   },
+   {
+    "tag": "raid",
+    "text": "anyone running lh?"
+   },
+   {
+    "tag": "raid",
+    "text": "cult or void?"
+   },
+   {
+    "tag": "raid",
+    "text": "mbc soon, stay behind"
+   },
+   {
+    "tag": "raid",
+    "text": "void portal on me"
+   },
+   {
+    "tag": "raid",
+    "text": "need more dps for void"
+   },
+   {
+    "tag": "raid",
+    "text": "lh was clean until first void"
+   },
+   {
+    "tag": "raid",
+    "text": "i'll do cult, not feeling void on this char"
+   },
+   {
+    "tag": "raid",
+    "text": "fungal tp, crystal after"
+   },
+   {
+    "tag": "raid",
+    "text": "crystal is open if you stayed"
+   },
+   {
+    "tag": "raid",
+    "text": "kogbold anyone?"
+   },
+   {
+    "tag": "raid",
+    "text": "mv 3 dancers, chill run"
+   },
+   {
+    "tag": "raid",
+    "text": "umi is a different game"
+   },
+   {
+    "tag": "raid",
+    "text": "shatts from realm, no rusher"
+   },
+   {
+    "tag": "raid",
+    "text": "don't enter shatts if you're tilted"
+   },
+   {
+    "tag": "raid",
+    "text": "nest popped, easy dex"
+   },
+   {
+    "tag": "raid",
+    "text": "cult for wis, come through"
+   },
+   {
+    "tag": "raid",
+    "text": "cdepths is a pot factory today"
+   },
+   {
+    "tag": "raid",
+    "text": "wlab tp, speed pots"
+   },
+   {
+    "tag": "raid",
+    "text": "ddocks portal is safe"
+   },
+   {
+    "tag": "raid",
+    "text": "manor? i still need att"
+   },
+   {
+    "tag": "group",
+    "text": "wait for slow players"
+   },
+   {
+    "tag": "group",
+    "text": "group up for buffs"
+   },
+   {
+    "tag": "group",
+    "text": "don't stand on top of each other"
+   },
+   {
+    "tag": "group",
+    "text": "take your time, portal isn't going anywhere"
+   },
+   {
+    "tag": "group",
+    "text": "i can rush if you want"
+   },
+   {
+    "tag": "group",
+    "text": "no need to rush, let's clear"
+   },
+   {
+    "tag": "group",
+    "text": "pally buff is up"
+   },
+   {
+    "tag": "group",
+    "text": "i've got heals, play safe"
+   },
+   {
+    "tag": "group",
+    "text": "knight stun saved that"
+   },
+   {
+    "tag": "group",
+    "text": "mystic stasis is huge here"
+   },
+   {
+    "tag": "group",
+    "text": "decoy was clutch"
+   },
+   {
+    "tag": "group",
+    "text": "give priest a second for mana"
+   },
+   {
+    "tag": "group",
+    "text": "who has armor break?"
+   },
+   {
+    "tag": "group",
+    "text": "stop shooting for a sec, let people catch up"
+   },
+   {
+    "tag": "group",
+    "text": "boss is almost phased"
+   },
+   {
+    "tag": "group",
+    "text": "back up, phase change"
+   },
+   {
+    "tag": "group",
+    "text": "safe spot is top right"
+   },
+   {
+    "tag": "group",
+    "text": "rotate clockwise"
+   },
+   {
+    "tag": "group",
+    "text": "don't panic nexus, you're fine"
+   },
+   {
+    "tag": "group",
+    "text": "good save"
+   },
+   {
+    "tag": "loot",
+    "text": "white!!!"
+   },
+   {
+    "tag": "loot",
+    "text": "finally got [item]"
+   },
+   {
+    "tag": "loot",
+    "text": "first [item], no way"
+   },
+   {
+    "tag": "loot",
+    "text": "another pbag, classic"
+   },
+   {
+    "tag": "loot",
+    "text": "at least it was a gpott"
+   },
+   {
+    "tag": "loot",
+    "text": "all that for a t8 robe"
+   },
+   {
+    "tag": "loot",
+    "text": "i'll take the life"
+   },
+   {
+    "tag": "loot",
+    "text": "0 from [number] runs, rng is evil"
+   },
+   {
+    "tag": "loot",
+    "text": "got the white and forgot to screenshot"
+   },
+   {
+    "tag": "loot",
+    "text": "is [item] actually good?"
+   },
+   {
+    "tag": "loot",
+    "text": "that drop is a keeper"
+   },
+   {
+    "tag": "loot",
+    "text": "feed power goes brr"
+   },
+   {
+    "tag": "loot",
+    "text": "i got sb at the last second"
+   },
+   {
+    "tag": "loot",
+    "text": "no sb, i was looking at my inventory"
+   },
+   {
+    "tag": "loot",
+    "text": "orange bag is still a win"
+   },
+   {
+    "tag": "loot",
+    "text": "white bag sound is dopamine"
+   },
+   {
+    "tag": "loot",
+    "text": "i heard a white and it wasn't mine"
+   },
+   {
+    "tag": "loot",
+    "text": "congrats on the [item]"
+   },
+   {
+    "tag": "loot",
+    "text": "big gz"
+   },
+   {
+    "tag": "loot",
+    "text": "save that, don't insta feed it"
+   },
+   {
+    "tag": "death",
+    "text": "rip [class]"
+   },
+   {
+    "tag": "death",
+    "text": "f"
+   },
+   {
+    "tag": "death",
+    "text": "o7"
+   },
+   {
+    "tag": "death",
+    "text": "unlucky"
+   },
+   {
+    "tag": "death",
+    "text": "that was a good char too"
+   },
+   {
+    "tag": "death",
+    "text": "i got greedy, deserved"
+   },
+   {
+    "tag": "death",
+    "text": "lag spike into grave, nice"
+   },
+   {
+    "tag": "death",
+    "text": "thought i had another hp pot"
+   },
+   {
+    "tag": "death",
+    "text": "nexused one frame too late"
+   },
+   {
+    "tag": "death",
+    "text": "never tp blind near keyper"
+   },
+   {
+    "tag": "death",
+    "text": "i knew i should've backed off"
+   },
+   {
+    "tag": "death",
+    "text": "there goes my 8/8"
+   },
+   {
+    "tag": "death",
+    "text": "lost my first exalted, pain"
+   },
+   {
+    "tag": "death",
+    "text": "new char angle"
+   },
+   {
+    "tag": "death",
+    "text": "take a break, that dungeon gets everyone"
+   },
+   {
+    "tag": "death",
+    "text": "you'll rebuild fast"
+   },
+   {
+    "tag": "death",
+    "text": "rip but at least you learned the phase"
+   },
+   {
+    "tag": "death",
+    "text": "that wasn't worth the dps greed"
+   },
+   {
+    "tag": "death",
+    "text": "the nexus button is my best item"
+   },
+   {
+    "tag": "death",
+    "text": "my pet watched me die"
+   },
+   {
+    "tag": "progression",
+    "text": "anyone want to max [stat]?"
+   },
+   {
+    "tag": "progression",
+    "text": "need a few more dex then i'm 6/8"
+   },
+   {
+    "tag": "progression",
+    "text": "what should i max after def?"
+   },
+   {
+    "tag": "progression",
+    "text": "just hit 8/8 for the first time"
+   },
+   {
+    "tag": "progression",
+    "text": "gz, now the real addiction starts"
+   },
+   {
+    "tag": "progression",
+    "text": "don't rush 8/8, learn the dungeons first"
+   },
+   {
+    "tag": "progression",
+    "text": "pots are easier than rebuilding gear"
+   },
+   {
+    "tag": "progression",
+    "text": "is 4/8 enough for nest?"
+   },
+   {
+    "tag": "progression",
+    "text": "yeah, just stay calm on boss"
+   },
+   {
+    "tag": "progression",
+    "text": "where do people farm life now?"
+   },
+   {
+    "tag": "progression",
+    "text": "cult, fungal/crystal, o2 if you're lucky"
+   },
+   {
+    "tag": "progression",
+    "text": "first time on [class], any build advice?"
+   },
+   {
+    "tag": "progression",
+    "text": "tiered gear is more than enough to learn"
+   },
+   {
+    "tag": "progression",
+    "text": "don't bring your only good set into blind runs"
+   },
+   {
+    "tag": "progression",
+    "text": "my pet is finally rare"
+   },
+   {
+    "tag": "progression",
+    "text": "70 heal/mheal is a game changer"
+   },
+   {
+    "tag": "progression",
+    "text": "what exalt are you working on?"
+   },
+   {
+    "tag": "progression",
+    "text": "trying to finish dex exalt before i burn out"
+   },
+   {
+    "tag": "progression",
+    "text": "one more complete for [stat] exalt"
+   },
+   {
+    "tag": "progression",
+    "text": "the grind is real"
+   },
+   {
+    "tag": "trade",
+    "text": "selling [item], offer"
+   },
+   {
+    "tag": "trade",
+    "text": "buying [item], pm"
+   },
+   {
+    "tag": "trade",
+    "text": "wtb [item]"
+   },
+   {
+    "tag": "trade",
+    "text": "wts [item]"
+   },
+   {
+    "tag": "trade",
+    "text": "anyone have a spare [item]?"
+   },
+   {
+    "tag": "trade",
+    "text": "i can give you a t12 for free"
+   },
+   {
+    "tag": "trade",
+    "text": "keep your pots, you need them more"
+   },
+   {
+    "tag": "trade",
+    "text": "ty for the trade"
+   },
+   {
+    "tag": "trade",
+    "text": "mind checking the items before accepting?"
+   },
+   {
+    "tag": "trade",
+    "text": "take your time, no rush"
+   },
+   {
+    "tag": "trade",
+    "text": "i have a spare if you still need it"
+   },
+   {
+    "tag": "trade",
+    "text": "that's a fair offer"
+   },
+   {
+    "tag": "trade",
+    "text": "sorry, looking for something else"
+   },
+   {
+    "tag": "trade",
+    "text": "all good, gl trading"
+   },
+   {
+    "tag": "trade",
+    "text": "don't trade your only set for pots"
+   },
+   {
+    "tag": "trade",
+    "text": "that item is soulbound, can't trade it"
+   },
+   {
+    "tag": "trade",
+    "text": "you can have it, vault space is pain"
+   },
+   {
+    "tag": "trade",
+    "text": "free t10/t11 at nexus"
+   },
+   {
+    "tag": "trade",
+    "text": "someone gave me my first tops, paying it forward"
+   },
+   {
+    "tag": "trade",
+    "text": "tysm, huge help"
+   },
+   {
+    "tag": "social",
+    "text": "any active guild recruiting?"
+   },
+   {
+    "tag": "social",
+    "text": "we're small but we run stuff most nights"
+   },
+   {
+    "tag": "social",
+    "text": "what server are you all on?"
+   },
+   {
+    "tag": "social",
+    "text": "[server] is popping right now"
+   },
+   {
+    "tag": "social",
+    "text": "server feels laggy today"
+   },
+   {
+    "tag": "social",
+    "text": "i'm getting 300 ping, i'll play safe"
+   },
+   {
+    "tag": "social",
+    "text": "brb, feeding pet"
+   },
+   {
+    "tag": "social",
+    "text": "afk for 2, don't start without me if it's full"
+   },
+   {
+    "tag": "social",
+    "text": "anyone else coming back after years?"
+   },
+   {
+    "tag": "social",
+    "text": "welcome back, a lot changed after flash"
+   },
+   {
+    "tag": "social",
+    "text": "what did i miss since 2020?"
+   },
+   {
+    "tag": "social",
+    "text": "mostly more dungeons and more ways to die"
+   },
+   {
+    "tag": "social",
+    "text": "this game has me in a chokehold again"
+   },
+   {
+    "tag": "social",
+    "text": "one more run then i log, surely"
+   },
+   {
+    "tag": "social",
+    "text": "famous last words"
+   },
+   {
+    "tag": "social",
+    "text": "anyone watching motmg news?"
+   },
+   {
+    "tag": "social",
+    "text": "deca please fix the disconnects"
+   },
+   {
+    "tag": "social",
+    "text": "the music in this dungeon goes hard"
+   },
+   {
+    "tag": "social",
+    "text": "i play for the pixel bags, honestly"
+   },
+   {
+    "tag": "social",
+    "text": "same"
+   },
+   {
+    "tag": "fr",
+    "text": "[dungeon] tp, portail safe"
+   },
+   {
+    "tag": "fr",
+    "text": "quelqu'un pour maxer dex ?"
+   },
+   {
+    "tag": "fr",
+    "text": "j'ai une inc, wc après o2"
+   },
+   {
+    "tag": "fr",
+    "text": "premier o3, je joue safe"
+   },
+   {
+    "tag": "fr",
+    "text": "gg le white, énorme"
+   },
+   {
+    "tag": "fr",
+    "text": "rip le 8/8, courage"
+   },
+   {
+    "tag": "fr",
+    "text": "lag énorme, je nexus si ça continue"
+   },
+   {
+    "tag": "fr",
+    "text": "vous faites cult ou void ?"
+   },
+   {
+    "tag": "fr",
+    "text": "j'ai besoin de life, je viens"
+   },
+   {
+    "tag": "fr",
+    "text": "le boss phase, reculez"
+   },
+   {
+    "tag": "fr",
+    "text": "je peux rush mais je garantis rien"
+   },
+   {
+    "tag": "fr",
+    "text": "pas de greed, le nexus c'est gratuit"
+   },
+   {
+    "tag": "fr",
+    "text": "quelqu'un veut des tops gratuits ?"
+   },
+   {
+    "tag": "fr",
+    "text": "merci pour le carry"
+   },
+   {
+    "tag": "fr",
+    "text": "non mais ce pbag après 40 runs..."
+   },
+   {
+    "tag": "fr",
+    "text": "on attend les retardataires"
+   },
+   {
+    "tag": "fr",
+    "text": "le mini c'est leuc, attention aux beams"
+   },
+   {
+    "tag": "fr",
+    "text": "je rejoins après avoir nourri le pet"
+   },
+   {
+    "tag": "fr",
+    "text": "encore une run et j'arrête, promis"
+   },
+   {
+    "tag": "fr",
+    "text": "oui bien sûr, à demain matin"
+   },
+   {
+    "tag": "reaction",
+    "text": "ty"
+   },
+   {
+    "tag": "reaction",
+    "text": "tyty"
+   },
+   {
+    "tag": "reaction",
+    "text": "np"
+   },
+   {
+    "tag": "reaction",
+    "text": "gz"
+   },
+   {
+    "tag": "reaction",
+    "text": "big gz"
+   },
+   {
+    "tag": "reaction",
+    "text": "lol"
+   },
+   {
+    "tag": "reaction",
+    "text": "lmao"
+   },
+   {
+    "tag": "reaction",
+    "text": "fr"
+   },
+   {
+    "tag": "reaction",
+    "text": "real"
+   },
+   {
+    "tag": "reaction",
+    "text": "same"
+   },
+   {
+    "tag": "reaction",
+    "text": "based"
+   },
+   {
+    "tag": "reaction",
+    "text": "huge"
+   },
+   {
+    "tag": "reaction",
+    "text": "nice"
+   },
+   {
+    "tag": "reaction",
+    "text": "clean"
+   },
+   {
+    "tag": "reaction",
+    "text": "pain"
+   },
+   {
+    "tag": "reaction",
+    "text": "rip"
+   },
+   {
+    "tag": "reaction",
+    "text": "unlucky"
+   },
+   {
+    "tag": "reaction",
+    "text": "worth"
+   },
+   {
+    "tag": "reaction",
+    "text": "not worth"
+   },
+   {
+    "tag": "reaction",
+    "text": "we go next"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "stop dragging mobs into the group"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "whoever stunned that chest, please don't"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "why are you shooting during the callout"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "bro learned the fight from a youtube short"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "please use your eyes"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "that was the most avoidable death ever"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "don't blame lag for walking into every shot"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "you had a full hp bar and a nexus key"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "actual floor tank gameplay"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "least greedy rotmg player"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "average [class] moment"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "you are not the main character, spread out"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "stop rushing if you don't know the route"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "that decoy did more damage to us than the boss"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "nice stasis, now nobody can finish the phase"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "please don't call it safe if you aren't there"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "you're making this take twice as long"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "i swear some of you are allergic to backing up"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "not every phase needs max dps"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "that portal was called ten seconds ago"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "if you want a carry, at least stay with the group"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "we said no rush three times"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "this run was clean until that happened"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "someone ping the person who keeps pulling ahead"
+   },
+   {
+    "tag": "toxic_low",
+    "text": "i'm muting realm chat for my own sanity"
+   },
+   {
+    "tag": "accusation",
+    "text": "that movement looks really suspicious"
+   },
+   {
+    "tag": "accusation",
+    "text": "how did they get there that fast?"
+   },
+   {
+    "tag": "accusation",
+    "text": "report and move on"
+   },
+   {
+    "tag": "accusation",
+    "text": "don't start witch hunts in chat"
+   },
+   {
+    "tag": "accusation",
+    "text": "i clipped that, sending it to support"
+   },
+   {
+    "tag": "accusation",
+    "text": "there's no way that was normal lag"
+   },
+   {
+    "tag": "accusation",
+    "text": "stop advertising cheats in nexus"
+   },
+   {
+    "tag": "accusation",
+    "text": "keep that stuff out of public runs"
+   },
+   {
+    "tag": "accusation",
+    "text": "if it looks wrong, just report it"
+   },
+   {
+    "tag": "accusation",
+    "text": "i'm not risking my account for a shortcut"
+   },
+   {
+    "tag": "accusation",
+    "text": "why is the boss getting deleted before we arrive"
+   },
+   {
+    "tag": "accusation",
+    "text": "that player is following every event spawn somehow"
+   },
+   {
+    "tag": "accusation",
+    "text": "can we focus on the run instead of arguing about it"
+   },
+   {
+    "tag": "accusation",
+    "text": "they're probably just cracked, chill"
+   },
+   {
+    "tag": "accusation",
+    "text": "being fast isn't proof of anything"
+   },
+   {
+    "tag": "accusation",
+    "text": "no names in chat, use the report tool"
+   },
+   {
+    "tag": "accusation",
+    "text": "i left that run, it felt sketchy"
+   },
+   {
+    "tag": "accusation",
+    "text": "not worth getting caught up in that"
+   },
+   {
+    "tag": "scam_like",
+    "text": "selling super cheap [item], trade fast"
+   },
+   {
+    "tag": "scam_like",
+    "text": "trust trade? i need proof first"
+   },
+   {
+    "tag": "scam_like",
+    "text": "can you add first, i promise i'll add mine"
+   },
+   {
+    "tag": "scam_like",
+    "text": "my inventory bugged, trade again"
+   },
+   {
+    "tag": "scam_like",
+    "text": "wait, you changed the item"
+   },
+   {
+    "tag": "scam_like",
+    "text": "check the trade window carefully"
+   },
+   {
+    "tag": "scam_like",
+    "text": "too cheap means double check"
+   },
+   {
+    "tag": "scam_like",
+    "text": "don't rush a trade because someone is spamming"
+   },
+   {
+    "tag": "scam_like",
+    "text": "that offer is not what it was a second ago"
+   },
+   {
+    "tag": "scam_like",
+    "text": "nah, i'm good. trade feels weird"
+   },
+   {
+    "tag": "scam_like",
+    "text": "they vanished right after i accepted"
+   },
+   {
+    "tag": "scam_like",
+    "text": "use the normal trade window, no weird deals"
+   },
+   {
+    "tag": "scam_like",
+    "text": "who is buying keys for that much?"
+   },
+   {
+    "tag": "scam_like",
+    "text": "don't drop items on the ground for a trade"
+   },
+   {
+    "tag": "scam_like",
+    "text": "that message is a red flag"
+   },
+   {
+    "tag": "scam_like",
+    "text": "i almost clicked accept without looking"
+   },
+   {
+    "tag": "scam_like",
+    "text": "no vouch, no trade"
+   },
+   {
+    "tag": "scam_like",
+    "text": "report the scam attempt and block"
+   },
+   {
+    "tag": "spam",
+    "text": "SELLING [item] SELLING [item] PM"
+   },
+   {
+    "tag": "spam",
+    "text": "FREE KEY POP AT NEXUS COME NOW"
+   },
+   {
+    "tag": "spam",
+    "text": "[dungeon] TP [dungeon] TP [dungeon] TP"
+   },
+   {
+    "tag": "spam",
+    "text": "WTS TOPS CHEAP CHEAP CHEAP"
+   },
+   {
+    "tag": "spam",
+    "text": "O3 RUNES READY, NEED PEOPLE NOW"
+   },
+   {
+    "tag": "spam",
+    "text": "WHO NEEDS MAXING WHO NEEDS MAXING"
+   },
+   {
+    "tag": "spam",
+    "text": "[player] [player] [player] answer trade"
+   },
+   {
+    "tag": "spam",
+    "text": "KEYPER EAST EAST EAST"
+   },
+   {
+    "tag": "spam",
+    "text": "GZ GZ GZ GZ"
+   },
+   {
+    "tag": "spam",
+    "text": "deca fix servers pls"
+   },
+   {
+    "tag": "spam",
+    "text": "LAG LAG LAG"
+   },
+   {
+    "tag": "spam",
+    "text": "anyone? anyone? anyone?"
+   },
+   {
+    "tag": "fr_toxic_low",
+    "text": "arrête de drag les mobs sur le groupe"
+   },
+   {
+    "tag": "fr_toxic_low",
+    "text": "on a dit safe, pas suicide"
+   },
+   {
+    "tag": "fr_toxic_low",
+    "text": "tu peux arrêter de spam le chat ?"
+   },
+   {
+    "tag": "fr_toxic_low",
+    "text": "regarde ton écran un peu"
+   },
+   {
+    "tag": "fr_toxic_low",
+    "text": "tu greed trop pour un pbag"
+   },
+   {
+    "tag": "fr_toxic_low",
+    "text": "encore un tp à l'aveugle, incroyable"
+   },
+   {
+    "tag": "fr_accusation",
+    "text": "ça avait l'air vraiment suspect"
+   },
+   {
+    "tag": "fr_accusation",
+    "text": "report et passe à autre chose"
+   },
+   {
+    "tag": "fr_accusation",
+    "text": "pas de noms dans le chat, reporte juste"
+   },
+   {
+    "tag": "fr_scam_like",
+    "text": "vérifie bien le trade avant d'accepter"
+   },
+   {
+    "tag": "fr_scam_like",
+    "text": "l'item a changé, annule"
+   },
+   {
+    "tag": "fr_scam_like",
+    "text": "prix trop beau pour être vrai, méfiance"
+   }
+  ],
+  "talks": [
+   {
+    "turns": [
+     "A: cdepths tp, safe portal",
+     "B: omw",
+     "C: wait i need dex",
+     "A: no rush, still clearing",
+     "D: ty for call"
+    ]
+   },
+   {
+    "turns": [
+     "A: first o3, any quick tips?",
+     "B: don't greed damage, watch the floor",
+     "C: nexus early if you don't know a phase",
+     "A: got it, ty",
+     "D: everyone starts somewhere"
+    ]
+   },
+   {
+    "turns": [
+     "A: white!!!",
+     "B: what'd you get?",
+     "A: [item] from [boss]",
+     "C: huge gz",
+     "D: save it before you feed it by accident lol"
+    ]
+   },
+   {
+    "turns": [
+     "A: rip my 8/8",
+     "B: what happened?",
+     "A: tp'd blind to keyper",
+     "C: classic rotmg lesson",
+     "D: f, rebuild time"
+    ]
+   },
+   {
+    "turns": [
+     "A: natural wc after o2?",
+     "B: i have an inc if not",
+     "C: pop after everyone gets in castle",
+     "A: sounds good",
+     "D: ty popper"
+    ]
+   },
+   {
+    "turns": [
+     "A: lh tp",
+     "B: cult or void?",
+     "A: void if we have enough",
+     "C: i'm on a fresh 6/8, doing cult",
+     "D: fair, gl void"
+    ]
+   },
+   {
+    "turns": [
+     "A: coming back after 5 years, why is everything different?",
+     "B: welcome back to exalt",
+     "C: same game, more dungeons, more beams",
+     "A: do pets still carry?",
+     "D: yes, but don't let that make you greedy"
+    ]
+   },
+   {
+    "turns": [
+     "A: anyone have a spare t12 staff?",
+     "B: i do, come nexus",
+     "A: what do you want for it?",
+     "B: nothing, keep your pots",
+     "A: tysm"
+    ]
+   },
+   {
+    "turns": [
+     "A: mv 3 dancers, anyone?",
+     "B: i'm in",
+     "C: learning run or fast?",
+     "A: chill, no umi tonight",
+     "D: perfect"
+    ]
+   },
+   {
+    "turns": [
+     "A: dc'd on final phase...",
+     "B: noooo",
+     "C: worst feeling",
+     "A: i survived the hard part too",
+     "D: deca servers moment"
+    ]
+   },
+   {
+    "turns": [
+     "A: need 6 more wis for 8/8",
+     "B: cult is good if you see one",
+     "C: manor and undead lair work too",
+     "A: ty, i'll call if i find cult",
+     "D: gz in advance"
+    ]
+   },
+   {
+    "turns": [
+     "A: shatts tp, no rusher",
+     "B: is it a learning run?",
+     "A: mostly, take it slow",
+     "C: i'm bringing a backup char",
+     "D: wise choice"
+    ]
+   },
+   {
+    "turns": [
+     "A: 30th nest, still no [item]",
+     "B: rng will get you eventually",
+     "C: got mine by accident while maxing dex",
+     "A: i hate you respectfully",
+     "D: lmao"
+    ]
+   },
+   {
+    "turns": [
+     "A: hold up, pally is behind",
+     "B: wait for buffs",
+     "C: boss isn't going anywhere",
+     "D: alright go",
+     "A: clean"
+    ]
+   },
+   {
+    "turns": [
+     "A: [server] is packed",
+     "B: queue of the mad god",
+     "C: try another server if you're just farming",
+     "A: but this one has all the calls",
+     "D: the eternal dilemma"
+    ]
+   },
+   {
+    "turns": [
+     "A: free tops at nexus, clearing vault",
+     "B: could use a t13 weapon",
+     "A: trade me",
+     "C: paying it forward is always nice",
+     "B: ty so much"
+    ]
+   },
+   {
+    "turns": [
+     "A: which mini?",
+     "B: leuc",
+     "C: stay spread and watch beams",
+     "A: i'm nervous",
+     "D: nervous is good, it keeps you alive"
+    ]
+   },
+   {
+    "turns": [
+     "A: can someone rush?",
+     "B: i can try",
+     "C: don't risk it for an epic dungeon",
+     "B: i'll go slow and call portal",
+     "A: ty"
+    ]
+   },
+   {
+    "turns": [
+     "A: got my first exalt",
+     "B: gz!!",
+     "C: which stat?",
+     "A: dex",
+     "D: only eight hundred more completes to go"
+    ]
+   },
+   {
+    "turns": [
+     "A: one more run then i log",
+     "B: that's what you said an hour ago",
+     "C: o3 is up though",
+     "A: okay one last real last run",
+     "D: see you in two hours"
+    ]
+   },
+   {
+    "turns": [
+     "A: fungal tp, safe",
+     "B: j'arrive",
+     "C: crystal après ?",
+     "A: si ça pop oui",
+     "D: merci pour l'appel"
+    ]
+   },
+   {
+    "turns": [
+     "A: is [boss] safe to dps here?",
+     "B: only if you know the next phase",
+     "C: back off when low, don't gamble",
+     "A: makes sense",
+     "D: white bags aren't worth a character"
+    ]
+   },
+   {
+    "turns": [
+     "A: pbag from o2",
+     "B: better than no sb",
+     "C: technically loot",
+     "A: technically sadness",
+     "D: accurate"
+    ]
+   },
+   {
+    "turns": [
+     "A: trying [class] for the first time",
+     "B: nice, ability timing matters a lot",
+     "C: use tiered gear until you're comfortable",
+     "A: any dungeon i should learn it in?",
+     "D: nest/cult are good starts"
+    ]
+   },
+   {
+    "turns": [
+     "A: lost a good set, i'm done",
+     "B: take five, don't rebuild tilted",
+     "C: make a 0/8 and farm easy stuff",
+     "A: yeah probably smart",
+     "D: the game will still be here"
+    ]
+   },
+   {
+    "turns": [
+     "A: anyone wanna chain nests?",
+     "B: yes need dex",
+     "C: i'm down for a few",
+     "A: i'll pop first one",
+     "D: i'll bring keys after"
+    ]
+   },
+   {
+    "turns": [
+     "A: is [item] a white?",
+     "B: yeah, from [dungeon]",
+     "C: not every white is automatically best in slot",
+     "A: still looks sick",
+     "D: that is the important part"
+    ]
+   },
+   {
+    "turns": [
+     "A: cube god up beach",
+     "B: tp?",
+     "C: careful, don't stack on it",
+     "A: portal call after",
+     "D: got it"
+    ]
+   },
+   {
+    "turns": [
+     "A: that void was insanely clean",
+     "B: good slows and no panic",
+     "C: rl calls were on point",
+     "D: gg everyone",
+     "A: run it back?"
+    ]
+   },
+   {
+    "turns": [
+     "A: c'est mon premier o3, je peux rester ?",
+     "B: oui, joue safe",
+     "C: si tu connais pas une phase, recule",
+     "A: merci, je veux juste apprendre",
+     "D: bon réflexe"
+    ]
+   },
+   {
+    "turns": [
+     "A: stop dragging mobs into the group",
+     "B: i didn't mean to, my bad",
+     "C: just reset and keep moving",
+     "A: fine, but please watch where you're going",
+     "D: boss is clear now, focus"
+    ]
+   },
+   {
+    "turns": [
+     "A: that movement looks really suspicious",
+     "B: report and move on",
+     "C: no names in chat please",
+     "A: fair, i just don't want it in this run",
+     "D: portal is up, let's go"
+    ]
+   },
+   {
+    "turns": [
+     "A: selling super cheap [item], trade fast",
+     "B: why so cheap?",
+     "C: check the trade window carefully",
+     "A: never mind, i'm out",
+     "D: good call, no reason to rush"
+    ]
+   },
+   {
+    "turns": [
+     "A: FREE KEY POP AT NEXUS COME NOW",
+     "B: can you stop spamming?",
+     "C: if it's real, call the actual dungeon",
+     "A: [dungeon] popped, left nexus",
+     "D: there we go"
+    ]
+   },
+   {
+    "turns": [
+     "A: we said no rush three times",
+     "B: sorry, thought i knew the route",
+     "C: happens, just wait at forks",
+     "A: alright, no hard feelings",
+     "D: group is back together"
+    ]
+   },
+   {
+    "turns": [
+     "A: arrête de drag les mobs sur le groupe",
+     "B: désolé, j'ai lag",
+     "C: on reset, pas besoin de s'embrouiller",
+     "A: ok, on joue safe",
+     "D: portail en bas"
+    ]
+   }
+  ]
+ },
  "things": true,
  "sky": true,
  "water": true,
