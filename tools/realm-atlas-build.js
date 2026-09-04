@@ -2278,10 +2278,24 @@ function main() {
         const talks = (said.conversations || [])
           .filter(one => one && Array.isArray(one.turns) && one.turns.length)
           .map(one => ({ turns: one.turns }));
+        /*
+         * The corpus also says when each kind of line belongs - what the
+         * speaker is doing, how the chat is running, what just happened -
+         * and which short runs of messages an event should produce. Carried
+         * across so the page can follow them rather than pick at random.
+         */
+        const brain = said.contextual_engine || {};
+        const rules = (brain.rules || []).filter(one => one && one.when && one.allowed_tags)
+          .map(one => ({ when: one.when, allowed_tags: one.allowed_tags }));
+        const chains = (brain.reaction_chains || [])
+          .filter(one => one && one.event && Array.isArray(one.sequence))
+          .map(one => ({ event: one.event, sequence: one.sequence,
+            max_messages: one.max_messages }));
         if (lines.length) {
-          summary.chatter = { lines, talks };
-          console.log('  ' + lines.length + ' things to say and ' + talks.length
-            + ' exchanges');
+          summary.chatter = { lines, talks, rules, chains };
+          console.log('  ' + lines.length + ' things to say, ' + talks.length
+            + ' exchanges, ' + rules.length + ' rules for when, ' + chains.length
+            + ' runs of reaction');
         }
       } catch (e) {
         console.log('  the corpus of dialogue could not be read: ' + e.message);

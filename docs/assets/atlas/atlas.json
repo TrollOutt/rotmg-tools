@@ -83027,6 +83027,594 @@
      "D: portail en bas"
     ]
    }
+  ],
+  "rules": [
+   {
+    "when": {
+     "location": "nexus",
+     "activity": "idle",
+     "chat_tone": [
+      "quiet",
+      "busy"
+     ]
+    },
+    "allowed_tags": [
+     "social",
+     "trade",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "nexus",
+     "activity": "trading"
+    },
+    "allowed_tags": [
+     "trade",
+     "scam_like",
+     "spam",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "nexus",
+     "activity": "trading",
+     "recent_event": "trade_item_changed"
+    },
+    "allowed_tags": [
+     "scam_like",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": [
+      "realm_beach",
+      "realm_godlands"
+     ],
+     "activity": "realm_clear",
+     "recent_event": "none"
+    },
+    "allowed_tags": [
+     "realm",
+     "social",
+     "progression",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": [
+      "realm_beach",
+      "realm_godlands"
+     ],
+     "recent_event": "event_boss_spotted"
+    },
+    "allowed_tags": [
+     "realm",
+     "call",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "realm_godlands",
+     "recent_event": "keyper_spotted",
+     "character_risk": [
+      "6_8_plus",
+      "valuable_set",
+      "learning"
+     ]
+    },
+    "allowed_tags": [
+     "realm",
+     "group",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": [
+      "realm_godlands",
+      "realm_beach"
+     ],
+     "recent_event": "natural_dungeon_dropped"
+    },
+    "allowed_tags": [
+     "call",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "activity": "waiting_for_portal",
+     "recent_event": "portal_expiring"
+    },
+    "allowed_tags": [
+     "call",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "activity": "waiting_for_portal",
+     "player_role": "caller",
+     "portal": "open"
+    },
+    "allowed_tags": [
+     "call"
+    ]
+   },
+   {
+    "when": {
+     "activity": "waiting_for_portal",
+     "recent_event": "portal_called",
+     "player_role": "nearby"
+    },
+    "allowed_tags": [
+     "reaction",
+     "group",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "entering_dungeon"
+    },
+    "allowed_tags": [
+     "group",
+     "raid",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "clearing",
+     "group_size": "small"
+    },
+    "allowed_tags": [
+     "group",
+     "progression",
+     "social",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "clearing",
+     "group_size": "large"
+    },
+    "allowed_tags": [
+     "group",
+     "raid",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "boss_fight",
+     "recent_event": "phase_change_imminent"
+    },
+    "allowed_tags": [
+     "group",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "boss_fight",
+     "character_risk": "learning"
+    },
+    "allowed_tags": [
+     "group",
+     "progression",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "boss_fight",
+     "recent_event": "boss_vulnerable"
+    },
+    "allowed_tags": [
+     "group",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": [
+      "clearing",
+      "boss_fight"
+     ],
+     "recent_event": "avoidable_group_harm",
+     "chat_tone": [
+      "tense",
+      "toxic"
+     ]
+    },
+    "allowed_tags": [
+     "toxic_low",
+     "group",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "activity": "dead",
+     "recent_event": "player_death"
+    },
+    "allowed_tags": [
+     "death",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "activity": "dead",
+     "player_role": "deceased"
+    },
+    "allowed_tags": [
+     "death"
+    ]
+   },
+   {
+    "when": {
+     "activity": "recovering",
+     "recent_event": "player_death"
+    },
+    "allowed_tags": [
+     "death",
+     "progression",
+     "social"
+    ]
+   },
+   {
+    "when": {
+     "activity": "loot",
+     "loot_result": "none"
+    },
+    "allowed_tags": [
+     "loot",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "activity": "loot",
+     "loot_result": "no_sb"
+    },
+    "allowed_tags": [
+     "loot",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "activity": "loot",
+     "loot_result": "pbag"
+    },
+    "allowed_tags": [
+     "loot",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "activity": "loot",
+     "loot_result": "white"
+    },
+    "allowed_tags": [
+     "loot",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "activity": "loot",
+     "loot_result": [
+      "pots",
+      "tops",
+      "orange"
+     ]
+    },
+    "allowed_tags": [
+     "loot",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "castle",
+     "activity": "waiting_for_portal",
+     "recent_event": "o2_approaching"
+    },
+    "allowed_tags": [
+     "realm",
+     "group",
+     "o3",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "wine_cellar",
+     "activity": "boss_fight",
+     "boss": "O2"
+    },
+    "allowed_tags": [
+     "group",
+     "o3",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "wine_cellar",
+     "recent_event": "o2_dead",
+     "portal": "oryx_sanctuary_pending"
+    },
+    "allowed_tags": [
+     "o3",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "oryx_sanctuary",
+     "activity": "entering_dungeon",
+     "character_risk": "learning"
+    },
+    "allowed_tags": [
+     "o3",
+     "group",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "location": "oryx_sanctuary",
+     "activity": "boss_fight",
+     "boss": [
+      "Beisa",
+      "Gemsbok",
+      "Leucoryx"
+     ]
+    },
+    "allowed_tags": [
+     "o3",
+     "group",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "location": "oryx_sanctuary",
+     "activity": "boss_fight",
+     "boss": "O3",
+     "boss_phase": "celestial"
+    },
+    "allowed_tags": [
+     "o3",
+     "group",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "activity": "entering_dungeon",
+     "portal": "lost_halls"
+    },
+    "allowed_tags": [
+     "raid",
+     "group",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "portal": "moonlight_village"
+    },
+    "allowed_tags": [
+     "raid",
+     "group",
+     "social",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "dungeon",
+     "portal": "shatters"
+    },
+    "allowed_tags": [
+     "raid",
+     "group",
+     "death",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "server_health": [
+      "high_ping",
+      "disconnecting"
+     ],
+     "activity": [
+      "clearing",
+      "boss_fight"
+     ]
+    },
+    "allowed_tags": [
+     "social",
+     "death",
+     "reaction",
+     "fr"
+    ]
+   },
+   {
+    "when": {
+     "location": "nexus",
+     "server_health": "queue"
+    },
+    "allowed_tags": [
+     "social",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "recent_event": "suspicious_behavior",
+     "chat_tone": [
+      "tense",
+      "toxic"
+     ]
+    },
+    "allowed_tags": [
+     "accusation",
+     "reaction"
+    ]
+   },
+   {
+    "when": {
+     "location": "nexus",
+     "chat_tone": "spammy"
+    },
+    "allowed_tags": [
+     "spam",
+     "reaction",
+     "toxic_low"
+    ]
+   },
+   {
+    "when": {
+     "activity": "idle",
+     "recent_event": "new_player_question",
+     "chat_tone": "helpful"
+    },
+    "allowed_tags": [
+     "progression",
+     "social",
+     "group",
+     "fr"
+    ]
+   }
+  ],
+  "chains": [
+   {
+    "event": "portal_called",
+    "sequence": [
+     "caller:call",
+     "nearby:reaction",
+     "late_player:group?wait_for_slow_players",
+     "caller:call?last_call"
+    ],
+    "max_messages": 4
+   },
+   {
+    "event": "event_boss_spotted",
+    "sequence": [
+     "spotter:realm",
+     "nearby:reaction?tp",
+     "spotter:realm?danger_warning",
+     "group:call?portal_after"
+    ],
+    "max_messages": 4
+   },
+   {
+    "event": "boss_phase_change",
+    "sequence": [
+     "experienced_player:group",
+     "0-2_players:reaction",
+     "silent_combat:pause"
+    ],
+    "max_messages": 3
+   },
+   {
+    "event": "player_death",
+    "sequence": [
+     "deceased:death?self_report",
+     "others:death_or_reaction",
+     "friend:death?rebuild_support",
+     "chat:pause"
+    ],
+    "max_messages": 4
+   },
+   {
+    "event": "white_bag",
+    "sequence": [
+     "recipient:loot?announce",
+     "others:reaction?gz",
+     "recipient:loot?item_name",
+     "others:reaction?big_gz"
+    ],
+    "max_messages": 4
+   },
+   {
+    "event": "pbag",
+    "sequence": [
+     "recipient:loot?complaint",
+     "other:reaction?pain_or_lol",
+     "chat:pause"
+    ],
+    "max_messages": 2
+   },
+   {
+    "event": "trade_item_changed",
+    "sequence": [
+     "target:scam_like?notice",
+     "bystander:scam_like?check",
+     "target:scam_like?cancel",
+     "chat:pause"
+    ],
+    "max_messages": 3
+   },
+   {
+    "event": "avoidable_group_harm",
+    "sequence": [
+     "witness:toxic_low",
+     "responsible:reaction?apology_or_silence",
+     "leader:group?reset",
+     "chat:pause"
+    ],
+    "max_messages": 3
+   },
+   {
+    "event": "suspicious_behavior",
+    "sequence": [
+     "witness:accusation",
+     "other:accusation?report",
+     "group:reaction?refocus",
+     "chat:pause"
+    ],
+    "max_messages": 3
+   },
+   {
+    "event": "lag_spike",
+    "sequence": [
+     "affected_player:social",
+     "other:reaction",
+     "affected_player:death?play_safe_or_nexus",
+     "chat:pause"
+    ],
+    "max_messages": 3
+   }
   ]
  },
  "things": true,
