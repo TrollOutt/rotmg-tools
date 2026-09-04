@@ -124,7 +124,8 @@
   <span id="zone"></span>
   <span id="count"></span>
   <span id="seen" hidden><b id="seenAll">&ndash;</b> <i>visitors</i>
-    <b id="seenToday">&ndash;</b> <i>today</i></span>
+    <b id="seenToday">&ndash;</b> <i>today</i>
+    <b id="seenNow">&ndash;</b> <i>here now</i></span>
   <span id="hint">drag to pan · wheel to zoom · click a zone · double-click to fit</span>
 </div>
 <script>
@@ -3808,44 +3809,81 @@ addEventListener('keydown', event => {
   else if (event.key === 'e' || event.key === 'E') { turnBy(TURN_STEP); event.preventDefault(); }
 });
 
-/*
- * How many people have been here.
+/* --------------------------------------------------------------------
+ * How many people are here.
  *
- * The map is a folder of files on a static host: nothing of ours runs when
- * somebody opens it, so nothing of ours can count. The only way to have a
- * number is to ask something that is running somewhere, and this asks Abacus,
- * which keeps a counter under a name and hands it back. It is told nothing
- * but the name - no page, no referrer we add, nothing about who is asking -
- * and if it is down or blocked the line simply never appears.
+ * Three numbers: how many have ever come, how many came today, and how many
+ * are on the site at this moment.
  *
- * Two names: one that has always been counting, and one per day. And counted
- * once a day per browser rather than once a page load, because the question
- * is how many people came and not how many times somebody pressed reload -
- * so the day already counted is remembered here, and every later visit that
- * day reads the numbers without adding to them.
- */
-const ABACUS = 'https://abacus.jasoncameron.dev/';
-function countVisitors() {
+ * The site is a folder of files on a static host, so nothing of ours runs
+ * when somebody opens it and nothing of ours can count. The numbers come from
+ * Abacus, which keeps a tally under a name and hands it back. It is told the
+ * name and nothing else, and if it is away or blocked the line never appears.
+ *
+ * The first two are counted once a day per browser, because the question is
+ * how many people came and not how many times somebody pressed reload.
+ *
+ * The third has no business being possible with a plain counter, and is done
+ * like this: every open page adds one to a tally named after the current
+ * minute, once a minute, for as long as it is the tab being looked at. A
+ * minute that has finished therefore holds one mark per page that was open
+ * during it, which is as close to "how many are here" as anything gets
+ * without a server. The minute just gone is read rather than the one running,
+ * because the one running is still filling up. A page nobody is looking at
+ * stops marking, and drops out of the count within the minute.
+ * ------------------------------------------------------------------ */
+(function countVisitors() {
+  const ABACUS = 'https://abacus.jasoncameron.dev/rotmg-realm-atlas/';
+  const put = (into, n) => {
+    const cell = document.getElementById(into);
+    if (cell) cell.textContent = n.toLocaleString();
+    const box = document.getElementById('seen');
+    if (box) box.hidden = false;
+  };
+  const ask = (verb, key, into) => fetch('https://abacus.jasoncameron.dev/'
+    + verb + '/rotmg-realm-atlas/' + key)
+    .then(r => (r.ok ? r.json() : null))
+    .then(said => { if (said && typeof said.value === 'number' && into) put(into, said.value); })
+    .catch(() => { /* offline, blocked, or away: say nothing */ });
+
   const day = new Date().toISOString().slice(0, 10);
   let counted = null;
   try { counted = localStorage.getItem('atlas-counted'); } catch (no) { counted = null; }
   const first = counted !== day;
   if (first) { try { localStorage.setItem('atlas-counted', day); } catch (no) { /* private */ } }
+  const verb = first ? 'hit' : 'get';
+  ask(verb, 'all', 'seenAll');
+  ask(verb, 'd' + day.replace(/-/g, ''), 'seenToday');
 
-  const box = document.getElementById('seen');
-  const ask = (key, into) => fetch(ABACUS + (first ? 'hit' : 'get') + '/rotmg-realm-atlas/' + key)
-    .then(r => r.ok ? r.json() : null)
-    .then(said => {
-      if (!said || typeof said.value !== 'number') return;
-      const cell = document.getElementById(into);
-      if (cell) cell.textContent = said.value.toLocaleString();
-      if (box) box.hidden = false;
-    })
-    .catch(() => { /* offline, blocked, or the service is away: say nothing */ });
-  ask('all', 'seenAll');
-  ask('d' + day.replace(/-/g, ''), 'seenToday');
-}
-countVisitors();
+  // And the minute-by-minute mark that makes "here now" possible.
+  const minuteName = when => 'm' + new Date(when).toISOString().slice(0, 16).replace(/[-:T]/g, '');
+  let marked = '';
+  /*
+   * The minute just gone is the honest number - it has finished filling, so
+   * it holds one mark per page that was open during it. But a minute nobody
+   * marked was never created and the service answers 404 for a name it has
+   * never seen, so when that happens the minute now running is read instead.
+   * It is still filling and will read low for a moment; it is never nothing,
+   * because this page has just marked it.
+   */
+  const readHere = key => fetch('https://abacus.jasoncameron.dev/get/rotmg-realm-atlas/' + key)
+    .then(r => (r.ok ? r.json() : null))
+    .then(said => (said && typeof said.value === 'number' ? said.value : null))
+    .catch(() => null);
+
+  function tick() {
+    if (document.hidden) return;
+    const now = Date.now();
+    const mine = minuteName(now);
+    if (mine !== marked) { marked = mine; ask('hit', mine, null); }
+    readHere(minuteName(now - 60000))
+      .then(n => (n === null ? readHere(mine) : n))
+      .then(n => { if (n !== null) put('seenNow', n); });
+  }
+  tick();
+  setInterval(tick, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+})();
 
 fit();
 view.scale = want.scale; view.x = want.x; view.y = want.y;
