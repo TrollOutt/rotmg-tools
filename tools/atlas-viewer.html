@@ -18,6 +18,16 @@
     pointer-events: none;
   }
   #where { color: #b9c2d4; }
+  #chat {
+    position: absolute; left: 12px; bottom: 34px; max-width: 46ch;
+    pointer-events: none; line-height: 1.45;
+  }
+  #chat .said { color: #97a2b6; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  #chat .who { color: #cfa96a; }
+  .life .bags { display: inline-flex; gap: 2px; vertical-align: middle; }
+  .life .bag {
+    width: 11px; height: 11px; image-rendering: pixelated; opacity: .95;
+  }
   #hint { margin-left: auto; opacity: .5; }
 
   /* The panel a zone opens into. */
@@ -119,6 +129,7 @@
   <p>tilt works at the closest zoom</p>
 </aside>
 <aside id="panel"><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
+<div id="chat"></div>
 <div id="bar">
   <span id="where">—</span>
   <span id="zone"></span>
@@ -2593,94 +2604,409 @@ function standUpLandmarks() {
   }
 }
 
+/* ---------------- what they say to each other ---------------- */
+/*
+ * A realm is not quiet. The chat is half of what being in one is like: a
+ * portal called out, somebody asking for a teleport, a white bag announced,
+ * an "f" for whoever just died, the same three people arguing about a trade.
+ * A map with two thousand creatures on it and nobody saying anything is a
+ * diorama.
+ *
+ * The lines are a corpus written for this, filed by what they are for -
+ * calls, loot, deaths, trade, reactions, the odd bit of French - and written
+ * with slots in them: [dungeon], [item], [class], [player], [stat]. Those
+ * are filled from this map. The dungeons are the ones that actually drop
+ * here, the items are ones that actually fall here, the classes are the six
+ * the client has, and the names are made up on the spot the way names in
+ * that game are.
+ *
+ * Some of it is not single lines but whole exchanges - one player calls, a
+ * second says they are coming, a third asks them to wait - and those play as
+ * a scene with a few seconds between turns, given to whoever happens to be
+ * standing near each other.
+ */
+const CHAT_KEEP = 7;                     // lines held on screen
+const CHAT_LASTS = 22;                   // seconds one stays up
+const CHAT_QUIET = 3.4;                  // seconds between unprompted lines
+const chat = [];
+let chatIn = CHAT_QUIET;
+let scene = null;
+
+/* Names, in the shape the game's own are: short, blunt, often nonsense. */
+const NAME_HEAD = ['dar', 'kor', 'mal', 'zen', 'bri', 'tho', 'vex', 'lun', 'gar', 'syl',
+  'nix', 'ort', 'pha', 'rue', 'skal', 'tyr', 'ulf', 'wren', 'yor', 'zab'];
+const NAME_TAIL = ['ok', 'ith', 'us', 'ara', 'en', 'ix', 'orn', 'ael', 'un', 'yr',
+  'is', 'ard', 'eth', 'ow', 'im'];
+function madeName() {
+  const one = NAME_HEAD[Math.floor(Math.random() * NAME_HEAD.length)]
+    + NAME_TAIL[Math.floor(Math.random() * NAME_TAIL.length)];
+  return one.charAt(0).toUpperCase() + one.slice(1)
+    + (Math.random() < 0.3 ? String(Math.floor(Math.random() * 90) + 10) : '');
+}
+
+/* The things a line can be about, taken off the map rather than invented. */
+let chatBits = null;
+function bitsForChat() {
+  if (chatBits) return chatBits;
+  const dungeons = new Set(), items = new Set(), bosses = new Set();
+  for (const zone of A.zones || []) {
+    for (const one of (zone.loot && zone.loot.dungeons) || []) if (one.name) dungeons.add(one.name);
+    for (const one of (zone.loot && zone.loot.items) || []) if (one.name) items.add(one.name);
+    for (const one of zone.heroes || []) if (one.name) bosses.add(one.name);
+    for (const one of zone.encounters || []) if (one.name) bosses.add(one.name);
+  }
+  chatBits = {
+    dungeon: [...dungeons],
+    item: [...items],
+    boss: [...bosses],
+    class: (A.folk || []).map(f => f.name),
+    stat: ['att', 'def', 'dex', 'spd', 'vit', 'wis', 'hp', 'mp'],
+    server: ['eusouth', 'uswest', 'ussouth', 'eastasia', 'euwest2']
+  };
+  return chatBits;
+}
+
+const anyOf = list => (list && list.length)
+  ? list[Math.floor(Math.random() * list.length)] : null;
+
+function fillIn(text, who) {
+  const bits = bitsForChat();
+  return text.replace(/\[(\w+)\]/g, (whole, slot) => {
+    if (slot === 'player') return anyOf(folk.filter(f => f !== who && f.name).map(f => f.name))
+      || madeName();
+    if (slot === 'number') return String(Math.floor(Math.random() * 6) + 2);
+    const got = anyOf(bits[slot]);
+    return got === null ? whole : String(got).toLowerCase();
+  });
+}
+
+let linesByTag = null;
+function lineFor(tag) {
+  const said = A.chatter;
+  if (!said || !said.lines || !said.lines.length) return null;
+  if (!linesByTag) {
+    linesByTag = new Map();
+    for (const one of said.lines) {
+      if (!linesByTag.has(one.tag)) linesByTag.set(one.tag, []);
+      linesByTag.get(one.tag).push(one.text);
+    }
+  }
+  /*
+   * A tenth of what is said is in French, which is how that game's chat
+   * actually reads on a European server, and the corpus keeps those apart
+   * under their own tags so they can be dropped in at the right rate rather
+   * than mixed through everything.
+   */
+  const french = Math.random() < 0.1;
+  const list = (french && linesByTag.get('fr_' + tag)) || linesByTag.get(tag)
+    || (french ? linesByTag.get('fr') : null);
+  return anyOf(list);
+}
+
+function speak(tag, who, text) {
+  const said = text === undefined ? lineFor(tag) : text;
+  if (!said) return;
+  if (who && !who.name) who.name = madeName();
+  chat.push({
+    who: who && who.name ? who.name : madeName(),
+    said: fillIn(said, who),
+    left: CHAT_LASTS
+  });
+  while (chat.length > CHAT_KEEP) chat.shift();
+}
+
+/* And the exchanges, handed out to whoever is standing about. */
+function startScene() {
+  const said = A.chatter;
+  if (!said || !said.talks || !said.talks.length) return;
+  const talk = anyOf(said.talks);
+  if (!talk || !talk.turns || !talk.turns.length) return;
+  const up = folk.filter(one => one.down <= 0);
+  if (up.length < 2) return;
+  const cast = new Map();
+  scene = {
+    turns: talk.turns.slice(),
+    at: 0,
+    next: 0,
+    voice: mark => {
+      if (!cast.has(mark)) {
+        const one = up[Math.floor(Math.random() * up.length)];
+        if (one && !one.name) one.name = madeName();
+        cast.set(mark, one);
+      }
+      return cast.get(mark);
+    }
+  };
+}
+
+function stepChat(delta) {
+  for (let i = chat.length - 1; i >= 0; i--) {
+    chat[i].left -= delta;
+    if (chat[i].left <= 0) chat.splice(i, 1);
+  }
+
+  if (scene) {
+    scene.next -= delta;
+    if (scene.next <= 0) {
+      const turn = scene.turns[scene.at++];
+      // Written as "A: something", the letter being who is talking.
+      const m = /^([A-Z])\s*:\s*(.*)$/.exec(turn || '');
+      if (m) speak(null, scene.voice(m[1]), m[2]);
+      else if (turn) speak(null, null, turn);
+      scene.next = 1.6 + Math.random() * 1.6;
+      if (scene.at >= scene.turns.length) scene = null;
+    }
+    return;
+  }
+
+  chatIn -= delta;
+  if (chatIn > 0) return;
+  chatIn = CHAT_QUIET + Math.random() * CHAT_QUIET * 2;
+  if (Math.random() < 0.22) { startScene(); return; }
+  /*
+   * What gets said when nothing has happened. Weighted the way an idle realm
+   * reads: mostly people calling portals and organising, some chatter, and
+   * the sour end of it present but rare, because it is rare.
+   */
+  const idle = ['call', 'call', 'realm', 'realm', 'group', 'social', 'trade',
+    'progression', 'reaction', 'raid', 'o3', 'spam', 'toxic_low', 'accusation'];
+  speak(idle[Math.floor(Math.random() * idle.length)],
+    anyOf(folk.filter(one => one.down <= 0)));
+}
+
+function drawChat() {
+  const box = document.getElementById('chat');
+  if (!box) return;
+  if (!chat.length || view.scale < SHOW_LIFE) { box.textContent = ''; return; }
+  const out = [];
+  for (const one of chat) {
+    const line = document.createElement('div');
+    line.className = 'said';
+    line.style.opacity = String(Math.max(0.15, Math.min(1, one.left / 4)));
+    const who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = one.who;
+    line.appendChild(who);
+    line.appendChild(document.createTextNode(' ' + one.said));
+    out.push(line);
+  }
+  box.replaceChildren(...out);
+}
+
 /* ---------------- the folk who come to fight ---------------- */
 /*
- * Adventurers, in the realm, fighting the way the game says they fight.
+ * Adventurers, in the realm, built the way the game builds them.
  *
- * Almost nothing here is chosen. The six classes are objects in the client
- * with the same walk cycle the wildlife has, so they are cut and drawn by the
- * code that draws wildlife. Their hit points, attack, defence and dexterity
- * are the client's, and so is the kit they start with: a Warrior swings a
- * Short Sword for forty-five to ninety at three and a half tiles, a Wizard
- * throws two missiles off an Energy Staff for ten to thirty at nearly nine.
- * What a creature has, and how hard and how far it shoots back, is the
- * client's too.
+ * Almost nothing below is chosen. A class in the client declares eight
+ * statistics, each with what it starts on and what it can never pass, and
+ * then declares what one level is worth of each - so a character at level
+ * fourteen is arithmetic, not a guess. It declares the four things it is
+ * wearing, and each of those says what it does: a weapon and an ability
+ * carry a projectile apiece, which is the attack, and armour and rings say
+ * which statistic they raise. What a creature has, and how hard and how far
+ * it shoots back, is the client's as well.
  *
- * So a shot is a shot: it leaves whoever fired it, crosses the ground at the
- * speed the client gives it, expires at the range the client gives it, and
- * hurts whatever it reaches. Standing next to something and quietly draining
- * its hit points was a placeholder and read as two sprites ignoring each
- * other.
- *
- * The three numbers that are not the client's are marked below.
+ * Four conversions turn a statistic into a rate, and those are not in the
+ * client - they are the ones the game's own players have long since worked
+ * out and agreed on, and they are written out below so they can be argued
+ * with. Everything else here is either the client's or is marked as mine.
  */
+const SHOTS_AT = dex => 1.5 + 6.5 * (dex / 75);   // attacks a second
+const PACE_AT = spd => 4 + 5.6 * (spd / 75);      // tiles a second
+const HEAL_AT = vit => 1 + 0.12 * vit;            // hit points a second
+const MANA_AT = wis => 0.5 + 0.06 * wis;          // magic a second
+
 const FOLK_AT_A_BEACON = 4;              // mine: how many set out from each
 const FOLK_BACK = 9;                     // mine: seconds before a dead one returns
 const FOLK_SEEK = 26;                    // mine: tiles they will cross for a fight
+const FOLK_HOLD = 0.78;                  // mine: how much of their reach they keep
+const DODGE_SEE = 3.2;                   // mine: tiles ahead they watch for a shot
+const TO_LEVEL = 55;                     // mine: experience a level costs, times the level
 
 const folk = [];
 const shots = [];
+const sparks = [];
 
 /*
- * What a death leaves on the ground.
+ * What a character is at a given level.
  *
- * A creature that is killed does not blink out: it goes over about a third of
- * a second, fading and settling, and sometimes leaves a bag. A character that
- * is killed leaves a gravestone, and which of the eleven the game has depends
- * on how far they got - the first four are small markers and the rest are
- * proper stones, which is the game's own way of saying a death mattered.
- *
- * Nobody picks any of it up, so it goes by itself: a bag after a minute and a
- * stone after four, both fading out over their last few seconds. A realm
- * watched for an hour would otherwise be a graveyard with a map under it.
+ * Base plus the level's worth of each statistic, held under the ceiling the
+ * client sets, plus whatever the armour and the ring are worth for being
+ * worn. Nothing here is a curve I invented: every number in it is a number
+ * the client states.
  */
-const DYING = 0.36;                      // seconds a creature takes to go
-const BAG_LASTS = 60;                    // and how long its bag stays
-const GRAVE_LASTS = 240;                 // and how long a gravestone does
+function statsAt(kind, level) {
+  const g = kind.grow || {};
+  const worn = {};
+  for (const piece of [kind.armour, kind.ring, kind.weapon, kind.ability]) {
+    if (piece && piece.worn) {
+      for (const k of Object.keys(piece.worn)) worn[k] = (worn[k] || 0) + piece.worn[k];
+    }
+  }
+  const up = (base, per, top, extra) => {
+    const raw = (base || 0) + (per || 0) * (level - 1);
+    return Math.round(Math.min(top === undefined ? Infinity : top, raw) + (extra || 0));
+  };
+  return {
+    hp: up(kind.hp, g.hp, kind.hpTop, worn.HP) || 200,
+    mp: up(kind.mp, g.mp, kind.mpTop, worn.MP) || 100,
+    att: up(kind.att, g.att, kind.attTop, worn.ATT),
+    def: up(kind.def, g.def, kind.defTop, worn.DEF),
+    pace: up(kind.pace, g.pace, kind.paceTop, worn.SPD),
+    dex: up(kind.dex, g.dex, kind.dexTop, worn.DEX),
+    vit: up(kind.vit, g.vit, kind.vitTop, worn.VIT),
+    wis: up(kind.wis, g.wis, kind.wisTop, worn.WIS)
+  };
+}
+
+/*
+ * How hard a shot lands. The game works the damage up from the attacker's
+ * attack and then down again against the target's armour, and never lets
+ * armour take more than most of it - which is why a well armoured thing is
+ * hard to kill and not impossible.
+ */
+function hurtOf(shot, att, armour) {
+  const raw = shot.low + Math.random() * Math.max(0, (shot.high || shot.low) - shot.low);
+  const swung = raw * (0.5 + (att || 50) / 50);
+  if (shot.pierce) return swung;
+  return Math.max(swung * 0.15, swung - (armour || 0));
+}
+
+/*
+ * Which bags a creature can leave, which the client knows outright: every
+ * item carries the colour of bag it falls in, and the roster says which
+ * items a creature drops. The rosters are held per zone, so they are read
+ * once into one index by name.
+ */
+let bagsByName = null;
+function bagsFor(name) {
+  if (!bagsByName) {
+    bagsByName = new Map();
+    for (const owner of [...(A.zones || []), ...(A.biomes || [])]) {
+      for (const group of ['regular', 'encounters', 'heroes', 'guardians']) {
+        for (const one of owner[group] || []) {
+          if (one.bags && !bagsByName.has(one.name)) bagsByName.set(one.name, one.bags);
+        }
+      }
+    }
+  }
+  return bagsByName.get(name);
+}
+
+/* ---------------- what a death leaves ---------------- */
+/*
+ * A creature that is killed does not blink out. It goes over about a third
+ * of a second, fading while it comes apart into a handful of its own colours
+ * thrown outward - which is the shape of the thing the game does, and reads
+ * as a kill rather than as a sprite being switched off. A character that is
+ * killed leaves a gravestone, and which of the eleven depends on how far
+ * they got, because that is the game's own way of saying a death mattered.
+ *
+ * Nobody picks any of it up, so it goes by itself: a bag after a minute, a
+ * stone after four. A realm watched for an hour would otherwise be a
+ * graveyard with a map underneath it.
+ */
+const DYING = 0.36;
+const BAG_LASTS = 60;
+const GRAVE_LASTS = 240;
 const litter = [];
 
 /*
- * How good a bag is, and whether there is one at all. The game ties both to
- * what was killed, and so does this: nothing much drops off a bat, and a
- * thing with twenty thousand hit points nearly always leaves something.
+ * A few of a creature's own colours, read off its sprite once and kept, so
+ * that what flies off it when it dies is made of the thing that died.
+ */
+const dustOf = new Map();
+function coloursFor(sprite) {
+  let got = dustOf.get(sprite.file);
+  if (got) return got;
+  got = ['#d8d2c4'];
+  const img = artFor(sprite);
+  if (img.complete && img.naturalWidth) {
+    try {
+      const c = document.createElement('canvas');
+      c.width = sprite.tile; c.height = sprite.height;
+      const p = c.getContext('2d', { willReadFrequently: true });
+      p.drawImage(img, 0, 0, sprite.tile, sprite.height, 0, 0, sprite.tile, sprite.height);
+      const d = p.getImageData(0, 0, c.width, c.height).data;
+      const picked = [];
+      for (let i = 0; i < d.length && picked.length < 5; i += 4 * 7) {
+        // Skipping the outline, which is every sprite's colour and nobody's.
+        if (d[i + 3] < 250) continue;
+        if (d[i] < 30 && d[i + 1] < 30 && d[i + 2] < 30) continue;
+        picked.push('rgb(' + d[i] + ',' + d[i + 1] + ',' + d[i + 2] + ')');
+      }
+      if (picked.length) got = picked;
+      dustOf.set(sprite.file, got);
+    } catch (e) { /* the sheet is not ours to read yet */ }
+  }
+  return got;
+}
+
+function burst(beast) {
+  const colours = coloursFor(beast.kind.sprite);
+  const many = 5 + Math.round(Math.min(9, (beast.full || 400) / 2500));
+  for (let i = 0; i < many; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const fast = 1.6 + Math.random() * 3.4;
+    sparks.push({
+      x: beast.x, y: beast.y,
+      vx: Math.cos(angle) * fast, vy: Math.sin(angle) * fast,
+      left: 0.3 + Math.random() * 0.35, full: 0.65,
+      tint: colours[Math.floor(Math.random() * colours.length)]
+    });
+  }
+}
+
+function stepSparks(delta) {
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.x += s.vx * delta; s.y += s.vy * delta;
+    s.vx *= 0.90; s.vy *= 0.90;
+    s.left -= delta;
+    if (s.left <= 0) sparks.splice(i, 1);
+  }
+}
+
+/*
+ * Whether anything falls, and in which colour of bag.
+ *
+ * The colour is not reasoned about at all any more: the client says which
+ * bag every item falls in, and the roster says which items a creature drops,
+ * so a creature that only ever drops brown-bag things leaves brown bags and
+ * one with a tier eleven weapon on its table can leave the bag that goes
+ * with it. How likely each of its own colours is comes from how much of its
+ * table is that colour. Only the chance of anything at all is still
+ * reasoned, because the real tables are the server's: it climbs with the
+ * root of what was killed, so the median creature here leaves something
+ * about twice in a hundred kills and the largest about once in six.
  */
 function dropFrom(beast) {
   const bags = (A.marks && A.marks.bags) || [];
   if (!bags.length) return;
   const worth = beast.full || 200;
-
-  /*
-   * Whether anything falls.
-   *
-   * The real tables are not here to copy. They are kept by the server, and
-   * what can be read from outside is a list of what a thing is known to drop
-   * with no number against any of it - so the rate is reasoned rather than
-   * looked up, from two things about the game that are not in doubt: the
-   * great majority of kills leave nothing on the floor, and the biggest
-   * things leave something often but not reliably.
-   *
-   * So it climbs with the root of what was killed rather than with the thing
-   * itself, which keeps the ends sensible instead of only the middle. The
-   * eight hundred hit points that is the median creature here comes out under
-   * two in a hundred; a five thousand point god, four and a half; the largest
-   * thing in the realm, about one kill in six. The rule before this gave a
-   * bag to three kills in four and the floor was carpeted.
-   */
   const chance = Math.max(0.005, Math.min(0.35, Math.sqrt(worth / 1000) * 0.02));
   if (Math.random() > chance) return;
 
-  /*
-   * And what colour it is. The game says rarity with the colour of the bag,
-   * brown being the ordinary one and the pale ones the ones people stop for,
-   * so a step up is a quarter as likely as the step below it - and how far up
-   * the steps go at all is set by what was killed. Nothing the size of a bat
-   * has ever left a white bag.
-   */
-  const ceiling = Math.max(0, Math.min(bags.length - 1,
-    Math.floor(Math.log(Math.max(1, worth / 300)) / Math.log(3))));
   let tier = 0;
-  while (tier < ceiling && Math.random() < 0.25) tier++;
-
+  const mine = bagsFor(beast.kind.name);
+  if (mine && mine.length) {
+    /*
+     * Weighted against how common that colour is on its own table, so the
+     * one rare line on a long table stays the rare one.
+     */
+    let total = 0;
+    for (const one of mine) total += 1 / Math.max(1, one.many);
+    let roll = Math.random() * total;
+    tier = mine[0].bag;
+    for (const one of mine) {
+      roll -= 1 / Math.max(1, one.many);
+      if (roll <= 0) { tier = one.bag; break; }
+    }
+  } else {
+    // Nothing known about its table: the plain brown bag.
+    tier = 0;
+  }
+  tier = Math.max(0, Math.min(bags.length - 1, tier));
   litter.push({
     sprite: bags[tier].sprite, x: beast.x, y: beast.y, left: BAG_LASTS, full: BAG_LASTS
   });
@@ -2704,88 +3030,153 @@ function stepLitter(delta) {
   }
 }
 
-/*
- * How often a thing shoots. The game works it off dexterity; this is the same
- * shape - slow at nothing, about four a second at seventy-five - times
- * whatever rate the weapon itself declares.
- */
-const rateOf = one => (1.4 + (one.kind.dex || 40) / 28) * ((one.kind.weapon
-  && one.kind.weapon.shot && one.kind.weapon.shot.rate) || 1);
-
-/* And how hard, which the game works off attack against the target's armour. */
-function hurtOf(shot, att, armour) {
-  const raw = shot.low + Math.random() * Math.max(0, (shot.high || shot.low) - shot.low);
-  const swung = raw * (0.5 + (att || 50) / 50);
-  return Math.max(swung * 0.15, swung - (armour || 0));
-}
+/* ---------------- who they are ---------------- */
 
 function raiseFolk() {
   folk.length = 0;
   shots.length = 0;
+  sparks.length = 0;
   if (!A.folk || !A.folk.length || !A.beacons) return;
   for (const beacon of A.beacons) {
     for (let i = 0; i < FOLK_AT_A_BEACON; i++) {
-      folk.push(newFolk(A.folk[Math.floor(Math.random() * A.folk.length)], beacon));
+      folk.push(newFolk(A.folk[Math.floor(Math.random() * A.folk.length)], beacon, 1));
     }
   }
 }
 
-function newFolk(kind, beacon) {
+function newFolk(kind, beacon, level) {
   const angle = Math.random() * Math.PI * 2;
-  const full = kind.hp || 700;
+  const at = statsAt(kind, level);
   return {
-    kind, beacon,
+    kind, beacon, at,
     x: beacon.x + Math.cos(angle) * 3,
     y: beacon.y + Math.sin(angle) * 3,
     vx: 0, vy: 0,
     phase: Math.random() * 100,
-    hp: full, full,
+    hp: at.hp, full: at.hp,
+    mp: at.mp, mpFull: at.mp,
     /*
      * They start over. A character that came back at the level it died at
-     * would make dying free, and the gravestones would all be the same one.
+     * would make dying free, and every gravestone would be the same one.
      */
-    level: 1, kills: 0,
+    level, exp: 0, kills: 0,
     target: null,
     cool: Math.random() * 0.5,
+    spell: 1 + Math.random(),
     down: 0
   };
 }
 
-// The nearest thing worth hitting, if it is worth crossing the map for.
+/* Experience carries them up, and the client says what a kill is worth. */
+function reward(one, beast) {
+  one.kills++;
+  one.exp += beast.kind.exp || Math.round((beast.full || 200) / 25);
+  while (one.level < 20 && one.exp >= TO_LEVEL * one.level) {
+    one.exp -= TO_LEVEL * one.level;
+    one.level++;
+    const was = one.hp / one.full;
+    one.at = statsAt(one.kind, one.level);
+    one.full = one.at.hp; one.mpFull = one.at.mp;
+    // A level is a gift: it heals what it adds and no more.
+    one.hp = Math.min(one.full, Math.max(one.hp, was * one.full));
+    speak('progression', one);
+  }
+}
+
+/*
+ * What to go for.
+ *
+ * The nearest thing is not always the thing worth fighting, and a realm
+ * where everyone shoots the nearest bat is a realm where nothing ever dies
+ * that matters. So a big thing pulls harder than a small one, and a thing
+ * somebody else is already on pulls harder still - which is what turns a
+ * loose crowd into a group standing round the same encounter, without any
+ * of them being told to.
+ */
 function preyFor(one) {
-  let best = null, near = FOLK_SEEK * FOLK_SEEK;
+  let best = null, bestPull = 0;
   for (const beast of alive) {
-    if (beast.down > 0 || beast.hp <= 0) continue;
+    if (beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
     const dx = beast.x - one.x, dy = beast.y - one.y;
     const far = dx * dx + dy * dy;
-    if (far < near) { near = far; best = beast; }
+    if (far > FOLK_SEEK * FOLK_SEEK) continue;
+    const worth = Math.sqrt(beast.full || 200);
+    const crowd = 1 + Math.min(2, (beast.onIt || 0) * 0.5);
+    const pull = worth * crowd / (4 + far);
+    if (pull > bestPull) { bestPull = pull; best = beast; }
   }
   return best;
 }
 
-function fire(from, at, shot, hurt, mine, by) {
+function fire(from, at, shot, hurt, mine, by, spread) {
   const dx = at.x - from.x, dy = at.y - from.y;
-  const far = Math.hypot(dx, dy) || 1;
+  let angle = Math.atan2(dy, dx) + (spread || 0);
   const fast = shot.fast || 8;
   shots.push({
     x: from.x, y: from.y,
-    vx: (dx / far) * fast, vy: (dy / far) * fast,
+    vx: Math.cos(angle) * fast, vy: Math.sin(angle) * fast,
     left: (shot.reach || 6) / fast,
-    hurt, mine, by
+    hurt, mine, by, through: !!shot.through
   });
+}
+
+/* A volley, fanned the way the weapon says it fans. */
+function volley(one, beast, shot, hurt, by) {
+  const many = Math.max(1, shot.many || 1);
+  const fan = (shot.fan === undefined ? 12 : shot.fan) * Math.PI / 180;
+  for (let n = 0; n < many; n++) {
+    const off = many === 1 ? 0 : (n - (many - 1) / 2) * fan;
+    fire(one, beast, shot, hurt, true, by, off);
+  }
+}
+
+/*
+ * Getting out of the way.
+ *
+ * The whole game is shooting and not being shot, and a character who walks
+ * straight at what is firing at them is not playing it. Every incoming shot
+ * that is both close and pointed at them pushes them sideways - across the
+ * shot, never back down its line, because backing off a fast projectile does
+ * not work and stepping out of it does.
+ */
+function dodge(one, delta) {
+  let px = 0, py = 0;
+  for (const s of shots) {
+    if (s.mine) continue;
+    const dx = one.x - s.x, dy = one.y - s.y;
+    const far = Math.hypot(dx, dy);
+    if (far > DODGE_SEE || far < 0.01) continue;
+    const speed = Math.hypot(s.vx, s.vy) || 1;
+    // Only the ones actually coming this way.
+    const towards = (s.vx * dx + s.vy * dy) / (speed * far);
+    if (towards < 0.6) continue;
+    const side = (s.vx * dy - s.vy * dx) >= 0 ? 1 : -1;
+    px += (-s.vy / speed) * side * (DODGE_SEE - far);
+    py += (s.vx / speed) * side * (DODGE_SEE - far);
+  }
+  if (!px && !py) return false;
+  const far = Math.hypot(px, py) || 1;
+  one.vx += (px / far) * delta * 26;
+  one.vy += (py / far) * delta * 26;
+  return true;
 }
 
 function stepFolk(delta) {
   if (!folk.length) return;
+
+  // How many are already on each thing, so a fight draws a crowd.
+  for (const beast of alive) beast.onIt = 0;
+  for (const one of folk) if (one.target) one.target.onIt = (one.target.onIt || 0) + 1;
+
   for (const one of folk) {
     /*
      * The dead lie where they fell and then walk back out of the beacon they
-     * came from, whole. Coming straight back would make a death mean nothing.
+     * came from, at the first level, with nothing to show for it.
      */
     if (one.down > 0) {
       one.down -= delta;
       if (one.down <= 0) {
-        const fresh = newFolk(one.kind, one.beacon);
+        const fresh = newFolk(one.kind, one.beacon, 1);
         for (const k of Object.keys(fresh)) one[k] = fresh[k];
       }
       continue;
@@ -2793,10 +3184,20 @@ function stepFolk(delta) {
 
     one.phase += delta;
     one.cool -= delta;
-    if (!one.target || one.target.down > 0 || one.target.hp <= 0) one.target = preyFor(one);
+    one.spell -= delta;
+
+    // Flesh and magic both come back on their own, at the rate the two
+    // statistics for exactly that say they do.
+    one.hp = Math.min(one.full, one.hp + HEAL_AT(one.at.vit) * delta);
+    one.mp = Math.min(one.mpFull, one.mp + MANA_AT(one.at.wis) * delta);
+
+    if (!one.target || one.target.down > 0 || one.target.dying > 0 || one.target.hp <= 0) {
+      one.target = preyFor(one);
+    }
 
     const gun = one.kind.weapon && one.kind.weapon.shot;
     const reach = (gun && gun.reach) || 4;
+    const ducked = dodge(one, delta);
 
     if (!one.target) {
       const dx = one.beacon.x - one.x, dy = one.beacon.y - one.y;
@@ -2806,41 +3207,73 @@ function stepFolk(delta) {
       one.vy += (dy / far) * want * delta * 3;
     } else {
       /*
-       * Kept at the edge of its own reach: a wizard stands off and a warrior
+       * Kept at the edge of their own reach and moving across it rather than
+       * standing in it: a wizard holds seven tiles out and circles, a warrior
        * has to walk in, because their weapons say so and nothing else does.
        */
       const beast = one.target;
       const dx = beast.x - one.x, dy = beast.y - one.y;
       const far = Math.hypot(dx, dy) || 1;
-      const hold = reach * 0.75;
-      const pull = far > hold ? 1 : (far < hold * 0.6 ? -0.8 : 0);
+      const hold = reach * FOLK_HOLD;
+      const pull = far > hold ? 1 : (far < hold * 0.65 ? -0.9 : 0);
       one.vx += (dx / far) * pull * delta * 9;
       one.vy += (dy / far) * pull * delta * 9;
+      if (!ducked) {
+        // Circling, so a standing target cannot simply lead them.
+        one.strafe = one.strafe || (Math.random() < 0.5 ? -1 : 1);
+        one.vx += (-dy / far) * one.strafe * delta * 4.5;
+        one.vy += (dx / far) * one.strafe * delta * 4.5;
+        if (Math.random() < delta * 0.35) one.strafe = -one.strafe;
+      }
+
+      /*
+       * The ability, when there is magic for it and the thing in front of
+       * them is worth spending it on. The client says what it costs and what
+       * it throws - sixteen bolts of fire for twenty magic, in the Wizard's
+       * case - so the only judgement here is when it is worth it.
+       */
+      const spell = one.kind.ability;
+      if (spell && spell.shot && spell.mp && one.spell <= 0
+        && one.mp >= spell.mp && far <= (spell.shot.reach || reach)
+        && (beast.full > 1200 || (beast.onIt || 1) > 2)) {
+        one.mp -= spell.mp;
+        one.spell = 2.4 + Math.random();
+        const many = Math.max(1, spell.shot.many || 1);
+        // A nova goes all the way round; anything else fans forward.
+        const round = many >= 8;
+        for (let n = 0; n < many; n++) {
+          const off = round
+            ? (n / many) * Math.PI * 2
+            : (n - (many - 1) / 2) * 12 * Math.PI / 180;
+          fire(one, beast, spell.shot,
+            hurtOf(spell.shot, one.at.att, beast.kind.def), true, one, off);
+        }
+      }
 
       if (gun && far <= reach && one.cool <= 0) {
-        one.cool = 1 / rateOf(one);
-        for (let n = 0; n < (gun.many || 1); n++) {
-          fire(one, beast, gun, hurtOf(gun, one.kind.att, beast.kind.def), true, one);
-        }
+        one.cool = 1 / (SHOTS_AT(one.at.dex) * (gun.rate || 1));
+        volley(one, beast, gun, hurtOf(gun, one.at.att, beast.kind.def), one);
       }
     }
 
     const fast = Math.hypot(one.vx, one.vy);
-    const top = 2.4 + (one.kind.pace || 25) / 22;
+    const top = PACE_AT(one.at.pace);
     if (fast > top) { one.vx = one.vx / fast * top; one.vy = one.vy / fast * top; }
     const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
     if (walkable(nx, ny)) { one.x = nx; one.y = ny; }
     else { one.vx = -one.vx * 0.5; one.vy = -one.vy * 0.5; }
+    one.vx *= 0.86; one.vy *= 0.86;
 
     if (one.hp <= 0 && one.down <= 0) {
       graveFor(one);
+      speak('death', one);
       one.down = FOLK_BACK; one.vx = 0; one.vy = 0; one.target = null;
     }
   }
 
   /* And the creatures shoot back, with what the client gave them. */
   for (const beast of alive) {
-    if (beast.down > 0 || beast.hp <= 0) continue;
+    if (beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
     const shot = (beast.kind.shots || [])[0];
     if (!shot) continue;
     beast.cool = (beast.cool || Math.random()) - delta;
@@ -2855,12 +3288,17 @@ function stepFolk(delta) {
       if (far < near) { near = far; mark = one; }
     }
     if (mark) {
-      fire(beast, mark, { fast: shot.fast || 8, reach },
-        Math.max(shot.hurt * 0.15, shot.hurt - (mark.kind.def || 0)), false);
+      const many = shot.many ? 3 : 1;
+      for (let n = 0; n < many; n++) {
+        const off = many === 1 ? 0 : (n - 1) * 10 * Math.PI / 180;
+        fire(beast, mark, { fast: shot.fast || 8, reach },
+          Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def), false, null, off);
+      }
     }
   }
 
   stepShots(delta);
+  stepSparks(delta);
   stepLitter(delta);
 }
 
@@ -2877,18 +3315,17 @@ function stepShots(delta) {
     let gone = s.left <= 0;
     if (!gone && s.mine) {
       for (const beast of alive) {
-        if (beast.down > 0) continue;
+        if (beast.down > 0 || beast.dying > 0) continue;
         if (Math.abs(beast.x - s.x) > 0.7 || Math.abs(beast.y - s.y) > 0.7) continue;
         beast.hp -= s.hurt;
         if (beast.hp <= 0 && !beast.dying) {
           beast.dying = DYING;
+          burst(beast);
           dropFrom(beast);
-          if (s.by) {
-            s.by.kills++;
-            s.by.level = Math.min(20, 1 + Math.floor(s.by.kills / 3));
-          }
+          if (s.by) { reward(s.by, beast); if (Math.random() < 0.04) speak('loot', s.by); }
         }
-        gone = true; break;
+        // A shot that carries through does not stop in what it hits.
+        if (!s.through) { gone = true; break; }
       }
     } else if (!gone) {
       for (const one of folk) {
@@ -2917,8 +3354,7 @@ function drawFolk(box) {
   /*
    * What is lying about, first, because it is lying about: a bag or a stone
    * is on the floor and everything else stands on top of it. Each thins out
-   * over its last few seconds rather than vanishing between one frame and
-   * the next.
+   * over its last few seconds rather than vanishing between two frames.
    */
   for (const bit of litter) {
     if (bit.x < seen.x0 || bit.x > seen.x1 || bit.y < seen.y0 || bit.y > seen.y1) continue;
@@ -2926,6 +3362,7 @@ function drawFolk(box) {
     drawn += drawOneLife({ kind: { sprite: bit.sprite }, x: bit.x, y: bit.y, phase: 0 }, box);
   }
   ctx.globalAlpha = 1;
+
   for (const one of folk) {
     if (one.down > 0) continue;
     if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
@@ -2937,6 +3374,18 @@ function drawFolk(box) {
     if (beast.x < seen.x0 || beast.x > seen.x1 || beast.y < seen.y0 || beast.y > seen.y1) continue;
     drawThread(beast, box, '#d4685f');
   }
+
+  /* What a thing came apart into, on its way out. */
+  for (const s of sparks) {
+    const at = place(s.x, s.y, box);
+    if (!at) continue;
+    if (at.x < -20 || at.y < -20 || at.x > box.w + 20 || at.y > box.h + 20) continue;
+    ctx.globalAlpha = Math.max(0, Math.min(1, s.left / s.full));
+    ctx.fillStyle = s.tint;
+    const side = Math.max(1, view.scale * 0.18) * at.k;
+    ctx.fillRect(at.x - side / 2, at.y - side / 2, side, side);
+  }
+  ctx.globalAlpha = 1;
 
   /*
    * The shots, as a streak of where each has just been rather than a dot.
@@ -3285,9 +3734,23 @@ function castList(list, note) {
       .join('<u>,</u>');
     const held = (one.immune || []).length
       ? '<span class="held">immune ' + one.immune.join(', ') + '</span>' : '';
+    /*
+     * And which bags it leaves, which is the one part of the loot question
+     * the client settles outright: every item carries the colour of bag it
+     * falls in, and the reference says which items this thing drops. The
+     * commonest colour on its table comes first, so a long brown table with
+     * one white line on it reads as what it is.
+     */
+    const bags = (one.bags || []).slice().sort((p, q) => q.many - p.many)
+      .map(b => {
+        const kept = ((A.marks && A.marks.bags) || [])[b.bag];
+        return kept ? '<img class="bag" src="' + asset('life/' + kept.sprite.file)
+          + '" alt="" loading="lazy" title="' + b.many + ' of its drops">' : '';
+      }).join('');
     return '<div>' + art + '<b>' + one.name + '</b>'
       + (facts ? '<u class="stat">' + facts + '</u>' : '')
       + (shots ? '<u class="shots">' + shots + '</u>' : '')
+      + (bags ? '<u class="bags">' + bags + '</u>' : '')
       + held
       + (one.onMap ? '<i>on the map</i>' : '')
       + (note ? '<em>' + note + '</em>' : '') + '</div>';
@@ -4091,8 +4554,10 @@ function frame(now) {
   else ground = groundFlat(box, now);
   stepLife(delta);
   stepFolk(delta);
+  stepChat(delta);
   const close = drawThings(box, now);
   const living = (close ? close.living : drawLife(box)) + drawFolk(box);
+  drawChat();
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);

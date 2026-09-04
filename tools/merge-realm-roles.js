@@ -333,6 +333,90 @@ for (const one of Object.values(realmEye.creatures || {})) {
 }
 
 let joined = 0, unjoined = new Set();
+/*
+ * Which colour of bag a thing falls in, which the client answers outright.
+ *
+ * Every item in the game carries a BagType, and the containers it names are
+ * objects in the same files - Loot Bag 0 through Loot Bag 9. So "this monster
+ * drops a Sprite Wand" plus "a Sprite Wand is BagType 1" is "this monster
+ * drops a pink bag", with nothing in between that had to be guessed. It is
+ * the one piece of the loot question the client settles completely.
+ *
+ * The tier lines - "Tier 8 Weapons" and the like - name no single item, so
+ * they are resolved the same way any tier is: by finding the items of that
+ * tier and that slot and taking the bag they agree on.
+ */
+function readItems() {
+  const byName = new Map();
+  const byTierSlot = new Map();
+  const shape = /<Object\s+type="[^"]+"\s+id="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
+  const SLOT_NAME = {
+    1: 'weapon', 2: 'weapon', 3: 'weapon', 8: 'weapon', 17: 'weapon', 24: 'weapon',
+    4: 'ability', 5: 'ability', 11: 'ability', 12: 'ability', 13: 'ability',
+    15: 'ability', 16: 'ability', 18: 'ability', 19: 'ability', 20: 'ability',
+    21: 'ability', 22: 'ability', 23: 'ability', 25: 'ability',
+    6: 'armor', 7: 'armor', 14: 'armor',
+    9: 'ring', 10: 'consumable'
+  };
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      const body = m[2];
+      if (!/<Item\s*\/>/.test(body)) continue;
+      const bagAt = /<BagType>(\d+)<\/BagType>/.exec(body);
+      if (!bagAt) continue;
+      const tierAt = /<Tier>(\d+)<\/Tier>/.exec(body);
+      const slotAt = /<SlotType>(\d+)<\/SlotType>/.exec(body);
+      const slot = slotAt ? SLOT_NAME[Number(slotAt[1])] : undefined;
+      const one = {
+        name: m[1],
+        bag: Number(bagAt[1]),
+        tier: tierAt ? Number(tierAt[1]) : undefined,
+        slot
+      };
+      byName.set(plainName(m[1]), one);
+      if (one.tier !== undefined && slot) {
+        const key = slot + ' ' + one.tier;
+        if (!byTierSlot.has(key)) byTierSlot.set(key, []);
+        byTierSlot.get(key).push(one);
+      }
+    }
+  }
+  return { byName, byTierSlot };
+}
+
+const gear = readItems();
+
+/*
+ * The bags one creature can leave, and how ordinary each of them is.
+ *
+ * A creature that drops eleven things which all fall in brown bags leaves
+ * brown bags; one that drops a tier eleven weapon as well can leave the bag
+ * that goes with it. Counting how many of its drops land in each colour is
+ * what makes the rare one rare without a rate being written down anywhere:
+ * the weight is simply how much of the table is that colour.
+ */
+function bagsOf(drops) {
+  const count = new Map();
+  for (const drop of drops || []) {
+    const tier = TIER.exec(drop);
+    if (tier) {
+      const slot = SLOT_OF[tier[2]];
+      const kin = slot && gear.byTierSlot.get(slot + ' ' + Number(tier[1]));
+      if (!kin || !kin.length) continue;
+      const bag = kin[0].bag;
+      count.set(bag, (count.get(bag) || 0) + 1);
+      continue;
+    }
+    const one = gear.byName.get(plainName(drop));
+    if (!one) continue;
+    count.set(one.bag, (count.get(one.bag) || 0) + 1);
+  }
+  if (!count.size) return undefined;
+  return [...count.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([bag, many]) => ({ bag, many }));
+}
+
 const dress = list => list.map(one => {
   const facts = factsOf.get(one.name);
   const fight = clientFight.get(plainName(one.name));
@@ -344,7 +428,11 @@ const dress = list => list.map(one => {
   if (facts.hp !== undefined) out.hp = facts.hp;
   if (facts.def !== undefined) out.def = facts.def;
   if (facts.exp !== undefined) out.exp = facts.exp;
-  if (facts.drops.length) out.drops = facts.drops;
+  if (facts.drops.length) {
+    out.drops = facts.drops;
+    const bags = bagsOf(facts.drops);
+    if (bags) out.bags = bags;
+  }
   return out;
 });
 
