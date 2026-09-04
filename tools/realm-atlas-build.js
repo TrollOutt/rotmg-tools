@@ -2084,6 +2084,30 @@ function main() {
     beacon.guards = (beacon.guards || []).filter(one => one.sprite);
   }
 
+  /*
+   * And the people who come to fight all of it.
+   *
+   * The six classes are objects in the client like anything else, drawn from
+   * one sheet called players, and they have the same walk cycle every
+   * creature has - so they are cut exactly the way the wildlife is and the
+   * page can move them with the same code. They are not wildlife and are not
+   * listed as living anywhere: they arrive.
+   */
+  {
+    const wanted = ['Warrior', 'Knight', 'Wizard', 'Priest', 'Archer', 'Rogue'];
+    const byName = new Map();
+    for (const [type, name] of objectName) if (wanted.includes(name)) byName.set(name, type);
+    const folk = [];
+    for (const name of wanted) {
+      const type = byName.get(name);
+      if (type === undefined) continue;
+      const sprite = cutLife(type);
+      if (sprite) folk.push({ name, type, sprite });
+    }
+    map.folk = folk;
+    console.log('  ' + folk.length + ' of the six classes cut, to walk the realm');
+  }
+
   const levels = buildPyramid();
 
   const summary = {
@@ -2093,6 +2117,7 @@ function main() {
     focus: map.focus,
     biomes: map.found,
     zones: map.zones,
+    folk: map.folk || [],
     beacons,
     roads: map.roadCount,
     tiles: store.tiles.size

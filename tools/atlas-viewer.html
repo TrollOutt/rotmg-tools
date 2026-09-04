@@ -2287,6 +2287,7 @@ function weighted(zone) {
 
 function populate() {
   alive.length = 0;
+  raiseFolk();
   if (!WANDERERS) return;
   for (const zone of A.zones) {
     if (!zone.lives || !zone.lives.length) continue;
@@ -2310,6 +2311,8 @@ function populate() {
       const angle = Math.random() * Math.PI * 2;
       alive.push({
         kind, home: zone.id, x, y,
+        // What the client gives it, so a Lich King is a wall and a bat is not.
+        hp: kind.hp || 200, full: kind.hp || 200, down: 0,
         vx: Math.cos(angle) * 0.5, vy: Math.sin(angle) * 0.5,
         phase: Math.random() * 100
       });
@@ -2380,6 +2383,16 @@ function canStand(x, y, home) {
 
 function stepLife(delta) {
   for (const one of alive) {
+    /*
+     * A creature that has been killed is gone for a few seconds and then
+     * back. The realm restocks itself; a map that emptied out over an
+     * afternoon of watching would be a worse map by teatime.
+     */
+    if (one.down > 0) {
+      one.down -= delta;
+      if (one.down <= 0) { one.hp = one.full; }
+      continue;
+    }
     one.phase += delta;
     const turn = (Math.random() - 0.5) * 0.4 * delta;
     const cos = Math.cos(turn), sin = Math.sin(turn);
@@ -2554,6 +2567,177 @@ function standUpLandmarks() {
   }
 }
 
+/* ---------------- the folk who come to fight ---------------- */
+/*
+ * Adventurers, in the realm.
+ *
+ * The map has always been a place with things standing in it. This is the
+ * first of it being a place where something happens: six classes out of the
+ * client, walking out from the beacons, picking a fight with whatever is
+ * nearest, and losing it often enough to be worth watching.
+ *
+ * Everything they need is already here and none of it is invented. The
+ * classes are objects in the client with the same walk cycle the wildlife
+ * has, so they are cut and drawn by the code that draws wildlife. What a
+ * creature has for hit points, and how hard and how far it hits, comes off
+ * the client too - so a Lich King is a wall and a bat is a nuisance without
+ * anybody choosing that.
+ *
+ * What is invented is only what the client has no answer for: how hard an
+ * adventurer hits, and how long they stand around afterwards. Those are the
+ * four numbers below and they are meant to be played with.
+ */
+const FOLK_AT_A_BEACON = 4;              // how many set out from each
+const FOLK_REACH = 1.6;                  // tiles they must close to
+/*
+ * Damage a second, all classes alike. Set so an ordinary creature takes a
+ * handful of seconds and a Hero of Oryx takes a good deal longer: at nine
+ * hundred a party cleared a zone faster than it could restock and the map
+ * emptied while you watched.
+ */
+const FOLK_HURT = 260;
+const FOLK_BACK = 9;                     // seconds before a dead one returns
+const FOLK_SEEK = 26;                    // tiles they will cross for a fight
+const FOLK_SPEED = 3.4;                  // tiles a second
+
+const folk = [];
+
+/* How much punishment each class takes, roughly as the game has it. */
+const FOLK_TOUGH = {
+  Knight: 1400, Warrior: 1100, Priest: 800, Archer: 750, Rogue: 700, Wizard: 650
+};
+
+function raiseFolk() {
+  folk.length = 0;
+  if (!A.folk || !A.folk.length || !A.beacons) return;
+  for (const beacon of A.beacons) {
+    for (let i = 0; i < FOLK_AT_A_BEACON; i++) {
+      const kind = A.folk[Math.floor(Math.random() * A.folk.length)];
+      folk.push(newFolk(kind, beacon));
+    }
+  }
+}
+
+function newFolk(kind, beacon) {
+  const angle = Math.random() * Math.PI * 2;
+  return {
+    kind, beacon,
+    x: beacon.x + Math.cos(angle) * 3,
+    y: beacon.y + Math.sin(angle) * 3,
+    vx: 0, vy: 0,
+    phase: Math.random() * 100,
+    hp: FOLK_TOUGH[kind.name] || 800,
+    full: FOLK_TOUGH[kind.name] || 800,
+    target: null,
+    down: 0
+  };
+}
+
+/*
+ * The nearest thing worth hitting, and only if it is worth crossing the map
+ * for. Searched over everything alive rather than by any index, because there
+ * are two thousand of them and this runs a few dozen times a second at most -
+ * and an index of things that move is a thing to keep correct for no gain.
+ */
+function preyFor(one) {
+  let best = null, near = FOLK_SEEK * FOLK_SEEK;
+  for (const beast of alive) {
+    if (beast.hp <= 0) continue;
+    const dx = beast.x - one.x, dy = beast.y - one.y;
+    const far = dx * dx + dy * dy;
+    if (far < near) { near = far; best = beast; }
+  }
+  return best;
+}
+
+function stepFolk(delta) {
+  if (!folk.length) return;
+  for (const one of folk) {
+    /*
+     * The dead lie where they fell for a few seconds and then walk back out
+     * of the beacon they came from, whole. Coming straight back would make a
+     * death mean nothing, and never coming back would empty the realm.
+     */
+    if (one.down > 0) {
+      one.down -= delta;
+      if (one.down <= 0) {
+        const fresh = newFolk(one.kind, one.beacon);
+        for (const k of Object.keys(fresh)) one[k] = fresh[k];
+      }
+      continue;
+    }
+
+    one.phase += delta;
+    if (!one.target || one.target.hp <= 0) one.target = preyFor(one);
+
+    if (!one.target) {
+      // Nothing to fight: drift about near the beacon it came out of.
+      const dx = one.beacon.x - one.x, dy = one.beacon.y - one.y;
+      const far = Math.hypot(dx, dy) || 1;
+      const want = far > 14 ? 1 : -0.15;
+      one.vx += (dx / far) * want * delta * 3;
+      one.vy += (dy / far) * want * delta * 3;
+    } else {
+      const beast = one.target;
+      const dx = beast.x - one.x, dy = beast.y - one.y;
+      const far = Math.hypot(dx, dy) || 1;
+      if (far > FOLK_REACH) {
+        one.vx += (dx / far) * delta * 9;
+        one.vy += (dy / far) * delta * 9;
+      } else {
+        // In reach of each other, and both of them swinging.
+        one.vx *= 0.7; one.vy *= 0.7;
+        beast.hp -= FOLK_HURT * delta;
+        const shot = (beast.kind.shots || [])[0];
+        one.hp -= (shot ? shot.hurt : 40) * delta * 1.4;
+        if (beast.hp <= 0) { beast.down = 4 + Math.random() * 6; one.target = null; }
+      }
+    }
+
+    const fast = Math.hypot(one.vx, one.vy);
+    if (fast > FOLK_SPEED) { one.vx = one.vx / fast * FOLK_SPEED; one.vy = one.vy / fast * FOLK_SPEED; }
+    const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
+    // They may cross a border a creature may not: they are travelling.
+    if (walkable(nx, ny)) { one.x = nx; one.y = ny; }
+    else { one.vx = -one.vx * 0.5; one.vy = -one.vy * 0.5; }
+
+    if (one.hp <= 0) { one.down = FOLK_BACK; one.vx = 0; one.vy = 0; one.target = null; }
+  }
+}
+
+// Anywhere on the chart that is not a wall and not open water.
+function walkable(x, y) {
+  const here = atTile(x, y);
+  return !!here && !here.walled && here.biome !== NOWHERE;
+}
+
+function drawFolk(box) {
+  if (!folk.length || view.scale < SHOW_LIFE) return 0;
+  const seen = seenRange(box, 60);
+  ctx.imageSmoothingEnabled = false;
+  let drawn = 0;
+  for (const one of folk) {
+    if (one.down > 0) continue;
+    if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
+    drawn += drawOneLife(one, box);
+    /*
+     * A thread of health over anybody who is losing, and only then - a bar
+     * over every adventurer all the time is a spreadsheet laid on a map.
+     */
+    if (one.hp < one.full * 0.97) {
+      const at = place(one.x, one.y, box);
+      if (!at) continue;
+      const wide = Math.max(6, view.scale * 1.4);
+      const y = at.y - Math.max(7, view.scale * 1.6);
+      ctx.fillStyle = 'rgba(6,9,14,.72)';
+      ctx.fillRect(at.x - wide / 2, y, wide, 2);
+      ctx.fillStyle = one.hp > one.full * 0.4 ? '#7fd08a' : '#d4685f';
+      ctx.fillRect(at.x - wide / 2, y, wide * Math.max(0, one.hp / one.full), 2);
+    }
+  }
+  return drawn;
+}
+
 /*
  * The set pieces, drawn over the ground rather than sorted into it: a thing
  * you are looking for should not go behind a tree.
@@ -2617,6 +2801,7 @@ function drawLife(box) {
   ctx.imageSmoothingEnabled = false;
   let drawn = 0;
   for (const one of alive) {
+    if (one.down > 0) continue;
     if (one.x < near.x || one.x > far.x || one.y < near.y || one.y > far.y) continue;
     drawn += drawOneLife(one, box);
   }
@@ -3645,8 +3830,9 @@ function frame(now) {
   else if (turning()) ground = groundTilted(box, now);
   else ground = groundFlat(box, now);
   stepLife(delta);
+  stepFolk(delta);
   const close = drawThings(box, now);
-  const living = close ? close.living : drawLife(box);
+  const living = (close ? close.living : drawLife(box)) + drawFolk(box);
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);

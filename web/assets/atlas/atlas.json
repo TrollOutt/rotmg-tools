@@ -62941,6 +62941,74 @@
    }
   }
  ],
+ "folk": [
+  {
+   "name": "Warrior",
+   "type": 797,
+   "sprite": {
+    "file": "c797.png",
+    "tile": 10,
+    "height": 10,
+    "frames": 3,
+    "size": 100
+   }
+  },
+  {
+   "name": "Knight",
+   "type": 798,
+   "sprite": {
+    "file": "c798.png",
+    "tile": 10,
+    "height": 10,
+    "frames": 3,
+    "size": 100
+   }
+  },
+  {
+   "name": "Wizard",
+   "type": 782,
+   "sprite": {
+    "file": "c782.png",
+    "tile": 10,
+    "height": 10,
+    "frames": 3,
+    "size": 100
+   }
+  },
+  {
+   "name": "Priest",
+   "type": 784,
+   "sprite": {
+    "file": "c784.png",
+    "tile": 10,
+    "height": 10,
+    "frames": 3,
+    "size": 100
+   }
+  },
+  {
+   "name": "Archer",
+   "type": 775,
+   "sprite": {
+    "file": "c775.png",
+    "tile": 10,
+    "height": 10,
+    "frames": 3,
+    "size": 100
+   }
+  },
+  {
+   "name": "Rogue",
+   "type": 768,
+   "sprite": {
+    "file": "c768.png",
+    "tile": 10,
+    "height": 10,
+    "frames": 3,
+    "size": 100
+   }
+  }
+ ],
  "beacons": [
   {
    "x": 606,
