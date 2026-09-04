@@ -33,6 +33,25 @@ const pagesDir = path.join(root, 'docs');
  * is more than the rest of the page put together, and it is only read when the
  * atlas is actually opened.
  */
+/*
+ * A copy that waits for the virus scanner to let go.
+ *
+ * A freshly written PNG is opened by the scanner the moment it lands, and
+ * for a fraction of a second Windows answers any attempt to read it with an
+ * error that names no cause. There is nothing wrong with the file and the
+ * next attempt works; the whole publish used to fail on a random one of four
+ * hundred pictures.
+ */
+function patiently(work) {
+  for (let go = 0; ; go++) {
+    try { return work(); } catch (e) {
+      if (go >= 40 || (e.code !== 'UNKNOWN' && e.code !== 'EBUSY' && e.code !== 'EPERM')) throw e;
+      const until = Date.now() + 50;
+      while (Date.now() < until) { /* the only way to wait without going async */ }
+    }
+  }
+}
+
 function carryAcross(from, to) {
   if (!fs.existsSync(from)) return { copied: 0, dropped: 0 };
   fs.mkdirSync(to, { recursive: true });
@@ -49,7 +68,7 @@ function carryAcross(from, to) {
     const older = !fs.existsSync(there)
       || fs.statSync(there).mtimeMs < fs.statSync(here).mtimeMs
       || fs.statSync(there).size !== fs.statSync(here).size;
-    if (older) { fs.copyFileSync(here, there); copied++; }
+    if (older) { patiently(() => fs.copyFileSync(here, there)); copied++; }
   }
   /*
    * And what is no longer on this side goes.
