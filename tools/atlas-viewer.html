@@ -151,6 +151,26 @@ const BASE = window.ATLAS_BASE || (() => {
   return at.endsWith('/') ? at : at + '/';
 })();
 
+/*
+ * The mark this atlas was built under, put on the end of every file it asks
+ * for.
+ *
+ * Every picture here has a fixed name: things.png is always things.png, and a
+ * creature's sprite keeps its name for as long as the creature does. That is
+ * good for the repository and bad for the reader, because a browser that has
+ * once fetched things.png has no reason to ever ask for it again. It is why
+ * the outline has been reported as gone soft several times after it was made
+ * sharp: the file on the server was right and the file in the reader's cache
+ * was the one from before, and nothing in the page ever told them apart.
+ *
+ * The mark changes whenever the art changes, so the address changes with it
+ * and the old copy is simply a different file that nobody asks for. When
+ * there is no mark - an atlas built before this - nothing is appended and it
+ * behaves as it always did.
+ */
+const MARK = A.mark ? '?v=' + A.mark : '';
+const asset = name => BASE + name + MARK;
+
 const canvas = document.getElementById('map');
 let ctx = canvas.getContext('2d', { alpha: false });
 const whereAt = document.getElementById('where');
@@ -574,7 +594,7 @@ function chunkImage(z, name) {
   // Something that was not there a moment ago now is, which anything
   // holding a finished picture of the ground needs to know about.
   img.onload = () => { arrived++; };
-  img.src = BASE + 'z' + z + '/' + name + '.png';
+  img.src = asset('z' + z + '/' + name + '.png');
   images.set(key, img);
   while (images.size > KEEP) {
     // The coarsest level is what a missing chunk falls back on, so it is
@@ -754,7 +774,7 @@ maskImage.onload = () => {
   mask = { w: off.width, h: off.height, data: o.getImageData(0, 0, off.width, off.height).data };
   populate();
 };
-maskImage.src = BASE + 'mask.png';
+maskImage.src = asset('mask.png');
 
 function atTile(tx, ty) {
   if (!mask) return null;
@@ -787,8 +807,8 @@ const zoneOf = (tx, ty) => { const t = atTile(tx, ty); return t ? t.zone : 0; };
 let wet = null;
 const wetArt = new Image();
 if (A.water) {
-  wetArt.src = BASE + 'water-art.png';
-  fetch(BASE + 'water.json').then(r => r.json()).then(index => {
+  wetArt.src = asset('water-art.png');
+  fetch(asset('water.json')).then(r => r.json()).then(index => {
     const img = new Image();
     img.onload = () => {
       const off = document.createElement('canvas');
@@ -802,7 +822,7 @@ if (A.water) {
       for (let i = 0, j = 0; j < at.length; i += 4, j++) at[j] = data[i];
       wet = { index: index, at: at };
     };
-    img.src = BASE + 'water.png';
+    img.src = asset('water.png');
   }).catch(() => { wet = null; });
 }
 
@@ -1219,8 +1239,8 @@ let skyArt = null;
 const skySheet = new Image();
 const oryxSheet = new Image();
 if (A.sky) {
-  skySheet.src = BASE + 'sky.png';
-  fetch(BASE + 'sky.json').then(r => r.json())
+  skySheet.src = asset('sky.png');
+  fetch(asset('sky.json')).then(r => r.json())
     .then(one => { skyArt = one; }).catch(() => { skyArt = null; });
 }
 
@@ -1236,7 +1256,7 @@ let sentFor = false;
 function callForOryx() {
   if (sentFor || !A.sky) return;
   sentFor = true;
-  oryxSheet.src = BASE + 'oryx.png';
+  oryxSheet.src = asset('oryx.png');
 }
 
 /*
@@ -1879,9 +1899,9 @@ function drawBirds(box) {
 let things = null;
 const thingArt = new Image();
 if (A.things) {
-  thingArt.src = BASE + 'things.png';
-  fetch(BASE + 'things.json').then(r => r.json()).then(index =>
-    fetch(BASE + 'things.bin').then(r => r.arrayBuffer()).then(buffer => {
+  thingArt.src = asset('things.png');
+  fetch(asset('things.json')).then(r => r.json()).then(index =>
+    fetch(asset('things.bin')).then(r => r.arrayBuffer()).then(buffer => {
       things = { index, at: new Uint16Array(buffer), reach: reachOf(index) };
     })).catch(() => { things = null; });
 }
@@ -2091,7 +2111,7 @@ const seen = seenRange(box, 80);
 }
 
 const roads = new Image();
-roads.src = BASE + 'roads.png';
+roads.src = asset('roads.png');
 
 /*
  * A zone lit up.
@@ -2233,7 +2253,7 @@ function artFor(sprite) {
   if (!img) {
     img = new Image();
     img.decoding = 'async';
-    img.src = BASE + 'life/' + sprite.file;
+    img.src = asset('life/' + sprite.file);
     lifeArt.set(sprite.file, img);
   }
   return img;
@@ -2512,7 +2532,7 @@ function bossFor(file) {
   img.decoding = 'async';
   held = { img, box: null };
   img.onload = () => { try { held.box = opaqueBox(img); } catch (error) { held.box = null; } };
-  img.src = BASE + 'boss/' + file;
+  img.src = asset('boss/' + file);
   bossArt.set(file, held);
   return held;
 }
@@ -3145,7 +3165,7 @@ function livesList(list) {
     const s = one.sprite;
     const k = Math.max(2, Math.min(6, Math.round(30 / s.height)));
     const style = 'width:' + (s.tile * k) + 'px;height:' + (s.height * k) + 'px;'
-      + 'background-image:url(' + BASE + 'life/' + s.file + ');'
+      + 'background-image:url(' + asset('life/' + s.file) + ');'
       + 'background-size:' + (s.tile * s.frames * k) + 'px 100%;'
       + '--w:' + (s.tile * s.frames * k) + 'px;--steps:' + s.frames + ';'
       + '--time:' + (s.frames * 0.24).toFixed(2) + 's';
@@ -3204,7 +3224,7 @@ function castList(list, note) {
   if (!list || !list.length) return '';
   return '<div class="life">' + list.map(one => {
     const art = one.art
-      ? '<img class="face" src="' + BASE + 'boss/' + one.art + '" alt="" loading="lazy">'
+      ? '<img class="face" src="' + asset('boss/' + one.art) + '" alt="" loading="lazy">'
       : '<span class="face"></span>';
     /*
      * What it is worth going after. Hit points and defence say how long it
@@ -3248,7 +3268,7 @@ function castList(list, note) {
 const GEAR = ['Weapons', 'Alternate Weapons', 'Armor', 'Rings', 'Abilities'];
 function lootList(loot) {
   if (!loot) return '';
-  const art = file => BASE + 'loot/' + file;
+  const art = file => asset('loot/' + file);
 
   /*
    * A tier line is not an item and cannot be given an item's picture: "Tier 8
