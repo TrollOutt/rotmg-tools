@@ -23,7 +23,7 @@ Blue Grass|Dead Church
 
 @763,1429|Lime Plains
 @1030,1567|Dark Forest
-@849,1612|Mid Forest
+@849,1612|Nature Ruins
 @830,1813|Beach
 @598,1315|Beach
 @530,1105|Mid Desert

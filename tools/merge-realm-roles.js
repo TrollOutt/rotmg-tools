@@ -74,11 +74,11 @@ const GROUND_BIOMES = {
   DeadChurch: 'dead-church',
   DeepSea: 'deep-sea-abyss',
   FloralEscape: 'floral-escape',
-  Forest: 'low-forest',
+  LowForest: 'low-forest',
   HauntedHallows: 'haunted-hallows',
   HighDesert: 'high-desert',
-  HigherForest: 'high-forest',
-  HigherPlains: 'high-plains',
+  HighForest: 'high-forest',
+  HighPlains: 'high-plains',
   /*
    * The client knows two deserts and no third - HighDesert and MidDesert -
    * and the reference's low-desert page is empty of everything. The owner of
@@ -87,7 +87,7 @@ const GROUND_BIOMES = {
    */
   MidDesert: 'high-desert',
   Nature: 'mid-forest',
-  Plains: 'low-plains',
+  MidPlains: 'mid-plains',
   RisenHell: 'risen-hell',
   RunicTundra: 'runic-tundra',
   SanguineForest: 'sanguine-forest',
