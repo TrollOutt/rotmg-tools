@@ -456,7 +456,23 @@ function readFight() {
         def: Number(one(m[2], 'Defense')) || undefined,
         exp: Number(one(m[2], 'Exp')) || undefined,
         shots: shots.length ? shots.slice(0, 4) : undefined,
-        immune: held.length ? held : undefined
+        immune: held.length ? held : undefined,
+        /*
+         * What the client says happens when it is hit and when it dies. It
+         * is the only death effect the data carries: a splash, how likely it
+         * is, and what colour it is. Seventy-one things declare it and the
+         * rest declare nothing, so the rest get nothing declared - the game's
+         * own burst lives in its code, not in these files.
+         */
+        blood: (() => {
+          const prob = /<BloodProb>([^<]*)<\/BloodProb>/.exec(m[2]);
+          const tint = /<BloodColor>([^<]*)<\/BloodColor>/.exec(m[2]);
+          if (!prob && !tint) return undefined;
+          const got = {};
+          if (prob) got.odds = Number(prob[1]);
+          if (tint) got.tint = '#' + Number(tint[1]).toString(16).padStart(6, '0');
+          return got;
+        })()
       });
     }
   }
@@ -1904,11 +1920,23 @@ function main() {
   }
 
   /*
-   * A picture for each of them, moving where the client draws them moving.
-   * The side-on facing is the one the game shows most and the one that reads
-   * best small, so that is the one taken; the walk cycle is what the atlas
-   * plays, and standing still is the fallback for the things that have no
-   * walk.
+   * A picture for each of them - every picture the client has of them.
+   *
+   * The sprite registry holds fifty-three thousand poses, filed by which way
+   * the thing is facing and what it is doing: nought standing, one walking,
+   * two attacking. A creature typically has nine of them, three facings by
+   * three actions, and the walk and the attack are two frames each. Only one
+   * of those nine was being taken, which meant every creature in the realm
+   * stood side-on doing its walk cycle whatever it was actually doing.
+   *
+   * All of them are cut now, into one strip, with a note of which slots of
+   * that strip belong to which facing and action. The page can then show a
+   * thing walking north while it walks north and swinging while it swings,
+   * and none of it has to be invented - it is the animation the game itself
+   * plays.
+   *
+   * There is no facing for east. The client stores west and mirrors it, so
+   * the page mirrors it too.
    */
   const artOf = readArt();
   const lifeDir = path.join(OUT, 'life');
@@ -1922,12 +1950,20 @@ function main() {
     if (art && frames) {
       const moving = frames.moving.get(art.atlas + '#' + art.index);
       let rects = null;
+      let poses = null;
       if (moving && moving.length) {
-        const facings = [...new Set(moving.map(f => f.facing))].sort();
-        const facing = facings.includes(0) ? 0 : facings[0];
-        rects = moving.filter(f => f.facing === facing && f.doing === 1);
-        if (!rects.length) rects = moving.filter(f => f.facing === facing && f.doing === 0);
-        if (!rects.length) rects = [moving[0]];
+        /*
+         * Every pose, in a settled order, so the strip is the same on every
+         * build: facing by facing, action by action, in the order the client
+         * numbers them.
+         */
+        rects = moving.slice().sort((a, b) =>
+          (a.facing - b.facing) || (a.doing - b.doing));
+        poses = {};
+        rects.forEach((r, slot) => {
+          const key = r.facing + '/' + r.doing;
+          (poses[key] || (poses[key] = [])).push(slot);
+        });
       } else {
         const bag = frames.still.get(art.atlas);
         const one = bag && bag.get(art.index);
@@ -1998,6 +2034,21 @@ function main() {
             fs.writeFileSync(path.join(lifeDir, file), writePng(stride, h, strip));
             made = { file, tile: w, height: h, frames: usable.length,
               size: (artOf.get(type) || {}).size || 100 };
+            /*
+             * And which slots are which, renumbered against the frames that
+             * actually survived - a pose whose rectangle fell outside its
+             * sheet is dropped, and the numbering has to close up behind it.
+             */
+            if (poses) {
+              const kept = new Map();
+              usable.forEach((r, slot) => kept.set(rects.indexOf(r), slot));
+              const out = {};
+              for (const key of Object.keys(poses)) {
+                const list = poses[key].map(i => kept.get(i)).filter(i => i !== undefined);
+                if (list.length) out[key] = list;
+              }
+              if (Object.keys(out).length > 1) made.poses = out;
+            }
           }
         }
       }
