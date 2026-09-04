@@ -2569,80 +2569,79 @@ function standUpLandmarks() {
 
 /* ---------------- the folk who come to fight ---------------- */
 /*
- * Adventurers, in the realm.
+ * Adventurers, in the realm, fighting the way the game says they fight.
  *
- * The map has always been a place with things standing in it. This is the
- * first of it being a place where something happens: six classes out of the
- * client, walking out from the beacons, picking a fight with whatever is
- * nearest, and losing it often enough to be worth watching.
+ * Almost nothing here is chosen. The six classes are objects in the client
+ * with the same walk cycle the wildlife has, so they are cut and drawn by the
+ * code that draws wildlife. Their hit points, attack, defence and dexterity
+ * are the client's, and so is the kit they start with: a Warrior swings a
+ * Short Sword for forty-five to ninety at three and a half tiles, a Wizard
+ * throws two missiles off an Energy Staff for ten to thirty at nearly nine.
+ * What a creature has, and how hard and how far it shoots back, is the
+ * client's too.
  *
- * Everything they need is already here and none of it is invented. The
- * classes are objects in the client with the same walk cycle the wildlife
- * has, so they are cut and drawn by the code that draws wildlife. What a
- * creature has for hit points, and how hard and how far it hits, comes off
- * the client too - so a Lich King is a wall and a bat is a nuisance without
- * anybody choosing that.
+ * So a shot is a shot: it leaves whoever fired it, crosses the ground at the
+ * speed the client gives it, expires at the range the client gives it, and
+ * hurts whatever it reaches. Standing next to something and quietly draining
+ * its hit points was a placeholder and read as two sprites ignoring each
+ * other.
  *
- * What is invented is only what the client has no answer for: how hard an
- * adventurer hits, and how long they stand around afterwards. Those are the
- * four numbers below and they are meant to be played with.
+ * The three numbers that are not the client's are marked below.
  */
-const FOLK_AT_A_BEACON = 4;              // how many set out from each
-const FOLK_REACH = 1.6;                  // tiles they must close to
-/*
- * Damage a second, all classes alike. Set so an ordinary creature takes a
- * handful of seconds and a Hero of Oryx takes a good deal longer: at nine
- * hundred a party cleared a zone faster than it could restock and the map
- * emptied while you watched.
- */
-const FOLK_HURT = 260;
-const FOLK_BACK = 9;                     // seconds before a dead one returns
-const FOLK_SEEK = 26;                    // tiles they will cross for a fight
-const FOLK_SPEED = 3.4;                  // tiles a second
+const FOLK_AT_A_BEACON = 4;              // mine: how many set out from each
+const FOLK_BACK = 9;                     // mine: seconds before a dead one returns
+const FOLK_SEEK = 26;                    // mine: tiles they will cross for a fight
 
 const folk = [];
+const shots = [];
 
-/* How much punishment each class takes, roughly as the game has it. */
-const FOLK_TOUGH = {
-  Knight: 1400, Warrior: 1100, Priest: 800, Archer: 750, Rogue: 700, Wizard: 650
-};
+/*
+ * How often a thing shoots. The game works it off dexterity; this is the same
+ * shape - slow at nothing, about four a second at seventy-five - times
+ * whatever rate the weapon itself declares.
+ */
+const rateOf = one => (1.4 + (one.kind.dex || 40) / 28) * ((one.kind.weapon
+  && one.kind.weapon.shot && one.kind.weapon.shot.rate) || 1);
+
+/* And how hard, which the game works off attack against the target's armour. */
+function hurtOf(shot, att, armour) {
+  const raw = shot.low + Math.random() * Math.max(0, (shot.high || shot.low) - shot.low);
+  const swung = raw * (0.5 + (att || 50) / 50);
+  return Math.max(swung * 0.15, swung - (armour || 0));
+}
 
 function raiseFolk() {
   folk.length = 0;
+  shots.length = 0;
   if (!A.folk || !A.folk.length || !A.beacons) return;
   for (const beacon of A.beacons) {
     for (let i = 0; i < FOLK_AT_A_BEACON; i++) {
-      const kind = A.folk[Math.floor(Math.random() * A.folk.length)];
-      folk.push(newFolk(kind, beacon));
+      folk.push(newFolk(A.folk[Math.floor(Math.random() * A.folk.length)], beacon));
     }
   }
 }
 
 function newFolk(kind, beacon) {
   const angle = Math.random() * Math.PI * 2;
+  const full = kind.hp || 700;
   return {
     kind, beacon,
     x: beacon.x + Math.cos(angle) * 3,
     y: beacon.y + Math.sin(angle) * 3,
     vx: 0, vy: 0,
     phase: Math.random() * 100,
-    hp: FOLK_TOUGH[kind.name] || 800,
-    full: FOLK_TOUGH[kind.name] || 800,
+    hp: full, full,
     target: null,
+    cool: Math.random() * 0.5,
     down: 0
   };
 }
 
-/*
- * The nearest thing worth hitting, and only if it is worth crossing the map
- * for. Searched over everything alive rather than by any index, because there
- * are two thousand of them and this runs a few dozen times a second at most -
- * and an index of things that move is a thing to keep correct for no gain.
- */
+// The nearest thing worth hitting, if it is worth crossing the map for.
 function preyFor(one) {
   let best = null, near = FOLK_SEEK * FOLK_SEEK;
   for (const beast of alive) {
-    if (beast.hp <= 0) continue;
+    if (beast.down > 0 || beast.hp <= 0) continue;
     const dx = beast.x - one.x, dy = beast.y - one.y;
     const far = dx * dx + dy * dy;
     if (far < near) { near = far; best = beast; }
@@ -2650,13 +2649,24 @@ function preyFor(one) {
   return best;
 }
 
+function fire(from, at, shot, hurt, mine) {
+  const dx = at.x - from.x, dy = at.y - from.y;
+  const far = Math.hypot(dx, dy) || 1;
+  const fast = shot.fast || 8;
+  shots.push({
+    x: from.x, y: from.y,
+    vx: (dx / far) * fast, vy: (dy / far) * fast,
+    left: (shot.reach || 6) / fast,
+    hurt, mine
+  });
+}
+
 function stepFolk(delta) {
   if (!folk.length) return;
   for (const one of folk) {
     /*
-     * The dead lie where they fell for a few seconds and then walk back out
-     * of the beacon they came from, whole. Coming straight back would make a
-     * death mean nothing, and never coming back would empty the realm.
+     * The dead lie where they fell and then walk back out of the beacon they
+     * came from, whole. Coming straight back would make a death mean nothing.
      */
     if (one.down > 0) {
       one.down -= delta;
@@ -2668,40 +2678,102 @@ function stepFolk(delta) {
     }
 
     one.phase += delta;
-    if (!one.target || one.target.hp <= 0) one.target = preyFor(one);
+    one.cool -= delta;
+    if (!one.target || one.target.down > 0 || one.target.hp <= 0) one.target = preyFor(one);
+
+    const gun = one.kind.weapon && one.kind.weapon.shot;
+    const reach = (gun && gun.reach) || 4;
 
     if (!one.target) {
-      // Nothing to fight: drift about near the beacon it came out of.
       const dx = one.beacon.x - one.x, dy = one.beacon.y - one.y;
       const far = Math.hypot(dx, dy) || 1;
       const want = far > 14 ? 1 : -0.15;
       one.vx += (dx / far) * want * delta * 3;
       one.vy += (dy / far) * want * delta * 3;
     } else {
+      /*
+       * Kept at the edge of its own reach: a wizard stands off and a warrior
+       * has to walk in, because their weapons say so and nothing else does.
+       */
       const beast = one.target;
       const dx = beast.x - one.x, dy = beast.y - one.y;
       const far = Math.hypot(dx, dy) || 1;
-      if (far > FOLK_REACH) {
-        one.vx += (dx / far) * delta * 9;
-        one.vy += (dy / far) * delta * 9;
-      } else {
-        // In reach of each other, and both of them swinging.
-        one.vx *= 0.7; one.vy *= 0.7;
-        beast.hp -= FOLK_HURT * delta;
-        const shot = (beast.kind.shots || [])[0];
-        one.hp -= (shot ? shot.hurt : 40) * delta * 1.4;
-        if (beast.hp <= 0) { beast.down = 4 + Math.random() * 6; one.target = null; }
+      const hold = reach * 0.75;
+      const pull = far > hold ? 1 : (far < hold * 0.6 ? -0.8 : 0);
+      one.vx += (dx / far) * pull * delta * 9;
+      one.vy += (dy / far) * pull * delta * 9;
+
+      if (gun && far <= reach && one.cool <= 0) {
+        one.cool = 1 / rateOf(one);
+        for (let n = 0; n < (gun.many || 1); n++) {
+          fire(one, beast, gun, hurtOf(gun, one.kind.att, beast.kind.def), true);
+        }
       }
     }
 
     const fast = Math.hypot(one.vx, one.vy);
-    if (fast > FOLK_SPEED) { one.vx = one.vx / fast * FOLK_SPEED; one.vy = one.vy / fast * FOLK_SPEED; }
+    const top = 2.4 + (one.kind.pace || 25) / 22;
+    if (fast > top) { one.vx = one.vx / fast * top; one.vy = one.vy / fast * top; }
     const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
-    // They may cross a border a creature may not: they are travelling.
     if (walkable(nx, ny)) { one.x = nx; one.y = ny; }
     else { one.vx = -one.vx * 0.5; one.vy = -one.vy * 0.5; }
 
     if (one.hp <= 0) { one.down = FOLK_BACK; one.vx = 0; one.vy = 0; one.target = null; }
+  }
+
+  /* And the creatures shoot back, with what the client gave them. */
+  for (const beast of alive) {
+    if (beast.down > 0 || beast.hp <= 0) continue;
+    const shot = (beast.kind.shots || [])[0];
+    if (!shot) continue;
+    beast.cool = (beast.cool || Math.random()) - delta;
+    if (beast.cool > 0) continue;
+    beast.cool = 1.1 + Math.random() * 0.7;
+    const reach = shot.reach || 5;
+    let mark = null, near = reach * reach;
+    for (const one of folk) {
+      if (one.down > 0) continue;
+      const dx = one.x - beast.x, dy = one.y - beast.y;
+      const far = dx * dx + dy * dy;
+      if (far < near) { near = far; mark = one; }
+    }
+    if (mark) {
+      fire(beast, mark, { fast: shot.fast || 8, reach },
+        Math.max(shot.hurt * 0.15, shot.hurt - (mark.kind.def || 0)), false);
+    }
+  }
+
+  stepShots(delta);
+}
+
+/*
+ * Everything in the air. A shot is checked against whichever side it did not
+ * come from, and only against things it could plausibly have reached this
+ * frame - which at these speeds is a tile or so, so a plain distance test is
+ * enough and there is no need for anything cleverer.
+ */
+function stepShots(delta) {
+  for (let i = shots.length - 1; i >= 0; i--) {
+    const s = shots[i];
+    s.x += s.vx * delta; s.y += s.vy * delta; s.left -= delta;
+    let gone = s.left <= 0;
+    if (!gone && s.mine) {
+      for (const beast of alive) {
+        if (beast.down > 0) continue;
+        if (Math.abs(beast.x - s.x) > 0.7 || Math.abs(beast.y - s.y) > 0.7) continue;
+        beast.hp -= s.hurt;
+        if (beast.hp <= 0) beast.down = 4 + Math.random() * 6;
+        gone = true; break;
+      }
+    } else if (!gone) {
+      for (const one of folk) {
+        if (one.down > 0) continue;
+        if (Math.abs(one.x - s.x) > 0.7 || Math.abs(one.y - s.y) > 0.7) continue;
+        one.hp -= s.hurt;
+        gone = true; break;
+      }
+    }
+    if (gone) shots.splice(i, 1);
   }
 }
 
@@ -2720,22 +2792,45 @@ function drawFolk(box) {
     if (one.down > 0) continue;
     if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
     drawn += drawOneLife(one, box);
-    /*
-     * A thread of health over anybody who is losing, and only then - a bar
-     * over every adventurer all the time is a spreadsheet laid on a map.
-     */
-    if (one.hp < one.full * 0.97) {
-      const at = place(one.x, one.y, box);
-      if (!at) continue;
-      const wide = Math.max(6, view.scale * 1.4);
-      const y = at.y - Math.max(7, view.scale * 1.6);
-      ctx.fillStyle = 'rgba(6,9,14,.72)';
-      ctx.fillRect(at.x - wide / 2, y, wide, 2);
-      ctx.fillStyle = one.hp > one.full * 0.4 ? '#7fd08a' : '#d4685f';
-      ctx.fillRect(at.x - wide / 2, y, wide * Math.max(0, one.hp / one.full), 2);
-    }
+    if (one.hp < one.full * 0.97) drawThread(one, box, '#7fd08a');
+  }
+  for (const beast of alive) {
+    if (beast.down > 0 || beast.hp >= beast.full) continue;
+    if (beast.x < seen.x0 || beast.x > seen.x1 || beast.y < seen.y0 || beast.y > seen.y1) continue;
+    drawThread(beast, box, '#d4685f');
+  }
+
+  /*
+   * The shots, as a streak of where each has just been rather than a dot.
+   * A dot at eighteen tiles a second is at two different places on two
+   * consecutive frames and reads as flicker; a streak reads as a shot.
+   */
+  ctx.lineCap = 'round';
+  for (const s of shots) {
+    const head = place(s.x, s.y, box);
+    const tail = place(s.x - s.vx * 0.05, s.y - s.vy * 0.05, box);
+    if (!head || !tail) continue;
+    if (head.x < -20 || head.y < -20 || head.x > box.w + 20 || head.y > box.h + 20) continue;
+    ctx.strokeStyle = s.mine ? 'rgba(255,238,190,.92)' : 'rgba(255,132,96,.92)';
+    ctx.lineWidth = Math.max(1, view.scale * 0.22);
+    ctx.beginPath();
+    ctx.moveTo(tail.x, tail.y);
+    ctx.lineTo(head.x, head.y);
+    ctx.stroke();
   }
   return drawn;
+}
+
+/* A thread of health over anybody who is losing, and only then. */
+function drawThread(one, box, colour) {
+  const at = place(one.x, one.y, box);
+  if (!at) return;
+  const wide = Math.max(6, view.scale * 1.4);
+  const y = at.y - Math.max(7, view.scale * 1.6);
+  ctx.fillStyle = 'rgba(6,9,14,.72)';
+  ctx.fillRect(at.x - wide / 2, y, wide, 2);
+  ctx.fillStyle = colour;
+  ctx.fillRect(at.x - wide / 2, y, wide * Math.max(0, one.hp / one.full), 2);
 }
 
 /*

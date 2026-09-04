@@ -266,6 +266,70 @@ function readEnemies() {
  * forty-eight creatures carry a maximum, six hundred and seventy-two a
  * probability, a hundred and nine a group size.
  */
+/*
+ * A class, and the kit it starts with.
+ *
+ * The Equipment line is a list of object types by slot: weapon first, then
+ * ability, then armour, then ring. Each of the first two carries a Projectile
+ * of its own, and that projectile is the attack - there is nothing else to
+ * look up and nothing to invent.
+ */
+function readKit() {
+  const byType = new Map();
+  const shape = /<Object\s+type="([^"]+)"\s+id="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      const ty = Number.parseInt(m[1], 16);
+      if (Number.isFinite(ty)) byType.set(ty, { id: m[2], body: m[3] });
+    }
+  }
+  const num = (body, tag, attr) => {
+    const m = attr
+      ? new RegExp('<' + tag + '[^>]*' + attr + '="([^"]+)"').exec(body)
+      : new RegExp('<' + tag + '>([^<]*)</' + tag + '>').exec(body);
+    if (!m) return undefined;
+    const n = Number(m[1]);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const shotOf = body => {
+    const p = /<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/.exec(body);
+    if (!p) return undefined;
+    const low = num(p[1], 'MinDamage'), high = num(p[1], 'MaxDamage');
+    const fast = num(p[1], 'Speed'), lives = num(p[1], 'LifetimeMS');
+    if (low === undefined && high === undefined) return undefined;
+    return {
+      low: low === undefined ? high : low,
+      high: high === undefined ? low : high,
+      // Tiles a second, and how far it gets before it expires.
+      fast: fast === undefined ? undefined : fast / 10,
+      reach: fast !== undefined && lives !== undefined
+        ? Math.round(fast * lives / 1000) / 10 : undefined,
+      many: num(body, 'NumProjectiles') || 1,
+      rate: num(body, 'RateOfFire') || 1
+    };
+  };
+  const out = new Map();
+  for (const [, one] of byType) {
+    if (!/<Player\s*\/>/.test(one.body)) continue;
+    const gear = /<Equipment>([^<]*)<\/Equipment>/.exec(one.body);
+    const kit = gear ? gear[1].split(',').map(x => Number.parseInt(x.trim(), 16)) : [];
+    const weapon = byType.get(kit[0]);
+    const ability = byType.get(kit[1]);
+    out.set(one.id, {
+      hp: num(one.body, 'MaxHitPoints', 'max'),
+      att: num(one.body, 'Attack', 'max'),
+      def: num(one.body, 'Defense', 'max'),
+      dex: num(one.body, 'Dexterity', 'max'),
+      pace: num(one.body, 'Speed', 'max'),
+      weapon: weapon ? { name: weapon.id, shot: shotOf(weapon.body) } : undefined,
+      ability: ability
+        ? { name: ability.id, cost: num(ability.body, 'MpCost'), shot: shotOf(ability.body) }
+        : undefined
+    });
+  }
+  return out;
+}
+
 function readSpawnRules() {
   const out = new Map();
   const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
@@ -340,6 +404,8 @@ function readFight() {
         if (!Number.isFinite(hurt) || !hurt) continue;
         shots.push({
           hurt,
+          // Tiles a second, which is what the page needs to fly one.
+          fast: Number.isFinite(fast) ? fast / 10 : undefined,
           reach: Number.isFinite(fast) && Number.isFinite(lives)
             ? Math.round(fast * lives / 10000 * 10) / 10 : undefined,
           pierce: /<ArmorPiercing\s*\/>/.test(shot[1]) || undefined,
@@ -2094,6 +2160,15 @@ function main() {
    * listed as living anywhere: they arrive.
    */
   {
+    /*
+     * What each class is and what it carries, all of it the client's: the hit
+     * points it tops out at, its attack and defence and dexterity, and the
+     * four things it starts with. The first of those is its weapon and the
+     * second its ability, and each declares the shot it throws. A wizard's
+     * Energy Staff throws two missiles for ten to thirty; his Fire Spray
+     * costs twenty magic. None of that is a number anybody here chose.
+     */
+    const kitOf = readKit();
     const wanted = ['Warrior', 'Knight', 'Wizard', 'Priest', 'Archer', 'Rogue'];
     const byName = new Map();
     for (const [type, name] of objectName) if (wanted.includes(name)) byName.set(name, type);
@@ -2102,7 +2177,7 @@ function main() {
       const type = byName.get(name);
       if (type === undefined) continue;
       const sprite = cutLife(type);
-      if (sprite) folk.push({ name, type, sprite });
+      if (sprite) folk.push({ name, type, sprite, ...(kitOf.get(name) || {}) });
     }
     map.folk = folk;
     console.log('  ' + folk.length + ' of the six classes cut, to walk the realm');
