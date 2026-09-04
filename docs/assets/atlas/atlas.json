@@ -3748,8 +3748,832 @@
   },
   {
    "index": 3,
+   "name": "Coral Reef",
+   "tiles": 115874,
+   "at": [
+    1859,
+    1363
+   ],
+   "ground": "CoralReefs",
+   "lives": [
+    {
+     "type": 22034,
+     "name": "New Beach Bum",
+     "most": 1,
+     "odds": 0.005,
+     "labels": "ENEMY,ENCOUNTER,ADEPT_ENCOUNTER",
+     "size": 100,
+     "hp": 20000,
+     "def": 15,
+     "exp": 300,
+     "sprite": {
+      "file": "c22034.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 45861,
+     "name": "AI Alien Tank",
+     "odds": 1,
+     "few": 2,
+     "many": 3,
+     "group": "AI Alien Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 5000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 120,
+       "fast": 9,
+       "reach": 10.8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45861.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45862,
+     "name": "AI Alien Pod",
+     "odds": 1,
+     "few": 2,
+     "many": 3,
+     "group": "AI Alien Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 5000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 130,
+       "fast": 11,
+       "reach": 13.2,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45862.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21888,
+     "name": "Reef Leviathan",
+     "odds": 0.55,
+     "group": "Gods",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 2000,
+     "def": 20,
+     "exp": 600,
+     "shots": [
+      {
+       "hurt": 60,
+       "fast": 6.7,
+       "reach": 11.4
+      },
+      {
+       "hurt": 90,
+       "fast": 8.5,
+       "reach": 15.3
+      }
+     ],
+     "sprite": {
+      "file": "c21888.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 45859,
+     "name": "AI Alien Mini Satellite",
+     "odds": 1,
+     "few": 2,
+     "many": 4,
+     "group": "AI Alien Mini Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 2000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 130,
+       "fast": 9,
+       "reach": 9,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45859.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45860,
+     "name": "AI Alien Mini Tank",
+     "odds": 1,
+     "few": 2,
+     "many": 4,
+     "group": "AI Alien Mini Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 2000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 100,
+       "fast": 9,
+       "reach": 10.8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45860.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45858,
+     "name": "AI Alien Elite",
+     "odds": 1,
+     "few": 4,
+     "many": 7,
+     "group": "AI Alien Army",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_MID,ALIEN_INVASION_ADEPT",
+     "size": 120,
+     "hp": 1400,
+     "def": 10,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 110,
+       "fast": 9,
+       "reach": 7.2,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45858.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49344,
+     "name": "Reef Walrus",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 120,
+     "hp": 1300,
+     "def": 10,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 80,
+       "fast": 7,
+       "reach": 14,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c49344.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 1200,
+     "def": 30,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 90,
+       "fast": 7.5,
+       "reach": 9.4
+      },
+      {
+       "hurt": 85,
+       "fast": 7,
+       "reach": 8.8
+      },
+      {
+       "hurt": 80,
+       "fast": 6.5,
+       "reach": 8.1
+      },
+      {
+       "hurt": 75,
+       "fast": 6,
+       "reach": 7.5
+      }
+     ],
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49340,
+     "name": "Reef Seahorse",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 1000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 90,
+       "fast": 7.5,
+       "reach": 22.5
+      },
+      {
+       "hurt": 95,
+       "fast": 7,
+       "reach": 21
+      }
+     ],
+     "sprite": {
+      "file": "c49340.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49342,
+     "name": "Reef Octopus",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 45,
+       "fast": 2.5,
+       "reach": 8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c49342.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49343,
+     "name": "Reef Narwhal",
+     "odds": 0.7,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 120,
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 85,
+       "fast": 5,
+       "reach": 7.5
+      }
+     ],
+     "sprite": {
+      "file": "c49343.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45856,
+     "name": "AI Alien Soldier",
+     "odds": 1,
+     "few": 4,
+     "many": 7,
+     "group": "AI Alien Army",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
+     "size": 120,
+     "hp": 1000,
+     "def": 15,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 100,
+       "fast": 9,
+       "reach": 7.2,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45856.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45857,
+     "name": "AI Alien Caster",
+     "odds": 1,
+     "few": 4,
+     "many": 7,
+     "group": "AI Alien Army",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
+     "size": 120,
+     "hp": 800,
+     "def": 10,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 80,
+       "fast": 9,
+       "reach": 10.8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45857.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ],
+   "rank": "Adept",
+   "wiki": "coral-reefs",
+   "regular": [
+    {
+     "name": "Enchanted Turtle",
+     "art": "enchanted-turtle.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 90,
+       "reach": 9.4
+      },
+      {
+       "hurt": 85,
+       "reach": 8.8
+      },
+      {
+       "hurt": 80,
+       "reach": 8.1
+      }
+     ],
+     "hp": 1200,
+     "def": 30,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Vitality",
+      "Torrential Staff",
+      "Cnidarian Reef"
+     ]
+    },
+    {
+     "name": "Flying Seahorse",
+     "art": "flying-seahorse.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 90,
+       "reach": 22.5
+      },
+      {
+       "hurt": 95,
+       "reach": 21
+      }
+     ],
+     "hp": 1000,
+     "def": 20,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Wisdom",
+      "Torrential Staff",
+      "Snake Pit"
+     ]
+    },
+    {
+     "name": "Leviathan",
+     "art": "leviathan.png",
+     "group": "Gods",
+     "shots": [
+      {
+       "hurt": 60,
+       "reach": 11.4
+      },
+      {
+       "hurt": 90,
+       "reach": 15.3
+      }
+     ],
+     "hp": 2000,
+     "def": 20,
+     "exp": 600,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Weapons",
+      "Tier 9 Armor",
+      "Tier 10 Armor",
+      "Potion of Speed",
+      "Potion of Wisdom",
+      "Potion of Vitality",
+      "Torrential Staff",
+      "Puppet Master’s Theatre"
+     ]
+    },
+    {
+     "name": "Rampant Walrus",
+     "art": "rampant-walrus.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 80,
+       "reach": 14
+      }
+     ],
+     "hp": 1300,
+     "def": 10,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Wisdom",
+      "Torrential Staff"
+     ]
+    },
+    {
+     "name": "Silvery Narwhal",
+     "art": "silvery-narwhal.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 85,
+       "reach": 7.5
+      }
+     ],
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Wisdom",
+      "Torrential Staff",
+      "Cave of a Thousand Treasures"
+     ]
+    },
+    {
+     "name": "Smelly Octopus",
+     "art": "smelly-octopus.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 45,
+       "reach": 8
+      }
+     ],
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Speed",
+      "Torrential Staff",
+      "Toxic Sewers"
+     ]
+    }
+   ],
+   "encounters": [
+    {
+     "name": "Carp Emperor",
+     "art": "carp-emperor.png",
+     "shots": [
+      {
+       "hurt": 70,
+       "reach": 15.8,
+       "pierce": true
+      },
+      {
+       "hurt": 70,
+       "reach": 15,
+       "pierce": true
+      },
+      {
+       "hurt": 140,
+       "reach": 15
+      }
+     ],
+     "immune": [
+      "stasis",
+      "petrify",
+      "daze",
+      "stun"
+     ],
+     "hp": 145000,
+     "def": 40,
+     "exp": 25000,
+     "drops": [
+      "Stat Increase Potions",
+      "Potion of Life",
+      "Potion of Mana",
+      "Barnacle Blueprint",
+      "Barnacle Basher"
+     ]
+    },
+    {
+     "name": "Hermit God",
+     "art": "hermit-god.png",
+     "group": "New Hermit God Encounter",
+     "shots": [
+      {
+       "hurt": 45,
+       "reach": 16.5
+      },
+      {
+       "hurt": 65,
+       "reach": 16.5
+      },
+      {
+       "hurt": 100,
+       "reach": 17.6
+      }
+     ],
+     "immune": [
+      "stasis"
+     ],
+     "hp": 55000,
+     "def": 35,
+     "exp": 25000,
+     "drops": [
+      "Tier 8 Weapons",
+      "Tier 9 Weapons",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 4 Abilities",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Pet Eggs",
+      "Tier 10 Weapons",
+      "Tier 11 Weapons",
+      "Tier 9 Armor",
+      "Tier 10 Armor",
+      "Tier 11 Armor",
+      "Tier 5 Abilities",
+      "Tier 5 Rings",
+      "Shield Rune",
+      "Stat Increase Potions",
+      "Hermit Wizard Skin",
+      "Barnacle Blueprint",
+      "Barnacle Basher",
+      "Ocean Trench"
+     ]
+    },
+    {
+     "name": "World’s Oyster",
+     "art": "world-s-oyster.png",
+     "shots": [
+      {
+       "hurt": 60,
+       "reach": 12
+      },
+      {
+       "hurt": 100,
+       "reach": 27
+      },
+      {
+       "hurt": 80,
+       "reach": 14
+      }
+     ],
+     "immune": [
+      "stasis",
+      "petrify",
+      "daze",
+      "stun"
+     ],
+     "hp": 65000,
+     "def": 55,
+     "exp": 25000,
+     "drops": [
+      "Tier 9 Weapons",
+      "Tier 9 Alternate Weapons",
+      "Tier 4 Abilities",
+      "Tier 10 Weapons",
+      "Tier 10 Alternate Weapons",
+      "Tier 11 Weapons",
+      "Tier 11 Alternate Weapons",
+      "Tier 10 Armor",
+      "Tier 11 Armor",
+      "Tier 5 Abilities",
+      "Tier 5 Rings",
+      "Tier 6 Rings",
+      "Potion of Life",
+      "Potion of Mana",
+      "Stat Increase Potions",
+      "Barnacle Blueprint",
+      "Barnacle Basher",
+      "Cnidarian Reef"
+     ]
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Beach Bum",
+     "art": "beach-bum.png",
+     "hp": 20000,
+     "def": 15,
+     "exp": 300,
+     "drops": [
+      "Davy’s Key",
+      "Beachzone"
+     ]
+    },
+    {
+     "name": "Maiden of the Sea",
+     "art": "maiden-of-the-sea.png",
+     "shots": [
+      {
+       "hurt": 70,
+       "reach": 12
+      },
+      {
+       "hurt": 80,
+       "reach": 10.5
+      },
+      {
+       "hurt": 60,
+       "reach": 11,
+       "pierce": true
+      }
+     ],
+     "immune": [
+      "stasis"
+     ],
+     "hp": 12000,
+     "def": 10,
+     "exp": 2500,
+     "drops": [
+      "Tier 7 Weapons",
+      "Tier 7 Alternate Weapons",
+      "Tier 8 Weapons",
+      "Tier 8 Alternate Weapons",
+      "Tier 9 Weapons",
+      "Tier 9 Alternate Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 10 Weapons",
+      "Tier 10 Alternate Weapons",
+      "Tier 9 Armor",
+      "Tier 10 Armor",
+      "Wine Cellar Incantation",
+      "Potion of Wisdom",
+      "Potion of Vitality",
+      "Potion of Speed",
+      "Torrential Staff"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 4,
    "name": "Ancient City",
-   "tiles": 116067,
+   "tiles": 115613,
    "at": [
     1211,
     1114
@@ -5232,833 +6056,9 @@
    ]
   },
   {
-   "index": 4,
-   "name": "Coral Reef",
-   "tiles": 115919,
-   "at": [
-    1859,
-    1363
-   ],
-   "ground": "CoralReefs",
-   "lives": [
-    {
-     "type": 22034,
-     "name": "New Beach Bum",
-     "most": 1,
-     "odds": 0.005,
-     "labels": "ENEMY,ENCOUNTER,ADEPT_ENCOUNTER",
-     "size": 100,
-     "hp": 20000,
-     "def": 15,
-     "exp": 300,
-     "sprite": {
-      "file": "c22034.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 45861,
-     "name": "AI Alien Tank",
-     "odds": 1,
-     "few": 2,
-     "many": 3,
-     "group": "AI Alien Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 5000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 120,
-       "fast": 9,
-       "reach": 10.8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45861.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45862,
-     "name": "AI Alien Pod",
-     "odds": 1,
-     "few": 2,
-     "many": 3,
-     "group": "AI Alien Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 5000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 130,
-       "fast": 11,
-       "reach": 13.2,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45862.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21888,
-     "name": "Reef Leviathan",
-     "odds": 0.55,
-     "group": "Gods",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 2000,
-     "def": 20,
-     "exp": 600,
-     "shots": [
-      {
-       "hurt": 60,
-       "fast": 6.7,
-       "reach": 11.4
-      },
-      {
-       "hurt": 90,
-       "fast": 8.5,
-       "reach": 15.3
-      }
-     ],
-     "sprite": {
-      "file": "c21888.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 45859,
-     "name": "AI Alien Mini Satellite",
-     "odds": 1,
-     "few": 2,
-     "many": 4,
-     "group": "AI Alien Mini Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 2000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 130,
-       "fast": 9,
-       "reach": 9,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45859.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45860,
-     "name": "AI Alien Mini Tank",
-     "odds": 1,
-     "few": 2,
-     "many": 4,
-     "group": "AI Alien Mini Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 2000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 100,
-       "fast": 9,
-       "reach": 10.8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45860.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45858,
-     "name": "AI Alien Elite",
-     "odds": 1,
-     "few": 4,
-     "many": 7,
-     "group": "AI Alien Army",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_MID,ALIEN_INVASION_ADEPT",
-     "size": 120,
-     "hp": 1400,
-     "def": 10,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 110,
-       "fast": 9,
-       "reach": 7.2,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45858.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49344,
-     "name": "Reef Walrus",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 120,
-     "hp": 1300,
-     "def": 10,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 80,
-       "fast": 7,
-       "reach": 14,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c49344.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49341,
-     "name": "Reef Turtle",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 1200,
-     "def": 30,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 90,
-       "fast": 7.5,
-       "reach": 9.4
-      },
-      {
-       "hurt": 85,
-       "fast": 7,
-       "reach": 8.8
-      },
-      {
-       "hurt": 80,
-       "fast": 6.5,
-       "reach": 8.1
-      },
-      {
-       "hurt": 75,
-       "fast": 6,
-       "reach": 7.5
-      }
-     ],
-     "sprite": {
-      "file": "c49341.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49340,
-     "name": "Reef Seahorse",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 1000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 90,
-       "fast": 7.5,
-       "reach": 22.5
-      },
-      {
-       "hurt": 95,
-       "fast": 7,
-       "reach": 21
-      }
-     ],
-     "sprite": {
-      "file": "c49340.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49342,
-     "name": "Reef Octopus",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 45,
-       "fast": 2.5,
-       "reach": 8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c49342.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49343,
-     "name": "Reef Narwhal",
-     "odds": 0.7,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 120,
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 85,
-       "fast": 5,
-       "reach": 7.5
-      }
-     ],
-     "sprite": {
-      "file": "c49343.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45856,
-     "name": "AI Alien Soldier",
-     "odds": 1,
-     "few": 4,
-     "many": 7,
-     "group": "AI Alien Army",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
-     "size": 120,
-     "hp": 1000,
-     "def": 15,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 100,
-       "fast": 9,
-       "reach": 7.2,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45856.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45857,
-     "name": "AI Alien Caster",
-     "odds": 1,
-     "few": 4,
-     "many": 7,
-     "group": "AI Alien Army",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
-     "size": 120,
-     "hp": 800,
-     "def": 10,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 80,
-       "fast": 9,
-       "reach": 10.8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45857.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ],
-   "rank": "Adept",
-   "wiki": "coral-reefs",
-   "regular": [
-    {
-     "name": "Enchanted Turtle",
-     "art": "enchanted-turtle.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 90,
-       "reach": 9.4
-      },
-      {
-       "hurt": 85,
-       "reach": 8.8
-      },
-      {
-       "hurt": 80,
-       "reach": 8.1
-      }
-     ],
-     "hp": 1200,
-     "def": 30,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Vitality",
-      "Torrential Staff",
-      "Cnidarian Reef"
-     ]
-    },
-    {
-     "name": "Flying Seahorse",
-     "art": "flying-seahorse.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 90,
-       "reach": 22.5
-      },
-      {
-       "hurt": 95,
-       "reach": 21
-      }
-     ],
-     "hp": 1000,
-     "def": 20,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Wisdom",
-      "Torrential Staff",
-      "Snake Pit"
-     ]
-    },
-    {
-     "name": "Leviathan",
-     "art": "leviathan.png",
-     "group": "Gods",
-     "shots": [
-      {
-       "hurt": 60,
-       "reach": 11.4
-      },
-      {
-       "hurt": 90,
-       "reach": 15.3
-      }
-     ],
-     "hp": 2000,
-     "def": 20,
-     "exp": 600,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Weapons",
-      "Tier 9 Armor",
-      "Tier 10 Armor",
-      "Potion of Speed",
-      "Potion of Wisdom",
-      "Potion of Vitality",
-      "Torrential Staff",
-      "Puppet Master’s Theatre"
-     ]
-    },
-    {
-     "name": "Rampant Walrus",
-     "art": "rampant-walrus.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 80,
-       "reach": 14
-      }
-     ],
-     "hp": 1300,
-     "def": 10,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Wisdom",
-      "Torrential Staff"
-     ]
-    },
-    {
-     "name": "Silvery Narwhal",
-     "art": "silvery-narwhal.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 85,
-       "reach": 7.5
-      }
-     ],
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Wisdom",
-      "Torrential Staff",
-      "Cave of a Thousand Treasures"
-     ]
-    },
-    {
-     "name": "Smelly Octopus",
-     "art": "smelly-octopus.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 45,
-       "reach": 8
-      }
-     ],
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Speed",
-      "Torrential Staff",
-      "Toxic Sewers"
-     ]
-    }
-   ],
-   "encounters": [
-    {
-     "name": "Carp Emperor",
-     "art": "carp-emperor.png",
-     "shots": [
-      {
-       "hurt": 70,
-       "reach": 15.8,
-       "pierce": true
-      },
-      {
-       "hurt": 70,
-       "reach": 15,
-       "pierce": true
-      },
-      {
-       "hurt": 140,
-       "reach": 15
-      }
-     ],
-     "immune": [
-      "stasis",
-      "petrify",
-      "daze",
-      "stun"
-     ],
-     "hp": 145000,
-     "def": 40,
-     "exp": 25000,
-     "drops": [
-      "Stat Increase Potions",
-      "Potion of Life",
-      "Potion of Mana",
-      "Barnacle Blueprint",
-      "Barnacle Basher"
-     ]
-    },
-    {
-     "name": "Hermit God",
-     "art": "hermit-god.png",
-     "group": "New Hermit God Encounter",
-     "shots": [
-      {
-       "hurt": 45,
-       "reach": 16.5
-      },
-      {
-       "hurt": 65,
-       "reach": 16.5
-      },
-      {
-       "hurt": 100,
-       "reach": 17.6
-      }
-     ],
-     "immune": [
-      "stasis"
-     ],
-     "hp": 55000,
-     "def": 35,
-     "exp": 25000,
-     "drops": [
-      "Tier 8 Weapons",
-      "Tier 9 Weapons",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 4 Abilities",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Pet Eggs",
-      "Tier 10 Weapons",
-      "Tier 11 Weapons",
-      "Tier 9 Armor",
-      "Tier 10 Armor",
-      "Tier 11 Armor",
-      "Tier 5 Abilities",
-      "Tier 5 Rings",
-      "Shield Rune",
-      "Stat Increase Potions",
-      "Hermit Wizard Skin",
-      "Barnacle Blueprint",
-      "Barnacle Basher",
-      "Ocean Trench"
-     ]
-    },
-    {
-     "name": "World’s Oyster",
-     "art": "world-s-oyster.png",
-     "shots": [
-      {
-       "hurt": 60,
-       "reach": 12
-      },
-      {
-       "hurt": 100,
-       "reach": 27
-      },
-      {
-       "hurt": 80,
-       "reach": 14
-      }
-     ],
-     "immune": [
-      "stasis",
-      "petrify",
-      "daze",
-      "stun"
-     ],
-     "hp": 65000,
-     "def": 55,
-     "exp": 25000,
-     "drops": [
-      "Tier 9 Weapons",
-      "Tier 9 Alternate Weapons",
-      "Tier 4 Abilities",
-      "Tier 10 Weapons",
-      "Tier 10 Alternate Weapons",
-      "Tier 11 Weapons",
-      "Tier 11 Alternate Weapons",
-      "Tier 10 Armor",
-      "Tier 11 Armor",
-      "Tier 5 Abilities",
-      "Tier 5 Rings",
-      "Tier 6 Rings",
-      "Potion of Life",
-      "Potion of Mana",
-      "Stat Increase Potions",
-      "Barnacle Blueprint",
-      "Barnacle Basher",
-      "Cnidarian Reef"
-     ]
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Beach Bum",
-     "art": "beach-bum.png",
-     "hp": 20000,
-     "def": 15,
-     "exp": 300,
-     "drops": [
-      "Davy’s Key",
-      "Beachzone"
-     ]
-    },
-    {
-     "name": "Maiden of the Sea",
-     "art": "maiden-of-the-sea.png",
-     "shots": [
-      {
-       "hurt": 70,
-       "reach": 12
-      },
-      {
-       "hurt": 80,
-       "reach": 10.5
-      },
-      {
-       "hurt": 60,
-       "reach": 11,
-       "pierce": true
-      }
-     ],
-     "immune": [
-      "stasis"
-     ],
-     "hp": 12000,
-     "def": 10,
-     "exp": 2500,
-     "drops": [
-      "Tier 7 Weapons",
-      "Tier 7 Alternate Weapons",
-      "Tier 8 Weapons",
-      "Tier 8 Alternate Weapons",
-      "Tier 9 Weapons",
-      "Tier 9 Alternate Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 10 Weapons",
-      "Tier 10 Alternate Weapons",
-      "Tier 9 Armor",
-      "Tier 10 Armor",
-      "Wine Cellar Incantation",
-      "Potion of Wisdom",
-      "Potion of Vitality",
-      "Potion of Speed",
-      "Torrential Staff"
-     ]
-    }
-   ]
-  },
-  {
    "index": 5,
    "name": "Dead Church",
-   "tiles": 101333,
+   "tiles": 101314,
    "at": [
     917,
     1229
@@ -9932,7 +9932,7 @@
   {
    "index": 10,
    "name": "Low Forest",
-   "tiles": 68006,
+   "tiles": 68194,
    "at": [
     1297,
     534
@@ -26149,10 +26149,10 @@
   {
    "index": 35,
    "name": "Zone 36",
-   "tiles": 2892,
+   "tiles": 2094,
    "at": [
-    1131,
-    1160
+    849,
+    1612
    ],
    "ground": "",
    "lives": []
@@ -26160,10 +26160,10 @@
   {
    "index": 36,
    "name": "Zone 37",
-   "tiles": 2094,
+   "tiles": 1907,
    "at": [
-    849,
-    1612
+    1140,
+    1161
    ],
    "ground": "",
    "lives": []
@@ -26181,6 +26181,17 @@
   },
   {
    "index": 38,
+   "name": "Zone 39",
+   "tiles": 1449,
+   "at": [
+    1128,
+    1163
+   ],
+   "ground": "",
+   "lives": []
+  },
+  {
+   "index": 39,
    "name": "Dead Church",
    "tiles": 1082,
    "at": [
@@ -27131,8 +27142,8 @@
    ]
   },
   {
-   "index": 39,
-   "name": "Zone 40",
+   "index": 40,
+   "name": "Zone 41",
    "tiles": 943,
    "at": [
     1404,
@@ -31128,7 +31139,978 @@
   {
    "id": 4,
    "biome": 3,
-   "tiles": 116067,
+   "tiles": 115874,
+   "at": [
+    1859,
+    1363
+   ],
+   "box": [
+    1469,
+    885,
+    2036,
+    1793
+   ],
+   "name": "Coral Reef",
+   "named": true,
+   "from": "ground",
+   "roadSplit": [
+    {
+     "biome": "Coral Reef",
+     "tiles": 683
+    },
+    {
+     "biome": "Sprite Forest",
+     "tiles": 28
+    },
+    {
+     "biome": "Shipwreck Cove",
+     "tiles": 2
+    }
+   ],
+   "colour": "#c1b090",
+   "madeOf": [
+    {
+     "ground": "Coral Reefs Sand",
+     "tiles": 109502
+    },
+    {
+     "ground": "Shipwreck Cove Grassy Dirt",
+     "tiles": 1728
+    },
+    {
+     "ground": "Sprite Forest Grass",
+     "tiles": 666
+    },
+    {
+     "ground": "Setpiece DWD Sand",
+     "tiles": 665
+    }
+   ],
+   "lives": [
+    {
+     "type": 22034,
+     "name": "New Beach Bum",
+     "most": 1,
+     "odds": 0.005,
+     "labels": "ENEMY,ENCOUNTER,ADEPT_ENCOUNTER",
+     "size": 100,
+     "hp": 20000,
+     "def": 15,
+     "exp": 300,
+     "sprite": {
+      "file": "c22034.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 45861,
+     "name": "AI Alien Tank",
+     "odds": 1,
+     "few": 2,
+     "many": 3,
+     "group": "AI Alien Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 5000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 120,
+       "fast": 9,
+       "reach": 10.8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45861.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45862,
+     "name": "AI Alien Pod",
+     "odds": 1,
+     "few": 2,
+     "many": 3,
+     "group": "AI Alien Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 5000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 130,
+       "fast": 11,
+       "reach": 13.2,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45862.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21888,
+     "name": "Reef Leviathan",
+     "odds": 0.55,
+     "group": "Gods",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 2000,
+     "def": 20,
+     "exp": 600,
+     "shots": [
+      {
+       "hurt": 60,
+       "fast": 6.7,
+       "reach": 11.4
+      },
+      {
+       "hurt": 90,
+       "fast": 8.5,
+       "reach": 15.3
+      }
+     ],
+     "sprite": {
+      "file": "c21888.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 45859,
+     "name": "AI Alien Mini Satellite",
+     "odds": 1,
+     "few": 2,
+     "many": 4,
+     "group": "AI Alien Mini Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 2000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 130,
+       "fast": 9,
+       "reach": 9,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45859.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45860,
+     "name": "AI Alien Mini Tank",
+     "odds": 1,
+     "few": 2,
+     "many": 4,
+     "group": "AI Alien Mini Machine",
+     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
+     "size": 100,
+     "hp": 2000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 100,
+       "fast": 9,
+       "reach": 10.8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45860.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45858,
+     "name": "AI Alien Elite",
+     "odds": 1,
+     "few": 4,
+     "many": 7,
+     "group": "AI Alien Army",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_MID,ALIEN_INVASION_ADEPT",
+     "size": 120,
+     "hp": 1400,
+     "def": 10,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 110,
+       "fast": 9,
+       "reach": 7.2,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45858.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49344,
+     "name": "Reef Walrus",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 120,
+     "hp": 1300,
+     "def": 10,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 80,
+       "fast": 7,
+       "reach": 14,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c49344.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49341,
+     "name": "Reef Turtle",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 1200,
+     "def": 30,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 90,
+       "fast": 7.5,
+       "reach": 9.4
+      },
+      {
+       "hurt": 85,
+       "fast": 7,
+       "reach": 8.8
+      },
+      {
+       "hurt": 80,
+       "fast": 6.5,
+       "reach": 8.1
+      },
+      {
+       "hurt": 75,
+       "fast": 6,
+       "reach": 7.5
+      }
+     ],
+     "sprite": {
+      "file": "c49341.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49340,
+     "name": "Reef Seahorse",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 1000,
+     "def": 20,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 90,
+       "fast": 7.5,
+       "reach": 22.5
+      },
+      {
+       "hurt": 95,
+       "fast": 7,
+       "reach": 21
+      }
+     ],
+     "sprite": {
+      "file": "c49340.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49342,
+     "name": "Reef Octopus",
+     "odds": 1,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 100,
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 45,
+       "fast": 2.5,
+       "reach": 8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c49342.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 49343,
+     "name": "Reef Narwhal",
+     "odds": 0.7,
+     "group": "Coral Reef Mobs",
+     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
+     "size": 120,
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 85,
+       "fast": 5,
+       "reach": 7.5
+      }
+     ],
+     "sprite": {
+      "file": "c49343.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45856,
+     "name": "AI Alien Soldier",
+     "odds": 1,
+     "few": 4,
+     "many": 7,
+     "group": "AI Alien Army",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
+     "size": 120,
+     "hp": 1000,
+     "def": 15,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 100,
+       "fast": 9,
+       "reach": 7.2,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45856.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 45857,
+     "name": "AI Alien Caster",
+     "odds": 1,
+     "few": 4,
+     "many": 7,
+     "group": "AI Alien Army",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
+     "size": 120,
+     "hp": 800,
+     "def": 10,
+     "exp": 200,
+     "shots": [
+      {
+       "hurt": 80,
+       "fast": 9,
+       "reach": 10.8,
+       "many": true
+      }
+     ],
+     "sprite": {
+      "file": "c45857.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    }
+   ],
+   "met": true,
+   "ground": "CoralReefs",
+   "rank": "Adept",
+   "wiki": "coral-reefs",
+   "regular": [
+    {
+     "name": "Enchanted Turtle",
+     "art": "enchanted-turtle.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 90,
+       "reach": 9.4
+      },
+      {
+       "hurt": 85,
+       "reach": 8.8
+      },
+      {
+       "hurt": 80,
+       "reach": 8.1
+      }
+     ],
+     "hp": 1200,
+     "def": 30,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Vitality",
+      "Torrential Staff",
+      "Cnidarian Reef"
+     ]
+    },
+    {
+     "name": "Flying Seahorse",
+     "art": "flying-seahorse.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 90,
+       "reach": 22.5
+      },
+      {
+       "hurt": 95,
+       "reach": 21
+      }
+     ],
+     "hp": 1000,
+     "def": 20,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Wisdom",
+      "Torrential Staff",
+      "Snake Pit"
+     ]
+    },
+    {
+     "name": "Leviathan",
+     "art": "leviathan.png",
+     "group": "Gods",
+     "shots": [
+      {
+       "hurt": 60,
+       "reach": 11.4
+      },
+      {
+       "hurt": 90,
+       "reach": 15.3
+      }
+     ],
+     "hp": 2000,
+     "def": 20,
+     "exp": 600,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Weapons",
+      "Tier 9 Armor",
+      "Tier 10 Armor",
+      "Potion of Speed",
+      "Potion of Wisdom",
+      "Potion of Vitality",
+      "Torrential Staff",
+      "Puppet Master’s Theatre"
+     ]
+    },
+    {
+     "name": "Rampant Walrus",
+     "art": "rampant-walrus.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 80,
+       "reach": 14
+      }
+     ],
+     "hp": 1300,
+     "def": 10,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Wisdom",
+      "Torrential Staff"
+     ]
+    },
+    {
+     "name": "Silvery Narwhal",
+     "art": "silvery-narwhal.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 85,
+       "reach": 7.5
+      }
+     ],
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Wisdom",
+      "Torrential Staff",
+      "Cave of a Thousand Treasures"
+     ]
+    },
+    {
+     "name": "Smelly Octopus",
+     "art": "smelly-octopus.png",
+     "group": "Coral Reef Mobs",
+     "shots": [
+      {
+       "hurt": 45,
+       "reach": 8
+      }
+     ],
+     "hp": 1000,
+     "def": 16,
+     "exp": 200,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 6 Weapons",
+      "Tier 7 Weapons",
+      "Tier 8 Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 6 Armor",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 9 Armor",
+      "Potion of Speed",
+      "Torrential Staff",
+      "Toxic Sewers"
+     ]
+    }
+   ],
+   "encounters": [
+    {
+     "name": "Carp Emperor",
+     "art": "carp-emperor.png",
+     "shots": [
+      {
+       "hurt": 70,
+       "reach": 15.8,
+       "pierce": true
+      },
+      {
+       "hurt": 70,
+       "reach": 15,
+       "pierce": true
+      },
+      {
+       "hurt": 140,
+       "reach": 15
+      }
+     ],
+     "immune": [
+      "stasis",
+      "petrify",
+      "daze",
+      "stun"
+     ],
+     "hp": 145000,
+     "def": 40,
+     "exp": 25000,
+     "drops": [
+      "Stat Increase Potions",
+      "Potion of Life",
+      "Potion of Mana",
+      "Barnacle Blueprint",
+      "Barnacle Basher"
+     ]
+    },
+    {
+     "name": "Hermit God",
+     "art": "hermit-god.png",
+     "group": "New Hermit God Encounter",
+     "shots": [
+      {
+       "hurt": 45,
+       "reach": 16.5
+      },
+      {
+       "hurt": 65,
+       "reach": 16.5
+      },
+      {
+       "hurt": 100,
+       "reach": 17.6
+      }
+     ],
+     "immune": [
+      "stasis"
+     ],
+     "hp": 55000,
+     "def": 35,
+     "exp": 25000,
+     "drops": [
+      "Tier 8 Weapons",
+      "Tier 9 Weapons",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 4 Abilities",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Pet Eggs",
+      "Tier 10 Weapons",
+      "Tier 11 Weapons",
+      "Tier 9 Armor",
+      "Tier 10 Armor",
+      "Tier 11 Armor",
+      "Tier 5 Abilities",
+      "Tier 5 Rings",
+      "Shield Rune",
+      "Stat Increase Potions",
+      "Hermit Wizard Skin",
+      "Barnacle Blueprint",
+      "Barnacle Basher",
+      "Ocean Trench"
+     ]
+    },
+    {
+     "name": "World’s Oyster",
+     "art": "world-s-oyster.png",
+     "shots": [
+      {
+       "hurt": 60,
+       "reach": 12
+      },
+      {
+       "hurt": 100,
+       "reach": 27
+      },
+      {
+       "hurt": 80,
+       "reach": 14
+      }
+     ],
+     "immune": [
+      "stasis",
+      "petrify",
+      "daze",
+      "stun"
+     ],
+     "hp": 65000,
+     "def": 55,
+     "exp": 25000,
+     "drops": [
+      "Tier 9 Weapons",
+      "Tier 9 Alternate Weapons",
+      "Tier 4 Abilities",
+      "Tier 10 Weapons",
+      "Tier 10 Alternate Weapons",
+      "Tier 11 Weapons",
+      "Tier 11 Alternate Weapons",
+      "Tier 10 Armor",
+      "Tier 11 Armor",
+      "Tier 5 Abilities",
+      "Tier 5 Rings",
+      "Tier 6 Rings",
+      "Potion of Life",
+      "Potion of Mana",
+      "Stat Increase Potions",
+      "Barnacle Blueprint",
+      "Barnacle Basher",
+      "Cnidarian Reef"
+     ]
+    }
+   ],
+   "heroes": [
+    {
+     "name": "Beach Bum",
+     "art": "beach-bum.png",
+     "hp": 20000,
+     "def": 15,
+     "exp": 300,
+     "drops": [
+      "Davy’s Key",
+      "Beachzone"
+     ],
+     "onMap": true
+    },
+    {
+     "name": "Maiden of the Sea",
+     "art": "maiden-of-the-sea.png",
+     "shots": [
+      {
+       "hurt": 70,
+       "reach": 12
+      },
+      {
+       "hurt": 80,
+       "reach": 10.5
+      },
+      {
+       "hurt": 60,
+       "reach": 11,
+       "pierce": true
+      }
+     ],
+     "immune": [
+      "stasis"
+     ],
+     "hp": 12000,
+     "def": 10,
+     "exp": 2500,
+     "drops": [
+      "Tier 7 Weapons",
+      "Tier 7 Alternate Weapons",
+      "Tier 8 Weapons",
+      "Tier 8 Alternate Weapons",
+      "Tier 9 Weapons",
+      "Tier 9 Alternate Weapons",
+      "Tier 3 Abilities",
+      "Tier 4 Abilities",
+      "Tier 7 Armor",
+      "Tier 8 Armor",
+      "Tier 3 Rings",
+      "Tier 4 Rings",
+      "Common Pet Eggs",
+      "Uncommon Pet Eggs",
+      "Tier 10 Weapons",
+      "Tier 10 Alternate Weapons",
+      "Tier 9 Armor",
+      "Tier 10 Armor",
+      "Wine Cellar Incantation",
+      "Potion of Wisdom",
+      "Potion of Vitality",
+      "Potion of Speed",
+      "Torrential Staff"
+     ]
+    }
+   ],
+   "loot": {
+    "tiers": {
+     "Weapons": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Abilities": [
+      3,
+      4,
+      5
+     ],
+     "Armor": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "Rings": [
+      3,
+      4,
+      5,
+      6
+     ],
+     "Alternate Weapons": [
+      7,
+      8,
+      9,
+      10,
+      11
+     ]
+    },
+    "slots": {
+     "Weapons": "weapon.png",
+     "Abilities": "ability.png",
+     "Armor": "armor.png",
+     "Rings": "ring.png",
+     "Alternate Weapons": "weapon.png"
+    },
+    "dungeons": [
+     {
+      "name": "Cnidarian Reef",
+      "art": "cnidarian-reef.png"
+     },
+     {
+      "name": "Snake Pit",
+      "art": "snake-pit.gif"
+     },
+     {
+      "name": "Puppet Master’s Theatre",
+      "art": "puppet-master-s-theatre.png"
+     },
+     {
+      "name": "Cave of a Thousand Treasures",
+      "art": "cave-of-a-thousand-treasures.png"
+     },
+     {
+      "name": "Toxic Sewers",
+      "art": "toxic-sewers.png"
+     },
+     {
+      "name": "Ocean Trench",
+      "art": "ocean-trench.png"
+     },
+     {
+      "name": "Beachzone",
+      "art": "beachzone.png"
+     }
+    ],
+    "gear": [
+     {
+      "name": "Torrential Staff",
+      "art": "torrential-staff.png"
+     },
+     {
+      "name": "Barnacle Basher",
+      "art": "barnacle-basher.png"
+     }
+    ],
+    "items": [
+     "Common Pet Eggs",
+     "Uncommon Pet Eggs",
+     "Health Potion",
+     "Magic Potion",
+     "Potion of Wisdom",
+     "Potion of Vitality",
+     "Potion of Speed",
+     "Stat Increase Potions",
+     "Barnacle Blueprint",
+     "Potion of Life",
+     "Potion of Mana",
+     "Pet Eggs",
+     "Shield Rune",
+     "Hermit Wizard Skin",
+     "Davy’s Key",
+     "Wine Cellar Incantation"
+    ]
+   }
+  },
+  {
+   "id": 5,
+   "biome": 4,
+   "tiles": 115613,
    "at": [
     1211,
     1114
@@ -31152,23 +32134,23 @@
      "tiles": 3
     }
    ],
-   "colour": "#7c6f5d",
+   "colour": "#7d705e",
    "madeOf": [
     {
      "ground": "Ancient City Dirt",
-     "tiles": 62721
+     "tiles": 61723
     },
     {
      "ground": "Ancient City Grass",
-     "tiles": 19887
+     "tiles": 19848
     },
     {
      "ground": "Ancient City Beige Square",
-     "tiles": 8970
+     "tiles": 8719
     },
     {
      "ground": "Ancient City Dirt Rock",
-     "tiles": 6126
+     "tiles": 6112
     }
    ],
    "lives": [
@@ -32897,977 +33879,6 @@
      "Space Smuggler Rogue",
      "Miniature Alien Generator",
      "Rare Pet Eggs"
-    ]
-   }
-  },
-  {
-   "id": 5,
-   "biome": 4,
-   "tiles": 115919,
-   "at": [
-    1859,
-    1363
-   ],
-   "box": [
-    1469,
-    885,
-    2036,
-    1793
-   ],
-   "name": "Coral Reef",
-   "named": true,
-   "from": "ground",
-   "roadSplit": [
-    {
-     "biome": "Coral Reef",
-     "tiles": 683
-    },
-    {
-     "biome": "Sprite Forest",
-     "tiles": 28
-    },
-    {
-     "biome": "Shipwreck Cove",
-     "tiles": 2
-    }
-   ],
-   "colour": "#c1b090",
-   "madeOf": [
-    {
-     "ground": "Coral Reefs Sand",
-     "tiles": 110204
-    },
-    {
-     "ground": "Shipwreck Cove Grassy Dirt",
-     "tiles": 1728
-    },
-    {
-     "ground": "Sprite Forest Grass",
-     "tiles": 666
-    },
-    {
-     "ground": "Castle Stone Floor Tile",
-     "tiles": 636
-    }
-   ],
-   "lives": [
-    {
-     "type": 22034,
-     "name": "New Beach Bum",
-     "most": 1,
-     "odds": 0.005,
-     "labels": "ENEMY,ENCOUNTER,ADEPT_ENCOUNTER",
-     "size": 100,
-     "hp": 20000,
-     "def": 15,
-     "exp": 300,
-     "sprite": {
-      "file": "c22034.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 45861,
-     "name": "AI Alien Tank",
-     "odds": 1,
-     "few": 2,
-     "many": 3,
-     "group": "AI Alien Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 5000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 120,
-       "fast": 9,
-       "reach": 10.8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45861.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45862,
-     "name": "AI Alien Pod",
-     "odds": 1,
-     "few": 2,
-     "many": 3,
-     "group": "AI Alien Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_STRONG,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 5000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 130,
-       "fast": 11,
-       "reach": 13.2,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45862.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21888,
-     "name": "Reef Leviathan",
-     "odds": 0.55,
-     "group": "Gods",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 2000,
-     "def": 20,
-     "exp": 600,
-     "shots": [
-      {
-       "hurt": 60,
-       "fast": 6.7,
-       "reach": 11.4
-      },
-      {
-       "hurt": 90,
-       "fast": 8.5,
-       "reach": 15.3
-      }
-     ],
-     "sprite": {
-      "file": "c21888.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 45859,
-     "name": "AI Alien Mini Satellite",
-     "odds": 1,
-     "few": 2,
-     "many": 4,
-     "group": "AI Alien Mini Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 2000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 130,
-       "fast": 9,
-       "reach": 9,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45859.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45860,
-     "name": "AI Alien Mini Tank",
-     "odds": 1,
-     "few": 2,
-     "many": 4,
-     "group": "AI Alien Mini Machine",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_MID,ALIEN_INVASION_ADEPT",
-     "size": 100,
-     "hp": 2000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 100,
-       "fast": 9,
-       "reach": 10.8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45860.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45858,
-     "name": "AI Alien Elite",
-     "odds": 1,
-     "few": 4,
-     "many": 7,
-     "group": "AI Alien Army",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_MID,ALIEN_INVASION_ADEPT",
-     "size": 120,
-     "hp": 1400,
-     "def": 10,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 110,
-       "fast": 9,
-       "reach": 7.2,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45858.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49344,
-     "name": "Reef Walrus",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 120,
-     "hp": 1300,
-     "def": 10,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 80,
-       "fast": 7,
-       "reach": 14,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c49344.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49341,
-     "name": "Reef Turtle",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 1200,
-     "def": 30,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 90,
-       "fast": 7.5,
-       "reach": 9.4
-      },
-      {
-       "hurt": 85,
-       "fast": 7,
-       "reach": 8.8
-      },
-      {
-       "hurt": 80,
-       "fast": 6.5,
-       "reach": 8.1
-      },
-      {
-       "hurt": 75,
-       "fast": 6,
-       "reach": 7.5
-      }
-     ],
-     "sprite": {
-      "file": "c49341.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49340,
-     "name": "Reef Seahorse",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 1000,
-     "def": 20,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 90,
-       "fast": 7.5,
-       "reach": 22.5
-      },
-      {
-       "hurt": 95,
-       "fast": 7,
-       "reach": 21
-      }
-     ],
-     "sprite": {
-      "file": "c49340.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49342,
-     "name": "Reef Octopus",
-     "odds": 1,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 100,
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 45,
-       "fast": 2.5,
-       "reach": 8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c49342.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 49343,
-     "name": "Reef Narwhal",
-     "odds": 0.7,
-     "group": "Coral Reef Mobs",
-     "labels": "ENEMY,MINION,CORALREEFS,GOD,MINION_MID,ADEPT",
-     "size": 120,
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 85,
-       "fast": 5,
-       "reach": 7.5
-      }
-     ],
-     "sprite": {
-      "file": "c49343.png",
-      "tile": 36,
-      "height": 36,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45856,
-     "name": "AI Alien Soldier",
-     "odds": 1,
-     "few": 4,
-     "many": 7,
-     "group": "AI Alien Army",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
-     "size": 120,
-     "hp": 1000,
-     "def": 15,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 100,
-       "fast": 9,
-       "reach": 7.2,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45856.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 45857,
-     "name": "AI Alien Caster",
-     "odds": 1,
-     "few": 4,
-     "many": 7,
-     "group": "AI Alien Army",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK,ALIEN_INVASION_ADEPT",
-     "size": 120,
-     "hp": 800,
-     "def": 10,
-     "exp": 200,
-     "shots": [
-      {
-       "hurt": 80,
-       "fast": 9,
-       "reach": 10.8,
-       "many": true
-      }
-     ],
-     "sprite": {
-      "file": "c45857.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    }
-   ],
-   "met": true,
-   "ground": "CoralReefs",
-   "rank": "Adept",
-   "wiki": "coral-reefs",
-   "regular": [
-    {
-     "name": "Enchanted Turtle",
-     "art": "enchanted-turtle.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 90,
-       "reach": 9.4
-      },
-      {
-       "hurt": 85,
-       "reach": 8.8
-      },
-      {
-       "hurt": 80,
-       "reach": 8.1
-      }
-     ],
-     "hp": 1200,
-     "def": 30,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Vitality",
-      "Torrential Staff",
-      "Cnidarian Reef"
-     ]
-    },
-    {
-     "name": "Flying Seahorse",
-     "art": "flying-seahorse.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 90,
-       "reach": 22.5
-      },
-      {
-       "hurt": 95,
-       "reach": 21
-      }
-     ],
-     "hp": 1000,
-     "def": 20,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Wisdom",
-      "Torrential Staff",
-      "Snake Pit"
-     ]
-    },
-    {
-     "name": "Leviathan",
-     "art": "leviathan.png",
-     "group": "Gods",
-     "shots": [
-      {
-       "hurt": 60,
-       "reach": 11.4
-      },
-      {
-       "hurt": 90,
-       "reach": 15.3
-      }
-     ],
-     "hp": 2000,
-     "def": 20,
-     "exp": 600,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Weapons",
-      "Tier 9 Armor",
-      "Tier 10 Armor",
-      "Potion of Speed",
-      "Potion of Wisdom",
-      "Potion of Vitality",
-      "Torrential Staff",
-      "Puppet Master’s Theatre"
-     ]
-    },
-    {
-     "name": "Rampant Walrus",
-     "art": "rampant-walrus.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 80,
-       "reach": 14
-      }
-     ],
-     "hp": 1300,
-     "def": 10,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Wisdom",
-      "Torrential Staff"
-     ]
-    },
-    {
-     "name": "Silvery Narwhal",
-     "art": "silvery-narwhal.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 85,
-       "reach": 7.5
-      }
-     ],
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Wisdom",
-      "Torrential Staff",
-      "Cave of a Thousand Treasures"
-     ]
-    },
-    {
-     "name": "Smelly Octopus",
-     "art": "smelly-octopus.png",
-     "group": "Coral Reef Mobs",
-     "shots": [
-      {
-       "hurt": 45,
-       "reach": 8
-      }
-     ],
-     "hp": 1000,
-     "def": 16,
-     "exp": 200,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
-      "Tier 7 Weapons",
-      "Tier 8 Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 6 Armor",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 9 Armor",
-      "Potion of Speed",
-      "Torrential Staff",
-      "Toxic Sewers"
-     ]
-    }
-   ],
-   "encounters": [
-    {
-     "name": "Carp Emperor",
-     "art": "carp-emperor.png",
-     "shots": [
-      {
-       "hurt": 70,
-       "reach": 15.8,
-       "pierce": true
-      },
-      {
-       "hurt": 70,
-       "reach": 15,
-       "pierce": true
-      },
-      {
-       "hurt": 140,
-       "reach": 15
-      }
-     ],
-     "immune": [
-      "stasis",
-      "petrify",
-      "daze",
-      "stun"
-     ],
-     "hp": 145000,
-     "def": 40,
-     "exp": 25000,
-     "drops": [
-      "Stat Increase Potions",
-      "Potion of Life",
-      "Potion of Mana",
-      "Barnacle Blueprint",
-      "Barnacle Basher"
-     ]
-    },
-    {
-     "name": "Hermit God",
-     "art": "hermit-god.png",
-     "group": "New Hermit God Encounter",
-     "shots": [
-      {
-       "hurt": 45,
-       "reach": 16.5
-      },
-      {
-       "hurt": 65,
-       "reach": 16.5
-      },
-      {
-       "hurt": 100,
-       "reach": 17.6
-      }
-     ],
-     "immune": [
-      "stasis"
-     ],
-     "hp": 55000,
-     "def": 35,
-     "exp": 25000,
-     "drops": [
-      "Tier 8 Weapons",
-      "Tier 9 Weapons",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 4 Abilities",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Pet Eggs",
-      "Tier 10 Weapons",
-      "Tier 11 Weapons",
-      "Tier 9 Armor",
-      "Tier 10 Armor",
-      "Tier 11 Armor",
-      "Tier 5 Abilities",
-      "Tier 5 Rings",
-      "Shield Rune",
-      "Stat Increase Potions",
-      "Hermit Wizard Skin",
-      "Barnacle Blueprint",
-      "Barnacle Basher",
-      "Ocean Trench"
-     ]
-    },
-    {
-     "name": "World’s Oyster",
-     "art": "world-s-oyster.png",
-     "shots": [
-      {
-       "hurt": 60,
-       "reach": 12
-      },
-      {
-       "hurt": 100,
-       "reach": 27
-      },
-      {
-       "hurt": 80,
-       "reach": 14
-      }
-     ],
-     "immune": [
-      "stasis",
-      "petrify",
-      "daze",
-      "stun"
-     ],
-     "hp": 65000,
-     "def": 55,
-     "exp": 25000,
-     "drops": [
-      "Tier 9 Weapons",
-      "Tier 9 Alternate Weapons",
-      "Tier 4 Abilities",
-      "Tier 10 Weapons",
-      "Tier 10 Alternate Weapons",
-      "Tier 11 Weapons",
-      "Tier 11 Alternate Weapons",
-      "Tier 10 Armor",
-      "Tier 11 Armor",
-      "Tier 5 Abilities",
-      "Tier 5 Rings",
-      "Tier 6 Rings",
-      "Potion of Life",
-      "Potion of Mana",
-      "Stat Increase Potions",
-      "Barnacle Blueprint",
-      "Barnacle Basher",
-      "Cnidarian Reef"
-     ]
-    }
-   ],
-   "heroes": [
-    {
-     "name": "Beach Bum",
-     "art": "beach-bum.png",
-     "hp": 20000,
-     "def": 15,
-     "exp": 300,
-     "drops": [
-      "Davy’s Key",
-      "Beachzone"
-     ],
-     "onMap": true
-    },
-    {
-     "name": "Maiden of the Sea",
-     "art": "maiden-of-the-sea.png",
-     "shots": [
-      {
-       "hurt": 70,
-       "reach": 12
-      },
-      {
-       "hurt": 80,
-       "reach": 10.5
-      },
-      {
-       "hurt": 60,
-       "reach": 11,
-       "pierce": true
-      }
-     ],
-     "immune": [
-      "stasis"
-     ],
-     "hp": 12000,
-     "def": 10,
-     "exp": 2500,
-     "drops": [
-      "Tier 7 Weapons",
-      "Tier 7 Alternate Weapons",
-      "Tier 8 Weapons",
-      "Tier 8 Alternate Weapons",
-      "Tier 9 Weapons",
-      "Tier 9 Alternate Weapons",
-      "Tier 3 Abilities",
-      "Tier 4 Abilities",
-      "Tier 7 Armor",
-      "Tier 8 Armor",
-      "Tier 3 Rings",
-      "Tier 4 Rings",
-      "Common Pet Eggs",
-      "Uncommon Pet Eggs",
-      "Tier 10 Weapons",
-      "Tier 10 Alternate Weapons",
-      "Tier 9 Armor",
-      "Tier 10 Armor",
-      "Wine Cellar Incantation",
-      "Potion of Wisdom",
-      "Potion of Vitality",
-      "Potion of Speed",
-      "Torrential Staff"
-     ]
-    }
-   ],
-   "loot": {
-    "tiers": {
-     "Weapons": [
-      6,
-      7,
-      8,
-      9,
-      10,
-      11
-     ],
-     "Abilities": [
-      3,
-      4,
-      5
-     ],
-     "Armor": [
-      6,
-      7,
-      8,
-      9,
-      10,
-      11
-     ],
-     "Rings": [
-      3,
-      4,
-      5,
-      6
-     ],
-     "Alternate Weapons": [
-      7,
-      8,
-      9,
-      10,
-      11
-     ]
-    },
-    "slots": {
-     "Weapons": "weapon.png",
-     "Abilities": "ability.png",
-     "Armor": "armor.png",
-     "Rings": "ring.png",
-     "Alternate Weapons": "weapon.png"
-    },
-    "dungeons": [
-     {
-      "name": "Cnidarian Reef",
-      "art": "cnidarian-reef.png"
-     },
-     {
-      "name": "Snake Pit",
-      "art": "snake-pit.gif"
-     },
-     {
-      "name": "Puppet Master’s Theatre",
-      "art": "puppet-master-s-theatre.png"
-     },
-     {
-      "name": "Cave of a Thousand Treasures",
-      "art": "cave-of-a-thousand-treasures.png"
-     },
-     {
-      "name": "Toxic Sewers",
-      "art": "toxic-sewers.png"
-     },
-     {
-      "name": "Ocean Trench",
-      "art": "ocean-trench.png"
-     },
-     {
-      "name": "Beachzone",
-      "art": "beachzone.png"
-     }
-    ],
-    "gear": [
-     {
-      "name": "Torrential Staff",
-      "art": "torrential-staff.png"
-     },
-     {
-      "name": "Barnacle Basher",
-      "art": "barnacle-basher.png"
-     }
-    ],
-    "items": [
-     "Common Pet Eggs",
-     "Uncommon Pet Eggs",
-     "Health Potion",
-     "Magic Potion",
-     "Potion of Wisdom",
-     "Potion of Vitality",
-     "Potion of Speed",
-     "Stat Increase Potions",
-     "Barnacle Blueprint",
-     "Potion of Life",
-     "Potion of Mana",
-     "Pet Eggs",
-     "Shield Rune",
-     "Hermit Wizard Skin",
-     "Davy’s Key",
-     "Wine Cellar Incantation"
     ]
    }
   },
@@ -37750,7 +37761,7 @@
   {
    "id": 6,
    "biome": 5,
-   "tiles": 71351,
+   "tiles": 71332,
    "at": [
     874,
     1289
@@ -37782,7 +37793,7 @@
    "madeOf": [
     {
      "ground": "Dead Church Grass Light",
-     "tiles": 69068
+     "tiles": 69047
     },
     {
      "ground": "Dead Church Grass Dark",
@@ -37790,7 +37801,7 @@
     },
     {
      "ground": "Ancient City Dirt",
-     "tiles": 1334
+     "tiles": 1336
     },
     {
      "ground": "Yellow Grass",
@@ -38312,11 +38323,11 @@
      "tiles": 10
     }
    ],
-   "colour": "#7d9931",
+   "colour": "#7d9831",
    "madeOf": [
     {
      "ground": "Low Forest Grass",
-     "tiles": 65818
+     "tiles": 65196
     },
     {
      "ground": "Set Piece 275",
@@ -39590,7 +39601,7 @@
   {
    "id": 11,
    "biome": 10,
-   "tiles": 68006,
+   "tiles": 68194,
    "at": [
     1297,
     534
@@ -39618,11 +39629,11 @@
      "tiles": 13
     }
    ],
-   "colour": "#7c9732",
+   "colour": "#7c9632",
    "madeOf": [
     {
      "ground": "Low Forest Grass",
-     "tiles": 63228
+     "tiles": 62809
     },
     {
      "ground": "Carboniferous Grass",
@@ -40920,15 +40931,15 @@
      "tiles": 177
     }
    ],
-   "colour": "#848525",
+   "colour": "#838525",
    "madeOf": [
     {
      "ground": "Yellow Grass",
-     "tiles": 45343
+     "tiles": 45235
     },
     {
      "ground": "Blue Floor",
-     "tiles": 1976
+     "tiles": 2084
     },
     {
      "ground": "Undead Forest Grass",
@@ -41792,11 +41803,11 @@
      "tiles": 20
     }
    ],
-   "colour": "#251b3e",
+   "colour": "#251a3e",
    "madeOf": [
     {
      "ground": "Haunted Hallows Darkish Dirt",
-     "tiles": 43902
+     "tiles": 43696
     },
     {
      "ground": "Dead Church Grass Dark",
@@ -46801,23 +46812,23 @@
      "tiles": 19
     }
    ],
-   "colour": "#513a1f",
+   "colour": "#52391e",
    "madeOf": [
     {
      "ground": "Dead Church Grass Dark",
-     "tiles": 30214
-    },
-    {
-     "ground": "Zombie Grass",
-     "tiles": 1097
+     "tiles": 32154
     },
     {
      "ground": "Haunted Hallows Darkish Dirt",
      "tiles": 746
     },
     {
-     "ground": "Grey Dirt",
-     "tiles": 708
+     "ground": "Dead Church Dirt Rough",
+     "tiles": 639
+    },
+    {
+     "ground": "Cultists Set Piece 2010",
+     "tiles": 416
     }
    ],
    "lives": [
@@ -50276,15 +50287,15 @@
    "madeOf": [
     {
      "ground": "New Low Forest Grass",
-     "tiles": 29639
-    },
-    {
-     "ground": "Brown Lines",
-     "tiles": 951
+     "tiles": 29778
     },
     {
      "ground": "Shoreline Sand",
      "tiles": 862
+    },
+    {
+     "ground": "Brown Lines",
+     "tiles": 831
     },
     {
      "ground": "Nature Ruins Grass",
@@ -53117,11 +53128,11 @@
      "tiles": 6
     }
    ],
-   "colour": "#3c4a68",
+   "colour": "#3b4a68",
    "madeOf": [
     {
      "ground": "Sprite Forest Grass",
-     "tiles": 27829
+     "tiles": 27287
     },
     {
      "ground": "Haunted Hallows Darkish Dirt",
@@ -54322,8 +54333,8 @@
    }
   },
   {
-   "id": 41,
-   "biome": 40,
+   "id": 42,
+   "biome": 41,
    "tiles": 29982,
    "at": [
     1019,
@@ -58758,7 +58769,7 @@
      "tiles": 401
     },
     {
-     "ground": "Setpiece PC Horizontal Wood Edge L",
+     "ground": "Setpiece PC Horizontal Wood Edge R",
      "tiles": 30
     }
    ],
@@ -65175,40 +65186,40 @@
    }
   },
   {
-   "id": 36,
-   "biome": 35,
-   "tiles": 2892,
+   "id": 37,
+   "biome": 36,
+   "tiles": 1907,
    "at": [
-    1131,
-    1160
+    1140,
+    1161
    ],
    "box": [
-    1102,
-    1129,
-    1161,
-    1191
+    1115,
+    1138,
+    1167,
+    1183
    ],
-   "name": "Zone 36",
+   "name": "Zone 37",
    "named": false,
    "from": null,
    "roadSplit": [],
-   "colour": "#e9b54e",
+   "colour": "#9c9d45",
    "madeOf": [
     {
+     "ground": "Japanese Moss No Edge",
+     "tiles": 1283
+    },
+    {
+     "ground": "Dragon Tile Cream",
+     "tiles": 445
+    },
+    {
      "ground": "Gold Sand",
-     "tiles": 2674
+     "tiles": 90
     },
     {
-     "ground": "Sand Tile",
-     "tiles": 127
-    },
-    {
-     "ground": "Ancient City Dirt",
-     "tiles": 36
-    },
-    {
-     "ground": "Pool",
-     "tiles": 30
+     "ground": "Dragon Tile Cream 2",
+     "tiles": 71
     }
    ],
    "lives": [],
@@ -65259,6 +65270,47 @@
   {
    "id": 39,
    "biome": 38,
+   "tiles": 1449,
+   "at": [
+    1128,
+    1163
+   ],
+   "box": [
+    1102,
+    1129,
+    1165,
+    1197
+   ],
+   "name": "Zone 39",
+   "named": false,
+   "from": null,
+   "roadSplit": [],
+   "colour": "#e3b04c",
+   "madeOf": [
+    {
+     "ground": "Gold Sand",
+     "tiles": 1301
+    },
+    {
+     "ground": "Ancient City Dirt",
+     "tiles": 41
+    },
+    {
+     "ground": "Dragon Set Piece 1962",
+     "tiles": 23
+    },
+    {
+     "ground": "Dragon Set Piece 1966",
+     "tiles": 23
+    }
+   ],
+   "lives": [],
+   "met": false,
+   "ground": ""
+  },
+  {
+   "id": 40,
+   "biome": 39,
    "tiles": 1082,
    "at": [
     1222,
@@ -66410,8 +66462,8 @@
    }
   },
   {
-   "id": 40,
-   "biome": 39,
+   "id": 41,
+   "biome": 40,
    "tiles": 943,
    "at": [
     1404,
@@ -66423,7 +66475,7 @@
     1425,
     1154
    ],
-   "name": "Zone 40",
+   "name": "Zone 41",
    "named": false,
    "from": null,
    "roadSplit": [
@@ -67080,7 +67132,7 @@
    "y": 1258,
    "name": "Coral Reefs",
    "state": "teleport",
-   "zone": 5,
+   "zone": 4,
    "guards": []
   },
   {
@@ -67088,7 +67140,7 @@
    "y": 1661,
    "name": "Coral Reefs",
    "state": "teleport",
-   "zone": 5,
+   "zone": 4,
    "guards": []
   },
   {
@@ -67096,7 +67148,7 @@
    "y": 1016,
    "name": "Coral Reefs",
    "state": "teleport",
-   "zone": 5,
+   "zone": 4,
    "guards": []
   },
   {
@@ -67530,7 +67582,7 @@
    "y": 1076,
    "name": "Dead Church",
    "state": "teleport",
-   "zone": 41,
+   "zone": 42,
    "guards": [],
    "guardian": {
     "name": "Legion Church Guardian",
@@ -67808,7 +67860,7 @@
    "y": 1039,
    "name": "Abandoned City",
    "state": "teleport",
-   "zone": 4,
+   "zone": 5,
    "guards": [],
    "guardian": {
     "name": "Legion City Guardian",
