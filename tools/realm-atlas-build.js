@@ -257,6 +257,40 @@ function readEnemies() {
  * This is the only authority on where a thing belongs; where it happened to
  * be standing when somebody walked past is only where it was.
  */
+/*
+ * The rules the client keeps for putting a creature in a realm.
+ *
+ * PerRealmMax is the one that matters here: how many of a thing may stand in
+ * the world at once. SpawnProb is how likely it is to be used at all, and a
+ * Spawn block says how many arrive together when one does. Three hundred and
+ * forty-eight creatures carry a maximum, six hundred and seventy-two a
+ * probability, a hundred and nine a group size.
+ */
+function readSpawnRules() {
+  const out = new Map();
+  const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
+  const num = (body, tag) => {
+    const m = new RegExp('<' + tag + '>([^<]*)<' + '\/' + tag + '>').exec(body);
+    if (!m) return undefined;
+    const n = Number(m[1]);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      const type = /type="([^"]+)"/.exec(m[1]);
+      if (!type) continue;
+      const most = num(m[2], 'PerRealmMax');
+      const odds = num(m[2], 'SpawnProb');
+      const bunch = /<Spawn>([\s\S]*?)<\/Spawn>/.exec(m[2]);
+      const few = bunch ? num(bunch[1], 'Min') : undefined;
+      const many = bunch ? num(bunch[1], 'Max') : undefined;
+      if (most === undefined && odds === undefined && few === undefined) continue;
+      out.set(Number(type[1]) & 0xffff, { most, odds, few, many });
+    }
+  }
+  return out;
+}
+
 function readTerrain() {
   const out = new Map();
   const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
@@ -490,6 +524,48 @@ const BIOMES = [
   'Desert', 'Mid Forest', 'Undead Forest', 'Mid Plains', 'Beach',
   'High Forest', 'Sprite Forest', 'Nature Ruins', 'Low Forest'
 ];
+/*
+ * Which ground each place is, in the client's own word for it.
+ *
+ * Keyed on the name the map shows, because that is the name a person has
+ * looked at and agreed with, and because two places can share a patch of
+ * colour and still be different ground - the deserts do exactly that.
+ *
+ * It is a table and not a measurement on purpose. It used to be worked out by
+ * asking the creatures standing on each patch what ground they declared and
+ * taking the majority, which is a fine way to identify ground and the wrong
+ * way to decide who lives on it: it makes where a thing happened to be
+ * standing when somebody walked past into evidence about where it belongs.
+ * Nothing downstream of here looks at a sighting again.
+ */
+const TERRAIN_OF = {
+  'Deep Sea Abyss': 'DeepSea',
+  Carboniferous: 'Carboniferous',
+  'Floral Escape': 'FloralEscape',
+  'Haunted Hallows': 'HauntedHallows',
+  'Runic Tundra': 'RunicTundra',
+  'Sanguine Forest': 'SanguineForest',
+  'Ancient City': 'Abandoned',
+  'Coral Reef': 'CoralReefs',
+  'Dead Church': 'DeadChurch',
+  'Shipwreck Cove': 'ShipWreck',
+  'Sprite Forest': 'SpriteForest',
+  'Withered Plains': 'HighPlains',
+  'High Plains': 'HighPlains',
+  'Lime Plains': 'MidPlains',
+  'Mid Plains': 'MidPlains',
+  'Risen Hell': 'RisenHell',
+  'Undead Forest': 'UndeadForest',
+  'Nature Ruins': 'Nature',
+  'Mid Forest': 'MidForest',
+  'Low Forest': 'LowForest',
+  Beach: 'Beach',
+  'Mid Desert': 'MidDesert',
+  'High Desert': 'HighDesert',
+  'Dark Forest': 'HighForest',
+  'High Forest': 'HighForest'
+};
+
 const flat = text => String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
 /*
@@ -1612,48 +1688,48 @@ function main() {
    * disagree are the strays, and they are the whole of the error.
    */
   const groundOf = readTerrain();
-  const biomeGround = new Map();
-  for (const biome of map.found) {
-    const bag = census.get(biome.index);
-    if (!bag) continue;
-    const votes = new Map();
-    for (const [type, n] of bag) {
-      if (!isCreature(type)) continue;
-      for (const on of groundOf.get(type) || []) votes.set(on, (votes.get(on) || 0) + n);
+  const spawnOf = readSpawnRules();
+
+  /*
+   * Who lives on each ground: everything the client says belongs there, in
+   * hit-point order so the worst of it is at the top. Not who was seen there.
+   */
+  const livesOn = new Map();
+  for (const [type, on] of groundOf) {
+    if (!isCreature(type)) continue;
+    for (const where of on) {
+      if (!livesOn.has(where)) livesOn.set(where, []);
+      livesOn.get(where).push(type);
     }
-    let best = null, most = 0, all = 0;
-    for (const [on, n] of votes) { all += n; if (n > most) { most = n; best = on; } }
-    if (best && most / all >= 0.5) biomeGround.set(biome.index, best);
   }
+  const rosterFor = where => (livesOn.get(where) || [])
+    .map(type => {
+      const rule = spawnOf.get(type) || {};
+      return withFight(type, {
+        type,
+        name: objectName.get(type),
+        most: rule.most,
+        odds: rule.odds,
+        few: rule.few,
+        many: rule.many
+      });
+    })
+    .sort((a, b) => (b.hp || 0) - (a.hp || 0));
+
+  const biomeGround = new Map();
+  for (const biome of map.found) biomeGround.set(biome.index, TERRAIN_OF[biome.name] || '');
 
   /*
    * And nothing is listed as living somewhere it says it does not live. A
    * creature that declares no ground at all is left alone: it was seen there,
    * and there is nothing to contradict it with.
    */
-  const belongs = (type, index) => {
-    const here = biomeGround.get(index);
-    if (!here) return true;
-    const on = groundOf.get(type);
-    return !on || on.has(here);
-  };
-
-  let livesHere = 0, strays = 0;
+  let livesHere = 0;
   for (const biome of map.found) {
     biome.ground = biomeGround.get(biome.index) || '';
-    const bag = census.get(biome.index);
-    if (!bag) { biome.lives = []; continue; }
-    const all = [...bag].filter(([type, n]) => n >= 3 && isCreature(type));
-    const mine = all.filter(([type]) => belongs(type, biome.index));
-    strays += all.length - mine.length;
-    biome.lives = mine
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 14)
-      .map(([type, n]) => withFight(type, { type, name: objectName.get(type), seen: n }));
+    biome.lives = biome.ground ? rosterFor(biome.ground) : [];
     livesHere += biome.lives.length;
   }
-  console.log('  ' + biomeGround.size + ' patches know what ground they are, and '
-    + strays + ' creatures that say they belong elsewhere were struck off them');
 
   /*
    * A picture for each of them, moving where the client draws them moving.
@@ -1799,33 +1875,16 @@ function main() {
     }
   }
 
-  let zoneStrays = 0;
-  for (const zone of map.zones) {
-    zone.ground = biomeGround.get(zone.biome) || '';
-    const bag = perZone.get(zone.id);
-    if (!bag) { zone.lives = []; continue; }
-    const all = [...bag].filter(([type, n]) => n >= 2 && isCreature(type));
-    const mine = all.filter(([type]) => belongs(type, zone.biome));
-    zoneStrays += all.length - mine.length;
-    zone.lives = mine
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([type, n]) => withFight(type, { type, name: objectName.get(type), seen: n }));
-  }
-  console.log('  ' + zoneStrays + ' more struck off the places, for the same reason');
+  // The rosters are worked out once the places have their final names, below.
+  for (const zone of map.zones) { zone.lives = []; zone.met = true; }
 
-  let guardStrays = 0;
-  for (const beacon of beacons) {
-    const zone = map.zones.find(one => one.id === beacon.zone);
-    const index = zone ? zone.biome : -1;
-    const all = beacon.near || [];
-    const mine = all.filter(([type]) => belongs(type, index));
-    guardStrays += all.length - mine.length;
-    beacon.guards = mine.slice(0, 8)
-      .map(([type, n]) => withFight(type, { type, name: objectName.get(type), seen: n }));
-    delete beacon.near;
-  }
-  console.log('  ' + guardStrays + ' would-be beacon guards were only standing nearby');
+  /*
+   * A beacon's guards used to be whatever was counted within twenty tiles of
+   * it, which is the same mistake in miniature - a thing near a beacon is
+   * near a beacon, not guarding it. The reference names the guardian of each
+   * ground and that is carried in from the merge; nothing is guessed here.
+   */
+  for (const beacon of beacons) delete beacon.near;
   /*
    * A patch with no name of its own asks what lives in it.
    *
@@ -1907,6 +1966,28 @@ function main() {
       }
     }
     if (fixed) console.log('  ' + fixed + ' places named by hand');
+  }
+
+  /*
+   * A place's own roster, worked out now that the names are settled.
+   *
+   * Its ground is read off the name it is shown under - which is the name a
+   * person has looked at and agreed with - falling back to the name of the
+   * patch of colour it sits in.
+   * falling back to the name of the patch of colour it sits in - the deserts
+   * need that, being one colour and two grounds.
+   */
+  for (const zone of map.zones) {
+    const patch = map.found.find(one => one.index === zone.biome);
+    zone.ground = TERRAIN_OF[zone.name] || (patch ? TERRAIN_OF[patch.name] : '') || '';
+    zone.lives = zone.ground ? rosterFor(zone.ground) : [];
+    zone.met = true;
+  }
+  {
+    const known = map.zones.filter(one => one.ground).length;
+    const kinds = map.zones.reduce((n, one) => n + one.lives.length, 0);
+    console.log('  ' + known + ' of ' + map.zones.length + ' places know their ground, and '
+      + kinds + ' creature listings come from what the client says lives on it');
   }
 
   // A patch nobody was ever met in borrows its biome's list, so it is not

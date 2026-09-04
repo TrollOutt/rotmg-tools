@@ -2260,8 +2260,21 @@ const WANDERERS = true;
  */
 function weighted(zone) {
   if (!zone.pick) {
+    /*
+     * Weighed by what the client allows, not by what anyone saw.
+     *
+     * A creature that may stand in the realm forty times over should be forty
+     * times as common as one allowed once, and where no maximum is given the
+     * chance of it being used at all stands in for the same thing. Nothing
+     * here counts sightings: the same place looks the same however it was
+     * walked, or whether it was walked at all.
+     */
     let sum = 0;
-    zone.pick = zone.lives.map(one => (sum += Math.max(1, one.seen || 1)));
+    zone.pick = zone.lives.map(one => {
+      const many = one.most !== undefined ? one.most
+        : one.odds !== undefined ? Math.max(1, Math.round(one.odds * 8)) : 2;
+      return (sum += Math.max(1, many));
+    });
     zone.pickAll = sum;
   }
   const want = Math.random() * zone.pickAll;
@@ -3061,8 +3074,17 @@ function homeView(box) {
 }
 
 function overOcean() {
-  const here = atTile(view.x, view.y);
-  return !here || here.biome === NOWHERE;
+  /*
+   * Only right off the chart, not merely on ground nobody walked.
+   *
+   * The chart is a rectangle and a good deal of it was never walked - the
+   * corners, the bays, the water past the coast - but all of that is still
+   * drawn, still part of the picture, and still somewhere you might be
+   * looking on purpose. What is not is the flat blue the page paints beyond
+   * the chart altogether, where there is nothing to see and never will be.
+   * That is the only place worth hauling the camera back from.
+   */
+  return !atTile(view.x, view.y);
 }
 
 /*
