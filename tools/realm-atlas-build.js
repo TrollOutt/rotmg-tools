@@ -273,6 +273,66 @@ function readTerrain() {
   return out;
 }
 
+/*
+ * How a creature fights, out of the client.
+ *
+ * Not its plans - those live on a server nobody here can see - but everything
+ * about it that is fixed: how hard it is, what it shoots, how far the shot
+ * carries, what it will not be stopped by, and which family the client files
+ * it under. That is enough to say why one thing in a place is worse than
+ * another, which is the question a map gets asked.
+ *
+ * A shot's reach is its speed times how long it lives. The client keeps speed
+ * in tenths of a tile a second and life in milliseconds, so the two multiply
+ * out to ten thousand tile-milliseconds per tile.
+ */
+function readFight() {
+  const out = new Map();
+  const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
+  const one = (body, tag) => {
+    const m = new RegExp('<' + tag + '>([^<]*)<' + '\/' + tag + '>').exec(body);
+    return m ? m[1].trim() : '';
+  };
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      if (!/<Enemy\s*\/>/.test(m[2])) continue;
+      const type = /type="([^"]+)"/.exec(m[1]);
+      if (!type) continue;
+      const shots = [];
+      for (const shot of m[2].matchAll(/<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/g)) {
+        const hurt = Number(one(shot[1], 'Damage'));
+        const fast = Number(one(shot[1], 'Speed'));
+        const lives = Number(one(shot[1], 'LifetimeMS'));
+        if (!Number.isFinite(hurt) || !hurt) continue;
+        shots.push({
+          hurt,
+          reach: Number.isFinite(fast) && Number.isFinite(lives)
+            ? Math.round(fast * lives / 10000 * 10) / 10 : undefined,
+          pierce: /<ArmorPiercing\s*\/>/.test(shot[1]) || undefined,
+          many: /<MultiHit\s*\/>/.test(shot[1]) || undefined
+        });
+      }
+      const held = [];
+      for (const [tag, say] of [['StasisImmune', 'stasis'], ['PetrifyImmune', 'petrify'],
+        ['ParalyzeImmune', 'paralyse'], ['DazedImmune', 'daze'], ['SlowedImmune', 'slow'],
+        ['StunImmune', 'stun'], ['CurseImmune', 'curse']]) {
+        if (new RegExp('<' + tag + '\\s*/>').test(m[2])) held.push(say);
+      }
+      out.set(Number(type[1]) & 0xffff, {
+        group: one(m[2], 'Group') || undefined,
+        labels: one(m[2], 'Labels') || undefined,
+        size: Number(one(m[2], 'Size')) || undefined,
+        hp: Number(one(m[2], 'MaxHitPoints')) || undefined,
+        def: Number(one(m[2], 'Defense')) || undefined,
+        exp: Number(one(m[2], 'Exp')) || undefined,
+        shots: shots.length ? shots.slice(0, 4) : undefined,
+        immune: held.length ? held : undefined
+      });
+    }
+  }
+  return out;
+}
+
 function readUnfightable() {
   const out = new Set();
   const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
@@ -1433,6 +1493,18 @@ function main() {
    * runs. What this governs is who is listed as living somewhere.
    */
   const unfightable = readUnfightable();
+  const fightOf = readFight();
+  /*
+   * Everything the client knows about a creature, folded into its listing so
+   * the page has it without a second lookup.
+   */
+  const withFight = (type, base) => {
+    const said = fightOf.get(type);
+    if (!said) return base;
+    const out = { ...base };
+    for (const k of Object.keys(said)) if (said[k] !== undefined) out[k] = said[k];
+    return out;
+  };
   const isCreature = type => enemyKinds.has(type)
     && !unfightable.has(type)
     && !notCreatures.has(objectName.get(type));
@@ -1577,7 +1649,7 @@ function main() {
     biome.lives = mine
       .sort((a, b) => b[1] - a[1])
       .slice(0, 14)
-      .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
+      .map(([type, n]) => withFight(type, { type, name: objectName.get(type), seen: n }));
     livesHere += biome.lives.length;
   }
   console.log('  ' + biomeGround.size + ' patches know what ground they are, and '
@@ -1738,7 +1810,7 @@ function main() {
     zone.lives = mine
       .sort((a, b) => b[1] - a[1])
       .slice(0, 20)
-      .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
+      .map(([type, n]) => withFight(type, { type, name: objectName.get(type), seen: n }));
   }
   console.log('  ' + zoneStrays + ' more struck off the places, for the same reason');
 
@@ -1750,7 +1822,7 @@ function main() {
     const mine = all.filter(([type]) => belongs(type, index));
     guardStrays += all.length - mine.length;
     beacon.guards = mine.slice(0, 8)
-      .map(([type, n]) => ({ type, name: objectName.get(type), seen: n }));
+      .map(([type, n]) => withFight(type, { type, name: objectName.get(type), seen: n }));
     delete beacon.near;
   }
   console.log('  ' + guardStrays + ' would-be beacon guards were only standing nearby');
