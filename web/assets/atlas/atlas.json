@@ -12537,7 +12537,7 @@
   {
    "index": 15,
    "name": "Dead Church",
-   "tiles": 40160,
+   "tiles": 40163,
    "at": [
     1342,
     1357
@@ -13471,10 +13471,10 @@
   {
    "index": 16,
    "name": "Nature Ruins",
-   "tiles": 39195,
+   "tiles": 39192,
    "at": [
     903,
-    1716
+    1715
    ],
    "ground": "Nature",
    "lives": [
@@ -15998,7 +15998,7 @@
   {
    "index": 19,
    "name": "Risen Hell",
-   "tiles": 33317,
+   "tiles": 33314,
    "at": [
     1456,
     1204
@@ -16929,7 +16929,7 @@
   {
    "index": 20,
    "name": "Low Forest",
-   "tiles": 33041,
+   "tiles": 33044,
    "at": [
     841,
     1741
@@ -23607,10 +23607,10 @@
   {
    "index": 28,
    "name": "Zone 29",
-   "tiles": 20106,
+   "tiles": 20168,
    "at": [
-    830,
-    1813
+    829,
+    1812
    ],
    "ground": "",
    "lives": []
@@ -25645,7 +25645,7 @@
    "madeOf": [
     {
      "ground": "Deep Sea Light Sand",
-     "tiles": 250782
+     "tiles": 250372
     },
     {
      "ground": "Deep Sea Craggle",
@@ -25657,7 +25657,7 @@
     },
     {
      "ground": "Shipwreck Cove Plank Wood",
-     "tiles": 2254
+     "tiles": 2301
     }
    ],
    "lives": [
@@ -39108,11 +39108,11 @@
    "madeOf": [
     {
      "ground": "Yellow Grass",
-     "tiles": 45341
+     "tiles": 45343
     },
     {
      "ground": "Blue Floor",
-     "tiles": 1978
+     "tiles": 1976
     },
     {
      "ground": "Undead Forest Grass",
@@ -42900,7 +42900,7 @@
   {
    "id": 16,
    "biome": 15,
-   "tiles": 40160,
+   "tiles": 40163,
    "at": [
     1342,
     1357
@@ -42928,23 +42928,23 @@
      "tiles": 19
     }
    ],
-   "colour": "#50381e",
+   "colour": "#4f391f",
    "madeOf": [
     {
      "ground": "Dead Church Grass Dark",
-     "tiles": 34283
+     "tiles": 31724
+    },
+    {
+     "ground": "Zombie Grass",
+     "tiles": 1096
     },
     {
      "ground": "Blue Grass",
      "tiles": 1010
     },
     {
-     "ground": "Dark Grass",
-     "tiles": 879
-    },
-    {
-     "ground": "Haunted Hallows Darkish Dirt",
-     "tiles": 782
+     "ground": "Grey Dirt",
+     "tiles": 1001
     }
    ],
    "lives": [
@@ -44049,10 +44049,10 @@
   {
    "id": 17,
    "biome": 16,
-   "tiles": 39195,
+   "tiles": 41286,
    "at": [
-    903,
-    1716
+    900,
+    1710
    ],
    "box": [
     752,
@@ -44062,11 +44062,11 @@
    ],
    "name": "Nature Ruins",
    "named": true,
-   "from": "ground",
+   "from": "walked",
    "roadSplit": [
     {
      "biome": "Low Forest",
-     "tiles": 1285
+     "tiles": 1222
     },
     {
      "biome": "Desert",
@@ -44081,19 +44081,19 @@
    "madeOf": [
     {
      "ground": "Nature Ruins Grass",
-     "tiles": 28700
+     "tiles": 27800
     },
     {
      "ground": "Dark Grass",
-     "tiles": 4097
+     "tiles": 5055
     },
     {
      "ground": "Light Grass",
-     "tiles": 2945
+     "tiles": 2744
     },
     {
      "ground": "Jungle Temple Floor",
-     "tiles": 1530
+     "tiles": 1671
     }
    ],
    "lives": [
@@ -47154,7 +47154,7 @@
   {
    "id": 20,
    "biome": 19,
-   "tiles": 33317,
+   "tiles": 33314,
    "at": [
     1456,
     1204
@@ -47182,11 +47182,11 @@
      "tiles": 3
     }
    ],
-   "colour": "#422227",
+   "colour": "#422228",
    "madeOf": [
     {
      "ground": "Risen Hell Dark Tiles",
-     "tiles": 28414
+     "tiles": 28653
     },
     {
      "ground": "Ancient City Dirt",
@@ -47198,7 +47198,7 @@
     },
     {
      "ground": "Risen Hell Lava",
-     "tiles": 396
+     "tiles": 427
     }
    ],
    "lives": [
@@ -48271,7 +48271,7 @@
   {
    "id": 21,
    "biome": 20,
-   "tiles": 33041,
+   "tiles": 33044,
    "at": [
     841,
     1741
@@ -48299,11 +48299,11 @@
    "madeOf": [
     {
      "ground": "New Low Forest Grass",
-     "tiles": 29641
+     "tiles": 29660
     },
     {
      "ground": "Brown Lines",
-     "tiles": 951
+     "tiles": 938
     },
     {
      "ground": "Shoreline Sand",
@@ -48311,7 +48311,7 @@
     },
     {
      "ground": "Nature Ruins Grass",
-     "tiles": 685
+     "tiles": 688
     }
    ],
    "lives": [
@@ -57788,10 +57788,10 @@
   {
    "id": 29,
    "biome": 28,
-   "tiles": 20106,
+   "tiles": 20168,
    "at": [
-    830,
-    1813
+    829,
+    1812
    ],
    "box": [
     632,
@@ -57808,11 +57808,11 @@
      "tiles": 29
     }
    ],
-   "colour": "#d0c6a5",
+   "colour": "#d1c7a6",
    "madeOf": [
     {
      "ground": "Shoreline Sand",
-     "tiles": 18481
+     "tiles": 18737
     },
     {
      "ground": "New Low Forest Grass",
@@ -57820,11 +57820,11 @@
     },
     {
      "ground": "Setpiece PC Sand",
-     "tiles": 666
+     "tiles": 471
     },
     {
-     "ground": "Setpiece PC Sand Alt",
-     "tiles": 27
+     "ground": "Setpiece PC Horizontal Wood Edge L",
+     "tiles": 25
     }
    ],
    "lives": [
@@ -62159,9 +62159,9 @@
     659,
     1459
    ],
-   "name": "Zone 35",
-   "named": false,
-   "from": null,
+   "name": "Beach",
+   "named": true,
+   "from": "walked",
    "roadSplit": [
     {
      "biome": "Undead Forest",
@@ -62175,75 +62175,26 @@
      "tiles": 10279
     }
    ],
-   "lives": [],
-   "met": false,
-   "ground": ""
-  },
-  {
-   "id": 36,
-   "biome": 35,
-   "tiles": 2094,
-   "at": [
-    849,
-    1612
-   ],
-   "box": [
-    818,
-    1590,
-    881,
-    1635
-   ],
-   "name": "Nature Ruins",
-   "named": true,
-   "from": "walked",
-   "roadSplit": [
-    {
-     "biome": "Low Forest",
-     "tiles": 30
-    },
-    {
-     "biome": "Undead Forest",
-     "tiles": 1
-    }
-   ],
-   "colour": "#323f21",
-   "madeOf": [
-    {
-     "ground": "Dark Grass",
-     "tiles": 1698
-    },
-    {
-     "ground": "Jungle Temple Floor",
-     "tiles": 297
-    },
-    {
-     "ground": "Nature Ruins Grass",
-     "tiles": 85
-    },
-    {
-     "ground": "Yellow Grass",
-     "tiles": 14
-    }
-   ],
    "lives": [
     {
-     "type": 21843,
-     "name": "New Horned Drake",
-     "odds": 0.75,
-     "group": "New Drakes",
-     "labels": "ENEMY,MINION,BEAST,QUEST,MINION_MID",
-     "size": 110,
-     "hp": 1270,
-     "def": 4,
-     "exp": 456,
+     "type": 44158,
+     "name": "Admiral of Pirates",
+     "labels": "ENEMY,MINION,HUMANOID,QUEST,MINION_WEAK",
+     "size": 125,
+     "hp": 500,
+     "def": 2,
+     "exp": 60,
      "shots": [
       {
-       "hurt": 30,
-       "reach": 9.8
+       "hurt": 8,
+       "reach": 7
       }
      ],
+     "immune": [
+      "stasis"
+     ],
      "sprite": {
-      "file": "c21843.png",
+      "file": "c44158.png",
       "tile": 36,
       "height": 36,
       "frames": 2,
@@ -62251,48 +62202,58 @@
      }
     },
     {
-     "type": 21844,
-     "name": "New Drake Baby",
-     "group": "New Drakes",
-     "labels": "ENEMY,MINION,CRITTER,MINION_WEAK",
-     "size": 80,
-     "hp": 700,
-     "exp": 70,
+     "type": 21768,
+     "name": "New Giant Crab",
+     "odds": 0.75,
+     "labels": "ENEMY,MINION,BEAST,QUEST,MINION_WEAK",
+     "size": 100,
+     "hp": 300,
+     "def": 2,
+     "exp": 86,
      "shots": [
       {
-       "hurt": 20,
-       "reach": 8.5
-      }
-     ],
-     "sprite": {
-      "file": "c21844.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21842,
-     "name": "New Werelion",
-     "odds": 1,
-     "labels": "ENEMY,MINION,BEAST,MINION_WEAK",
-     "size": 120,
-     "hp": 400,
-     "def": 5,
-     "exp": 80,
-     "shots": [
-      {
-       "hurt": 22,
-       "reach": 14.9
+       "hurt": 1,
+       "reach": 0.4
       },
       {
-       "hurt": 35,
-       "reach": 15
+       "hurt": 4,
+       "reach": 1.6
+      },
+      {
+       "hurt": 7,
+       "reach": 3.6
+      },
+      {
+       "hurt": 11,
+       "reach": 6.4
       }
      ],
      "sprite": {
-      "file": "c21842.png",
+      "file": "c21768.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21775,
+     "name": "New Bandit Leader",
+     "odds": 0.75,
+     "group": "New Bandits",
+     "labels": "ENEMY,MINION,HUMANOID,QUEST,MINION_WEAK",
+     "size": 150,
+     "hp": 280,
+     "def": 2,
+     "exp": 88,
+     "shots": [
+      {
+       "hurt": 9,
+       "reach": 4.8
+      }
+     ],
+     "sprite": {
+      "file": "c21775.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -62300,209 +62261,111 @@
      }
     },
     {
-     "type": 21836,
-     "name": "New Dwarf King",
+     "type": 21767,
+     "name": "New Sandsman King",
      "odds": 0.75,
      "labels": "ENEMY,MINION,HUMANOID,QUEST,MINION_WEAK",
-     "size": 130,
-     "hp": 320,
-     "def": 3,
-     "exp": 102,
-     "shots": [
-      {
-       "hurt": 16,
-       "reach": 5.4
-      }
-     ],
-     "sprite": {
-      "file": "c21836.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21841,
-     "name": "New Werepanther",
-     "group": "New Werecats",
-     "labels": "ENEMY,MINION,BEAST,MINION_WEAK",
-     "size": 100,
-     "hp": 240,
-     "def": 3,
-     "exp": 18,
-     "shots": [
-      {
-       "hurt": 16,
-       "reach": 14
-      }
-     ],
-     "sprite": {
-      "file": "c21841.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21837,
-     "name": "New Metal Golem",
-     "odds": 1,
-     "group": "New Golems",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_WEAK",
-     "size": 140,
-     "hp": 220,
-     "def": 5,
-     "exp": 30,
-     "shots": [
-      {
-       "hurt": 25,
-       "reach": 10.5
-      }
-     ],
-     "sprite": {
-      "file": "c21837.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21838,
-     "name": "New Clockwork Golem",
-     "odds": 1,
-     "group": "New Golems",
-     "labels": "ENEMY,MINION,CONSTRUCT,MINION_WEAK",
-     "size": 140,
-     "hp": 220,
-     "def": 3,
-     "exp": 44,
-     "shots": [
-      {
-       "hurt": 37,
-       "reach": 10
-      }
-     ],
-     "sprite": {
-      "file": "c21838.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21839,
-     "name": "New Weretiger",
-     "group": "New Werecats",
-     "labels": "ENEMY,MINION,BEAST,MINION_WEAK",
-     "size": 100,
-     "hp": 220,
-     "def": 3,
-     "exp": 16,
-     "shots": [
-      {
-       "hurt": 17,
-       "reach": 14.3
-      }
-     ],
-     "sprite": {
-      "file": "c21839.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21840,
-     "name": "New Wereleopard",
-     "group": "New Werecats",
-     "labels": "ENEMY,MINION,BEAST,MINION_WEAK",
-     "size": 100,
-     "hp": 220,
-     "def": 1,
-     "exp": 16,
-     "shots": [
-      {
-       "hurt": 19,
-       "reach": 8
-      }
-     ],
-     "sprite": {
-      "file": "c21840.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21845,
-     "name": "New Red Spider",
-     "odds": 1,
-     "few": 1,
-     "many": 10,
-     "labels": "ENEMY,MINION,CRITTER,MINION_WEAK",
-     "size": 50,
-     "hp": 150,
-     "exp": 30,
-     "shots": [
-      {
-       "hurt": 25,
-       "reach": 10
-      }
-     ],
-     "sprite": {
-      "file": "c21845.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 2,
-      "size": 100
-     }
-    },
-    {
-     "type": 21835,
-     "name": "New Dwarf Veteran",
-     "group": "New Dwarves",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
-     "size": 90,
-     "hp": 100,
-     "def": 3,
-     "exp": 10,
-     "shots": [
-      {
-       "hurt": 14,
-       "reach": 3.6
-      }
-     ],
-     "sprite": {
-      "file": "c21835.png",
-      "tile": 20,
-      "height": 20,
-      "frames": 3,
-      "size": 100
-     }
-    },
-    {
-     "type": 21833,
-     "name": "New Dwarf Axebearer",
-     "group": "New Dwarves",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
-     "size": 90,
-     "hp": 80,
+     "size": 120,
+     "hp": 270,
      "def": 2,
+     "exp": 86,
+     "shots": [
+      {
+       "hurt": 15,
+       "reach": 8.4
+      }
+     ],
+     "sprite": {
+      "file": "c21767.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 44155,
+     "name": "X Treasure Chest",
+     "labels": "ENEMY,MINION,MINION_WEAK",
+     "size": 40,
+     "hp": 200,
+     "def": 1,
+     "exp": 40,
+     "immune": [
+      "stasis",
+      "petrify",
+      "paralyse",
+      "daze",
+      "stun"
+     ],
+     "sprite": {
+      "file": "c44155.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 21769,
+     "name": "New Sand Devil",
+     "odds": 1,
+     "labels": "ENEMY,MINION,NATURE,MINION_WEAK",
+     "size": 100,
+     "hp": 100,
+     "def": 1,
      "exp": 8,
      "shots": [
       {
        "hurt": 10,
-       "reach": 3.6
+       "reach": 9.8
       }
      ],
      "sprite": {
-      "file": "c21833.png",
+      "file": "c21769.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21774,
+     "name": "New Scorpion Queen",
+     "odds": 0.75,
+     "group": "New Scorpions",
+     "labels": "ENEMY,MINION,BEAST,QUEST,MINION_WEAK",
+     "size": 150,
+     "hp": 100,
+     "exp": 40,
+     "sprite": {
+      "file": "c21774.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 2,
+      "size": 100
+     }
+    },
+    {
+     "type": 21766,
+     "name": "New Sandsman Sorcerer",
+     "group": "New Sandsmen",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
+     "size": 100,
+     "hp": 88,
+     "exp": 18,
+     "shots": [
+      {
+       "hurt": 13,
+       "reach": 8
+      },
+      {
+       "hurt": 17,
+       "reach": 2.4
+      }
+     ],
+     "sprite": {
+      "file": "c21766.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -62510,21 +62373,45 @@
      }
     },
     {
-     "type": 21834,
-     "name": "New Dwarf Mage",
-     "group": "New Dwarves",
-     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
-     "size": 90,
+     "type": 44156,
+     "name": "X Treasure Crab",
+     "labels": "ENEMY,MINION,MINION_WEAK",
+     "size": 40,
      "hp": 80,
      "exp": 8,
      "shots": [
       {
-       "hurt": 12,
-       "reach": 12.3
+       "hurt": 7,
+       "reach": 5
       }
      ],
      "sprite": {
-      "file": "c21834.png",
+      "file": "c44156.png",
+      "tile": 36,
+      "height": 36,
+      "frames": 1,
+      "size": 100
+     }
+    },
+    {
+     "type": 21762,
+     "name": "New Red Gelatinous Cube",
+     "odds": 1,
+     "few": 2,
+     "many": 7,
+     "group": "New Cubes",
+     "labels": "ENEMY,MINION,CUBE,MINION_WEAK",
+     "size": 80,
+     "hp": 70,
+     "exp": 8,
+     "shots": [
+      {
+       "hurt": 9,
+       "reach": 12
+      }
+     ],
+     "sprite": {
+      "file": "c21762.png",
       "tile": 20,
       "height": 20,
       "frames": 3,
@@ -62532,328 +62419,511 @@
      }
     },
     {
-     "type": 21846,
-     "name": "New Black Bat",
+     "type": 21763,
+     "name": "New Purple Gelatinous Cube",
      "odds": 1,
      "few": 2,
-     "many": 20,
-     "group": "New Bats",
-     "labels": "ENEMY,MINION,CRITTER,MINION_WEAK",
-     "size": 50,
-     "hp": 50,
-     "exp": 10,
+     "many": 7,
+     "group": "New Cubes",
+     "labels": "ENEMY,MINION,CUBE,MINION_WEAK",
+     "size": 80,
+     "hp": 70,
+     "exp": 8,
      "shots": [
       {
-       "hurt": 25,
-       "reach": 2
+       "hurt": 12,
+       "reach": 13
       }
      ],
      "sprite": {
-      "file": "c21846.png",
+      "file": "c21763.png",
       "tile": 20,
       "height": 20,
-      "frames": 2,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21764,
+     "name": "New Green Gelatinous Cube",
+     "odds": 1,
+     "few": 2,
+     "many": 7,
+     "group": "New Cubes",
+     "labels": "ENEMY,MINION,CUBE,MINION_WEAK",
+     "size": 80,
+     "hp": 70,
+     "exp": 8,
+     "shots": [
+      {
+       "hurt": 10,
+       "reach": 12
+      }
+     ],
+     "sprite": {
+      "file": "c21764.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21776,
+     "name": "New Bandit Enemy",
+     "group": "New Bandits",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
+     "size": 100,
+     "hp": 50,
+     "def": 1,
+     "exp": 10,
+     "shots": [
+      {
+       "hurt": 9,
+       "reach": 3.6
+      },
+      {
+       "hurt": 8,
+       "reach": 6
+      }
+     ],
+     "sprite": {
+      "file": "c21776.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21765,
+     "name": "New Sandsman Archer",
+     "group": "New Sandsmen",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
+     "size": 100,
+     "hp": 30,
+     "exp": 6,
+     "shots": [
+      {
+       "hurt": 8,
+       "reach": 11.9
+      }
+     ],
+     "sprite": {
+      "file": "c21765.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21773,
+     "name": "New Poison Scorpion",
+     "group": "New Scorpions",
+     "labels": "ENEMY,MINION,CRITTER,MINION_WEAK",
+     "size": 100,
+     "hp": 10,
+     "exp": 2,
+     "shots": [
+      {
+       "hurt": 7,
+       "reach": 8
+      }
+     ],
+     "sprite": {
+      "file": "c21773.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21771,
+     "name": "New Piratess",
+     "odds": 1,
+     "group": "New Pirates",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
+     "size": 100,
+     "hp": 6,
+     "exp": 2,
+     "shots": [
+      {
+       "hurt": 4,
+       "reach": 2.4
+      }
+     ],
+     "sprite": {
+      "file": "c21771.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21770,
+     "name": "New Pirate",
+     "group": "New Pirates",
+     "labels": "ENEMY,MINION,HUMANOID,MINION_WEAK",
+     "size": 100,
+     "hp": 5,
+     "exp": 2,
+     "shots": [
+      {
+       "hurt": 4,
+       "reach": 2.4
+      }
+     ],
+     "sprite": {
+      "file": "c21770.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
+      "size": 100
+     }
+    },
+    {
+     "type": 21772,
+     "name": "New Snake",
+     "odds": 1,
+     "few": 2,
+     "many": 7,
+     "group": "New Snakes",
+     "labels": "ENEMY,MINION,CRITTER,MINION_WEAK",
+     "size": 80,
+     "hp": 5,
+     "exp": 2,
+     "shots": [
+      {
+       "hurt": 4,
+       "reach": 8
+      }
+     ],
+     "sprite": {
+      "file": "c21772.png",
+      "tile": 20,
+      "height": 20,
+      "frames": 3,
       "size": 100
      }
     }
    ],
    "met": true,
-   "ground": "Nature",
+   "ground": "Beach",
    "rank": "Rookie",
-   "wiki": "mid-forest",
+   "wiki": "shore-plains",
    "regular": [
     {
-     "name": "Big Ladybug",
-     "art": "big-ladybug.png",
+     "name": "Bandit Leader",
+     "art": "bandit-leader.png",
+     "group": "New Bandits",
      "shots": [
       {
-       "hurt": 25,
-       "reach": 10
+       "hurt": 9,
+       "reach": 4.8
       }
      ],
-     "hp": 150,
-     "def": 0,
-     "exp": 30,
+     "hp": 280,
+     "def": 2,
+     "exp": 88,
      "drops": [
       "Health Potion",
       "Magic Potion",
-      "Spider Den"
-     ]
-    },
-    {
-     "name": "Black Bat",
-     "art": "black-bat.png",
-     "group": "New Bats",
-     "shots": [
-      {
-       "hurt": 25,
-       "reach": 2
-      }
-     ],
-     "hp": 50,
-     "def": 0,
-     "exp": 5,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 1 Armor",
-      "Forbidden Jungle"
-     ]
-    },
-    {
-     "name": "Clockwork Golem",
-     "art": "clockwork-golem.png",
-     "group": "New Golems",
-     "shots": [
-      {
-       "hurt": 37,
-       "reach": 10
-      }
-     ],
-     "hp": 220,
-     "def": 3,
-     "exp": 22,
-     "drops": [
-      "Health Potion",
-      "Tier 4 Armors",
-      "Tier 6 Armors"
-     ]
-    },
-    {
-     "name": "Dwarf King",
-     "art": "dwarf-king.png",
-     "shots": [
-      {
-       "hurt": 16,
-       "reach": 5.4
-      }
-     ],
-     "hp": 320,
-     "def": 3,
-     "exp": 102,
-     "drops": [
-      "Magic Potion",
-      "Tier 3 Weapons",
-      "Tier 4 Weapons",
+      "Tier 1 Weapons",
+      "Tier 2 Weapons",
       "Tier 1 Abilities",
-      "Tier 3 Armor",
-      "Tier 4 Armor",
-      "Tier 5 Armor",
-      "Tier 1 Rings",
-      "Adventurer’s Scarf",
-      "Forest Maze"
-     ]
-    },
-    {
-     "name": "Horned Drake",
-     "art": "horned-drake.png",
-     "group": "Drakes",
-     "shots": [
-      {
-       "hurt": 30,
-       "reach": 9.8
-      }
-     ],
-     "hp": 1270,
-     "def": 4,
-     "exp": 456,
-     "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 3 Weapons",
-      "Tier 5 Weapons",
-      "Tier 6 Weapons",
-      "Tier 2 Abilities",
-      "Tier 5 Armor",
-      "Tier 2 Rings",
-      "Tier 3 Abilities",
-      "Tier 6 Armor",
-      "Tier 3 Rings",
+      "Tier 0 Armor",
+      "Tier 1 Armor",
       "Adventurer’s Scarf"
      ]
     },
     {
-     "name": "Metal Golem",
-     "art": "metal-golem.png",
-     "group": "New Golems",
+     "name": "Little Blue Jelly",
+     "art": "little-blue-jelly.png",
+     "group": "New Cubes",
      "shots": [
       {
-       "hurt": 25,
-       "reach": 10.5
+       "hurt": 9,
+       "reach": 12
       }
      ],
-     "hp": 220,
-     "def": 5,
-     "exp": 30,
+     "hp": 70,
+     "def": 0,
+     "exp": 8,
      "drops": [
       "Health Potion",
-      "Tier 3 Weapons",
-      "Tier 5 Weapons"
+      "Magic Potion",
+      "Pirate Cave"
      ]
     },
     {
-     "name": "Werelion",
-     "art": "werelion.png",
+     "name": "Little Green Jelly",
+     "art": "little-green-jelly.png",
+     "group": "New Cubes",
      "shots": [
       {
-       "hurt": 22,
-       "reach": 14.9
-      },
-      {
-       "hurt": 35,
-       "reach": 15
+       "hurt": 10,
+       "reach": 12
       }
      ],
-     "hp": 400,
-     "def": 5,
+     "hp": 70,
+     "def": 0,
+     "exp": 8,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Little Pink Jelly",
+     "art": "little-pink-jelly.png",
+     "group": "New Cubes",
+     "shots": [
+      {
+       "hurt": 12,
+       "reach": 13
+      }
+     ],
+     "hp": 70,
+     "def": 0,
+     "exp": 8,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Pirate",
+     "art": "pirate.png",
+     "group": "New Pirates",
+     "shots": [
+      {
+       "hurt": 4,
+       "reach": 2.4
+      }
+     ],
+     "hp": 5,
+     "def": 0,
+     "exp": 2,
+     "drops": [
+      "Health Potion",
+      "Tier 1 Weapons",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Piratess",
+     "art": "piratess.png",
+     "group": "New Pirates",
+     "shots": [
+      {
+       "hurt": 4,
+       "reach": 2.4
+      }
+     ],
+     "hp": 6,
+     "def": 0,
+     "exp": 2,
+     "drops": [
+      "Health Potion",
+      "Tier 0 Armor",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Scorpion Queen",
+     "art": "scorpion-queen.png",
+     "group": "New Scorpions",
+     "hp": 100,
+     "def": 0,
      "exp": 40,
      "drops": [
       "Health Potion",
       "Magic Potion",
-      "Tier 4 Weapons",
-      "Tier 5 Weapons",
-      "Tier 2 Abilities",
+      "Adventurer’s Scarf"
+     ]
+    },
+    {
+     "name": "Snake",
+     "art": "snake.png",
+     "group": "New Snakes",
+     "shots": [
+      {
+       "hurt": 4,
+       "reach": 8
+      }
+     ],
+     "hp": 5,
+     "def": 0,
+     "exp": 2,
+     "drops": [
+      "Health Potion",
+      "Magic Potion"
+     ]
+    },
+    {
+     "name": "X Treasure Chest",
+     "art": "x-treasure-chest.png",
+     "immune": [
+      "stasis",
+      "petrify",
+      "paralyse",
+      "daze",
+      "stun"
+     ],
+     "hp": 200,
+     "def": 1,
+     "exp": 40,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 2 Weapons",
+      "Tier 1 Abilities",
+      "Tier 1 Armor",
+      "Tier 1 Rings",
+      "Pirate Rum",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Giant Crab",
+     "art": "giant-crab.png",
+     "shots": [
+      {
+       "hurt": 1,
+       "reach": 0.4
+      },
+      {
+       "hurt": 4,
+       "reach": 1.6
+      },
+      {
+       "hurt": 7,
+       "reach": 3.6
+      }
+     ],
+     "hp": 300,
+     "def": 2,
+     "exp": 86,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Tier 2 Weapons",
+      "Tier 1 Abilities",
       "Tier 2 Armor",
-      "Tier 5 Armor",
-      "Tier 2 Rings",
-      "Tier 6 Armor",
-      "Spider Den"
+      "Tier 1 Rings",
+      "Kendo Stick (Shiny)",
+      "Adventurer’s Scarf",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Sand Devil",
+     "art": "sand-devil.png",
+     "shots": [
+      {
+       "hurt": 10,
+       "reach": 9.8
+      }
+     ],
+     "hp": 100,
+     "def": 1,
+     "exp": 8,
+     "drops": [
+      "Health Potion",
+      "Magic Potion",
+      "Kendo Stick (Shiny)",
+      "Pirate Cave"
+     ]
+    },
+    {
+     "name": "Sandsman King",
+     "art": "sandsman-king.png",
+     "shots": [
+      {
+       "hurt": 15,
+       "reach": 8.4
+      }
+     ],
+     "hp": 270,
+     "def": 2,
+     "exp": 86,
+     "drops": [
+      "Health Potion",
+      "Tier 3 Weapons",
+      "Tier 1 Abilities",
+      "Tier 2 Armor",
+      "Tier 1 Rings",
+      "Kendo Stick (Shiny)",
+      "Adventurer’s Scarf",
+      "Forest Maze"
      ]
     }
    ],
    "heroes": [
     {
-     "name": "Ent Ancient",
-     "art": "ent-ancient.png",
-     "group": "Heros",
+     "name": "Beached Buccaneer",
+     "art": "beached-buccaneer.png",
      "shots": [
       {
-       "hurt": 20,
-       "reach": 14
-      },
-      {
-       "hurt": 30,
-       "reach": 13
-      },
-      {
-       "hurt": 40,
-       "reach": 13.2
+       "hurt": 8,
+       "reach": 7
       }
      ],
      "immune": [
       "stasis"
      ],
-     "hp": 1200,
-     "def": 15,
-     "exp": 1200,
+     "hp": 500,
+     "def": 2,
+     "exp": 60,
      "drops": [
-      "Health Potion",
-      "Magic Potion",
-      "Tier 6 Weapons",
+      "Tier 3 Weapons",
       "Tier 1 Abilities",
-      "Tier 2 Abilities",
-      "Tier 5 Armor",
-      "Tier 2 Rings",
-      "Tier 7 Weapons",
-      "Tier 3 Abilities",
-      "Tier 6 Armor",
-      "Tier 3 Rings",
-      "Magic Woods"
-     ]
-    },
-    {
-     "name": "Great Coil Snake",
-     "art": "great-coil-snake.png",
-     "group": "New Heros",
-     "shots": [
-      {
-       "hurt": 50,
-       "reach": 104
-      },
-      {
-       "hurt": 40,
-       "reach": 4.5
-      }
-     ],
-     "immune": [
-      "stasis"
-     ],
-     "hp": 900,
-     "def": 15,
-     "exp": 270,
-     "drops": [
-      "Tier 1 Abilities",
-      "Tier 2 Abilities",
-      "Tier 5 Armor",
-      "Tier 2 Rings",
-      "Tier 3 Abilities",
-      "Tier 6 Armor",
-      "Forbidden Jungle"
-     ]
-    }
-   ],
-   "guardians": [
-    {
-     "name": "Legion Forest Guard",
-     "art": "legion-forest-guard.png",
-     "hp": 800,
-     "def": 5,
-     "exp": 250,
-     "drops": [
-      "Adventurer’s Scarf"
+      "Tier 2 Armor",
+      "Tier 1 Rings",
+      "Pirate Rum",
+      "Adventurer’s Scarf",
+      "Pirate Cave"
      ]
     }
    ],
    "loot": {
     "tiers": {
-     "Armor": [
+     "Weapons": [
       1,
       2,
-      3,
-      4,
-      5,
-      6
-     ],
-     "Weapons": [
-      3,
-      4,
-      5,
-      6,
-      7
+      3
      ],
      "Abilities": [
+      1
+     ],
+     "Armor": [
+      0,
       1,
-      2,
-      3
+      2
      ],
      "Rings": [
-      1,
-      2,
-      3
+      1
      ]
     },
     "slots": {
-     "Armor": "armor.png",
      "Weapons": "weapon.png",
      "Abilities": "ability.png",
+     "Armor": "armor.png",
      "Rings": "ring.png"
     },
     "dungeons": [
      {
-      "name": "Spider Den",
-      "art": "spider-den.png"
-     },
-     {
-      "name": "Forbidden Jungle",
-      "art": "forbidden-jungle.png"
+      "name": "Pirate Cave",
+      "art": "pirate-cave.png"
      },
      {
       "name": "Forest Maze",
       "art": "forest-maze.png"
-     },
-     {
-      "name": "Magic Woods",
-      "art": "magic-woods.png"
      }
     ],
     "gear": [
@@ -62864,7 +62934,9 @@
     ],
     "items": [
      "Health Potion",
-     "Magic Potion"
+     "Magic Potion",
+     "Kendo Stick (Shiny)",
+     "Pirate Rum"
     ]
    }
   }
@@ -64349,7 +64421,7 @@
    }
   }
  ],
- "roads": 53825,
+ "roads": 53762,
  "tiles": 2362491,
  "things": true,
  "sky": true,

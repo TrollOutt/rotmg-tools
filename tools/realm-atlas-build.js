@@ -665,6 +665,74 @@ const CLEAVE_APART = 0.18;               // their middles this far apart, of the
 const CLEAVE_KEEP = 4000;                // a piece smaller than this is not a place
 const CLEAVE_CELL = 6;                   // tiles to a cell of the voting grid
 
+/*
+ * Two patches that are one place.
+ *
+ * A place is found by growing a run of touching tiles of one colour, so a
+ * stretch of the same ground with a road or a river through it comes out as
+ * two. Most of the time that is right - the realm really does have three
+ * Floral Escapes - and sometimes it is not, and only a person looking at the
+ * map can say which. So it is said in data/Realm/zone-names.txt:
+ *
+ *     join 852,1610 into 820,1637
+ *
+ * The patch holding the first tile is folded into the one holding the second.
+ * It happens before anything is named, so the surviving patch takes the name,
+ * and its middle and its box are worked out again from everything it now has.
+ */
+function joinZones(map) {
+  const file = path.join(root, 'data', 'Realm', 'zone-names.txt');
+  if (!fs.existsSync(file)) return;
+  const W = map.width;
+  const idAt = (x, y) => {
+    const gx = x - map.minX, gy = y - map.minY;
+    if (gx < 0 || gy < 0 || gx >= W || gy >= map.height) return 0;
+    return map.zoneByte[gy * W + gx];
+  };
+  let folded = 0;
+  for (let line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    line = line.replace(/\s*##.*$/, '').trim();
+    const m = /^join\s+(-?\d+),(-?\d+)\s+into\s+(-?\d+),(-?\d+)$/.exec(line);
+    if (!m) continue;
+    const gone = idAt(Number(m[1]), Number(m[2]));
+    const host = idAt(Number(m[3]), Number(m[4]));
+    if (!gone || !host || gone === host) {
+      console.log('  join ' + m[1] + ',' + m[2] + ' into ' + m[3] + ',' + m[4]
+        + ' does nothing: ' + (!gone || !host ? 'one of the tiles is in no patch'
+          : 'both tiles are already the same patch'));
+      continue;
+    }
+    for (let at = 0; at < map.zoneByte.length; at++) {
+      if (map.zoneByte[at] === gone) map.zoneByte[at] = host;
+    }
+    map.zones = map.zones.filter(one => one.id !== gone);
+    folded++;
+  }
+  if (!folded) return;
+
+  // What each surviving patch now holds.
+  const left = new Map();
+  for (let at = 0; at < map.zoneByte.length; at++) {
+    const id = map.zoneByte[at];
+    if (!id) continue;
+    let bag = left.get(id);
+    if (!bag) { bag = { n: 0, sx: 0, sy: 0, x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 }; left.set(id, bag); }
+    const tx = (at % W) + map.minX, ty = ((at - at % W) / W) + map.minY;
+    bag.n++; bag.sx += tx; bag.sy += ty;
+    if (tx < bag.x0) bag.x0 = tx; if (tx > bag.x1) bag.x1 = tx;
+    if (ty < bag.y0) bag.y0 = ty; if (ty > bag.y1) bag.y1 = ty;
+  }
+  for (const zone of map.zones) {
+    const bag = left.get(zone.id);
+    if (!bag || !bag.n) continue;
+    zone.tiles = bag.n;
+    zone.at = [Math.round(bag.sx / bag.n), Math.round(bag.sy / bag.n)];
+    zone.box = [bag.x0, bag.y0, bag.x1, bag.y1];
+  }
+  console.log('  ' + folded + ' patch' + (folded === 1 ? '' : 'es')
+    + ' folded into the one next to it, by hand');
+}
+
 function cleaveByLife(map, store, groundName) {
   const terrain = new Map();
   for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
@@ -1479,6 +1547,7 @@ function main() {
 
   const map = biomeMap(store.tiles, groundName, colourOf);
   cleaveByLife(map, store, groundName);
+  joinZones(map);
   console.log('  ' + map.width + ' x ' + map.height + ' tiles from ' + map.minX + ',' + map.minY);
   console.log('  ' + map.found.length + ' biomes in ' + map.zones.length + ' separate zones, '
     + map.roadCount.toLocaleString('en-US') + ' road tiles, '
