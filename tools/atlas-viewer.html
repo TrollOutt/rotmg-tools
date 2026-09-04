@@ -19,11 +19,42 @@
   }
   #where { color: #b9c2d4; }
   #chat {
-    position: absolute; left: 12px; bottom: 34px; max-width: 46ch;
-    pointer-events: none; line-height: 1.45;
+    position: absolute; left: 12px; bottom: 34px; max-width: 52ch;
+    pointer-events: none; line-height: 1.5;
+    padding: 7px 10px; border-radius: 5px;
+    background: rgba(7,10,16,.62);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    transition: background .25s, opacity .25s;
   }
-  #chat .said { color: #97a2b6; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  #chat:empty { padding: 0; background: none; box-shadow: none; }
+  #chat.bare { background: rgba(7,10,16,.16); box-shadow: none; opacity: .55; }
+  #chat .said { color: #a7b2c6; }
   #chat .who { color: #cfa96a; }
+  #chatKnob {
+    position: absolute; left: 12px; bottom: 12px; z-index: 3;
+    font: 11px ui-monospace, monospace; color: #8b94a6;
+    background: rgba(7,10,16,.6); border: 0; border-radius: 4px;
+    padding: 2px 7px; cursor: pointer;
+  }
+  #chatKnob:hover { color: #cfd6e6; }
+  .who-head { display: flex; gap: 10px; align-items: center; margin: 6px 0 2px; }
+  .who-head .face {
+    width: 34px; height: 34px; background-repeat: no-repeat;
+    image-rendering: pixelated; flex: none;
+  }
+  .who-head div { display: flex; flex-direction: column; }
+  .who-head span { color: #9fb0c4; }
+  .stat-row, .kit-row { display: flex; gap: 8px; align-items: baseline; padding: 1px 0; }
+  .stat-row i, .kit-row i { font-style: normal; color: #7b8496; width: 8ch; flex: none; }
+  .stat-row .bar {
+    flex: 1; height: 4px; background: rgba(255,255,255,.08); border-radius: 2px;
+    overflow: hidden; align-self: center;
+  }
+  .stat-row .bar span { display: block; height: 100%; background: #6f8fbf; }
+  .stat-row b { color: #cfd6e6; }
+  .stat-row u { text-decoration: none; color: #6d7688; }
+  .kit-row b { color: #cfd6e6; }
+  .kit-row em { font-style: normal; color: #8b94a6; margin-left: auto; text-align: right; }
   .life .bags { display: inline-flex; gap: 2px; vertical-align: middle; }
   .life .bag {
     width: 11px; height: 11px; image-rendering: pixelated; opacity: .95;
@@ -130,6 +161,7 @@
 </aside>
 <aside id="panel"><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
 <div id="chat"></div>
+<button id="chatKnob" type="button">chat</button>
 <div id="bar">
   <span id="where">—</span>
   <span id="zone"></span>
@@ -2340,11 +2372,19 @@ function populate() {
        */
       const kind = zone.lives[weighted(zone)];
       const angle = Math.random() * Math.PI * 2;
+      // Heavier things are slower, which is the only handle the client gives.
+      const pace = Math.max(1.6, Math.min(5.2, 5.2 - Math.log10(Math.max(10, kind.hp || 200)) * 0.85));
       alive.push({
         kind, home: zone.id, x, y,
         // What the client gives it, so a Lich King is a wall and a bat is not.
         hp: kind.hp || 200, full: kind.hp || 200, down: 0,
-        vx: Math.cos(angle) * 0.5, vy: Math.sin(angle) * 0.5,
+        /*
+         * At something like the pace the thing keeps in the game. Half a
+         * tile a second - what this was - is a creature standing still with
+         * a limp; the big slow ones amble at two and the small ones scurry
+         * at five, so it is taken off how heavy the thing is.
+         */
+        vx: Math.cos(angle) * pace, vy: Math.sin(angle) * pace,
         phase: Math.random() * 100
       });
       placed++;
@@ -2608,40 +2648,56 @@ function standUpLandmarks() {
 /*
  * A realm is not quiet. The chat is half of what being in one is like: a
  * portal called out, somebody asking for a teleport, a white bag announced,
- * an "f" for whoever just died, the same three people arguing about a trade.
- * A map with two thousand creatures on it and nobody saying anything is a
- * diorama.
+ * an "f" for whoever just died. A map with two thousand creatures on it and
+ * nobody saying anything is a diorama.
  *
- * The lines are a corpus written for this, filed by what they are for -
- * calls, loot, deaths, trade, reactions, the odd bit of French - and written
- * with slots in them: [dungeon], [item], [class], [player], [stat]. Those
- * are filled from this map. The dungeons are the ones that actually drop
- * here, the items are ones that actually fall here, the classes are the six
- * the client has, and the names are made up on the spot the way names in
- * that game are.
- *
- * Some of it is not single lines but whole exchanges - one player calls, a
- * second says they are coming, a third asks them to wait - and those play as
- * a scene with a few seconds between turns, given to whoever happens to be
- * standing near each other.
+ * The corpus is written for this. The lines are filed by what they are for
+ * and carry slots - [dungeon], [item], [class], [player], [stat] - which are
+ * filled from this map, so a portal called out is a portal that really drops
+ * here. And it comes with a set of rules for when each kind of line belongs:
+ * what the speaker is doing, how the chat is running, what just happened.
+ * Those rules are followed rather than ignored, which is the difference
+ * between a chat and a random line generator - nobody announces loot before
+ * anything has died, and a death gets one or two reactions and then the
+ * subject changes.
  */
-const CHAT_KEEP = 7;                     // lines held on screen
-const CHAT_LASTS = 22;                   // seconds one stays up
-const CHAT_QUIET = 3.4;                  // seconds between unprompted lines
+const CHAT_KEEP = 8;                     // lines held in the feed
+const CHAT_LASTS = 26;                   // seconds one stays in the feed
+const CHAT_QUIET = 1.1;                  // seconds between unprompted lines
+const BUBBLE_LASTS = 4.2;                // seconds one stays over a head
 const chat = [];
 let chatIn = CHAT_QUIET;
 let scene = null;
 
+/*
+ * How the realm is running just now, in the words the rules are written in.
+ * Nothing here is decided by hand: it is read off the simulation each time a
+ * line is wanted.
+ */
+const mood = {
+  location: 'realm_beach',
+  activity: 'realm_clear',
+  group_size: 'small',
+  chat_tone: 'quiet',
+  recent_event: 'none',
+  loot_result: 'none',
+  character_risk: 'mid_maxed',
+  player_role: 'nearby',
+  server_health: 'normal'
+};
+let toneUntil = 0, eventUntil = 0, chatClock = 0;
+
 /* Names, in the shape the game's own are: short, blunt, often nonsense. */
 const NAME_HEAD = ['dar', 'kor', 'mal', 'zen', 'bri', 'tho', 'vex', 'lun', 'gar', 'syl',
-  'nix', 'ort', 'pha', 'rue', 'skal', 'tyr', 'ulf', 'wren', 'yor', 'zab'];
+  'nix', 'ort', 'pha', 'rue', 'skal', 'tyr', 'ulf', 'wren', 'yor', 'zab', 'ith', 'mor',
+  'cae', 'dru', 'fen', 'hal', 'jor', 'kel', 'nym', 'sev'];
 const NAME_TAIL = ['ok', 'ith', 'us', 'ara', 'en', 'ix', 'orn', 'ael', 'un', 'yr',
-  'is', 'ard', 'eth', 'ow', 'im'];
+  'is', 'ard', 'eth', 'ow', 'im', 'ax', 'ella', 'ond', 'ir', 'ux'];
 function madeName() {
   const one = NAME_HEAD[Math.floor(Math.random() * NAME_HEAD.length)]
     + NAME_TAIL[Math.floor(Math.random() * NAME_TAIL.length)];
   return one.charAt(0).toUpperCase() + one.slice(1)
-    + (Math.random() < 0.3 ? String(Math.floor(Math.random() * 90) + 10) : '');
+    + (Math.random() < 0.28 ? String(Math.floor(Math.random() * 90) + 10) : '');
 }
 
 /* The things a line can be about, taken off the map rather than invented. */
@@ -2656,9 +2712,7 @@ function bitsForChat() {
     for (const one of zone.encounters || []) if (one.name) bosses.add(one.name);
   }
   chatBits = {
-    dungeon: [...dungeons],
-    item: [...items],
-    boss: [...bosses],
+    dungeon: [...dungeons], item: [...items], boss: [...bosses],
     class: (A.folk || []).map(f => f.name),
     stat: ['att', 'def', 'dex', 'spd', 'vit', 'wis', 'hp', 'mp'],
     server: ['eusouth', 'uswest', 'ussouth', 'eastasia', 'euwest2']
@@ -2672,8 +2726,9 @@ const anyOf = list => (list && list.length)
 function fillIn(text, who) {
   const bits = bitsForChat();
   return text.replace(/\[(\w+)\]/g, (whole, slot) => {
-    if (slot === 'player') return anyOf(folk.filter(f => f !== who && f.name).map(f => f.name))
-      || madeName();
+    if (slot === 'player') {
+      return anyOf(folk.filter(f => f !== who && f.name).map(f => f.name)) || madeName();
+    }
     if (slot === 'number') return String(Math.floor(Math.random() * 6) + 2);
     const got = anyOf(bits[slot]);
     return got === null ? whole : String(got).toLowerCase();
@@ -2681,16 +2736,51 @@ function fillIn(text, who) {
 }
 
 let linesByTag = null;
-function lineFor(tag) {
-  const said = A.chatter;
-  if (!said || !said.lines || !said.lines.length) return null;
+function tagged(tag) {
   if (!linesByTag) {
     linesByTag = new Map();
-    for (const one of said.lines) {
+    for (const one of (A.chatter && A.chatter.lines) || []) {
       if (!linesByTag.has(one.tag)) linesByTag.set(one.tag, []);
       linesByTag.get(one.tag).push(one.text);
     }
   }
+  return linesByTag.get(tag);
+}
+
+/*
+ * Whether a rule fits how things are running. A rule names some of the state
+ * and says nothing about the rest, and a value it names may be one thing or
+ * a choice of several - so a rule fits when every part it does mention
+ * agrees, and the more parts it mentions the better it fits.
+ */
+function ruleFits(rule) {
+  const when = rule.when || {};
+  let said = 0;
+  for (const key of Object.keys(when)) {
+    const want = when[key];
+    const have = mood[key];
+    if (have === undefined) return -1;
+    if (Array.isArray(want)) { if (!want.includes(have)) return -1; }
+    else if (want !== have) return -1;
+    said++;
+  }
+  return said;
+}
+
+/* The tags the moment allows, from the closest-fitting rule that matches. */
+function tagsNow() {
+  const rules = (A.chatter && A.chatter.rules) || [];
+  let best = null, bestSaid = -1;
+  for (const rule of rules) {
+    const said = ruleFits(rule);
+    if (said > bestSaid) { bestSaid = said; best = rule; }
+  }
+  if (!best) return ['social', 'reaction'];
+  const out = (best.allowed_tags || []).filter(tag => tagged(tag) && tagged(tag).length);
+  return out.length ? out : ['social', 'reaction'];
+}
+
+function lineFor(tag) {
   /*
    * A tenth of what is said is in French, which is how that game's chat
    * actually reads on a European server, and the corpus keeps those apart
@@ -2698,8 +2788,8 @@ function lineFor(tag) {
    * than mixed through everything.
    */
   const french = Math.random() < 0.1;
-  const list = (french && linesByTag.get('fr_' + tag)) || linesByTag.get(tag)
-    || (french ? linesByTag.get('fr') : null);
+  const list = (french && tagged('fr_' + tag)) || tagged(tag)
+    || (french ? tagged('fr') : null);
   return anyOf(list);
 }
 
@@ -2707,53 +2797,102 @@ function speak(tag, who, text) {
   const said = text === undefined ? lineFor(tag) : text;
   if (!said) return;
   if (who && !who.name) who.name = madeName();
+  const filled = fillIn(said, who);
   chat.push({
     who: who && who.name ? who.name : madeName(),
-    said: fillIn(said, who),
+    said: filled,
     left: CHAT_LASTS
   });
   while (chat.length > CHAT_KEEP) chat.shift();
+  // And over their head, so it is plain who said it.
+  if (who) { who.bubble = filled; who.bubbleLeft = BUBBLE_LASTS; }
 }
 
-/* And the exchanges, handed out to whoever is standing about. */
+/*
+ * Something happened, so the chat knows about it. The corpus asks for a
+ * short run of messages per event rather than one - somebody announces, one
+ * or two react, and then it stops - so an event is remembered for a few
+ * seconds and the rules for it apply while it is.
+ */
+function happened(event, who, extra) {
+  mood.recent_event = event;
+  eventUntil = chatClock + 6;
+  if (extra) for (const k of Object.keys(extra)) mood[k] = extra[k];
+  const chains = (A.chatter && A.chatter.chains) || [];
+  const chain = chains.find(c => c.event === event);
+  if (!chain) return;
+  scene = {
+    turns: chain.sequence.slice(0, chain.max_messages || 4).map(step => {
+      const tag = String(step).split(':')[1] || 'reaction';
+      return { tag: tag.split('?')[0] };
+    }),
+    at: 0, next: 0.35, first: who
+  };
+}
+
+/* And the written-out exchanges, handed to whoever is standing about. */
 function startScene() {
-  const said = A.chatter;
-  if (!said || !said.talks || !said.talks.length) return;
-  const talk = anyOf(said.talks);
+  const talks = (A.chatter && A.chatter.talks) || [];
+  const talk = anyOf(talks);
   if (!talk || !talk.turns || !talk.turns.length) return;
   const up = folk.filter(one => one.down <= 0);
   if (up.length < 2) return;
   const cast = new Map();
   scene = {
-    turns: talk.turns.slice(),
-    at: 0,
-    next: 0,
+    turns: talk.turns.map(turn => {
+      const m = /^([A-Z])\s*:\s*(.*)$/.exec(turn || '');
+      return m ? { mark: m[1], text: m[2] } : { text: turn };
+    }),
+    at: 0, next: 0,
     voice: mark => {
-      if (!cast.has(mark)) {
-        const one = up[Math.floor(Math.random() * up.length)];
-        if (one && !one.name) one.name = madeName();
-        cast.set(mark, one);
-      }
+      if (!cast.has(mark)) cast.set(mark, up[Math.floor(Math.random() * up.length)]);
       return cast.get(mark);
     }
   };
 }
 
+/* How the realm is running, read off the simulation. */
+function readMood(delta) {
+  chatClock += delta;
+  const up = folk.filter(one => one.down <= 0);
+  const fighting = up.filter(one => one.target).length;
+  mood.group_size = up.length > 40 ? 'large' : (up.length > 12 ? 'small' : 'small');
+  const heavy = up.some(one => one.target && one.target.full >= 8000);
+  mood.activity = heavy ? 'boss_fight' : (fighting > up.length * 0.25 ? 'realm_clear' : 'idle');
+  const middle = folk.length ? folk.reduce((n, o) => n + o.level, 0) / folk.length : 1;
+  mood.character_risk = middle < 4 ? 'learning' : (middle > 13 ? '6_8_plus' : 'mid_maxed');
+  mood.location = mood.activity === 'boss_fight' ? 'realm_godlands' : 'realm_beach';
+  if (chatClock > eventUntil) { mood.recent_event = 'none'; mood.loot_result = 'none'; }
+  if (chatClock > toneUntil) {
+    mood.chat_tone = mood.activity === 'boss_fight' ? 'excited'
+      : (fighting ? 'busy' : 'quiet');
+  }
+}
+
 function stepChat(delta) {
+  readMood(delta);
   for (let i = chat.length - 1; i >= 0; i--) {
     chat[i].left -= delta;
     if (chat[i].left <= 0) chat.splice(i, 1);
+  }
+  for (const one of folk) {
+    if (one.bubbleLeft > 0 && (one.bubbleLeft -= delta) <= 0) one.bubble = null;
   }
 
   if (scene) {
     scene.next -= delta;
     if (scene.next <= 0) {
       const turn = scene.turns[scene.at++];
-      // Written as "A: something", the letter being who is talking.
-      const m = /^([A-Z])\s*:\s*(.*)$/.exec(turn || '');
-      if (m) speak(null, scene.voice(m[1]), m[2]);
-      else if (turn) speak(null, null, turn);
-      scene.next = 1.6 + Math.random() * 1.6;
+      const up = folk.filter(one => one.down <= 0);
+      if (turn) {
+        if (turn.text !== undefined) {
+          speak(null, scene.voice ? scene.voice(turn.mark) : anyOf(up), turn.text);
+        } else {
+          const who = (scene.at === 1 && scene.first) ? scene.first : anyOf(up);
+          speak(turn.tag, who);
+        }
+      }
+      scene.next = 1.1 + Math.random() * 1.3;
       if (scene.at >= scene.turns.length) scene = null;
     }
     return;
@@ -2761,28 +2900,27 @@ function stepChat(delta) {
 
   chatIn -= delta;
   if (chatIn > 0) return;
-  chatIn = CHAT_QUIET + Math.random() * CHAT_QUIET * 2;
-  if (Math.random() < 0.22) { startScene(); return; }
-  /*
-   * What gets said when nothing has happened. Weighted the way an idle realm
-   * reads: mostly people calling portals and organising, some chatter, and
-   * the sour end of it present but rare, because it is rare.
-   */
-  const idle = ['call', 'call', 'realm', 'realm', 'group', 'social', 'trade',
-    'progression', 'reaction', 'raid', 'o3', 'spam', 'toxic_low', 'accusation'];
-  speak(idle[Math.floor(Math.random() * idle.length)],
+  chatIn = CHAT_QUIET + Math.random() * CHAT_QUIET * 1.6;
+  if (Math.random() < 0.14) { startScene(); return; }
+  const allowed = tagsNow();
+  speak(allowed[Math.floor(Math.random() * allowed.length)],
     anyOf(folk.filter(one => one.down <= 0)));
 }
 
 function drawChat() {
   const box = document.getElementById('chat');
   if (!box) return;
-  if (!chat.length || view.scale < SHOW_LIFE) { box.textContent = ''; return; }
+  if (!chat.length || view.scale < SHOW_LIFE || chatShy === 2) {
+    box.replaceChildren();
+    box.classList.toggle('bare', true);
+    return;
+  }
+  box.classList.toggle('bare', chatShy === 1);
   const out = [];
   for (const one of chat) {
     const line = document.createElement('div');
     line.className = 'said';
-    line.style.opacity = String(Math.max(0.15, Math.min(1, one.left / 4)));
+    line.style.opacity = String(Math.max(0.2, Math.min(1, one.left / 4)));
     const who = document.createElement('span');
     who.className = 'who';
     who.textContent = one.who;
@@ -2792,6 +2930,17 @@ function drawChat() {
   }
   box.replaceChildren(...out);
 }
+
+/*
+ * How much of the chat you want. Full, faded to a whisper, or off - because
+ * it is over the map, and somebody reading the map should be able to put it
+ * out of the way without losing it.
+ */
+let chatShy = 0;
+try {
+  const was = Number(localStorage.getItem('atlas.chat'));
+  if (was === 1 || was === 2) chatShy = was;
+} catch (e) { /* a private window, or storage turned off */ }
 
 /* ---------------- the folk who come to fight ---------------- */
 /*
@@ -2906,6 +3055,8 @@ function bagsFor(name) {
  * stone after four. A realm watched for an hour would otherwise be a
  * graveyard with a map underneath it.
  */
+const SHOW_NAMES = 11;                   // zoom at which names are worth reading
+let chosenFolk = null, sheetIn = 0;
 const DYING = 0.36;
 const BAG_LASTS = 60;
 const GRAVE_LASTS = 240;
@@ -2942,26 +3093,52 @@ function coloursFor(sprite) {
   return got;
 }
 
-function burst(beast) {
+function burst(beast, size) {
   const colours = coloursFor(beast.kind.sprite);
-  const many = 5 + Math.round(Math.min(9, (beast.full || 400) / 2500));
+  const heft = Math.min(3, 0.8 + Math.log10(Math.max(10, beast.full || 400)) / 3);
+  const many = Math.round((14 + Math.min(30, (beast.full || 400) / 900)) * (size || 1));
+  /*
+   * The flash goes in first so the pieces are thrown over it and not under
+   * it. Painted last it was a white disc with the whole burst hidden behind
+   * it, which is a puff of smoke where a death should be.
+   */
+  sparks.push({
+    x: beast.x, y: beast.y, vx: 0, vy: 0,
+    left: 0.16, full: 0.16, flash: heft, tint: '#fff6df'
+  });
   for (let i = 0; i < many; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const fast = 1.6 + Math.random() * 3.4;
+    const fast = (2.4 + Math.random() * 7) * heft;
     sparks.push({
       x: beast.x, y: beast.y,
       vx: Math.cos(angle) * fast, vy: Math.sin(angle) * fast,
-      left: 0.3 + Math.random() * 0.35, full: 0.65,
+      // Long enough to be seen. Half a second was a death nobody caught.
+      left: 0.9 + Math.random() * 0.9, full: 1.8,
+      wide: heft * (0.55 + Math.random() * 0.85),
       tint: colours[Math.floor(Math.random() * colours.length)]
     });
   }
+}
+
+/* The same, in one colour, for something that has just gone up a level. */
+function shine(one) {
+  for (let i = 0; i < 22; i++) {
+    const angle = (i / 22) * Math.PI * 2;
+    sparks.push({
+      x: one.x, y: one.y,
+      vx: Math.cos(angle) * 3.4, vy: Math.sin(angle) * 3.4 - 1.4,
+      left: 0.7, full: 0.7, wide: 0.8, tint: '#ffe9a8'
+    });
+  }
+  one.rose = 1.6;
 }
 
 function stepSparks(delta) {
   for (let i = sparks.length - 1; i >= 0; i--) {
     const s = sparks[i];
     s.x += s.vx * delta; s.y += s.vy * delta;
-    s.vx *= 0.90; s.vy *= 0.90;
+    const slow = Math.pow(0.02, delta);
+    s.vx *= slow; s.vy *= slow;
     s.left -= delta;
     if (s.left <= 0) sparks.splice(i, 1);
   }
@@ -3008,7 +3185,8 @@ function dropFrom(beast) {
   }
   tier = Math.max(0, Math.min(bags.length - 1, tier));
   litter.push({
-    sprite: bags[tier].sprite, x: beast.x, y: beast.y, left: BAG_LASTS, full: BAG_LASTS
+    sprite: bags[tier].sprite, x: beast.x, y: beast.y,
+    left: BAG_LASTS, full: BAG_LASTS, tier
   });
 }
 
@@ -3019,18 +3197,97 @@ function graveFor(one) {
   const level = one.level || 1;
   const tier = Math.min(graves.length - 1, Math.floor((level - 1) / 20 * graves.length));
   litter.push({
-    sprite: graves[tier].sprite, x: one.x, y: one.y, left: GRAVE_LASTS, full: GRAVE_LASTS
+    sprite: graves[tier].sprite, x: one.x, y: one.y,
+    left: GRAVE_LASTS, full: GRAVE_LASTS, grave: true
   });
 }
 
 function stepLitter(delta) {
   for (let i = litter.length - 1; i >= 0; i--) {
-    litter[i].left -= delta;
-    if (litter[i].left <= 0) litter.splice(i, 1);
+    const bit = litter[i];
+    bit.left -= delta;
+    if (bit.left <= 0) { litter.splice(i, 1); continue; }
+    if (bit.grave) continue;
+    /*
+     * A bag on the floor is picked up by whoever walks over it, and what is
+     * in it is a potion - which in that game is not a heal but a permanent
+     * point of a statistic, and the reason anybody grinds a realm at all. A
+     * paler bag is worth more of them.
+     */
+    for (const one of folk) {
+      if (one.down > 0) continue;
+      if (Math.abs(one.x - bit.x) > 0.8 || Math.abs(one.y - bit.y) > 0.8) continue;
+      drink(one, bit.tier || 0);
+      litter.splice(i, 1);
+      break;
+    }
+  }
+}
+
+const POTS = ['hp', 'mp', 'att', 'def', 'pace', 'dex', 'vit', 'wis'];
+const POT_TOP = { hp: 'hpTop', mp: 'mpTop', att: 'attTop', def: 'defTop',
+  pace: 'paceTop', dex: 'dexTop', vit: 'vitTop', wis: 'wisTop' };
+function drink(one, tier) {
+  const many = 1 + Math.floor(tier / 3);
+  let took = null;
+  for (let i = 0; i < many; i++) {
+    const which = POTS[Math.floor(Math.random() * POTS.length)];
+    const top = one.kind[POT_TOP[which]];
+    // A potion is a point of a statistic, and no statistic passes its ceiling.
+    if (top !== undefined && one.at[which] >= top) continue;
+    one.at[which] += which === 'hp' ? 5 : (which === 'mp' ? 5 : 1);
+    took = which;
+  }
+  if (!took) return;
+  one.full = one.at.hp; one.mpFull = one.at.mp;
+  one.hp = Math.min(one.full, one.hp + 5);
+  one.rose = 0.9;
+  if (Math.random() < 0.25) {
+    mood.loot_result = tier >= 6 ? 'white' : (tier >= 3 ? 'tops' : 'pots');
+    happened(tier >= 6 ? 'white_bag' : 'pbag', one);
   }
 }
 
 /* ---------------- who they are ---------------- */
+
+/*
+ * How dangerous each beacon's ground is, and which suits a given level.
+ *
+ * A realm is not one difficulty. The plains hold things with a few hundred
+ * hit points and the godlands hold things with tens of thousands, and a
+ * character walks further in as it gets stronger - so a beacon is scored by
+ * what actually lives on its ground, and a level is matched to a score.
+ * Levelling up moves them along; dying puts them back at the shallow end.
+ */
+let beaconRisk = null;
+function riskOfBeacons() {
+  if (beaconRisk) return beaconRisk;
+  beaconRisk = (A.beacons || []).map(beacon => {
+    const id = zoneOf(beacon.x, beacon.y);
+    const zone = (A.zones || []).find(z => z.id === id);
+    const lives = (zone && zone.lives) || [];
+    if (!lives.length) return { beacon, risk: 1 };
+    const hp = lives.map(one => one.hp || 200).sort((a, b) => a - b);
+    return { beacon, risk: Math.log10(Math.max(10, hp[hp.length >> 1])) };
+  });
+  return beaconRisk;
+}
+
+function beaconFor(level) {
+  const all = riskOfBeacons();
+  if (!all.length) return null;
+  // Level one wants the mildest ground there is; level twenty wants the worst.
+  const low = Math.min(...all.map(o => o.risk));
+  const high = Math.max(...all.map(o => o.risk));
+  const want = low + (high - low) * Math.min(1, (level - 1) / 17);
+  let best = null, bestOff = Infinity;
+  for (const one of all) {
+    // A little slack, so the whole realm does not gather on one beacon.
+    const off = Math.abs(one.risk - want) + Math.random() * 0.35;
+    if (off < bestOff) { bestOff = off; best = one.beacon; }
+  }
+  return best;
+}
 
 function raiseFolk() {
   folk.length = 0;
@@ -3040,6 +3297,7 @@ function raiseFolk() {
   for (const beacon of A.beacons) {
     for (let i = 0; i < FOLK_AT_A_BEACON; i++) {
       folk.push(newFolk(A.folk[Math.floor(Math.random() * A.folk.length)], beacon, 1));
+      folk[folk.length - 1].name = madeName();
     }
   }
 }
@@ -3079,7 +3337,14 @@ function reward(one, beast) {
     one.full = one.at.hp; one.mpFull = one.at.mp;
     // A level is a gift: it heals what it adds and no more.
     one.hp = Math.min(one.full, Math.max(one.hp, was * one.full));
-    speak('progression', one);
+    shine(one);
+    /*
+     * And they move on. A character worth more can stand somewhere worse,
+     * which is the shape of the whole game: you go where your statistics
+     * let you go and no further.
+     */
+    one.beacon = beaconFor(one.level) || one.beacon;
+    if (Math.random() < 0.4) speak('progression', one);
   }
 }
 
@@ -3139,7 +3404,7 @@ function volley(one, beast, shot, hurt, by) {
  * shot, never back down its line, because backing off a fast projectile does
  * not work and stepping out of it does.
  */
-function dodge(one, delta) {
+function dodge(one) {
   let px = 0, py = 0;
   for (const s of shots) {
     if (s.mine) continue;
@@ -3154,11 +3419,9 @@ function dodge(one, delta) {
     px += (-s.vy / speed) * side * (DODGE_SEE - far);
     py += (s.vx / speed) * side * (DODGE_SEE - far);
   }
-  if (!px && !py) return false;
+  if (!px && !py) return null;
   const far = Math.hypot(px, py) || 1;
-  one.vx += (px / far) * delta * 26;
-  one.vy += (py / far) * delta * 26;
-  return true;
+  return { x: px / far, y: py / far };
 }
 
 function stepFolk(delta) {
@@ -3176,8 +3439,11 @@ function stepFolk(delta) {
     if (one.down > 0) {
       one.down -= delta;
       if (one.down <= 0) {
-        const fresh = newFolk(one.kind, one.beacon, 1);
+        // Back at the first level, and back at ground a first level survives.
+        const name = one.name;
+        const fresh = newFolk(one.kind, beaconFor(1) || one.beacon, 1);
         for (const k of Object.keys(fresh)) one[k] = fresh[k];
+        one.name = name;
       }
       continue;
     }
@@ -3185,6 +3451,7 @@ function stepFolk(delta) {
     one.phase += delta;
     one.cool -= delta;
     one.spell -= delta;
+    if (one.rose > 0) one.rose -= delta;
 
     // Flesh and magic both come back on their own, at the rate the two
     // statistics for exactly that say they do.
@@ -3197,14 +3464,25 @@ function stepFolk(delta) {
 
     const gun = one.kind.weapon && one.kind.weapon.shot;
     const reach = (gun && gun.reach) || 4;
-    const ducked = dodge(one, delta);
+    /*
+     * Where they would like to be going, as a direction and no more. It used
+     * to be shoved straight into the velocity and then damped once a frame,
+     * which is not a speed limit at all: at sixty frames a second the damping
+     * ate almost everything and the whole realm walked at a tile a second no
+     * matter what its statistics said. The wanting is worked out first now
+     * and the velocity is steered towards it, so the top speed the client
+     * gives them is the speed they actually reach.
+     */
+    let wx = 0, wy = 0;
+    const ducked = dodge(one);
+    if (ducked) { wx += ducked.x * 1.4; wy += ducked.y * 1.4; }
 
     if (!one.target) {
       const dx = one.beacon.x - one.x, dy = one.beacon.y - one.y;
       const far = Math.hypot(dx, dy) || 1;
       const want = far > 14 ? 1 : -0.15;
-      one.vx += (dx / far) * want * delta * 3;
-      one.vy += (dy / far) * want * delta * 3;
+      wx += (dx / far) * want;
+      wy += (dy / far) * want;
     } else {
       /*
        * Kept at the edge of their own reach and moving across it rather than
@@ -3216,13 +3494,13 @@ function stepFolk(delta) {
       const far = Math.hypot(dx, dy) || 1;
       const hold = reach * FOLK_HOLD;
       const pull = far > hold ? 1 : (far < hold * 0.65 ? -0.9 : 0);
-      one.vx += (dx / far) * pull * delta * 9;
-      one.vy += (dy / far) * pull * delta * 9;
+      wx += (dx / far) * pull;
+      wy += (dy / far) * pull;
       if (!ducked) {
         // Circling, so a standing target cannot simply lead them.
         one.strafe = one.strafe || (Math.random() < 0.5 ? -1 : 1);
-        one.vx += (-dy / far) * one.strafe * delta * 4.5;
-        one.vy += (dx / far) * one.strafe * delta * 4.5;
+        wx += (-dy / far) * one.strafe * 0.55;
+        wy += (dx / far) * one.strafe * 0.55;
         if (Math.random() < delta * 0.35) one.strafe = -one.strafe;
       }
 
@@ -3256,13 +3534,22 @@ function stepFolk(delta) {
       }
     }
 
-    const fast = Math.hypot(one.vx, one.vy);
+    /*
+     * And the steering: the velocity is pulled towards the wanted one over
+     * about an eighth of a second, which reads as somebody changing their
+     * mind rather than as somebody on ice.
+     */
     const top = PACE_AT(one.at.pace);
-    if (fast > top) { one.vx = one.vx / fast * top; one.vy = one.vy / fast * top; }
+    const wanted = Math.hypot(wx, wy);
+    const goX = wanted > 1 ? wx / wanted : wx, goY = wanted > 1 ? wy / wanted : wy;
+    const grip = Math.min(1, delta * 8);
+    one.vx += (goX * top - one.vx) * grip;
+    one.vy += (goY * top - one.vy) * grip;
     const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
     if (walkable(nx, ny)) { one.x = nx; one.y = ny; }
-    else { one.vx = -one.vx * 0.5; one.vy = -one.vy * 0.5; }
-    one.vx *= 0.86; one.vy *= 0.86;
+    else if (walkable(nx, one.y)) { one.x = nx; one.vy = -one.vy * 0.4; }
+    else if (walkable(one.x, ny)) { one.y = ny; one.vx = -one.vx * 0.4; }
+    else { one.vx = -one.vx * 0.4; one.vy = -one.vy * 0.4; }
 
     if (one.hp <= 0 && one.down <= 0) {
       graveFor(one);
@@ -3274,11 +3561,24 @@ function stepFolk(delta) {
   /* And the creatures shoot back, with what the client gave them. */
   for (const beast of alive) {
     if (beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
-    const shot = (beast.kind.shots || [])[0];
-    if (!shot) continue;
+    /*
+     * Everything it throws, not just the first thing.
+     *
+     * A Red Demon has two projectiles and an Oryx has half a dozen, each with
+     * its own damage, speed and range, and using only the first made every
+     * hero in the realm fight like its weakest attack. They are cycled
+     * through instead, so a thing with three patterns shows all three - and
+     * the heavier the thing, the more often it lets one go, which is what
+     * being a god in that game amounts to.
+     */
+    const all = beast.kind.shots || [];
+    if (!all.length) continue;
     beast.cool = (beast.cool || Math.random()) - delta;
     if (beast.cool > 0) continue;
-    beast.cool = 1.1 + Math.random() * 0.7;
+    const heavy = (beast.full || 200) >= 5000;
+    beast.cool = (heavy ? 0.55 : 0.95) + Math.random() * 0.6;
+    beast.which = ((beast.which || 0) + 1) % all.length;
+    const shot = all[beast.which];
     const reach = shot.reach || 5;
     let mark = null, near = reach * reach;
     for (const one of folk) {
@@ -3289,10 +3589,12 @@ function stepFolk(delta) {
     }
     if (mark) {
       const many = shot.many ? 3 : 1;
+      const hurt = shot.pierce
+        ? shot.hurt : Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def);
       for (let n = 0; n < many; n++) {
         const off = many === 1 ? 0 : (n - 1) * 10 * Math.PI / 180;
-        fire(beast, mark, { fast: shot.fast || 8, reach },
-          Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def), false, null, off);
+        fire(beast, mark, { fast: shot.fast || 8, reach, through: shot.through },
+          hurt, false, null, off);
       }
     }
   }
@@ -3368,6 +3670,78 @@ function drawFolk(box) {
     if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
     drawn += drawOneLife(one, box);
     if (one.hp < one.full * 0.97) drawThread(one, box, '#7fd08a');
+    if (one === chosenFolk) drawRing(one, box);
+  }
+
+  /*
+   * And who they are. A name under everybody at every zoom would be a wall of
+   * text over the map, so it waits until you are close enough to be looking
+   * at people rather than at country.
+   */
+  if (view.scale >= SHOW_NAMES) {
+    ctx.textAlign = 'center';
+    ctx.font = Math.max(9, Math.round(view.scale * 0.42)) + 'px ui-monospace, monospace';
+    for (const one of folk) {
+      if (one.down > 0 || !one.name) continue;
+      if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
+      const at = place(one.x, one.y, box);
+      if (!at) continue;
+      const y = at.y + Math.max(8, view.scale * 0.8) * at.k;
+      ctx.fillStyle = 'rgba(6,9,14,.75)';
+      ctx.fillText(one.name, at.x + 1, y + 1);
+      ctx.fillStyle = one === chosenFolk ? '#ffe9a8' : 'rgba(203,214,232,.9)';
+      ctx.fillText(one.name, at.x, y);
+      // What they are worth, kept small and beside the name.
+      if (view.scale >= SHOW_NAMES * 1.6) {
+        ctx.fillStyle = 'rgba(150,163,186,.8)';
+        ctx.fillText('lv ' + one.level, at.x, y + Math.max(9, view.scale * 0.46));
+      }
+    }
+    ctx.textAlign = 'left';
+  }
+
+  /* What was just said, over the head of whoever said it. */
+  if (view.scale >= SHOW_LIFE * 1.4) {
+    ctx.font = Math.max(9, Math.round(view.scale * 0.42)) + 'px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    for (const one of folk) {
+      if (one.down > 0 || !one.bubble || one.bubbleLeft <= 0) continue;
+      if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
+      const at = place(one.x, one.y, box);
+      if (!at) continue;
+      const said = one.bubble.length > 42 ? one.bubble.slice(0, 41) + '\u2026' : one.bubble;
+      const wide = ctx.measureText(said).width + 10;
+      const tall = Math.max(13, view.scale * 0.62);
+      const y = at.y - Math.max(16, view.scale * 2.1) * at.k;
+      ctx.globalAlpha = Math.max(0, Math.min(1, one.bubbleLeft / 0.8));
+      ctx.fillStyle = 'rgba(10,14,22,.82)';
+      round(ctx, at.x - wide / 2, y - tall, wide, tall, 3);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(at.x - 3, y);
+      ctx.lineTo(at.x + 3, y);
+      ctx.lineTo(at.x, y + 4);
+      ctx.fill();
+      ctx.fillStyle = '#d5dcea';
+      ctx.fillText(said, at.x, y - tall + tall * 0.72);
+      ctx.globalAlpha = 1;
+    }
+    ctx.textAlign = 'left';
+  }
+
+  /* And the ring that says somebody has just gone up. */
+  for (const one of folk) {
+    if (one.down > 0 || !one.rose || one.rose <= 0) continue;
+    const at = place(one.x, one.y, box);
+    if (!at) continue;
+    const gone = 1 - one.rose / 1.6;
+    ctx.globalAlpha = Math.max(0, one.rose / 1.6) * 0.85;
+    ctx.strokeStyle = '#ffe9a8';
+    ctx.lineWidth = Math.max(1, view.scale * 0.12);
+    ctx.beginPath();
+    ctx.arc(at.x, at.y, Math.max(3, view.scale * (0.4 + gone * 1.8)) * at.k, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
   for (const beast of alive) {
     if (beast.down > 0 || beast.hp >= beast.full) continue;
@@ -3382,7 +3756,14 @@ function drawFolk(box) {
     if (at.x < -20 || at.y < -20 || at.x > box.w + 20 || at.y > box.h + 20) continue;
     ctx.globalAlpha = Math.max(0, Math.min(1, s.left / s.full));
     ctx.fillStyle = s.tint;
-    const side = Math.max(1, view.scale * 0.18) * at.k;
+    if (s.flash) {
+      const r = view.scale * s.flash * (0.45 + (1 - s.left / s.full) * 0.7) * at.k;
+      ctx.beginPath();
+      ctx.arc(at.x, at.y, Math.max(2, r), 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+    const side = Math.max(1.5, view.scale * 0.22 * (s.wide || 1)) * at.k;
     ctx.fillRect(at.x - side / 2, at.y - side / 2, side, side);
   }
   ctx.globalAlpha = 1;
@@ -3406,6 +3787,29 @@ function drawFolk(box) {
     ctx.stroke();
   }
   return drawn;
+}
+
+/* A rounded box, since the platform still has no one way of drawing one. */
+function round(pen, x, y, w, h, r) {
+  pen.beginPath();
+  if (pen.roundRect) { pen.roundRect(x, y, w, h, r); return; }
+  pen.moveTo(x + r, y);
+  pen.arcTo(x + w, y, x + w, y + h, r);
+  pen.arcTo(x + w, y + h, x, y + h, r);
+  pen.arcTo(x, y + h, x, y, r);
+  pen.arcTo(x, y, x + w, y, r);
+  pen.closePath();
+}
+
+/* The one you are watching, marked without hiding them. */
+function drawRing(one, box) {
+  const at = place(one.x, one.y, box);
+  if (!at) return;
+  ctx.strokeStyle = 'rgba(255,233,168,.85)';
+  ctx.lineWidth = Math.max(1, view.scale * 0.1);
+  ctx.beginPath();
+  ctx.arc(at.x, at.y, Math.max(4, view.scale * 0.85) * at.k, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 /* A thread of health over anybody who is losing, and only then. */
@@ -3862,7 +4266,98 @@ function openZone(id) {
     + (zone.loot ? '<h3>What falls here</h3>' + lootList(zone.loot) : '');
   panel.classList.add('is-open');
 }
-function shutPanel() { chosen = 0; chosenBeacon = null; panel.classList.remove('is-open'); }
+/*
+ * One adventurer, in full.
+ *
+ * Everything on this card is either the client's or was earned in front of
+ * you: the eight statistics with the ceiling each of them is walking towards,
+ * the four things they are carrying and what each of those actually does, and
+ * the count of what they have killed and drunk since they last died. It is
+ * the sheet the game shows you, filled in from the same numbers.
+ */
+const STAT_NAMES = [
+  ['hp', 'life', 'hpTop'], ['mp', 'magic', 'mpTop'], ['att', 'attack', 'attTop'],
+  ['def', 'defence', 'defTop'], ['pace', 'speed', 'paceTop'], ['dex', 'dexterity', 'dexTop'],
+  ['vit', 'vitality', 'vitTop'], ['wis', 'wisdom', 'wisTop']
+];
+
+function openFolk(one) {
+  chosenFolk = one;
+  chosen = 0; chosenBeacon = null;
+  const kind = one.kind;
+  const art = kind.sprite
+    ? '<span class="face" style="background-image:url(' + asset('life/' + kind.sprite.file)
+      + ');background-size:' + (kind.sprite.frames * 100) + '% 100%"></span>'
+    : '<span class="face"></span>';
+
+  const bars = STAT_NAMES.map(([key, label, top]) => {
+    const now = one.at[key] || 0;
+    const most = kind[top] || now || 1;
+    const part = Math.max(0, Math.min(1, now / most));
+    return '<div class="stat-row"><i>' + label + '</i>'
+      + '<span class="bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
+      + '<b>' + now + '</b><u>/' + most + '</u></div>';
+  }).join('');
+
+  const gear = [['weapon', kind.weapon], ['ability', kind.ability],
+    ['armour', kind.armour], ['ring', kind.ring]].map(([slot, piece]) => {
+    if (!piece) return '<div class="kit-row"><i>' + slot + '</i><b>&mdash;</b></div>';
+    const shot = piece.shot;
+    const says = [];
+    if (shot) {
+      says.push(shot.low + (shot.high !== shot.low ? '\u2013' + shot.high : '') + ' damage');
+      if (shot.reach) says.push(shot.reach + ' tiles');
+      if (shot.many > 1) says.push(shot.many + ' shots');
+      if (shot.pierce) says.push('through armour');
+    }
+    if (piece.mp) says.push(piece.mp + ' magic');
+    if (piece.worn) {
+      for (const k of Object.keys(piece.worn)) says.push('+' + piece.worn[k] + ' ' + k.toLowerCase());
+    }
+    return '<div class="kit-row"><i>' + slot + '</i><b>' + piece.name + '</b>'
+      + (says.length ? '<em>' + says.join(' \u00b7 ') + '</em>' : '') + '</div>';
+  }).join('');
+
+  const shooting = kind.weapon && kind.weapon.shot
+    ? (SHOTS_AT(one.at.dex) * (kind.weapon.shot.rate || 1)).toFixed(1) + ' a second' : '&mdash;';
+
+  panelBody.innerHTML = '<h2>' + (one.name || kind.name) + '</h2>'
+    + '<p class="sub">' + kind.name + ' &middot; level ' + one.level + '</p>'
+    + '<div class="who-head">' + art
+    + '<div><span>' + Math.round(one.hp) + ' / ' + one.full + ' life</span>'
+    + '<span>' + Math.round(one.mp) + ' / ' + one.mpFull + ' magic</span></div></div>'
+    + '<h3>What they are</h3><div class="stats">' + bars + '</div>'
+    + '<h3>What they carry</h3><div class="kit">' + gear + '</div>'
+    + '<h3>How they fight</h3><div class="facts">'
+    + '<span><i>shooting</i><b>' + shooting + '</b></span>'
+    + '<span><i>moving</i><b>' + PACE_AT(one.at.pace).toFixed(1) + ' tiles/s</b></span>'
+    + '<span><i>healing</i><b>' + HEAL_AT(one.at.vit).toFixed(1) + ' /s</b></span>'
+    + '<span><i>magic back</i><b>' + MANA_AT(one.at.wis).toFixed(1) + ' /s</b></span>'
+    + '<span><i>killed</i><b>' + one.kills + '</b></span>'
+    + '<span><i>experience</i><b>' + Math.round(one.exp) + '</b></span>'
+    + '</div>';
+  panel.classList.add('is-open');
+}
+
+/* Whichever of them is under the pointer, once they are big enough to hit. */
+function folkUnder(px, py, box) {
+  if (view.scale < SHOW_LIFE) return null;
+  const reach = Math.max(10, view.scale * 0.9);
+  let near = null, best = reach * reach;
+  for (const one of folk) {
+    if (one.down > 0) continue;
+    const at = place(one.x, one.y, box);
+    if (!at) continue;
+    const d = (at.x - px) ** 2 + (at.y - py) ** 2;
+    if (d < best) { best = d; near = one; }
+  }
+  return near;
+}
+
+function shutPanel() {
+  chosen = 0; chosenBeacon = null; chosenFolk = null;
+  panel.classList.remove('is-open');
+}
 document.getElementById('shut').addEventListener('click', shutPanel);
 
 /* ---------------- the frame ---------------- */
@@ -4506,7 +5001,24 @@ function settleInto(box) {
 }
 
 function frame(now) {
-  requestAnimationFrame(frame);
+  /*
+ * How much of the chat you want: all of it, a whisper of it, or none. It sits
+ * over the map, so somebody reading the map has to be able to push it out of
+ * the way without losing it, and the choice is remembered.
+ */
+{
+  const knob = document.getElementById('chatKnob');
+  const words = ['chat', 'chat \u00b7 faint', 'chat \u00b7 off'];
+  const show = () => { knob.textContent = words[chatShy]; };
+  knob.addEventListener('click', () => {
+    chatShy = (chatShy + 1) % 3;
+    try { localStorage.setItem('atlas.chat', String(chatShy)); } catch (e) { /* no storage */ }
+    show();
+  });
+  show();
+}
+
+requestAnimationFrame(frame);
   /*
    * Never negative. Everything downstream of this multiplies by it - the
    * easing, the walk home, the creatures' step - so a clock that went
@@ -4558,6 +5070,11 @@ function frame(now) {
   const close = drawThings(box, now);
   const living = (close ? close.living : drawLife(box)) + drawFolk(box);
   drawChat();
+  // The card is live: the one being watched is still fighting behind it.
+  if (chosenFolk && panel.classList.contains('is-open')) {
+    if (chosenFolk.down > 0) shutPanel();
+    else if ((sheetIn -= delta) <= 0) { sheetIn = 0.5; openFolk(chosenFolk); }
+  }
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);
@@ -4704,6 +5221,13 @@ canvas.addEventListener('pointerup', event => {
   const t = toTile(event.offsetX, event.offsetY, box);
   // A beacon is a smaller target than the ground under it, so it is tried
   // first, and with a margin that does not shrink to nothing when zoomed out.
+  /*
+   * A person is a smaller target than the beacon they are standing on and a
+   * far smaller one than the ground, so they are asked about first - but only
+   * once they are drawn large enough to be aimed at.
+   */
+  const who = folkUnder(event.offsetX, event.offsetY, box);
+  if (who) { openFolk(who); return; }
   const near = beaconUnder(event.offsetX, event.offsetY, box);
   if (near) { openBeacon(near); return; }
   const zone = zoneOf(t.x, t.y);
