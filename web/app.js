@@ -2715,3 +2715,40 @@ for (const image of document.querySelectorAll('[data-art]')) {
 bind();
 routeFromHash();
 load();
+
+
+/* --------------------------------------------------------------------
+ * How many people have been here.
+ *
+ * The site is a folder of files on a static host, so nothing of ours runs
+ * when somebody opens it and nothing of ours can count. The number comes from
+ * Abacus, which keeps a counter under a name and hands it back; it is told
+ * the name and nothing else, and if it is away or blocked the line never
+ * appears at all.
+ *
+ * The same two names the atlas uses, so a visit is a visit to the site rather
+ * than to one page of it, and counted once a day per browser rather than once
+ * a page load - the question is how many people came, not how many times
+ * somebody pressed reload.
+ * ------------------------------------------------------------------ */
+(function countVisitors() {
+  const ABACUS = 'https://abacus.jasoncameron.dev/';
+  const day = new Date().toISOString().slice(0, 10);
+  let counted = null;
+  try { counted = localStorage.getItem('atlas-counted'); } catch (no) { counted = null; }
+  const first = counted !== day;
+  if (first) { try { localStorage.setItem('atlas-counted', day); } catch (no) { /* private */ } }
+
+  const box = document.getElementById('seen');
+  const ask = (key, into) => fetch(ABACUS + (first ? 'hit' : 'get') + '/rotmg-realm-atlas/' + key)
+    .then(r => (r.ok ? r.json() : null))
+    .then(said => {
+      if (!said || typeof said.value !== 'number') return;
+      const cell = document.getElementById(into);
+      if (cell) cell.textContent = said.value.toLocaleString();
+      if (box) box.hidden = false;
+    })
+    .catch(() => { /* offline, blocked, or away: say nothing */ });
+  ask('all', 'seenAll');
+  ask('d' + day.replace(/-/g, ''), 'seenToday');
+})();

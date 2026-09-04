@@ -1982,6 +1982,23 @@ body.globe-wide .home-card-art { animation: none !important; }
 .realm-stage-full iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .realm-stage-full .note { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 
+/* --------------------------------------------------------------------
+ * How many have been here.
+ *
+ * Under the title on the way in, where it is read once and then ignored,
+ * rather than tucked into a status line nobody looks at.
+ * ------------------------------------------------------------------ */
+.seen {
+  display: flex; justify-content: center; gap: 18px;
+  margin: 10px 0 0; padding: 0;
+  font-size: 12px; letter-spacing: .04em; color: var(--muted, #8b96ab);
+}
+.seen span { display: inline-flex; align-items: baseline; gap: 5px; }
+.seen b {
+  font-size: 17px; font-weight: 650; color: var(--ink, #e8eef8);
+  font-variant-numeric: tabular-nums;
+}
+
 </style>
   <meta name="generator" content="rotmg-enchant-calculator standalone build 2026-09-04">
 </head>
@@ -2008,6 +2025,10 @@ body.globe-wide .home-card-art { animation: none !important; }
 <div id="pageHome" class="app page">
   <header class="masthead home-head">
     <h1>Realm Tools</h1>
+    <p id="seen" class="seen" hidden>
+      <span><b id="seenAll">&ndash;</b> visitors</span>
+      <span><b id="seenToday">&ndash;</b> today</span>
+    </p>
   </header>
 
   <button type="button" class="news-bell" data-go="news">
@@ -7558,6 +7579,43 @@ for (const image of document.querySelectorAll('[data-art]')) {
 bind();
 routeFromHash();
 load();
+
+
+/* --------------------------------------------------------------------
+ * How many people have been here.
+ *
+ * The site is a folder of files on a static host, so nothing of ours runs
+ * when somebody opens it and nothing of ours can count. The number comes from
+ * Abacus, which keeps a counter under a name and hands it back; it is told
+ * the name and nothing else, and if it is away or blocked the line never
+ * appears at all.
+ *
+ * The same two names the atlas uses, so a visit is a visit to the site rather
+ * than to one page of it, and counted once a day per browser rather than once
+ * a page load - the question is how many people came, not how many times
+ * somebody pressed reload.
+ * ------------------------------------------------------------------ */
+(function countVisitors() {
+  const ABACUS = 'https://abacus.jasoncameron.dev/';
+  const day = new Date().toISOString().slice(0, 10);
+  let counted = null;
+  try { counted = localStorage.getItem('atlas-counted'); } catch (no) { counted = null; }
+  const first = counted !== day;
+  if (first) { try { localStorage.setItem('atlas-counted', day); } catch (no) { /* private */ } }
+
+  const box = document.getElementById('seen');
+  const ask = (key, into) => fetch(ABACUS + (first ? 'hit' : 'get') + '/rotmg-realm-atlas/' + key)
+    .then(r => (r.ok ? r.json() : null))
+    .then(said => {
+      if (!said || typeof said.value !== 'number') return;
+      const cell = document.getElementById(into);
+      if (cell) cell.textContent = said.value.toLocaleString();
+      if (box) box.hidden = false;
+    })
+    .catch(() => { /* offline, blocked, or away: say nothing */ });
+  ask('all', 'seenAll');
+  ask('d' + day.replace(/-/g, ''), 'seenToday');
+})();
 
 </script>
 </body>

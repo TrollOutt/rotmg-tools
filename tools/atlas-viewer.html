@@ -7,8 +7,10 @@
     font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #7b8496; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
   canvas.drag { cursor: grabbing; }
-  #seen i { font-style: normal; opacity: .55; }
-  #seen b { font-weight: 600; color: #b9c4d8; }
+  #seen { color: #8b96ab; }
+  #seen i { font-style: normal; opacity: .6; }
+  #seen b { font-size: 14px; font-weight: 650; color: #e8eef8;
+    font-variant-numeric: tabular-nums; }
   #bar {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 12px;
     display: flex; gap: 20px; align-items: baseline;
@@ -121,8 +123,8 @@
   <span id="where">—</span>
   <span id="zone"></span>
   <span id="count"></span>
-  <span id="seen" hidden><i>visitors</i> <b id="seenAll">&ndash;</b>
-    <i>today</i> <b id="seenToday">&ndash;</b></span>
+  <span id="seen" hidden><b id="seenAll">&ndash;</b> <i>visitors</i>
+    <b id="seenToday">&ndash;</b> <i>today</i></span>
   <span id="hint">drag to pan · wheel to zoom · click a zone · double-click to fit</span>
 </div>
 <script>

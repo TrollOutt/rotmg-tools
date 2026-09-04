@@ -25,6 +25,7 @@ Blue Grass|Dead Church
 @1030,1567|Dark Forest
 @849,1612|Nature Ruins
 @830,1813|Beach
+@556,1217|Beach
 @598,1315|Beach
 @530,1105|Mid Desert
 @1034,1445|High Desert
@@ -41,3 +42,8 @@ Blue Grass|Dead Church
 @911,807|Floral Escape
 @799,550|Floral Escape
 @1230,529|Floral Escape
+
+## The small patch north of the Nature Ruins is the same place: one stretch of
+## ground with a road through the middle of it, which the colour-growing reads
+## as two.
+join 852,1610 into 820,1637
