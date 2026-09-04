@@ -1415,10 +1415,17 @@ function biomeMap(tiles, groundName, colourOf) {
  * The pyramid                                                         *
  * ------------------------------------------------------------------ */
 /*
- * Level zero is what realm-render already drew, copied rather than redrawn.
  * Each level above is built by halving the one below: four pixels average
  * into one, and four chunks become one. Transparency averages with the rest,
  * so ground that was never recorded stays see-through however far out you go.
+ *
+ * The outline averages with the rest too, and that is deliberate. Keeping it
+ * black through the halving was tried - a square with any black in it staying
+ * black - and on anything but sparse scenery it floods: a field of tufts has
+ * a line round every blade, and at half size the lines touch and the field
+ * becomes a black mass. Averaged, the same field stays a field. The line is
+ * kept sharp where it can be read, which is the level the sprites are drawn
+ * at, and allowed to become shading where it cannot.
  */
 function halve(image) {
   const w = image.width >> 1, h = image.height >> 1;
@@ -2265,7 +2272,8 @@ function main() {
 
   const drew = [...drawnAlready.values()].filter(Boolean).length;
   console.log('\n  ' + beacons.length + ' beacons, ' + livesHere
-    + ' creature kinds placed by where they were met, ' + drew + ' of them drawn');
+    + ' creature kinds placed by the ground the client gives them, ' + drew
+    + ' of them drawn');
   console.log('  -> ' + path.relative(root, OUT) + '\n');
 }
 

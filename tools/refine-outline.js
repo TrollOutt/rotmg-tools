@@ -35,6 +35,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const zlib = require('zlib');
 
 const root = path.join(__dirname, '..');
@@ -358,6 +359,36 @@ for (const beacon of atlas.beacons || []) {
   }
 }
 atlas.ss = SS;
+
+/*
+ * The mark the page will hang off every file it asks for.
+ *
+ * Taken from the art itself, so it moves when the art moves and stands still
+ * when nothing has changed - a rebuild that produced the same pictures leaves
+ * every reader's cached copy valid, which is the whole point of caching. The
+ * sheet, the mask and the roll of creature sprites between them cover
+ * everything the eye can catch: nothing here has ever changed without one of
+ * those changing with it.
+ *
+ * It is written last, after the sheets have been doubled and inked, because
+ * a mark taken before that would name the wrong pictures.
+ */
+{
+  const sum = crypto.createHash('sha1');
+  for (const name of ['things.png', 'mask.png']) {
+    const at = path.join(ATLAS, name);
+    if (fs.existsSync(at)) sum.update(readFile(at));
+  }
+  const lifeDir = path.join(ATLAS, 'life');
+  if (fs.existsSync(lifeDir)) {
+    for (const name of fs.readdirSync(lifeDir).sort()) {
+      sum.update(name).update(String(fs.statSync(path.join(lifeDir, name)).size));
+    }
+  }
+  atlas.mark = sum.digest('hex').slice(0, 10);
+  console.log('  mark        ' + atlas.mark + ', so a reader asks again for what changed');
+}
+
 writeAtlasJson(atlas);
 console.log('  atlas.json  ' + sprites + ' frame sizes doubled');
 
@@ -376,3 +407,90 @@ if (!inlined.test(page)) {
 }
 writeFile(pageFile, page.replace(inlined, () => 'const A = ' + JSON.stringify(atlas) + ';'));
 console.log('  index.html  the inlined copy replaced');
+
+/*
+ * And a look at what came out, because this keeps coming back.
+ *
+ * The line has been wrong four separate times and each time in a different
+ * place: soft on the sheets, soft in the chunks the scenery is baked into,
+ * washed out by the fade the page draws the standing layer with, and thinned
+ * away by the pyramid. Three of those are files, and files can be checked -
+ * so they are, here, every time this runs. A publish that would have shipped
+ * a grey outline says so instead of going quietly out.
+ */
+{
+  const NL = String.fromCharCode(10);
+  /*
+   * What a leftover rim looks like: dark and half there. Plenty of the art is
+   * legitimately see-through - a portal's glow, a spell, the shine on water -
+   * and all of that is bright, so brightness is what tells them apart. Asking
+   * only "is it see-through" flagged two thousand pixels of purple and cyan
+   * and would have cried wolf on every publish.
+   */
+  const rimLike = (r, g, b, a) => a > 8 && a < 250 && r < 90 && g < 90 && b < 90;
+
+  /*
+   * And how many of those are normal. Some art is genuinely dark and faint -
+   * smoke, a shadow under a wing - and the sheet carries a few hundred of
+   * them. A rim coming back is not a few hundred: it would put a soft edge
+   * around every one of the thirteen hundred pictures, which is tens of
+   * thousands of pixels. So the line is drawn well above what is here today
+   * and still nowhere near what a regression looks like.
+   */
+  const ROOM = 2000;
+  let bad = 0, looked = 0;
+
+  const sheet = readPng(readFile(thingsFile));
+  let sheetInk = 0;
+  for (let i = 0; i < sheet.width * sheet.height; i++) {
+    const at = i * 4;
+    if (rimLike(sheet.pixels[at], sheet.pixels[at + 1], sheet.pixels[at + 2],
+      sheet.pixels[at + 3])) bad++;
+    else if (sheet.pixels[at + 3] > 250 && sheet.pixels[at] < 12
+      && sheet.pixels[at + 1] < 12 && sheet.pixels[at + 2] < 12) sheetInk++;
+  }
+  looked++;
+
+  /*
+   * The ground chunks, where the scenery is painted in. Nothing there should
+   * be half-transparent: a chunk is a flat picture and the rim a sprite wears
+   * has no business being copied into one.
+   */
+  let chunkSoft = 0, chunkInk = 0, chunks = 0;
+  for (const level of ['z1', 'z2', 'z3']) {
+    const dir = path.join(ATLAS, level);
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir).filter(n => n.endsWith('.png')).slice(0, 4)) {
+      const one = readPng(readFile(path.join(dir, name)));
+      chunks++;
+      for (let i = 0; i < one.width * one.height; i += 7) {
+        const at = i * 4;
+        if (rimLike(one.pixels[at], one.pixels[at + 1], one.pixels[at + 2],
+          one.pixels[at + 3])) chunkSoft++;
+        else if (one.pixels[at + 3] > 250 && one.pixels[at] < 12
+          && one.pixels[at + 1] < 12 && one.pixels[at + 2] < 12) chunkInk++;
+      }
+      looked++;
+    }
+  }
+
+  console.log('  checked      ' + sheetInk.toLocaleString() + ' inked pixels on the'
+    + ' sheet, ' + bad + ' soft ones (room for ' + ROOM + '), and ' + chunkSoft
+    + ' sampled across ' + chunks + ' ground chunks');
+  if (bad > ROOM) {
+    console.error(NL + '  ' + bad + ' half-transparent pixels left on things.png - the'
+      + ' line is soft again. Something wrote a rim this did not replace.' + NL);
+    process.exitCode = 1;
+  }
+  if (chunkSoft > ROOM) {
+    console.error(NL + '  ' + chunkSoft + ' half-transparent pixels sampled in the'
+      + ' ground chunks - the scenery baked into them wears a soft rim again. Look at'
+      + ' blit() in the renderer: it must ink RIM_ALPHA flat black.' + NL);
+    process.exitCode = 1;
+  }
+  if (!sheetInk) {
+    console.error(NL + '  no inked pixels on things.png at all - the line was not'
+      + ' laid.' + NL);
+    process.exitCode = 1;
+  }
+}
