@@ -2388,6 +2388,12 @@ function stepLife(delta) {
      * back. The realm restocks itself; a map that emptied out over an
      * afternoon of watching would be a worse map by teatime.
      */
+    if (one.dying > 0) {
+      // Going, not gone: it settles and fades before it is taken off the map.
+      one.dying -= delta;
+      if (one.dying <= 0) { one.dying = 0; one.down = 4 + Math.random() * 6; }
+      continue;
+    }
     if (one.down > 0) {
       one.down -= delta;
       if (one.down <= 0) { one.hp = one.full; }
@@ -2596,6 +2602,58 @@ const folk = [];
 const shots = [];
 
 /*
+ * What a death leaves on the ground.
+ *
+ * A creature that is killed does not blink out: it goes over about a third of
+ * a second, fading and settling, and sometimes leaves a bag. A character that
+ * is killed leaves a gravestone, and which of the eleven the game has depends
+ * on how far they got - the first four are small markers and the rest are
+ * proper stones, which is the game's own way of saying a death mattered.
+ *
+ * Nobody picks any of it up, so it goes by itself: a bag after a minute and a
+ * stone after four, both fading out over their last few seconds. A realm
+ * watched for an hour would otherwise be a graveyard with a map under it.
+ */
+const DYING = 0.36;                      // seconds a creature takes to go
+const BAG_LASTS = 60;                    // and how long its bag stays
+const GRAVE_LASTS = 240;                 // and how long a gravestone does
+const litter = [];
+
+/*
+ * How good a bag is, and whether there is one at all. The game ties both to
+ * what was killed, and so does this: nothing much drops off a bat, and a
+ * thing with twenty thousand hit points nearly always leaves something.
+ */
+function dropFrom(beast) {
+  const worth = beast.full || 200;
+  if (Math.random() > Math.min(0.75, worth / 3500)) return;
+  const bags = (A.marks && A.marks.bags) || [];
+  if (!bags.length) return;
+  const tier = Math.min(bags.length - 1, Math.floor(Math.pow(worth / 22000, 0.5) * bags.length));
+  litter.push({
+    sprite: bags[tier].sprite, x: beast.x, y: beast.y, left: BAG_LASTS, full: BAG_LASTS
+  });
+}
+
+/* And the stone, chosen by how far the one under it got. */
+function graveFor(one) {
+  const graves = (A.marks && A.marks.graves) || [];
+  if (!graves.length) return;
+  const level = one.level || 1;
+  const tier = Math.min(graves.length - 1, Math.floor((level - 1) / 20 * graves.length));
+  litter.push({
+    sprite: graves[tier].sprite, x: one.x, y: one.y, left: GRAVE_LASTS, full: GRAVE_LASTS
+  });
+}
+
+function stepLitter(delta) {
+  for (let i = litter.length - 1; i >= 0; i--) {
+    litter[i].left -= delta;
+    if (litter[i].left <= 0) litter.splice(i, 1);
+  }
+}
+
+/*
  * How often a thing shoots. The game works it off dexterity; this is the same
  * shape - slow at nothing, about four a second at seventy-five - times
  * whatever rate the weapon itself declares.
@@ -2631,6 +2689,11 @@ function newFolk(kind, beacon) {
     vx: 0, vy: 0,
     phase: Math.random() * 100,
     hp: full, full,
+    /*
+     * They start over. A character that came back at the level it died at
+     * would make dying free, and the gravestones would all be the same one.
+     */
+    level: 1, kills: 0,
     target: null,
     cool: Math.random() * 0.5,
     down: 0
@@ -2649,7 +2712,7 @@ function preyFor(one) {
   return best;
 }
 
-function fire(from, at, shot, hurt, mine) {
+function fire(from, at, shot, hurt, mine, by) {
   const dx = at.x - from.x, dy = at.y - from.y;
   const far = Math.hypot(dx, dy) || 1;
   const fast = shot.fast || 8;
@@ -2657,7 +2720,7 @@ function fire(from, at, shot, hurt, mine) {
     x: from.x, y: from.y,
     vx: (dx / far) * fast, vy: (dy / far) * fast,
     left: (shot.reach || 6) / fast,
-    hurt, mine
+    hurt, mine, by
   });
 }
 
@@ -2706,7 +2769,7 @@ function stepFolk(delta) {
       if (gun && far <= reach && one.cool <= 0) {
         one.cool = 1 / rateOf(one);
         for (let n = 0; n < (gun.many || 1); n++) {
-          fire(one, beast, gun, hurtOf(gun, one.kind.att, beast.kind.def), true);
+          fire(one, beast, gun, hurtOf(gun, one.kind.att, beast.kind.def), true, one);
         }
       }
     }
@@ -2718,7 +2781,10 @@ function stepFolk(delta) {
     if (walkable(nx, ny)) { one.x = nx; one.y = ny; }
     else { one.vx = -one.vx * 0.5; one.vy = -one.vy * 0.5; }
 
-    if (one.hp <= 0) { one.down = FOLK_BACK; one.vx = 0; one.vy = 0; one.target = null; }
+    if (one.hp <= 0 && one.down <= 0) {
+      graveFor(one);
+      one.down = FOLK_BACK; one.vx = 0; one.vy = 0; one.target = null;
+    }
   }
 
   /* And the creatures shoot back, with what the client gave them. */
@@ -2744,6 +2810,7 @@ function stepFolk(delta) {
   }
 
   stepShots(delta);
+  stepLitter(delta);
 }
 
 /*
@@ -2762,7 +2829,14 @@ function stepShots(delta) {
         if (beast.down > 0) continue;
         if (Math.abs(beast.x - s.x) > 0.7 || Math.abs(beast.y - s.y) > 0.7) continue;
         beast.hp -= s.hurt;
-        if (beast.hp <= 0) beast.down = 4 + Math.random() * 6;
+        if (beast.hp <= 0 && !beast.dying) {
+          beast.dying = DYING;
+          dropFrom(beast);
+          if (s.by) {
+            s.by.kills++;
+            s.by.level = Math.min(20, 1 + Math.floor(s.by.kills / 3));
+          }
+        }
         gone = true; break;
       }
     } else if (!gone) {
@@ -2788,6 +2862,19 @@ function drawFolk(box) {
   const seen = seenRange(box, 60);
   ctx.imageSmoothingEnabled = false;
   let drawn = 0;
+
+  /*
+   * What is lying about, first, because it is lying about: a bag or a stone
+   * is on the floor and everything else stands on top of it. Each thins out
+   * over its last few seconds rather than vanishing between one frame and
+   * the next.
+   */
+  for (const bit of litter) {
+    if (bit.x < seen.x0 || bit.x > seen.x1 || bit.y < seen.y0 || bit.y > seen.y1) continue;
+    ctx.globalAlpha = Math.min(1, bit.left / 6);
+    drawn += drawOneLife({ kind: { sprite: bit.sprite }, x: bit.x, y: bit.y, phase: 0 }, box);
+  }
+  ctx.globalAlpha = 1;
   for (const one of folk) {
     if (one.down > 0) continue;
     if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
@@ -2898,6 +2985,13 @@ function drawLife(box) {
   for (const one of alive) {
     if (one.down > 0) continue;
     if (one.x < near.x || one.x > far.x || one.y < near.y || one.y > far.y) continue;
+    if (one.dying > 0) {
+      const left = one.dying / DYING;
+      ctx.globalAlpha = fade * left;
+      drawn += drawOneLife(one, box);
+      ctx.globalAlpha = fade;
+      continue;
+    }
     drawn += drawOneLife(one, box);
   }
   ctx.globalAlpha = 1;

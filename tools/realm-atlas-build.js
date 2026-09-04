@@ -2181,6 +2181,32 @@ function main() {
     }
     map.folk = folk;
     console.log('  ' + folk.length + ' of the six classes cut, to walk the realm');
+
+    /*
+     * And what a death leaves behind.
+     *
+     * The game has eleven gravestones and gives a dead character the one that
+     * matches how far they got - the first four are small markers and the
+     * rest are proper stones - and ten loot bags, whose colour is how good
+     * what is in it is. Both are objects in the client like anything else, so
+     * both are cut the same way, and neither is a picture anybody here drew.
+     */
+    const marks = { graves: [], bags: [] };
+    for (let n = 1; n <= 11; n++) {
+      const type = [...objectName].find(([, name]) => name === 'Gravestone ' + n);
+      if (!type) continue;
+      const sprite = cutLife(type[0]);
+      if (sprite) marks.graves.push({ tier: n, sprite });
+    }
+    for (let n = 0; n <= 9; n++) {
+      const type = [...objectName].find(([, name]) => name === 'Loot Bag ' + n);
+      if (!type) continue;
+      const sprite = cutLife(type[0]);
+      if (sprite) marks.bags.push({ tier: n, sprite });
+    }
+    map.marks = marks;
+    console.log('  ' + marks.graves.length + ' gravestones and ' + marks.bags.length
+      + ' loot bags cut, for what is left behind');
   }
 
   const levels = buildPyramid();
@@ -2193,6 +2219,7 @@ function main() {
     biomes: map.found,
     zones: map.zones,
     folk: map.folk || [],
+    marks: map.marks || { graves: [], bags: [] },
     beacons,
     roads: map.roadCount,
     tiles: store.tiles.size
