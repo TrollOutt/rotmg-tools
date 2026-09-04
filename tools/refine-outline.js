@@ -358,6 +358,24 @@ for (const beacon of atlas.beacons || []) {
     guard.sprite.tile *= SS; guard.sprite.height *= SS; sprites++;
   }
 }
+/*
+ * And the six classes, the gravestones and the loot bags, which are cut from
+ * the client by the same code and live in the same folder and were left out
+ * of this. Their pictures were doubled with everything else and their numbers
+ * were not, so the page went on slicing a ten pixel window out of a twenty
+ * pixel drawing: it took the top left quarter of an adventurer and drew it at
+ * half size, which reads as somebody standing in a hole.
+ */
+for (const one of atlas.folk || []) {
+  if (!one.sprite) continue;
+  one.sprite.tile *= SS; one.sprite.height *= SS; sprites++;
+}
+for (const kept of Object.values(atlas.marks || {})) {
+  for (const one of kept || []) {
+    if (!one.sprite) continue;
+    one.sprite.tile *= SS; one.sprite.height *= SS; sprites++;
+  }
+}
 atlas.ss = SS;
 
 /*
@@ -491,6 +509,51 @@ console.log('  index.html  the inlined copy replaced');
   if (!sheetInk) {
     console.error(NL + '  no inked pixels on things.png at all - the line was not'
       + ' laid.' + NL);
+    process.exitCode = 1;
+  }
+
+  /*
+   * And that every drawing is the size the atlas says it is.
+   *
+   * The page slices a frame out of a strip by the numbers it is given, so a
+   * picture that was doubled while its numbers were not is not a picture that
+   * looks slightly wrong - it is a corner of the right picture, drawn at half
+   * size. That happened to the six classes, the gravestones and the loot bags
+   * and it looked like they were standing in a hole. Nothing about it shows up
+   * in a count of black pixels, so it is checked on its own terms: width
+   * against frames times the frame, height against the frame's own.
+   */
+  const listed = [];
+  const gather = one => { if (one && one.sprite && one.sprite.file) listed.push(one); };
+  for (const owner of [...(atlas.zones || []), ...(atlas.biomes || [])]) {
+    for (const one of owner.lives || []) gather(one);
+  }
+  for (const beacon of atlas.beacons || []) for (const g of beacon.guards || []) gather(g);
+  for (const one of atlas.folk || []) gather(one);
+  for (const kept of Object.values(atlas.marks || {})) for (const one of kept || []) gather(one);
+
+  const wrong = [];
+  const measured = new Set();
+  for (const one of listed) {
+    const sp = one.sprite;
+    const key = sp.file + ' ' + sp.tile + 'x' + sp.height + ' ' + (sp.frames || 1);
+    if (measured.has(key)) continue;
+    measured.add(key);
+    const at = path.join(ATLAS, 'life', sp.file);
+    if (!fs.existsSync(at)) { wrong.push(sp.file + ' is missing'); continue; }
+    const art = readPng(readFile(at));
+    const want = sp.tile * (sp.frames || 1);
+    if (art.width !== want || art.height !== sp.height) {
+      wrong.push((one.name || sp.file) + ': the atlas says ' + (sp.frames || 1) + ' frames of '
+        + sp.tile +( 'x') + sp.height + ' but the drawing is ' + art.width + 'x' + art.height);
+    }
+  }
+  console.log('  frames      ' + measured.size + ' drawings measured against what the'
+    + ' atlas says they are');
+  if (wrong.length) {
+    console.error(NL + '  ' + wrong.length + ' drawing(s) are not the size the atlas'
+      + ' claims, so the page will slice the wrong window out of them:');
+    for (const line of wrong.slice(0, 8)) console.error('    ' + line);
     process.exitCode = 1;
   }
 }

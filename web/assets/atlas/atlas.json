@@ -66514,8 +66514,8 @@
    "type": 797,
    "sprite": {
     "file": "c797.png",
-    "tile": 10,
-    "height": 10,
+    "tile": 20,
+    "height": 20,
     "frames": 3,
     "size": 100
    },
@@ -66545,8 +66545,8 @@
    "type": 798,
    "sprite": {
     "file": "c798.png",
-    "tile": 10,
-    "height": 10,
+    "tile": 20,
+    "height": 20,
     "frames": 3,
     "size": 100
    },
@@ -66584,8 +66584,8 @@
    "type": 782,
    "sprite": {
     "file": "c782.png",
-    "tile": 10,
-    "height": 10,
+    "tile": 20,
+    "height": 20,
     "frames": 3,
     "size": 100
    },
@@ -66623,8 +66623,8 @@
    "type": 784,
    "sprite": {
     "file": "c784.png",
-    "tile": 10,
-    "height": 10,
+    "tile": 20,
+    "height": 20,
     "frames": 3,
     "size": 100
    },
@@ -66654,8 +66654,8 @@
    "type": 775,
    "sprite": {
     "file": "c775.png",
-    "tile": 10,
-    "height": 10,
+    "tile": 20,
+    "height": 20,
     "frames": 3,
     "size": 100
    },
@@ -66693,8 +66693,8 @@
    "type": 768,
    "sprite": {
     "file": "c768.png",
-    "tile": 10,
-    "height": 10,
+    "tile": 20,
+    "height": 20,
     "frames": 3,
     "size": 100
    },
@@ -66726,8 +66726,8 @@
     "tier": 1,
     "sprite": {
      "file": "c1827.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66736,8 +66736,8 @@
     "tier": 2,
     "sprite": {
      "file": "c1828.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66746,8 +66746,8 @@
     "tier": 3,
     "sprite": {
      "file": "c1829.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66756,8 +66756,8 @@
     "tier": 4,
     "sprite": {
      "file": "c1830.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66766,8 +66766,8 @@
     "tier": 5,
     "sprite": {
      "file": "c1831.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66776,8 +66776,8 @@
     "tier": 6,
     "sprite": {
      "file": "c1832.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66786,8 +66786,8 @@
     "tier": 7,
     "sprite": {
      "file": "c1833.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66796,8 +66796,8 @@
     "tier": 8,
     "sprite": {
      "file": "c1834.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66806,8 +66806,8 @@
     "tier": 9,
     "sprite": {
      "file": "c1835.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66816,8 +66816,8 @@
     "tier": 10,
     "sprite": {
      "file": "c1836.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66826,8 +66826,8 @@
     "tier": 11,
     "sprite": {
      "file": "c1837.png",
-     "tile": 18,
-     "height": 18,
+     "tile": 36,
+     "height": 36,
      "frames": 1,
      "size": 100
     }
@@ -66838,8 +66838,8 @@
     "tier": 0,
     "sprite": {
      "file": "c1280.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66848,8 +66848,8 @@
     "tier": 1,
     "sprite": {
      "file": "c1286.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66858,8 +66858,8 @@
     "tier": 2,
     "sprite": {
      "file": "c1287.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66868,8 +66868,8 @@
     "tier": 3,
     "sprite": {
      "file": "c1288.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66878,8 +66878,8 @@
     "tier": 4,
     "sprite": {
      "file": "c1289.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66888,8 +66888,8 @@
     "tier": 5,
     "sprite": {
      "file": "c1291.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66898,8 +66898,8 @@
     "tier": 6,
     "sprite": {
      "file": "c1292.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66908,8 +66908,8 @@
     "tier": 7,
     "sprite": {
      "file": "c1294.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66918,8 +66918,8 @@
     "tier": 8,
     "sprite": {
      "file": "c1295.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
@@ -66928,8 +66928,8 @@
     "tier": 9,
     "sprite": {
      "file": "c1708.png",
-     "tile": 10,
-     "height": 10,
+     "tile": 20,
+     "height": 20,
      "frames": 1,
      "size": 100
     }
