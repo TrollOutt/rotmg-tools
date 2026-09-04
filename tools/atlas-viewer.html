@@ -2471,6 +2471,7 @@ function stepLife(delta) {
       continue;
     }
     one.phase += delta;
+    if (one.swing > 0) one.swing -= delta;
     const turn = (Math.random() - 0.5) * 0.4 * delta;
     const cos = Math.cos(turn), sin = Math.sin(turn);
     const vx = one.vx * cos - one.vy * sin;
@@ -3094,7 +3095,22 @@ function coloursFor(sprite) {
 }
 
 function burst(beast, size) {
-  const colours = coloursFor(beast.kind.sprite);
+  /*
+   * What a death throws off.
+   *
+   * The client does not describe one. Its data files carry three particles -
+   * mist, steam and dirt, all ambient - a death sound for nearly everything,
+   * and a splash of blood for seventy-one things out of five thousand, given
+   * as a colour and a likelihood. That last is used here exactly as stated:
+   * a creature that declares green blood at even odds throws green, half the
+   * time. Everything else is thrown in its own colours, read off its own
+   * sprite, because those at least are the game's. The motion is not the
+   * game's and there is nothing in the client to take it from.
+   */
+  const blood = beast.kind.blood;
+  const colours = (blood && blood.tint && (blood.odds === undefined
+    || Math.random() < blood.odds))
+    ? [blood.tint] : coloursFor(beast.kind.sprite);
   const heft = Math.min(3, 0.8 + Math.log10(Math.max(10, beast.full || 400)) / 3);
   const many = Math.round((14 + Math.min(30, (beast.full || 400) / 900)) * (size || 1));
   /*
@@ -3452,6 +3468,7 @@ function stepFolk(delta) {
     one.cool -= delta;
     one.spell -= delta;
     if (one.rose > 0) one.rose -= delta;
+    if (one.swing > 0) one.swing -= delta;
 
     // Flesh and magic both come back on their own, at the rate the two
     // statistics for exactly that say they do.
@@ -3530,6 +3547,8 @@ function stepFolk(delta) {
 
       if (gun && far <= reach && one.cool <= 0) {
         one.cool = 1 / (SHOTS_AT(one.at.dex) * (gun.rate || 1));
+        // Long enough for the swing to be seen, never longer than the gap.
+        one.swing = Math.min(0.32, one.cool * 0.8);
         volley(one, beast, gun, hurtOf(gun, one.at.att, beast.kind.def), one);
       }
     }
@@ -3588,6 +3607,7 @@ function stepFolk(delta) {
       if (far < near) { near = far; mark = one; }
     }
     if (mark) {
+      beast.swing = Math.min(0.35, beast.cool * 0.7);
       const many = shot.many ? 3 : 1;
       const hurt = shot.pierce
         ? shot.hurt : Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def);
@@ -3859,11 +3879,42 @@ function drawLandmarks(box) {
 
 // One creature where it stands. Drawn either on its own, far out, or sorted
 // in among the scenery close up.
+/*
+ * Which of a thing's pictures to show.
+ *
+ * The client keeps them filed by which way the thing faces and what it is
+ * doing - nought standing, one walking, two attacking - and there is no
+ * eastward facing at all: the game stores west and mirrors it. So the facing
+ * comes off which way the thing is actually travelling, the action off
+ * whether it is moving and whether it has just let a shot go, and the frame
+ * off how long it has been doing it. Nothing here is drawn that the game
+ * does not draw.
+ */
+function poseOf(one, sprite) {
+  const poses = sprite.poses;
+  const vx = one.vx || 0, vy = one.vy || 0;
+  const going = Math.hypot(vx, vy);
+  let facing = 0, flip = false;
+  if (Math.abs(vy) > Math.abs(vx) && going > 0.35) facing = vy < 0 ? 2 : 3;
+  else if (going > 0.35) flip = vx > 0;
+  const doing = one.swing > 0 ? 2 : (going > 0.35 ? 1 : 0);
+  if (!poses) {
+    return { list: null, flip, beat: doing === 1 ? 6 : 4 };
+  }
+  const list = poses[facing + '/' + doing] || poses['0/' + doing]
+    || poses[facing + '/0'] || poses['0/0'] || poses[Object.keys(poses)[0]];
+  // A swing is quick and a walk is a walk; standing does not need a beat.
+  return { list, flip, beat: doing === 2 ? 9 : (doing === 1 ? 6 : 2) };
+}
+
 function drawOneLife(one, box) {
   const img = artFor(one.kind.sprite);
   if (!img.complete || !img.naturalWidth) return 0;
   const sprite = one.kind.sprite;
-  const frame = sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0;
+  const pose = poseOf(one, sprite);
+  const frame = pose.list
+    ? pose.list[Math.floor(one.phase * pose.beat) % pose.list.length]
+    : (sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0);
   // At the size the client draws it, not all at one size.
   const k = 1.5 * ((sprite.size || 100) / 100);
   const wide = (sprite.tile / (A.px * SS)) * view.scale * k;
@@ -3880,8 +3931,19 @@ function drawOneLife(one, box) {
   const at = place(one.x, one.y, box);
   if (!at) return 0;
   const w2 = wide * at.k, h2 = tall * at.k;
+  const top = at.y - h2 + (foot + view.scale / 2) * at.k;
+  if (pose.flip) {
+    // The client has no eastward picture; it keeps west and turns it over.
+    ctx.save();
+    ctx.translate(at.x, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
+      -w2 / 2, top, w2, h2);
+    ctx.restore();
+    return 1;
+  }
   ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
-    at.x - w2 / 2, at.y - h2 + (foot + view.scale / 2) * at.k, w2, h2);
+    at.x - w2 / 2, top, w2, h2);
   return 1;
 }
 
