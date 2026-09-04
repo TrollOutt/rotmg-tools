@@ -7,6 +7,8 @@
     font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #7b8496; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
   canvas.drag { cursor: grabbing; }
+  #seen i { font-style: normal; opacity: .55; }
+  #seen b { font-weight: 600; color: #b9c4d8; }
   #bar {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 12px;
     display: flex; gap: 20px; align-items: baseline;
@@ -116,6 +118,8 @@
   <span id="where">—</span>
   <span id="zone"></span>
   <span id="count"></span>
+  <span id="seen" hidden><i>visitors</i> <b id="seenAll">&ndash;</b>
+    <i>today</i> <b id="seenToday">&ndash;</b></span>
   <span id="hint">drag to pan · wheel to zoom · click a zone · double-click to fit</span>
 </div>
 <script>
@@ -2680,10 +2684,20 @@ function drawNames(box) {
   if (!zone) return;
   const at = place(zone.at[0], zone.at[1], box);
   if (!at || at.x < 0 || at.y < 0 || at.x > box.w || at.y > box.h) return;
+  /*
+   * Sized without rounding, which is the whole of why it used to shake.
+   *
+   * The size follows the zoom, and the zoom eases rather than stepping - so
+   * rounding the size to whole pixels turned a smooth sweep into thirteen,
+   * fourteen, fifteen. Every step changed how wide the word was, and a word
+   * drawn from its middle moves both its ends when it changes width, so it
+   * twitched left and right all the way in. Two decimals is still one string
+   * per frame and the width now changes as smoothly as the distance does.
+   */
   const scale = Math.max(13, Math.min(22, Math.sqrt(zone.tiles) * view.scale * 0.06));
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '600 ' + scale.toFixed(0) + 'px ui-monospace, Consolas, monospace';
+  ctx.font = '600 ' + scale.toFixed(2) + 'px ui-monospace, Consolas, monospace';
   ctx.globalAlpha = 0.55;
   ctx.lineWidth = 4; ctx.strokeStyle = '#05080d';
   ctx.strokeText(zone.name, at.x, at.y);
@@ -3730,6 +3744,45 @@ addEventListener('keydown', event => {
   if (event.key === 'a' || event.key === 'A') { turnBy(-TURN_STEP); event.preventDefault(); }
   else if (event.key === 'e' || event.key === 'E') { turnBy(TURN_STEP); event.preventDefault(); }
 });
+
+/*
+ * How many people have been here.
+ *
+ * The map is a folder of files on a static host: nothing of ours runs when
+ * somebody opens it, so nothing of ours can count. The only way to have a
+ * number is to ask something that is running somewhere, and this asks Abacus,
+ * which keeps a counter under a name and hands it back. It is told nothing
+ * but the name - no page, no referrer we add, nothing about who is asking -
+ * and if it is down or blocked the line simply never appears.
+ *
+ * Two names: one that has always been counting, and one per day. And counted
+ * once a day per browser rather than once a page load, because the question
+ * is how many people came and not how many times somebody pressed reload -
+ * so the day already counted is remembered here, and every later visit that
+ * day reads the numbers without adding to them.
+ */
+const ABACUS = 'https://abacus.jasoncameron.dev/';
+function countVisitors() {
+  const day = new Date().toISOString().slice(0, 10);
+  let counted = null;
+  try { counted = localStorage.getItem('atlas-counted'); } catch (no) { counted = null; }
+  const first = counted !== day;
+  if (first) { try { localStorage.setItem('atlas-counted', day); } catch (no) { /* private */ } }
+
+  const box = document.getElementById('seen');
+  const ask = (key, into) => fetch(ABACUS + (first ? 'hit' : 'get') + '/rotmg-realm-atlas/' + key)
+    .then(r => r.ok ? r.json() : null)
+    .then(said => {
+      if (!said || typeof said.value !== 'number') return;
+      const cell = document.getElementById(into);
+      if (cell) cell.textContent = said.value.toLocaleString();
+      if (box) box.hidden = false;
+    })
+    .catch(() => { /* offline, blocked, or the service is away: say nothing */ });
+  ask('all', 'seenAll');
+  ask('d' + day.replace(/-/g, ''), 'seenToday');
+}
+countVisitors();
 
 fit();
 view.scale = want.scale; view.x = want.x; view.y = want.y;
