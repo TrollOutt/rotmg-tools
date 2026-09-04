@@ -2645,11 +2645,42 @@ const litter = [];
  * thing with twenty thousand hit points nearly always leaves something.
  */
 function dropFrom(beast) {
-  const worth = beast.full || 200;
-  if (Math.random() > Math.min(0.75, worth / 3500)) return;
   const bags = (A.marks && A.marks.bags) || [];
   if (!bags.length) return;
-  const tier = Math.min(bags.length - 1, Math.floor(Math.pow(worth / 22000, 0.5) * bags.length));
+  const worth = beast.full || 200;
+
+  /*
+   * Whether anything falls.
+   *
+   * The real tables are not here to copy. They are kept by the server, and
+   * what can be read from outside is a list of what a thing is known to drop
+   * with no number against any of it - so the rate is reasoned rather than
+   * looked up, from two things about the game that are not in doubt: the
+   * great majority of kills leave nothing on the floor, and the biggest
+   * things leave something often but not reliably.
+   *
+   * So it climbs with the root of what was killed rather than with the thing
+   * itself, which keeps the ends sensible instead of only the middle. The
+   * eight hundred hit points that is the median creature here comes out under
+   * two in a hundred; a five thousand point god, four and a half; the largest
+   * thing in the realm, about one kill in six. The rule before this gave a
+   * bag to three kills in four and the floor was carpeted.
+   */
+  const chance = Math.max(0.005, Math.min(0.35, Math.sqrt(worth / 1000) * 0.02));
+  if (Math.random() > chance) return;
+
+  /*
+   * And what colour it is. The game says rarity with the colour of the bag,
+   * brown being the ordinary one and the pale ones the ones people stop for,
+   * so a step up is a quarter as likely as the step below it - and how far up
+   * the steps go at all is set by what was killed. Nothing the size of a bat
+   * has ever left a white bag.
+   */
+  const ceiling = Math.max(0, Math.min(bags.length - 1,
+    Math.floor(Math.log(Math.max(1, worth / 300)) / Math.log(3))));
+  let tier = 0;
+  while (tier < ceiling && Math.random() < 0.25) tier++;
+
   litter.push({
     sprite: bags[tier].sprite, x: beast.x, y: beast.y, left: BAG_LASTS, full: BAG_LASTS
   });
@@ -2984,8 +3015,15 @@ function drawOneLife(one, box) {
   const k = 1.5 * ((sprite.size || 100) / 100);
   const wide = (sprite.tile / (A.px * SS)) * view.scale * k;
   const tall = (sprite.height / (A.px * SS)) * view.scale * k;
-  // The line took a pixel of art under its feet, so it is put back down by that much.
-  const foot = (1 / A.px) * view.scale * k;
+  /*
+   * The line took a pixel of art under its feet, so it is put back down by
+   * that much - one pixel of the drawing, which since the drawings were
+   * doubled is half of what it used to be. Measured against the tile the same
+   * way the width and the height above are, rather than against a tile of
+   * eight pixels that no longer exists, which was sinking everybody by a
+   * further tenth of a tile.
+   */
+  const foot = (1 / (A.px * SS)) * view.scale * k;
   const at = place(one.x, one.y, box);
   if (!at) return 0;
   const w2 = wide * at.k, h2 = tall * at.k;
