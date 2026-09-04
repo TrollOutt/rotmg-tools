@@ -42,6 +42,7 @@ const ITEMS = path.join(root, 'web', 'assets', 'items');
 const DUNGEONS = path.join(root, 'data', 'GUI Files', 'Dungeon Icons');
 const SLOTS = path.join(root, 'data', 'GUI Files', 'Item Types');
 const LOOT = path.join(ATLAS, 'loot');
+const XML = path.join(root, 'client-data');
 
 /*
  * Which zone name answers to which imported biome.
@@ -256,6 +257,71 @@ const listOf = (biome, role) => ((biome.groups || {})[role] || []).map(entry => 
  * roster entry can carry what it is worth killing as well as what it is
  * called.
  */
+/*
+ * The reference and the client, joined at last.
+ *
+ * They have never agreed about names. The client files a thing under an
+ * internal id - Dead Church Skeleton - and the reference calls it what the
+ * game shows on screen, Crusader Skeleton, so matching the two by name found
+ * one in five. The client carries both: a DisplayId beside the id, and it is
+ * the display name the reference uses. Counted, that is two hundred and
+ * seventy-one of two hundred and eighty-four, and the last dozen are curly
+ * apostrophes and two seasonal things this realm does not have - so the
+ * apostrophes are flattened before comparing and it is nearer to all of them.
+ *
+ * What it buys is that every creature on a roster can carry what the client
+ * knows about it and the reference does not: what it shoots, how far the shot
+ * reaches, what it cannot be stopped by, and the family it belongs to.
+ */
+const plainName = name => String(name).toLowerCase()
+  .replace(/[\u2018\u2019\u02bc]/g, "'").replace(/\s+/g, ' ').trim();
+
+function readClientFight() {
+  const out = new Map();
+  if (!fs.existsSync(XML)) return out;
+  const shape = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
+  const one = (body, tag) => {
+    const m = new RegExp('<' + tag + '>([^<]*)<' + '\/' + tag + '>').exec(body);
+    return m ? m[1].trim() : '';
+  };
+  for (const file of fs.readdirSync(XML).filter(n => /^Objects\.\d+\.xml$/.test(n))) {
+    for (const m of fs.readFileSync(path.join(XML, file), 'utf8').matchAll(shape)) {
+      if (!/<Enemy\s*\/>/.test(m[2])) continue;
+      const id = /id="([^"]*)"/.exec(m[1]);
+      const shots = [];
+      for (const shot of m[2].matchAll(/<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/g)) {
+        const hurt = Number(one(shot[1], 'Damage'));
+        const fast = Number(one(shot[1], 'Speed'));
+        const lives = Number(one(shot[1], 'LifetimeMS'));
+        if (!Number.isFinite(hurt) || !hurt) continue;
+        shots.push({
+          hurt,
+          reach: Number.isFinite(fast) && Number.isFinite(lives)
+            ? Math.round(fast * lives / 1000) / 10 : undefined,
+          pierce: /<ArmorPiercing\s*\/>/.test(shot[1]) || undefined
+        });
+      }
+      const held = [];
+      for (const [tag, say] of [['StasisImmune', 'stasis'], ['PetrifyImmune', 'petrify'],
+        ['ParalyzeImmune', 'paralyse'], ['DazedImmune', 'daze'], ['SlowedImmune', 'slow'],
+        ['StunImmune', 'stun'], ['CurseImmune', 'curse']]) {
+        if (new RegExp('<' + tag + '\\s*/>').test(m[2])) held.push(say);
+      }
+      const said = {
+        group: one(m[2], 'Group') || undefined,
+        shots: shots.length ? shots.slice(0, 3) : undefined,
+        immune: held.length ? held : undefined
+      };
+      if (!said.group && !said.shots && !said.immune) continue;
+      const show = one(m[2], 'DisplayId');
+      if (show) out.set(plainName(show), said);
+      if (id && !out.has(plainName(id[1]))) out.set(plainName(id[1]), said);
+    }
+  }
+  return out;
+}
+const clientFight = readClientFight();
+
 const factsOf = new Map();
 for (const one of Object.values(realmEye.creatures || {})) {
   if (!one || !one.name) continue;
@@ -266,10 +332,15 @@ for (const one of Object.values(realmEye.creatures || {})) {
   });
 }
 
+let joined = 0, unjoined = new Set();
 const dress = list => list.map(one => {
   const facts = factsOf.get(one.name);
-  if (!facts) return one;
+  const fight = clientFight.get(plainName(one.name));
+  if (fight) joined++; else unjoined.add(one.name);
+  if (!facts && !fight) return one;
   const out = { ...one };
+  if (fight) for (const k of Object.keys(fight)) if (fight[k] !== undefined) out[k] = fight[k];
+  if (!facts) return out;
   if (facts.hp !== undefined) out.hp = facts.hp;
   if (facts.def !== undefined) out.def = facts.def;
   if (facts.exp !== undefined) out.exp = facts.exp;

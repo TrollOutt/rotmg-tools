@@ -79,6 +79,9 @@
   .drops span { font-size: 10px; padding: 2px 6px; border-radius: 9px;
     background: rgba(120,132,158,.14); color: #93a0b6; }
   .life u.stat { display: block; text-decoration: none; font-size: 10px; color: #6f7b90; }
+  .life u.shots { display: block; text-decoration: none; font-size: 10px; color: #c98f7a; }
+  .life u.shots u { text-decoration: none; color: #66707f; padding: 0 1px; }
+  .life .held { display: block; font-size: 9px; color: #7d86a6; }
   .soil { display: grid; gap: 5px; font-size: .8em; }
   .soil div { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
   .soil b { font-weight: 400; color: #c3ccdb; }
@@ -2248,7 +2251,23 @@ function artFor(sprite) {
  * sowing below, the drifting, the depth sorting and the portraits are all
  * still here and still built.
  */
-const WANDERERS = false;
+const WANDERERS = true;
+
+/*
+ * One of a place's creatures, chosen by how common it was. The running totals
+ * are worked out once per place and kept on it, because this is asked several
+ * thousand times at every fit.
+ */
+function weighted(zone) {
+  if (!zone.pick) {
+    let sum = 0;
+    zone.pick = zone.lives.map(one => (sum += Math.max(1, one.seen || 1)));
+    zone.pickAll = sum;
+  }
+  const want = Math.random() * zone.pickAll;
+  for (let i = 0; i < zone.pick.length; i++) if (want < zone.pick[i]) return i;
+  return zone.pick.length - 1;
+}
 
 function populate() {
   alive.length = 0;
@@ -2264,7 +2283,14 @@ function populate() {
       const y = y0 + Math.random() * (y1 - y0 + 1);
       // Its own patch, and ground it could actually stand on.
       if (!canStand(x, y, zone.id)) continue;
-      const kind = zone.lives[Math.floor(Math.random() * zone.lives.length)];
+      /*
+       * Picked in proportion to how often each was actually met here, so a
+       * place looks like itself: the thing you walk into constantly is
+       * everywhere and the thing seen twice is seen twice. Uniform picking
+       * made every zone an even mix of its twenty kinds, which no part of the
+       * realm has ever looked like.
+       */
+      const kind = zone.lives[weighted(zone)];
       const angle = Math.random() * Math.PI * 2;
       alive.push({
         kind, home: zone.id, x, y,
@@ -2787,8 +2813,21 @@ function castList(list, note) {
       one.def !== undefined ? one.def + ' def' : '',
       one.exp !== undefined ? Number(one.exp).toLocaleString() + ' xp' : ''
     ].filter(Boolean).join(' \u00b7 ');
+    /*
+     * And how it fights, which the client knows and the reference does not.
+     * Its shots, worst first, as damage at a reach; then anything it cannot be
+     * stopped by, which is the difference between a fight and a formality.
+     */
+    const shots = (one.shots || []).slice().sort((a, b) => b.hurt - a.hurt)
+      .map(shot => shot.hurt + (shot.reach ? '<u>@</u>' + shot.reach : '')
+        + (shot.pierce ? '<u>\u25b8</u>' : ''))
+      .join('<u>,</u>');
+    const held = (one.immune || []).length
+      ? '<span class="held">immune ' + one.immune.join(', ') + '</span>' : '';
     return '<div>' + art + '<b>' + one.name + '</b>'
       + (facts ? '<u class="stat">' + facts + '</u>' : '')
+      + (shots ? '<u class="shots">' + shots + '</u>' : '')
+      + held
       + (one.onMap ? '<i>on the map</i>' : '')
       + (note ? '<em>' + note + '</em>' : '') + '</div>';
   }).join('') + '</div>';
