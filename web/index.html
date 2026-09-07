@@ -456,13 +456,22 @@
         <header><h2>Optimize build for</h2>
           <span class="header-aside">
             <span class="tc-hands" role="group" aria-label="What it may change">
-              <button type="button" data-scope="all">Gear + enchants</button>
-              <button type="button" data-scope="gear">Gear only</button>
+              <button type="button" data-scope="all"
+                title="Every slot filled - with the best thing the game's rules still allow, even where nothing left helps">Fill it all</button>
+              <button type="button" data-scope="helps"
+                title="Only enchantments that move the number you asked for; a slot with nothing useful left stays empty">Only what helps</button>
+              <button type="button" data-scope="gear"
+                title="Change the four items and leave every enchantment exactly as it is">Gear only</button>
             </span>
             <span id="tcKept"></span>
           </span></header>
         <div id="tcGoals" class="tc-goals"></div>
         <div id="tcMix" class="tc-mix" hidden></div>
+        <!--
+          Whatever the reader has decided they will never hold. Half the best
+          answers in this game are drops from somewhere they do not go.
+        -->
+        <div id="tcAside" class="tc-aside" hidden></div>
         <div class="tc-calc-row">
           <button type="button" id="tcRun" class="tc-run">Search</button>
           <button type="button" id="tcUndo" class="tc-undo" hidden>Put it back</button>

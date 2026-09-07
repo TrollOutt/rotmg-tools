@@ -334,7 +334,26 @@ for (const [id, art] of artOf) if (art.shown && !byShown.has(art.shown)) byShown
 for (const one of facts.bosses) {
   const where = artOf.has(one.id) ? one.id : byShown.get(one.name);
   if (!where) continue;
-  if (cutOne('t:' + one.id, where, true)) { one.pic = 't:' + one.id; hitters++; }
+  const got = cutOne('t:' + one.id, where, true);
+  if (!got) continue;
+  /*
+   * And nothing that turns out to be drawn from nothing. A few things the
+   * client calls enemies are doors and triggers whose picture is two stray
+   * pixels - the Gates of the Nether is one - and a row of empty squares in
+   * a list of things to fight is a row of questions nobody can answer.
+   */
+  let lit = 0;
+  for (const r of got.tiles) {
+    const from = sheetFor(r.sheet);
+    for (let y = 0; y < r.h && lit < 12; y++) {
+      for (let x = 0; x < r.w; x++) {
+        if (from.pixels[((r.y + y) * from.width + r.x + x) * 4 + 3] > 8) { lit++; break; }
+      }
+    }
+  }
+  if (lit < 3) continue;
+  one.pic = 't:' + one.id;
+  hitters++;
 }
 
 // And the bolt each weapon and ability actually throws.

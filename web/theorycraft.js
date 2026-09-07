@@ -633,8 +633,16 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function itemsFor(hand, klass) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
+    /*
+     * Minus whatever has been set aside. Half the best answers in this game
+     * are things a particular reader will never hold - a white bag from a
+     * dungeon they do not run, an exalted drop three hundred hours away - and
+     * an answer built out of those is not an answer to their question.
+     */
+    const out = (build && build.banned) || {};
     return data.items.filter(one => one.hand === hand
-      && (slot === undefined || one.slot === slot));
+      && (slot === undefined || one.slot === slot)
+      && !out[one.name]);
   }
 
   /* ---------------- the optimiser ---------------- */
@@ -987,6 +995,17 @@ const TINT = {
            * that has to be filled with something is filled with the best
            * something rather than the first one out of the pool.
            */
+          /*
+           * Whether an empty slot has to be filled at all.
+           *
+           * Asked to fill them, the search puts the best thing the rules
+           * still allow in every slot, and once two statistics are on an item
+           * the game allows only effects - so the answer comes back wearing
+           * mana regeneration on a build that never casts. Asked for only
+           * what helps, it leaves a slot empty rather than write down
+           * something that does nothing for the question.
+           */
+          const fills = work.scope !== 'helps';
           let best = was;
           let bestScore = score;
           let bestWorth = worth(data.byEnch[was]);
@@ -1000,7 +1019,8 @@ const TINT = {
             looked++;
             const mine = worth(one);
             const better = now > bestScore + 1e-9;
-            const evens = !was && Math.abs(now - bestScore) <= 1e-9 && mine > bestWorth;
+            const evens = fills && !was
+              && Math.abs(now - bestScore) <= 1e-9 && mine > bestWorth;
             if (better || evens) {
               bestScore = Math.max(bestScore, now);
               best = one.id;
@@ -1017,7 +1037,7 @@ const TINT = {
            * The likeliest roll takes it, and the page says plainly that it is
            * not counting what it does.
            */
-          if (!best) {
+          if (!best && fills) {
             let common = null;
             for (const one of enchantsFor(worn.name, worn.ench, at)) {
               // Loot and dust bonuses are rolled for the bag, not for the
@@ -1375,6 +1395,16 @@ const TINT = {
             + esc(one.say.toLowerCase()) + ' now</small></span>'
           : '';
       }).join('');
+    }
+    const aside = el('tcAside');
+    if (aside) {
+      const names = Object.keys(build.banned || {});
+      aside.hidden = !names.length;
+      aside.innerHTML = names.length
+        ? '<i>Set aside</i>' + names.map(name =>
+          '<button type="button" class="tc-aside-one" data-unban="' + esc(name)
+          + '" title="Put it back in the running">' + esc(name) + ' ×</button>').join('')
+        : '';
     }
     const kept = el('tcKept');
     if (kept) {
@@ -2050,7 +2080,7 @@ const TINT = {
         bits.push(plus(part.pct) + '% of ' + part.of
           + (part.of === part.stat ? '' : ' as ' + part.stat));
       }
-      return { id: one.name, name: one.name, says: bits.join(' · '), art: true };
+      return { id: one.name, name: one.name, says: bits.join(' · '), art: true, ban: true };
     }), 'nothing');
   }
 
@@ -2138,13 +2168,18 @@ const TINT = {
      * - the search box is how you get to the rest.
      */
     for (const one of rows.slice(0, 120)) {
-      out.push('<button type="button" class="tc-row" data-choose="' + esc(one.id) + '">'
+      out.push((one.ban
+        ? '<span class="tc-row-pair"><button type="button" class="tc-ban" data-ban="'
+          + esc(one.id) + '" title="Set this aside - the search will not offer it">'
+          + '⊘</button>'
+        : '')
+        + '<button type="button" class="tc-row" data-choose="' + esc(one.id) + '">'
         + (one.art ? itemIcon(one.id)
           : (one.pic ? sheetIcon(one.pic, 26, 'tc-charm-row') : '<span class="tc-icon-big"></span>'))
         + '<b>' + esc(one.name) + '</b>'
         + '<u>' + esc(one.says || '') + '</u>'
         + (one.counted === false ? '<em class="tc-uncounted">not counted</em>' : '')
-        + '</button>');
+        + '</button>' + (one.ban ? '</span>' : ''));
     }
     if (rows.length > 120) {
       out.push('<p class="tc-more">' + (rows.length - 120)
@@ -2325,6 +2360,13 @@ const TINT = {
       build.scope = scope.dataset.scope;
       keep(); paint();
     });
+    el('tcBody').addEventListener('click', event => {
+      const back = event.target.closest('[data-unban]');
+      if (!back) return;
+      delete (build.banned || {})[back.dataset.unban];
+      keep(); paint();
+    });
+
     el('tcGoals').addEventListener('click', event => {
       const pick = event.target.closest('[data-goal]');
       if (!pick) return;
@@ -2442,6 +2484,18 @@ const TINT = {
     });
 
     el('tcPicker').addEventListener('click', event => {
+      const ban = event.target.closest('[data-ban]');
+      if (ban) {
+        event.stopPropagation();
+        build.banned = build.banned || {};
+        build.banned[ban.dataset.ban] = true;
+        keep();
+        // The row goes with it: the list is what you can still choose from.
+        const gone = ban.closest('.tc-row-pair');
+        if (gone) gone.remove();
+        drawSearch();
+        return;
+      }
       const row = event.target.closest('[data-choose]');
       if (row) chose(row.dataset.choose);
     });
