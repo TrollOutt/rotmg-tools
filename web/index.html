@@ -387,18 +387,16 @@
       <section class="tc-who-box">
         <h2>Who</h2>
         <div class="tc-who">
-          <label>Class<select id="tcClass"></select></label>
-          <label>Level<input id="tcLevel" type="number" min="1" max="20" step="1"></label>
-          <label class="tc-tick"><input id="tcMaxed" type="checkbox">
-            <span>8/8<small>every potion drunk</small></span></label>
-          <label class="tc-tick"><input id="tcExalt" type="checkbox">
-            <span>Exalted<small>five of each</small></span></label>
+          <label class="tc-pick">Class<select id="tcClass"></select></label>
+          <div class="tc-switches">
+            <button type="button" class="tc-switch" data-set="level20">Level 20</button>
+            <button type="button" class="tc-switch" data-set="maxed">8/8</button>
+            <button type="button" class="tc-switch" data-set="exalt">Exalted</button>
+            <label class="tc-pick tc-lvl">Level
+              <input id="tcLevel" type="number" min="1" max="20" step="1"></label>
+          </div>
         </div>
         <div id="tcStats" class="tc-stats"></div>
-        <p class="tc-note">The eight statistics, the value each tops out at and
-          what a level is worth of each are the client's own. Exaltations are
-          not in it: the game's rule of five points a statistic is applied, and
-          marked here so you know which part is which.</p>
       </section>
     </div>
 
@@ -419,28 +417,20 @@
           <input id="tcAgainst" type="range" min="0" max="100" step="1">
           <b id="tcAgainstSay"></b>
         </label>
-        <p class="tc-note tc-warn">Damage a second and time to kill are not in
-          the client. They come from the formulas the game's own players
-          settled on - shots a second from dexterity, damage raised by attack
-          and then reduced by armour - and they assume every shot lands. Worth
-          having as a comparison between builds rather than as the game's own
-          arithmetic.</p>
+        <p class="tc-note">Good for comparing builds. Assumes every shot hits.</p>
       </section>
     </div>
 
     <section class="tc-calc">
       <h2>Let it look for a better one</h2>
+      <p class="tc-note">Click the padlock on anything you want kept. Then
+        pick what matters and let it hunt.</p>
+      <div id="tcGoals" class="tc-goals"></div>
       <div class="tc-calc-row">
-        <label>Push up<select id="tcGoal"></select></label>
         <button type="button" id="tcRun" class="tc-run">Look for a better build</button>
         <label class="tc-name">Call it<input id="tcName" type="text" maxlength="40"></label>
       </div>
       <p id="tcSaid" class="tc-said"></p>
-      <p class="tc-note">Hold anything you want kept with the ring beside it.
-        It tries every weapon, ability, armour, ring and enchantment that fits,
-        one at a time, over and over, until nothing it can swap improves the
-        answer. Not a proof - the honest number of combinations has thirty
-        digits in it - but what a careful person would find by hand, faster.</p>
     </section>
   </div>
 
