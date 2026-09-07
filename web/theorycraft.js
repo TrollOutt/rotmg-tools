@@ -270,15 +270,40 @@ var TheoryCraft = (function () {
    * better and the search only knows how to climb.
    */
   const GOALS = [
-    { id: 'dps', say: 'Damage', of: n => n.total },
-    { id: 'kill', say: 'Kill it fast', of: (n, s) => {
+    { group: 'Others', id: 'dps', say: 'Damage a second', of: n => n.total },
+    { group: 'Others', id: 'kill', say: 'Kill it fast', of: (n, s) => {
       const boss = data.byBoss[s.boss];
       if (!boss || !n.total) return 0;
       return -boss.hp / n.total;
     } },
-    { id: 'gun', say: 'Weapon', of: n => n.gun.dps },
-    { id: 'spell', say: 'Ability', of: n => n.spell.dps },
-    ...STATS.map(([key, say]) => ({ id: 'stat:' + key, say, of: n => n.stats.now[key] }))
+    { group: 'Others', id: 'shot', say: 'Damage a shot', of: n => n.gun.each * (n.gun.many || 1) },
+    { group: 'Others', id: 'gun', say: 'Weapon only', of: n => n.gun.dps },
+    { group: 'Others', id: 'spell', say: 'Ability only', of: n => n.spell.dps },
+    /*
+     * Through armour: what the build still lands on the hardest thing it will
+     * ever meet. A weapon that throws many small shots loses most of itself to
+     * armour and a heavy one barely notices, so this and plain damage pull in
+     * different directions - which is the whole reason the curve is drawn.
+     */
+    { group: 'Others', id: 'pierce', say: 'Through armour', of: (n, s) => {
+      const was = s.against;
+      s.against = 80;
+      const hard = numbersFor(s, 80);
+      s.against = was;
+      return hard ? hard.total : 0;
+    } },
+    /*
+     * Staying alive, as the game measures it: how much damage you can soak
+     * before you die, which is your life multiplied by what armour saves you
+     * on an ordinary hit, plus what you heal back while it happens.
+     */
+    { group: 'Others', id: 'live', say: 'Survival', of: n => {
+      const s = n.stats.now;
+      const soak = 100 / Math.max(15, 100 - s.def);
+      return s.hp * soak + HEAL_AT(s.vit) * 20;
+    } },
+    ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
+      of: n => n.stats.now[key] }))
   ];
 
   function scoreOf(state, goal) {
@@ -371,15 +396,26 @@ var TheoryCraft = (function () {
    * enchantment's own picture costs nothing extra to show - and it is the
    * only way anybody tells a thousand enchantments apart at a glance.
    */
+  /*
+   * A window onto the one sheet.
+   *
+   * The address of that sheet is written into the page once, as a custom
+   * property, and every icon says var(--tc-sheet). Spelling it out per icon
+   * put the whole picture - a quarter of a megabyte of base64, in the offline
+   * copy - into the markup a thousand times over, which is why opening the
+   * enchantment list took a second and a half.
+   *
+   * The box is the frame's own shape rather than a square. A tall creature in
+   * a square window showed the width of its height, which is the frame beside
+   * it: that is why several of them appeared to be standing next to a copy of
+   * themselves.
+   */
   function sheetIcon(key, side, extra) {
     const piece = data.sheet && data.sheet.pics[key];
     if (!piece) return '';
-    const bundle = window.ROTMG_BUNDLE;
-    const src = (bundle && bundle.theorySheet) || 'assets/theory/sheet.png';
     const zoom = side / Math.max(piece.w, piece.h);
-    return '<span class="tc-charm' + (extra ? ' ' + extra + '"' : '"')
-      + ' style="width:' + side + 'px;height:' + side + 'px'
-      + ';background-image:url(' + src + ')'
+    return '<span class="tc-charm' + (extra ? ' ' + extra : '') + '"'
+      + ' style="width:' + (piece.w * zoom) + 'px;height:' + (piece.h * zoom) + 'px'
       + ';background-size:' + (data.sheet.wide * zoom) + 'px '
       + (data.sheet.tall * zoom) + 'px'
       + ';background-position:' + (-piece.x * zoom) + 'px ' + (-piece.y * zoom) + 'px'
@@ -967,7 +1003,12 @@ var TheoryCraft = (function () {
     const out = ['<button type="button" class="tc-row" data-choose="">'
       + '<span class="tc-icon-big"></span><b>' + esc(clearSay || 'nothing')
       + '</b></button>'];
-    for (const one of rows.slice(0, 400)) {
+    /*
+     * A first handful, not the lot. A thousand rows is a second of work
+     * before anything appears, and nobody reads past the first screen anyway
+     * - the search box is how you get to the rest.
+     */
+    for (const one of rows.slice(0, 120)) {
       out.push('<button type="button" class="tc-row" data-choose="' + esc(one.id) + '">'
         + (one.art ? itemIcon(one.id)
           : (one.pic ? sheetIcon(one.pic, 26, 'tc-charm-row') : '<span class="tc-icon-big"></span>'))
@@ -976,8 +1017,8 @@ var TheoryCraft = (function () {
         + (one.counted === false ? '<em class="tc-uncounted">not counted</em>' : '')
         + '</button>');
     }
-    if (rows.length > 400) {
-      out.push('<p class="tc-more">' + (rows.length - 400)
+    if (rows.length > 120) {
+      out.push('<p class="tc-more">' + (rows.length - 120)
         + ' more — type to narrow it down</p>');
     }
     box.innerHTML = out.join('');
@@ -1083,9 +1124,13 @@ var TheoryCraft = (function () {
       '<button type="button" class="tc-boss" data-boss="' + esc(one.name) + '"'
       + ' title="' + esc(one.name) + ' — ' + commas(one.hp) + ' life, '
       + one.def + ' armour">' + sheetIcon(one.pic, 34) + '</button>').join('');
-    el('tcGoals').innerHTML = GOALS.map(one =>
-      '<button type="button" class="tc-goal" data-goal="' + one.id + '">'
-      + esc(one.say) + '</button>').join('');
+    const groups = [...new Set(GOALS.map(one => one.group))];
+    el('tcGoals').innerHTML = groups.map(name =>
+      '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
+      + GOALS.filter(one => one.group === name).map(one =>
+        '<button type="button" class="tc-goal" data-goal="' + one.id + '">'
+        + esc(one.say) + '</button>').join('')
+      + '</div>').join('');
   }
 
   /* ---------------- wiring ---------------- */
@@ -1251,6 +1296,14 @@ var TheoryCraft = (function () {
     for (const one of data.bosses) data.byBoss[one.name] = one;
     started = true;
 
+    // The sheet's address, once, for every icon on the page to point at.
+    {
+      const bundle = window.ROTMG_BUNDLE;
+      el('tcBody').style.setProperty('--tc-sheet', 'url('
+        + ((bundle && bundle.theorySheet) || 'assets/theory/sheet.png') + ')');
+      const wrap = el('tcPickerWrap');
+      if (wrap) wrap.style.setProperty('--tc-sheet', el('tcBody').style.getPropertyValue('--tc-sheet'));
+    }
     fillPickers();
     if (!recall()) tabs = [fresh('Wizard')];
     build = tabs[onTab] || (tabs[0] = fresh('Wizard'));
