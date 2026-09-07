@@ -48,16 +48,30 @@ const objectText = fs.readdirSync(XML)
   .sort()
   .map(name => fs.readFileSync(path.join(XML, name), 'utf8'));
 
-const SHAPE = /<Object\s+type="([^"]+)"\s+id="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
+/*
+ * Every object, whatever order its attributes are written in.
+ *
+ * The client does not write them consistently. Most objects open with
+ * type then id; five thousand eight hundred of them - fifteen per cent of the
+ * file - open with something else, and a pattern that demanded type first
+ * walked straight past every one. Among them were fifty-seven pieces of
+ * wearable gear with pictures, including the Ring of Cubed Wisdom, which is
+ * most of a build on its own. The attributes are read out of the tag rather
+ * than matched in a fixed order.
+ */
+const SHAPE = /<Object\b([^>]*)>([\s\S]*?)<\/Object>/g;
 const byType = new Map();
 const byName = new Map();
 for (const text of objectText) {
   for (const m of text.matchAll(SHAPE)) {
-    const type = Number.parseInt(m[1], 16);
+    const id = /\bid="([^"]*)"/.exec(m[1]);
+    const said = /\btype="([^"]+)"/.exec(m[1]);
+    if (!id || !said) continue;
+    const type = Number.parseInt(said[1], 16);
     if (!Number.isFinite(type)) continue;
-    const one = { type, id: m[2], body: m[3] };
+    const one = { type, id: id[1], body: m[2] };
     byType.set(type, one);
-    if (!byName.has(m[2])) byName.set(m[2], one);
+    if (!byName.has(id[1])) byName.set(id[1], one);
   }
 }
 
@@ -148,6 +162,29 @@ function shareOf(body) {
     const stat = /stat="([^"]+)"/.exec(attrs);
     const of = /statRelativeTo="([^"]+)"/.exec(attrs);
     const amount = /amount="([^"]+)"/.exec(attrs);
+    const n = amount ? Number(amount[1]) : NaN;
+    if (!stat || !of || !Number.isFinite(n)) continue;
+    out.push({ stat: stat[1], of: of[1], pct: n });
+  }
+  return out.length ? out : undefined;
+}
+
+/*
+ * A share of what the rest of the gear gives.
+ *
+ * The same mutator the relative enchantments use, and a few items carry it
+ * too: the Ring of Cubed Wisdom is a hundred and seventy-five per cent of
+ * your bonus wisdom as life, two hundred and fifty as mana, and fifteen of
+ * everything else - which is the whole ring. Read as nothing, it was a ring
+ * that gave five wisdom.
+ */
+function bonusOf(body) {
+  const out = [];
+  for (const m of body.matchAll(
+    /<ActivateOnEquip([^>]*)>BonusStatRelative<\/ActivateOnEquip>/g)) {
+    const stat = /stat="([^"]+)"/.exec(m[1]);
+    const of = /statRelativeTo="([^"]+)"/.exec(m[1]);
+    const amount = /amount="([^"]+)"/.exec(m[1]);
     const n = amount ? Number(amount[1]) : NaN;
     if (!stat || !of || !Number.isFinite(n)) continue;
     out.push({ stat: stat[1], of: of[1], pct: n });
@@ -298,6 +335,7 @@ for (const [, one] of byType) {
     fan: num(one.body, 'ArcGap'),
     worn: wornOf(one.body),
     share: shareOf(one.body),
+    rel: bonusOf(one.body),
     shots: shotOf(one.body),
     // What the ability actually does, when it is not simply a projectile.
     does: text(one.body, 'Activate'),

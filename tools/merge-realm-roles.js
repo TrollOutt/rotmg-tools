@@ -349,7 +349,9 @@ let joined = 0, unjoined = new Set();
 function readItems() {
   const byName = new Map();
   const byTierSlot = new Map();
-  const shape = /<Object\s+type="[^"]+"\s+id="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
+  // Attributes in whatever order the client wrote them; insisting on type
+  // first walks past a sixth of the file.
+  const shape = /<Object\b[^>]*\bid="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
   const SLOT_NAME = {
     1: 'weapon', 2: 'weapon', 3: 'weapon', 8: 'weapon', 17: 'weapon', 24: 'weapon',
     4: 'ability', 5: 'ability', 11: 'ability', 12: 'ability', 13: 'ability',
