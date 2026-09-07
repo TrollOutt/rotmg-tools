@@ -361,6 +361,38 @@ for (const one of facts.classes) {
 }
 
 /*
+ * And a picture for every item the site does not already have one of.
+ *
+ * The folder of item art came from the wiki, so it is always a patch behind
+ * the game: the week an update lands, every new thing in it is missing from
+ * that folder, and a bench that hides what it has no picture of hides exactly
+ * the items everybody has come to ask about. The client has the art - it is
+ * drawing it - so it is cut from there, the same way the bolts and the things
+ * worth hitting are.
+ */
+let drawn = 0;
+for (const one of facts.items) {
+  if (!one.cut) continue;
+  if (cutOne('i:' + one.name, one.name, false)) { one.art = 'i:' + one.name; drawn++; }
+}
+/*
+ * And what has no picture anywhere still goes. A hundred and twenty of them
+ * are marked "(SB)" in the client - soulbound twins of things already on the
+ * list, kept without art of their own - and an empty grey box in a picker is
+ * worse than one choice fewer: there is nothing to recognise and nothing to
+ * pick.
+ */
+{
+  let gone = 0;
+  for (let i = facts.items.length - 1; i >= 0; i--) {
+    const one = facts.items[i];
+    if (one.cut && !one.art) { facts.items.splice(i, 1); gone++; }
+    else delete one.cut;
+  }
+  if (gone) console.log('  ' + gone + ' with no picture anywhere dropped');
+}
+
+/*
  * And an icon for each enchantment, which is the one thing on that side of
  * the page nobody can identify from words alone: a thousand of them, most
  * named "something Bonus" with a numeral, and the picture is how a player
@@ -475,7 +507,7 @@ facts.sheet = {
 fs.writeFileSync(FACTS, JSON.stringify(facts) + '\n');
 
 console.log('\n  ' + hitters + ' targets, ' + folk + ' classes, ' + bolts
-  + ' bolts and ' + charms + ' enchantment icons on one '
+  + ' bolts, ' + drawn + ' items and ' + charms + ' enchantment icons on one '
   + WIDE + 'x' + tall + ' sheet'
   + '\n  -> ' + path.relative(root, png)
   + '  (' + (fs.statSync(png).size / 1024).toFixed(0) + ' KB)'
