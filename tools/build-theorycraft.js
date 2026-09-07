@@ -443,6 +443,36 @@ for (const m of enchantText.matchAll(
      * could hold nothing worth having, because the game's own rules leave
      * only these in the pool once two statistics are on it.
      */
+    /*
+     * A share of what the gear already gives.
+     *
+     * Two hundred and seventy-one of them are built this way - the whole
+     * "Relative Attack Bonus IV" family and everything like it - and the
+     * client is precise about what the share is of: "Increases Attack by 16%
+     * of Bonus Attack", which is the attack your equipment gives, not the
+     * attack you have. So they are worth nothing on a bare character and a
+     * great deal on a good one, which is exactly why every build guide reaches
+     * for them and why a page that could not read them was giving the wrong
+     * answer to anybody near the top of the game.
+     *
+     * A different tag from the one items use: an item says IncrementStatRelative
+     * and takes its share of the whole statistic, an enchantment says
+     * BonusStatRelative and takes its share of the bonus. Two rules, two
+     * names, and the client keeps them apart.
+     */
+    rel: (() => {
+      const out = [];
+      for (const one of inner.matchAll(
+        /<ActivateOnEquip([^>]*)>BonusStatRelative<\/ActivateOnEquip>/g)) {
+        const stat = /stat="([^"]+)"/.exec(one[1]);
+        const of = /statRelativeTo="([^"]+)"/.exec(one[1]);
+        const amount = /amount="([^"]+)"/.exec(one[1]);
+        const n = amount ? Number(amount[1]) : NaN;
+        if (!stat || !of || !Number.isFinite(n)) continue;
+        out.push({ stat: stat[1], of: of[1], pct: n });
+      }
+      return out.length ? out : undefined;
+    })(),
     heal: (() => {
       const out = {};
       for (const one of inner.matchAll(
