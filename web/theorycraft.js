@@ -212,7 +212,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       exalts,
       gear,
       goal: 'dps',
-      against: 0,
+      // Aimed at whatever is being fought, not at a bare target: a build is
+      // read against the thing it is meant to kill.
+      against: null,
       /*
        * Something worth timing. The list is sorted by hit points and the top
        * of it is a training dummy with ten million of them, which tells you
@@ -1149,14 +1151,20 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       pen.globalAlpha = 1;
     }
 
+    /*
+     * Whose number is whose. The life left was drawn at the left edge, under
+     * the character, where it read as something about the character - it is
+     * the target's, so it is written under the target, and the clock and the
+     * running total sit on the other side where the fight is being counted
+     * rather than suffered.
+     */
     pen.font = '11px ui-monospace, monospace';
-    pen.fillStyle = 'rgba(255,255,255,.55)';
-    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), 22, tall - 25);
     pen.textAlign = 'right';
-    pen.fillStyle = 'rgba(255,255,255,.55)';
-    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt',
-      wide - 22, tall - 25);
+    pen.fillStyle = 'rgba(255,255,255,.6)';
+    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - 22, tall - 25);
     pen.textAlign = 'left';
+    pen.fillStyle = 'rgba(255,255,255,.45)';
+    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', 22, tall - 25);
 
     /* And how long it took, said once and said large. */
     if (duel.hp <= 0) {
@@ -1209,6 +1217,45 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     picking = { kind: 'ench', hand, at };
     const worn = build.gear[hand];
     if (!worn.name) return;
+
+    /*
+     * The calculator's own dialogue, where it exists. It already shows an
+     * enchantment the way this project shows one - the icon, the sentence,
+     * the labels it gives and the labels it refuses, its weight - and two
+     * dialogues for the same job would have drifted apart inside a month.
+     */
+    const held = rulesFor();
+    if (held && typeof window.openEnchantPicker === 'function') {
+      const item = data.byItem[worn.name];
+      const locks = [];
+      worn.ench.forEach((id, i) => {
+        if (i === at || !id) return;
+        const one = data.byEnch[id];
+        if (one) locks.push(one.name);
+      });
+      const pool = EnchantEngine.eligiblePool(held, {
+        item: worn.name,
+        type: OF_HAND[item.hand] || 'WEAPON',
+        slots: worn.slots,
+        locks,
+        subtypes: new Set()
+      }, null);
+      const opened = window.openEnchantPicker({
+        title: 'Slot ' + (at + 1) + ' · ' + worn.name,
+        sub: pool.length + ' available'
+          + (locks.length ? ' · ' + locks.length + ' removed by the other slots' : ''),
+        candidates: pool,
+        onPick: name => {
+          const mine = charmNamed(name);
+          build.gear[hand].ench[at] = mine ? mine.id : null;
+          picking = null;
+          keep();
+          paint();
+        }
+      });
+      if (opened) return;
+    }
+
     /*
      * One line per thing, not one per record. The client keeps a separate
      * enchantment for each item an effect can land on, so a picker built
@@ -1356,6 +1403,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', node.dataset.goal === build.goal);
     }
+    if (build.against === null || build.against === undefined) {
+      const boss = data.byBoss[build.boss];
+      build.against = boss ? Math.min(100, boss.def) : 0;
+    }
     el('tcAgainst').value = build.against;
     el('tcAgainstSay').textContent = build.against + ' armour';
     for (const node of el('tcBosses').querySelectorAll('[data-boss]')) {
@@ -1433,6 +1484,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const pick = event.target.closest('[data-boss]');
       if (!pick) return;
       build.boss = pick.dataset.boss;
+      // The aim follows the target, unless it has been moved by hand since.
+      const boss = data.byBoss[build.boss];
+      if (boss) build.against = Math.min(100, boss.def);
       keep(); paint();
     });
     el('tcPause').addEventListener('click', () => {

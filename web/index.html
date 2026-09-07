@@ -332,28 +332,7 @@
 </div>
 
 <!-- Enchantment picker ------------------------------------------------ -->
-<div id="pickerBackdrop" class="picker-backdrop" hidden>
-  <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
-    <header>
-      <div>
-        <strong id="pickerTitle">Choose an enchantment</strong>
-        <span id="pickerSub" class="header-aside"></span>
-      </div>
-      <button id="pickerClose" type="button" class="ghost-x" aria-label="Close">×</button>
-    </header>
-    <input id="pickerSearch" type="search" placeholder="Search by name, description or label…" autocomplete="off">
-    <!--
-      Narrow the list to the two kinds worth hunting on purpose. Neither is on
-      to begin with, so the list opens on everything the item can roll.
-    -->
-    <div id="pickerKinds" class="picker-kinds" role="group" aria-label="Show only certain enchantments">
-      <button type="button" class="filter-chip" data-kind="AWAKENED" aria-pressed="false">Awoken</button>
-      <button type="button" class="filter-chip" data-kind="UNIQUE" aria-pressed="false">Unique</button>
-    </div>
-    <div id="pickerList" class="picker-list"></div>
-    <footer id="pickerFooter"></footer>
-  </div>
-</div>
+
 
 <!-- Theory crafting ------------------------------------------------- -->
 <div id="pageTheory" class="app page" hidden>
@@ -453,6 +432,36 @@
       </div>
       <div id="tcPicker" class="tc-picker"></div>
     </div>
+  </div>
+</div>
+
+<!--
+  The enchantment picker, at the top level rather than inside one page.
+
+  It began life inside the calculator and theory crafting now borrows it, and
+  a dialogue nested in a hidden page is a hidden dialogue - it opened, filled
+  itself in and showed nobody anything.
+-->
+<div id="pickerBackdrop" class="picker-backdrop" hidden>
+  <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <header>
+      <div>
+        <strong id="pickerTitle">Choose an enchantment</strong>
+        <span id="pickerSub" class="header-aside"></span>
+      </div>
+      <button id="pickerClose" type="button" class="ghost-x" aria-label="Close">×</button>
+    </header>
+    <input id="pickerSearch" type="search" placeholder="Search by name, description or label…" autocomplete="off">
+    <!--
+      Narrow the list to the two kinds worth hunting on purpose. Neither is on
+      to begin with, so the list opens on everything the item can roll.
+    -->
+    <div id="pickerKinds" class="picker-kinds" role="group" aria-label="Show only certain enchantments">
+      <button type="button" class="filter-chip" data-kind="AWAKENED" aria-pressed="false">Awoken</button>
+      <button type="button" class="filter-chip" data-kind="UNIQUE" aria-pressed="false">Unique</button>
+    </div>
+    <div id="pickerList" class="picker-list"></div>
+    <footer id="pickerFooter"></footer>
   </div>
 </div>
 
