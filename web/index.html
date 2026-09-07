@@ -372,16 +372,21 @@
 
       <section class="card step" data-step="1">
         <header><span class="step-badge">1</span><h2>The character</h2></header>
-        <label class="field">
-          <span class="field-label">Class</span>
-          <select id="tcClass"></select>
-        </label>
-        <div class="tc-switches">
+        <div class="tc-face-row">
+          <span id="tcFace" class="tc-face"></span>
+          <label class="field tc-face-pick">
+            <span class="field-label">Class</span>
+            <select id="tcClass"></select>
+          </label>
+          <label class="tc-lvl">
+            <span class="field-label">Level</span>
+            <input id="tcLevel" type="number" min="1" max="20" step="1">
+          </label>
+        </div>
+        <div class="tc-switches" role="group" aria-label="How far along">
           <button type="button" class="tc-switch" data-set="level20">Level 20</button>
           <button type="button" class="tc-switch" data-set="maxed">8/8</button>
           <button type="button" class="tc-switch" data-set="exalt">Exalted</button>
-          <label class="tc-lvl">Level
-            <input id="tcLevel" type="number" min="1" max="20" step="1"></label>
         </div>
         <div id="tcStats" class="tc-stats"></div>
       </section>
