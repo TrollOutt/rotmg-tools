@@ -305,6 +305,14 @@ for (const [, one] of byType) {
   if (!/<Enemy\s*\/>/.test(one.body)) continue;
   const hp = num(one.body, 'MaxHitPoints');
   if (!hp || hp < 1000) continue;
+  /*
+   * Only the things anybody builds against: the realm's encounters and the
+   * boss at the end of a dungeon. The client marks both the same way - it
+   * calls them Quest - and that leaves three hundred and sixty-eight instead
+   * of two and a half thousand, which is the difference between a list you
+   * can look through and a list you scroll past.
+   */
+  if (!/<Quest\s*\/>/.test(one.body)) continue;
   const labels = text(one.body, 'Labels') || '';
   bosses.push({
     name: text(one.body, 'DisplayId') || one.id,
@@ -389,7 +397,7 @@ bosses.sort((a, b) => b.hp - a.hp);
 
 /* ---------------- write it ---------------- */
 fs.mkdirSync(OUT, { recursive: true });
-const out = { classes, items, enchants, sets, bosses: bosses.slice(0, 400) };
+const out = { classes, items, enchants, sets, bosses };
 const file = path.join(OUT, 'theorycraft.json');
 fs.writeFileSync(file, JSON.stringify(out) + '\n');
 
