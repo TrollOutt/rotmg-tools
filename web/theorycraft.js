@@ -181,13 +181,26 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return { each, many, every, dps: each * many / every, reach: shot.reach };
   }
 
+  /*
+   * With one hand or with both.
+   *
+   * A wizard's staff and his spell are two different weapons and a build can
+   * be judged on either - the spell is what kills a boss and the staff is
+   * what clears a room - so the bench lets you take one away. Everything on
+   * the page reads the same choice: the figures, the curve and the fight all
+   * count the same hands, or they would be three answers to three questions
+   * nobody asked.
+   */
+  const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
+
   function numbersFor(state, def) {
     const stats = statsOf(state);
     if (!stats) return null;
+    const using = state.using || 'both';
     const weapon = data.byItem[(state.gear.weapon || {}).name];
     const ability = data.byItem[(state.gear.ability || {}).name];
-    const gun = weaponRate(weapon, stats.now, def);
-    const spell = abilityRate(ability, stats.now, def);
+    const gun = using === 'spell' ? NONE : weaponRate(weapon, stats.now, def);
+    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def);
     return { stats, gun, spell, total: gun.dps + spell.dps };
   }
 
@@ -212,6 +225,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       exalts,
       gear,
       goal: 'dps',
+      using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
       // read against the thing it is meant to kill.
       against: null,
@@ -881,7 +895,8 @@ const TINT = {
    */
   const duel = {
     on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0,
-    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: []
+    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [],
+    mp: 0, mpFull: 0
   };
 
   function artOfClass(kind) {
@@ -951,6 +966,11 @@ const TINT = {
     duel.full = boss ? boss.hp : 0;
     duel.hp = duel.full;
     duel.bits.length = 0;
+    // You walk in with a full pool, which is why the opening is faster than
+    // the rest: the first few casts are paid for out of savings.
+    const stats = statsOf(build);
+    duel.mpFull = stats ? stats.now.mp : 0;
+    duel.mp = duel.mpFull;
   }
 
   /* One frame of it, at whatever rate the browser is painting. */
@@ -981,10 +1001,19 @@ const TINT = {
         }
       }
     }
-    if (spell.dps > 0 && spell.every > 0) {
+    /*
+     * The magic comes back at the rate wisdom says it does, and a cast is
+     * paid for out of what is there. So the first seconds of a fight are the
+     * fast ones and the rest is whatever the pool can afford - which is the
+     * thing a sustained figure cannot show you.
+     */
+    const cost = (build.using !== 'gun' && ability && ability.mp) || 0;
+    duel.mp = Math.min(duel.mpFull, duel.mp + MANA_AT(stats.wis) * delta);
+    if (spell.dps > 0 && cost) {
       duel.spell -= delta;
-      if (duel.spell <= 0) {
-        duel.spell += spell.every;
+      if (duel.spell <= 0 && duel.mp >= cost) {
+        duel.mp -= cost;
+        duel.spell = 0.6;                     // as fast as a hand can cast
         for (let n = 0; n < (spell.many || 1); n++) {
           duel.shots.push({
             at: 0, lane: (n - ((spell.many || 1) - 1) / 2) * 0.16,
@@ -1159,6 +1188,15 @@ const TINT = {
     round(pen, 22, tall - 20, barW, 7, 3.5); pen.fill();
     pen.fillStyle = part > 0.35 ? '#8fd08a' : '#d4685f';
     round(pen, 22, tall - 20, Math.max(0, barW * part), 7, 3.5); pen.fill();
+
+    /* And the magic left, which is what paces the ability. */
+    if (duel.mpFull && build.using !== 'gun') {
+      const mine = Math.max(0, Math.min(1, duel.mp / duel.mpFull));
+      pen.fillStyle = 'rgba(255,255,255,.07)';
+      round(pen, 22, tall - 11, barW, 3, 1.5); pen.fill();
+      pen.fillStyle = '#5b8cd9';
+      round(pen, 22, tall - 11, Math.max(0, barW * mine), 3, 1.5); pen.fill();
+    }
 
     /* Whatever is left of it, on its way outward. */
     if (duel.bits.length) {
@@ -1420,6 +1458,9 @@ const TINT = {
       const which = node.dataset.set;
       node.classList.toggle('is-on', !!build[which]);
     }
+    for (const node of el('tcBody').querySelectorAll('[data-using]')) {
+      node.classList.toggle('is-on', node.dataset.using === (build.using || 'both'));
+    }
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', node.dataset.goal === build.goal);
     }
@@ -1500,6 +1541,12 @@ const TINT = {
       build.against = Number(event.target.value) || 0;
       el('tcAgainstSay').textContent = build.against + ' armour';
       drawNumbers(); drawGraph(); keep();
+    });
+    el('tcBody').addEventListener('click', event => {
+      const hand = event.target.closest('[data-using]');
+      if (!hand) return;
+      build.using = hand.dataset.using;
+      keep(); paint();
     });
     el('tcBosses').addEventListener('click', event => {
       const pick = event.target.closest('[data-boss]');
