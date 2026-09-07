@@ -383,8 +383,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       // pulled is the reader's to set.
       goals: ['dps'],
       share: {},
-      // Everything the game has, up to any tier.
-      roof: 0,
+      // Everything the game has, to the top of it.
       scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
@@ -593,17 +592,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function itemsFor(hand, klass) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
-    /*
-     * And a ceiling, for the question nobody can ask otherwise: what is the
-     * best I can put together before the endgame. A tier is the game's own
-     * measure of how far up something is, so capping it caps the answer -
-     * and untiered gear goes with it, since a thing with no tier is a drop
-     * from the top of the game and would walk straight through the ceiling.
-     */
-    const roof = build && build.roof;
     return data.items.filter(one => one.hand === hand
-      && (slot === undefined || one.slot === slot)
-      && !(roof && (one.tier === undefined || one.tier > roof)));
+      && (slot === undefined || one.slot === slot));
   }
 
   /* ---------------- the optimiser ---------------- */
@@ -2130,10 +2120,6 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
-    const roof = el('tcRoof');
-    if (roof && roof.value !== String(build.roof || '')) {
-      roof.value = String(build.roof || '');
-    }
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
@@ -2207,10 +2193,6 @@ const TINT = {
       const scope = event.target.closest('[data-scope]');
       if (!scope) return;
       build.scope = scope.dataset.scope;
-      keep(); paint();
-    });
-    el('tcRoof').addEventListener('change', event => {
-      build.roof = Number(event.target.value) || 0;
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {
