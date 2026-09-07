@@ -767,11 +767,23 @@ const TINT = {
      * beneath it or in the fight above it, and a wall of figures is what
      * the page looked like before somebody said so.
      */
+    /*
+     * The middle two describe whichever hand is doing the work. They were the
+     * weapon's, always, so turning the weapon off left two noughts sitting
+     * there claiming the ability fires nothing - when what it does is throw
+     * one big shot every few seconds, which is the interesting half of the
+     * comparison.
+     */
+    const spellOnly = build.using === 'spell';
+    const hand = spellOnly ? numbers.spell : numbers.gun;
+    const often = spellOnly
+      ? (hand.every ? round(1 / hand.every) : 0)
+      : round(hand.rate);
     const rows = [
       ['damage a second', commas(numbers.total), true],
-      ['shots a second', round(numbers.gun.rate)],
-      ['each shot', commas(numbers.gun.each)
-        + (numbers.gun.many > 1 ? ' x ' + numbers.gun.many : '')]
+      [spellOnly ? 'casts a second' : 'shots a second', often],
+      [spellOnly ? 'each cast' : 'each shot', commas(hand.each)
+        + (hand.many > 1 ? ' x ' + hand.many : '')]
     ];
     if (kill !== null) {
       rows.push([esc(boss.name) + ' dies in', round(kill) + 's', true]);
