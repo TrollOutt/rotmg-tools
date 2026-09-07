@@ -2263,6 +2263,15 @@ body.globe-wide .home-card-art { animation: none !important; }
  * reach, and the whole thing is a shade warmer than the panels around it so
  * the frame reads as a place rather than as another chart.
  */
+/* Which hands are fighting, said as three little tabs over the frame. */
+.tc-hands { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.tc-hands button {
+  background: transparent; border: 0; color: var(--dim); font: inherit; font-size: 11px;
+  padding: 3px 10px; cursor: pointer; white-space: nowrap;
+}
+.tc-hands button:hover { color: var(--text); }
+.tc-hands button.is-on { background: var(--accent); color: #10141c; font-weight: 650; }
+
 .tc-duel {
   width: 100%; height: 178px; display: block; border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, .07);
