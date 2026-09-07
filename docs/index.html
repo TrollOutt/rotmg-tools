@@ -2026,13 +2026,6 @@ body.globe-wide .home-card-art { animation: none !important; }
  * the whole - so the row reads as one hundred per cent split up rather than
  * as three unrelated numbers.
  */
-.tc-roof {
-  background: rgba(255, 255, 255, .05); color: var(--text);
-  border: 1px solid var(--line); border-radius: 999px;
-  font: inherit; font-size: 11.5px; padding: 3px 8px; cursor: pointer;
-}
-.tc-roof:hover { border-color: var(--accent); }
-
 .tc-mix {
   display: flex; flex-wrap: wrap; gap: 10px 18px;
   margin: 12px 0 2px; padding: 11px 13px;
@@ -2860,18 +2853,6 @@ body.globe-wide .home-card-art { animation: none !important; }
       <section class="card step" data-step="2">
         <header><span class="step-badge">2</span><h2>The gear</h2>
           <span class="header-aside">
-            <select id="tcRoof" class="tc-roof"
-              title="Nothing above this tier, in any of the four slots - untiered gear included">
-              <option value="0">Any tier</option>
-              <option value="4">up to T4</option>
-              <option value="6">up to T6</option>
-              <option value="8">up to T8</option>
-              <option value="10">up to T10</option>
-              <option value="11">up to T11</option>
-              <option value="12">up to T12</option>
-              <option value="13">up to T13</option>
-              <option value="14">up to T14</option>
-            </select>
             click the padlock to keep one</span></header>
         <div id="tcGear" class="tc-gear"></div>
       </section>
@@ -5870,8 +5851,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       // pulled is the reader's to set.
       goals: ['dps'],
       share: {},
-      // Everything the game has, up to any tier.
-      roof: 0,
+      // Everything the game has, to the top of it.
       scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
@@ -6080,17 +6060,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function itemsFor(hand, klass) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
-    /*
-     * And a ceiling, for the question nobody can ask otherwise: what is the
-     * best I can put together before the endgame. A tier is the game's own
-     * measure of how far up something is, so capping it caps the answer -
-     * and untiered gear goes with it, since a thing with no tier is a drop
-     * from the top of the game and would walk straight through the ceiling.
-     */
-    const roof = build && build.roof;
     return data.items.filter(one => one.hand === hand
-      && (slot === undefined || one.slot === slot)
-      && !(roof && (one.tier === undefined || one.tier > roof)));
+      && (slot === undefined || one.slot === slot));
   }
 
   /* ---------------- the optimiser ---------------- */
@@ -7617,10 +7588,6 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
-    const roof = el('tcRoof');
-    if (roof && roof.value !== String(build.roof || '')) {
-      roof.value = String(build.roof || '');
-    }
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
@@ -7694,10 +7661,6 @@ const TINT = {
       const scope = event.target.closest('[data-scope]');
       if (!scope) return;
       build.scope = scope.dataset.scope;
-      keep(); paint();
-    });
-    el('tcRoof').addEventListener('change', event => {
-      build.roof = Number(event.target.value) || 0;
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {
