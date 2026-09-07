@@ -90,7 +90,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       top[key] = ceiling;
       out[key] = base[key];
     }
-    const from = { gear: {}, ench: {}, set: {}, exalt: {} };
+    const from = { gear: {}, ench: {}, set: {}, exalt: {}, share: {} };
 
     /*
      * Sets first, because they are decided by what is worn rather than by
@@ -135,8 +135,33 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       from.exalt[key] = state.exalt ? (state.exalts[key] || 0) : 0;
       out[key] = base[key] + (from.gear[key] || 0) + (from.ench[key] || 0)
         + (from.set[key] || 0) + from.exalt[key];
-      out[key] = Math.round(out[key] * 10) / 10;
     }
+
+    /*
+     * And last, the ones given as a share of another statistic.
+     *
+     * The Wretched Rags do not add life: they take half of it away and give
+     * back all of your mana as life, which on a wizard with nine hundred mana
+     * is eight hundred and fifty. They are read after everything else,
+     * because a share is a share of the whole - what the class has, what is
+     * worn and what the exaltations added - and taken from the totals as they
+     * stood before any share was applied, so two of them cannot feed on each
+     * other.
+     */
+    const stood = Object.assign({}, out);
+    for (const hand of HANDS) {
+      const worn = state.gear[hand[0]];
+      const item = worn && data.byItem[worn.name];
+      for (const part of (item && item.share) || []) {
+        const key = OF_STAT[part.stat], of = OF_STAT[part.of];
+        if (!key || !of) continue;
+        const much = stood[of] * part.pct / 100;
+        from.share[key] = (from.share[key] || 0) + much;
+        out[key] += much;
+      }
+    }
+
+    for (const [key] of STATS) out[key] = Math.round(out[key] * 10) / 10;
     return { now: out, base, top, from };
   }
 
@@ -313,6 +338,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       gear,
       // More than one thing can be asked for at once.
       goals: ['dps'],
+      // Tradeable things only, until somebody says otherwise.
+      bound: false,
       scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
@@ -518,11 +545,19 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     });
   }
 
-  function itemsFor(hand, klass) {
+  function itemsFor(hand, klass, bound) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
+    /*
+     * Two thirds of the catalogue is soulbound, and a list of things nobody
+     * can trade for is a poor place to start planning, so it is put away
+     * behind a switch rather than thrown out: the build a player actually
+     * has is very often made of exactly those.
+     */
+    const shut = !(bound === undefined ? build && build.bound : bound);
     return data.items.filter(one => one.hand === hand
-      && (slot === undefined || one.slot === slot));
+      && (slot === undefined || one.slot === slot)
+      && !(shut && one.sb));
   }
 
   /* ---------------- the optimiser ---------------- */
@@ -668,7 +703,7 @@ const TINT = {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of itemsFor(hand, work.klass)) {
+        for (const one of itemsFor(hand, work.klass, work.bound)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
@@ -877,6 +912,13 @@ const TINT = {
             bits.push(plus(item.worn[tag]) + ' ' + tag);
           }
         }
+        // A statistic given as a share of another one, said as the game says
+        // it: half your life off, all of your mana on as life.
+        for (const part of item.share || []) {
+          bits.push(plus(part.pct) + '% of ' + part.of
+            + (part.of === part.stat ? '' : ' as ' + part.stat));
+        }
+        if (item.sb) bits.push('soulbound');
       }
 
       /* And its enchantments, as chips rather than as a faint list. */
@@ -1643,7 +1685,7 @@ const TINT = {
 
   function openItems(hand) {
     picking = { kind: 'item', hand };
-    const list = itemsFor(hand, build.klass);
+    const list = itemsFor(hand, build.klass, build.bound);
     show('Choose a ' + hand, list.map(one => {
       const gun = one.shots && one.shots[0];
       const bits = [];
@@ -1653,6 +1695,10 @@ const TINT = {
       if (one.mp) bits.push(one.mp + ' MP');
       if (one.worn) {
         for (const t of Object.keys(one.worn)) bits.push(plus(one.worn[t]) + ' ' + t);
+      }
+      for (const part of one.share || []) {
+        bits.push(plus(part.pct) + '% of ' + part.of
+          + (part.of === part.stat ? '' : ' as ' + part.stat));
       }
       return { id: one.name, name: one.name, says: bits.join(' · '), art: true };
     }), 'nothing');
@@ -1854,6 +1900,9 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
+    for (const node of el('tcBody').querySelectorAll('[data-bound]')) {
+      node.classList.toggle('is-on', node.dataset.bound === (build.bound ? '1' : '0'));
+    }
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
@@ -1926,6 +1975,12 @@ const TINT = {
       const scope = event.target.closest('[data-scope]');
       if (!scope) return;
       build.scope = scope.dataset.scope;
+      keep(); paint();
+    });
+    el('tcBody').addEventListener('click', event => {
+      const bound = event.target.closest('[data-bound]');
+      if (!bound) return;
+      build.bound = bound.dataset.bound === '1';
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {

@@ -130,6 +130,31 @@ function shotOf(body) {
   return out.length ? out : undefined;
 }
 
+/*
+ * A statistic given as a share of another one.
+ *
+ * The Wretched Rags do not add life; they say IncrementStatRelative minus
+ * fifty per cent of MAXHP and plus a hundred per cent of MAXMP, which on a
+ * wizard with nine hundred mana is eight hundred and fifty life. Thirty-nine
+ * things in the game are built this way, and read as flat bonuses they read
+ * as nothing at all - which is why a build made of them came out lighter on
+ * the page than it is in the game.
+ */
+function shareOf(body) {
+  const out = [];
+  for (const m of body.matchAll(
+    /<ActivateOnEquip\s+([^>]*)>\s*IncrementStatRelative\s*</g)) {
+    const attrs = m[1];
+    const stat = /stat="([^"]+)"/.exec(attrs);
+    const of = /statRelativeTo="([^"]+)"/.exec(attrs);
+    const amount = /amount="([^"]+)"/.exec(attrs);
+    const n = amount ? Number(amount[1]) : NaN;
+    if (!stat || !of || !Number.isFinite(n)) continue;
+    out.push({ stat: stat[1], of: of[1], pct: n });
+  }
+  return out.length ? out : undefined;
+}
+
 /* What a piece of gear, or an enchantment, is worth for being worn. */
 function wornOf(body) {
   const out = {};
@@ -241,11 +266,20 @@ for (const [, one] of byType) {
    * not a thing a build can be planned around by somebody who does not
    * already have it, and it is two thirds of the catalogue.
    */
-  if (/<Soulbound\s*\/>/.test(one.body)) continue;
   items.push({
     name: one.id,
     hand,
     slot,
+    /*
+     * Soulbound, and kept anyway.
+     *
+     * Two thirds of the catalogue is soulbound, and a list of things nobody
+     * can trade for is a poor place to start planning - so the page hides
+     * them by default. It does not throw them away, because the build a
+     * player actually has is very often made of them, and a bench that
+     * cannot be shown that build cannot answer a question about it.
+     */
+    sb: /<Soulbound\s*\/>/.test(one.body) ? 1 : undefined,
     tier: num(one.body, 'Tier'),
     bag: num(one.body, 'BagType'),
     mp: num(one.body, 'MpCost'),
@@ -253,6 +287,7 @@ for (const [, one] of byType) {
     many: num(one.body, 'NumProjectiles'),
     fan: num(one.body, 'ArcGap'),
     worn: wornOf(one.body),
+    share: shareOf(one.body),
     shots: shotOf(one.body),
     // What the ability actually does, when it is not simply a projectile.
     does: text(one.body, 'Activate'),
