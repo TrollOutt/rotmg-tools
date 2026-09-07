@@ -5046,11 +5046,15 @@ function settleInto(box) {
   if (view.scale < past) view.scale = past;
 }
 
-function frame(now) {
-  /*
+/*
  * How much of the chat you want: all of it, a whisper of it, or none. It sits
  * over the map, so somebody reading the map has to be able to push it out of
  * the way without losing it, and the choice is remembered.
+ *
+ * Wired once, at the start. It used to sit inside the frame function, so the
+ * knob was found again and given another click listener sixty times a second
+ * - three and a half thousand of them a minute, none of them ever removed,
+ * and every one firing on a click.
  */
 {
   const knob = document.getElementById('chatKnob');
@@ -5064,7 +5068,34 @@ function frame(now) {
   show();
 }
 
-requestAnimationFrame(frame);
+/*
+ * How often to draw at all.
+ *
+ * A map nobody is looking at costs exactly what one somebody is looking at
+ * costs: the whole planet, its clouds, its weather and everything walking on
+ * it, sixty times a second, in a frame two inches across on a page about
+ * something else. The page holding the frame says which of the three this is
+ * - full while it is the thing being looked at, slow while it is a picture in
+ * the corner, still while it is covered or off the screen - and a frame that
+ * is not due is dropped before anything is drawn.
+ */
+let pace = 0;                            // milliseconds between frames
+let drawnAt = -1e9;
+window.addEventListener('message', event => {
+  const said = event.data;
+  if (!said || said.rotmg !== 'pace') return;
+  pace = said.pace === 'still' ? Infinity : said.pace === 'slow' ? 110 : 0;
+});
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  /*
+   * Nothing at all while the tab is in the background, or while the frame is
+   * not due. The clock is moved on with it, so the first frame back is a step
+   * rather than a leap - everything downstream multiplies by that gap.
+   */
+  if (document.hidden || now - drawnAt < pace) { last = now; return; }
+  drawnAt = now;
   /*
    * Never negative. Everything downstream of this multiplies by it - the
    * easing, the walk home, the creatures' step - so a clock that went

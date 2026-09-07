@@ -1578,6 +1578,7 @@ function bind() {
       setGlobe(true);
     });
   }
+  watchGlobe();
   const globeBack = document.getElementById('globeBack');
   if (globeBack) globeBack.addEventListener('click', () => setGlobe(false));
   const globeShut = document.getElementById('globeShut');
@@ -2518,7 +2519,11 @@ function pointAtAtlas() {
   fetch(base + 'atlas.json', { method: 'HEAD' })
     .then(response => {
       if (!response.ok) throw new Error('no atlas');
-      frame.addEventListener('load', () => tellAtlas({ rotmg: 'settle', frames: 12 }));
+      frame.addEventListener('load', () => {
+        atlasPace = '';                  // a fresh document knows nothing yet
+        paceAtlas();
+        tellAtlas({ rotmg: 'settle', frames: 12 });
+      });
       frame.src = base + 'index.html';
     })
     .catch(() => {
@@ -2618,6 +2623,44 @@ function holdAmbience(hold) {
   if (!ambience.timer) startAmbience();
 }
 
+/*
+ * What the atlas in the frame should be spending.
+ *
+ * It is a whole world - ground, clouds, weather, everything walking about -
+ * and it costs the same whether it is the page or a thumbnail in the corner
+ * of one. Three states, decided here and nowhere else:
+ *
+ *   full     it is what is being looked at, opened out over the window
+ *   slow     it is the picture on the way in, a few frames a second
+ *   still    it is behind another page, scrolled off, or the tab is away
+ *
+ * Told rather than guessed: the frame is another document and knows none of
+ * this - which page is open, where the box has scrolled to, whether anyone
+ * is even at the machine.
+ */
+let atlasPace = '';
+function paceAtlas() {
+  const box = document.getElementById('globeBox');
+  let want = 'still';
+  if (!document.hidden && document.body.dataset.page === 'home' && box) {
+    want = globeWide() ? 'full' : (globeSeen ? 'slow' : 'still');
+  }
+  if (want === atlasPace) return;
+  atlasPace = want;
+  tellAtlas({ rotmg: 'pace', pace: want });
+}
+
+let globeSeen = true;
+function watchGlobe() {
+  const box = document.getElementById('globeBox');
+  if (!box || typeof IntersectionObserver === 'undefined') return;
+  new IntersectionObserver(entries => {
+    for (const one of entries) globeSeen = one.isIntersecting;
+    paceAtlas();
+  }, { rootMargin: '80px' }).observe(box);
+}
+document.addEventListener('visibilitychange', paceAtlas);
+
 let globeSettling = 0;
 function setGlobe(open) {
   const box = document.getElementById('globeBox');
@@ -2649,6 +2692,9 @@ function setGlobe(open) {
     placeGlobe(box, { top: room.top, left: room.left, width: room.width, height: room.height });
   }
 
+  // Paced before it is told to settle: a still frame cannot settle into
+  // anything, since the settling is counted one drawn frame at a time.
+  paceAtlas();
   tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
   holdAmbience(open);
 
@@ -2727,6 +2773,7 @@ function showPage(name) {
     else setTimeout(pointAtAtlas, 700);
   }
   setGlobe(wideOpen);
+  paceAtlas();
   window.scrollTo(0, 0);
 
   /*
