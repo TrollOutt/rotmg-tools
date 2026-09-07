@@ -2028,17 +2028,20 @@ body.globe-wide .home-card-art { animation: none !important; }
 .tc-stat u { text-decoration: none; color: var(--dim); font-size: 10.5px; font-weight: 400; }
 
 /* --- the gear --- */
-.tc-gear { display: flex; flex-direction: column; gap: 8px; }
+.tc-gear { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.card, .column, .layout { min-width: 0; }
+.tc-slot-head { min-width: 0; }
+/*
+ * A gear row grows to hold what is in it. It used to be clipped, which meant
+ * a long item name and a fourth enchantment were simply cut off at the edge
+ * of the box instead of pushing it taller.
+ */
 .tc-slot {
   border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, .16); overflow: hidden;
+  background: rgba(0, 0, 0, .16); min-width: 0;
 }
 .tc-slot.is-held { border-color: var(--accent); background: rgba(121, 197, 232, .06); }
-.tc-slot.is-held .tc-item-where::after,
-.tc-ench.is-held::after {
-  content: 'kept'; margin-left: 6px; font-size: 9.5px; letter-spacing: .6px;
-  color: var(--accent); text-transform: uppercase; font-weight: 700;
-}
+
 .tc-slot-head { display: flex; align-items: center; gap: 11px; padding: 9px 11px 7px; }
 .tc-item-pick {
   flex: 1; display: flex; align-items: center; gap: 11px; text-align: left; min-width: 0;
@@ -2062,15 +2065,38 @@ body.globe-wide .home-card-art { animation: none !important; }
   color: var(--muted); font-size: 11.5px; margin: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.tc-ench-pick { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/*
+ * A chip is one line and holds its parts apart. They were overlapping because
+ * the name was allowed to be any width and the effect beside it was not given
+ * room of its own.
+ */
+.tc-ench-pick {
+  flex: 0 1 auto; min-width: 0; max-width: 18ch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tc-ench u { flex: 0 0 auto; }
+.tc-ench .tc-charm { flex: 0 0 auto; }
+.tc-ench { min-width: 0; }
+.tc-ench u { white-space: nowrap; }
 .tc-facts b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tc-facts i { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .header-aside { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/*
+ * Keeping a thing. It was a greyed-out padlock glyph that nobody could see,
+ * which is the same as not having the feature: it says what it does now, and
+ * says the opposite once it is doing it.
+ */
 .tc-hold {
-  background: none; border: 0; cursor: pointer; font-size: 13px; padding: 0 2px;
-  flex: none; line-height: 1; filter: grayscale(1) opacity(.5);
+  flex: none; cursor: pointer; font: inherit; font-size: 10px;
+  text-transform: uppercase; letter-spacing: .6px; font-weight: 700;
+  color: var(--dim); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px;
 }
-.tc-hold:hover, .tc-slot.is-held .tc-hold, .tc-ench.is-held .tc-hold { filter: none; }
+.tc-hold:hover { color: var(--text); border-color: var(--muted); }
+.tc-slot.is-held > .tc-slot-head > .tc-hold,
+.tc-ench.is-held .tc-hold {
+  color: #10141c; background: var(--accent); border-color: var(--accent);
+}
 
 .tc-ench-strip { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 0 11px 10px; }
 .tc-ench {

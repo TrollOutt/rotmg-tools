@@ -196,6 +196,25 @@ for (const [, one] of byType) {
    * it. Left in, the calculator's answer to every question was the toolbox.
    */
   if (!labels.split(',').includes('EQUIPMENT')) continue;
+  /*
+   * And not the shiny copies. The client marks them itself - two hundred and
+   * fifty-seven carry a SHINY label - and a shiny is the same item with a
+   * sparkle on it, so every picker had each of them twice with nothing to
+   * choose between the two. A couple say it only in their name.
+   */
+  if (labels.split(',').includes('SHINY') || / Shiny$/.test(one.id)) continue;
+  /*
+   * Nor the machinery. Sixty-one things are filed as equipment and labelled
+   * EFFECT: they are the invisible carriers a proc fires through - "AoO
+   * Shield Proc" - and nobody equips one.
+   */
+  if (labels.split(',').includes('EFFECT')) continue;
+  /*
+   * Nor anything soulbound. It cannot be traded for or handed over, so it is
+   * not a thing a build can be planned around by somebody who does not
+   * already have it, and it is two thirds of the catalogue.
+   */
+  if (/<Soulbound\s*\/>/.test(one.body)) continue;
   items.push({
     name: one.id,
     hand,
@@ -214,6 +233,21 @@ for (const [, one] of byType) {
     labels: labels || undefined
   });
 }
+/*
+ * And nothing the page cannot show. An item with no sprite in the site's own
+ * item folder draws an empty grey box in every picker, which is worse than
+ * not offering it - there is nothing to recognise and nothing to choose.
+ */
+{
+  const index = path.join(root, 'web', 'assets', 'items', 'index.json');
+  if (fs.existsSync(index)) {
+    const have = new Set(Object.keys(JSON.parse(fs.readFileSync(index, 'utf8'))));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (!have.has(items[i].name)) items.splice(i, 1);
+    }
+  }
+}
+
 items.sort((a, b) => a.hand.localeCompare(b.hand)
   || (a.tier === undefined ? 99 : a.tier) - (b.tier === undefined ? 99 : b.tier)
   || a.name.localeCompare(b.name));
