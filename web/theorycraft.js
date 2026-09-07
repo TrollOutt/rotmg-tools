@@ -795,6 +795,32 @@ const TINT = {
 
   let before = null;
 
+  /*
+   * What the bench is not showing you.
+   *
+   * A hundred and sixteen weapons and abilities throw something that does not
+   * travel in a straight line - it weaves, or speeds up, or comes back - and
+   * the client states the parameters of that without stating the algorithm.
+   * The bench draws a straight line, which is honest arithmetic for the
+   * damage and a lie about the flight, so it says which.
+   */
+  function drawFlight() {
+    const note = el('tcFlight');
+    if (!note) return;
+    const using = build.using || 'both';
+    const said = [];
+    for (const [hand, when] of [['weapon', 'gun'], ['ability', 'spell']]) {
+      if (using !== 'both' && using !== when) continue;
+      const item = data.byItem[(build.gear[hand] || {}).name];
+      const how = item && item.shots && item.shots[0] && item.shots[0].moves;
+      if (how) said.push(item.name + ' — ' + how);
+    }
+    note.hidden = !said.length;
+    note.textContent = said.length
+      ? 'Shown flying straight. In the game: ' + said.join('; ') + '.'
+      : '';
+  }
+
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -1080,7 +1106,13 @@ const TINT = {
 
     for (let i = duel.shots.length - 1; i >= 0; i--) {
       const one = duel.shots[i];
-      // A shot crosses the frame in a fifth of a second, whatever its range.
+      /*
+       * How far along its flight the shot is, kept apart from how it is
+       * drawn. Straight, from nought to one across the bench: this is the
+       * seam where a real model for a weaving or a returning shot would go,
+       * and until there is one the page says so rather than letting a
+       * straight line pass for the truth.
+       */
       one.at += delta * 5;
       if (one.at < 1) continue;
       duel.shots.splice(i, 1);
@@ -1553,6 +1585,7 @@ const TINT = {
     drawSlots();
     drawStats();
     drawNumbers();
+    drawFlight();
     drawGraph();
     resetDuel();
     drawDuel();
