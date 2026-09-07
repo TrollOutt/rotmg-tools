@@ -113,6 +113,9 @@ const sources = {
   awakenText: readText('Awakened Items', 'awakenedItems.txt'),
   realmTerrain: readText('Realm', 'realm-terrain.txt'),
   realmBeacons: readText('Realm', 'realm-beacons.txt'),
+  // Every class, item, enchantment, set and thing worth hitting, as taken out
+  // of the installed client by tools/build-theorycraft.js.
+  theoryText: readText('TheoryCraft', 'theorycraft.json'),
 };
 
 /* ---------------------------------------------------------------- *
@@ -314,6 +317,7 @@ const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
+const theorySource = readWeb('theorycraft.js');
 const whatsNewSource = readWeb('whats-new.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
@@ -396,7 +400,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -425,6 +429,7 @@ page = page
     `<script>\n${safe(fameSource)}\n</script>`,
     `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(whatsNewSource)}\n</script>`,
+    `<script>\n${safe(theorySource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);

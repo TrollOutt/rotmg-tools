@@ -2444,7 +2444,8 @@ async function load() {
  * The atlas has no page of its own any more: it is a frame on the way in,
  * and 'realm' means the way in with that frame opened out.
  */
-const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame', news: 'pageNews' };
+const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame',
+  news: 'pageNews', theory: 'pageTheory' };
 
 /*
  * Pointed at the atlas once, and not before the way in has painted.
@@ -2658,6 +2659,12 @@ function showPage(name) {
   if (page === 'news' && typeof WhatsNew !== 'undefined') {
     WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
   }
+  /*
+   * And the same for theory crafting, which is most of a megabyte of items,
+   * enchantments and things to hit. It reads it once, the first time it is
+   * asked for, and nobody who came for the enchanter pays for it.
+   */
+  if (page === 'theory' && typeof TheoryCraft !== 'undefined') TheoryCraft.start();
   /*
    * The frame is asked for while the browser is idle, and only on the page
    * that holds it. Anything else that was open is put away.
