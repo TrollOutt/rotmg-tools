@@ -1186,13 +1186,23 @@ body.globe-wide { overflow: hidden; }
  * once the fade is done, which is what saves the painting; the fade is only
  * so that the saving does not arrive as a blink.
  */
-.ambience { transition: opacity .78s ease; }
-body.globe-wide .ambience { opacity: 0; }
+/*
+ * And taken out of the picture altogether once it has faded. A layer at zero
+ * opacity is still a layer: the browser keeps compositing it, blur and all,
+ * behind a map that covers every pixel of it. Hiding it costs nothing on the
+ * way back, since visibility snaps in at the start of the fade in and only
+ * waits for the end of the fade out.
+ */
+.ambience { transition: opacity .78s ease, visibility 0s; }
+body.globe-wide .ambience {
+  opacity: 0; visibility: hidden; transition: opacity .78s ease, visibility 0s linear .78s;
+}
 /*
  * Everything else with a keyframe on it stops once the frame is open. These
  * are behind a full-page map and invisible, so there is nothing to fade -
  * and they are costing the map the frames they animate in.
  */
+body.globe-wide .ambience canvas,
 body.globe-wide .ambience-dom img,
 body.globe-wide .aurora span,
 body.globe-wide .news-bell-glyph,
