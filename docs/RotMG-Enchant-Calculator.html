@@ -10637,7 +10637,17 @@ function paceAtlas() {
   const box = document.getElementById('globeBox');
   let want = 'still';
   if (!document.hidden && document.body.dataset.page === 'home' && box) {
-    want = globeWide() ? 'full' : (globeSeen ? 'slow' : 'still');
+    /*
+     * And full while the frame is on the move, whichever way it is going.
+     *
+     * The box changes size sixty times a second while it opens or shuts, and
+     * the map inside re-fits itself to that box on the frames it draws. At
+     * thirty it re-fits on every other one, so half the frames of the
+     * movement show the map at the size the box was two frames ago - which is
+     * not a slower animation, it is a flickering one. The saving is for a box
+     * that is standing still.
+     */
+    want = (globeWide() || globeMoving) ? 'full' : (globeSeen ? 'slow' : 'still');
   }
   if (want === atlasPace) return;
   atlasPace = want;
@@ -10645,6 +10655,7 @@ function paceAtlas() {
 }
 
 let globeSeen = true;
+let globeMoving = false;
 function watchGlobe() {
   const box = document.getElementById('globeBox');
   if (!box || typeof IntersectionObserver === 'undefined') return;
@@ -10688,6 +10699,7 @@ function setGlobe(open) {
 
   // Paced before it is told to settle: a still frame cannot settle into
   // anything, since the settling is counted one drawn frame at a time.
+  globeMoving = true;
   paceAtlas();
   tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
   holdAmbience(open);
@@ -10700,6 +10712,8 @@ function setGlobe(open) {
   clearTimeout(globeSettling);
   globeSettling = setTimeout(() => {
     box.classList.remove('is-moving');
+    globeMoving = false;
+    paceAtlas();
     if (!globeWide()) {
       box.style.position = '';
       box.style.top = ''; box.style.left = ''; box.style.width = ''; box.style.height = '';
