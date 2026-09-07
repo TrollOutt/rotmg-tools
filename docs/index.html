@@ -2058,11 +2058,20 @@ body.globe-wide .home-card-art { animation: none !important; }
   height: 6px; background: rgba(0, 0, 0, .35); border-radius: 3px; overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
 }
+/*
+ * The game's own colours for the two that have them: life is red and magic is
+ * blue, everywhere in that game, and nobody reading a character sheet should
+ * have to check which row they are on.
+ */
 .tc-bar span {
   display: block; height: 100%; border-radius: 3px;
-  background: linear-gradient(90deg, rgba(121, 197, 232, .55), var(--accent));
+  background: linear-gradient(90deg, rgba(121, 197, 232, .5), var(--accent));
   transition: width .18s ease-out;
 }
+.tc-stat.is-hp .tc-bar span { background: linear-gradient(90deg, #8c3a3a, #d95f5f); }
+.tc-stat.is-mp .tc-bar span { background: linear-gradient(90deg, #34558c, #5f8fd9); }
+.tc-stat.is-hp b { color: #e58b8b; }
+.tc-stat.is-mp b { color: #8fb4ec; }
 .tc-stat.is-over .tc-bar span { background: linear-gradient(90deg, var(--accent), #f0c274); }
 .tc-stat b {
   color: var(--text); font-variant-numeric: tabular-nums; font-size: 13px;
@@ -2100,10 +2109,36 @@ body.globe-wide .home-card-art { animation: none !important; }
   flex: 1; display: flex; align-items: center; gap: 11px; text-align: left; min-width: 0;
   background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; padding: 0;
 }
+/*
+ * An inventory cell, as the game draws one: a square well with a lip of light
+ * along the top, a hard shadow inside it, and the sprite sitting in the
+ * middle unsmoothed. The frame takes its colour from what the item is - the
+ * game gives its best drops a warm border and nothing else one - so a slot
+ * reads at a glance without anybody having to look at the tier.
+ */
 .tc-icon-big {
-  width: 46px; height: 46px; flex: none; image-rendering: pixelated;
-  background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); object-fit: contain; padding: 4px;
+  width: 52px; height: 52px; flex: none; image-rendering: pixelated;
+  object-fit: contain; padding: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(0, 0, 0, .18)),
+    rgba(4, 6, 11, .72);
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .09),
+    inset 0 -6px 12px rgba(0, 0, 0, .45),
+    0 1px 2px rgba(0, 0, 0, .5);
+}
+.tc-icon-big.is-low { border-color: rgba(255, 255, 255, .12); }
+.tc-icon-big.is-mid { border-color: rgba(121, 197, 232, .45); }
+.tc-icon-big.is-high { border-color: rgba(178, 132, 226, .5); }
+.tc-icon-big.is-top { border-color: rgba(224, 161, 58, .55); }
+.tc-icon-big.is-ut {
+  border-color: rgba(240, 216, 150, .6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .12),
+    inset 0 -6px 12px rgba(0, 0, 0, .45),
+    0 0 10px rgba(240, 216, 150, .14);
 }
 .tc-item-said { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .tc-item-where {
@@ -2152,10 +2187,13 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 
 .tc-ench-strip { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 0 11px 10px; }
+/* A slotted-in enchantment, sitting in its own little well. */
 .tc-ench {
   display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
-  background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); padding: 3px 6px 3px 5px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .035), rgba(0, 0, 0, .2));
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 4px; padding: 3px 6px 3px 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
 }
 .tc-ench.is-empty { opacity: .55; }
 .tc-ench.is-held { border-color: var(--accent); opacity: 1; }
@@ -2183,19 +2221,37 @@ body.globe-wide .home-card-art { animation: none !important; }
   display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
   gap: 4px; max-height: 168px; overflow-y: auto;
 }
+/* The same cell as the gear, since a target is picked the same way. */
 .tc-boss {
   display: inline-flex; align-items: center; justify-content: center;
   aspect-ratio: 1; padding: 0; cursor: pointer;
-  background: rgba(0, 0, 0, .18); border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(0, 0, 0, .16)),
+    rgba(4, 6, 11, .6);
+  border: 1px solid rgba(255, 255, 255, .08); border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), inset 0 -5px 10px rgba(0, 0, 0, .4);
 }
-.tc-boss:hover { background: rgba(255, 255, 255, .07); }
-.tc-boss.is-on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(121, 197, 232, .18) inset; }
+.tc-boss:hover { border-color: rgba(255, 255, 255, .22); }
+.tc-boss.is-on {
+  border-color: rgba(224, 161, 58, .7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 12px rgba(224, 161, 58, .22);
+}
 
 /* --- the fight and the curve --- */
+/*
+ * A patch of ground with something standing on it. The wash across the bottom
+ * is the floor, the darkness at the edges is everything the torch does not
+ * reach, and the whole thing is a shade warmer than the panels around it so
+ * the frame reads as a place rather than as another chart.
+ */
 .tc-duel {
-  width: 100%; height: 170px; display: block; border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, .22); border: 1px solid var(--line);
+  width: 100%; height: 178px; display: block; border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, .07);
+  background:
+    radial-gradient(120% 80% at 50% 118%, rgba(94, 78, 58, .35), transparent 62%),
+    radial-gradient(90% 70% at 50% 40%, rgba(255, 255, 255, .045), transparent 70%),
+    linear-gradient(180deg, rgba(10, 11, 18, .9), rgba(17, 14, 12, .92));
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, .55);
 }
 .tc-facts {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr));
@@ -2276,6 +2332,14 @@ body.globe-wide .home-card-art { animation: none !important; }
   margin-left: auto; text-align: right; white-space: nowrap;
 }
 .tc-more { color: var(--dim); font-size: 11.5px; padding: 6px 10px; }
+
+/* --- and the small pixel-art courtesies --- */
+.tc-charm, .tc-face, .tc-icon-big, .tc-duel, .tc-boss img { image-rendering: pixelated; }
+.tc-face {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 -6px 12px rgba(0, 0, 0, .4);
+}
+#tcBody .card > header h2 { letter-spacing: .4px; }
+.tc-item-name { letter-spacing: .2px; }
 
 </style>
   <meta name="generator" content="rotmg-enchant-calculator standalone build 2026-09-07">
@@ -2667,15 +2731,17 @@ body.globe-wide .home-card-art { animation: none !important; }
         <div id="tcGear" class="tc-gear"></div>
       </section>
 
+
+
+    </section>
+
+    <section class="column" aria-label="What it does">
+
       <section class="card step" data-step="3">
         <header><span class="step-badge">3</span><h2>The target</h2>
           <span class="header-aside" id="tcBossSay"></span></header>
         <div id="tcBosses" class="tc-bosses"></div>
       </section>
-
-    </section>
-
-    <section class="column" aria-label="What it does">
 
       <section class="card">
         <header><h2>The fight</h2>
@@ -5765,10 +5831,30 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '"></span>';
   }
 
+  /*
+   * What the game would call this thing, so the cell can be framed the way
+   * the game frames it. Untiered gear - the drops people actually want - is
+   * marked UT in the client's own labels, and the tiered stuff bands the way
+   * its dust does: the low ones plain, the middle ones better, the top two
+   * the ones worth a white bag.
+   */
+  function gradeOf(name) {
+    const item = data.byItem[name];
+    if (!item) return '';
+    const labels = (item.labels || '').split(',');
+    if (labels.includes('UT')) return 'is-ut';
+    if (item.tier === undefined) return '';
+    if (item.tier >= 13) return 'is-top';
+    if (item.tier >= 10) return 'is-high';
+    if (item.tier >= 6) return 'is-mid';
+    return 'is-low';
+  }
+
   function itemIcon(name) {
     const src = artFor(name);
+    const grade = gradeOf(name);
     return src
-      ? '<img class="tc-icon-big" src="' + esc(src) + '" alt="" loading="lazy">'
+      ? '<img class="tc-icon-big ' + grade + '" src="' + esc(src) + '" alt="" loading="lazy">'
       : '<span class="tc-icon-big"></span>';
   }
 
@@ -5861,7 +5947,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
        * came from is arithmetic somebody would have to want; the bar against
        * the ceiling is the thing being read.
        */
-      return '<div class="tc-stat' + (over ? ' is-over' : '')
+      return '<div class="tc-stat is-' + key + (over ? ' is-over' : '')
         + (part >= 1 ? ' is-full' : '') + '">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
@@ -6220,17 +6306,23 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
     /* And the thing being hit, on the right, in its own animation. */
     /*
-     * Drawn at the size the client draws it - a spider declares fifty and is
-     * half its picture, a god declares a hundred and fifty - and inside a box
-     * rather than forced to a square, so a thing wider than it is tall comes
-     * out wide rather than squashed into a column.
+     * Every target the same size, whatever the client says it is.
+     *
+     * On the map a declared size matters: a spider says fifty and is half its
+     * picture, a god says a hundred and fifty, and the difference is the
+     * point. Here it is only noise - this frame is a test bench, and a bench
+     * that draws one dummy at twice another makes two builds look different
+     * when only the dummy changed. So the longest side of whatever is being
+     * hit is always the same number of pixels, and the thing's own
+     * proportions are kept inside that: a wide creature stays wide without
+     * ending up bigger than a tall one.
      */
     const piece = pieceOf(boss && boss.pic);
-    const room = Math.min(84, tall * 0.62);
-    const shape = piece ? piece.w / piece.h : 1;
-    const big = Math.min(room, room / Math.max(1, shape))
-      * Math.min(1.6, Math.max(0.7, (piece ? piece.size : 100) / 100));
-    const bossX = wide - big * Math.max(1, shape) - 22;
+    const room = Math.min(88, tall * 0.64);
+    const longest = piece ? Math.max(piece.w, piece.h) : 1;
+    const big = piece ? room * (piece.h / longest) : room;
+    const across = piece ? room * (piece.w / longest) : room;
+    const bossX = wide - 22 - room / 2 - across / 2;
     /*
      * It stands still and stays still.
      *
@@ -6296,7 +6388,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
     /* Whatever is left of it, on its way outward. */
     if (duel.bits.length) {
-      const middle = bossX + big * Math.max(1, shape) / 2;
+      const middle = bossX + across / 2;
       for (const one of duel.bits) {
         pen.globalAlpha = Math.max(0, one.left / one.full);
         pen.fillStyle = one.left > 0.6 ? '#fff2cf' : '#e0a13a';
