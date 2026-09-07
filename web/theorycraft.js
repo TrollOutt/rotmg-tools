@@ -48,7 +48,20 @@ var TheoryCraft = (function () {
   OF_STAT.MAXHP = 'hp'; OF_STAT.MAXMP = 'mp';
   const HANDS = [['weapon', 'Weapon'], ['ability', 'Ability'],
     ['armor', 'Armour'], ['ring', 'Ring']];
-  const EXALT_MOST = 5;
+/*
+ * Exaltations. Five of each statistic, and what one is worth depends on the
+ * statistic: life and magic go up five at a time, so a fully exalted
+ * character carries twenty-five more of each, while the other six go up one
+ * at a time for five. Treating all eight alike gave a character twenty
+ * points of life it never had.
+ *
+ * This is the game's own rule and not the client's - the installed files
+ * confirm who may exalt and say nothing about what it is worth - so it is
+ * written here in the open rather than buried in a table.
+ */
+const EXALT_EACH = 5;
+const EXALT_STEP = { hp: 5, mp: 5 };
+const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   let data = null;
   let build = null;
@@ -188,10 +201,11 @@ var TheoryCraft = (function () {
       gear[hand] = { name: name || null, slots: 4, ench: [null, null, null, null] };
     });
     const exalts = {};
-    for (const [key] of STATS) exalts[key] = EXALT_MOST;
+    for (const [key] of STATS) exalts[key] = exaltOf(key);
     return {
       name: kind.name + ' build',
       klass: kind.name,
+      // Always twenty. Nobody theory crafts a level nine.
       level: 20,
       maxed: true,
       exalt: true,
@@ -1225,7 +1239,7 @@ var TheoryCraft = (function () {
   function paint() {
     const kind = el('tcClass');
     if (kind && kind.value !== build.klass) kind.value = build.klass;
-    el('tcLevel').value = build.level;
+    build.level = 20;
     /*
      * The class, as itself. A name in a dropdown is a word; the sprite the
      * game draws is how anybody knows a Huntress from a Trickster, and it is
@@ -1249,8 +1263,7 @@ var TheoryCraft = (function () {
     }
     for (const node of el('tcBody').querySelectorAll('[data-set]')) {
       const which = node.dataset.set;
-      const on = which === 'level20' ? build.level === 20 : !!build[which];
-      node.classList.toggle('is-on', on);
+      node.classList.toggle('is-on', !!build[which]);
     }
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', node.dataset.goal === build.goal);
@@ -1309,16 +1322,11 @@ var TheoryCraft = (function () {
       if (was) build.name = start.name;
       keep(); paint();
     });
-    el('tcLevel').addEventListener('input', event => {
-      build.level = Math.max(1, Math.min(20, Number(event.target.value) || 1));
-      keep(); paint();
-    });
+
     el('tcBody').addEventListener('click', event => {
       const flip = event.target.closest('[data-set]');
       if (!flip) return;
-      const which = flip.dataset.set;
-      if (which === 'level20') build.level = build.level === 20 ? 1 : 20;
-      else build[which] = !build[which];
+      build[flip.dataset.set] = !build[flip.dataset.set];
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {
@@ -1474,6 +1482,16 @@ var TheoryCraft = (function () {
     build = tabs[onTab] || (tabs[0] = fresh('Wizard'));
     // A build kept from an older visit may name a class or item since renamed.
     if (!data.byClass[build.klass]) build = tabs[onTab] = fresh(data.classes[0].name);
+    /*
+     * A build kept from before knows the old exaltation numbers, which were
+     * wrong for life and magic. They are not a choice anybody made, so they
+     * are simply brought up to date rather than left to puzzle over.
+     */
+    for (const one of tabs) {
+      one.level = 20;
+      one.exalts = one.exalts || {};
+      for (const [key] of STATS) one.exalts[key] = exaltOf(key);
+    }
     wire();
     paint();
     keepPainting();
