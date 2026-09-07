@@ -903,6 +903,19 @@ const TINT = {
       if (work.locked[hand]) continue;
       work.gear[hand].slots = 4;
       while (work.gear[hand].ench.length < 4) work.gear[hand].ench.push(null);
+      /*
+       * And every slot that is not being kept starts empty.
+       *
+       * A search that begins from what is already there can only add and
+       * swap, never take away - so an enchantment left over from an earlier
+       * question stayed for the next one, and a build asked for damage came
+       * back still wearing the mana regeneration it was given while somebody
+       * was asking about survival. Everything is worked out again from
+       * nothing; what is kept is kept, and the rest has to earn its place.
+       */
+      for (let at = 0; at < 4; at++) {
+        if (!work.locked[hand + ':' + at]) work.gear[hand].ench[at] = null;
+      }
     }
     let score = scoreOf(work, goal);
     let looked = 0;
