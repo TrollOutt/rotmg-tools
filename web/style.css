@@ -2009,8 +2009,10 @@ body.globe-wide .home-card-art { animation: none !important; }
   border: 1px solid var(--line); image-rendering: pixelated;
 }
 .tc-face-pick { flex: 1; min-width: 0; }
-.tc-lvl { display: flex; flex-direction: column; gap: 5px; flex: none; }
-.tc-lvl input { width: 6ch; text-align: center; }
+.tc-lvl-said {
+  flex: none; font-size: 11.5px; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--dim); font-weight: 600; padding-bottom: 11px; white-space: nowrap;
+}
 
 /*
  * One control, three parts, the way a segmented switch reads. Three separate
