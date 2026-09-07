@@ -75,6 +75,20 @@ for (const text of objectText) {
   }
 }
 
+/*
+ * What the game calls a thing on screen.
+ *
+ * The client files an object under a working name and, where that name is not
+ * the one players see, gives the real one in DisplayId. Every set item is like
+ * that - 3ArcherST3 is the Targeting Monocular, RWMysticST3 is the Bronze
+ * Pocketwatch - so a page that showed the id was showing the developer's
+ * shorthand to a reader who has only ever seen the other one.
+ */
+const nameOf = one => {
+  const m = /<DisplayId>([^<]*)<\/DisplayId>/.exec(one.body);
+  return ((m && m[1]) || one.id).trim();
+};
+
 /* A number out of a tag, whether or not the tag carries attributes. */
 const num = (body, tag, attr) => {
   const m = attr
@@ -247,7 +261,8 @@ for (const [, one] of byType) {
      */
     kit: gear.split(',').slice(0, 4).map(x => {
       const t = Number.parseInt(x.trim(), 16);
-      return (Number.isFinite(t) && t > 0 && (byType.get(t) || {}).id) || null;
+      const got = Number.isFinite(t) && t > 0 && byType.get(t);
+      return got ? nameOf(got) : null;
     })
   });
 }
@@ -294,6 +309,26 @@ for (const [, one] of byType) {
    */
   if (/<AdminOnly\s*\/>/.test(one.body)) continue;
   /*
+   * And nothing the client says outright is not for players. The Shatters
+   * A2000 - Conqueror's Crown on screen - is twenty-five per cent of every
+   * statistic and carries "Item is not available to players." in its own
+   * tooltip; the answer to every question would have been that ring.
+   */
+  if (/description="Item is not available to players/.test(one.body)) continue;
+  /*
+   * Nor the workbench. A dozen things in the file are named for what they
+   * were used to try - Testiken, Short Test Sword, Test Trap ATT - and they
+   * were only ever out of sight because the wiki had no picture of them.
+   */
+  if (/(^|\s)(test|tester|testing|testiken)/i.test(one.id)) continue;
+  /*
+   * And not the machinery behind an item either. A hundred and twenty objects
+   * whose names end in Proc are what a proc actually fires - a cloak's
+   * invisibility, a quiver's second volley - filed as equipment because that
+   * is how the client carries them, and worn by nobody.
+   */
+  if (/\bProc\b/i.test(one.id)) continue;
+  /*
    * And not the shiny copies. The client marks them itself - two hundred and
    * fifty-seven carry a SHINY label - and a shiny is the same item with a
    * sparkle on it, so every picker had each of them twice with nothing to
@@ -312,7 +347,9 @@ for (const [, one] of byType) {
    * already have it, and it is two thirds of the catalogue.
    */
   items.push({
-    name: one.id,
+    name: nameOf(one),
+    // The client's own name for it, which is what its picture is filed under.
+    id: one.id,
     hand,
     slot,
     /*
@@ -325,8 +362,7 @@ for (const [, one] of byType) {
      * cannot be shown that build cannot answer a question about it.
      */
     sb: /<Soulbound\s*\/>/.test(one.body) ? 1 : undefined,
-    // What the game calls it on screen, which is how a twin is spotted.
-    shown: (text(one.body, 'DisplayId') || one.id).trim(),
+    shown: nameOf(one),
     tier: num(one.body, 'Tier'),
     bag: num(one.body, 'BagType'),
     mp: num(one.body, 'MpCost'),
@@ -562,7 +598,10 @@ const sets = [];
       /<EquipmentSet\s+type="[^"]*"\s+id="([^"]+)">([\s\S]*?)<\/EquipmentSet>/g)) {
       const body = m[2];
       const pieces = [...body.matchAll(/<Setpiece\s+slot="(\d+)"\s+itemtype="([^"]+)"/g)]
-        .map(one => (byType.get(Number.parseInt(one[2], 16)) || {}).id)
+        .map(one => {
+          const got = byType.get(Number.parseInt(one[2], 16));
+          return got ? nameOf(got) : null;
+        })
         .filter(Boolean);
       if (!pieces.length) continue;
       const steps = {};
