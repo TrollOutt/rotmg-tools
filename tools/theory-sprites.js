@@ -373,7 +373,10 @@ for (const one of facts.classes) {
 let drawn = 0;
 for (const one of facts.items) {
   if (!one.cut) continue;
-  if (cutOne('i:' + one.name, one.name, false)) { one.art = 'i:' + one.name; drawn++; }
+  // Cut by the client's own name for it, which is what the art is filed
+  // under - the name on screen is often a different word entirely.
+  const where = one.id || one.name;
+  if (cutOne('i:' + where, where, false)) { one.art = 'i:' + where; drawn++; }
 }
 /*
  * And what has no picture anywhere still goes. A hundred and twenty of them
@@ -387,7 +390,7 @@ for (const one of facts.items) {
   for (let i = facts.items.length - 1; i >= 0; i--) {
     const one = facts.items[i];
     if (one.cut && !one.art) { facts.items.splice(i, 1); gone++; }
-    else delete one.cut;
+    else { delete one.cut; delete one.id; }
   }
   if (gone) console.log('  ' + gone + ' with no picture anywhere dropped');
 }
