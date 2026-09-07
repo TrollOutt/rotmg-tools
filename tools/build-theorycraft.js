@@ -280,6 +280,8 @@ for (const [, one] of byType) {
      * cannot be shown that build cannot answer a question about it.
      */
     sb: /<Soulbound\s*\/>/.test(one.body) ? 1 : undefined,
+    // What the game calls it on screen, which is how a twin is spotted.
+    shown: (text(one.body, 'DisplayId') || one.id).trim(),
     tier: num(one.body, 'Tier'),
     bag: num(one.body, 'BagType'),
     mp: num(one.body, 'MpCost'),
@@ -342,6 +344,27 @@ for (const [, one] of byType) {
     }
   }
 }
+
+/*
+ * One of each thing.
+ *
+ * The client keeps retro copies of a good many items - Retro Doom Bow beside
+ * Doom Bow, Retro Demon Blade beside Demon Blade - which are the same weapon
+ * drawn the old way and handed out soulbound. They carry the same name on
+ * screen, so a list holding both offers the same choice twice and the search
+ * picks between two identical things. Where a name exists in a form that can
+ * be traded, the soulbound twin goes.
+ */
+{
+  const free = new Set();
+  for (const one of items) if (!one.sb) free.add(one.shown);
+  let went = 0;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].sb && free.has(items[i].shown)) { items.splice(i, 1); went++; }
+  }
+  if (went) console.log('  ' + went + ' soulbound twins of a tradeable thing dropped');
+}
+for (const one of items) delete one.shown;
 
 items.sort((a, b) => a.hand.localeCompare(b.hand)
   || (a.tier === undefined ? 99 : a.tier) - (b.tier === undefined ? 99 : b.tier)
