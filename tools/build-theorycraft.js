@@ -676,7 +676,14 @@ for (const [, one] of byType) {
   if (/^[{]/.test(shown)) continue;
   if (/(^|[^a-z])(retro|snowball|present|chicken|bunny|carnival|party|beach bum|cupcake|effigy|lol|easter|santa|turkey|pumpkin|valentine|nostalgi)/i
     .test(shown)) continue;
-  bosses.push({
+    /*
+   * And not the loot. Nine things in the moonlight village are chests the
+   * client files as bosses so that a fight can drop them - MV Fishing Loot 3
+   * and its kind - with a working name, no name on screen and a picture of a
+   * crate. Nobody has ever fought one.
+   */
+  if (/\bloot\b/i.test(one.id)) continue;
+bosses.push({
     name: shown,
     // The portrait folder is filed under the object's own id, which is often
     // not the name the game shows - "Oryx the Mad God 2" against "Oryx".
