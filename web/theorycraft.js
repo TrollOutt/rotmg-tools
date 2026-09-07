@@ -223,14 +223,99 @@ var TheoryCraft = (function () {
     .filter(Boolean));
 
   /*
-   * The client states this as labels rather than as a list of items: an
-   * enchantment says which labels an item must carry, which it must not, and
-   * which other enchantments it will not sit beside. So the test is set
-   * arithmetic and nothing has to be hand-listed.
+   * Which enchantments may go on a thing, decided by the calculator that was
+   * already written to decide it.
+   *
+   * This page had its own reading of the rules and it was a worse one. The
+   * enchant calculator has carried the real ones for months: which pool an
+   * item's kind draws from, that an awakened enchantment only goes on the one
+   * item it belongs to, that a second enchantment sharing a label with one
+   * already on the item cannot be rolled beside it - the whole reason you
+   * cannot stack four attack bonuses. Its eligiblePool answers exactly that
+   * question, so it is asked rather than second-guessed.
    */
+  let rules = null;
+  const OF_HAND = { weapon: 'WEAPON', ability: 'ABILITY', armor: 'ARMOR', ring: 'RING' };
+
+  function rulesFor() {
+    if (rules !== null) return rules;
+    rules = false;
+    try {
+      const bundle = window.ROTMG_BUNDLE;
+      if (typeof EnchantEngine === 'undefined' || !bundle || !bundle.sources) return rules;
+      rules = EnchantEngine.buildDataset(bundle.sources);
+      if (typeof EnchantItems !== 'undefined' && bundle.sources.clientItemText) {
+        EnchantItems.loadClient(bundle.sources.clientItemText);
+      }
+    } catch (e) { rules = false; }
+    return rules;
+  }
+
+  /*
+   * The client's own record for a name the calculator uses.
+   *
+   * They do not spell them the same way. The calculator knows "Attack
+   * -Defense Tradeoff", which is the thing you ask for; the client files four
+   * of them, "Attack -Defense Tradeoff I" through "IV", which are what it
+   * rolls. Matching on the exact string found nothing for most of the list,
+   * so the numeral is dropped from both ends and the strongest of the four is
+   * the one shown - which is the one anybody planning a build means.
+   */
+  const NUMERAL = /\s+(?:[IVX]+|\d+)$/;
+  const plainly = name => String(name).replace(NUMERAL, '').trim().toLowerCase();
+  const worth = one => Object.values(one.worn || {})
+    .reduce((n, v) => n + Math.abs(v), 0);
+
+  let enchByName = null;
+  function charmNamed(name) {
+    if (!enchByName) {
+      enchByName = new Map();
+      for (const one of data.enchants) {
+        for (const key of [one.name, plainly(one.name)]) {
+          const had = enchByName.get(key);
+          if (!had || worth(one) > worth(had)) enchByName.set(key, one);
+        }
+      }
+    }
+    return enchByName.get(name) || enchByName.get(plainly(name));
+  }
+
   function enchantsFor(itemName, already, at) {
     const item = data.byItem[itemName];
     if (!item) return [];
+    const held = rulesFor();
+    if (held) {
+      const locks = [];
+      (already || []).forEach((id, i) => {
+        if (i === at || !id) return;
+        const one = data.byEnch[id];
+        if (one) locks.push(one.name);
+      });
+      const cfg = {
+        item: itemName,
+        type: OF_HAND[item.hand] || 'WEAPON',
+        slots: (already || []).length || 4,
+        locks,
+        subtypes: new Set()
+      };
+      const pool = EnchantEngine.eligiblePool(held, cfg, null);
+      const out = [];
+      const seen = new Set();
+      for (const mod of pool) {
+        if (seen.has(mod.name)) continue;
+        seen.add(mod.name);
+        const mine = charmNamed(mod.name);
+        out.push(mine || { id: 'n:' + mod.name, name: mod.name });
+      }
+      return out;
+    }
+
+    /*
+     * And if the calculator is not on the page - somebody opened this file on
+     * its own - the client's own labels are the fallback: an enchantment says
+     * which labels an item must and must not carry, and which enchantments it
+     * will not sit beside.
+     */
     const has = labelsOf(item.labels);
     const beside = new Set();
     (already || []).forEach((id, i) => {
@@ -476,7 +561,7 @@ var TheoryCraft = (function () {
           + said
           + '<button type="button" class="tc-hold" data-hold="' + hand + ':' + at
           + '" title="keep this one while the calculator works">'
-          + (held ? '◉' : '○') + '</button>'
+          + (held ? 'kept' : 'keep') + '</button>'
           + '</span>');
       }
       chips.push('<label class="tc-rarity">slots'
@@ -496,7 +581,7 @@ var TheoryCraft = (function () {
         + '</span></button>'
         + '<button type="button" class="tc-hold" data-hold="' + hand
         + '" title="keep this item while the calculator works">'
-        + (locked ? '◉' : '○') + '</button>'
+        + (locked ? 'kept' : 'keep') + '</button>'
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';
@@ -675,7 +760,7 @@ var TheoryCraft = (function () {
    */
   const duel = {
     on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0,
-    hp: 0, full: 0, over: 0, last: 0, art: new Map()
+    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: []
   };
 
   function artOfClass(kind) {
@@ -744,6 +829,7 @@ var TheoryCraft = (function () {
     duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.over = 0;
     duel.full = boss ? boss.hp : 0;
     duel.hp = duel.full;
+    duel.bits.length = 0;
   }
 
   /* One frame of it, at whatever rate the browser is painting. */
@@ -756,6 +842,8 @@ var TheoryCraft = (function () {
     const gun = weaponRate(weapon, stats, boss.def);
     const spell = abilityRate(ability, stats, boss.def);
 
+    stepBits(delta);
+    if (duel.hp <= 0) return;                 // it is over; nothing else moves
     duel.at += delta;
     if (duel.swing > 0) duel.swing -= delta;
 
@@ -794,10 +882,42 @@ var TheoryCraft = (function () {
       if (duel.hp <= 0) continue;
       duel.hp -= one.hurt;
       duel.dealt += one.hurt;
-      if (duel.hp <= 0) { duel.hp = 0; duel.over = duel.at; }
+      if (duel.hp <= 0) { duel.hp = 0; duel.over = duel.at; blowUp(); }
     }
-    // Once it is down it stays down for a moment, then gets up again.
-    if (duel.hp <= 0 && duel.at - duel.over > 1.6) resetDuel();
+    /*
+     * And once it is down it stays down. The time it took is the answer to
+     * the question the frame was asked, and a frame that clears itself two
+     * seconds later is one that hides its own answer; the fight starts again
+     * when somebody asks it to.
+     */
+  }
+
+  /*
+   * It comes apart when it dies. Watching a life bar reach nought is a fact;
+   * watching the thing burst is the same fact and reads as a kill, which is
+   * the whole reason this frame is here rather than another row of figures.
+   */
+  function blowUp() {
+    duel.bits.length = 0;
+    for (let i = 0; i < 34; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const fast = 30 + Math.random() * 130;
+      duel.bits.push({
+        x: 0, y: 0, vx: Math.cos(angle) * fast, vy: Math.sin(angle) * fast - 40,
+        left: 0.5 + Math.random() * 0.5, full: 1
+      });
+    }
+  }
+
+  function stepBits(delta) {
+    for (let i = duel.bits.length - 1; i >= 0; i--) {
+      const one = duel.bits[i];
+      one.x += one.vx * delta;
+      one.y += one.vy * delta;
+      one.vy += 260 * delta;
+      one.left -= delta;
+      if (one.left <= 0) duel.bits.splice(i, 1);
+    }
   }
 
   function drawDuel() {
@@ -913,16 +1033,37 @@ var TheoryCraft = (function () {
     pen.fillStyle = part > 0.35 ? '#8fd08a' : '#d4685f';
     round(pen, 22, tall - 20, Math.max(0, barW * part), 7, 3.5); pen.fill();
 
+    /* Whatever is left of it, on its way outward. */
+    if (duel.bits.length) {
+      const middle = bossX + big * Math.max(1, shape) / 2;
+      for (const one of duel.bits) {
+        pen.globalAlpha = Math.max(0, one.left / one.full);
+        pen.fillStyle = one.left > 0.6 ? '#fff2cf' : '#e0a13a';
+        pen.fillRect(middle + one.x, floor - big / 2 + one.y, 3, 3);
+      }
+      pen.globalAlpha = 1;
+    }
+
     pen.font = '11px ui-monospace, monospace';
     pen.fillStyle = 'rgba(255,255,255,.55)';
     pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), 22, tall - 25);
-    const said = duel.hp > 0
-      ? round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt'
-      : 'down in ' + round(duel.over) + 's';
     pen.textAlign = 'right';
-    pen.fillStyle = duel.hp > 0 ? 'rgba(255,255,255,.55)' : '#f0c274';
-    pen.fillText(said, wide - 22, tall - 25);
+    pen.fillStyle = 'rgba(255,255,255,.55)';
+    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt',
+      wide - 22, tall - 25);
     pen.textAlign = 'left';
+
+    /* And how long it took, said once and said large. */
+    if (duel.hp <= 0) {
+      pen.textAlign = 'center';
+      pen.fillStyle = '#f0c274';
+      pen.font = '600 20px ui-monospace, monospace';
+      pen.fillText('dead in ' + round(duel.over) + 's', wide / 2, tall * 0.42);
+      pen.font = '11px ui-monospace, monospace';
+      pen.fillStyle = 'rgba(255,255,255,.45)';
+      pen.fillText(commas(duel.dealt) + ' damage', wide / 2, tall * 0.42 + 16);
+      pen.textAlign = 'left';
+    }
   }
 
   let painting = false;
