@@ -315,8 +315,20 @@ for (const [, one] of byType) {
   const labels = text(one.body, 'Labels') || '';
   const labelSet = labels.split(',').map(one => one.trim());
   if (!labelSet.includes('ENCOUNTER') && !labelSet.includes('BOSS')) continue;
+  /*
+   * And not the ones that come round once a year. This is the one filter here
+   * the client does not make for me: it labels a snowball chest and a marble
+   * colossus identically, so the seasons are recognised by name, which is
+   * where the game itself puts the difference. Anything whose name has not
+   * been resolved out of the localisation table goes too - a target called
+   * "{cave.Golden_Oryx_Effigy}" is not a target anybody picked.
+   */
+  const shown = text(one.body, 'DisplayId') || one.id;
+  if (/^[{]/.test(shown)) continue;
+  if (/(^|[^a-z])(retro|snowball|present|chicken|bunny|carnival|party|beach bum|cupcake|effigy|lol|easter|santa|turkey|pumpkin|valentine|nostalgi)/i
+    .test(shown)) continue;
   bosses.push({
-    name: text(one.body, 'DisplayId') || one.id,
+    name: shown,
     // The portrait folder is filed under the object's own id, which is often
     // not the name the game shows - "Oryx the Mad God 2" against "Oryx".
     id: one.id,
