@@ -5075,16 +5075,22 @@ function settleInto(box) {
  * costs: the whole planet, its clouds, its weather and everything walking on
  * it, sixty times a second, in a frame two inches across on a page about
  * something else. The page holding the frame says which of the three this is
- * - full while it is the thing being looked at, slow while it is a picture in
- * the corner, still while it is covered or off the screen - and a frame that
- * is not due is dropped before anything is drawn.
+ * - full while it is the thing being looked at, thirty a second while it is a
+ * picture in the corner, still while it is covered or off the screen - and a
+ * frame that is not due is dropped before anything is drawn.
  */
 let pace = 0;                            // milliseconds between frames
 let drawnAt = -1e9;
+/*
+ * Slow is thirty a second, not as slow as it will go. Below that the planet
+ * stops turning and starts stepping, and a picture that stutters looks
+ * broken rather than economical - which costs more than the frames it saves.
+ */
+const SLOW = 1000 / 30;
 window.addEventListener('message', event => {
   const said = event.data;
   if (!said || said.rotmg !== 'pace') return;
-  pace = said.pace === 'still' ? Infinity : said.pace === 'slow' ? 110 : 0;
+  pace = said.pace === 'still' ? Infinity : said.pace === 'slow' ? SLOW : 0;
 });
 
 function frame(now) {
