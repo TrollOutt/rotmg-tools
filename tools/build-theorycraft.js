@@ -97,7 +97,27 @@ function shotOf(body) {
       reach: (fast !== undefined && lives !== undefined)
         ? Math.round(fast * lives / 1000) / 10 : undefined,
       pierce: /<ArmorPiercing\s*\/>/.test(inner) || undefined,
-      through: /<MultiHit\s*\/>/.test(inner) || undefined
+      through: /<MultiHit\s*\/>/.test(inner) || undefined,
+      /*
+       * How the thing actually travels, in the client's own words.
+       *
+       * Most shots go straight. Two hundred and forty-one weave - the client
+       * gives an amplitude and a frequency - two hundred and forty-four speed
+       * up or slow down, fifty-four come back, and twenty-three follow a
+       * parametric path. The client states the parameters of those and not
+       * the algorithm, so this is carried in order to be able to say that a
+       * straight line is not what the shot does, rather than to pretend the
+       * line is right.
+       */
+      moves: (() => {
+        const how = [];
+        if (/<Parametric\s*\/>/.test(inner)) how.push('parametric');
+        if (/<Boomerang\s*\/>/.test(inner)) how.push('boomerang');
+        if (/<Wavy\s*\/>/.test(inner)) how.push('wavy');
+        if (/<Amplitude>/.test(inner) && /<Frequency>/.test(inner)) how.push('weaving');
+        if (/<Acceleration>/.test(inner)) how.push('speeding up');
+        return how.length ? how.join(', ') : undefined;
+      })()
     });
   }
   return out.length ? out : undefined;
