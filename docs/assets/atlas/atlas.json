@@ -90495,10 +90495,137 @@
  ],
  "folk": [
   {
-   "name": "Warrior",
-   "type": 797,
+   "name": "Archer",
+   "type": 775,
    "sprite": {
-    "file": "c797.png",
+    "file": "c775.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 18,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4,
+      5
+     ],
+     "2/0": [
+      6
+     ],
+     "2/1": [
+      7,
+      8,
+      9
+     ],
+     "2/2": [
+      10,
+      11
+     ],
+     "3/0": [
+      12
+     ],
+     "3/1": [
+      13,
+      14,
+      15
+     ],
+     "3/2": [
+      16,
+      17
+     ]
+    }
+   },
+   "hp": 150,
+   "hpTop": 750,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 17,
+   "attTop": 75,
+   "def": 0,
+   "defTop": 25,
+   "pace": 22,
+   "paceTop": 55,
+   "dex": 15,
+   "dexTop": 50,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 15,
+   "wisTop": 50,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 2,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 1,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Shortbow",
+    "tier": 0,
+    "slot": 3,
+    "bag": 1,
+    "shot": {
+     "low": 15,
+     "high": 20,
+     "fast": 16,
+     "reach": 7,
+     "many": 1,
+     "fan": 14,
+     "rate": 1,
+     "through": true,
+     "pierce": true
+    }
+   },
+   "ability": {
+    "name": "Magic Quiver",
+    "tier": 0,
+    "slot": 15,
+    "bag": 1,
+    "mp": 45,
+    "shot": {
+     "low": 35,
+     "high": 50,
+     "fast": 15,
+     "reach": 15,
+     "many": 2,
+     "fan": 7,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "armour": {
+    "name": "Wolfskin Armor",
+    "tier": 0,
+    "slot": 6,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Assassin",
+   "type": 800,
+   "sprite": {
+    "file": "c800.png",
     "tile": 20,
     "height": 36,
     "frames": 18,
@@ -90542,56 +90669,534 @@
      ]
     }
    },
-   "hp": 200,
-   "hpTop": 800,
-   "mp": 100,
-   "mpTop": 300,
-   "att": 17,
-   "attTop": 75,
+   "hp": 150,
+   "hpTop": 750,
+   "mp": 125,
+   "mpTop": 350,
+   "att": 26,
+   "attTop": 65,
    "def": 0,
    "defTop": 25,
-   "pace": 17,
-   "paceTop": 50,
-   "dex": 15,
-   "dexTop": 50,
-   "vit": 17,
-   "vitTop": 75,
-   "wis": 15,
-   "wisTop": 50,
+   "pace": 26,
+   "paceTop": 65,
+   "dex": 17,
+   "dexTop": 75,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 23,
+   "wisTop": 60,
    "grow": {
     "hp": 25,
-    "mp": 5,
-    "att": 2,
+    "mp": 6,
+    "att": 1,
     "def": 0.5,
     "pace": 1,
-    "dex": 1,
-    "vit": 2,
+    "dex": 2,
+    "vit": 1,
     "wis": 1
    },
    "weapon": {
-    "name": "Short Sword",
+    "name": "Steel Dagger",
     "tier": 0,
-    "slot": 1,
+    "slot": 2,
     "bag": 1,
     "shot": {
-     "low": 45,
-     "high": 90,
-     "fast": 10,
-     "reach": 3.5,
+     "low": 25,
+     "high": 70,
+     "fast": 14,
+     "reach": 5.6,
      "many": 1,
-     "rate": 1,
+     "rate": 1.05,
      "through": false,
      "pierce": false
     }
    },
    "ability": {
-    "name": "Combat Helm",
+    "name": "Centipede Poison",
     "tier": 0,
-    "slot": 16,
+    "slot": 18,
     "bag": 1,
-    "mp": 60,
+    "mp": 25
+   },
+   "armour": {
+    "name": "Wolfskin Armor",
+    "tier": 0,
+    "slot": 6,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Bard",
+   "type": 796,
+   "sprite": {
+    "file": "c796.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 18,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4,
+      5
+     ],
+     "2/0": [
+      6
+     ],
+     "2/1": [
+      7,
+      8,
+      9
+     ],
+     "2/2": [
+      10,
+      11
+     ],
+     "3/0": [
+      12
+     ],
+     "3/1": [
+      13,
+      14,
+      15
+     ],
+     "3/2": [
+      16,
+      17
+     ]
+    }
+   },
+   "hp": 150,
+   "hpTop": 750,
+   "mp": 150,
+   "mpTop": 400,
+   "att": 20,
+   "attTop": 55,
+   "def": 0,
+   "defTop": 25,
+   "pace": 22,
+   "paceTop": 55,
+   "dex": 12,
+   "dexTop": 70,
+   "vit": 10,
+   "vitTop": 45,
+   "wis": 17,
+   "wisTop": 75,
+   "grow": {
+    "hp": 25,
+    "mp": 7,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 2,
+    "vit": 1,
+    "wis": 2
+   },
+   "weapon": {
+    "name": "Shortbow",
+    "tier": 0,
+    "slot": 3,
+    "bag": 1,
+    "shot": {
+     "low": 15,
+     "high": 20,
+     "fast": 16,
+     "reach": 7,
+     "many": 1,
+     "fan": 14,
+     "rate": 1,
+     "through": true,
+     "pierce": true
+    }
+   },
+   "ability": {
+    "name": "Novice's Lute",
+    "tier": 0,
+    "slot": 28,
+    "bag": 1,
+    "mp": 70
+   },
+   "armour": {
+    "name": "Robe of the Neophyte",
+    "tier": 0,
+    "slot": 14,
+    "bag": 1,
     "worn": {
      "DEF": 2
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Druid",
+   "type": 819,
+   "sprite": {
+    "file": "c819.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 150,
+   "hpTop": 750,
+   "mp": 125,
+   "mpTop": 350,
+   "att": 20,
+   "attTop": 60,
+   "def": 0,
+   "defTop": 25,
+   "pace": 23,
+   "paceTop": 60,
+   "dex": 17,
+   "dexTop": 65,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 17,
+   "wisTop": 75,
+   "grow": {
+    "hp": 25,
+    "mp": 6,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 2,
+    "vit": 1,
+    "wis": 2
+   },
+   "weapon": {
+    "name": "Fire Wand",
+    "tier": 0,
+    "slot": 8,
+    "bag": 1,
+    "shot": {
+     "low": 30,
+     "high": 55,
+     "fast": 18,
+     "reach": 9,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Sigil of the Chicken",
+    "tier": 0,
+    "slot": 31,
+    "bag": 1,
+    "mp": 30,
+    "shot": {
+     "low": 120,
+     "high": 180,
+     "fast": 16,
+     "reach": 9.6,
+     "many": 1,
+     "fan": 15,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "armour": {
+    "name": "Wolfskin Armor",
+    "tier": 0,
+    "slot": 6,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Huntress",
+   "type": 802,
+   "sprite": {
+    "file": "c802.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 18,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4,
+      5
+     ],
+     "2/0": [
+      6
+     ],
+     "2/1": [
+      7,
+      8,
+      9
+     ],
+     "2/2": [
+      10,
+      11
+     ],
+     "3/0": [
+      12
+     ],
+     "3/1": [
+      13,
+      14,
+      15
+     ],
+     "3/2": [
+      16,
+      17
+     ]
+    }
+   },
+   "hp": 150,
+   "hpTop": 750,
+   "mp": 125,
+   "mpTop": 350,
+   "att": 26,
+   "attTop": 65,
+   "def": 0,
+   "defTop": 25,
+   "pace": 17,
+   "paceTop": 50,
+   "dex": 23,
+   "dexTop": 60,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 23,
+   "wisTop": 60,
+   "grow": {
+    "hp": 25,
+    "mp": 6,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 1,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Shortbow",
+    "tier": 0,
+    "slot": 3,
+    "bag": 1,
+    "shot": {
+     "low": 15,
+     "high": 20,
+     "fast": 16,
+     "reach": 7,
+     "many": 1,
+     "fan": 14,
+     "rate": 1,
+     "through": true,
+     "pierce": true
+    }
+   },
+   "ability": {
+    "name": "Hunting Trap",
+    "tier": 0,
+    "slot": 20,
+    "bag": 1,
+    "mp": 40
+   },
+   "armour": {
+    "name": "Wolfskin Armor",
+    "tier": 0,
+    "slot": 6,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Kensei",
+   "type": 818,
+   "sprite": {
+    "file": "c818.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 200,
+   "hpTop": 800,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 26,
+   "attTop": 65,
+   "def": 0,
+   "defTop": 25,
+   "pace": 27,
+   "paceTop": 60,
+   "dex": 26,
+   "dexTop": 65,
+   "vit": 23,
+   "vitTop": 60,
+   "wis": 15,
+   "wisTop": 50,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 1,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Rusty Katana",
+    "tier": 0,
+    "slot": 24,
+    "bag": 1,
+    "shot": {
+     "low": 35,
+     "high": 80,
+     "fast": 13,
+     "reach": 4.7,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Slashing Sheath",
+    "tier": 0,
+    "slot": 30,
+    "bag": 1,
+    "mp": 60,
+    "shot": {
+     "low": 150,
+     "high": 250,
+     "fast": 16,
+     "reach": 8,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
     }
    },
    "armour": {
@@ -90741,10 +91346,10 @@
    ]
   },
   {
-   "name": "Wizard",
-   "type": 782,
+   "name": "Mystic",
+   "type": 803,
    "sprite": {
-    "file": "c782.png",
+    "file": "c803.png",
     "tile": 20,
     "height": 20,
     "frames": 17,
@@ -90791,27 +91396,27 @@
    "hpTop": 700,
    "mp": 150,
    "mpTop": 400,
-   "att": 23,
-   "attTop": 60,
+   "att": 26,
+   "attTop": 65,
    "def": 0,
    "defTop": 25,
-   "pace": 17,
-   "paceTop": 50,
-   "dex": 17,
-   "dexTop": 75,
+   "pace": 27,
+   "paceTop": 60,
+   "dex": 26,
+   "dexTop": 65,
    "vit": 5,
    "vitTop": 40,
-   "wis": 23,
-   "wisTop": 60,
+   "wis": 17,
+   "wisTop": 75,
    "grow": {
     "hp": 25,
     "mp": 7,
     "att": 1,
     "def": 0.5,
     "pace": 1,
-    "dex": 2,
+    "dex": 1,
     "vit": 1,
-    "wis": 1
+    "wis": 2
    },
    "weapon": {
     "name": "Energy Staff",
@@ -90831,21 +91436,11 @@
     }
    },
    "ability": {
-    "name": "Fire Spray Spell",
+    "name": "Stasis Orb",
     "tier": 0,
-    "slot": 11,
+    "slot": 21,
     "bag": 1,
-    "mp": 20,
-    "shot": {
-     "low": 20,
-     "high": 25,
-     "fast": 16,
-     "reach": 16,
-     "many": 1,
-     "rate": 1,
-     "through": false,
-     "pierce": false
-    }
+    "mp": 75
    },
    "armour": {
     "name": "Robe of the Neophyte",
@@ -90854,6 +91449,361 @@
     "bag": 1,
     "worn": {
      "DEF": 2
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Necromancer",
+   "type": 801,
+   "sprite": {
+    "file": "c801.png",
+    "tile": 20,
+    "height": 36,
+    "frames": 18,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4,
+      5
+     ],
+     "2/0": [
+      6
+     ],
+     "2/1": [
+      7,
+      8,
+      9
+     ],
+     "2/2": [
+      10,
+      11
+     ],
+     "3/0": [
+      12
+     ],
+     "3/1": [
+      13,
+      14,
+      15
+     ],
+     "3/2": [
+      16,
+      17
+     ]
+    }
+   },
+   "hp": 100,
+   "hpTop": 700,
+   "mp": 150,
+   "mpTop": 400,
+   "att": 17,
+   "attTop": 75,
+   "def": 0,
+   "defTop": 25,
+   "pace": 17,
+   "paceTop": 50,
+   "dex": 23,
+   "dexTop": 60,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 17,
+   "wisTop": 75,
+   "grow": {
+    "hp": 25,
+    "mp": 7,
+    "att": 2,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 1,
+    "wis": 2
+   },
+   "weapon": {
+    "name": "Energy Staff",
+    "tier": 0,
+    "slot": 17,
+    "bag": 1,
+    "shot": {
+     "low": 10,
+     "high": 30,
+     "fast": 18,
+     "reach": 8.6,
+     "many": 2,
+     "fan": 0,
+     "rate": 1,
+     "through": false,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Necrotic Skull",
+    "tier": 0,
+    "slot": 19,
+    "bag": 1,
+    "mp": 40
+   },
+   "armour": {
+    "name": "Robe of the Neophyte",
+    "tier": 0,
+    "slot": 14,
+    "bag": 1,
+    "worn": {
+     "DEF": 2
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Ninja",
+   "type": 806,
+   "sprite": {
+    "file": "c806.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 200,
+   "hpTop": 800,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 12,
+   "attTop": 70,
+   "def": 0,
+   "defTop": 25,
+   "pace": 27,
+   "paceTop": 60,
+   "dex": 12,
+   "dexTop": 70,
+   "vit": 23,
+   "vitTop": 60,
+   "wis": 12,
+   "wisTop": 70,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 2,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 2,
+    "vit": 1,
+    "wis": 2
+   },
+   "weapon": {
+    "name": "Rusty Katana",
+    "tier": 0,
+    "slot": 24,
+    "bag": 1,
+    "shot": {
+     "low": 35,
+     "high": 80,
+     "fast": 13,
+     "reach": 4.7,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Basic Star",
+    "tier": 0,
+    "slot": 25,
+    "bag": 1,
+    "mp": 0,
+    "shot": {
+     "low": 150,
+     "high": 250,
+     "fast": 18,
+     "reach": 10.8,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "armour": {
+    "name": "Wolfskin Armor",
+    "tier": 0,
+    "slot": 6,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Paladin",
+   "type": 799,
+   "sprite": {
+    "file": "c799.png",
+    "tile": 20,
+    "height": 36,
+    "frames": 18,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4,
+      5
+     ],
+     "2/0": [
+      6
+     ],
+     "2/1": [
+      7,
+      8,
+      9
+     ],
+     "2/2": [
+      10,
+      11
+     ],
+     "3/0": [
+      12
+     ],
+     "3/1": [
+      13,
+      14,
+      15
+     ],
+     "3/2": [
+      16,
+      17
+     ]
+    }
+   },
+   "hp": 200,
+   "hpTop": 800,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 16,
+   "attTop": 55,
+   "def": 1,
+   "defTop": 30,
+   "pace": 22,
+   "paceTop": 55,
+   "dex": 18,
+   "dexTop": 55,
+   "vit": 23,
+   "vitTop": 60,
+   "wis": 17,
+   "wisTop": 75,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 1,
+    "wis": 2
+   },
+   "weapon": {
+    "name": "Short Sword",
+    "tier": 0,
+    "slot": 1,
+    "bag": 1,
+    "shot": {
+     "low": 45,
+     "high": 90,
+     "fast": 10,
+     "reach": 3.5,
+     "many": 1,
+     "rate": 1,
+     "through": false,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Seal of the Initiate",
+    "tier": 0,
+    "slot": 12,
+    "bag": 1,
+    "mp": 60
+   },
+   "armour": {
+    "name": "Iron Mail",
+    "tier": 0,
+    "slot": 7,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
     }
    },
    "pack": [
@@ -90981,133 +91931,6 @@
    ]
   },
   {
-   "name": "Archer",
-   "type": 775,
-   "sprite": {
-    "file": "c775.png",
-    "tile": 20,
-    "height": 20,
-    "frames": 18,
-    "size": 100,
-    "poses": {
-     "0/0": [
-      0
-     ],
-     "0/1": [
-      1,
-      2,
-      3
-     ],
-     "0/2": [
-      4,
-      5
-     ],
-     "2/0": [
-      6
-     ],
-     "2/1": [
-      7,
-      8,
-      9
-     ],
-     "2/2": [
-      10,
-      11
-     ],
-     "3/0": [
-      12
-     ],
-     "3/1": [
-      13,
-      14,
-      15
-     ],
-     "3/2": [
-      16,
-      17
-     ]
-    }
-   },
-   "hp": 150,
-   "hpTop": 750,
-   "mp": 100,
-   "mpTop": 300,
-   "att": 17,
-   "attTop": 75,
-   "def": 0,
-   "defTop": 25,
-   "pace": 22,
-   "paceTop": 55,
-   "dex": 15,
-   "dexTop": 50,
-   "vit": 5,
-   "vitTop": 40,
-   "wis": 15,
-   "wisTop": 50,
-   "grow": {
-    "hp": 25,
-    "mp": 5,
-    "att": 2,
-    "def": 0.5,
-    "pace": 1,
-    "dex": 1,
-    "vit": 1,
-    "wis": 1
-   },
-   "weapon": {
-    "name": "Shortbow",
-    "tier": 0,
-    "slot": 3,
-    "bag": 1,
-    "shot": {
-     "low": 15,
-     "high": 20,
-     "fast": 16,
-     "reach": 7,
-     "many": 1,
-     "fan": 14,
-     "rate": 1,
-     "through": true,
-     "pierce": true
-    }
-   },
-   "ability": {
-    "name": "Magic Quiver",
-    "tier": 0,
-    "slot": 15,
-    "bag": 1,
-    "mp": 45,
-    "shot": {
-     "low": 35,
-     "high": 50,
-     "fast": 15,
-     "reach": 15,
-     "many": 2,
-     "fan": 7,
-     "rate": 1,
-     "through": true,
-     "pierce": false
-    }
-   },
-   "armour": {
-    "name": "Wolfskin Armor",
-    "tier": 0,
-    "slot": 6,
-    "bag": 1,
-    "worn": {
-     "DEF": 5
-    }
-   },
-   "pack": [
-    {
-     "name": "Health Potion",
-     "tier": 1,
-     "slot": 10,
-     "bag": 0
-    }
-   ]
-  },
-  {
    "name": "Rogue",
    "type": 768,
    "sprite": {
@@ -91210,6 +92033,715 @@
     "bag": 1,
     "worn": {
      "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Samurai",
+   "type": 785,
+   "sprite": {
+    "file": "c785.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 200,
+   "hpTop": 800,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 17,
+   "attTop": 75,
+   "def": 1,
+   "defTop": 30,
+   "pace": 22,
+   "paceTop": 55,
+   "dex": 16,
+   "dexTop": 55,
+   "vit": 23,
+   "vitTop": 60,
+   "wis": 23,
+   "wisTop": 60,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 2,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 1,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Rusty Katana",
+    "tier": 0,
+    "slot": 24,
+    "bag": 1,
+    "shot": {
+     "low": 35,
+     "high": 80,
+     "fast": 13,
+     "reach": 4.7,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Simple Wakizashi",
+    "tier": 0,
+    "slot": 27,
+    "bag": 1,
+    "mp": 40,
+    "shot": {
+     "low": 150,
+     "high": 250,
+     "fast": 18,
+     "reach": 6.3,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "armour": {
+    "name": "Iron Mail",
+    "tier": 0,
+    "slot": 7,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Sorcerer",
+   "type": 805,
+   "sprite": {
+    "file": "c805.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 100,
+   "hpTop": 700,
+   "mp": 150,
+   "mpTop": 400,
+   "att": 17,
+   "attTop": 70,
+   "def": 0,
+   "defTop": 25,
+   "pace": 27,
+   "paceTop": 60,
+   "dex": 23,
+   "dexTop": 60,
+   "vit": 17,
+   "vitTop": 75,
+   "wis": 23,
+   "wisTop": 60,
+   "grow": {
+    "hp": 25,
+    "mp": 7,
+    "att": 2,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 2,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Fire Wand",
+    "tier": 0,
+    "slot": 8,
+    "bag": 1,
+    "shot": {
+     "low": 30,
+     "high": 55,
+     "fast": 18,
+     "reach": 9,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Lightning Scepter",
+    "tier": 0,
+    "slot": 23,
+    "bag": 1,
+    "mp": 30
+   },
+   "armour": {
+    "name": "Robe of the Neophyte",
+    "tier": 0,
+    "slot": 14,
+    "bag": 1,
+    "worn": {
+     "DEF": 2
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Summoner",
+   "type": 817,
+   "sprite": {
+    "file": "c817.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 100,
+   "hpTop": 700,
+   "mp": 150,
+   "mpTop": 400,
+   "att": 23,
+   "attTop": 60,
+   "def": 0,
+   "defTop": 25,
+   "pace": 27,
+   "paceTop": 60,
+   "dex": 17,
+   "dexTop": 75,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 17,
+   "wisTop": 75,
+   "grow": {
+    "hp": 25,
+    "mp": 7,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 2,
+    "vit": 1,
+    "wis": 2
+   },
+   "weapon": {
+    "name": "Fire Wand",
+    "tier": 0,
+    "slot": 8,
+    "bag": 1,
+    "shot": {
+     "low": 30,
+     "high": 55,
+     "fast": 18,
+     "reach": 9,
+     "many": 1,
+     "rate": 1,
+     "through": true,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Summoning Mace",
+    "tier": 0,
+    "slot": 29,
+    "bag": 1,
+    "mp": 45
+   },
+   "armour": {
+    "name": "Robe of the Neophyte",
+    "tier": 0,
+    "slot": 14,
+    "bag": 1,
+    "worn": {
+     "DEF": 2
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Trickster",
+   "type": 804,
+   "sprite": {
+    "file": "c804.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 150,
+   "hpTop": 750,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 26,
+   "attTop": 65,
+   "def": 0,
+   "defTop": 25,
+   "pace": 23,
+   "paceTop": 75,
+   "dex": 17,
+   "dexTop": 75,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 23,
+   "wisTop": 60,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 1,
+    "def": 0.5,
+    "pace": 2,
+    "dex": 2,
+    "vit": 1,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Steel Dagger",
+    "tier": 0,
+    "slot": 2,
+    "bag": 1,
+    "shot": {
+     "low": 25,
+     "high": 70,
+     "fast": 14,
+     "reach": 5.6,
+     "many": 1,
+     "rate": 1.05,
+     "through": false,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Decoy Prism",
+    "tier": 0,
+    "slot": 22,
+    "bag": 1,
+    "mp": 60
+   },
+   "armour": {
+    "name": "Wolfskin Armor",
+    "tier": 0,
+    "slot": 6,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Warrior",
+   "type": 797,
+   "sprite": {
+    "file": "c797.png",
+    "tile": 20,
+    "height": 36,
+    "frames": 18,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4,
+      5
+     ],
+     "2/0": [
+      6
+     ],
+     "2/1": [
+      7,
+      8,
+      9
+     ],
+     "2/2": [
+      10,
+      11
+     ],
+     "3/0": [
+      12
+     ],
+     "3/1": [
+      13,
+      14,
+      15
+     ],
+     "3/2": [
+      16,
+      17
+     ]
+    }
+   },
+   "hp": 200,
+   "hpTop": 800,
+   "mp": 100,
+   "mpTop": 300,
+   "att": 17,
+   "attTop": 75,
+   "def": 0,
+   "defTop": 25,
+   "pace": 17,
+   "paceTop": 50,
+   "dex": 15,
+   "dexTop": 50,
+   "vit": 17,
+   "vitTop": 75,
+   "wis": 15,
+   "wisTop": 50,
+   "grow": {
+    "hp": 25,
+    "mp": 5,
+    "att": 2,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 1,
+    "vit": 2,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Short Sword",
+    "tier": 0,
+    "slot": 1,
+    "bag": 1,
+    "shot": {
+     "low": 45,
+     "high": 90,
+     "fast": 10,
+     "reach": 3.5,
+     "many": 1,
+     "rate": 1,
+     "through": false,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Combat Helm",
+    "tier": 0,
+    "slot": 16,
+    "bag": 1,
+    "mp": 60,
+    "worn": {
+     "DEF": 2
+    }
+   },
+   "armour": {
+    "name": "Iron Mail",
+    "tier": 0,
+    "slot": 7,
+    "bag": 1,
+    "worn": {
+     "DEF": 5
+    }
+   },
+   "pack": [
+    {
+     "name": "Health Potion",
+     "tier": 1,
+     "slot": 10,
+     "bag": 0
+    }
+   ]
+  },
+  {
+   "name": "Wizard",
+   "type": 782,
+   "sprite": {
+    "file": "c782.png",
+    "tile": 20,
+    "height": 20,
+    "frames": 17,
+    "size": 100,
+    "poses": {
+     "0/0": [
+      0
+     ],
+     "0/1": [
+      1,
+      2,
+      3
+     ],
+     "0/2": [
+      4
+     ],
+     "2/0": [
+      5
+     ],
+     "2/1": [
+      6,
+      7,
+      8
+     ],
+     "2/2": [
+      9,
+      10
+     ],
+     "3/0": [
+      11
+     ],
+     "3/1": [
+      12,
+      13,
+      14
+     ],
+     "3/2": [
+      15,
+      16
+     ]
+    }
+   },
+   "hp": 100,
+   "hpTop": 700,
+   "mp": 150,
+   "mpTop": 400,
+   "att": 23,
+   "attTop": 60,
+   "def": 0,
+   "defTop": 25,
+   "pace": 17,
+   "paceTop": 50,
+   "dex": 17,
+   "dexTop": 75,
+   "vit": 5,
+   "vitTop": 40,
+   "wis": 23,
+   "wisTop": 60,
+   "grow": {
+    "hp": 25,
+    "mp": 7,
+    "att": 1,
+    "def": 0.5,
+    "pace": 1,
+    "dex": 2,
+    "vit": 1,
+    "wis": 1
+   },
+   "weapon": {
+    "name": "Energy Staff",
+    "tier": 0,
+    "slot": 17,
+    "bag": 1,
+    "shot": {
+     "low": 10,
+     "high": 30,
+     "fast": 18,
+     "reach": 8.6,
+     "many": 2,
+     "fan": 0,
+     "rate": 1,
+     "through": false,
+     "pierce": false
+    }
+   },
+   "ability": {
+    "name": "Fire Spray Spell",
+    "tier": 0,
+    "slot": 11,
+    "bag": 1,
+    "mp": 20,
+    "shot": {
+     "low": 20,
+     "high": 25,
+     "fast": 16,
+     "reach": 16,
+     "many": 1,
+     "rate": 1,
+     "through": false,
+     "pierce": false
+    }
+   },
+   "armour": {
+    "name": "Robe of the Neophyte",
+    "tier": 0,
+    "slot": 14,
+    "bag": 1,
+    "worn": {
+     "DEF": 2
     }
    },
    "pack": [
@@ -95432,5 +96964,5 @@
  "sky": true,
  "water": true,
  "ss": 2,
- "mark": "b56214dfe9"
+ "mark": "2de2f9d4ff"
 }

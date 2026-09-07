@@ -205,6 +205,19 @@ if (fs.existsSync(itemIndexPath)) {
 // site is served. An offline copy has no directory beside it, so carry the
 // same id -> data URI lookup the item picker already uses. They are small
 // pixel sprites and are only read if the optional extraction has been run.
+/*
+ * One sheet for theory crafting: every target with the poses the client keeps
+ * for it, and every bolt a weapon throws. An offline copy has no folder
+ * beside it, so it travels as a data URI like everything else.
+ */
+let theorySheet = '';
+{
+  const at = path.join(web, 'assets', 'theory', 'sheet.png');
+  if (fs.existsSync(at)) {
+    theorySheet = 'data:image/png;base64,' + fs.readFileSync(at).toString('base64');
+  }
+}
+
 const realmMonsterSprites = {};
 const realmSpriteDir = path.join(web, 'assets', 'realm-monsters');
 const realmSpriteIndex = path.join(realmSpriteDir, 'index.json');
@@ -423,7 +436,8 @@ page = page
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, whatsNew })};</script>`,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, whatsNew,
+      theorySheet })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,

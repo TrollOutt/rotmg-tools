@@ -2257,7 +2257,13 @@ function main() {
      * costs twenty magic. None of that is a number anybody here chose.
      */
     const kitOf = readKit();
-    const wanted = ['Warrior', 'Knight', 'Wizard', 'Priest', 'Archer', 'Rogue'];
+    /*
+     * Every class the client has, not the six it started with. The realm gets
+     * nineteen kinds of adventurer instead of six, and the theory crafting
+     * page - which needs a picture of whichever class is being dressed - has
+     * one for all of them without a second cutter being written.
+     */
+    const wanted = [...kitOf.keys()].sort();
     const byName = new Map();
     for (const [type, name] of objectName) if (wanted.includes(name)) byName.set(name, type);
     const folk = [];

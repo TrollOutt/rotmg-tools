@@ -308,6 +308,9 @@ for (const [, one] of byType) {
   const labels = text(one.body, 'Labels') || '';
   bosses.push({
     name: text(one.body, 'DisplayId') || one.id,
+    // The portrait folder is filed under the object's own id, which is often
+    // not the name the game shows - "Oryx the Mad God 2" against "Oryx".
+    id: one.id,
     hp,
     def: num(one.body, 'Defense') || 0,
     god: /\bGOD\b/.test(labels) || undefined,
@@ -326,6 +329,63 @@ for (const [, one] of byType) {
   bosses.push(...seen.values());
 }
 bosses.sort((a, b) => b.hp - a.hp);
+
+/*
+ * A picture for each of them, and for the things they will be hitting.
+ *
+ * Both already exist. The atlas cuts every class out of the client with its
+ * whole run of poses - standing, walking and swinging, in each direction it
+ * has one for - and the realm catalogue holds a portrait of every boss. So
+ * this only has to write down where they are rather than cut anything again.
+ */
+{
+  const atlas = path.join(root, 'web', 'assets', 'atlas', 'atlas.json');
+  if (fs.existsSync(atlas)) {
+    try {
+      const said = JSON.parse(fs.readFileSync(atlas, 'utf8'));
+      const art = new Map((said.folk || []).map(one => [one.name, one.sprite]));
+      for (const one of classes) {
+        const sprite = art.get(one.name);
+        if (sprite) one.art = sprite;
+      }
+    } catch (e) { /* no atlas yet: the page draws a plain figure instead */ }
+  }
+}
+{
+  /*
+   * A portrait for whatever has one. The site already carries a folder of
+   * them, filed under the object's own id rather than the name the game
+   * shows, so both are tried - and what has none is drawn as a plain shape
+   * and says so in the list, rather than being hidden.
+   */
+  const index = path.join(root, 'web', 'assets', 'realm-monsters', 'index.json');
+  if (fs.existsSync(index)) {
+    try {
+      const have = JSON.parse(fs.readFileSync(index, 'utf8'));
+      /*
+       * The atlas is the better source where it has one - it cuts the whole
+       * run of poses, so the thing being hit can move - and the portrait
+       * folder covers the rest.
+       */
+      const moving = new Map();
+      const atlas = path.join(root, 'web', 'assets', 'atlas', 'atlas.json');
+      if (fs.existsSync(atlas)) {
+        const said = JSON.parse(fs.readFileSync(atlas, 'utf8'));
+        for (const owner of [...(said.zones || []), ...(said.biomes || [])]) {
+          for (const alive of owner.lives || []) {
+            if (alive.sprite && !moving.has(alive.name)) moving.set(alive.name, alive.sprite);
+          }
+        }
+      }
+      for (const one of bosses) {
+        const strip = moving.get(one.name) || moving.get(one.id);
+        if (strip) { one.strip = strip; continue; }
+        if (have[one.name]) one.art = one.name;
+        else if (have[one.id]) one.art = one.id;
+      }
+    } catch (e) { /* no portraits: plain shapes it is */ }
+  }
+}
 
 /* ---------------- write it ---------------- */
 fs.mkdirSync(OUT, { recursive: true });
