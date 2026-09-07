@@ -231,11 +231,26 @@ for (const text of objectText) {
     if (!art) continue;
     const size = /<Size>([^<]+)<\/Size>/.exec(m[2]);
     const shown = /<DisplayId>([^<]*)<\/DisplayId>/.exec(m[2]);
+    /*
+     * How a projectile is meant to sit.
+     *
+     * A bolt is drawn pointing one particular way in its own picture, and the
+     * client says which as an eighth of a turn: AngleCorrection one means the
+     * art points up and right, so it has to be turned back before it can be
+     * pointed anywhere. Rotation, where a projectile has one, is how many
+     * milliseconds it takes to turn a radian - a spinner rather than an
+     * arrow. Neither changes where the shot goes; both change how it looks
+     * going there.
+     */
+    const tilt = /<AngleCorrection>([^<]*)<\/AngleCorrection>/.exec(m[2]);
+    const spin = /<Rotation>([^<]*)<\/Rotation>/.exec(m[2]);
     artOf.set(m[1], {
       atlas: art[1].trim(),
       index: Number(art[2]),
       size: size ? Math.max(10, Math.min(400, Number(size[1]))) : 100,
-      shown: shown ? shown[1].trim() : null
+      shown: shown ? shown[1].trim() : null,
+      tilt: tilt ? Number(tilt[1]) : undefined,
+      spin: spin ? Number(spin[1]) : undefined
     });
   }
 }
@@ -288,6 +303,8 @@ function cutOne(key, where, wantPoses) {
     size: art.size,
     tiles: usable
   };
+  if (Number.isFinite(art.tilt) && art.tilt) out.tilt = art.tilt;
+  if (Number.isFinite(art.spin) && art.spin) out.spin = art.spin;
   if (poses) {
     const closed = {};
     for (const at of Object.keys(poses)) {
@@ -395,6 +412,8 @@ facts.sheet = {
   pics: Object.fromEntries(cut.map(one => [one.key, {
     x: one.px, y: one.py, w: one.w, h: one.h,
     frames: one.frames, size: one.size,
+    ...(one.tilt ? { tilt: one.tilt } : {}),
+    ...(one.spin ? { spin: one.spin } : {}),
     ...(one.poses ? { poses: one.poses } : {})
   }]))
 };

@@ -1223,10 +1223,30 @@ const TINT = {
       const y = floor - side * 0.55 + one.lane * side;
       const bolt = one.mine ? boltMine : boltSpell;
       if (bolt) {
-        // Its own proportions and its own run of frames, spinning as it goes.
+        /*
+         * Turned to face where it is going, once, as a whole bitmap.
+         *
+         * A bolt is drawn pointing some particular way in its own picture and
+         * the client says which - an eighth of a turn per unit of its angle
+         * correction - so the picture is turned back by that and then turned
+         * to the direction of travel. Rotating the bitmap rather than drawing
+         * a line means the black outline the art already carries turns with
+         * the colour instead of being redrawn beside it.
+         *
+         * A projectile with a Rotation spins as well: the client gives that
+         * as milliseconds to the radian.
+         */
         const high = 16 * Math.min(1.5, Math.max(0.7, bolt.size / 100));
         const frame = bolt.frames > 1 ? Math.floor(one.at * 14) % bolt.frames : 0;
-        if (drawPiece(pen, bolt, frame, x - high * 0.5, y + high * 0.5, high)) continue;
+        const going = 0;                       // across the bench, left to right
+        const facing = going - (bolt.tilt || 0) * Math.PI / 4
+          + (bolt.spin ? (duel.at * 1000) / bolt.spin : 0);
+        pen.save();
+        pen.translate(x, y);
+        pen.rotate(facing);
+        const drew = drawPiece(pen, bolt, frame, -high * 0.5, high * 0.5, high);
+        pen.restore();
+        if (drew) continue;
       }
       pen.strokeStyle = one.mine ? 'rgba(255,238,190,.95)' : 'rgba(140,190,240,.95)';
       pen.lineWidth = 2;
