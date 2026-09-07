@@ -306,14 +306,15 @@ for (const [, one] of byType) {
   const hp = num(one.body, 'MaxHitPoints');
   if (!hp || hp < 1000) continue;
   /*
-   * Only the things anybody builds against: the realm's encounters and the
-   * boss at the end of a dungeon. The client marks both the same way - it
-   * calls them Quest - and that leaves three hundred and sixty-eight instead
-   * of two and a half thousand, which is the difference between a list you
-   * can look through and a list you scroll past.
+   * Only the two kinds of thing anybody builds against, and the client names
+   * them itself rather than leaving it to be inferred: an ENCOUNTER is what
+   * turns up in the realm, and a BOSS is what waits at the end of a dungeon.
+   * Quest was the wrong question - it marks anything that counts towards one,
+   * which is two and a half thousand things including every minion.
    */
-  if (!/<Quest\s*\/>/.test(one.body)) continue;
   const labels = text(one.body, 'Labels') || '';
+  const labelSet = labels.split(',').map(one => one.trim());
+  if (!labelSet.includes('ENCOUNTER') && !labelSet.includes('BOSS')) continue;
   bosses.push({
     name: text(one.body, 'DisplayId') || one.id,
     // The portrait folder is filed under the object's own id, which is often

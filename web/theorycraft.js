@@ -814,11 +814,26 @@ var TheoryCraft = (function () {
     const big = Math.min(room, room / Math.max(1, shape))
       * Math.min(1.6, Math.max(0.7, (piece ? piece.size : 100) / 100));
     const bossX = wide - big * Math.max(1, shape) - 22;
+    /*
+     * It stands still and stays still.
+     *
+     * Two things were making it jump. Switching to its attack pose whenever a
+     * shot landed swapped in a different drawing, often a different size, for
+     * a frame at a time - and a random shake on top of that moved it again
+     * every time the screen was painted. A thing being shot at should flinch,
+     * not teleport, so it keeps its own idle animation throughout and the hit
+     * shows as a flash instead.
+     */
     const struck = duel.hp > 0 && duel.shots.some(s => s.at > 0.86);
-    const shake = struck ? (Math.random() - 0.5) * 3 : 0;
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
-    const drew = drawPiece(pen, piece,
-      frameOf(piece, struck ? 2 : 0, duel.at), bossX + shake, floor, big);
+    const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
+    if (drew && struck) {
+      pen.globalAlpha = 0.35;
+      pen.fillStyle = '#fff';
+      pen.globalCompositeOperation = 'lighter';
+      drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
+      pen.globalCompositeOperation = 'source-over';
+    }
     if (!drew) {
       pen.fillStyle = duel.hp > 0 ? '#8a5a5a' : 'rgba(138,90,90,.25)';
       pen.fillRect(bossX, floor - big, big, big);
@@ -1013,11 +1028,11 @@ var TheoryCraft = (function () {
     const box = el('tcTabs');
     if (!box) return;
     box.innerHTML = tabs.map((one, i) =>
-      '<button type="button" class="tc-tab' + (i === onTab ? ' is-on' : '')
+      '<button type="button" role="tab" class="tab' + (i === onTab ? ' is-active' : '')
       + '" data-tab="' + i + '">' + esc(one.name)
       + (tabs.length > 1 ? '<u data-shut="' + i + '">×</u>' : '')
       + '</button>').join('')
-      + '<button type="button" class="tc-tab tc-tab-new" data-tab="new">+</button>';
+      + '<button type="button" class="tab tab-new" data-tab="new">+ New</button>';
   }
 
   /* ---------------- putting it on the screen ---------------- */
@@ -1039,6 +1054,10 @@ var TheoryCraft = (function () {
     for (const node of el('tcBosses').querySelectorAll('[data-boss]')) {
       node.classList.toggle('is-on', node.dataset.boss === build.boss);
     }
+    const chosenBoss = data.byBoss[build.boss];
+    el('tcBossSay').textContent = chosenBoss
+      ? chosenBoss.name + ' · ' + commas(chosenBoss.hp) + ' life, '
+        + chosenBoss.def + ' armour' : '';
     el('tcName').value = build.name;
     drawTabs();
     drawSlots();
