@@ -419,10 +419,15 @@ if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   process.exit(1);
 }
 
-// The tab and the app-mode window title bar get the original Qt icon, inlined
-// like everything else so the file still depends on nothing.
-const iconBytes = fs.readFileSync(path.join(dataRoot, 'appicon.ico'));
-const faviconTag = `<link rel="icon" href="data:image/x-icon;base64,${iconBytes.toString('base64')}">`;
+/*
+ * The tab icon, inlined like everything else so the file still depends on
+ * nothing. A picture put there by tools/tab-icon.js wins; the client's own
+ * icon is what it falls back to, which is what it was for years.
+ */
+const iconPng = path.join(dataRoot, 'appicon.png');
+const faviconTag = fs.existsSync(iconPng)
+  ? `<link rel="icon" type="image/png" href="data:image/png;base64,${fs.readFileSync(iconPng).toString('base64')}">`
+  : `<link rel="icon" href="data:image/x-icon;base64,${fs.readFileSync(path.join(dataRoot, 'appicon.ico')).toString('base64')}">`;
 
 const built = new Date().toISOString().slice(0, 10);
 
