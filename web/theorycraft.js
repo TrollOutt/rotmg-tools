@@ -521,10 +521,30 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '"></span>';
   }
 
+  /*
+   * What the game would call this thing, so the cell can be framed the way
+   * the game frames it. Untiered gear - the drops people actually want - is
+   * marked UT in the client's own labels, and the tiered stuff bands the way
+   * its dust does: the low ones plain, the middle ones better, the top two
+   * the ones worth a white bag.
+   */
+  function gradeOf(name) {
+    const item = data.byItem[name];
+    if (!item) return '';
+    const labels = (item.labels || '').split(',');
+    if (labels.includes('UT')) return 'is-ut';
+    if (item.tier === undefined) return '';
+    if (item.tier >= 13) return 'is-top';
+    if (item.tier >= 10) return 'is-high';
+    if (item.tier >= 6) return 'is-mid';
+    return 'is-low';
+  }
+
   function itemIcon(name) {
     const src = artFor(name);
+    const grade = gradeOf(name);
     return src
-      ? '<img class="tc-icon-big" src="' + esc(src) + '" alt="" loading="lazy">'
+      ? '<img class="tc-icon-big ' + grade + '" src="' + esc(src) + '" alt="" loading="lazy">'
       : '<span class="tc-icon-big"></span>';
   }
 
@@ -617,7 +637,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
        * came from is arithmetic somebody would have to want; the bar against
        * the ceiling is the thing being read.
        */
-      return '<div class="tc-stat' + (over ? ' is-over' : '')
+      return '<div class="tc-stat is-' + key + (over ? ' is-over' : '')
         + (part >= 1 ? ' is-full' : '') + '">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
@@ -976,17 +996,23 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
     /* And the thing being hit, on the right, in its own animation. */
     /*
-     * Drawn at the size the client draws it - a spider declares fifty and is
-     * half its picture, a god declares a hundred and fifty - and inside a box
-     * rather than forced to a square, so a thing wider than it is tall comes
-     * out wide rather than squashed into a column.
+     * Every target the same size, whatever the client says it is.
+     *
+     * On the map a declared size matters: a spider says fifty and is half its
+     * picture, a god says a hundred and fifty, and the difference is the
+     * point. Here it is only noise - this frame is a test bench, and a bench
+     * that draws one dummy at twice another makes two builds look different
+     * when only the dummy changed. So the longest side of whatever is being
+     * hit is always the same number of pixels, and the thing's own
+     * proportions are kept inside that: a wide creature stays wide without
+     * ending up bigger than a tall one.
      */
     const piece = pieceOf(boss && boss.pic);
-    const room = Math.min(84, tall * 0.62);
-    const shape = piece ? piece.w / piece.h : 1;
-    const big = Math.min(room, room / Math.max(1, shape))
-      * Math.min(1.6, Math.max(0.7, (piece ? piece.size : 100) / 100));
-    const bossX = wide - big * Math.max(1, shape) - 22;
+    const room = Math.min(88, tall * 0.64);
+    const longest = piece ? Math.max(piece.w, piece.h) : 1;
+    const big = piece ? room * (piece.h / longest) : room;
+    const across = piece ? room * (piece.w / longest) : room;
+    const bossX = wide - 22 - room / 2 - across / 2;
     /*
      * It stands still and stays still.
      *
@@ -1052,7 +1078,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
     /* Whatever is left of it, on its way outward. */
     if (duel.bits.length) {
-      const middle = bossX + big * Math.max(1, shape) / 2;
+      const middle = bossX + across / 2;
       for (const one of duel.bits) {
         pen.globalAlpha = Math.max(0, one.left / one.full);
         pen.fillStyle = one.left > 0.6 ? '#fff2cf' : '#e0a13a';
