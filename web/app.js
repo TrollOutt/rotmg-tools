@@ -301,6 +301,15 @@ function conflictWith(mod, slot, others) {
 function candidatesFor(slot, config) {
   const others = state.slots.filter(entry => entry.index !== slot.index);
   return state.data.enchants
+    /*
+     * The retired ones are not offered. The client keeps Crown, Iron Plating
+     * (Legacy), Living Hive (Legacy) and their kind so that an item still
+     * carrying one reads correctly, and gives them a weight of nought to say
+     * they can never come out of an enchanting again. Listing something
+     * nobody can roll among the things you might want is how a list stops
+     * being trustworthy.
+     */
+    .filter(mod => mod.weight > 0)
     .filter(mod => eligibleForItem(mod, config))
     .filter(mod => !conflictWith(mod, slot, others))
     .sort((a, b) => a.name.localeCompare(b.name));

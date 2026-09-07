@@ -141,31 +141,6 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /*
-   * What the worn things heal back, and what they keep off you.
-   *
-   * Life a second, a share of maximum life a second, and a plain reduction of
-   * everything incoming. They matter for one question only - how long you
-   * last - but for that question they matter more than another point of
-   * armour does, and the game's own rules make them the only things left that
-   * can go in the last two slots of a piece of armour.
-   */
-  function healOf(state) {
-    const out = { flatHP: 0, partHP: 0, flatMP: 0, partMP: 0, soak: 1 };
-    for (const [hand] of HANDS) {
-      const worn = state.gear[hand];
-      for (const id of (worn && worn.ench) || []) {
-        const one = id && data.byEnch[id];
-        if (!one || !one.heal) continue;
-        for (const key of ['flatHP', 'partHP', 'flatMP', 'partMP']) {
-          if (one.heal[key]) out[key] += one.heal[key];
-        }
-        if (one.heal.soak) out.soak *= one.heal.soak;
-      }
-    }
-    return out;
-  }
-
-  /*
    * What the worn enchantments multiply.
    *
    * Some of them do not add a statistic at all: they scale the weapon. Two
@@ -490,20 +465,25 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const seen = new Set();
       for (const mod of pool) {
         /*
-         * Only what the game will actually roll.
+         * Only what an enchanting will actually put on an item.
          *
-         * The client keeps the retired ones - Kogbold Spirit (Legacy), Living
-         * Hive (Legacy), a dozen others - so that an item that already has
-         * one still reads correctly, and gives them a weight of nought to say
-         * they can no longer come out of an enchanting. They are eligible in
-         * every other sense, which is how the search came to hand back builds
-         * nobody can make any more.
+         * The calculator's list is the whole list, and the whole list is
+         * wider than what a player can roll. The retired ones - Kogbold
+         * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
+         * item already carrying one still reads, and are given a weight of
+         * nought to say they can never come out again. The seasonal ones -
+         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
+         * at the time, not out of enchanting, and the client marks the
+         * difference with a ROLLABLE label. This page has no artifact in it,
+         * so it plans with what a plain enchanting can roll and nothing else.
          */
-        if (!(mod.weight > 0)) continue;
+        if (!(mod.weight > 0) || !mod.tags || !mod.tags.has('ROLLABLE')) continue;
         if (seen.has(mod.name)) continue;
         seen.add(mod.name);
         const mine = charmNamed(mod.name);
-        out.push(mine || { id: 'n:' + mod.name, name: mod.name });
+        // How likely it is to come out, kept for the slot that has nothing
+        // countable left to put in it.
+        out.push(Object.assign({ roll: mod.weight }, mine || { id: 'n:' + mod.name, name: mod.name }));
       }
       return out;
     }
@@ -522,9 +502,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (one) for (const label of labelsOf(one.labels)) beside.add(label);
     });
     return data.enchants.filter(one => {
-      // Retired ones carry a weight of nought: kept so an item that has one
-      // still reads, never rolled again.
-      if (!(one.weight > 0)) return false;
+      // Retired ones carry a weight of nought, and the seasonal ones come out
+      // of an engraving rather than an enchanting: neither can be planned for.
+      if (!(one.weight > 0) || !labelsOf(one.labels).has('ROLLABLE')) return false;
       const wants = labelsOf(one.fits);
       if (wants.size) {
         let met = false;
@@ -576,57 +556,6 @@ const TINT = {
       const boss = data.byBoss[s.boss];
       if (!boss || !n.total) return 0;
       return -boss.hp / n.total;
-    } },
-    { group: 'Others', id: 'shot', say: 'Damage a shot', tint: '#e08a3c',
-      of: n => n.gun.each * (n.gun.many || 1) },
-    /*
-     * Through armour: what the build still lands on the hardest thing it will
-     * ever meet. A weapon that throws many small shots loses most of itself to
-     * armour and a heavy one barely notices, so this and plain damage pull in
-     * different directions - which is the whole reason the curve is drawn.
-     */
-    { group: 'Others', id: 'pierce', say: 'Through armour', tint: '#93a3b5', of: (n, s) => {
-      const was = s.against;
-      s.against = 80;
-      const hard = numbersFor(s, 80);
-      s.against = was;
-      return hard ? hard.total : 0;
-    } },
-    /*
-     * Staying alive: how long you last, in seconds, under fire.
-     *
-     * Armour is subtracted from each hit, not from a total, so what it is
-     * worth depends entirely on the size of the hit - twenty points is most
-     * of a snake's shot and a rounding error on a god's. So the figure is
-     * read against a spread of incoming fire rather than one imagined hit:
-     * something small and constant, something middling, and the heavy one
-     * that arrives now and then. Armour never takes more than eighty-five per
-     * cent off, which the client enforces and which is why the last points of
-     * it are worth so much less than the first.
-     *
-     * Then life is what there is to spend and vitality is what comes back
-     * while you spend it, so the answer is a length of time: life divided by
-     * what gets through, less what heals. That is why piling everything into
-     * armour stops paying - past the point where the small hits are already
-     * at their floor, another point of it buys nothing, and the same
-     * enchantment slot spent on life or vitality still buys seconds.
-     */
-    { group: 'Others', id: 'live', say: 'Survival', tint: '#7fc45a', of: (n, at) => {
-      const s = n.stats.now;
-      const back = healOf(at);
-      // What a fight throws at you in a second: something small and
-      // constant, something middling, and the heavy one that arrives now and
-      // then. Three sizes, because armour is taken off each hit rather than
-      // off a total, and the same twenty points is most of the first and
-      // nothing much of the last.
-      const INCOMING = [30, 70, 140];
-      let through = 0;
-      for (const hit of INCOMING) through += Math.max(hit * 0.15, hit - s.def);
-      through *= back.soak;
-      const heal = HEAL_AT(s.vit) + back.flatHP + back.partHP * s.hp;
-      const net = through - heal;
-      if (net <= 0) return 600;                      // healing faster than it lands
-      return Math.min(600, s.hp / net);
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
       tint: TINT[key], of: n => n.stats.now[key] }))
@@ -687,6 +616,31 @@ const TINT = {
    * at a time, which is what a person does by hand and is usually the answer.
    * The page says so rather than claiming a best.
    */
+  /*
+   * The same build every time, whatever is on the page.
+   *
+   * A search reads the build in front of it, so searching twice searched from
+   * two different places and gave two different answers - which makes the
+   * button feel like a dice roll rather than an answer. The starting point is
+   * now always the same: the plainest thing that fits each slot, with
+   * anything kept left exactly as it is.
+   */
+  function bareOf(state) {
+    const out = JSON.parse(JSON.stringify(state));
+    HANDS.forEach(([hand], i) => {
+      if (out.locked[hand]) return;
+      const kind = data.byClass[out.klass];
+      const plain = bottomOf((kind && kind.slots || [])[i]);
+      out.gear[hand] = {
+        name: (plain && data.byItem[plain]) ? plain : null,
+        slots: 4,
+        ench: [0, 1, 2, 3].map(at =>
+          out.locked[hand + ':' + at] ? (state.gear[hand].ench || [])[at] || null : null)
+      };
+    });
+    return out;
+  }
+
   function optimise(state, goal, report) {
     const work = JSON.parse(JSON.stringify(state));
     /*
@@ -770,6 +724,30 @@ const TINT = {
               best = one.id;
               bestWorth = mine;
             }
+          }
+          /*
+           * And if nothing this page can count is allowed here, the slot is
+           * still a slot. Two statistics on one item bar every other
+           * statistic from joining them, so the last slots of a piece of
+           * armour are often a choice between effects the page does not
+           * model and nothing at all - and nothing at all is the one answer
+           * that is certainly wrong, since the game will put something there.
+           * The likeliest roll takes it, and the page says plainly that it is
+           * not counting what it does.
+           */
+          if (!best) {
+            let common = null;
+            for (const one of enchantsFor(worn.name, worn.ench, at)) {
+              // Loot and dust bonuses are rolled for the bag, not for the
+              // fight, so they are the last thing to put in a fighting slot.
+              const spoils = (one.labels || '').includes('REWARD');
+              const mineIs = (spoils ? 0 : 1e9) + (one.roll || 0);
+              const hisIs = common
+                ? ((common.labels || '').includes('REWARD') ? 0 : 1e9) + (common.roll || 0)
+                : -1;
+              if (mineIs > hisIs) common = one;
+            }
+            if (common) best = common.id;
           }
           worn.ench[at] = best;
           score = bestScore;
@@ -1031,7 +1009,6 @@ const TINT = {
   function sayGoal(goal, value) {
     if (!Number.isFinite(value)) return '\u2014';
     if (goal.id === 'kill') return round(-value) + 's';
-    if (goal.id === 'live') return round(value) + 's';
     if (goal.id && goal.id.indexOf('stat:') === 0) return round(value);
     return commas(value);
   }
@@ -1477,18 +1454,10 @@ const TINT = {
     const left = Math.max(14, (wide - (mine + apart + across)) / 2);
     const bossX = left + mine + apart;
 
-    /*
-     * The one on the left, in whichever pose it is in, turned to face what it
-     * is shooting at. The client keeps one side view and mirrors it for the
-     * other, which is what is done here.
-     */
+    /* The one on the left, in whichever pose it is in. */
     if (me) {
-      pen.save();
-      pen.translate(left + mine, 0);
-      pen.scale(-1, 1);
       drawPiece(pen, me, frameOf(me, duel.swing > 0 ? 2 : 0, duel.at),
-        0, floor, side);
-      pen.restore();
+        left, floor, side);
     } else {
       pen.fillStyle = '#6f8fbf';
       pen.fillRect(left, floor - side, side * 0.6, side);
@@ -1566,7 +1535,19 @@ const TINT = {
         + Math.cos(one.angle) * sway;
       const bolt = one.bolt;
       if (bolt) {
-        const high = 16 * Math.min(1.5, Math.max(0.7, bolt.size / 100));
+        /*
+         * As big as the client says, at the scale of this floor.
+         *
+         * The bolt used to be given a height of sixteen pixels and a width
+         * from its proportions, which is fine for a round missile and absurd
+         * for a blade: the dagger's projectile is eight pixels by one, so
+         * sixteen tall made it a hundred and twenty-eight long - a grey bar
+         * across the whole bench. A texture is eight pixels to the tile, and
+         * a tile here is thirty, so the drawing is simply that, scaled by the
+         * size the client gives the projectile.
+         */
+        const per = (PX_TILE / 8) * Math.min(2, Math.max(0.5, bolt.size / 100));
+        const high = Math.max(2, bolt.h * per);
         const wide = high * (bolt.w / bolt.h);
         const frame = bolt.frames > 1
           ? Math.floor(one.age * 14) % bolt.frames : 0;
@@ -2071,9 +2052,21 @@ const TINT = {
       said.textContent = 'trying things...';
       // Off the paint, so the button has time to say it is working.
       setTimeout(() => {
-        const aim = aimOf(build, wanted);
+        /*
+         * Two searches, and the better of them. One from the plainest gear
+         * there is, which is the same starting point every time and so gives
+         * the same answer every time; one from what is on the page, which can
+         * only help. Both are scored on the same scale - read off the plain
+         * build, not off whatever the last search left behind - so pressing
+         * the button twice cannot wander.
+         */
+        const plain = bareOf(build);
+        const aim = aimOf(plain, wanted);
         const was = wanted.map(one => scoreOf(build, one));
-        const got = optimise(build, aim, null);
+        const fromPlain = optimise(plain, aim, null);
+        const fromHere = optimise(build, aim, null);
+        const got = fromPlain.score >= fromHere.score ? fromPlain : fromHere;
+        got.looked = fromPlain.looked + fromHere.looked;
         got.state.name = build.name;
         tabs[onTab] = build = got.state;
         keep(); paint();
