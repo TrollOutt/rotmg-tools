@@ -203,7 +203,14 @@ var TheoryCraft = (function () {
        * of it is a training dummy with ten million of them, which tells you
        * nothing; the first thing the game actually calls a god does.
        */
-      boss: (data.bosses.find(one => one.god && one.hp < 200000)
+      /*
+       * Something worth timing, and worth looking at. The list is sorted by
+       * hit points and the top of it is a training dummy with ten million of
+       * them, which tells you nothing; the first god the catalogue has a
+       * portrait of both dies in a sensible time and shows its face.
+       */
+      boss: (data.bosses.find(one => one.pic && one.god && one.hp < 200000)
+        || data.bosses.find(one => one.pic)
         || data.bosses[data.bosses.length - 1] || {}).name || null,
       locked: {}
     };
@@ -362,8 +369,8 @@ var TheoryCraft = (function () {
   function itemIcon(name) {
     const src = artFor(name);
     return src
-      ? '<img class="tc-icon" src="' + esc(src) + '" alt="" loading="lazy">'
-      : '<span class="tc-icon"></span>';
+      ? '<img class="tc-icon-big" src="' + esc(src) + '" alt="" loading="lazy">'
+      : '<span class="tc-icon-big"></span>';
   }
 
   function drawSlots() {
@@ -373,6 +380,8 @@ var TheoryCraft = (function () {
       const worn = build.gear[hand];
       const item = data.byItem[worn.name];
       const locked = !!build.locked[hand];
+
+      /* What the thing is, in the fewest words that still say it. */
       const bits = [];
       if (item) {
         if (item.tier !== undefined) bits.push('T' + item.tier);
@@ -380,6 +389,7 @@ var TheoryCraft = (function () {
         if (gun) {
           bits.push(gun.low + (gun.high !== gun.low ? '–' + gun.high : '') + ' dmg');
           if (gun.reach) bits.push(gun.reach + ' tiles');
+          if (gun.pierce) bits.push('pierces');
         }
         if (item.many > 1) bits.push(item.many + ' shots');
         if (item.rate !== undefined && item.rate !== 1) {
@@ -388,44 +398,50 @@ var TheoryCraft = (function () {
         if (item.mp) bits.push(item.mp + ' MP');
         if (item.worn) {
           for (const tag of Object.keys(item.worn)) {
-            bits.push((item.worn[tag] > 0 ? '+' : '') + item.worn[tag] + ' ' + tag);
+            bits.push(plus(item.worn[tag]) + ' ' + tag);
           }
         }
       }
-      const rows = [];
+
+      /* And its enchantments, as chips rather than as a faint list. */
+      const chips = [];
       for (let at = 0; at < worn.slots; at++) {
         const id = worn.ench[at];
         const one = id && data.byEnch[id];
         const held = !!build.locked[hand + ':' + at];
-        rows.push('<div class="tc-ench' + (held ? ' is-held' : '') + '">'
+        const said = one && one.worn
+          ? '<u>' + Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ') + '</u>'
+          : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
+        chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
+          + (one ? '' : ' is-empty') + '">'
           + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '">'
-          + (one ? esc(one.name) : '<em>empty slot</em>') + '</button>'
-          + (one && one.worn
-            ? '<u>' + Object.keys(one.worn).map(t =>
-              (one.worn[t] > 0 ? '+' : '') + one.worn[t] + ' ' + t).join(' ') + '</u>'
-            : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : ''))
+          + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
+          + said
           + '<button type="button" class="tc-hold" data-hold="' + hand + ':' + at
           + '" title="keep this one while the calculator works">'
           + (held ? '◉' : '○') + '</button>'
-          + '</div>');
+          + '</span>');
       }
+      chips.push('<label class="tc-rarity">slots'
+        + '<select data-slots="' + hand + '">'
+        + [0, 1, 2, 3, 4].map(n => '<option value="' + n + '"'
+          + (n === worn.slots ? ' selected' : '') + '>' + n + '</option>').join('')
+        + '</select></label>');
+
       return '<div class="tc-slot' + (locked ? ' is-held' : '') + '">'
         + '<div class="tc-slot-head">'
-        + '<i>' + say + '</i>'
         + '<button type="button" class="tc-item-pick" data-item="' + hand + '">'
-        + itemIcon(worn.name) + '<b>' + (worn.name ? esc(worn.name) : 'nothing') + '</b>'
-        + '</button>'
+        + itemIcon(worn.name)
+        + '<span class="tc-item-said">'
+        + '<span class="tc-item-where">' + say + '</span>'
+        + '<span class="tc-item-name">' + (worn.name ? esc(worn.name) : 'nothing') + '</span>'
+        + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
+        + '</span></button>'
         + '<button type="button" class="tc-hold" data-hold="' + hand
         + '" title="keep this item while the calculator works">'
         + (locked ? '◉' : '○') + '</button>'
         + '</div>'
-        + (bits.length ? '<p class="tc-bits">' + esc(bits.join(' · ')) + '</p>' : '')
-        + '<label class="tc-rarity">enchantment slots'
-        + '<select data-slots="' + hand + '">'
-        + [0, 1, 2, 3, 4].map(n => '<option value="' + n + '"'
-          + (n === worn.slots ? ' selected' : '') + '>' + n + '</option>').join('')
-        + '</select></label>'
-        + rows.join('')
+        + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';
     }).join('');
   }
@@ -446,8 +462,7 @@ var TheoryCraft = (function () {
       return '<div class="tc-stat">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
-        + '<b>' + round(now) + '</b>'
-        + '<u>of ' + top + '</u>'
+        + '<b>' + round(now) + '<u>/' + top + '</u></b>'
         + (extra.length ? '<em>' + esc(extra.join(', ')) + '</em>' : '')
         + '</div>';
     }).join('');
@@ -475,17 +490,18 @@ var TheoryCraft = (function () {
       ['ability', numbers.spell.dps
         ? commas(numbers.spell.dps) + ' a second, every ' + round(numbers.spell.every) + 's'
         : '—'],
-      ['both hands', commas(numbers.total) + ' a second'],
+      ['both hands', commas(numbers.total) + ' a second', true],
       ['moving', round(PACE_AT(stats.spd)) + ' tiles a second'],
       ['life back', round(HEAL_AT(stats.vit)) + ' a second'],
       ['magic back', round(MANA_AT(stats.wis)) + ' a second']
     ];
     if (kill !== null) {
       rows.push([esc(boss.name), commas(boss.hp) + ' life, ' + boss.def + ' armour']);
-      rows.push(['dies in', round(kill) + ' seconds']);
+      rows.push(['dies in', round(kill) + ' seconds', true]);
     }
-    box.innerHTML = rows.map(([say, was]) =>
-      '<span><i>' + say + '</i><b>' + was + '</b></span>').join('');
+    box.innerHTML = rows.map(([say, was, loud]) =>
+      '<span' + (loud ? ' class="tc-loud"' : '') + '><i>' + say + '</i><b>'
+      + was + '</b></span>').join('');
   }
 
   /*
@@ -577,6 +593,261 @@ var TheoryCraft = (function () {
     }
   }
 
+  /* ---------------- the duel ---------------- */
+  /*
+   * The build, hitting the thing you chose to hit.
+   *
+   * Every number on this page is a rate, and a rate is a hard thing to feel.
+   * Six hundred a second and thirty-four thousand a second are both just
+   * words until you watch the same boss take four hundred seconds and then
+   * five. So the frame plays it out: the class stands on the left in the
+   * animation the client gives it, throws the shots its weapon actually
+   * throws at the rate its dexterity actually gives it, and the target's life
+   * comes down by what each one lands for.
+   *
+   * It is the same arithmetic as the panel beside it, not a second opinion.
+   * The damage a shot lands, the number of shots and how often they go are
+   * all read from the same functions, so the clock in the corner and the
+   * "dies in" line agree by construction rather than by luck.
+   */
+  const duel = {
+    on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0,
+    hp: 0, full: 0, over: 0, last: 0, art: new Map()
+  };
+
+  function artOfClass(kind) {
+    if (!kind || !kind.art) return null;
+    let img = duel.art.get(kind.art.file);
+    if (!img) {
+      img = new Image();
+      img.decoding = 'async';
+      const bundle = window.ROTMG_BUNDLE;
+      // Served, the atlas sits beside the page; bundled, it is a folder the
+      // single file cannot carry, so the frame falls back to a plain figure.
+      img.src = (bundle && bundle.atlasBase ? bundle.atlasBase : 'assets/atlas/')
+        + 'life/' + kind.art.file;
+      duel.art.set(kind.art.file, img);
+    }
+    return img;
+  }
+
+  /*
+   * One sheet holds every target and every bolt, cut out of the client by
+   * tools/theory-sprites.js: four hundred things worth hitting with the whole
+   * run of poses the game keeps for them, and the nine hundred projectiles
+   * the weapons actually throw. One picture, one index of rectangles.
+   */
+  function theSheet() {
+    let img = duel.art.get('sheet');
+    if (!img) {
+      const bundle = window.ROTMG_BUNDLE;
+      img = new Image();
+      img.decoding = 'async';
+      img.src = (bundle && bundle.theorySheet) || 'assets/theory/sheet.png';
+      duel.art.set('sheet', img);
+    }
+    return img;
+  }
+
+  const pieceOf = key => (key && data.sheet && data.sheet.pics[key]) || null;
+
+  /*
+   * Which frame of a thing to show. The registry files them by facing and
+   * action - nought standing, one walking, two swinging - so a target that
+   * has a swing plays its swing when it is being hit and stands the rest of
+   * the time. None of it is animation I wrote.
+   */
+  function frameOf(piece, doing, clock) {
+    if (!piece) return 0;
+    const poses = piece.poses;
+    if (!poses) return piece.frames > 1 ? Math.floor(clock * 4) % piece.frames : 0;
+    const list = poses['0/' + doing] || poses['3/' + doing] || poses['0/0']
+      || poses[Object.keys(poses)[0]];
+    return list[Math.floor(clock * (doing === 1 ? 6 : 3)) % list.length];
+  }
+
+  function drawPiece(pen, piece, frame, x, y, tall) {
+    const img = theSheet();
+    if (!piece || !img.complete || !img.naturalWidth) return false;
+    const wide = tall * (piece.w / piece.h);
+    pen.drawImage(img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
+      x, y - tall, wide, tall);
+    return true;
+  }
+
+  function resetDuel() {
+    const boss = data.byBoss[build.boss];
+    duel.at = 0; duel.dealt = 0; duel.shots.length = 0;
+    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.over = 0;
+    duel.full = boss ? boss.hp : 0;
+    duel.hp = duel.full;
+  }
+
+  /* One frame of it, at whatever rate the browser is painting. */
+  function stepDuel(delta) {
+    const boss = data.byBoss[build.boss];
+    if (!boss) return;
+    const stats = statsOf(build).now;
+    const weapon = data.byItem[(build.gear.weapon || {}).name];
+    const ability = data.byItem[(build.gear.ability || {}).name];
+    const gun = weaponRate(weapon, stats, boss.def);
+    const spell = abilityRate(ability, stats, boss.def);
+
+    duel.at += delta;
+    if (duel.swing > 0) duel.swing -= delta;
+
+    if (gun.rate > 0) {
+      duel.cool -= delta;
+      if (duel.cool <= 0) {
+        duel.cool += 1 / gun.rate;
+        duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
+        for (let n = 0; n < (gun.many || 1); n++) {
+          duel.shots.push({
+            at: 0, lane: (n - ((gun.many || 1) - 1) / 2) * 0.16,
+            hurt: gun.each, mine: true
+          });
+        }
+      }
+    }
+    if (spell.dps > 0 && spell.every > 0) {
+      duel.spell -= delta;
+      if (duel.spell <= 0) {
+        duel.spell += spell.every;
+        for (let n = 0; n < (spell.many || 1); n++) {
+          duel.shots.push({
+            at: 0, lane: (n - ((spell.many || 1) - 1) / 2) * 0.16,
+            hurt: spell.each, mine: false
+          });
+        }
+      }
+    }
+
+    for (let i = duel.shots.length - 1; i >= 0; i--) {
+      const one = duel.shots[i];
+      // A shot crosses the frame in a fifth of a second, whatever its range.
+      one.at += delta * 5;
+      if (one.at < 1) continue;
+      duel.shots.splice(i, 1);
+      if (duel.hp <= 0) continue;
+      duel.hp -= one.hurt;
+      duel.dealt += one.hurt;
+      if (duel.hp <= 0) { duel.hp = 0; duel.over = duel.at; }
+    }
+    // Once it is down it stays down for a moment, then gets up again.
+    if (duel.hp <= 0 && duel.at - duel.over > 1.6) resetDuel();
+  }
+
+  function drawDuel() {
+    const canvas = el('tcDuel');
+    if (!canvas) return;
+    const wide = canvas.clientWidth || 320;
+    const tall = canvas.clientHeight || 150;
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.round(wide * dpr)) {
+      canvas.width = Math.round(wide * dpr);
+      canvas.height = Math.round(tall * dpr);
+    }
+    const pen = canvas.getContext('2d');
+    pen.setTransform(dpr, 0, 0, dpr, 0, 0);
+    pen.clearRect(0, 0, wide, tall);
+    pen.imageSmoothingEnabled = false;
+
+    const kind = data.byClass[build.klass];
+    const boss = data.byBoss[build.boss];
+    const floor = tall - 30;
+
+    /* The one on the left, in whichever pose it is in. */
+    const mine = artOfClass(kind);
+    const side = Math.min(46, tall * 0.36);
+    if (mine && mine.complete && mine.naturalWidth) {
+      const art = kind.art;
+      const poses = art.poses || {};
+      const list = duel.swing > 0
+        ? (poses['0/2'] || poses['0/0'] || [0])
+        : (poses['0/0'] || [0]);
+      const frame = list[Math.floor(duel.at * 4) % list.length];
+      const cell = art.tile, high = art.height;
+      pen.drawImage(mine, frame * cell, 0, cell, high,
+        22, floor - side * (high / cell), side, side * (high / cell));
+    } else {
+      pen.fillStyle = '#6f8fbf';
+      pen.fillRect(26, floor - side, side * 0.6, side);
+    }
+
+    /* And the thing being hit, on the right, in its own animation. */
+    const piece = pieceOf(boss && boss.pic);
+    const big = Math.min(70, tall * 0.52);
+    const bossX = wide - big - 26;
+    const struck = duel.hp > 0 && duel.shots.some(s => s.at > 0.86);
+    const shake = struck ? (Math.random() - 0.5) * 3 : 0;
+    pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
+    const drew = drawPiece(pen, piece,
+      frameOf(piece, struck ? 2 : 0, duel.at), bossX + shake, floor, big);
+    if (!drew) {
+      pen.fillStyle = duel.hp > 0 ? '#8a5a5a' : 'rgba(138,90,90,.25)';
+      pen.fillRect(bossX, floor - big, big, big);
+    }
+    pen.globalAlpha = 1;
+
+    /*
+     * And what is in the air between them: the bolt the weapon actually
+     * throws rather than a line standing in for one, and the ability's own
+     * projectile where it has one - a Fire Spray bolt is not an Energy Staff
+     * missile and should not look like it.
+     */
+    const weapon = data.byItem[(build.gear.weapon || {}).name];
+    const ability = data.byItem[(build.gear.ability || {}).name];
+    const boltMine = pieceOf(weapon && weapon.pic);
+    const boltSpell = pieceOf(ability && ability.pic);
+    const from = 22 + side * 0.8, to = bossX + big * 0.4;
+    for (const one of duel.shots) {
+      const x = from + (to - from) * Math.min(1, one.at);
+      const y = floor - side * 0.55 + one.lane * side;
+      const bolt = one.mine ? boltMine : boltSpell;
+      if (bolt && drawPiece(pen, bolt, 0, x - 7, y + 7, 14)) continue;
+      pen.strokeStyle = one.mine ? 'rgba(255,238,190,.95)' : 'rgba(140,190,240,.95)';
+      pen.lineWidth = 2;
+      pen.beginPath();
+      pen.moveTo(x - 9, y);
+      pen.lineTo(x, y);
+      pen.stroke();
+    }
+
+    /* The thing's life, and what has been taken off it. */
+    const barW = wide - 44;
+    const part = duel.full ? Math.max(0, duel.hp / duel.full) : 0;
+    pen.fillStyle = 'rgba(255,255,255,.08)';
+    round(pen, 22, tall - 20, barW, 7, 3.5); pen.fill();
+    pen.fillStyle = part > 0.35 ? '#8fd08a' : '#d4685f';
+    round(pen, 22, tall - 20, Math.max(0, barW * part), 7, 3.5); pen.fill();
+
+    pen.font = '11px ui-monospace, monospace';
+    pen.fillStyle = 'rgba(255,255,255,.55)';
+    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), 22, tall - 25);
+    const said = duel.hp > 0
+      ? round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt'
+      : 'down in ' + round(duel.over) + 's';
+    pen.textAlign = 'right';
+    pen.fillStyle = duel.hp > 0 ? 'rgba(255,255,255,.55)' : '#f0c274';
+    pen.fillText(said, wide - 22, tall - 25);
+    pen.textAlign = 'left';
+  }
+
+  let painting = false;
+  function keepPainting() {
+    if (painting) return;
+    painting = true;
+    let was = performance.now();
+    const tick = now => {
+      const delta = Math.min(0.05, (now - was) / 1000);
+      was = now;
+      const open = document.body.dataset.page === 'theory';
+      if (open && duel.on && data && build) { stepDuel(delta); drawDuel(); }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
   /* ---------------- pickers ---------------- */
 
   function openItems(hand) {
@@ -624,10 +895,11 @@ var TheoryCraft = (function () {
   function paintPicker(rows, clearSay) {
     const box = el('tcPicker');
     const out = ['<button type="button" class="tc-row" data-choose="">'
-      + '<span class="tc-icon"></span><b>' + esc(clearSay || 'nothing') + '</b></button>'];
+      + '<span class="tc-icon-big"></span><b>' + esc(clearSay || 'nothing')
+      + '</b></button>'];
     for (const one of rows.slice(0, 400)) {
       out.push('<button type="button" class="tc-row" data-choose="' + esc(one.id) + '">'
-        + (one.art ? itemIcon(one.id) : '<span class="tc-icon"></span>')
+        + (one.art ? itemIcon(one.id) : '<span class="tc-icon-big"></span>')
         + '<b>' + esc(one.name) + '</b>'
         + '<u>' + esc(one.says || '') + '</u>'
         + (one.counted === false ? '<em class="tc-uncounted">not counted</em>' : '')
@@ -710,14 +982,24 @@ var TheoryCraft = (function () {
     drawStats();
     drawNumbers();
     drawGraph();
+    resetDuel();
+    drawDuel();
   }
 
   function fillPickers() {
     el('tcClass').innerHTML = data.classes.map(one =>
       '<option value="' + esc(one.name) + '">' + esc(one.name) + '</option>').join('');
-    el('tcBoss').innerHTML = data.bosses.map(one =>
+    /*
+     * Sorted so the ones with a portrait come first: the frame can draw any
+     * of them, but only these have a face, and a fight against a plain
+     * rectangle is a worse thing to watch.
+     */
+    const targets = data.bosses.slice().sort((a, b) =>
+      (b.pic ? 1 : 0) - (a.pic ? 1 : 0) || a.hp - b.hp);
+    el('tcBoss').innerHTML = targets.map(one =>
       '<option value="' + esc(one.name) + '">' + esc(one.name) + ' · '
-      + commas(one.hp) + ' life, ' + one.def + ' armour</option>').join('');
+      + commas(one.hp) + ' life, ' + one.def + ' armour'
+      + (one.pic ? '' : ' · no picture') + '</option>').join('');
     el('tcGoal').innerHTML = GOALS.map(one =>
       '<option value="' + one.id + '">' + esc(one.say) + '</option>').join('');
   }
@@ -748,8 +1030,14 @@ var TheoryCraft = (function () {
       drawNumbers(); drawGraph(); keep();
     });
     el('tcBoss').addEventListener('change', event => {
-      build.boss = event.target.value; keep(); drawNumbers(); drawGraph();
+      build.boss = event.target.value;
+      keep(); drawNumbers(); drawGraph(); resetDuel();
     });
+    el('tcPause').addEventListener('click', () => {
+      duel.on = !duel.on;
+      el('tcPause').textContent = duel.on ? 'pause' : 'play';
+    });
+    el('tcAgain').addEventListener('click', resetDuel);
     el('tcName').addEventListener('input', event => {
       build.name = event.target.value; keep(); drawTabs();
     });
@@ -875,6 +1163,7 @@ var TheoryCraft = (function () {
     if (!data.byClass[build.klass]) build = tabs[onTab] = fresh(data.classes[0].name);
     wire();
     paint();
+    keepPainting();
   }
 
   return { start };
