@@ -338,8 +338,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       gear,
       // More than one thing can be asked for at once.
       goals: ['dps'],
-      // Tradeable things only, until somebody says otherwise.
-      bound: false,
+      // Everything the game has, soulbound included.
+      noSb: false,
       scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
@@ -545,16 +545,17 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     });
   }
 
-  function itemsFor(hand, klass, bound) {
+  function itemsFor(hand, klass, hide) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
     /*
-     * Two thirds of the catalogue is soulbound, and a list of things nobody
-     * can trade for is a poor place to start planning, so it is put away
-     * behind a switch rather than thrown out: the build a player actually
-     * has is very often made of exactly those.
+     * Everything is in, soulbound included, because the build somebody
+     * actually has is very often made of exactly those - and where the same
+     * thing exists in a form that can be traded, the soulbound twin was
+     * already dropped when the catalogue was read. The switch is for the
+     * other question: what could I put together out of what I can buy.
      */
-    const shut = !(bound === undefined ? build && build.bound : bound);
+    const shut = hide === undefined ? (build && build.noSb) : hide;
     return data.items.filter(one => one.hand === hand
       && (slot === undefined || one.slot === slot)
       && !(shut && one.sb));
@@ -703,7 +704,7 @@ const TINT = {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of itemsFor(hand, work.klass, work.bound)) {
+        for (const one of itemsFor(hand, work.klass, work.noSb)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
@@ -1685,7 +1686,7 @@ const TINT = {
 
   function openItems(hand) {
     picking = { kind: 'item', hand };
-    const list = itemsFor(hand, build.klass, build.bound);
+    const list = itemsFor(hand, build.klass, build.noSb);
     show('Choose a ' + hand, list.map(one => {
       const gun = one.shots && one.shots[0];
       const bits = [];
@@ -1901,7 +1902,7 @@ const TINT = {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
     for (const node of el('tcBody').querySelectorAll('[data-bound]')) {
-      node.classList.toggle('is-on', node.dataset.bound === (build.bound ? '1' : '0'));
+      node.classList.toggle('is-on', node.dataset.bound === (build.noSb ? '0' : '1'));
     }
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
@@ -1980,7 +1981,7 @@ const TINT = {
     el('tcBody').addEventListener('click', event => {
       const bound = event.target.closest('[data-bound]');
       if (!bound) return;
-      build.bound = bound.dataset.bound === '1';
+      build.noSb = bound.dataset.bound === '0';
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {

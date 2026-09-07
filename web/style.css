@@ -1226,7 +1226,12 @@ body.globe-wide .home-card-art { animation: none !important; }
  * resampled somewhere along the way and is no longer whole pixels, so asking
  * the browser not to smooth it only sharpens the damage.
  */
-.home-card-art[data-art^="Page Art"] { image-rendering: auto; }
+.home-card-art[data-art="Page Art/Enchanting.png"] { image-rendering: auto; }
+/*
+ * The forge is not resampled - it is cut out of the client and enlarged nine
+ * whole pixels for one, so it keeps the hard edges it was drawn with.
+ */
+.home-card-art[data-art="Page Art/Forge.png"] { image-rendering: pixelated; }
 
 /*
  * It is a still picture of a room where something is being enchanted, so it
