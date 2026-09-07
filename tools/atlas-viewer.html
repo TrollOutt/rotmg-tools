@@ -229,10 +229,33 @@ let pointer = null, hovered = 0, chosen = 0;
 
 const zoneById = new Map(A.zones.map(z => [z.id, z]));
 
+/*
+ * How many device pixels to spend on one page pixel.
+ *
+ * Dropping frames is the wrong economy for a thing that drifts: clouds at
+ * thirty a second on a sixty-hertz screen judder, because every picture is
+ * held for two refreshes and the eye follows the motion between them. Pixels
+ * are the cheaper thing to give up. A planet two inches across in the corner
+ * of a page is drawn at two thirds of the resolution and still moves on every
+ * refresh the screen has - which is smooth, and costs well under half of what
+ * it cost before, because fill is by the pixel.
+ */
+let sharp = 1;
+const screenDpr = () => Math.min(2, window.devicePixelRatio || 1) * sharp;
+
 function size() {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = Math.round(canvas.clientWidth * dpr);
-  canvas.height = Math.round(canvas.clientHeight * dpr);
+  const dpr = screenDpr();
+  const wide = Math.round(canvas.clientWidth * dpr);
+  const tall = Math.round(canvas.clientHeight * dpr);
+  /*
+   * Only when it has actually changed. Assigning a canvas its own width
+   * throws away the bitmap and builds another one - sixty times a second,
+   * for a size that is the same sixty times a second.
+   */
+  if (canvas.width !== wide || canvas.height !== tall) {
+    canvas.width = wide;
+    canvas.height = tall;
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { w: canvas.clientWidth, h: canvas.clientHeight };
 }
@@ -1074,7 +1097,7 @@ const spaceLeft = box => {
 function drawSpace(box, now) {
   const showing = spaceLeft(box);
   if (showing <= 0.01) return 0;
-  const grain = Math.min(2, window.devicePixelRatio || 1);
+  const grain = screenDpr();
   paintSpace(box, grain);
   const t = now / 1000;
   const short = Math.min(box.w, box.h);
@@ -4688,7 +4711,7 @@ function groundFlat(box, now) {
 }
 
 function groundGlobe(box, now) {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const dpr = screenDpr();
   const level = levelFor(view.scale);
   /*
    * On the ball the water holds still, so the disc can always be kept.
@@ -4940,7 +4963,7 @@ function groundGlobe(box, now) {
  * laid back onto the screen one strip at a time.
  */
 function groundTilted(box, now) {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const dpr = screenDpr();
   const room = turning() ? 2.2 : 1.6;
   const wide = box.w * room, tall = box.h * 2;
   if (flatMap.width !== Math.round(wide * dpr) || flatMap.height !== Math.round(tall * dpr)) {
@@ -5098,15 +5121,20 @@ function settleInto(box) {
 let pace = 0;                            // milliseconds between frames
 let drawnAt = -1e9;
 /*
- * Slow is thirty a second, not as slow as it will go. Below that the planet
- * stops turning and starts stepping, and a picture that stutters looks
- * broken rather than economical - which costs more than the frames it saves.
+ * Small is drawn thinner, not slower.
+ *
+ * Frames were the first thing given up and it was the wrong one: clouds at
+ * thirty a second judder on a sixty-hertz screen, and a picture that stutters
+ * reads as broken rather than as thrifty. So the map in the corner keeps
+ * every refresh the screen has and spends two thirds of the pixels on each -
+ * which is less than half the fill, and looks like nothing at all at that
+ * size. Still is still nothing: a map behind another page draws no frames.
  */
-const SLOW = 1000 / 30;
 window.addEventListener('message', event => {
   const said = event.data;
   if (!said || said.rotmg !== 'pace') return;
-  pace = said.pace === 'still' ? Infinity : said.pace === 'slow' ? SLOW : 0;
+  pace = said.pace === 'still' ? Infinity : 0;
+  sharp = said.pace === 'slow' ? 0.66 : 1;
 });
 
 function frame(now) {
