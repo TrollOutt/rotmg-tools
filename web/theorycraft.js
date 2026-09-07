@@ -595,13 +595,16 @@ var TheoryCraft = (function () {
     box.innerHTML = STATS.map(([key, say]) => {
       const now = got.now[key];
       const top = got.top[key] || now || 1;
-      const part = Math.max(0, Math.min(1, now / Math.max(top, now)));
+      const part = Math.max(0, Math.min(1, now / top));
+      // Past its ceiling is worth seeing: it can only have come off the gear.
+      const over = now > top;
       /*
        * The number, and nothing about how it got there. Where every point
        * came from is arithmetic somebody would have to want; the bar against
        * the ceiling is the thing being read.
        */
-      return '<div class="tc-stat">'
+      return '<div class="tc-stat' + (over ? ' is-over' : '')
+        + (part >= 1 ? ' is-full' : '') + '">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
         + '<b>' + round(now) + '<u>/' + top + '</u></b>'
@@ -1223,6 +1226,27 @@ var TheoryCraft = (function () {
     const kind = el('tcClass');
     if (kind && kind.value !== build.klass) kind.value = build.klass;
     el('tcLevel').value = build.level;
+    /*
+     * The class, as itself. A name in a dropdown is a word; the sprite the
+     * game draws is how anybody knows a Huntress from a Trickster, and it is
+     * already cut and sitting in the atlas.
+     */
+    {
+      const kind = data.byClass[build.klass];
+      const face = el('tcFace');
+      const art = kind && kind.art;
+      if (art) {
+        const bundle = window.ROTMG_BUNDLE;
+        const base = (bundle && bundle.atlasBase) || 'assets/atlas/';
+        const zoom = 40 / art.height;
+        const stand = (art.poses && (art.poses['3/0'] || art.poses['0/0']) || [0])[0];
+        face.style.backgroundImage = 'url(' + base + 'life/' + art.file + ')';
+        face.style.backgroundSize = (art.tile * art.frames * zoom) + 'px '
+          + (art.height * zoom) + 'px';
+        face.style.backgroundPosition = (-stand * art.tile * zoom) + 'px 0';
+        face.hidden = false;
+      } else { face.hidden = true; }
+    }
     for (const node of el('tcBody').querySelectorAll('[data-set]')) {
       const which = node.dataset.set;
       const on = which === 'level20' ? build.level === 20 : !!build[which];

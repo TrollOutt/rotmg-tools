@@ -2009,36 +2009,79 @@ body.globe-wide .home-card-art { animation: none !important; }
 .tab-new { opacity: .6; }
 
 /* --- the character --- */
-.tc-switches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
-.tc-switch {
-  background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); color: var(--muted);
-  font: inherit; font-size: 12.5px; padding: 7px 13px; cursor: pointer;
+/* --- who it is: the sprite, the name, the level --- */
+.tc-face-row { display: flex; align-items: flex-end; gap: 11px; }
+.tc-face {
+  width: 48px; height: 48px; flex: none; border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, .28) no-repeat center;
+  border: 1px solid var(--line); image-rendering: pixelated;
 }
-.tc-switch:hover { color: var(--text); }
-.tc-switch.is-on {
-  border-color: var(--accent); color: var(--text);
-  box-shadow: 0 0 0 3px rgba(121, 197, 232, .12) inset;
-}
-.tc-lvl {
-  display: inline-flex; align-items: center; gap: 7px; margin-left: auto;
-  font-size: 11.5px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim);
-}
-.tc-lvl input { width: 5ch; }
+.tc-face-pick { flex: 1; min-width: 0; }
+.tc-lvl { display: flex; flex-direction: column; gap: 5px; flex: none; }
+.tc-lvl input { width: 6ch; text-align: center; }
 
-.tc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; }
+/*
+ * One control, three parts, the way a segmented switch reads. Three separate
+ * buttons floating beside a stray number box was the untidiest thing on the
+ * page.
+ */
+.tc-switches { display: flex; margin: 13px 0; }
+.tc-switch {
+  flex: 1; background: var(--panel-2); border: 1px solid var(--line);
+  color: var(--muted); font: inherit; font-size: 12.5px; padding: 8px 4px;
+  cursor: pointer; border-right-width: 0;
+}
+.tc-switch:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.tc-switch:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-right-width: 1px; }
+.tc-switch:hover { color: var(--text); background: rgba(255, 255, 255, .05); }
+.tc-switch.is-on {
+  color: #10141c; background: var(--accent); border-color: var(--accent);
+  font-weight: 650;
+}
+.tc-switch.is-on + .tc-switch { border-left-color: var(--accent); }
+
+/*
+ * The eight, two to a row. A bar that is full says the levelling and the
+ * potions are done with it; one past full says the rest came off the gear,
+ * which is the only way past a ceiling, and that is worth a different colour.
+ */
+.tc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 18px; margin-top: 4px; }
 @media (max-width: 560px) { .tc-stats { grid-template-columns: 1fr; } }
-.tc-stat { display: grid; grid-template-columns: 6.5ch 1fr auto; gap: 8px; align-items: center; }
-.tc-stat i { font-style: normal; color: var(--dim); font-size: 11px; }
-.tc-bar { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
-.tc-bar span { display: block; height: 100%; background: var(--accent); opacity: .75; }
-.tc-stat b { color: var(--text); font-variant-numeric: tabular-nums; font-size: 12.5px; }
-.tc-stat u { text-decoration: none; color: var(--dim); font-size: 10.5px; font-weight: 400; }
+.tc-stat { display: grid; grid-template-columns: 6.5ch 1fr auto; gap: 9px; align-items: center; }
+.tc-stat i {
+  font-style: normal; color: var(--dim); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+}
+.tc-bar {
+  height: 6px; background: rgba(0, 0, 0, .35); border-radius: 3px; overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+}
+.tc-bar span {
+  display: block; height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, rgba(121, 197, 232, .55), var(--accent));
+  transition: width .18s ease-out;
+}
+.tc-stat.is-over .tc-bar span { background: linear-gradient(90deg, var(--accent), #f0c274); }
+.tc-stat b {
+  color: var(--text); font-variant-numeric: tabular-nums; font-size: 13px;
+  font-weight: 650; min-width: 7.5ch; text-align: right;
+}
+.tc-stat.is-over b { color: #f0c274; }
+.tc-stat u {
+  text-decoration: none; color: var(--dim); font-size: 10.5px; font-weight: 400;
+  margin-left: 1px;
+}
 
 /* --- the gear --- */
 .tc-gear { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.card, .column, .layout { min-width: 0; }
 .tc-slot-head { min-width: 0; }
+/*
+ * A card is as tall as what is in it. The columns are flex, and a flex child
+ * is allowed to be squeezed shorter than its contents - which is how the gear
+ * card came to end halfway through its own last row.
+ */
+#tcBody .card { flex: 0 0 auto; min-width: 0; min-height: 0; }
+#tcBody .card > * { min-width: 0; }
 /*
  * A gear row grows to hold what is in it. It used to be clipped, which meant
  * a long item name and a fourth enchantment were simply cut off at the edge
@@ -2601,16 +2644,21 @@ body.globe-wide .home-card-art { animation: none !important; }
 
       <section class="card step" data-step="1">
         <header><span class="step-badge">1</span><h2>The character</h2></header>
-        <label class="field">
-          <span class="field-label">Class</span>
-          <select id="tcClass"></select>
-        </label>
-        <div class="tc-switches">
+        <div class="tc-face-row">
+          <span id="tcFace" class="tc-face"></span>
+          <label class="field tc-face-pick">
+            <span class="field-label">Class</span>
+            <select id="tcClass"></select>
+          </label>
+          <label class="tc-lvl">
+            <span class="field-label">Level</span>
+            <input id="tcLevel" type="number" min="1" max="20" step="1">
+          </label>
+        </div>
+        <div class="tc-switches" role="group" aria-label="How far along">
           <button type="button" class="tc-switch" data-set="level20">Level 20</button>
           <button type="button" class="tc-switch" data-set="maxed">8/8</button>
           <button type="button" class="tc-switch" data-set="exalt">Exalted</button>
-          <label class="tc-lvl">Level
-            <input id="tcLevel" type="number" min="1" max="20" step="1"></label>
         </div>
         <div id="tcStats" class="tc-stats"></div>
       </section>
@@ -5793,13 +5841,16 @@ var TheoryCraft = (function () {
     box.innerHTML = STATS.map(([key, say]) => {
       const now = got.now[key];
       const top = got.top[key] || now || 1;
-      const part = Math.max(0, Math.min(1, now / Math.max(top, now)));
+      const part = Math.max(0, Math.min(1, now / top));
+      // Past its ceiling is worth seeing: it can only have come off the gear.
+      const over = now > top;
       /*
        * The number, and nothing about how it got there. Where every point
        * came from is arithmetic somebody would have to want; the bar against
        * the ceiling is the thing being read.
        */
-      return '<div class="tc-stat">'
+      return '<div class="tc-stat' + (over ? ' is-over' : '')
+        + (part >= 1 ? ' is-full' : '') + '">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
         + '<b>' + round(now) + '<u>/' + top + '</u></b>'
@@ -6421,6 +6472,27 @@ var TheoryCraft = (function () {
     const kind = el('tcClass');
     if (kind && kind.value !== build.klass) kind.value = build.klass;
     el('tcLevel').value = build.level;
+    /*
+     * The class, as itself. A name in a dropdown is a word; the sprite the
+     * game draws is how anybody knows a Huntress from a Trickster, and it is
+     * already cut and sitting in the atlas.
+     */
+    {
+      const kind = data.byClass[build.klass];
+      const face = el('tcFace');
+      const art = kind && kind.art;
+      if (art) {
+        const bundle = window.ROTMG_BUNDLE;
+        const base = (bundle && bundle.atlasBase) || 'assets/atlas/';
+        const zoom = 40 / art.height;
+        const stand = (art.poses && (art.poses['3/0'] || art.poses['0/0']) || [0])[0];
+        face.style.backgroundImage = 'url(' + base + 'life/' + art.file + ')';
+        face.style.backgroundSize = (art.tile * art.frames * zoom) + 'px '
+          + (art.height * zoom) + 'px';
+        face.style.backgroundPosition = (-stand * art.tile * zoom) + 'px 0';
+        face.hidden = false;
+      } else { face.hidden = true; }
+    }
     for (const node of el('tcBody').querySelectorAll('[data-set]')) {
       const which = node.dataset.set;
       const on = which === 'level20' ? build.level === 20 : !!build[which];
