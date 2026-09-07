@@ -109,6 +109,13 @@ function shotOf(body) {
        * straight line is not what the shot does, rather than to pretend the
        * line is right.
        */
+      /*
+       * How wide it weaves and how often, where it does. A staff's two
+       * missiles are given half a tile of amplitude at two cycles, in
+       * opposite phase, and that helix is the whole look of a staff.
+       */
+      amp: num(inner, 'Amplitude'),
+      freq: num(inner, 'Frequency'),
       moves: (() => {
         const how = [];
         if (/<Parametric\s*\/>/.test(inner)) how.push('parametric');

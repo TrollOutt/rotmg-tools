@@ -216,7 +216,16 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function numbersFor(state, def) {
     const stats = statsOf(state);
     if (!stats) return null;
-    const using = state.using || 'both';
+    /*
+     * The weapon, and only the weapon.
+     *
+     * An ability is a different question with different arithmetic - what it
+     * costs, how the pool pays for it, whether it lands where you are or
+     * where you are aiming - and answering both at once was making a mess of
+     * each. The ability side is set aside until the weapon side is right; the
+     * seam is here, not deleted.
+     */
+    const using = 'gun';
     const weapon = data.byItem[(state.gear.weapon || {}).name];
     const ability = data.byItem[(state.gear.ability || {}).name];
     const gun = using === 'spell' ? NONE : weaponRate(weapon, stats.now, def);
@@ -451,10 +460,6 @@ const TINT = {
     } },
     { group: 'Others', id: 'shot', say: 'Damage a shot', tint: '#e08a3c',
       of: n => n.gun.each * (n.gun.many || 1) },
-    { group: 'Others', id: 'gun', say: 'Weapon only', tint: '#d9534f',
-      of: n => n.gun.dps },
-    { group: 'Others', id: 'spell', say: 'Ability only', tint: '#5b8cd9',
-      of: n => n.spell.dps },
     /*
      * Through armour: what the build still lands on the hardest thing it will
      * ever meet. A weapon that throws many small shots loses most of itself to
@@ -807,13 +812,17 @@ const TINT = {
   function drawFlight() {
     const note = el('tcFlight');
     if (!note) return;
-    const using = build.using || 'both';
     const said = [];
-    for (const [hand, when] of [['weapon', 'gun'], ['ability', 'spell']]) {
-      if (using !== 'both' && using !== when) continue;
-      const item = data.byItem[(build.gear[hand] || {}).name];
+    {
+      const item = data.byItem[(build.gear.weapon || {}).name];
       const how = item && item.shots && item.shots[0] && item.shots[0].moves;
-      if (how) said.push(item.name + ' — ' + how);
+      /*
+       * Weaving is drawn now, from the amplitude and the frequency the
+       * client states, so it has come off the list of things this frame is
+       * not showing you.
+       */
+      const left = (how || '').split(', ').filter(one => one && one !== 'weaving');
+      if (left.length) said.push(item.name + ' - ' + left.join(', '));
     }
     note.hidden = !said.length;
     note.textContent = said.length
@@ -1083,7 +1092,7 @@ const TINT = {
      * fast ones and the rest is whatever the pool can afford - which is the
      * thing a sustained figure cannot show you.
      */
-    const cost = (build.using !== 'gun' && ability && ability.mp) || 0;
+    const cost = 0;                            // the ability is set aside
     duel.mp = Math.min(duel.mpFull, duel.mp + MANA_AT(stats.wis) * delta);
     if (spell.dps > 0 && cost) {
       duel.spell -= delta;
@@ -1156,7 +1165,18 @@ const TINT = {
         hurt: rate.each,
         mine, bolt,
         spin: bolt && bolt.spin ? bolt.spin : 0,
-        tilt: bolt && bolt.tilt ? bolt.tilt : 0
+        tilt: bolt && bolt.tilt ? bolt.tilt : 0,
+        /*
+         * How it weaves, if it does. The client gives an amplitude in tiles
+         * and a frequency, and a volley alternates phase - which is why a
+         * staff's two missiles braid around each other instead of flying as
+         * one thick line. The sine is the shape the game's own players have
+         * always read off those two numbers; the numbers are the client's.
+         */
+        amp: shot.amp || 0,
+        freq: shot.freq || 0,
+        phase: (n % 2) ? Math.PI : 0,
+        reach
       });
     }
   }
@@ -1290,8 +1310,18 @@ const TINT = {
     for (const one of duel.shots) {
       const part = Math.max(0, Math.min(1, one.age / one.lasts));
       const along = reachAcross * part;
-      const x = from + Math.cos(one.angle) * along;
-      const y = floor - side * 0.55 + Math.sin(one.angle) * along;
+      /*
+       * Across its own line, if it weaves. The offset is perpendicular to the
+       * direction of travel, in tiles converted to the width of the bench, so
+       * a half-tile amplitude looks like half a tile of the range it covers.
+       */
+      const across = one.amp
+        ? one.amp * (reachAcross / Math.max(1, one.reach))
+          * Math.sin(2 * Math.PI * one.freq * one.age + one.phase)
+        : 0;
+      const x = from + Math.cos(one.angle) * along - Math.sin(one.angle) * across;
+      const y = floor - side * 0.55 + Math.sin(one.angle) * along
+        + Math.cos(one.angle) * across;
       const bolt = one.bolt;
       if (bolt) {
         const high = 16 * Math.min(1.5, Math.max(0.7, bolt.size / 100));
@@ -1587,18 +1617,12 @@ const TINT = {
       const which = node.dataset.set;
       node.classList.toggle('is-on', !!build[which]);
     }
-    for (const node of el('tcBody').querySelectorAll('[data-using]')) {
-      node.classList.toggle('is-on', node.dataset.using === (build.using || 'both'));
-    }
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', node.dataset.goal === build.goal);
     }
-    if (build.against === null || build.against === undefined) {
-      const boss = data.byBoss[build.boss];
-      build.against = boss ? Math.min(100, boss.def) : 0;
-    }
-    el('tcAgainst').value = build.against;
-    el('tcAgainstSay').textContent = build.against + ' armour';
+    // Read against whatever is being fought, since there is no dial any more.
+    const aimedAt = data.byBoss[build.boss];
+    build.against = aimedAt ? aimedAt.def : 0;
     for (const node of el('tcBosses').querySelectorAll('[data-boss]')) {
       node.classList.toggle('is-on', node.dataset.boss === build.boss);
     }
@@ -1613,7 +1637,6 @@ const TINT = {
     drawStats();
     drawNumbers();
     drawFlight();
-    drawGraph();
     resetDuel();
     drawDuel();
   }
@@ -1667,17 +1690,8 @@ const TINT = {
       build.goal = pick.dataset.goal;
       keep(); paint();
     });
-    el('tcAgainst').addEventListener('input', event => {
-      build.against = Number(event.target.value) || 0;
-      el('tcAgainstSay').textContent = build.against + ' armour';
-      drawNumbers(); drawGraph(); keep();
-    });
-    el('tcBody').addEventListener('click', event => {
-      const hand = event.target.closest('[data-using]');
-      if (!hand) return;
-      build.using = hand.dataset.using;
-      keep(); paint();
-    });
+
+
     el('tcBosses').addEventListener('click', event => {
       const pick = event.target.closest('[data-boss]');
       if (!pick) return;
@@ -1816,7 +1830,7 @@ const TINT = {
       }, 20);
     });
 
-    addEventListener('resize', () => { if (data && build) drawGraph(); });
+
   }
 
   /* ---------------- opening ---------------- */
