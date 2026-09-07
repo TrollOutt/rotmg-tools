@@ -2705,28 +2705,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 </div>
 
 <!-- Enchantment picker ------------------------------------------------ -->
-<div id="pickerBackdrop" class="picker-backdrop" hidden>
-  <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
-    <header>
-      <div>
-        <strong id="pickerTitle">Choose an enchantment</strong>
-        <span id="pickerSub" class="header-aside"></span>
-      </div>
-      <button id="pickerClose" type="button" class="ghost-x" aria-label="Close">×</button>
-    </header>
-    <input id="pickerSearch" type="search" placeholder="Search by name, description or label…" autocomplete="off">
-    <!--
-      Narrow the list to the two kinds worth hunting on purpose. Neither is on
-      to begin with, so the list opens on everything the item can roll.
-    -->
-    <div id="pickerKinds" class="picker-kinds" role="group" aria-label="Show only certain enchantments">
-      <button type="button" class="filter-chip" data-kind="AWAKENED" aria-pressed="false">Awoken</button>
-      <button type="button" class="filter-chip" data-kind="UNIQUE" aria-pressed="false">Unique</button>
-    </div>
-    <div id="pickerList" class="picker-list"></div>
-    <footer id="pickerFooter"></footer>
-  </div>
-</div>
+
 
 <!-- Theory crafting ------------------------------------------------- -->
 <div id="pageTheory" class="app page" hidden>
@@ -2826,6 +2805,36 @@ body.globe-wide .home-card-art { animation: none !important; }
       </div>
       <div id="tcPicker" class="tc-picker"></div>
     </div>
+  </div>
+</div>
+
+<!--
+  The enchantment picker, at the top level rather than inside one page.
+
+  It began life inside the calculator and theory crafting now borrows it, and
+  a dialogue nested in a hidden page is a hidden dialogue - it opened, filled
+  itself in and showed nobody anything.
+-->
+<div id="pickerBackdrop" class="picker-backdrop" hidden>
+  <div class="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <header>
+      <div>
+        <strong id="pickerTitle">Choose an enchantment</strong>
+        <span id="pickerSub" class="header-aside"></span>
+      </div>
+      <button id="pickerClose" type="button" class="ghost-x" aria-label="Close">×</button>
+    </header>
+    <input id="pickerSearch" type="search" placeholder="Search by name, description or label…" autocomplete="off">
+    <!--
+      Narrow the list to the two kinds worth hunting on purpose. Neither is on
+      to begin with, so the list opens on everything the item can roll.
+    -->
+    <div id="pickerKinds" class="picker-kinds" role="group" aria-label="Show only certain enchantments">
+      <button type="button" class="filter-chip" data-kind="AWAKENED" aria-pressed="false">Awoken</button>
+      <button type="button" class="filter-chip" data-kind="UNIQUE" aria-pressed="false">Unique</button>
+    </div>
+    <div id="pickerList" class="picker-list"></div>
+    <footer id="pickerFooter"></footer>
   </div>
 </div>
 
@@ -5563,7 +5572,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       exalts,
       gear,
       goal: 'dps',
-      against: 0,
+      // Aimed at whatever is being fought, not at a bare target: a build is
+      // read against the thing it is meant to kill.
+      against: null,
       /*
        * Something worth timing. The list is sorted by hit points and the top
        * of it is a training dummy with ten million of them, which tells you
@@ -6500,14 +6511,20 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       pen.globalAlpha = 1;
     }
 
+    /*
+     * Whose number is whose. The life left was drawn at the left edge, under
+     * the character, where it read as something about the character - it is
+     * the target's, so it is written under the target, and the clock and the
+     * running total sit on the other side where the fight is being counted
+     * rather than suffered.
+     */
     pen.font = '11px ui-monospace, monospace';
-    pen.fillStyle = 'rgba(255,255,255,.55)';
-    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), 22, tall - 25);
     pen.textAlign = 'right';
-    pen.fillStyle = 'rgba(255,255,255,.55)';
-    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt',
-      wide - 22, tall - 25);
+    pen.fillStyle = 'rgba(255,255,255,.6)';
+    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - 22, tall - 25);
     pen.textAlign = 'left';
+    pen.fillStyle = 'rgba(255,255,255,.45)';
+    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', 22, tall - 25);
 
     /* And how long it took, said once and said large. */
     if (duel.hp <= 0) {
@@ -6560,6 +6577,45 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     picking = { kind: 'ench', hand, at };
     const worn = build.gear[hand];
     if (!worn.name) return;
+
+    /*
+     * The calculator's own dialogue, where it exists. It already shows an
+     * enchantment the way this project shows one - the icon, the sentence,
+     * the labels it gives and the labels it refuses, its weight - and two
+     * dialogues for the same job would have drifted apart inside a month.
+     */
+    const held = rulesFor();
+    if (held && typeof window.openEnchantPicker === 'function') {
+      const item = data.byItem[worn.name];
+      const locks = [];
+      worn.ench.forEach((id, i) => {
+        if (i === at || !id) return;
+        const one = data.byEnch[id];
+        if (one) locks.push(one.name);
+      });
+      const pool = EnchantEngine.eligiblePool(held, {
+        item: worn.name,
+        type: OF_HAND[item.hand] || 'WEAPON',
+        slots: worn.slots,
+        locks,
+        subtypes: new Set()
+      }, null);
+      const opened = window.openEnchantPicker({
+        title: 'Slot ' + (at + 1) + ' · ' + worn.name,
+        sub: pool.length + ' available'
+          + (locks.length ? ' · ' + locks.length + ' removed by the other slots' : ''),
+        candidates: pool,
+        onPick: name => {
+          const mine = charmNamed(name);
+          build.gear[hand].ench[at] = mine ? mine.id : null;
+          picking = null;
+          keep();
+          paint();
+        }
+      });
+      if (opened) return;
+    }
+
     /*
      * One line per thing, not one per record. The client keeps a separate
      * enchantment for each item an effect can land on, so a picker built
@@ -6707,6 +6763,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', node.dataset.goal === build.goal);
     }
+    if (build.against === null || build.against === undefined) {
+      const boss = data.byBoss[build.boss];
+      build.against = boss ? Math.min(100, boss.def) : 0;
+    }
     el('tcAgainst').value = build.against;
     el('tcAgainstSay').textContent = build.against + ' armour';
     for (const node of el('tcBosses').querySelectorAll('[data-boss]')) {
@@ -6784,6 +6844,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const pick = event.target.closest('[data-boss]');
       if (!pick) return;
       build.boss = pick.dataset.boss;
+      // The aim follows the target, unless it has been moved by hand since.
+      const boss = data.byBoss[build.boss];
+      if (boss) build.against = Math.min(100, boss.def);
       keep(); paint();
     });
     el('tcPause').addEventListener('click', () => {
@@ -7700,6 +7763,38 @@ function renderPickerList(query) {
 
 function closePicker() { $('pickerBackdrop').hidden = true; state.picker = null; }
 
+/*
+ * The same dialogue, lent out.
+ *
+ * Theory crafting needs exactly this - a searchable list of enchantments with
+ * their labels and their weights - and building a second one guaranteed the
+ * two would look different within a month. It hands in what may be chosen,
+ * what to say at the top, and what to do with the answer.
+ */
+window.openEnchantPicker = function (options) {
+  if (!state.data) return false;
+  state.picker = {
+    index: 0,
+    candidates: options.candidates || [],
+    blocked: [],
+    wrongBase: [],
+    kinds: new Set(),
+    pick: options.onPick
+  };
+  renderPickerKinds();
+  $('pickerTitle').textContent = options.title || 'Choose an enchantment';
+  $('pickerSub').textContent = options.sub || '';
+  $('pickerSearch').value = '';
+  $('pickerSearch').placeholder = 'Search by name, description or label…';
+  $('pickerBackdrop').hidden = false;
+  renderPickerList('');
+  $('pickerSearch').focus();
+  return true;
+};
+
+/* And the dataset it was built from, for anybody who needs the same rules. */
+window.enchantRules = () => state.data;
+
 /* ------------------------------------------------------------------ *
  * Item picker                                                         *
  * ------------------------------------------------------------------ */
@@ -8457,6 +8552,18 @@ function bind() {
     }
     const row = event.target.closest('.picker-row[data-name]');
     if (!row) return;
+    /*
+     * Somebody else may have opened this. The theory crafting page fills the
+     * same list with its own candidates and hands in what to do with the
+     * answer, so that both pages choose an enchantment through one dialogue
+     * rather than two that drift apart.
+     */
+    if (state.picker.pick) {
+      const chose = state.picker.pick;
+      closePicker();
+      chose(row.dataset.name);
+      return;
+    }
     const slot = state.slots[state.picker.index - 1];
     slot.name = row.dataset.name;
     closePicker();

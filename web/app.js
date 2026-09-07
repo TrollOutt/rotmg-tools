@@ -731,6 +731,38 @@ function renderPickerList(query) {
 
 function closePicker() { $('pickerBackdrop').hidden = true; state.picker = null; }
 
+/*
+ * The same dialogue, lent out.
+ *
+ * Theory crafting needs exactly this - a searchable list of enchantments with
+ * their labels and their weights - and building a second one guaranteed the
+ * two would look different within a month. It hands in what may be chosen,
+ * what to say at the top, and what to do with the answer.
+ */
+window.openEnchantPicker = function (options) {
+  if (!state.data) return false;
+  state.picker = {
+    index: 0,
+    candidates: options.candidates || [],
+    blocked: [],
+    wrongBase: [],
+    kinds: new Set(),
+    pick: options.onPick
+  };
+  renderPickerKinds();
+  $('pickerTitle').textContent = options.title || 'Choose an enchantment';
+  $('pickerSub').textContent = options.sub || '';
+  $('pickerSearch').value = '';
+  $('pickerSearch').placeholder = 'Search by name, description or label…';
+  $('pickerBackdrop').hidden = false;
+  renderPickerList('');
+  $('pickerSearch').focus();
+  return true;
+};
+
+/* And the dataset it was built from, for anybody who needs the same rules. */
+window.enchantRules = () => state.data;
+
 /* ------------------------------------------------------------------ *
  * Item picker                                                         *
  * ------------------------------------------------------------------ */
@@ -1488,6 +1520,18 @@ function bind() {
     }
     const row = event.target.closest('.picker-row[data-name]');
     if (!row) return;
+    /*
+     * Somebody else may have opened this. The theory crafting page fills the
+     * same list with its own candidates and hands in what to do with the
+     * answer, so that both pages choose an enchantment through one dialogue
+     * rather than two that drift apart.
+     */
+    if (state.picker.pick) {
+      const chose = state.picker.pick;
+      closePicker();
+      chose(row.dataset.name);
+      return;
+    }
     const slot = state.slots[state.picker.index - 1];
     slot.name = row.dataset.name;
     closePicker();
