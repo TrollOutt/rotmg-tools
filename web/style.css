@@ -178,6 +178,102 @@ img { image-rendering: pixelated; }
  * heading and its way back on the left; and above the atlas, which fills
  * its whole page with a frame of its own.
  */
+/*
+ * The way to say something back, in the corner the other page-wide control
+ * lives in - just inside it, because it is the one you want less often. The
+ * two of them read as a pair rather than as two strays.
+ */
+.say { position: fixed; top: 12px; right: 186px; z-index: 41; }
+.say-open {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--dim); cursor: pointer;
+  background: rgba(26, 24, 36, .92); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
+}
+.say-open:hover, .say-open[aria-expanded="true"] {
+  color: var(--text); border-color: var(--accent);
+}
+.say-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.say-glyph { font-size: 15px; line-height: 1; }
+.say-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 296px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 7px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+}
+/* Which of the two it is: a pair of chips, the way the rest of the site asks. */
+.say-kinds { display: flex; gap: 5px; margin-bottom: 9px; }
+.say-kind {
+  flex: 1; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  color: var(--dim); background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 8px;
+}
+.say-kind:hover { color: var(--text); }
+.say-kind.is-on { color: #10141c; background: var(--accent); border-color: var(--accent); }
+.say-field { display: block; margin-bottom: 8px; }
+.say-field > span {
+  display: block; font-size: 11px; color: var(--dim); margin-bottom: 4px;
+}
+.say-field i { font-style: normal; opacity: .7; }
+.say-field textarea, .say-field input {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 12.5px;
+  color: var(--text); background: rgba(0, 0, 0, .28);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 7px 9px; resize: vertical;
+}
+.say-field textarea:focus, .say-field input:focus {
+  outline: none; border-color: var(--accent);
+}
+/* Seen by robots only, which is the whole point of it. */
+.say-bot { position: absolute; left: -9999px; opacity: 0; }
+.say-send { display: flex; align-items: center; gap: 9px; }
+.say-go {
+  font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;
+  color: #10141c; background: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 6px 16px;
+}
+.say-go:disabled { opacity: .55; cursor: default; }
+.say-said { font-size: 11px; color: var(--dim); }
+.say-said a { color: var(--accent); }
+
+/*
+ * It went. Said where the button was, because the panel it was written in
+ * has just closed - and long enough to be read on the way past.
+ */
+.say-done {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 268px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--panel); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+  animation: say-in .28s cubic-bezier(.16, .84, .32, 1) backwards;
+}
+.say-done-tick {
+  flex: none; display: grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 999px;
+  background: var(--accent); color: #10141c; font-weight: 800; font-size: 13px;
+}
+.say-done b { display: block; font-size: 13px; font-weight: 650; }
+.say-done small { display: block; color: var(--dim); font-size: 11px; margin-top: 1px; }
+@keyframes say-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .say-done { animation: none; } }
+.say-note {
+  margin: 4px 4px 2px; color: var(--dim); font-size: 10.5px; line-height: 1.45;
+}
+body.globe-wide .say { display: none; }
+@media (max-width: 760px) {
+  /* The word goes and the envelope stays, so the pair still fits a phone. */
+  .say { top: 8px; right: 120px; }
+  .say-open { padding: 7px 12px; font-size: 13px; }
+  .say-text { display: none; }
+  .say-menu { width: 240px; }
+}
+
 .ambience-toggle {
   position: fixed; top: 12px; right: 14px; z-index: 40;
   display: inline-flex; align-items: center; gap: 8px;

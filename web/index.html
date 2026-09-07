@@ -25,6 +25,56 @@
   <span class="ambience-toggle-text">Animations on</span>
 </button>
 
+<!--
+  Saying something back.
+
+  A page like this only hears about what is wrong with it if there is a way to
+  say so from inside it, at the moment the thing goes wrong - so the way to
+  say it sits in the same corner as the other control that belongs to every
+  page, and takes the page you are on with it rather than asking you to
+  describe where you were.
+
+  There is no form and nothing is sent from here: it opens whatever you write
+  mail with, addressed and titled, and you send it yourself if you still want
+  to once you have read it.
+-->
+<div id="sayBox" class="say">
+  <button id="sayOpen" type="button" class="say-open" aria-expanded="false"
+    title="Report something broken, or ask for something">
+    <span class="say-glyph" aria-hidden="true">✉</span>
+    <span class="say-text">Feedback</span>
+  </button>
+  <form id="sayMenu" class="say-menu" hidden>
+    <div class="say-kinds" role="group" aria-label="What kind of thing this is">
+      <button type="button" class="say-kind is-on" data-say-kind="Bug">Something is broken</button>
+      <button type="button" class="say-kind" data-say-kind="Idea">An idea</button>
+    </div>
+    <label class="say-field">
+      <span id="sayAsk">What did you do, and what happened instead?</span>
+      <textarea id="sayText" rows="5" maxlength="4000" required></textarea>
+    </label>
+    <label class="say-field">
+      <span>Your email, if you want an answer <i>(optional)</i></span>
+      <input id="sayFrom" type="email" autocomplete="email" maxlength="120">
+    </label>
+    <!-- Left empty by people and filled in by robots, which is how they are told apart. -->
+    <input type="checkbox" name="botcheck" id="sayBot" class="say-bot" tabindex="-1" autocomplete="off">
+    <div class="say-send">
+      <button type="submit" id="saySend" class="say-go">Send</button>
+      <span id="saySaid" class="say-said"></span>
+    </div>
+    <p class="say-note" id="sayNote"></p>
+  </form>
+  <!--
+    And the answer to "did that go?", where the thing you pressed was, rather
+    than inside a panel that has just closed itself.
+  -->
+  <div id="sayDone" class="say-done" role="status" hidden>
+    <span class="say-done-tick" aria-hidden="true">✓</span>
+    <span><b>Sent</b><small>thank you — it goes straight to one mailbox</small></span>
+  </div>
+</div>
+
 <!-- The way in ------------------------------------------------------- -->
 <div id="pageHome" class="app page">
   <header class="masthead home-head">
