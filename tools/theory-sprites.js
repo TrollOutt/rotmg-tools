@@ -136,16 +136,16 @@ function writePng(width, height, rgba) {
 /*
  * Which packed sheet a rectangle lives on.
  *
- * The registry writes a number and only two of them ever appear: one, whose
- * rectangles all fit inside the two-thousand-pixel ground sheet, and four,
- * whose reach past six thousand across leaves only the two big ones. Both big
- * ones hold something at the Grey Missile's rectangle - but the characters
- * sheet holds it in flat white, which is the mask, and the objects sheet
- * holds it in grey, which is the missile. So four is the objects sheet, and
- * that was worth checking rather than assuming: read off the mask, every bolt
- * in the game would have come out a white smudge.
+ * The registry writes a number and the answer was worth proving rather than
+ * assuming, because two of the sheets are the same size and both hold
+ * something at any given rectangle. Sampled at a Wizard's own sprite, the
+ * characters sheet gives eleven colours and the objects sheet gives four of
+ * something else; sampled at the Grey Missile, the characters sheet gives
+ * flat white, which is the mask, and the objects sheet gives grey, which is
+ * the missile. So two is characters and four is objects - and getting that
+ * backwards is why every boss in the frame was the wrong picture.
  */
-const SHEET_OF = { 1: 'groundTiles' };
+const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
 const sheetName = field => SHEET_OF[field] || 'mapObjects';
 
 for (const needed of [path.join(XML, 'spritesheet.bin'), FACTS]) {

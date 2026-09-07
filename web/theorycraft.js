@@ -475,16 +475,15 @@ var TheoryCraft = (function () {
       const now = got.now[key];
       const top = got.top[key] || now || 1;
       const part = Math.max(0, Math.min(1, now / Math.max(top, now)));
-      const extra = [];
-      if (got.from.gear[key]) extra.push('gear ' + plus(got.from.gear[key]));
-      if (got.from.ench[key]) extra.push('enchant ' + plus(got.from.ench[key]));
-      if (got.from.set[key]) extra.push('set ' + plus(got.from.set[key]));
-      if (got.from.exalt[key]) extra.push('exalt ' + plus(got.from.exalt[key]));
+      /*
+       * The number, and nothing about how it got there. Where every point
+       * came from is arithmetic somebody would have to want; the bar against
+       * the ceiling is the thing being read.
+       */
       return '<div class="tc-stat">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
         + '<b>' + round(now) + '<u>/' + top + '</u></b>'
-        + (extra.length ? '<em>' + esc(extra.join(', ')) + '</em>' : '')
         + '</div>';
     }).join('');
   }
@@ -513,22 +512,19 @@ var TheoryCraft = (function () {
     const againstBoss = boss ? numbersFor(build, boss.def) : null;
     const kill = boss && againstBoss && againstBoss.total
       ? boss.hp / againstBoss.total : null;
+    /*
+     * Four numbers. Everything else this page can work out is on the curve
+     * beneath it or in the fight above it, and a wall of figures is what
+     * the page looked like before somebody said so.
+     */
     const rows = [
-      ['shooting', round(numbers.gun.rate) + ' a second'],
-      ['each shot', commas(numbers.gun.each) + (numbers.gun.many > 1
-        ? ' × ' + numbers.gun.many : '')],
-      ['weapon', commas(numbers.gun.dps) + ' a second'],
-      ['ability', numbers.spell.dps
-        ? commas(numbers.spell.dps) + ' a second, every ' + round(numbers.spell.every) + 's'
-        : '—'],
-      ['both hands', commas(numbers.total) + ' a second', true],
-      ['moving', round(PACE_AT(stats.spd)) + ' tiles a second'],
-      ['life back', round(HEAL_AT(stats.vit)) + ' a second'],
-      ['magic back', round(MANA_AT(stats.wis)) + ' a second']
+      ['damage a second', commas(numbers.total), true],
+      ['shots a second', round(numbers.gun.rate)],
+      ['each shot', commas(numbers.gun.each)
+        + (numbers.gun.many > 1 ? ' x ' + numbers.gun.many : '')]
     ];
     if (kill !== null) {
-      rows.push([esc(boss.name), commas(boss.hp) + ' life, ' + boss.def + ' armour']);
-      rows.push(['dies in', round(kill) + ' seconds', true]);
+      rows.push([esc(boss.name) + ' dies in', round(kill) + 's', true]);
     }
     box.innerHTML = rows.map(([say, was, loud]) =>
       '<span' + (loud ? ' class="tc-loud"' : '') + '><i>' + say + '</i><b>'
@@ -813,7 +809,7 @@ var TheoryCraft = (function () {
      * out wide rather than squashed into a column.
      */
     const piece = pieceOf(boss && boss.pic);
-    const room = Math.min(104, tall * 0.78);
+    const room = Math.min(84, tall * 0.62);
     const shape = piece ? piece.w / piece.h : 1;
     const big = Math.min(room, room / Math.max(1, shape))
       * Math.min(1.6, Math.max(0.7, (piece ? piece.size : 100) / 100));
@@ -1040,8 +1036,9 @@ var TheoryCraft = (function () {
     }
     el('tcAgainst').value = build.against;
     el('tcAgainstSay').textContent = build.against + ' armour';
-    const boss = el('tcBoss');
-    if (boss && boss.value !== String(build.boss)) boss.value = build.boss || '';
+    for (const node of el('tcBosses').querySelectorAll('[data-boss]')) {
+      node.classList.toggle('is-on', node.dataset.boss === build.boss);
+    }
     el('tcName').value = build.name;
     drawTabs();
     drawSlots();
@@ -1056,16 +1053,17 @@ var TheoryCraft = (function () {
     el('tcClass').innerHTML = data.classes.map(one =>
       '<option value="' + esc(one.name) + '">' + esc(one.name) + '</option>').join('');
     /*
-     * Sorted so the ones with a portrait come first: the frame can draw any
-     * of them, but only these have a face, and a fight against a plain
-     * rectangle is a worse thing to watch.
+     * You pick a thing to hit by looking at it. Everything here is either an
+     * encounter or the boss at the end of a dungeon - the client marks both
+     * as a quest - which leaves a list short enough to show as pictures, and
+     * a picture is how anybody actually knows which one is the Shatters.
      */
-    const targets = data.bosses.slice().sort((a, b) =>
-      (b.pic ? 1 : 0) - (a.pic ? 1 : 0) || a.hp - b.hp);
-    el('tcBoss').innerHTML = targets.map(one =>
-      '<option value="' + esc(one.name) + '">' + esc(one.name) + ' · '
-      + commas(one.hp) + ' life, ' + one.def + ' armour'
-      + (one.pic ? '' : ' · no picture') + '</option>').join('');
+    const targets = data.bosses.slice()
+      .filter(one => one.pic).sort((a, b) => a.hp - b.hp);
+    el('tcBosses').innerHTML = targets.map(one =>
+      '<button type="button" class="tc-boss" data-boss="' + esc(one.name) + '"'
+      + ' title="' + esc(one.name) + ' — ' + commas(one.hp) + ' life, '
+      + one.def + ' armour">' + sheetIcon(one.pic, 34) + '</button>').join('');
     el('tcGoals').innerHTML = GOALS.map(one =>
       '<button type="button" class="tc-goal" data-goal="' + one.id + '">'
       + esc(one.say) + '</button>').join('');
@@ -1105,9 +1103,11 @@ var TheoryCraft = (function () {
       el('tcAgainstSay').textContent = build.against + ' armour';
       drawNumbers(); drawGraph(); keep();
     });
-    el('tcBoss').addEventListener('change', event => {
-      build.boss = event.target.value;
-      keep(); drawNumbers(); drawGraph(); resetDuel();
+    el('tcBosses').addEventListener('click', event => {
+      const pick = event.target.closest('[data-boss]');
+      if (!pick) return;
+      build.boss = pick.dataset.boss;
+      keep(); paint();
     });
     el('tcPause').addEventListener('click', () => {
       duel.on = !duel.on;

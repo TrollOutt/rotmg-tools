@@ -2240,3 +2240,20 @@ body.globe-wide .home-card-art { animation: none !important; }
 .tc-hold { font-size: 12px; filter: grayscale(1) opacity(.55); }
 .tc-hold:hover { filter: none; }
 .tc-slot.is-held .tc-hold, .tc-ench.is-held .tc-hold { filter: none; }
+
+/* --- the things worth hitting, as their own pictures --- */
+.tc-bosses {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+  max-height: 96px; overflow-y: auto;
+}
+.tc-boss {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0; cursor: pointer;
+  background: rgba(255, 255, 255, .03); border: 0; border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+.tc-boss:hover { background: rgba(255, 255, 255, .09); }
+.tc-boss.is-on {
+  background: rgba(224, 161, 58, .16);
+  box-shadow: inset 0 0 0 1px rgba(224, 161, 58, .5);
+}
