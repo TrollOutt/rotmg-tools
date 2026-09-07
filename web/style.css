@@ -2011,6 +2011,8 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .tc-face i {
   display: block; background-repeat: no-repeat; image-rendering: pixelated;
+  /* The same one sheet every other picture on this page comes from. */
+  background-image: var(--tc-sheet);
 }
 .tc-face-pick { flex: 1; min-width: 0; }
 .tc-lvl-said {

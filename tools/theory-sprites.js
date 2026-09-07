@@ -341,6 +341,19 @@ for (const one of facts.items) {
 }
 
 /*
+ * And the nineteen classes, in the same way.
+ *
+ * They were being read out of the realm atlas instead - a folder of one strip
+ * a class, built for the map - which meant the offline copy of this page,
+ * which cannot carry a folder, had no figure in its frame at all. A class is
+ * a thing with poses like any other, so it is cut here with the rest.
+ */
+let folk = 0;
+for (const one of facts.classes) {
+  if (cutOne('c:' + one.name, one.name, true)) { one.pic = 'c:' + one.name; folk++; }
+}
+
+/*
  * And an icon for each enchantment, which is the one thing on that side of
  * the page nobody can identify from words alone: a thousand of them, most
  * named "something Bonus" with a numeral, and the picture is how a player
@@ -374,6 +387,37 @@ let charms = 0;
   }
 }
 
+/*
+ * Where the drawing actually is inside its rectangle.
+ *
+ * A rectangle is not the drawing. Several of them are taller than what they
+ * hold - the Assassin's swing is declared sixteen rows deep and the art sits
+ * in the top eight of them - so standing a frame on the bottom of its
+ * rectangle stands some frames on nothing, and the figure leaps every time
+ * that frame comes round. Each frame is measured, stood on the floor of its
+ * cell, and the cell is made no taller than the tallest drawing in it: a cell
+ * with empty rows in it is drawn at the size of the emptiness, which is what
+ * made one class half the height of the next.
+ */
+function bounds(from, r) {
+  let top = -1, bottom = -1;
+  for (let y = 0; y < r.h; y++) {
+    for (let x = 0; x < r.w; x++) {
+      if (from.pixels[((r.y + y) * from.width + r.x + x) * 4 + 3] > 8) {
+        if (top < 0) top = y;
+        bottom = y;
+        break;
+      }
+    }
+  }
+  return top < 0 ? { top: 0, bottom: r.h - 1, high: r.h } : { top, bottom, high: bottom - top + 1 };
+}
+
+for (const one of cut) {
+  one.shape = one.tiles.map(r => bounds(sheetFor(r.sheet), r));
+  one.h = Math.max(1, ...one.shape.map(b => b.high));
+}
+
 /* ---------------- one sheet for the lot ---------------- */
 const WIDE = 1024;
 cut.sort((a, b) => b.h - a.h);
@@ -386,6 +430,7 @@ for (const one of cut) {
   if (one.h > rowH) rowH = one.h;
 }
 const tall = y + rowH;
+
 const sheet = Buffer.alloc(WIDE * tall * 4);
 for (const one of cut) {
   one.tiles.forEach((r, slot) => {
@@ -393,15 +438,18 @@ for (const one of cut) {
     // Middled in its cell and standing on its floor, so a run whose frames
     // differ in size does not jitter as it plays.
     const ox = one.px + slot * one.w + ((one.w - r.w) >> 1);
-    const oy = one.py + (one.h - r.h);
+    const oy = one.py + one.h - 1 - one.shape[slot].bottom;
     for (let ry = 0; ry < r.h; ry++) {
+      const row = oy + ry;
+      if (row < one.py || row >= one.py + one.h) continue;
       for (let rx = 0; rx < r.w; rx++) {
         const at = ((r.y + ry) * from.width + r.x + rx) * 4;
-        from.pixels.copy(sheet, ((oy + ry) * WIDE + ox + rx) * 4, at, at + 4);
+        from.pixels.copy(sheet, (row * WIDE + ox + rx) * 4, at, at + 4);
       }
     }
   });
 }
+
 
 fs.mkdirSync(OUT, { recursive: true });
 const png = path.join(OUT, 'sheet.png');
@@ -419,8 +467,8 @@ facts.sheet = {
 };
 fs.writeFileSync(FACTS, JSON.stringify(facts) + '\n');
 
-console.log('\n  ' + hitters + ' targets, ' + bolts + ' bolts and ' + charms
-  + ' enchantment icons on one '
+console.log('\n  ' + hitters + ' targets, ' + folk + ' classes, ' + bolts
+  + ' bolts and ' + charms + ' enchantment icons on one '
   + WIDE + 'x' + tall + ' sheet'
   + '\n  -> ' + path.relative(root, png)
   + '  (' + (fs.statSync(png).size / 1024).toFixed(0) + ' KB)'
