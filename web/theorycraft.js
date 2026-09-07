@@ -147,7 +147,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       top[key] = ceiling;
       out[key] = base[key];
     }
-    const from = { gear: {}, ench: {}, set: {}, exalt: {}, share: {} };
+    const from = { gear: {}, ench: {}, set: {}, exalt: {}, rel: {}, share: {} };
 
     // Sets first, because they are decided by what is worn rather than by
     // any one piece.
@@ -178,6 +178,38 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       from.exalt[key] = state.exalt ? (state.exalts[key] || 0) : 0;
       out[key] = base[key] + (from.gear[key] || 0) + (from.ench[key] || 0)
         + (from.set[key] || 0) + from.exalt[key];
+    }
+
+    /*
+     * Then the enchantments that take a share of what the gear gives.
+     *
+     * "Increases Attack by 16% of Bonus Attack" - the bonus, not the total:
+     * what the four items, their enchantments and any set have added, with
+     * the class's own statistic and the exaltations left out of it. Worth
+     * nothing on a bare character and a great deal on a good one, which is
+     * why every build worth the name is full of them.
+     *
+     * They are taken from the bonus as it stood before any of them applied,
+     * so two cannot feed on each other.
+     */
+    {
+      const bonus = {};
+      for (const [key] of STATS) {
+        bonus[key] = (from.gear[key] || 0) + (from.ench[key] || 0) + (from.set[key] || 0);
+      }
+      for (const hand of HANDS) {
+        const worn = state.gear[hand[0]];
+        for (const id of (worn && worn.ench) || []) {
+          const one = id && data.byEnch[id];
+          for (const part of (one && one.rel) || []) {
+            const key = OF_STAT[part.stat], of = OF_STAT[part.of];
+            if (!key || !of) continue;
+            const much = bonus[of] * part.pct / 100;
+            from.rel[key] = (from.rel[key] || 0) + much;
+            out[key] += much;
+          }
+        }
+      }
     }
 
     /*
@@ -474,6 +506,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (one.mul) {
       n += Object.values(one.mul).reduce((sum, v) => sum + Math.abs(v - 1) * 100, 0);
     }
+    // A share of a bonus is worth what the bonus is; sixteen per cent of a
+    // good one beats four flat points, and this only has to rank them.
+    for (const part of one.rel || []) n += Math.abs(part.pct) / 2;
     return n;
   };
 
@@ -944,7 +979,7 @@ const TINT = {
             // Anything this page can count: a statistic, a scaling of the
             // weapon, or something that keeps you alive. The rest change the
             // shot in ways it does not model.
-            if (!one.worn && !one.mul && !one.heal) continue;
+            if (!one.worn && !one.mul && !one.heal && !one.rel) continue;
             worn.ench[at] = one.id;
             const now = scoreOf(work, goal);
             looked++;
@@ -1124,6 +1159,9 @@ const TINT = {
         const id = worn.ench[at];
         const one = id && data.byEnch[id];
         const held = !!build.locked[hand + ':' + at];
+        const shares = one && one.rel
+          ? one.rel.map(part => plus(part.pct) + '% of bonus ' + part.of).join(' ')
+          : '';
         const heals = one && one.heal ? [
           one.heal.flatHP ? '+' + one.heal.flatHP + ' HP/s' : '',
           one.heal.partHP ? '+' + round(one.heal.partHP * 100) + '% HP/s' : '',
@@ -1133,6 +1171,7 @@ const TINT = {
         ].filter(Boolean).join(' ') : '';
         const said = one && one.worn
           ? '<u>' + Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ') + '</u>'
+          : shares ? '<u>' + esc(shares) + '</u>'
           : heals ? '<u>' + esc(heals) + '</u>'
           : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
@@ -2330,7 +2369,24 @@ const TINT = {
       const hold = event.target.closest('[data-hold]');
       if (hold) {
         const which = hold.dataset.hold;
-        build.locked[which] = !build.locked[which];
+        const on = !build.locked[which];
+        build.locked[which] = on;
+        /*
+         * An enchantment cannot be kept on an item that is free to change.
+         *
+         * Keeping a slot and leaving the item open meant the search could
+         * swap the item out from under it, and the enchantment kept was one
+         * that may not even fit what took its place - so keeping a slot keeps
+         * the thing it is in, and letting the item go lets go of everything
+         * in it.
+         */
+        const at = which.indexOf(':');
+        if (at > 0 && on) build.locked[which.slice(0, at)] = true;
+        if (at < 0 && !on) {
+          for (const key of Object.keys(build.locked)) {
+            if (key.indexOf(which + ':') === 0) delete build.locked[key];
+          }
+        }
         keep(); drawSlots();
       }
     });
