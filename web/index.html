@@ -378,6 +378,10 @@
             <span class="field-label">Class</span>
             <select id="tcClass"></select>
           </label>
+          <label class="tc-name">
+            <span class="field-label">Called</span>
+            <input id="tcName" type="text" maxlength="40">
+          </label>
           <span class="tc-lvl-said">Level 20</span>
         </div>
         <div class="tc-switches" role="group" aria-label="How far along">
@@ -426,13 +430,15 @@
       </section>
 
       <section class="card">
-        <header><h2>Look for a better one</h2></header>
+        <header><h2>Look for a better one</h2>
+          <span class="header-aside" id="tcKept"></span></header>
         <div id="tcGoals" class="tc-goals"></div>
         <div class="tc-calc-row">
           <button type="button" id="tcRun" class="tc-run">Search</button>
-          <label class="tc-name">Call it<input id="tcName" type="text" maxlength="40"></label>
+          <button type="button" id="tcUndo" class="tc-undo" hidden>Put it back</button>
+          <span id="tcNow" class="tc-now"></span>
         </div>
-        <p id="tcSaid" class="tc-said"></p>
+        <div id="tcSaid" class="tc-said"></div>
       </section>
 
     </section>
