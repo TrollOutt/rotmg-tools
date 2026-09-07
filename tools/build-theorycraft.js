@@ -451,6 +451,30 @@ for (const [, one] of byType) {
     if (items[i].sb && free.has(items[i].shown)) { items.splice(i, 1); went++; }
   }
   if (went) console.log('  ' + went + ' soulbound twins of a tradeable thing dropped');
+
+  /*
+   * And one entry per name, whatever is left.
+   *
+   * A dozen things are in the client several times over under one name - the
+   * Beehemoth Armor four times, the Scorchium Stone five - one copy per
+   * dungeon or per season that hands it out. They are the same item to a
+   * player, and a list offering the same choice five times is a list nobody
+   * trusts. The one with the most on it stays, since a copy stripped of its
+   * projectile or its bonuses is the placeholder of the set.
+   */
+  const worth = one => (one.worn ? Object.keys(one.worn).length : 0)
+    + (one.shots ? one.shots.length * 2 : 0) + (one.rel ? one.rel.length : 0)
+    + (one.share ? one.share.length : 0) + (one.does ? 1 : 0);
+  const best = new Map();
+  for (const one of items) {
+    const had = best.get(one.name);
+    if (!had || worth(one) > worth(had)) best.set(one.name, one);
+  }
+  let twice = 0;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (best.get(items[i].name) !== items[i]) { items.splice(i, 1); twice++; }
+  }
+  if (twice) console.log('  ' + twice + ' further copies of a name dropped');
 }
 for (const one of items) delete one.shown;
 
