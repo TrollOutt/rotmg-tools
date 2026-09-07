@@ -249,6 +249,14 @@ for (const [, one] of byType) {
    */
   if (!labels.split(',').includes('EQUIPMENT')) continue;
   /*
+   * And nothing kept for the people who run the game. The Crown gives seven
+   * hundred wisdom and says so plainly - AdminOnly - which is the client's own
+   * word for a thing no player will ever hold. Anything wearing that tag is
+   * the best item in the game for every question anybody could ask, and the
+   * answer would be worthless.
+   */
+  if (/<AdminOnly\s*\/>/.test(one.body)) continue;
+  /*
    * And not the shiny copies. The client marks them itself - two hundred and
    * fifty-seven carry a SHINY label - and a shiny is the same item with a
    * sparkle on it, so every picker had each of them twice with nothing to
@@ -365,6 +373,7 @@ for (const [, one] of byType) {
   if (went) console.log('  ' + went + ' soulbound twins of a tradeable thing dropped');
 }
 for (const one of items) delete one.shown;
+
 
 items.sort((a, b) => a.hand.localeCompare(b.hand)
   || (a.tier === undefined ? 99 : a.tier) - (b.tier === undefined ? 99 : b.tier)
@@ -506,6 +515,24 @@ const sets = [];
       sets.push({ name: m[1], pieces: [...new Set(pieces)], steps });
     }
   }
+}
+
+/*
+ * And which set each thing belongs to, if any.
+ *
+ * The bonus itself is read off the set, but a piece that does not say it is a
+ * piece is a bonus nobody will ever assemble on purpose: it is the one fact
+ * about the item that changes what the other three slots should hold.
+ */
+{
+  const of = new Map();
+  for (const kit of sets) for (const piece of kit.pieces) of.set(piece, kit.name);
+  let marked = 0;
+  for (const one of items) {
+    const name = of.get(one.name);
+    if (name) { one.set = name; marked++; }
+  }
+  console.log('  ' + marked + ' of them belong to a set');
 }
 
 /* ---------------- something to hit ---------------- */

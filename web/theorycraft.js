@@ -77,6 +77,63 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * exaltations. Gear and exalts go on top of the ceiling, which is how the
    * game does it: the cap is on what levelling and potions can reach.
    */
+  /*
+   * Which sets are being worn, and what each is paying.
+   *
+   * The client gives a set its pieces and a bonus at two of them, three and
+   * four, and the thresholds stack the way the game stacks them: wearing all
+   * four pays the two-piece bonus as well. It is worked out from the whole
+   * outfit rather than from any one piece, which is exactly why it is the one
+   * thing a search that changes one item at a time can never find.
+   */
+  let sharedPieces = null;
+  function timesListed(name) {
+    if (!sharedPieces) {
+      sharedPieces = new Map();
+      for (const kit of data.sets || []) {
+        for (const piece of kit.pieces) {
+          sharedPieces.set(piece, (sharedPieces.get(piece) || 0) + 1);
+        }
+      }
+    }
+    return sharedPieces.get(name) || 0;
+  }
+
+  function setsOn(state) {
+    const worn = new Set(HANDS.map(h => (state.gear[h[0]] || {}).name).filter(Boolean));
+    const out = [];
+    for (const kit of data.sets || []) {
+      let howMany = 0, ours = false;
+      for (const piece of kit.pieces) {
+        if (!worn.has(piece)) continue;
+        howMany++;
+        // Something that belongs to this set and to no other.
+        if (timesListed(piece) === 1) ours = true;
+      }
+      /*
+       * A set pays only when something you are wearing is its own.
+       *
+       * The alien sets list the same three dozen weapons and the same nine
+       * suits of armour as each other, and differ only in the core that goes
+       * on the finger - so an alien weapon and an alien suit, counted
+       * plainly, satisfied two pieces of thirteen different sets at once and
+       * handed over all thirteen bonuses. What separates them is the piece
+       * that appears in one list and nowhere else.
+       */
+      if (howMany < 2 || !ours) continue;
+      const gives = {};
+      for (const step of Object.keys(kit.steps)) {
+        if (Number(step) > howMany) continue;
+        for (const tag of Object.keys(kit.steps[step])) {
+          const key = OF_STAT[tag] || OF_STAT[tag.replace(/^MAX/, '')];
+          if (key) gives[key] = (gives[key] || 0) + kit.steps[step][tag];
+        }
+      }
+      if (Object.keys(gives).length) out.push({ name: kit.name, many: howMany, gives });
+    }
+    return out;
+  }
+
   function statsOf(state) {
     const kind = data.byClass[state.klass];
     if (!kind) return null;
@@ -92,25 +149,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     const from = { gear: {}, ench: {}, set: {}, exalt: {}, share: {} };
 
-    /*
-     * Sets first, because they are decided by what is worn rather than by
-     * any one piece. The client gives a set its pieces and a bonus at two,
-     * three and four of them, and the thresholds stack the way the game
-     * stacks them: wearing four gets you the two-piece bonus as well.
-     */
-    {
-      const worn = new Set(HANDS.map(h => (state.gear[h[0]] || {}).name).filter(Boolean));
-      for (const kit of data.sets || []) {
-        let howMany = 0;
-        for (const piece of kit.pieces) if (worn.has(piece)) howMany++;
-        if (howMany < 2) continue;
-        for (const step of Object.keys(kit.steps)) {
-          if (Number(step) > howMany) continue;
-          for (const tag of Object.keys(kit.steps[step])) {
-            const key = OF_STAT[tag] || OF_STAT[tag.replace(/^MAX/, '')];
-            if (key) from.set[key] = (from.set[key] || 0) + kit.steps[step][tag];
-          }
-        }
+    // Sets first, because they are decided by what is worn rather than by
+    // any one piece.
+    for (const kit of setsOn(state)) {
+      for (const key of Object.keys(kit.gives)) {
+        from.set[key] = (from.set[key] || 0) + kit.gives[key];
       }
     }
     for (const hand of HANDS) {
@@ -336,10 +379,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       exalt: true,
       exalts,
       gear,
-      // More than one thing can be asked for at once.
+      // More than one thing can be asked for at once, and how hard each is
+      // pulled is the reader's to set.
       goals: ['dps'],
-      // Everything the game has, soulbound included.
-      noSb: false,
+      share: {},
+      // Everything the game has, up to any tier.
+      roof: 0,
       scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
@@ -545,20 +590,20 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     });
   }
 
-  function itemsFor(hand, klass, hide) {
+  function itemsFor(hand, klass) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
     /*
-     * Everything is in, soulbound included, because the build somebody
-     * actually has is very often made of exactly those - and where the same
-     * thing exists in a form that can be traded, the soulbound twin was
-     * already dropped when the catalogue was read. The switch is for the
-     * other question: what could I put together out of what I can buy.
+     * And a ceiling, for the question nobody can ask otherwise: what is the
+     * best I can put together before the endgame. A tier is the game's own
+     * measure of how far up something is, so capping it caps the answer -
+     * and untiered gear goes with it, since a thing with no tier is a drop
+     * from the top of the game and would walk straight through the ceiling.
      */
-    const shut = hide === undefined ? (build && build.noSb) : hide;
+    const roof = build && build.roof;
     return data.items.filter(one => one.hand === hand
       && (slot === undefined || one.slot === slot)
-      && !(shut && one.sb));
+      && !(roof && (one.tier === undefined || one.tier > roof)));
   }
 
   /* ---------------- the optimiser ---------------- */
@@ -627,18 +672,90 @@ const TINT = {
   function aimOf(state, goals) {
     const list = goals || goalsOf(state);
     if (list.length === 1) return list[0];
-    const worth = {};
+    const worth = {}, pull = {};
     for (const one of list) {
       const was = scoreOf(state, one);
       worth[one.id] = Number.isFinite(was) && was !== 0 ? Math.abs(was) : 1;
+      // How much of the answer this one is asked to be, as the reader set it.
+      pull[one.id] = shareOf(state, one.id);
     }
     return {
       id: list.map(one => one.id).join('+'),
       say: list.map(one => one.say.toLowerCase()).join(' and '),
       goals: list,
       of: (numbers, at) => list.reduce(
-        (sum, one) => sum + one.of(numbers, at) / worth[one.id], 0)
+        (sum, one) => sum + pull[one.id] * one.of(numbers, at) / worth[one.id], 0)
     };
+  }
+
+  /*
+   * How hard each thing asked for is being pulled.
+   *
+   * Asking for damage and survival at once is not one question, it is a
+   * bargain, and where the bargain lands is the reader's to say: seventy
+   * damage to thirty survival is a different build from thirty to seventy,
+   * and both are reasonable. The numbers are kept raw and read as shares of
+   * their own total, so moving one moves what the others are worth without
+   * anybody having to make them add up.
+   */
+  function shareOf(state, id) {
+    const want = state.share || {};
+    const n = Number(want[id]);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+
+  function sharesOf(state) {
+    const list = goalsOf(state);
+    let all = 0;
+    for (const one of list) all += shareOf(state, one.id);
+    return list.map(one => ({
+      goal: one,
+      raw: shareOf(state, one.id),
+      part: all > 0 ? shareOf(state, one.id) / all : 1 / list.length
+    }));
+  }
+
+  /*
+   * A hundred per cent, split up - never a hundred per cent each.
+   *
+   * There is only one build to be had, so the shares are one thing divided
+   * rather than several dials set on their own: pushing damage up has to push
+   * everything else down, and the row has to keep saying a hundred whatever
+   * is moved. Everything asked for keeps at least one per cent, so a goal
+   * that is on is never silently switched off.
+   */
+  function levelShares(state) {
+    const list = goalsOf(state).map(one => one.id);
+    const each = Math.floor(100 / list.length);
+    const share = {};
+    list.forEach((id, i) => { share[id] = each + (i < 100 - each * list.length ? 1 : 0); });
+    state.share = share;
+  }
+
+  function moveShare(state, id, to) {
+    const list = goalsOf(state).map(one => one.id);
+    const others = list.filter(x => x !== id);
+    if (!others.length) { state.share = { [id]: 100 }; return; }
+    const want = Math.max(1, Math.min(100 - others.length, Math.round(to)));
+    // What is left goes to the others in the proportion they already stood in.
+    const stood = {};
+    let sum = 0;
+    for (const x of others) {
+      stood[x] = Math.max(1, Number((state.share || {})[x]) || 1);
+      sum += stood[x];
+    }
+    const room = 100 - want;
+    const share = { [id]: want };
+    let given = 0;
+    others.forEach((x, i) => {
+      const part = i === others.length - 1
+        ? room - given
+        : Math.max(1, Math.min(room - given - (others.length - 1 - i),
+          Math.round(room * stood[x] / sum)));
+      share[x] = part;
+      given += part;
+    });
+    state.share = share;
   }
 
   /*
@@ -704,7 +821,7 @@ const TINT = {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of itemsFor(hand, work.klass, work.noSb)) {
+        for (const one of itemsFor(hand, work.klass)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
@@ -718,6 +835,52 @@ const TINT = {
         work.gear[hand].name = best;
         if (best !== was) moved = true;
       }
+      /*
+       * And whole sets, which no single swap can ever reach.
+       *
+       * A set pays nothing until two of its pieces are on at once, so every
+       * step towards one is a step downhill and a search that changes one
+       * thing at a time turns back at the first of them. Each set is
+       * therefore tried whole: the best piece it has for every hand that is
+       * free, put on together, kept only if the lot of them beats what was
+       * there.
+       */
+      for (const kit of data.sets || []) {
+        const trial = JSON.parse(JSON.stringify(work));
+        let put = 0;
+        for (const [hand] of HANDS) {
+          if (trial.locked[hand]) continue;
+          let best = null, mark = -Infinity;
+          const mine = new Set(kit.pieces);
+          for (const one of itemsFor(hand, trial.klass)) {
+            if (!mine.has(one.name)) continue;
+            const was = trial.gear[hand].name;
+            trial.gear[hand].name = one.name;
+            const now = scoreOf(trial, goal);
+            looked++;
+            if (now > mark) { mark = now; best = one.name; }
+            trial.gear[hand].name = was;
+          }
+          if (!best) continue;
+          trial.gear[hand].name = best;
+          // An enchantment that no longer fits the item cannot be counted.
+          const kept = trial.gear[hand].ench.slice();
+          trial.gear[hand].ench = kept.map((id, i) =>
+            (id && enchantsFor(best, kept, i).some(e => e.id === id)) ? id : null);
+          put++;
+        }
+        if (put < 2) continue;
+        const now = scoreOf(trial, goal);
+        looked++;
+        if (now <= score) continue;
+        score = now;
+        for (const [hand] of HANDS) {
+          if (work.locked[hand]) continue;
+          work.gear[hand] = trial.gear[hand];
+        }
+        moved = true;
+      }
+
       /*
        * Sometimes the question is only which gear to wear. An enchanted
        * answer is no use to somebody deciding what to hunt for first, so the
@@ -1000,7 +1163,27 @@ const TINT = {
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
         + '<b>' + round(now) + '<u>/' + top + '</u></b>'
         + '</div>';
-    }).join('');
+    }).join('') + setsSaid();
+  }
+
+  /*
+   * And what a set is paying, when one is on.
+   *
+   * It is the only bonus on the page that comes from the outfit rather than
+   * from a piece of it, so there is nowhere else it could be shown: a player
+   * looking at two pieces of the Legion Elite Set has no way of telling from
+   * the two lines above them that a hundred and twenty life of the total came
+   * from wearing them together.
+   */
+  function setsSaid() {
+    const on = setsOn(build);
+    if (!on.length) return '';
+    return on.map(kit => '<div class="tc-setline"><b>' + esc(kit.name) + '</b>'
+      + '<i>' + kit.many + ' pieces</i>'
+      + '<span>' + Object.keys(kit.gives)
+        .map(key => '<u style="color:' + TINT[key] + '">' + plus(kit.gives[key])
+          + ' ' + key.toUpperCase() + '</u>').join('')
+      + '</span></div>').join('');
   }
 
   const plus = n => (n > 0 ? '+' : '') + (Math.round(n * 10) / 10);
@@ -1025,6 +1208,42 @@ const TINT = {
    * when you can put the build back afterwards, which is what turns this from
    * a gamble into a thing worth trying.
    */
+  /*
+   * The bargain, as a row of sliders - and only when there is a bargain to
+   * strike. One thing asked for has nothing to trade against.
+   */
+  function drawMix() {
+    const box = el('tcMix');
+    if (!box) return;
+    const parts = sharesOf(build);
+    box.hidden = parts.length < 2;
+    if (box.hidden) { box.innerHTML = ''; return; }
+    box.innerHTML = parts.map(one =>
+      '<label class="tc-mix-one" style="--tint:' + one.goal.tint + '">'
+      + '<i>' + esc(one.goal.say) + '</i>'
+      + '<input type="range" min="1" max="' + (100 - parts.length + 1)
+      + '" value="' + Math.round(one.part * 100)
+      + '" data-mix="' + esc(one.goal.id) + '">'
+      + '<b>' + Math.round(one.part * 100) + '%</b></label>').join('');
+  }
+
+  /*
+   * The same numbers, written into the row that is already there. Used while
+   * a slider is being dragged, when replacing the row would end the drag.
+   */
+  function tuneMix(dragged) {
+    const box = el('tcMix');
+    if (!box) return;
+    for (const one of sharesOf(build)) {
+      const bar = box.querySelector('[data-mix="' + one.goal.id + '"]');
+      if (!bar) continue;
+      const pct = Math.round(one.part * 100);
+      if (bar !== dragged) bar.value = String(pct);
+      const said = bar.parentElement && bar.parentElement.querySelector('b');
+      if (said) said.textContent = pct + '%';
+    }
+  }
+
   function drawSearch() {
     const said = el('tcNow');
     if (said) {
@@ -1650,6 +1869,16 @@ const TINT = {
     pen.textAlign = 'right';
     pen.fillStyle = 'rgba(255,255,255,.6)';
     pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - 22, tall - 25);
+    /*
+     * And what it is wearing, beside what it has left. Every number under
+     * this frame is read against that armour - it is subtracted from each
+     * shot before anything else happens - so a frame that shows the life and
+     * hides the armour shows half of what decides the fight.
+     */
+    if (boss) {
+      pen.fillStyle = 'rgba(255,255,255,.38)';
+      pen.fillText(boss.def + ' armour', wide - 22, tall - 37);
+    }
     pen.textAlign = 'left';
     pen.fillStyle = 'rgba(255,255,255,.45)';
     pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', 22, tall - 25);
@@ -1686,7 +1915,7 @@ const TINT = {
 
   function openItems(hand) {
     picking = { kind: 'item', hand };
-    const list = itemsFor(hand, build.klass, build.noSb);
+    const list = itemsFor(hand, build.klass);
     show('Choose a ' + hand, list.map(one => {
       const gun = one.shots && one.shots[0];
       const bits = [];
@@ -1901,8 +2130,9 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
-    for (const node of el('tcBody').querySelectorAll('[data-bound]')) {
-      node.classList.toggle('is-on', node.dataset.bound === (build.noSb ? '0' : '1'));
+    const roof = el('tcRoof');
+    if (roof && roof.value !== String(build.roof || '')) {
+      roof.value = String(build.roof || '');
     }
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
@@ -1920,6 +2150,7 @@ const TINT = {
         + chosenBoss.def + ' armour' : '';
     el('tcName').value = build.name;
     drawTabs();
+    drawMix();
     drawSearch();
     drawSlots();
     drawStats();
@@ -1978,10 +2209,8 @@ const TINT = {
       build.scope = scope.dataset.scope;
       keep(); paint();
     });
-    el('tcBody').addEventListener('click', event => {
-      const bound = event.target.closest('[data-bound]');
-      if (!bound) return;
-      build.noSb = bound.dataset.bound === '0';
+    el('tcRoof').addEventListener('change', event => {
+      build.roof = Number(event.target.value) || 0;
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {
@@ -1999,9 +2228,30 @@ const TINT = {
       else if (want.length > 1) want.splice(at, 1);
       build.goals = want;
       delete build.goal;
+      /*
+       * The split is re-struck whenever the list of things asked for changes:
+       * the hundred per cent is shared out evenly again, because a share left
+       * over from a goal that is no longer on the list means nothing.
+       */
+      levelShares(build);
       keep(); paint();
     });
 
+
+    el('tcMix').addEventListener('input', event => {
+      const bar = event.target.closest('[data-mix]');
+      if (!bar) return;
+      moveShare(build, bar.dataset.mix, Number(bar.value));
+      keep();
+      /*
+       * The others move; the one under the mouse is left alone.
+       *
+       * Redrawing the whole row on every input replaced the very slider being
+       * dragged, so the browser lost the pointer the moment it moved one per
+       * cent and the drag had to be started again for every step.
+       */
+      tuneMix(bar);
+    });
 
     el('tcBosses').addEventListener('click', event => {
       const pick = event.target.closest('[data-boss]');
