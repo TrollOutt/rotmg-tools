@@ -1074,12 +1074,7 @@ const TINT = {
       if (duel.cool <= 0) {
         duel.cool += 1 / gun.rate;
         duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
-        for (let n = 0; n < (gun.many || 1); n++) {
-          duel.shots.push({
-            at: 0, lane: (n - ((gun.many || 1) - 1) / 2) * 0.16,
-            hurt: gun.each, mine: true
-          });
-        }
+        loose(weapon, gun, true);
       }
     }
     /*
@@ -1095,26 +1090,26 @@ const TINT = {
       if (duel.spell <= 0 && duel.mp >= cost) {
         duel.mp -= cost;
         duel.spell = 0.6;                     // as fast as a hand can cast
-        for (let n = 0; n < (spell.many || 1); n++) {
-          duel.shots.push({
-            at: 0, lane: (n - ((spell.many || 1) - 1) / 2) * 0.16,
-            hurt: spell.each, mine: false
-          });
-        }
+        loose(ability, spell, false);
       }
     }
 
+    /*
+     * Each shot ages at its own rate.
+     *
+     * The bench used to move every shot across in a fifth of a second, which
+     * made a Short Sword and a Sprite Wand look identical and threw away two
+     * numbers the client states outright. A shot's flight takes its range
+     * divided by its speed - a Short Sword's three and a half tiles at
+     * fourteen a second is a quarter of a second, an Energy Staff's eight and
+     * a half at eighteen is nearly half of one - and it lands when it arrives.
+     * The damage is counted at the impact, not at the shot, so the total on
+     * the frame follows what has actually hit.
+     */
     for (let i = duel.shots.length - 1; i >= 0; i--) {
       const one = duel.shots[i];
-      /*
-       * How far along its flight the shot is, kept apart from how it is
-       * drawn. Straight, from nought to one across the bench: this is the
-       * seam where a real model for a weaving or a returning shot would go,
-       * and until there is one the page says so rather than letting a
-       * straight line pass for the truth.
-       */
-      one.at += delta * 5;
-      if (one.at < 1) continue;
+      one.age += delta;
+      if (one.age < one.lasts) continue;
       duel.shots.splice(i, 1);
       if (duel.hp <= 0) continue;
       duel.hp -= one.hurt;
@@ -1127,6 +1122,43 @@ const TINT = {
      * seconds later is one that hides its own answer; the fight starts again
      * when somebody asks it to.
      */
+  }
+
+  /*
+   * Letting a volley go.
+   *
+   * Everything a shot needs is settled here and carried with it: the picture
+   * it is drawn from, how long it is in the air, the angle it left at. Read
+   * back off the current gear while drawing, a shot already in flight would
+   * change its face the moment you swapped weapons mid-fight.
+   *
+   * The angles are the item's own. A weapon states an arc gap in degrees
+   * between the shots of a volley; an ability that throws eight or more is a
+   * nova and divides the circle. Parallel lanes were a stand-in for both and
+   * looked like neither.
+   */
+  function loose(item, rate, mine) {
+    const many = Math.max(1, rate.many || 1);
+    const shot = (item && item.shots && item.shots[0]) || {};
+    const bolt = pieceOf(item && item.pic);
+    const reach = shot.reach || 6;
+    const fast = shot.fast || 8;
+    const round = many >= 8 && !mine;
+    const fan = (item && item.fan !== undefined ? item.fan : 12) * Math.PI / 180;
+    for (let n = 0; n < many; n++) {
+      const angle = round
+        ? (n / many) * Math.PI * 2
+        : (many === 1 ? 0 : (n - (many - 1) / 2) * fan);
+      duel.shots.push({
+        age: 0,
+        lasts: Math.max(0.05, reach / fast),
+        angle,
+        hurt: rate.each,
+        mine, bolt,
+        spin: bolt && bolt.spin ? bolt.spin : 0,
+        tilt: bolt && bolt.tilt ? bolt.tilt : 0
+      });
+    }
   }
 
   /*
@@ -1223,7 +1255,7 @@ const TINT = {
      * not teleport, so it keeps its own idle animation throughout and the hit
      * shows as a flash instead.
      */
-    const struck = duel.hp > 0 && duel.shots.some(s => s.at > 0.86);
+    const struck = duel.hp > 0 && duel.shots.some(s => s.age > s.lasts * 0.86);
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
     const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
     if (drew && struck) {
@@ -1240,50 +1272,45 @@ const TINT = {
     pen.globalAlpha = 1;
 
     /*
-     * And what is in the air between them: the bolt the weapon actually
-     * throws rather than a line standing in for one, and the ability's own
-     * projectile where it has one - a Fire Spray bolt is not an Energy Staff
-     * missile and should not look like it.
+     * And what is in the air between them.
+     *
+     * Everything a shot needs was settled when it was let go and travels with
+     * it - its picture, how long it is in the air, the angle it left at - so
+     * a shot already in flight keeps its face when the gear underneath it
+     * changes.
+     *
+     * Each is turned once, as a whole bitmap: to the direction it is
+     * travelling, plus the eighth-turns of angle correction the client puts
+     * on that projectile, plus whatever it has spun in its own lifetime if it
+     * is a spinner. Turning the bitmap rather than drawing a line beside it
+     * means the black outline the art already carries turns with the colour.
      */
-    const weapon = data.byItem[(build.gear.weapon || {}).name];
-    const ability = data.byItem[(build.gear.ability || {}).name];
-    const boltMine = pieceOf(weapon && weapon.pic);
-    const boltSpell = pieceOf(ability && ability.pic);
     const from = 22 + side * 0.8, to = bossX + big * 0.4;
+    const reachAcross = to - from;
     for (const one of duel.shots) {
-      const x = from + (to - from) * Math.min(1, one.at);
-      const y = floor - side * 0.55 + one.lane * side;
-      const bolt = one.mine ? boltMine : boltSpell;
+      const part = Math.max(0, Math.min(1, one.age / one.lasts));
+      const along = reachAcross * part;
+      const x = from + Math.cos(one.angle) * along;
+      const y = floor - side * 0.55 + Math.sin(one.angle) * along;
+      const bolt = one.bolt;
       if (bolt) {
-        /*
-         * Turned to face where it is going, once, as a whole bitmap.
-         *
-         * A bolt is drawn pointing some particular way in its own picture and
-         * the client says which - an eighth of a turn per unit of its angle
-         * correction - so the picture is turned back by that and then turned
-         * to the direction of travel. Rotating the bitmap rather than drawing
-         * a line means the black outline the art already carries turns with
-         * the colour instead of being redrawn beside it.
-         *
-         * A projectile with a Rotation spins as well: the client gives that
-         * as milliseconds to the radian.
-         */
         const high = 16 * Math.min(1.5, Math.max(0.7, bolt.size / 100));
-        const frame = bolt.frames > 1 ? Math.floor(one.at * 14) % bolt.frames : 0;
-        const going = 0;                       // across the bench, left to right
-        const facing = going - (bolt.tilt || 0) * Math.PI / 4
-          + (bolt.spin ? (duel.at * 1000) / bolt.spin : 0);
+        const wide = high * (bolt.w / bolt.h);
+        const frame = bolt.frames > 1
+          ? Math.floor(one.age * 14) % bolt.frames : 0;
+        const facing = one.angle + one.tilt * Math.PI / 4
+          + (one.spin ? (one.age * 1000) / one.spin : 0);
         pen.save();
         pen.translate(x, y);
         pen.rotate(facing);
-        const drew = drawPiece(pen, bolt, frame, -high * 0.5, high * 0.5, high);
+        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high);
         pen.restore();
         if (drew) continue;
       }
       pen.strokeStyle = one.mine ? 'rgba(255,238,190,.95)' : 'rgba(140,190,240,.95)';
       pen.lineWidth = 2;
       pen.beginPath();
-      pen.moveTo(x - 9, y);
+      pen.moveTo(x - Math.cos(one.angle) * 9, y - Math.sin(one.angle) * 9);
       pen.lineTo(x, y);
       pen.stroke();
     }
