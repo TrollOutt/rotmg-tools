@@ -140,6 +140,29 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return { now: out, base, top, from };
   }
 
+  /*
+   * What the worn enchantments multiply.
+   *
+   * Some of them do not add a statistic at all: they scale the weapon. Two
+   * per cent of damage, five per cent off the rate of fire, a longer-lived
+   * shot. They compound, the way the game compounds them, and they are as
+   * much a part of what a build does as an attack bonus is.
+   */
+  function scaleOf(state) {
+    const out = { dmg: 1, rate: 1, life: 1, fast: 1 };
+    for (const [hand] of HANDS) {
+      const worn = state.gear[hand];
+      for (const id of (worn && worn.ench) || []) {
+        const one = id && data.byEnch[id];
+        if (!one || !one.mul) continue;
+        for (const key of Object.keys(out)) {
+          if (one.mul[key] !== undefined) out[key] *= one.mul[key];
+        }
+      }
+    }
+    return out;
+  }
+
   /* What a shot lands for, against a given armour. */
   function landed(roll, att, def, pierce) {
     const dealt = roll * (0.5 + att / 50);
@@ -155,14 +178,21 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * its own, which is why many small shots suffer more from it than one big
    * one - and is most of what theory crafting is about.
    */
-  function weaponRate(item, stats, def) {
+  function weaponRate(item, stats, def, scale) {
     if (!item || !item.shots || !item.shots.length) return { each: 0, rate: 0, dps: 0 };
+    const by = scale || { dmg: 1, rate: 1, life: 1, fast: 1 };
     const shot = item.shots[0];
-    const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2;
+    const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
+      * by.dmg;
     const each = landed(roll, stats.att, def, shot.pierce);
-    const rate = SHOTS_AT(stats.dex) * (item.rate === undefined ? 1 : item.rate);
+    const rate = SHOTS_AT(stats.dex) * (item.rate === undefined ? 1 : item.rate)
+      * by.rate;
     const many = item.many || 1;
-    return { each, rate, many, dps: each * many * rate, reach: shot.reach };
+    return {
+      each, rate, many, dps: each * many * rate,
+      reach: (shot.reach || 0) * by.life * by.fast,
+      fast: (shot.fast || 8) * by.fast
+    };
   }
 
   /*
@@ -228,7 +258,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const using = 'gun';
     const weapon = data.byItem[(state.gear.weapon || {}).name];
     const ability = data.byItem[(state.gear.ability || {}).name];
-    const gun = using === 'spell' ? NONE : weaponRate(weapon, stats.now, def);
+    const scale = scaleOf(state);
+    const gun = using === 'spell' ? NONE : weaponRate(weapon, stats.now, def, scale);
     const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def);
     return { stats, gun, spell, total: gun.dps + spell.dps };
   }
@@ -254,6 +285,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       exalts,
       gear,
       goal: 'dps',
+      scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
       // read against the thing it is meant to kill.
@@ -508,6 +540,23 @@ const TINT = {
    */
   function optimise(state, goal, report) {
     const work = JSON.parse(JSON.stringify(state));
+    /*
+     * A kept item is kept whole.
+     *
+     * Holding a weapon used to hold only the weapon: the search would leave
+     * the item alone and then rearrange all four of its enchantments, which
+     * is not what anybody means by keeping something. A padlock on the item
+     * now fixes what is on it as well.
+     *
+     * And anything not kept is assumed to have all four slots. You are
+     * planning a build, not describing the copy in your bag - the question is
+     * what the item could be, and every one of them can roll four.
+     */
+    for (const [hand] of HANDS) {
+      if (work.locked[hand]) continue;
+      work.gear[hand].slots = 4;
+      while (work.gear[hand].ench.length < 4) work.gear[hand].ench.push(null);
+    }
     let score = scoreOf(work, goal);
     let looked = 0;
     for (let pass = 0; pass < 4; pass++) {
@@ -530,20 +579,39 @@ const TINT = {
         work.gear[hand].name = best;
         if (best !== was) moved = true;
       }
+      /*
+       * Sometimes the question is only which gear to wear. An enchanted
+       * answer is no use to somebody deciding what to hunt for first, so the
+       * search can be told to leave the enchantments exactly as they are and
+       * change nothing but the four items.
+       */
       for (const [hand] of HANDS) {
+        if (work.scope === 'gear') break;
         const worn = work.gear[hand];
-        if (!worn.name) continue;
+        if (!worn.name || work.locked[hand]) continue;
         for (let at = 0; at < worn.slots; at++) {
           if (work.locked[hand + ':' + at]) continue;
           const was = worn.ench[at];
           let best = was;
+          /*
+           * An empty slot is worth filling even by something that changes
+           * nothing. Insisting on a strict improvement left slots empty
+           * whenever every remaining candidate was neutral for the goal -
+           * four points of defence while chasing damage - and an empty slot
+           * is worth less than a neutral one to anybody who then goes and
+           * builds the thing.
+           */
+          const bar = was ? score : score - 1e-9;
           for (const one of enchantsFor(worn.name, worn.ench, at)) {
-            // Only the ones this page can actually count are worth trying.
-            if (!one.worn) continue;
+            // Anything this page can count: a statistic, or a scaling of the
+            // weapon. The rest change the shot in ways it does not model.
+            if (!one.worn && !one.mul) continue;
             worn.ench[at] = one.id;
             const now = scoreOf(work, goal);
             looked++;
-            if (now > score) { score = now; best = one.id; }
+            if (now > (best === was && !was ? bar : score)) {
+              score = now; best = one.id;
+            }
           }
           worn.ench[at] = best;
           if (best !== was) moved = true;
@@ -1150,8 +1218,8 @@ const TINT = {
     const many = Math.max(1, rate.many || 1);
     const shot = (item && item.shots && item.shots[0]) || {};
     const bolt = pieceOf(item && item.pic);
-    const reach = shot.reach || 6;
-    const fast = shot.fast || 8;
+    const reach = rate.reach || shot.reach || 6;
+    const fast = rate.fast || shot.fast || 8;
     const round = many >= 8 && !mine;
     const fan = (item && item.fan !== undefined ? item.fan : 12) * Math.PI / 180;
     for (let n = 0; n < many; n++) {
@@ -1602,10 +1670,21 @@ const TINT = {
       const face = el('tcFace');
       const art = kind && kind.art;
       if (art) {
+        /*
+         * One frame, in the shape of one frame.
+         *
+         * The window was square and the cell is not - an Assassin's is twenty
+         * across and thirty-six tall - so a square window forty pixels wide
+         * showed forty-three pixels of a twenty-pixel frame, which is one
+         * Assassin and most of the next one. The window is now exactly the
+         * cell, scaled to fit the well it sits in.
+         */
         const bundle = window.ROTMG_BUNDLE;
         const base = (bundle && bundle.atlasBase) || 'assets/atlas/';
-        const zoom = 40 / art.height;
+        const zoom = 42 / Math.max(art.tile, art.height);
         const stand = (art.poses && (art.poses['3/0'] || art.poses['0/0']) || [0])[0];
+        face.style.width = (art.tile * zoom) + 'px';
+        face.style.height = (art.height * zoom) + 'px';
         face.style.backgroundImage = 'url(' + base + 'life/' + art.file + ')';
         face.style.backgroundSize = (art.tile * art.frames * zoom) + 'px '
           + (art.height * zoom) + 'px';
@@ -1616,6 +1695,9 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-set]')) {
       const which = node.dataset.set;
       node.classList.toggle('is-on', !!build[which]);
+    }
+    for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
+      node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', node.dataset.goal === build.goal);
@@ -1659,11 +1741,11 @@ const TINT = {
     const groups = [...new Set(GOALS.map(one => one.group))];
     el('tcGoals').innerHTML = groups.map(name =>
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
-      + GOALS.filter(one => one.group === name).map(one =>
+      + '<span>' + GOALS.filter(one => one.group === name).map(one =>
         '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
         + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
-      + '</div>').join('');
+      + '</span></div>').join('');
   }
 
   /* ---------------- wiring ---------------- */
@@ -1682,6 +1764,12 @@ const TINT = {
       const flip = event.target.closest('[data-set]');
       if (!flip) return;
       build[flip.dataset.set] = !build[flip.dataset.set];
+      keep(); paint();
+    });
+    el('tcBody').addEventListener('click', event => {
+      const scope = event.target.closest('[data-scope]');
+      if (!scope) return;
+      build.scope = scope.dataset.scope;
       keep(); paint();
     });
     el('tcGoals').addEventListener('click', event => {

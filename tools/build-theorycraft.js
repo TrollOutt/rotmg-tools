@@ -336,6 +336,35 @@ for (const m of enchantText.matchAll(
     weight: num(body, 'Weight'),
     worn: wornOf(inner),
     /*
+     * What it multiplies rather than adds.
+     *
+     * A Damage Bonus does not give you attack; it says
+     * MultiplyMinDamage 1.02, which is two per cent on the weapon itself.
+     * Thirty-one enchantments scale damage that way, twenty-three the rate of
+     * fire, seventeen how long a shot lives and sixteen how fast it flies.
+     * Left unread they looked like enchantments that do nothing, so the
+     * search skipped them and left slots empty rather than take one.
+     */
+    mul: (() => {
+      const one = (tag) => {
+        const m = new RegExp('<' + tag + '[^>]*>([^<]*)</' + tag + '>').exec(inner);
+        const n = m ? Number(m[1]) : undefined;
+        return Number.isFinite(n) ? n : undefined;
+      };
+      const low = one('MultiplyMinDamage'), high = one('MultiplyMaxDamage');
+      const out = {};
+      if (low !== undefined || high !== undefined) {
+        out.dmg = ((low === undefined ? 1 : low) + (high === undefined ? 1 : high)) / 2;
+      }
+      const rate = one('MultiplyRateOfFire');
+      if (rate !== undefined) out.rate = rate;
+      const lives = one('MultiplyLifetimeMS');
+      if (lives !== undefined) out.life = lives;
+      const fast = one('MultiplySpeed');
+      if (fast !== undefined) out.fast = fast;
+      return Object.keys(out).length ? out : undefined;
+    })(),
+    /*
      * Some of them do not raise a statistic at all: they change the shot, or
      * hang something off a hit. Those are carried as the raw name of what
      * they do, so the page can show them and say plainly that it is not

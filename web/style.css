@@ -2005,8 +2005,12 @@ body.globe-wide .home-card-art { animation: none !important; }
 .tc-face-row { display: flex; align-items: flex-end; gap: 11px; }
 .tc-face {
   width: 48px; height: 48px; flex: none; border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, .28) no-repeat center;
-  border: 1px solid var(--line); image-rendering: pixelated;
+  background: rgba(0, 0, 0, .28);
+  border: 1px solid var(--line);
+  display: grid; place-items: center; overflow: hidden;
+}
+.tc-face i {
+  display: block; background-repeat: no-repeat; image-rendering: pixelated;
 }
 .tc-face-pick { flex: 1; min-width: 0; }
 .tc-lvl-said {
@@ -2271,6 +2275,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .tc-hands button:hover { color: var(--text); }
 .tc-hands button.is-on { background: var(--accent); color: #10141c; font-weight: 650; }
+.header-aside { display: inline-flex; align-items: center; gap: 10px; }
 
 .tc-duel {
   width: 100%; height: 178px; display: block; border-radius: var(--radius-sm);
@@ -2317,11 +2322,17 @@ body.globe-wide .home-card-art { animation: none !important; }
   */
 .tc-goals { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .tc-goal-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+/*
+ * The heading sits above its row rather than beside it. Alongside, it kept
+ * shouldering into the first button - and the first button is the one most
+ * people want.
+ */
+.tc-goal-row { flex-direction: column; align-items: stretch; gap: 5px; }
 .tc-goal-row > i {
   font-style: normal; font-size: 9.5px; text-transform: uppercase;
-  letter-spacing: .8px; font-weight: 700; width: 6.5ch; flex: none;
-  color: var(--dim);
+  letter-spacing: .8px; font-weight: 700; color: var(--dim);
 }
+.tc-goal-row > span { display: flex; flex-wrap: wrap; gap: 5px; }
 .tc-dot {
   width: 7px; height: 7px; border-radius: 50%; flex: none;
   background: var(--tint, var(--muted)); opacity: .8;
