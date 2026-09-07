@@ -186,6 +186,102 @@ img { image-rendering: pixelated; }
  * heading and its way back on the left; and above the atlas, which fills
  * its whole page with a frame of its own.
  */
+/*
+ * The way to say something back, in the corner the other page-wide control
+ * lives in - just inside it, because it is the one you want less often. The
+ * two of them read as a pair rather than as two strays.
+ */
+.say { position: fixed; top: 12px; right: 186px; z-index: 41; }
+.say-open {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--dim); cursor: pointer;
+  background: rgba(26, 24, 36, .92); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
+}
+.say-open:hover, .say-open[aria-expanded="true"] {
+  color: var(--text); border-color: var(--accent);
+}
+.say-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.say-glyph { font-size: 15px; line-height: 1; }
+.say-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 296px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 7px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+}
+/* Which of the two it is: a pair of chips, the way the rest of the site asks. */
+.say-kinds { display: flex; gap: 5px; margin-bottom: 9px; }
+.say-kind {
+  flex: 1; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  color: var(--dim); background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 8px;
+}
+.say-kind:hover { color: var(--text); }
+.say-kind.is-on { color: #10141c; background: var(--accent); border-color: var(--accent); }
+.say-field { display: block; margin-bottom: 8px; }
+.say-field > span {
+  display: block; font-size: 11px; color: var(--dim); margin-bottom: 4px;
+}
+.say-field i { font-style: normal; opacity: .7; }
+.say-field textarea, .say-field input {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 12.5px;
+  color: var(--text); background: rgba(0, 0, 0, .28);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 7px 9px; resize: vertical;
+}
+.say-field textarea:focus, .say-field input:focus {
+  outline: none; border-color: var(--accent);
+}
+/* Seen by robots only, which is the whole point of it. */
+.say-bot { position: absolute; left: -9999px; opacity: 0; }
+.say-send { display: flex; align-items: center; gap: 9px; }
+.say-go {
+  font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;
+  color: #10141c; background: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 6px 16px;
+}
+.say-go:disabled { opacity: .55; cursor: default; }
+.say-said { font-size: 11px; color: var(--dim); }
+.say-said a { color: var(--accent); }
+
+/*
+ * It went. Said where the button was, because the panel it was written in
+ * has just closed - and long enough to be read on the way past.
+ */
+.say-done {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 268px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--panel); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .55);
+  animation: say-in .28s cubic-bezier(.16, .84, .32, 1) backwards;
+}
+.say-done-tick {
+  flex: none; display: grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 999px;
+  background: var(--accent); color: #10141c; font-weight: 800; font-size: 13px;
+}
+.say-done b { display: block; font-size: 13px; font-weight: 650; }
+.say-done small { display: block; color: var(--dim); font-size: 11px; margin-top: 1px; }
+@keyframes say-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .say-done { animation: none; } }
+.say-note {
+  margin: 4px 4px 2px; color: var(--dim); font-size: 10.5px; line-height: 1.45;
+}
+body.globe-wide .say { display: none; }
+@media (max-width: 760px) {
+  /* The word goes and the envelope stays, so the pair still fits a phone. */
+  .say { top: 8px; right: 120px; }
+  .say-open { padding: 7px 12px; font-size: 13px; }
+  .say-text { display: none; }
+  .say-menu { width: 240px; }
+}
+
 .ambience-toggle {
   position: fixed; top: 12px; right: 14px; z-index: 40;
   display: inline-flex; align-items: center; gap: 8px;
@@ -2520,6 +2616,56 @@ body.globe-wide .home-card-art { animation: none !important; }
   <span class="ambience-toggle-glyph" aria-hidden="true">◐</span>
   <span class="ambience-toggle-text">Animations on</span>
 </button>
+
+<!--
+  Saying something back.
+
+  A page like this only hears about what is wrong with it if there is a way to
+  say so from inside it, at the moment the thing goes wrong - so the way to
+  say it sits in the same corner as the other control that belongs to every
+  page, and takes the page you are on with it rather than asking you to
+  describe where you were.
+
+  There is no form and nothing is sent from here: it opens whatever you write
+  mail with, addressed and titled, and you send it yourself if you still want
+  to once you have read it.
+-->
+<div id="sayBox" class="say">
+  <button id="sayOpen" type="button" class="say-open" aria-expanded="false"
+    title="Report something broken, or ask for something">
+    <span class="say-glyph" aria-hidden="true">✉</span>
+    <span class="say-text">Feedback</span>
+  </button>
+  <form id="sayMenu" class="say-menu" hidden>
+    <div class="say-kinds" role="group" aria-label="What kind of thing this is">
+      <button type="button" class="say-kind is-on" data-say-kind="Bug">Something is broken</button>
+      <button type="button" class="say-kind" data-say-kind="Idea">An idea</button>
+    </div>
+    <label class="say-field">
+      <span id="sayAsk">What did you do, and what happened instead?</span>
+      <textarea id="sayText" rows="5" maxlength="4000" required></textarea>
+    </label>
+    <label class="say-field">
+      <span>Your email, if you want an answer <i>(optional)</i></span>
+      <input id="sayFrom" type="email" autocomplete="email" maxlength="120">
+    </label>
+    <!-- Left empty by people and filled in by robots, which is how they are told apart. -->
+    <input type="checkbox" name="botcheck" id="sayBot" class="say-bot" tabindex="-1" autocomplete="off">
+    <div class="say-send">
+      <button type="submit" id="saySend" class="say-go">Send</button>
+      <span id="saySaid" class="say-said"></span>
+    </div>
+    <p class="say-note" id="sayNote"></p>
+  </form>
+  <!--
+    And the answer to "did that go?", where the thing you pressed was, rather
+    than inside a panel that has just closed itself.
+  -->
+  <div id="sayDone" class="say-done" role="status" hidden>
+    <span class="say-done-tick" aria-hidden="true">✓</span>
+    <span><b>Sent</b><small>thank you — it goes straight to one mailbox</small></span>
+  </div>
+</div>
 
 <!-- The way in ------------------------------------------------------- -->
 <div id="pageHome" class="app page">
@@ -9563,6 +9709,8 @@ function bind() {
    * panning a map the size of a postcard. Open, the map has the pointer and
    * the ways out are the cross, the key, and anywhere off the frame.
    */
+  wireSaying();
+
   const globeBox = document.getElementById('globeBox');
   if (globeBox) {
     globeBox.addEventListener('click', () => { if (!globeWide()) setGlobe(true); });
@@ -10441,6 +10589,233 @@ function renderModifiedDate() {
     const node = document.getElementById(id);
     if (node) node.textContent = when;
   }
+}
+
+/*
+ * Saying something back.
+ *
+ * A page like this only hears what is wrong with it if there is a way to say
+ * so from inside it, at the moment the thing goes wrong - so the way to say
+ * it sits in the corner that belongs to every page, and it takes the page you
+ * were on with it rather than asking you to describe where you were.
+ *
+ * Nothing on this site runs on a server: it is files, served as files, and
+ * a page of files cannot send mail. So the letter is handed to a relay that
+ * holds the mailbox on its own side - the form posts what you wrote, the
+ * relay puts it where it goes - and the address itself is nowhere in this
+ * page: not in the markup, not in the script, not in the offline copy.
+ */
+const SAY_RELAY = 'https://api.web3forms.com/submit';
+/*
+ * The form's own key. It is meant to be public - Web3Forms says so on the
+ * page it hands it out on - because it can do exactly one thing: put a
+ * message into the one mailbox it belongs to. It cannot read that mailbox
+ * and it cannot send anything in anybody's name.
+ */
+const SAY_KEY = 'e52c9a8a-0e93-4265-9087-706b9aef1410';
+const SAY_PAGE = {
+  home: 'the way in', enchant: 'the enchant calculator', theory: 'theory crafting',
+  fame: 'fame sweep', news: "what's new"
+};
+let sayKind = 'Bug';
+
+/*
+ * How often one person may write.
+ *
+ * The relay carries a fixed number of messages a month for nothing, and they
+ * are shared by everybody who uses the page - so one impatient hand on the
+ * button, or one form left submitting in a loop, spends what everybody else's
+ * reports were going to be carried by. A few minutes between messages and a
+ * handful a day is more than anybody with something to say needs, and it
+ * leaves the month intact.
+ *
+ * It is kept in the browser, which means it holds for the ordinary case - the
+ * same person pressing send again - and not against somebody setting out to
+ * get round it. Nothing served as files can do better than that, and the
+ * relay counts its own quota on its side regardless.
+ */
+const SAY_KEEP = 'rotmg-enchant-calculator/say';
+const SAY_WAIT = 30 * 60 * 1000;         // between one message and the next
+const SAY_MOST = 2;                      // in one day
+/*
+ * And where a conversation goes instead. Two messages is enough to report
+ * anything; a back and forth is a different thing and wants somewhere it can
+ * actually happen, which a form that only goes one way is not.
+ */
+const SAY_REDDIT = 'https://www.reddit.com/user/TrollOutYT/';
+
+function sayLog() {
+  try {
+    const was = JSON.parse(localStorage.getItem(SAY_KEEP) || 'null');
+    if (was && typeof was === 'object') return was;
+  } catch (e) { /* a private window, or storage turned off */ }
+  return { last: 0, day: '', count: 0 };
+}
+
+function sayToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/* Empty when it may be sent, or the reason it may not. */
+function sayHeldBack() {
+  const log = sayLog();
+  const since = Date.now() - (log.last || 0);
+  if (since < SAY_WAIT) {
+    const left = Math.ceil((SAY_WAIT - since) / 60000);
+    return 'just sent one - you can send another in '
+      + (left <= 1 ? 'a minute' : left + ' minutes');
+  }
+  if (log.day === sayToday() && log.count >= SAY_MOST) {
+    return 'that is two today';
+  }
+  return '';
+}
+
+function saySent() {
+  const log = sayLog();
+  const today = sayToday();
+  try {
+    localStorage.setItem(SAY_KEEP, JSON.stringify({
+      last: Date.now(),
+      day: today,
+      count: log.day === today ? (log.count || 0) + 1 : 1
+    }));
+  } catch (e) { /* nothing remembered; the relay still counts its own */ }
+}
+
+/* Where the writer was standing, which is half of any report worth having. */
+function sayWhere() {
+  const page = document.body.dataset.page || 'home';
+  return (SAY_PAGE[page] || page) + (globeWide() ? ' · atlas open' : '');
+}
+
+function sayTitle() {
+  return '[Realm Tools] ' + sayKind + ' — ' + sayWhere();
+}
+
+function sayContext() {
+  return ['Where: ' + sayWhere(),
+    'Build: ' + ((BUNDLE && BUNDLE.built) || 'unknown'),
+    'Screen: ' + window.innerWidth + '×' + window.innerHeight,
+    'Browser: ' + navigator.userAgent].join('\n');
+}
+
+/* What is written under what was written. */
+function sayLetter(said, from) {
+  return said + '\n\n—\n' + sayContext()
+    + (from ? '\nReply to: ' + from : '');
+}
+
+function wireSaying() {
+  const box = document.getElementById('sayBox');
+  const open = document.getElementById('sayOpen');
+  const menu = document.getElementById('sayMenu');
+  if (!box || !open || !menu) return;
+  const ask = document.getElementById('sayAsk');
+  const text = document.getElementById('sayText');
+  const from = document.getElementById('sayFrom');
+  const said = document.getElementById('saySaid');
+  const send = document.getElementById('saySend');
+  const note = document.getElementById('sayNote');
+
+  note.innerHTML = 'Goes to the one person who makes this - nothing but what '
+    + 'you write and the four lines under it. To talk rather than report, '
+    + '<a href="' + SAY_REDDIT + '" target="_blank" rel="noopener">u/TrollOutYT</a> '
+    + 'on reddit.';
+
+  const done = document.getElementById('sayDone');
+  let hideDone = 0;
+
+  const show = on => {
+    menu.hidden = !on;
+    open.setAttribute('aria-expanded', String(on));
+    if (!on) return;
+    clearTimeout(hideDone);
+    done.hidden = true;
+    // Whether there is anything to say about sending, said before they write.
+    const held = sayHeldBack();
+    said.textContent = held;
+    send.disabled = !!held;
+    // Blocked is not a dead end: there is a person at the other end of that.
+    if (held) said.innerHTML = html(held) + ' — <a href="' + SAY_REDDIT
+      + '" target="_blank" rel="noopener">say it on reddit</a>';
+    text.focus();
+  };
+  const askFor = () => {
+    ask.textContent = sayKind === 'Bug'
+      ? 'What did you do, and what happened instead?'
+      : 'What would you like it to do?';
+  };
+
+  open.addEventListener('click', event => { event.stopPropagation(); show(menu.hidden); });
+  menu.addEventListener('click', event => {
+    event.stopPropagation();
+    // Its own name for it: the calculator has chips of its own called kinds.
+    const pick = event.target.closest('[data-say-kind]');
+    if (!pick) return;
+    sayKind = pick.dataset.sayKind;
+    for (const one of menu.querySelectorAll('[data-say-kind]')) {
+      one.classList.toggle('is-on', one === pick);
+    }
+    askFor();
+  });
+  document.addEventListener('click', event => {
+    if (!menu.hidden && !box.contains(event.target)) show(false);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !menu.hidden) show(false);
+  });
+  askFor();
+
+  menu.addEventListener('submit', async event => {
+    event.preventDefault();
+    const words = text.value.trim();
+    if (!words) { text.focus(); return; }
+    if (document.getElementById('sayBot').checked) { show(false); return; }
+    const held = sayHeldBack();
+    if (held) { said.textContent = held; send.disabled = true; return; }
+
+    send.disabled = true;
+    said.textContent = 'sending…';
+    try {
+      const answer = await fetch(SAY_RELAY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: SAY_KEY,
+          subject: sayTitle(),
+          from_name: 'Realm Tools',
+          replyto: from.value.trim() || undefined,
+          message: sayLetter(words, from.value.trim())
+        })
+      });
+      const got = await answer.json().catch(() => ({}));
+      if (!answer.ok || got.success === false) throw new Error(got.message || 'refused');
+      /*
+       * Sent, said where the button was and not inside a panel that is about
+       * to close: the panel goes, and a line takes its place under the corner
+       * for a few seconds. Anything else and the reader is left wondering
+       * whether pressing it did anything at all.
+       */
+      text.value = '';
+      from.value = '';
+      said.textContent = '';
+      saySent();
+      show(false);
+      done.hidden = false;
+      clearTimeout(hideDone);
+      hideDone = setTimeout(() => { done.hidden = true; }, 5000);
+    } catch (error) {
+      /*
+       * A relay that is down, or a network that is not there, must not eat
+       * what somebody has just taken the trouble to write. Every word of it
+       * stays in the box, and the box stays open.
+       */
+      said.textContent = 'could not send — it is still here, try again';
+    } finally {
+      send.disabled = false;
+    }
+  });
 }
 
 function renderOfflineOffer() {
