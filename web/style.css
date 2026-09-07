@@ -2185,7 +2185,8 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .tc-picker-head b { color: #e8edf6; white-space: nowrap; }
 .tc-picker-head input { flex: 1; min-width: 0; }
-.tc-picker { overflow-y: auto; padding: 5px; }
+.tc-picker { overflow-y: auto; overflow-x: hidden; padding: 5px; }
+.tc-row b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tc-row {
   display: flex; width: 100%; align-items: center; gap: 10px; text-align: left;
   background: none; border: 0; color: #cfd6e6; font: inherit;
@@ -2199,3 +2200,43 @@ body.globe-wide .home-card-art { animation: none !important; }
   margin-left: auto; text-align: right; white-space: nowrap;
 }
 .tc-more { color: #6d7688; font-size: 11.5px; padding: 6px 10px; }
+
+/* --- the three switches, and what you are pushing up --- */
+.tc-switches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tc-switch {
+  background: rgba(255, 255, 255, .05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07);
+  border: 0; border-radius: 5px; color: #9fb0c4;
+  font: inherit; font-size: 12px; padding: 6px 12px; cursor: pointer;
+}
+.tc-switch:hover { color: #e8edf6; }
+.tc-switch.is-on {
+  background: rgba(111, 143, 191, .2); color: #dbe6f6;
+  box-shadow: inset 0 0 0 1px rgba(111, 143, 191, .5);
+}
+.tc-pick { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #7b8496; }
+.tc-lvl { flex-direction: row !important; align-items: center; gap: 6px !important; }
+.tc-lvl input { width: 5ch; }
+
+.tc-goals { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0 11px; }
+.tc-goal {
+  background: rgba(255, 255, 255, .04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+  border: 0; border-radius: 5px; color: #8b94a6;
+  font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer;
+}
+.tc-goal:hover { color: #e8edf6; }
+.tc-goal.is-on {
+  background: rgba(224, 161, 58, .17); color: #f0c274;
+  box-shadow: inset 0 0 0 1px rgba(224, 161, 58, .45);
+}
+
+/* --- an enchantment's own picture, cut from the one sheet --- */
+.tc-charm {
+  display: inline-block; flex: none; image-rendering: pixelated;
+  background-repeat: no-repeat; vertical-align: middle;
+}
+.tc-charm-row { width: 30px; height: 30px; }
+.tc-hold { font-size: 12px; filter: grayscale(1) opacity(.55); }
+.tc-hold:hover { filter: none; }
+.tc-slot.is-held .tc-hold, .tc-ench.is-held .tc-hold { filter: none; }

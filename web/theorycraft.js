@@ -197,6 +197,7 @@ var TheoryCraft = (function () {
       exalt: true,
       exalts,
       gear,
+      goal: 'dps',
       against: 0,
       /*
        * Something worth timing. The list is sorted by hit points and the top
@@ -269,17 +270,15 @@ var TheoryCraft = (function () {
    * better and the search only knows how to climb.
    */
   const GOALS = [
-    { id: 'dps', say: 'damage a second, both hands', of: n => n.total },
-    { id: 'gun', say: 'damage a second, weapon only', of: n => n.gun.dps },
-    { id: 'spell', say: 'damage a second, ability only', of: n => n.spell.dps },
-    { id: 'burst', say: 'damage over five seconds', of: n => n.total * 5 },
-    { id: 'kill', say: 'how fast the chosen boss dies', of: (n, s) => {
+    { id: 'dps', say: 'Damage', of: n => n.total },
+    { id: 'kill', say: 'Kill it fast', of: (n, s) => {
       const boss = data.byBoss[s.boss];
       if (!boss || !n.total) return 0;
       return -boss.hp / n.total;
     } },
-    ...STATS.map(([key, say]) => ({ id: 'stat:' + key, say: say + ', as high as it goes',
-      of: n => n.stats.now[key] }))
+    { id: 'gun', say: 'Weapon', of: n => n.gun.dps },
+    { id: 'spell', say: 'Ability', of: n => n.spell.dps },
+    ...STATS.map(([key, say]) => ({ id: 'stat:' + key, say, of: n => n.stats.now[key] }))
   ];
 
   function scoreOf(state, goal) {
@@ -366,6 +365,27 @@ var TheoryCraft = (function () {
     return '';
   }
 
+  /*
+   * A piece of the one sheet, as a plain element. The sheet is a single
+   * picture and every icon on the page is a window onto it, so an
+   * enchantment's own picture costs nothing extra to show - and it is the
+   * only way anybody tells a thousand enchantments apart at a glance.
+   */
+  function sheetIcon(key, side, extra) {
+    const piece = data.sheet && data.sheet.pics[key];
+    if (!piece) return '';
+    const bundle = window.ROTMG_BUNDLE;
+    const src = (bundle && bundle.theorySheet) || 'assets/theory/sheet.png';
+    const zoom = side / Math.max(piece.w, piece.h);
+    return '<span class="tc-charm' + (extra ? ' ' + extra + '"' : '"')
+      + ' style="width:' + side + 'px;height:' + side + 'px'
+      + ';background-image:url(' + src + ')'
+      + ';background-size:' + (data.sheet.wide * zoom) + 'px '
+      + (data.sheet.tall * zoom) + 'px'
+      + ';background-position:' + (-piece.x * zoom) + 'px ' + (-piece.y * zoom) + 'px'
+      + '"></span>';
+  }
+
   function itemIcon(name) {
     const src = artFor(name);
     return src
@@ -414,6 +434,7 @@ var TheoryCraft = (function () {
           : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
           + (one ? '' : ' is-empty') + '">'
+          + (one ? sheetIcon(one.pic, 18) : '')
           + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '">'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
           + said
@@ -469,6 +490,16 @@ var TheoryCraft = (function () {
   }
 
   const plus = n => (n > 0 ? '+' : '') + (Math.round(n * 10) / 10);
+  /*
+   * A short line, not a paragraph. The ones that raise a statistic say so in
+   * three words; the ones that hang an effect off a hit carry a sentence of
+   * conditions in the client, and a column of those unread is worse than a
+   * column of half-sentences.
+   */
+  const shortly = words => {
+    const one = String(words || '').split('\n')[0].trim();
+    return one.length > 44 ? one.slice(0, 43) + '…' : one;
+  };
   const round = n => Math.round(n * 10) / 10;
   const commas = n => Math.round(n).toLocaleString('en-US');
 
@@ -758,7 +789,7 @@ var TheoryCraft = (function () {
 
     /* The one on the left, in whichever pose it is in. */
     const mine = artOfClass(kind);
-    const side = Math.min(46, tall * 0.36);
+    const side = Math.min(58, tall * 0.44);
     if (mine && mine.complete && mine.naturalWidth) {
       const art = kind.art;
       const poses = art.poses || {};
@@ -775,9 +806,18 @@ var TheoryCraft = (function () {
     }
 
     /* And the thing being hit, on the right, in its own animation. */
+    /*
+     * Drawn at the size the client draws it - a spider declares fifty and is
+     * half its picture, a god declares a hundred and fifty - and inside a box
+     * rather than forced to a square, so a thing wider than it is tall comes
+     * out wide rather than squashed into a column.
+     */
     const piece = pieceOf(boss && boss.pic);
-    const big = Math.min(70, tall * 0.52);
-    const bossX = wide - big - 26;
+    const room = Math.min(104, tall * 0.78);
+    const shape = piece ? piece.w / piece.h : 1;
+    const big = Math.min(room, room / Math.max(1, shape))
+      * Math.min(1.6, Math.max(0.7, (piece ? piece.size : 100) / 100));
+    const bossX = wide - big * Math.max(1, shape) - 22;
     const struck = duel.hp > 0 && duel.shots.some(s => s.at > 0.86);
     const shake = struck ? (Math.random() - 0.5) * 3 : 0;
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
@@ -804,7 +844,12 @@ var TheoryCraft = (function () {
       const x = from + (to - from) * Math.min(1, one.at);
       const y = floor - side * 0.55 + one.lane * side;
       const bolt = one.mine ? boltMine : boltSpell;
-      if (bolt && drawPiece(pen, bolt, 0, x - 7, y + 7, 14)) continue;
+      if (bolt) {
+        // Its own proportions and its own run of frames, spinning as it goes.
+        const high = 16 * Math.min(1.5, Math.max(0.7, bolt.size / 100));
+        const frame = bolt.frames > 1 ? Math.floor(one.at * 14) % bolt.frames : 0;
+        if (drawPiece(pen, bolt, frame, x - high * 0.5, y + high * 0.5, high)) continue;
+      }
       pen.strokeStyle = one.mine ? 'rgba(255,238,190,.95)' : 'rgba(140,190,240,.95)';
       pen.lineWidth = 2;
       pen.beginPath();
@@ -871,13 +916,27 @@ var TheoryCraft = (function () {
     picking = { kind: 'ench', hand, at };
     const worn = build.gear[hand];
     if (!worn.name) return;
-    const list = enchantsFor(worn.name, worn.ench, at);
+    /*
+     * One line per thing, not one per record. The client keeps a separate
+     * enchantment for each item an effect can land on, so a picker built
+     * straight off the list showed "Adonis' Shot, +3 ATT" a dozen times in a
+     * row. Anything that reads the same and does the same is the same as far
+     * as a person choosing one is concerned.
+     */
+    const seen = new Set();
+    const list = enchantsFor(worn.name, worn.ench, at).filter(one => {
+      const same = one.name + '|' + JSON.stringify(one.worn || 0) + '|' + (one.alters || '');
+      if (seen.has(same)) return false;
+      seen.add(same);
+      return true;
+    });
     show('Enchantment for ' + esc(worn.name), list.map(one => ({
       id: one.id,
+      pic: one.pic,
       name: one.name,
       says: one.worn
         ? Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' · ')
-        : (one.says || '').split('\n')[0],
+        : shortly(one.says),
       counted: !!one.worn
     })), 'empty slot');
   }
@@ -899,7 +958,8 @@ var TheoryCraft = (function () {
       + '</b></button>'];
     for (const one of rows.slice(0, 400)) {
       out.push('<button type="button" class="tc-row" data-choose="' + esc(one.id) + '">'
-        + (one.art ? itemIcon(one.id) : '<span class="tc-icon-big"></span>')
+        + (one.art ? itemIcon(one.id)
+          : (one.pic ? sheetIcon(one.pic, 26, 'tc-charm-row') : '<span class="tc-icon-big"></span>'))
         + '<b>' + esc(one.name) + '</b>'
         + '<u>' + esc(one.says || '') + '</u>'
         + (one.counted === false ? '<em class="tc-uncounted">not counted</em>' : '')
@@ -970,8 +1030,14 @@ var TheoryCraft = (function () {
     const kind = el('tcClass');
     if (kind && kind.value !== build.klass) kind.value = build.klass;
     el('tcLevel').value = build.level;
-    el('tcMaxed').checked = build.maxed;
-    el('tcExalt').checked = build.exalt;
+    for (const node of el('tcBody').querySelectorAll('[data-set]')) {
+      const which = node.dataset.set;
+      const on = which === 'level20' ? build.level === 20 : !!build[which];
+      node.classList.toggle('is-on', on);
+    }
+    for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
+      node.classList.toggle('is-on', node.dataset.goal === build.goal);
+    }
     el('tcAgainst').value = build.against;
     el('tcAgainstSay').textContent = build.against + ' armour';
     const boss = el('tcBoss');
@@ -1000,8 +1066,9 @@ var TheoryCraft = (function () {
       '<option value="' + esc(one.name) + '">' + esc(one.name) + ' · '
       + commas(one.hp) + ' life, ' + one.def + ' armour'
       + (one.pic ? '' : ' · no picture') + '</option>').join('');
-    el('tcGoal').innerHTML = GOALS.map(one =>
-      '<option value="' + one.id + '">' + esc(one.say) + '</option>').join('');
+    el('tcGoals').innerHTML = GOALS.map(one =>
+      '<button type="button" class="tc-goal" data-goal="' + one.id + '">'
+      + esc(one.say) + '</button>').join('');
   }
 
   /* ---------------- wiring ---------------- */
@@ -1019,11 +1086,20 @@ var TheoryCraft = (function () {
       build.level = Math.max(1, Math.min(20, Number(event.target.value) || 1));
       keep(); paint();
     });
-    for (const [id, key] of [['tcMaxed', 'maxed'], ['tcExalt', 'exalt']]) {
-      el(id).addEventListener('change', event => {
-        build[key] = event.target.checked; keep(); paint();
-      });
-    }
+    el('tcBody').addEventListener('click', event => {
+      const flip = event.target.closest('[data-set]');
+      if (!flip) return;
+      const which = flip.dataset.set;
+      if (which === 'level20') build.level = build.level === 20 ? 1 : 20;
+      else build[which] = !build[which];
+      keep(); paint();
+    });
+    el('tcGoals').addEventListener('click', event => {
+      const pick = event.target.closest('[data-goal]');
+      if (!pick) return;
+      build.goal = pick.dataset.goal;
+      keep(); paint();
+    });
     el('tcAgainst').addEventListener('input', event => {
       build.against = Number(event.target.value) || 0;
       el('tcAgainstSay').textContent = build.against + ' armour';
@@ -1106,7 +1182,7 @@ var TheoryCraft = (function () {
     });
 
     el('tcRun').addEventListener('click', () => {
-      const goal = GOALS.find(one => one.id === el('tcGoal').value) || GOALS[0];
+      const goal = GOALS.find(one => one.id === build.goal) || GOALS[0];
       const said = el('tcSaid');
       said.textContent = 'working…';
       // Off the paint, so the button has time to say it is working.

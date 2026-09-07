@@ -319,7 +319,42 @@ for (const one of facts.items) {
   const thrown = shotOf.get(one.name);
   if (!thrown) continue;
   const key = 'p:' + thrown;
-  if (cutOne(key, thrown, false)) { one.pic = key; bolts++; }
+  // Poses wanted: a good many bolts have a run of frames and spin as they go.
+  if (cutOne(key, thrown, true)) { one.pic = key; bolts++; }
+}
+
+/*
+ * And an icon for each enchantment, which is the one thing on that side of
+ * the page nobody can identify from words alone: a thousand of them, most
+ * named "something Bonus" with a numeral, and the picture is how a player
+ * tells them apart at a glance. They are not objects, so they carry their
+ * texture in the enchantment file rather than pointing at one.
+ */
+let charms = 0;
+{
+  const raw = fs.readFileSync(path.join(XML, 'Enchantments.xml'), 'utf8');
+  const byId = new Map(facts.enchants.map(one => [one.id, one]));
+  const shape = new RegExp('<Enchantment id="([^"]+)"[\\s\\S]*?<Texture>'
+    + '\\s*<File>([^<]+)</File>\\s*<Index>([^<]+)</Index>', 'g');
+  for (const m of raw.matchAll(shape)) {
+    const one = byId.get(m[1]);
+    if (!one) continue;
+    const key = 'e:' + m[1];
+    if (already.has(key)) { if (already.get(key)) one.pic = key; continue; }
+    const bag = still.get(m[2].trim());
+    const rect = bag && bag.get(Number(m[3]));
+    const sheet = rect && rect.sheet && sheetFor(rect.sheet);
+    if (!sheet || !rect.w || !rect.h
+      || rect.x + rect.w > sheet.width || rect.y + rect.h > sheet.height) {
+      already.set(key, null);
+      continue;
+    }
+    const made = { key, w: rect.w, h: rect.h, frames: 1, size: 100, tiles: [rect] };
+    cut.push(made);
+    already.set(key, made);
+    one.pic = key;
+    charms++;
+  }
 }
 
 /* ---------------- one sheet for the lot ---------------- */
@@ -365,7 +400,8 @@ facts.sheet = {
 };
 fs.writeFileSync(FACTS, JSON.stringify(facts) + '\n');
 
-console.log('\n  ' + hitters + ' targets and ' + bolts + ' bolts on one '
+console.log('\n  ' + hitters + ' targets, ' + bolts + ' bolts and ' + charms
+  + ' enchantment icons on one '
   + WIDE + 'x' + tall + ' sheet'
   + '\n  -> ' + path.relative(root, png)
   + '  (' + (fs.statSync(png).size / 1024).toFixed(0) + ' KB)'
