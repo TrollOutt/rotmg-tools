@@ -30,7 +30,7 @@
   <header class="masthead home-head">
     <h1>Realm Tools</h1>
     <p id="seen" class="seen" hidden>
-      <span><b id="seenAll">&ndash;</b> visitors</span>
+      <span><b id="seenAll">&ndash;</b> visitors total</span>
       <span><b id="seenToday">&ndash;</b> today</span>
       <span><b id="seenNow">&ndash;</b> here now</span>
     </p>
@@ -51,7 +51,15 @@
       <em class="home-card-go">Open →</em>
     </button>
 
-    <button type="button" class="home-card" data-go="fame" style="--i:1">
+    <button type="button" class="home-card" data-go="theory" style="--i:1">
+      <img class="home-card-art" data-art="Item Types/Weapon.png" alt="">
+      <span class="home-card-title">Theory Crafting</span>
+      <span class="home-card-line">What a build would actually do.</span>
+      <small>Dress a class in anything the game has, enchant every slot, and watch the damage move as the enemy's armour rises. Then let it hunt for something better.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
+
+    <button type="button" class="home-card" data-go="fame" style="--i:2">
       <img class="home-card-art" data-art="Dungeon Icons/Oryx's Sanctuary.gif" alt="">
       <span class="home-card-title">Fame Sweep</span>
       <span class="home-card-line">Which dungeons are worth the trip.</span>
@@ -347,11 +355,98 @@
   </div>
 </div>
 
+<!-- Theory crafting ------------------------------------------------- -->
+<div id="pageTheory" class="app page" hidden>
+  <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>Theory Crafting</h1>
+    <p class="lede">Build a character out of the client's own numbers and see what it would do.</p>
+  </header>
+
+  <div id="tcBody" class="tc">
+    <div id="tcTabs" class="tc-tabs"></div>
+
+    <div class="tc-grid">
+      <section class="tc-col">
+        <h2>Who</h2>
+        <div class="tc-who">
+          <label>Class<select id="tcClass"></select></label>
+          <label>Level<input id="tcLevel" type="number" min="1" max="20" step="1"></label>
+          <label class="tc-tick"><input id="tcMaxed" type="checkbox"> 8/8
+            <small>every potion drunk</small></label>
+          <label class="tc-tick"><input id="tcExalt" type="checkbox"> Exalted
+            <small>five of each</small></label>
+        </div>
+        <p class="tc-note">The class's own eight statistics, the value each one
+          tops out at, and what a level is worth of each, are the client's.
+          Exaltations are not in it: the game's rule of five points a statistic
+          is applied and marked as such.</p>
+
+        <h2>What they carry</h2>
+        <div id="tcGear" class="tc-gear"></div>
+      </section>
+
+      <section class="tc-col">
+        <h2>What that makes them</h2>
+        <div id="tcStats" class="tc-stats"></div>
+
+        <h2>What they would do</h2>
+        <div id="tcNumbers" class="facts tc-facts"></div>
+        <p class="tc-note tc-warn">Damage a second and time to kill are not in
+          the client. They are worked out with the formulas the game's own
+          players settled on - shots a second from dexterity, damage raised by
+          attack and then reduced by armour - and they assume every shot lands.
+          Treat them as a comparison between builds rather than as the game's
+          own arithmetic.</p>
+
+        <h2>Against armour</h2>
+        <canvas id="tcGraph" class="tc-graph" height="220"></canvas>
+        <div id="tcKey" class="tc-key"></div>
+        <label class="tc-slide">Aim at
+          <input id="tcAgainst" type="range" min="0" max="100" step="1">
+          <b id="tcAgainstSay"></b>
+        </label>
+        <label class="tc-slide">Punching bag
+          <select id="tcBoss"></select>
+        </label>
+      </section>
+    </div>
+
+    <section class="tc-calc">
+      <h2>Let it look for a better one</h2>
+      <p class="tc-note">Hold anything you want kept with the ring beside it,
+        pick what you are trying to push up, and it will try every weapon,
+        ability, armour, ring and enchantment that fits - one at a time, over
+        and over, until nothing it can swap improves the answer. It is not a
+        proof: the honest number of combinations has thirty digits in it. It
+        finds what a careful person would find by hand, faster.</p>
+      <div class="tc-calc-row">
+        <label>Push up<select id="tcGoal"></select></label>
+        <button type="button" id="tcRun" class="tc-run">Look for a better build</button>
+        <label class="tc-name">Call it<input id="tcName" type="text" maxlength="40"></label>
+      </div>
+      <p id="tcSaid" class="tc-said"></p>
+    </section>
+  </div>
+
+  <div id="tcPickerWrap" class="tc-picker-wrap" hidden>
+    <div class="tc-picker-box">
+      <div class="tc-picker-head">
+        <b id="tcPickerTitle"></b>
+        <input id="tcSearch" type="search" placeholder="type to narrow it down">
+        <button type="button" id="tcPickerShut" class="link-button">close</button>
+      </div>
+      <div id="tcPicker" class="tc-picker"></div>
+    </div>
+  </div>
+</div>
+
 <script src="engine.js"></script>
 <script src="items.js"></script>
 <script src="fame.js"></script>
 <script src="fame-page.js"></script>
 <script src="whats-new.js"></script>
+<script src="theorycraft.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
