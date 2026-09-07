@@ -377,17 +377,23 @@ for (const [, one] of byType) {
   });
 }
 /*
- * And nothing the page cannot show. An item with no sprite in the site's own
- * item folder draws an empty grey box in every picker, which is worse than
- * not offering it - there is nothing to recognise and nothing to choose.
+ * Which of them the site already has a picture of.
+ *
+ * The folder of item pictures was gathered from the wiki, so it holds what
+ * the wiki has had time to draw - and nothing from the update that came out
+ * last week. Dropping what was missing from it dropped every new item in the
+ * game: the whole Venerable set, the Decades Chronicle, the lot, all of them
+ * sitting in the client with their art. So nothing is dropped for that any
+ * more. What the folder does not have, tools/theory-sprites.js cuts out of
+ * the client itself, which is where the game gets it from too.
  */
 {
   const index = path.join(root, 'web', 'assets', 'items', 'index.json');
   if (fs.existsSync(index)) {
     const have = new Set(Object.keys(JSON.parse(fs.readFileSync(index, 'utf8'))));
-    for (let i = items.length - 1; i >= 0; i--) {
-      if (!have.has(items[i].name)) items.splice(i, 1);
-    }
+    let ours = 0;
+    for (const one of items) if (!have.has(one.name)) { one.cut = 1; ours++; }
+    console.log('  ' + ours + ' of them want their picture cut from the client');
   }
 }
 

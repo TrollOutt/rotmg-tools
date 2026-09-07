@@ -2214,34 +2214,48 @@ body.globe-wide .home-card-art { animation: none !important; }
   text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
 }
 .tc-bar {
-  height: 6px; background: rgba(0, 0, 0, .35); border-radius: 3px; overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+  height: 7px; background: rgba(0, 0, 0, .38); border-radius: 4px; overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+  display: flex;
 }
 /*
- * The game's own colours for the two that have them: life is red and magic is
- * blue, everywhere in that game, and nobody reading a character sheet should
- * have to check which row they are on.
+ * Two lengths in one bar. The first is what the class itself reaches with
+ * every potion drunk and its exaltations; the second is what the gear has put
+ * on top, in the statistic's own colour and brighter than the ground it
+ * stands on. A reader looking for what a build actually lifts is looking for
+ * the bright part, and where there is none there is none.
  */
-/* Each of the eight in its own colour, the game's. */
-.tc-bar span {
-  display: block; height: 100%; border-radius: 3px;
-  background: linear-gradient(90deg,
-    color-mix(in srgb, var(--tint, var(--accent)) 45%, transparent),
-    var(--tint, var(--accent)));
+.tc-bar-was {
+  height: 100%; flex: none;
+  background: color-mix(in srgb, var(--tint, var(--accent)) 26%, transparent);
+}
+.tc-bar-got {
+  height: 100%; flex: none;
+  background: var(--tint, var(--accent));
+  box-shadow: 0 0 7px color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent);
   transition: width .18s ease-out;
 }
-.tc-stat i { color: color-mix(in srgb, var(--tint, var(--dim)) 60%, var(--dim)); }
-.tc-stat b { color: var(--tint, var(--text)); }
-.tc-stat.is-over b { color: #f0c274; }
-.tc-stat.is-over .tc-bar span {
-  background: linear-gradient(90deg, var(--tint, var(--accent)), #f0c274);
+/* Taken away rather than added: the same colour, struck through. */
+.tc-stat.is-cut .tc-bar-got {
+  background: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent) 0 3px,
+    transparent 3px 6px);
+  box-shadow: none;
 }
-.tc-stat.is-over .tc-bar span { background: linear-gradient(90deg, var(--accent), #f0c274); }
+.tc-stat i { color: color-mix(in srgb, var(--tint, var(--dim)) 55%, var(--dim)); }
+.tc-stat.is-lifted i { color: var(--tint, var(--text)); }
 .tc-stat b {
   color: var(--text); font-variant-numeric: tabular-nums; font-size: 13px;
-  font-weight: 650; min-width: 7.5ch; text-align: right;
+  font-weight: 650; min-width: 9.5ch; text-align: right;
 }
+.tc-stat.is-lifted b { color: var(--tint, var(--text)); }
 .tc-stat.is-over b { color: #f0c274; }
+/* What the gear is worth, beside what it made. */
+.tc-stat em {
+  font-style: normal; font-size: 10px; font-weight: 700; margin-left: 5px;
+  color: var(--tint, var(--accent));
+}
+.tc-stat.is-cut em { color: var(--dim); }
 .tc-stat u {
   text-decoration: none; color: var(--dim); font-size: 10.5px; font-weight: 400;
   margin-left: 1px;
@@ -2531,7 +2545,45 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .tc-run:hover { filter: brightness(1.1); }
 .tc-name { display: flex; flex-direction: column; gap: 5px; flex: 1 1 12ch; min-width: 0; }
-.tc-name input { min-width: 0; }
+
+/*
+ * The two things you type or choose in, dressed like the rest of the page.
+ *
+ * They were the browser's own: a white box and a grey dropdown sitting in a
+ * dark panel, which is the one place on a page where the eye stops for the
+ * wrong reason. Same ground, same line, same corner radius as every other
+ * control here, and the accent picks them out when they have the keyboard.
+ */
+#tcName, #tcClass {
+  font: inherit; font-size: 13px; color: var(--text);
+  background: rgba(0, 0, 0, .3);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 8px 10px; min-height: 38px; min-width: 0; width: 100%;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+#tcName::placeholder { color: var(--dim); }
+#tcName:hover, #tcClass:hover { border-color: var(--muted); }
+#tcName:focus, #tcClass:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(121, 197, 232, .14), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+/*
+ * The dropdown keeps its arrow but draws its own, since a native one in a
+ * dark box comes out as a light grey wedge on most machines and a white
+ * rectangle on some.
+ */
+#tcClass {
+  appearance: none; -webkit-appearance: none; padding-right: 28px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 15px) calc(50% + 1px), calc(100% - 10px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+/* The list itself is the operating system's; at least it is not white. */
+#tcClass option { background: var(--panel); color: var(--text); }
 /*
   * The result, as figures rather than a sentence: what it was, what it became,
   * and how hard it looked. A percentage on its own hides which way it went.

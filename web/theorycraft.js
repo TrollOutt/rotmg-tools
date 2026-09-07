@@ -656,9 +656,19 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
  * "this button raises your attack" - the button is attack-coloured and sits
  * under a heading that says STATS.
  */
+/*
+ * The eight colours, taken off the game's own banners.
+ *
+ * Every exaltation banner in the game is the colour of the statistic it is
+ * for, and that is the code every player already reads: life is the cyan one,
+ * mana the gold one, attack the magenta one, and so on. These are the
+ * brightest colour in each banner's sprite, sampled out of the client rather
+ * than chosen here - so a row on this page is the colour a player expects
+ * before reading the word beside it.
+ */
 const TINT = {
-  hp: '#d9534f', mp: '#5b8cd9', att: '#e08a3c', def: '#93a3b5',
-  spd: '#d9c23c', dex: '#7fc45a', vit: '#d95fa0', wis: '#9b7fd9'
+  hp: '#58cfda', mp: '#f4d24c', att: '#ca46dd', def: '#8b9cb3',
+  spd: '#58da6e', dex: '#ff5f2a', vit: '#dd0c32', wis: '#4b9be7'
 };
 
   const GOALS = [
@@ -1099,12 +1109,24 @@ const TINT = {
     return 'is-low';
   }
 
+  /*
+   * An item's picture, from wherever there is one.
+   *
+   * The site's own folder of item art comes from the wiki and is always a
+   * patch behind the game, so anything the last update added is not in it.
+   * Those are cut straight out of the client onto the same sheet the bolts
+   * and the targets live on, and the cell reads from there instead.
+   */
   function itemIcon(name) {
-    const src = artFor(name);
     const grade = gradeOf(name);
-    return src
-      ? '<img class="tc-icon-big ' + grade + '" src="' + esc(src) + '" alt="" loading="lazy">'
-      : '<span class="tc-icon-big"></span>';
+    const src = artFor(name);
+    if (src) {
+      return '<img class="tc-icon-big ' + grade + '" src="' + esc(src)
+        + '" alt="" loading="lazy">';
+    }
+    const item = data.byItem[name];
+    const cut = item && item.art && sheetIcon(item.art, 34, 'tc-icon-big ' + grade);
+    return cut || '<span class="tc-icon-big ' + grade + '"></span>';
   }
 
   function drawSlots() {
@@ -1230,19 +1252,31 @@ const TINT = {
     box.innerHTML = STATS.map(([key, say]) => {
       const now = got.now[key];
       const top = got.top[key] || now || 1;
-      const part = Math.max(0, Math.min(1, now / top));
-      // Past its ceiling is worth seeing: it can only have come off the gear.
-      const over = now > top;
       /*
-       * The number, and nothing about how it got there. Where every point
-       * came from is arithmetic somebody would have to want; the bar against
-       * the ceiling is the thing being read.
+       * Two lengths, not one: what the class itself reaches, and what the
+       * gear has put on top of it. A single bar answers "is this maxed",
+       * which the reader already knows; the question a build asks is which
+       * statistics the gear is actually lifting and which it is leaving
+       * alone, and that is the difference between the two lengths.
        */
+      const base = got.base[key] + (got.from.exalt[key] || 0);
+      const given = now - base;
+      const most = Math.max(now, top);
+      const wasPart = Math.max(0, Math.min(1, base / most));
+      const gotPart = Math.max(0, Math.min(1, given / most));
+      const over = now > top;
       return '<div class="tc-stat is-' + key + (over ? ' is-over' : '')
-        + (part >= 1 ? ' is-full' : '') + '" style="--tint:' + TINT[key] + '">'
+        + (given > 0.05 ? ' is-lifted' : given < -0.05 ? ' is-cut' : '')
+        + '" style="--tint:' + TINT[key] + '">'
         + '<i>' + say + '</i>'
-        + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
-        + '<b>' + round(now) + '<u>/' + top + '</u></b>'
+        + '<span class="tc-bar">'
+        + '<span class="tc-bar-was" style="width:' + (wasPart * 100).toFixed(1) + '%"></span>'
+        + '<span class="tc-bar-got" style="width:' + (Math.abs(gotPart) * 100).toFixed(1) + '%"></span>'
+        + '</span>'
+        + '<b>' + round(now) + '<u>/' + top + '</u>'
+        + (Math.abs(given) > 0.05
+          ? '<em>' + (given > 0 ? '+' : '') + round(given) + '</em>' : '')
+        + '</b>'
         + '</div>';
     }).join('') + setsSaid();
   }
