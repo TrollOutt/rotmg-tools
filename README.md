@@ -1,11 +1,21 @@
-# RotMG Enchant Calculator
+# Realm Tools
 
-Enchantment odds for Realm of the Mad God.
+Four things for Realm of the Mad God, read out of the game's own files.
 
-**→ [trolloutt.github.io/rotmg-enchant](https://trolloutt.github.io/rotmg-enchant/)** — opens in your browser, nothing to install.
+**→ [trolloutt.github.io/rotmg-tools](https://trolloutt.github.io/rotmg-tools/)** — opens in your browser, nothing to install.
 
-Pick your item, mark what you want on it, and it gives you the chance per
-reroll, how many rerolls to expect, and what it will cost in dust.
+**Enchant Calculator** — pick your item, mark what you want on it, and it
+gives you the chance per reroll, how many rerolls to expect, and what it will
+cost in dust.
+
+**Theory Crafting** — dress a class in anything the game has, enchant every
+slot, watch it fight, and let it hunt for something better.
+
+**Fame Sweep** — tick off the dungeons you have finished and it works out what
+the collection bonuses have paid and where to go next.
+
+**Realm Atlas** — the realm as a planet you can turn, built from ground that
+was actually walked.
 
 Want it offline? [`docs/RotMG-Enchant-Calculator.html`](docs/RotMG-Enchant-Calculator.html)
 is a single file — download it, double-click it, done.
