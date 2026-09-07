@@ -219,13 +219,20 @@ const sheetFor = name => {
 };
 
 /* ---------------- what to cut ---------------- */
+/*
+ * Whatever order the attributes come in: the client writes type first for
+ * most objects and something else for five thousand of them, and a pattern
+ * that insisted on the order never saw those at all.
+ */
+const SHAPE = /<Object\b[^>]*\bid="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
+
 const objectText = fs.readdirSync(XML)
   .filter(name => /^Objects\.\d+\.xml$/.test(name)).sort()
   .map(name => fs.readFileSync(path.join(XML, name), 'utf8'));
 
 const artOf = new Map();          // object id -> { atlas, index, size }
 for (const text of objectText) {
-  for (const m of text.matchAll(/<Object\s+type="[^"]+"\s+id="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g)) {
+  for (const m of text.matchAll(SHAPE)) {
     if (artOf.has(m[1])) continue;
     const art = /<(?:Animated)?Texture>\s*<File>([^<]+)<\/File>\s*<Index>([^<]+)<\/Index>/.exec(m[2]);
     if (!art) continue;
@@ -258,7 +265,7 @@ for (const text of objectText) {
 /* Which projectile object each weapon and ability throws. */
 const shotOf = new Map();         // item id -> projectile object id
 for (const text of objectText) {
-  for (const m of text.matchAll(/<Object\s+type="[^"]+"\s+id="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g)) {
+  for (const m of text.matchAll(SHAPE)) {
     if (!/<Item\s*\/>/.test(m[2]) || shotOf.has(m[1])) continue;
     const shot = /<Projectile\b[^>]*>[\s\S]*?<ObjectId>([^<]+)<\/ObjectId>/.exec(m[2]);
     if (shot) shotOf.set(m[1], shot[1].trim());

@@ -197,17 +197,22 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       for (const [key] of STATS) {
         bonus[key] = (from.gear[key] || 0) + (from.ench[key] || 0) + (from.set[key] || 0);
       }
+      const takes = part => {
+        const key = OF_STAT[part.stat], of = OF_STAT[part.of];
+        if (!key || !of) return;
+        const much = bonus[of] * part.pct / 100;
+        from.rel[key] = (from.rel[key] || 0) + much;
+        out[key] += much;
+      };
       for (const hand of HANDS) {
         const worn = state.gear[hand[0]];
+        // A few items are built the same way: the Ring of Cubed Wisdom is a
+        // hundred and seventy-five per cent of your bonus wisdom as life.
+        const item = worn && data.byItem[worn.name];
+        for (const part of (item && item.rel) || []) takes(part);
         for (const id of (worn && worn.ench) || []) {
           const one = id && data.byEnch[id];
-          for (const part of (one && one.rel) || []) {
-            const key = OF_STAT[part.stat], of = OF_STAT[part.of];
-            if (!key || !of) continue;
-            const much = bonus[of] * part.pct / 100;
-            from.rel[key] = (from.rel[key] || 0) + much;
-            out[key] += much;
-          }
+          for (const part of (one && one.rel) || []) takes(part);
         }
       }
     }
@@ -1148,6 +1153,10 @@ const TINT = {
         // it: half your life off, all of your mana on as life.
         for (const part of item.share || []) {
           bits.push(plus(part.pct) + '% of ' + part.of
+            + (part.of === part.stat ? '' : ' as ' + part.stat));
+        }
+        for (const part of item.rel || []) {
+          bits.push(plus(part.pct) + '% of bonus ' + part.of
             + (part.of === part.stat ? '' : ' as ' + part.stat));
         }
         if (item.sb) bits.push('soulbound');
