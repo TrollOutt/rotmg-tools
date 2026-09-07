@@ -556,10 +556,25 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const item = data.byItem[worn.name];
       const locked = !!build.locked[hand];
 
+      /*
+       * What it is, as the badges the rest of the site uses - the tier, or
+       * the fact that it has none, and what it does that is worth a word.
+       * The numbers that follow are what it does.
+       */
+      const marks = [];
+      if (item) {
+        const labels = (item.labels || '').split(',');
+        if (labels.includes('UT')) marks.push(['ut', 'Untiered']);
+        else if (item.tier !== undefined) marks.push(['tier', 'Tier ' + item.tier]);
+        if (item.set) marks.push(['set', 'Set']);
+        const first = item.shots && item.shots[0];
+        if (first && first.pierce) marks.push(['pierce', 'Pierces']);
+        if (item.mp) marks.push(['mp', item.mp + ' MP']);
+      }
+
       /* What the thing is, in the fewest words that still say it. */
       const bits = [];
       if (item) {
-        if (item.tier !== undefined) bits.push('T' + item.tier);
         const gun = item.shots && item.shots[0];
         if (gun) {
           bits.push(gun.low + (gun.high !== gun.low ? '–' + gun.high : '') + ' dmg');
@@ -570,7 +585,6 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         if (item.rate !== undefined && item.rate !== 1) {
           bits.push(Math.round(item.rate * 100) + '% rate');
         }
-        if (item.mp) bits.push(item.mp + ' MP');
         if (item.worn) {
           for (const tag of Object.keys(item.worn)) {
             bits.push(plus(item.worn[tag]) + ' ' + tag);
@@ -609,7 +623,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         + '<button type="button" class="tc-item-pick" data-item="' + hand + '">'
         + itemIcon(worn.name)
         + '<span class="tc-item-said">'
-        + '<span class="tc-item-where">' + say + '</span>'
+        + '<span class="tc-item-where">' + say
+        + (marks.length ? '<span class="chips">' + marks.map(([kind, said]) =>
+          '<i class="chip is-' + kind + '">' + esc(said) + '</i>').join('') + '</span>' : '')
+        + '</span>'
         + '<span class="tc-item-name">' + (worn.name ? esc(worn.name) : 'nothing') + '</span>'
         + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
         + '</span></button>'
@@ -684,9 +701,15 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (kill !== null) {
       rows.push([esc(boss.name) + ' dies in', round(kill) + 's', true]);
     }
+    /*
+     * The same row of figures the enchanter uses for its answer: the number
+     * large and set in tabular figures, the words for it small and grey
+     * underneath. Four tiles in boxes was this page inventing a treatment the
+     * site already had.
+     */
     box.innerHTML = rows.map(([say, was, loud]) =>
-      '<span' + (loud ? ' class="tc-loud"' : '') + '><i>' + say + '</i><b>'
-      + was + '</b></span>').join('');
+      '<span class="figure' + (loud ? ' is-loud' : '') + '"><b>' + was
+      + '</b><small>' + say + '</small></span>').join('');
   }
 
   /*
