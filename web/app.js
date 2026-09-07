@@ -2454,7 +2454,7 @@ function renderOfflineOffer() {
   if (!note) return;                     // the footer that held it is gone
   if (!BUNDLE || !/^https?:$/.test(location.protocol)) { note.hidden = true; return; }
   note.hidden = false;
-  note.innerHTML = '<a href="RotMG-Enchant-Calculator.html" download>Download this page</a> to keep it and use it offline — it is one self-contained file.';
+  note.innerHTML = '<a href="Realm-Tools.html" download>Download this page</a> to keep it and use it offline — it is one self-contained file.';
 }
 
 async function load() {
@@ -2479,7 +2479,7 @@ async function load() {
   } catch (error) {
     console.error(error);
     $('status').textContent = location.protocol === 'file:'
-      ? 'This copy of index.html needs the local server. Use the single-file build (RotMG-Enchant-Calculator.html) to open it straight from disk.'
+      ? 'This copy of index.html needs the local server. Use the single-file build (Realm-Tools.html) to open it straight from disk.'
       : 'Could not read the data files.';
     $('status').classList.add('bad');
   }

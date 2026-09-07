@@ -459,7 +459,7 @@ if (missing.length) {
 
 fs.mkdirSync(pagesDir, { recursive: true });
 fs.writeFileSync(outFile, page, 'utf8');
-fs.writeFileSync(path.join(pagesDir, 'RotMG-Enchant-Calculator.html'), page, 'utf8');
+fs.writeFileSync(path.join(pagesDir, 'Realm-Tools.html'), page, 'utf8');
 // Without this GitHub Pages runs Jekyll over the folder, which ignores files
 // and folders starting with an underscore and rewrites some content.
 fs.writeFileSync(path.join(pagesDir, '.nojekyll'), '');
@@ -482,4 +482,4 @@ if (carried.copied || carried.dropped) {
   console.log(`  atlas   ${carried.copied} files copied to docs/assets/atlas`
     + (carried.dropped ? `, ${carried.dropped} no longer there removed` : ''));
 }
-console.log('  served as index.html, downloadable as RotMG-Enchant-Calculator.html\n');
+console.log('  served as index.html, downloadable as Realm-Tools.html\n');
