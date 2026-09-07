@@ -677,6 +677,45 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   const round = n => Math.round(n * 10) / 10;
   const commas = n => Math.round(n).toLocaleString('en-US');
 
+  /*
+   * What the search is being asked for, and what it is starting from.
+   *
+   * Pressing a button that rearranges your whole build is easier to do when
+   * you can see the number it is aiming at and what that number is now - and
+   * when you can put the build back afterwards, which is what turns this from
+   * a gamble into a thing worth trying.
+   */
+  function drawSearch() {
+    const goal = GOALS.find(one => one.id === build.goal) || GOALS[0];
+    const now = scoreOf(build, goal);
+    const said = el('tcNow');
+    if (said) {
+      said.innerHTML = Number.isFinite(now)
+        ? '<span class="figure"><b>' + esc(sayGoal(goal, now)) + '</b><small>'
+          + esc(goal.say.toLowerCase()) + ' now</small></span>'
+        : '';
+    }
+    const kept = el('tcKept');
+    if (kept) {
+      const many = Object.values(build.locked).filter(Boolean).length;
+      kept.textContent = many
+        ? many + (many === 1 ? ' thing kept' : ' things kept')
+        : 'nothing kept - it may change anything';
+    }
+    const undo = el('tcUndo');
+    if (undo) undo.hidden = !before;
+  }
+
+  /* A score in the words of the thing it measures. */
+  function sayGoal(goal, value) {
+    if (!Number.isFinite(value)) return '\u2014';
+    if (goal.id === 'kill') return round(-value) + 's';
+    if (goal.id && goal.id.indexOf('stat:') === 0) return round(value);
+    return commas(value);
+  }
+
+  let before = null;
+
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -1328,6 +1367,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         + chosenBoss.def + ' armour' : '';
     el('tcName').value = build.name;
     drawTabs();
+    drawSearch();
     drawSlots();
     drawStats();
     drawNumbers();
@@ -1467,10 +1507,20 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       keep(); paint();
     });
 
+    el('tcUndo').addEventListener('click', () => {
+      if (!before) return;
+      tabs[onTab] = build = before;
+      before = null;
+      keep(); paint();
+      el('tcSaid').textContent = 'put back the way it was';
+    });
+
     el('tcRun').addEventListener('click', () => {
       const goal = GOALS.find(one => one.id === build.goal) || GOALS[0];
       const said = el('tcSaid');
-      said.textContent = 'working…';
+      before = JSON.parse(JSON.stringify(build));
+      el('tcRun').disabled = true;
+      said.textContent = 'trying things...';
       // Off the paint, so the button has time to say it is working.
       setTimeout(() => {
         const was = scoreOf(build, goal);
@@ -1478,12 +1528,25 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         got.state.name = build.name;
         tabs[onTab] = build = got.state;
         keep(); paint();
+        el('tcRun').disabled = false;
         const better = was && isFinite(was) && was !== 0
           ? Math.round((got.score / was - 1) * 100) : null;
-        said.textContent = got.looked.toLocaleString('en-US')
-          + ' builds tried, one thing at a time'
-          + (better !== null ? ' · ' + (better >= 0 ? '+' : '') + better + '%' : '')
-          + ' · nothing left that one swap improves';
+        /*
+         * Where it started, where it got to, and how hard it looked - as
+         * figures rather than a sentence. A percentage on its own hides which
+         * way it went, and the two numbers are the whole point.
+         */
+        said.innerHTML = '<span class="figure"><b>' + esc(sayGoal(goal, was))
+          + '</b><small>before</small></span>'
+          + '<span class="tc-arrow">→</span>'
+          + '<span class="figure is-loud"><b>' + esc(sayGoal(goal, got.score))
+          + '</b><small>after</small></span>'
+          + (better !== null && better !== 0
+            ? '<span class="figure"><b>' + (better > 0 ? '+' : '') + better
+              + '%</b><small>' + (better > 0 ? 'better' : 'worse') + '</small></span>'
+            : '<span>nothing it could swap improved it</span>')
+          + '<span class="figure"><b>' + got.looked.toLocaleString('en-US')
+          + '</b><small>builds tried</small></span>';
       }, 20);
     });
 
