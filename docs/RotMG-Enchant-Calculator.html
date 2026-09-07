@@ -2047,6 +2047,12 @@ body.globe-wide .home-card-art { animation: none !important; }
   color: var(--tint); font-variant-numeric: tabular-nums; min-width: 34px;
   text-align: right;
 }
+/* A share being held reads as held: the bar stops looking adjustable. */
+.tc-mix-one.is-held input[type="range"] { opacity: .5; }
+.tc-mix-one.is-held .tc-hold {
+  color: #10141c; background: var(--accent); border-color: var(--accent);
+}
+.tc-mix-one .tc-hold { padding: 2px 7px; font-size: 9.5px; }
 
 .tc-setline {
   grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px;
@@ -5851,6 +5857,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       // pulled is the reader's to set.
       goals: ['dps'],
       share: {},
+      pinned: {},
       // Everything the game has, to the top of it.
       scope: 'all',
       using: 'both',
@@ -6182,33 +6189,75 @@ const TINT = {
    * is moved. Everything asked for keeps at least one per cent, so a goal
    * that is on is never silently switched off.
    */
+  function heldShare(state, id) {
+    return !!(state.pinned && state.pinned[id]);
+  }
+
   function levelShares(state) {
     const list = goalsOf(state).map(one => one.id);
-    const each = Math.floor(100 / list.length);
+    const was = state.share || {};
+    /*
+     * A share that is being held stays where it was put; the rest of the
+     * hundred is shared out evenly between the others. Somebody who has said
+     * "seventy per cent damage" has said it, and adding a third thing to ask
+     * for should not quietly take it back.
+     */
+    const held = list.filter(id => heldShare(state, id));
+    const free = list.filter(id => !heldShare(state, id));
+    let fixed = 0;
     const share = {};
-    list.forEach((id, i) => { share[id] = each + (i < 100 - each * list.length ? 1 : 0); });
+    for (const id of held) {
+      share[id] = Math.max(1, Math.min(100 - free.length, Number(was[id]) || 1));
+      fixed += share[id];
+    }
+    if (!free.length) { state.share = share; return; }
+    const room = Math.max(free.length, 100 - fixed);
+    const each = Math.floor(room / free.length);
+    free.forEach((id, i) => {
+      share[id] = each + (i < room - each * free.length ? 1 : 0);
+    });
     state.share = share;
   }
 
   function moveShare(state, id, to) {
     const list = goalsOf(state).map(one => one.id);
+    const was = state.share || {};
+    /*
+     * Only what is not being held moves.
+     *
+     * Setting one share and then setting a second used to undo the first,
+     * since the hundred was taken back off everything equally - which made
+     * three of them impossible to aim. A padlock on a share takes it out of
+     * the arithmetic: the rest of the hundred is what the others divide.
+     */
     const others = list.filter(x => x !== id);
-    if (!others.length) { state.share = { [id]: 100 }; return; }
-    const want = Math.max(1, Math.min(100 - others.length, Math.round(to)));
+    const held = others.filter(x => heldShare(state, x));
+    const free = others.filter(x => !heldShare(state, x));
+    const share = {};
+    let fixed = 0;
+    for (const x of held) {
+      share[x] = Math.max(1, Number(was[x]) || 1);
+      fixed += share[x];
+    }
+    const most = 100 - fixed - free.length;
+    if (most < 1) {                      // everything else is pinned solid
+      share[id] = Math.max(1, 100 - fixed);
+      state.share = share;
+      return;
+    }
+    const want = Math.max(1, Math.min(most, Math.round(to)));
+    share[id] = want;
+    if (!free.length) { state.share = share; return; }
     // What is left goes to the others in the proportion they already stood in.
     const stood = {};
     let sum = 0;
-    for (const x of others) {
-      stood[x] = Math.max(1, Number((state.share || {})[x]) || 1);
-      sum += stood[x];
-    }
-    const room = 100 - want;
-    const share = { [id]: want };
+    for (const x of free) { stood[x] = Math.max(1, Number(was[x]) || 1); sum += stood[x]; }
+    const room = 100 - fixed - want;
     let given = 0;
-    others.forEach((x, i) => {
-      const part = i === others.length - 1
+    free.forEach((x, i) => {
+      const part = i === free.length - 1
         ? room - given
-        : Math.max(1, Math.min(room - given - (others.length - 1 - i),
+        : Math.max(1, Math.min(room - given - (free.length - 1 - i),
           Math.round(room * stood[x] / sum)));
       share[x] = part;
       given += part;
@@ -6677,12 +6726,17 @@ const TINT = {
     box.hidden = parts.length < 2;
     if (box.hidden) { box.innerHTML = ''; return; }
     box.innerHTML = parts.map(one =>
-      '<label class="tc-mix-one" style="--tint:' + one.goal.tint + '">'
+      '<span class="tc-mix-one' + (heldShare(build, one.goal.id) ? ' is-held' : '')
+      + '" style="--tint:' + one.goal.tint + '">'
       + '<i>' + esc(one.goal.say) + '</i>'
       + '<input type="range" min="1" max="' + (100 - parts.length + 1)
       + '" value="' + Math.round(one.part * 100)
       + '" data-mix="' + esc(one.goal.id) + '">'
-      + '<b>' + Math.round(one.part * 100) + '%</b></label>').join('');
+      + '<b>' + Math.round(one.part * 100) + '%</b>'
+      + '<button type="button" class="tc-hold" data-pin="' + esc(one.goal.id)
+      + '" title="hold this share while the others move">'
+      + (heldShare(build, one.goal.id) ? 'held' : 'hold') + '</button>'
+      + '</span>').join('');
   }
 
   /*
@@ -7687,6 +7741,15 @@ const TINT = {
       keep(); paint();
     });
 
+
+    el('tcMix').addEventListener('click', event => {
+      const pin = event.target.closest('[data-pin]');
+      if (!pin) return;
+      build.pinned = build.pinned || {};
+      if (build.pinned[pin.dataset.pin]) delete build.pinned[pin.dataset.pin];
+      else build.pinned[pin.dataset.pin] = true;
+      keep(); drawMix();
+    });
 
     el('tcMix').addEventListener('input', event => {
       const bar = event.target.closest('[data-mix]');

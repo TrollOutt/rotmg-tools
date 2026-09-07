@@ -2039,6 +2039,12 @@ body.globe-wide .home-card-art { animation: none !important; }
   color: var(--tint); font-variant-numeric: tabular-nums; min-width: 34px;
   text-align: right;
 }
+/* A share being held reads as held: the bar stops looking adjustable. */
+.tc-mix-one.is-held input[type="range"] { opacity: .5; }
+.tc-mix-one.is-held .tc-hold {
+  color: #10141c; background: var(--accent); border-color: var(--accent);
+}
+.tc-mix-one .tc-hold { padding: 2px 7px; font-size: 9.5px; }
 
 .tc-setline {
   grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px;
