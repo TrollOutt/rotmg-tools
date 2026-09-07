@@ -17,7 +17,7 @@ the collection bonuses have paid and where to go next.
 **Realm Atlas** — the realm as a planet you can turn, built from ground that
 was actually walked.
 
-Want it offline? [`docs/RotMG-Enchant-Calculator.html`](docs/RotMG-Enchant-Calculator.html)
+Want it offline? [`docs/Realm-Tools.html`](docs/Realm-Tools.html)
 is a single file — download it, double-click it, done.
 
 ---
