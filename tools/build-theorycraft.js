@@ -229,6 +229,39 @@ for (const [, one] of byType) {
     shots: shotOf(one.body),
     // What the ability actually does, when it is not simply a projectile.
     does: text(one.body, 'Activate'),
+    /*
+     * How an ability really fires.
+     *
+     * A spell does not declare NumProjectiles the way a weapon does; it
+     * declares an Activate, and that is where the count lives - a Fire Spray
+     * says numShots sixteen. Reading only NumProjectiles counted one bolt
+     * where the game throws sixteen, which understated every nova on the
+     * page by a factor of sixteen.
+     *
+     * The same line says how wisdom improves it: above a stated floor, each
+     * point adds a fraction of a shot and a fraction of the damage. Both are
+     * the client's own numbers.
+     */
+    cast: (() => {
+      const m = /<Activate\s+([^>]*)>/.exec(one.body);
+      if (!m) return undefined;
+      const attr = name => {
+        const got = new RegExp(name + '="([^"]+)"').exec(m[1]);
+        const n = got ? Number(got[1]) : undefined;
+        return Number.isFinite(n) ? n : undefined;
+      };
+      const shots = attr('numShots');
+      const from = attr('statModScalingMin');
+      const dmg = attr('statModDamage');
+      const more = attr('statModNumShots');
+      if (shots === undefined && from === undefined) return undefined;
+      const out = {};
+      if (shots !== undefined) out.shots = shots;
+      if (from !== undefined) out.from = from;
+      if (dmg !== undefined) out.dmg = dmg;
+      if (more !== undefined) out.more = more;
+      return Object.keys(out).length ? out : undefined;
+    })(),
     set: text(one.body, 'SetName'),
     labels: labels || undefined
   });

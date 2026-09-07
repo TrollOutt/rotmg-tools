@@ -169,14 +169,34 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * And an ability, which is bounded by magic rather than by dexterity: you
    * may use it as often as the magic comes back, and no oftener.
    */
+  /*
+   * An ability, which fires nothing like a weapon.
+   *
+   * It does not declare NumProjectiles; it declares an Activate, and that is
+   * where the count lives - a Fire Spray throws sixteen bolts and a Cobra
+   * Serpentis Scroll eight. Reading only NumProjectiles counted one, which
+   * understated every nova on this page by a factor of its own fan.
+   *
+   * The same line says how wisdom improves it: above a stated floor, each
+   * point adds a fraction of a shot and a fraction of the damage. Both
+   * fractions are the client's, and a Cobra Scroll at seventy-one wisdom is
+   * eighty damage a bolt better for it.
+   *
+   * And how often is not a choice: it is what the magic pays for, at the rate
+   * wisdom brings the magic back.
+   */
   function abilityRate(item, stats, def) {
     if (!item || !item.shots || !item.shots.length || !item.mp) {
       return { each: 0, every: 0, dps: 0 };
     }
     const shot = item.shots[0];
-    const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2;
+    const cast = item.cast || {};
+    const over = cast.from === undefined ? 0 : Math.max(0, stats.wis - cast.from);
+    const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
+      + over * (cast.dmg || 0);
     const each = landed(roll, stats.att, def, shot.pierce);
-    const many = item.many || 1;
+    const many = Math.max(1, Math.round((cast.shots || item.many || 1)
+      + over * (cast.more || 0)));
     const every = item.mp / MANA_AT(stats.wis);
     return { each, many, every, dps: each * many / every, reach: shot.reach };
   }
@@ -1671,8 +1691,14 @@ const TINT = {
         tabs[onTab] = build = got.state;
         keep(); paint();
         el('tcRun').disabled = false;
+        /*
+         * Measured against how far it moved, not as a ratio. Killing a boss
+         * scores as negative seconds, so a ratio flipped its sign: going from
+         * two thousand seconds to eleven was reported as ninety-nine per cent
+         * worse, which is the exact opposite of what happened.
+         */
         const better = was && isFinite(was) && was !== 0
-          ? Math.round((got.score / was - 1) * 100) : null;
+          ? Math.round(((got.score - was) / Math.abs(was)) * 100) : null;
         /*
          * Where it started, where it got to, and how hard it looked - as
          * figures rather than a sentence. A percentage on its own hides which
