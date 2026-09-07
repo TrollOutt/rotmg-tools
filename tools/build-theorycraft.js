@@ -365,6 +365,34 @@ for (const m of enchantText.matchAll(
       return Object.keys(out).length ? out : undefined;
     })(),
     /*
+     * What it heals back, and what it keeps off you.
+     *
+     * The three things the game gives a player for staying alive that are not
+     * statistics: a flat number of life a second, a share of maximum life a
+     * second, and a plain reduction of everything incoming. The client states
+     * all three outright - FlatRegen ten of HP, PercentageRegen half a per
+     * cent of it, DamageMultSelf nought point nine eight - and until they
+     * were read the page believed the last two slots of a piece of armour
+     * could hold nothing worth having, because the game's own rules leave
+     * only these in the pool once two statistics are on it.
+     */
+    heal: (() => {
+      const out = {};
+      for (const one of inner.matchAll(
+        /<ActivateOnEquip([^>]*)>(FlatRegen|PercentageRegen)<\/ActivateOnEquip>/g)) {
+        const amount = /amount="([^"]+)"/.exec(one[1]);
+        const stat = /stat="([^"]+)"/.exec(one[1]);
+        const n = amount ? Number(amount[1]) : NaN;
+        if (!Number.isFinite(n) || !stat) continue;
+        const which = stat[1] === 'HP' ? 'hp' : stat[1] === 'MP' ? 'mp' : null;
+        if (!which) continue;
+        out[(one[2] === 'FlatRegen' ? 'flat' : 'part') + which.toUpperCase()] = n;
+      }
+      const soak = /<ActivateOnEquip[^>]*mult="([^"]+)"[^>]*>DamageMultSelf</.exec(inner);
+      if (soak && Number.isFinite(Number(soak[1]))) out.soak = Number(soak[1]);
+      return Object.keys(out).length ? out : undefined;
+    })(),
+    /*
      * Some of them do not raise a statistic at all: they change the shot, or
      * hang something off a hit. Those are carried as the raw name of what
      * they do, so the page can show them and say plainly that it is not

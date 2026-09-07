@@ -141,6 +141,31 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /*
+   * What the worn things heal back, and what they keep off you.
+   *
+   * Life a second, a share of maximum life a second, and a plain reduction of
+   * everything incoming. They matter for one question only - how long you
+   * last - but for that question they matter more than another point of
+   * armour does, and the game's own rules make them the only things left that
+   * can go in the last two slots of a piece of armour.
+   */
+  function healOf(state) {
+    const out = { flatHP: 0, partHP: 0, flatMP: 0, partMP: 0, soak: 1 };
+    for (const [hand] of HANDS) {
+      const worn = state.gear[hand];
+      for (const id of (worn && worn.ench) || []) {
+        const one = id && data.byEnch[id];
+        if (!one || !one.heal) continue;
+        for (const key of ['flatHP', 'partHP', 'flatMP', 'partMP']) {
+          if (one.heal[key]) out[key] += one.heal[key];
+        }
+        if (one.heal.soak) out.soak *= one.heal.soak;
+      }
+    }
+    return out;
+  }
+
+  /*
    * What the worn enchantments multiply.
    *
    * Some of them do not add a statistic at all: they scale the weapon. Two
@@ -266,12 +291,39 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   /* ---------------- the state of a build ---------------- */
 
+  /*
+   * What a class walks out of the nexus in.
+   *
+   * The plainest thing that fits each of its four slots: the tier nought
+   * weapon, ability and armour, and the tier nought ring - which the client
+   * does not hand out at all, so the ring used to start empty and the page
+   * opened with a hole in it. Starting from the bottom is also the only
+   * honest place for the search to start from, since anything it finds is
+   * then something it found rather than something it was given.
+   */
+  let plainest = null;
+  function bottomOf(slot) {
+    if (!plainest) {
+      plainest = new Map();
+      for (const one of data.items) {
+        if (one.tier === undefined) continue;      // untiered: never a default
+        const had = plainest.get(one.slot);
+        if (!had || one.tier < had.tier) plainest.set(one.slot, one);
+      }
+    }
+    const got = plainest.get(slot);
+    return got ? got.name : null;
+  }
+
   function fresh(klass) {
     const kind = data.byClass[klass] || data.classes[0];
     const gear = {};
     HANDS.forEach(([hand], i) => {
-      const name = kind.kit[i];
-      gear[hand] = { name: name || null, slots: 4, ench: [null, null, null, null] };
+      const name = bottomOf((kind.slots || [])[i]) || kind.kit[i];
+      gear[hand] = {
+        name: (name && data.byItem[name]) ? name : null,
+        slots: 4, ench: [null, null, null, null]
+      };
     });
     const exalts = {};
     for (const [key] of STATS) exalts[key] = exaltOf(key);
@@ -284,7 +336,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       exalt: true,
       exalts,
       gear,
-      goal: 'dps',
+      // More than one thing can be asked for at once.
+      goals: ['dps'],
       scope: 'all',
       using: 'both',
       // Aimed at whatever is being fought, not at a bare target: a build is
@@ -354,8 +407,28 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    */
   const NUMERAL = /\s+(?:[IVX]+|\d+)$/;
   const plainly = name => String(name).replace(NUMERAL, '').trim().toLowerCase();
-  const worth = one => Object.values(one.worn || {})
-    .reduce((n, v) => n + Math.abs(v), 0);
+  /*
+   * How much of an enchantment there is, for choosing between four of the
+   * same thing. The client rolls Flat Life Regeneration I through IV under
+   * one name to a player, and the strongest is the one anybody planning a
+   * build means - so what it heals and what it keeps off you count towards
+   * that as much as a statistic does, which they did not, which is why the
+   * page kept offering the weakest of every family that raises nothing.
+   */
+  const worth = one => {
+    if (!one) return 0;
+    let n = Object.values(one.worn || {}).reduce((sum, v) => sum + Math.abs(v), 0);
+    const heal = one.heal;
+    if (heal) {
+      n += (heal.flatHP || 0) + (heal.partHP || 0) * 400
+        + ((heal.flatMP || 0) + (heal.partMP || 0) * 200) * 0.25
+        + (heal.soak ? (1 - heal.soak) * 200 : 0);
+    }
+    if (one.mul) {
+      n += Object.values(one.mul).reduce((sum, v) => sum + Math.abs(v - 1) * 100, 0);
+    }
+    return n;
+  };
 
   let enchByName = null;
   function charmNamed(name) {
@@ -416,6 +489,17 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const out = [];
       const seen = new Set();
       for (const mod of pool) {
+        /*
+         * Only what the game will actually roll.
+         *
+         * The client keeps the retired ones - Kogbold Spirit (Legacy), Living
+         * Hive (Legacy), a dozen others - so that an item that already has
+         * one still reads correctly, and gives them a weight of nought to say
+         * they can no longer come out of an enchanting. They are eligible in
+         * every other sense, which is how the search came to hand back builds
+         * nobody can make any more.
+         */
+        if (!(mod.weight > 0)) continue;
         if (seen.has(mod.name)) continue;
         seen.add(mod.name);
         const mine = charmNamed(mod.name);
@@ -438,6 +522,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (one) for (const label of labelsOf(one.labels)) beside.add(label);
     });
     return data.enchants.filter(one => {
+      // Retired ones carry a weight of nought: kept so an item that has one
+      // still reads, never rolled again.
+      if (!(one.weight > 0)) return false;
       const wants = labelsOf(one.fits);
       if (wants.size) {
         let met = false;
@@ -506,14 +593,40 @@ const TINT = {
       return hard ? hard.total : 0;
     } },
     /*
-     * Staying alive, as the game measures it: how much damage you can soak
-     * before you die, which is your life multiplied by what armour saves you
-     * on an ordinary hit, plus what you heal back while it happens.
+     * Staying alive: how long you last, in seconds, under fire.
+     *
+     * Armour is subtracted from each hit, not from a total, so what it is
+     * worth depends entirely on the size of the hit - twenty points is most
+     * of a snake's shot and a rounding error on a god's. So the figure is
+     * read against a spread of incoming fire rather than one imagined hit:
+     * something small and constant, something middling, and the heavy one
+     * that arrives now and then. Armour never takes more than eighty-five per
+     * cent off, which the client enforces and which is why the last points of
+     * it are worth so much less than the first.
+     *
+     * Then life is what there is to spend and vitality is what comes back
+     * while you spend it, so the answer is a length of time: life divided by
+     * what gets through, less what heals. That is why piling everything into
+     * armour stops paying - past the point where the small hits are already
+     * at their floor, another point of it buys nothing, and the same
+     * enchantment slot spent on life or vitality still buys seconds.
      */
-    { group: 'Others', id: 'live', say: 'Survival', tint: '#7fc45a', of: n => {
+    { group: 'Others', id: 'live', say: 'Survival', tint: '#7fc45a', of: (n, at) => {
       const s = n.stats.now;
-      const soak = 100 / Math.max(15, 100 - s.def);
-      return s.hp * soak + HEAL_AT(s.vit) * 20;
+      const back = healOf(at);
+      // What a fight throws at you in a second: something small and
+      // constant, something middling, and the heavy one that arrives now and
+      // then. Three sizes, because armour is taken off each hit rather than
+      // off a total, and the same twenty points is most of the first and
+      // nothing much of the last.
+      const INCOMING = [30, 70, 140];
+      let through = 0;
+      for (const hit of INCOMING) through += Math.max(hit * 0.15, hit - s.def);
+      through *= back.soak;
+      const heal = HEAL_AT(s.vit) + back.flatHP + back.partHP * s.hp;
+      const net = through - heal;
+      if (net <= 0) return 600;                      // healing faster than it lands
+      return Math.min(600, s.hp / net);
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
       tint: TINT[key], of: n => n.stats.now[key] }))
@@ -525,6 +638,42 @@ const TINT = {
     const numbers = numbersFor(state, def);
     if (!numbers) return -Infinity;
     return goal.of(numbers, state);
+  }
+
+  /* Which of them are being asked for, with the old single choice honoured. */
+  function goalsOf(state) {
+    const want = state.goals && state.goals.length
+      ? state.goals : [state.goal || 'dps'];
+    const out = GOALS.filter(one => want.includes(one.id));
+    return out.length ? out : [GOALS[0]];
+  }
+
+  /*
+   * Asking for more than one thing at once.
+   *
+   * Damage is in the thousands, survival in seconds and dexterity in dozens,
+   * so adding them together would be asking for damage and nothing else. Each
+   * is measured against what the build already has of it, which turns every
+   * one of them into the same kind of number - how many times better than the
+   * build you started from - and those can be added. A build that doubles
+   * damage and halves survival scores exactly as well as one that leaves both
+   * alone, which is the trade the page is being asked to make.
+   */
+  function aimOf(state, goals) {
+    const list = goals || goalsOf(state);
+    if (list.length === 1) return list[0];
+    const worth = {};
+    for (const one of list) {
+      const was = scoreOf(state, one);
+      worth[one.id] = Number.isFinite(was) && was !== 0 ? Math.abs(was) : 1;
+    }
+    return {
+      id: list.map(one => one.id).join('+'),
+      say: list.map(one => one.say.toLowerCase()).join(' and '),
+      goals: list,
+      of: (numbers, at) => list.reduce(
+        (sum, one) => sum + one.of(numbers, at) / worth[one.id], 0)
+    };
   }
 
   /*
@@ -592,28 +741,38 @@ const TINT = {
         for (let at = 0; at < worn.slots; at++) {
           if (work.locked[hand + ':' + at]) continue;
           const was = worn.ench[at];
-          let best = was;
           /*
            * An empty slot is worth filling even by something that changes
-           * nothing. Insisting on a strict improvement left slots empty
-           * whenever every remaining candidate was neutral for the goal -
-           * four points of defence while chasing damage - and an empty slot
-           * is worth less than a neutral one to anybody who then goes and
-           * builds the thing.
+           * nothing this goal can see. Insisting on a strict improvement left
+           * slots empty whenever every remaining candidate was neutral - and
+           * the game's own rules make that common, since two statistics on
+           * one item block the rest of the statistics from ever joining them.
+           * Between two that score the same, the bigger one wins, so a slot
+           * that has to be filled with something is filled with the best
+           * something rather than the first one out of the pool.
            */
-          const bar = was ? score : score - 1e-9;
+          let best = was;
+          let bestScore = score;
+          let bestWorth = worth(data.byEnch[was]);
           for (const one of enchantsFor(worn.name, worn.ench, at)) {
-            // Anything this page can count: a statistic, or a scaling of the
-            // weapon. The rest change the shot in ways it does not model.
-            if (!one.worn && !one.mul) continue;
+            // Anything this page can count: a statistic, a scaling of the
+            // weapon, or something that keeps you alive. The rest change the
+            // shot in ways it does not model.
+            if (!one.worn && !one.mul && !one.heal) continue;
             worn.ench[at] = one.id;
             const now = scoreOf(work, goal);
             looked++;
-            if (now > (best === was && !was ? bar : score)) {
-              score = now; best = one.id;
+            const mine = worth(one);
+            const better = now > bestScore + 1e-9;
+            const evens = !was && Math.abs(now - bestScore) <= 1e-9 && mine > bestWorth;
+            if (better || evens) {
+              bestScore = Math.max(bestScore, now);
+              best = one.id;
+              bestWorth = mine;
             }
           }
           worn.ench[at] = best;
+          score = bestScore;
           if (best !== was) moved = true;
         }
       }
@@ -748,8 +907,16 @@ const TINT = {
         const id = worn.ench[at];
         const one = id && data.byEnch[id];
         const held = !!build.locked[hand + ':' + at];
+        const heals = one && one.heal ? [
+          one.heal.flatHP ? '+' + one.heal.flatHP + ' HP/s' : '',
+          one.heal.partHP ? '+' + round(one.heal.partHP * 100) + '% HP/s' : '',
+          one.heal.flatMP ? '+' + one.heal.flatMP + ' MP/s' : '',
+          one.heal.partMP ? '+' + round(one.heal.partMP * 100) + '% MP/s' : '',
+          one.heal.soak ? '-' + round((1 - one.heal.soak) * 100) + '% damage taken' : ''
+        ].filter(Boolean).join(' ') : '';
         const said = one && one.worn
           ? '<u>' + Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ') + '</u>'
+          : heals ? '<u>' + esc(heals) + '</u>'
           : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
           + (one ? '' : ' is-empty') + '">'
@@ -838,14 +1005,16 @@ const TINT = {
    * a gamble into a thing worth trying.
    */
   function drawSearch() {
-    const goal = GOALS.find(one => one.id === build.goal) || GOALS[0];
-    const now = scoreOf(build, goal);
     const said = el('tcNow');
     if (said) {
-      said.innerHTML = Number.isFinite(now)
-        ? '<span class="figure"><b>' + esc(sayGoal(goal, now)) + '</b><small>'
-          + esc(goal.say.toLowerCase()) + ' now</small></span>'
-        : '';
+      said.innerHTML = goalsOf(build).map(one => {
+        const now = scoreOf(build, one);
+        return Number.isFinite(now)
+          ? '<span class="figure"><b style="color:' + esc(one.tint) + '">'
+            + esc(sayGoal(one, now)) + '</b><small>'
+            + esc(one.say.toLowerCase()) + ' now</small></span>'
+          : '';
+      }).join('');
     }
     const kept = el('tcKept');
     if (kept) {
@@ -862,6 +1031,7 @@ const TINT = {
   function sayGoal(goal, value) {
     if (!Number.isFinite(value)) return '\u2014';
     if (goal.id === 'kill') return round(-value) + 's';
+    if (goal.id === 'live') return round(value) + 's';
     if (goal.id && goal.id.indexOf('stat:') === 0) return round(value);
     return commas(value);
   }
@@ -1056,22 +1226,6 @@ const TINT = {
     hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [],
     mp: 0, mpFull: 0
   };
-
-  function artOfClass(kind) {
-    if (!kind || !kind.art) return null;
-    let img = duel.art.get(kind.art.file);
-    if (!img) {
-      img = new Image();
-      img.decoding = 'async';
-      const bundle = window.ROTMG_BUNDLE;
-      // Served, the atlas sits beside the page; bundled, it is a folder the
-      // single file cannot carry, so the frame falls back to a plain figure.
-      img.src = (bundle && bundle.atlasBase ? bundle.atlasBase : 'assets/atlas/')
-        + 'life/' + kind.art.file;
-      duel.art.set(kind.art.file, img);
-    }
-    return img;
-  }
 
   /*
    * One sheet holds every target and every bolt, cut out of the client by
@@ -1296,22 +1450,48 @@ const TINT = {
     const boss = data.byBoss[build.boss];
     const floor = tall - 30;
 
-    /* The one on the left, in whichever pose it is in. */
-    const mine = artOfClass(kind);
-    const side = Math.min(58, tall * 0.44);
-    if (mine && mine.complete && mine.naturalWidth) {
-      const art = kind.art;
-      const poses = art.poses || {};
-      const list = duel.swing > 0
-        ? (poses['0/2'] || poses['0/0'] || [0])
-        : (poses['0/0'] || [0]);
-      const frame = list[Math.floor(duel.at * 4) % list.length];
-      const cell = art.tile, high = art.height;
-      pen.drawImage(mine, frame * cell, 0, cell, high,
-        22, floor - side * (high / cell), side, side * (high / cell));
+    /*
+     * How far apart they stand: the range of the weapon in your hand.
+     *
+     * The bench used to be a fixed stretch of floor whatever you were
+     * holding, which quietly showed a dagger and a bow reaching the same
+     * distance and spread a volley across twenty tiles of ground - so the
+     * shots of a bow left the top of the frame long before they arrived. A
+     * tile is a tile here, thirty pixels of it, and the two of them stand the
+     * weapon's own range apart with the pair middled in the frame.
+     */
+    const kit = statsOf(build);
+    const arm = data.byItem[(build.gear.weapon || {}).name];
+    const shooting = kit ? weaponRate(arm, kit.now, 0, scaleOf(build)) : {};
+    const PX_TILE = 30;
+    const piece = pieceOf(boss && boss.pic);
+    const room = Math.min(88, tall * 0.64);
+    const longest = piece ? Math.max(piece.w, piece.h) : 1;
+    const big = piece ? room * (piece.h / longest) : room;
+    const across = piece ? room * (piece.w / longest) : room;
+    const me = pieceOf((kind && kind.pic) || '');
+    const side = Math.min(52, tall * 0.4);
+    const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
+    const apart = Math.max(80, Math.min(wide - 40 - mine - across,
+      (shooting.reach || 6) * PX_TILE));
+    const left = Math.max(14, (wide - (mine + apart + across)) / 2);
+    const bossX = left + mine + apart;
+
+    /*
+     * The one on the left, in whichever pose it is in, turned to face what it
+     * is shooting at. The client keeps one side view and mirrors it for the
+     * other, which is what is done here.
+     */
+    if (me) {
+      pen.save();
+      pen.translate(left + mine, 0);
+      pen.scale(-1, 1);
+      drawPiece(pen, me, frameOf(me, duel.swing > 0 ? 2 : 0, duel.at),
+        0, floor, side);
+      pen.restore();
     } else {
       pen.fillStyle = '#6f8fbf';
-      pen.fillRect(26, floor - side, side * 0.6, side);
+      pen.fillRect(left, floor - side, side * 0.6, side);
     }
 
     /* And the thing being hit, on the right, in its own animation. */
@@ -1327,12 +1507,6 @@ const TINT = {
      * proportions are kept inside that: a wide creature stays wide without
      * ending up bigger than a tall one.
      */
-    const piece = pieceOf(boss && boss.pic);
-    const room = Math.min(88, tall * 0.64);
-    const longest = piece ? Math.max(piece.w, piece.h) : 1;
-    const big = piece ? room * (piece.h / longest) : room;
-    const across = piece ? room * (piece.w / longest) : room;
-    const bossX = wide - 22 - room / 2 - across / 2;
     /*
      * It stands still and stays still.
      *
@@ -1373,7 +1547,7 @@ const TINT = {
      * is a spinner. Turning the bitmap rather than drawing a line beside it
      * means the black outline the art already carries turns with the colour.
      */
-    const from = 22 + side * 0.8, to = bossX + big * 0.4;
+    const from = left + mine * 0.9, to = bossX + across * 0.45;
     const reachAcross = to - from;
     for (const one of duel.shots) {
       const part = Math.max(0, Math.min(1, one.age / one.lasts));
@@ -1383,13 +1557,13 @@ const TINT = {
        * direction of travel, in tiles converted to the width of the bench, so
        * a half-tile amplitude looks like half a tile of the range it covers.
        */
-      const across = one.amp
+      const sway = one.amp
         ? one.amp * (reachAcross / Math.max(1, one.reach))
           * Math.sin(2 * Math.PI * one.freq * one.age + one.phase)
         : 0;
-      const x = from + Math.cos(one.angle) * along - Math.sin(one.angle) * across;
+      const x = from + Math.cos(one.angle) * along - Math.sin(one.angle) * sway;
       const y = floor - side * 0.55 + Math.sin(one.angle) * along
-        + Math.cos(one.angle) * across;
+        + Math.cos(one.angle) * sway;
       const bolt = one.bolt;
       if (bolt) {
         const high = 16 * Math.min(1.5, Math.max(0.7, bolt.size / 100));
@@ -1668,27 +1842,27 @@ const TINT = {
     {
       const kind = data.byClass[build.klass];
       const face = el('tcFace');
-      const art = kind && kind.art;
-      if (art) {
-        /*
-         * One frame, in the shape of one frame.
-         *
-         * The window was square and the cell is not - an Assassin's is twenty
-         * across and thirty-six tall - so a square window forty pixels wide
-         * showed forty-three pixels of a twenty-pixel frame, which is one
-         * Assassin and most of the next one. The window is now exactly the
-         * cell, scaled to fit the well it sits in.
-         */
-        const bundle = window.ROTMG_BUNDLE;
-        const base = (bundle && bundle.atlasBase) || 'assets/atlas/';
-        const zoom = 42 / Math.max(art.tile, art.height);
-        const stand = (art.poses && (art.poses['3/0'] || art.poses['0/0']) || [0])[0];
-        face.style.width = (art.tile * zoom) + 'px';
-        face.style.height = (art.height * zoom) + 'px';
-        face.style.backgroundImage = 'url(' + base + 'life/' + art.file + ')';
-        face.style.backgroundSize = (art.tile * art.frames * zoom) + 'px '
-          + (art.height * zoom) + 'px';
-        face.style.backgroundPosition = (-stand * art.tile * zoom) + 'px 0';
+      /*
+       * One frame of the class, standing.
+       *
+       * It used to be read out of the realm atlas - a folder built for the
+       * map - which put it on a different picture from everything else on
+       * this page and left the offline copy, which cannot carry a folder,
+       * with no figure at all. It is on the one sheet now, cut to the shape
+       * of the drawing rather than to the shape of the rectangle around it.
+       */
+      const piece = kind && data.sheet && data.sheet.pics[kind.pic];
+      if (piece) {
+        const stand = (piece.poses
+          && (piece.poses['3/0'] || piece.poses['0/0']) || [0])[0];
+        const zoom = 42 / Math.max(piece.w, piece.h);
+        face.style.width = (piece.w * zoom) + 'px';
+        face.style.height = (piece.h * zoom) + 'px';
+        face.style.backgroundSize = (data.sheet.wide * zoom) + 'px '
+          + (data.sheet.tall * zoom) + 'px';
+        face.style.backgroundPosition =
+          (-(piece.x + stand * piece.w) * zoom) + 'px '
+          + (-piece.y * zoom) + 'px';
         face.hidden = false;
       } else { face.hidden = true; }
     }
@@ -1699,8 +1873,9 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
+    const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
-      node.classList.toggle('is-on', node.dataset.goal === build.goal);
+      node.classList.toggle('is-on', asked.includes(node.dataset.goal));
     }
     // Read against whatever is being fought, since there is no dial any more.
     const aimedAt = data.byBoss[build.boss];
@@ -1775,7 +1950,18 @@ const TINT = {
     el('tcGoals').addEventListener('click', event => {
       const pick = event.target.closest('[data-goal]');
       if (!pick) return;
-      build.goal = pick.dataset.goal;
+      /*
+       * They add up rather than replacing one another. Nobody builds for one
+       * number: it is damage without dying, or a fast kill that still leaves
+       * you standing, and the search can be told both. The last one cannot be
+       * turned off, because a search with nothing to aim at has nothing to do.
+       */
+      const want = goalsOf(build).map(one => one.id);
+      const at = want.indexOf(pick.dataset.goal);
+      if (at < 0) want.push(pick.dataset.goal);
+      else if (want.length > 1) want.splice(at, 1);
+      build.goals = want;
+      delete build.goal;
       keep(); paint();
     });
 
@@ -1878,41 +2064,41 @@ const TINT = {
     });
 
     el('tcRun').addEventListener('click', () => {
-      const goal = GOALS.find(one => one.id === build.goal) || GOALS[0];
+      const wanted = goalsOf(build);
       const said = el('tcSaid');
       before = JSON.parse(JSON.stringify(build));
       el('tcRun').disabled = true;
       said.textContent = 'trying things...';
       // Off the paint, so the button has time to say it is working.
       setTimeout(() => {
-        const was = scoreOf(build, goal);
-        const got = optimise(build, goal, null);
+        const aim = aimOf(build, wanted);
+        const was = wanted.map(one => scoreOf(build, one));
+        const got = optimise(build, aim, null);
         got.state.name = build.name;
         tabs[onTab] = build = got.state;
         keep(); paint();
         el('tcRun').disabled = false;
         /*
-         * Measured against how far it moved, not as a ratio. Killing a boss
-         * scores as negative seconds, so a ratio flipped its sign: going from
-         * two thousand seconds to eleven was reported as ninety-nine per cent
-         * worse, which is the exact opposite of what happened.
+         * Where each thing asked for started and where it got to. Measured as
+         * how far it moved rather than as a ratio: killing a boss scores as
+         * negative seconds, so a ratio flipped its sign and reported going
+         * from two thousand seconds to eleven as ninety-nine per cent worse.
+         *
+         * Every goal is reported, including the ones that went down. Asking
+         * for damage and survival at once means trading one against the
+         * other, and a report that showed only the winner would hide the
+         * price.
          */
-        const better = was && isFinite(was) && was !== 0
-          ? Math.round(((got.score - was) / Math.abs(was)) * 100) : null;
-        /*
-         * Where it started, where it got to, and how hard it looked - as
-         * figures rather than a sentence. A percentage on its own hides which
-         * way it went, and the two numbers are the whole point.
-         */
-        said.innerHTML = '<span class="figure"><b>' + esc(sayGoal(goal, was))
-          + '</b><small>before</small></span>'
-          + '<span class="tc-arrow">→</span>'
-          + '<span class="figure is-loud"><b>' + esc(sayGoal(goal, got.score))
-          + '</b><small>after</small></span>'
-          + (better !== null && better !== 0
-            ? '<span class="figure"><b>' + (better > 0 ? '+' : '') + better
-              + '%</b><small>' + (better > 0 ? 'better' : 'worse') + '</small></span>'
-            : '<span>nothing it could swap improved it</span>')
+        said.innerHTML = wanted.map((one, i) => {
+          const now = scoreOf(build, one);
+          const moved = was[i] && isFinite(was[i]) && was[i] !== 0
+            ? Math.round(((now - was[i]) / Math.abs(was[i])) * 100) : null;
+          return '<span class="figure"><b style="color:' + esc(one.tint) + '">'
+            + esc(sayGoal(one, was[i])) + ' <i class="tc-arrow">→</i> '
+            + esc(sayGoal(one, now)) + '</b><small>' + esc(one.say.toLowerCase())
+            + (moved ? ' · ' + (moved > 0 ? '+' : '') + moved + '%' : '')
+            + '</small></span>';
+        }).join('')
           + '<span class="figure"><b>' + got.looked.toLocaleString('en-US')
           + '</b><small>builds tried</small></span>';
       }, 20);
