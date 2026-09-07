@@ -330,17 +330,40 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return enchByName.get(name) || enchByName.get(plainly(name));
   }
 
+  /*
+   * What is already on the item, in names the calculator recognises.
+   *
+   * It files "Wisdom -Defense Tradeoff", the thing you ask for; the client
+   * files four of them, I through IV, which are what it rolls. Handing over
+   * the client's spelling meant the calculator looked up the name, found
+   * nothing, and so believed the item was bare - which is how the optimiser
+   * came to put four copies of the same tradeoff on one weapon.
+   */
+  function locksOn(held, already, at) {
+    const out = [];
+    (already || []).forEach((id, i) => {
+      if (i === at || !id) return;
+      const one = data.byEnch[id];
+      if (!one) return;
+      const bare = plainly(one.name);
+      for (const name of [one.name, one.name.replace(NUMERAL, '').trim()]) {
+        if (held.byName && held.byName.get(name)) { out.push(name); return; }
+      }
+      // Nothing matched by name: hand over whatever the calculator does know
+      // that reads the same, rather than nothing at all.
+      for (const [name] of held.byName || []) {
+        if (plainly(name) === bare) { out.push(name); return; }
+      }
+    });
+    return out;
+  }
+
   function enchantsFor(itemName, already, at) {
     const item = data.byItem[itemName];
     if (!item) return [];
     const held = rulesFor();
     if (held) {
-      const locks = [];
-      (already || []).forEach((id, i) => {
-        if (i === at || !id) return;
-        const one = data.byEnch[id];
-        if (one) locks.push(one.name);
-      });
+      const locks = locksOn(held, already, at);
       const cfg = {
         item: itemName,
         type: OF_HAND[item.hand] || 'WEAPON',
@@ -1317,12 +1340,7 @@ const TINT = {
     const held = rulesFor();
     if (held && typeof window.openEnchantPicker === 'function') {
       const item = data.byItem[worn.name];
-      const locks = [];
-      worn.ench.forEach((id, i) => {
-        if (i === at || !id) return;
-        const one = data.byEnch[id];
-        if (one) locks.push(one.name);
-      });
+      const locks = locksOn(held, worn.ench, at);
       const pool = EnchantEngine.eligiblePool(held, {
         item: worn.name,
         type: OF_HAND[item.hand] || 'WEAPON',
