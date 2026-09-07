@@ -1993,182 +1993,156 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 /* ---------------- theory crafting ---------------- */
 /*
- * Same vocabulary as the rest of the site: a dark panel over the drifting
- * backdrop, labels in the muted grey, figures in tabular numerals, and the
- * one gold accent kept for the thing being pushed. Laid out to waste as
- * little height as possible, because everything here wants to be seen at
- * once - change a ring and four numbers, a curve and a fight all move.
+ * The cards, the columns, the tabs, the fields and the badges all come from
+ * the rest of the site, so what is left here is only the handful of things
+ * this page has that the others do not: a fight, a curve, a wall of gear and
+ * a wall of bosses.
  */
-.tc {
-  display: flex; flex-direction: column; gap: 14px;
-  background: rgba(9, 12, 18, .74);
-  border: 1px solid rgba(255, 255, 255, .06);
-  border-radius: 10px;
-  padding: 14px 16px 18px;
-  backdrop-filter: blur(3px);
-}
-.tc h2 {
-  font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
-  color: #7b8496; margin: 0 0 8px;
-}
-.tc-note { color: #6d7688; font-size: 11.5px; line-height: 1.55; margin: 8px 0 0; }
-.tc-warn { border-left: 2px solid rgba(224, 161, 58, .45); padding-left: 9px; }
+.tab-new { opacity: .6; }
 
-/* --- the tabs, as the enchanter has them --- */
-.tc-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
-.tc-tab {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(255, 255, 255, .05); border: 0; border-radius: 5px;
-  color: #9fb0c4; padding: 5px 11px; cursor: pointer; font: inherit;
+/* --- the character --- */
+.tc-switches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
+.tc-switch {
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); color: var(--muted);
+  font: inherit; font-size: 12.5px; padding: 7px 13px; cursor: pointer;
 }
-.tc-tab.is-on { background: rgba(255, 255, 255, .13); color: #e8edf6; }
-.tc-tab u { text-decoration: none; opacity: .45; }
-.tc-tab u:hover { opacity: 1; }
-.tc-tab-new { opacity: .55; padding: 5px 10px; }
+.tc-switch:hover { color: var(--text); }
+.tc-switch.is-on {
+  border-color: var(--accent); color: var(--text);
+  box-shadow: 0 0 0 3px rgba(121, 197, 232, .12) inset;
+}
+.tc-lvl {
+  display: inline-flex; align-items: center; gap: 7px; margin-left: auto;
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim);
+}
+.tc-lvl input { width: 5ch; }
 
-/* --- the top strip: the fight, and who is fighting --- */
-.tc-top { display: grid; grid-template-columns: minmax(280px, 5fr) minmax(0, 7fr); gap: 16px; }
-@media (max-width: 860px) { .tc-top { grid-template-columns: minmax(0, 1fr); } }
-.tc-duel-box, .tc-who-box {
-  background: rgba(255, 255, 255, .025);
-  border: 1px solid rgba(255, 255, 255, .05);
-  border-radius: 8px; padding: 11px 13px 12px; min-width: 0;
-}
-.tc-duel-head { display: flex; align-items: baseline; gap: 8px; }
-.tc-duel-head h2 { margin: 0; flex: 1; }
-.tc-mini {
-  background: rgba(255, 255, 255, .06); border: 0; border-radius: 4px;
-  color: #8b94a6; font: inherit; font-size: 11px; padding: 2px 8px; cursor: pointer;
-}
-.tc-mini:hover { color: #e8edf6; }
-.tc-duel {
-  width: 100%; height: 158px; display: block; margin: 6px 0 2px;
-  background: radial-gradient(120% 120% at 20% 20%, rgba(255,255,255,.045), transparent 70%);
-  border-radius: 6px;
-}
+.tc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; }
+@media (max-width: 560px) { .tc-stats { grid-template-columns: 1fr; } }
+.tc-stat { display: grid; grid-template-columns: 6.5ch 1fr auto; gap: 8px; align-items: center; }
+.tc-stat i { font-style: normal; color: var(--dim); font-size: 11px; }
+.tc-bar { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+.tc-bar span { display: block; height: 100%; background: var(--accent); opacity: .75; }
+.tc-stat b { color: var(--text); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.tc-stat u { text-decoration: none; color: var(--dim); font-size: 10.5px; font-weight: 400; }
 
-.tc-who { display: flex; flex-wrap: wrap; gap: 9px 16px; align-items: flex-end; margin-bottom: 11px; }
-.tc-who label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #7b8496; }
-.tc-who select { min-width: 12ch; }
-.tc-who input[type="number"] { width: 6ch; }
-.tc-tick { flex-direction: row !important; align-items: center; gap: 7px !important; }
-.tc-tick span { display: flex; flex-direction: column; color: #9fb0c4; font-size: 12px; }
-.tc-tick small { color: #5f6878; font-size: 10.5px; }
-
-/* --- the statistics, two columns of them to save the height --- */
-.tc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; }
-@media (max-width: 620px) { .tc-stats { grid-template-columns: 1fr; } }
-.tc-stat { display: grid; grid-template-columns: 7ch 1fr auto; gap: 7px; align-items: center; }
-.tc-stat i { font-style: normal; color: #7b8496; font-size: 11px; }
-.tc-bar { height: 4px; background: rgba(255, 255, 255, .07); border-radius: 2px; overflow: hidden; }
-.tc-bar span { display: block; height: 100%; background: linear-gradient(90deg, #5b7aa8, #7fa3d4); }
-.tc-stat b { color: #e8edf6; font-variant-numeric: tabular-nums; font-size: 12px; }
-.tc-stat u { text-decoration: none; color: #5f6878; font-size: 10.5px; font-weight: 400; }
-.tc-stat em {
-  grid-column: 2 / -1; font-style: normal; color: #6d7688; font-size: 10.5px;
-  margin: -3px 0 2px;
-}
-
-/* --- what they carry: the sprite is the point, so it is big --- */
-.tc-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
-@media (max-width: 900px) { .tc-grid { grid-template-columns: minmax(0, 1fr); } }
-.tc-col { min-width: 0; }
-.tc-gear { display: flex; flex-direction: column; gap: 9px; }
+/* --- the gear --- */
+.tc-gear { display: flex; flex-direction: column; gap: 8px; }
 .tc-slot {
-  border: 1px solid rgba(255, 255, 255, .06); border-radius: 8px;
-  background: rgba(255, 255, 255, .025); overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, .16); overflow: hidden;
 }
-.tc-slot.is-held { border-color: rgba(224, 161, 58, .4); }
-.tc-slot-head { display: flex; align-items: center; gap: 11px; padding: 10px 12px 8px; }
+.tc-slot.is-held { border-color: var(--accent); }
+.tc-slot-head { display: flex; align-items: center; gap: 11px; padding: 9px 11px 7px; }
 .tc-item-pick {
-  flex: 1; display: flex; align-items: center; gap: 11px; text-align: left;
-  background: none; border: 0; color: #e8edf6; font: inherit; cursor: pointer; padding: 0;
-  min-width: 0;
+  flex: 1; display: flex; align-items: center; gap: 11px; text-align: left; min-width: 0;
+  background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; padding: 0;
 }
-.tc-item-pick:hover .tc-item-name { color: #fff; }
 .tc-icon-big {
-  width: 44px; height: 44px; flex: none; image-rendering: pixelated;
-  background: rgba(0, 0, 0, .28); border-radius: 6px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
-  object-fit: contain; padding: 3px;
+  width: 46px; height: 46px; flex: none; image-rendering: pixelated;
+  background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); object-fit: contain; padding: 4px;
 }
 .tc-item-said { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .tc-item-where {
-  font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: #6d7688;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--dim); font-weight: 600;
 }
 .tc-item-name {
-  font-size: 14px; color: #e8edf6; white-space: nowrap; overflow: hidden;
+  font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis;
 }
-.tc-bits { color: #8b94a6; font-size: 11.5px; margin: 0; }
+.tc-bits { color: var(--muted); font-size: 11.5px; margin: 0; }
 .tc-hold {
-  background: none; border: 0; color: #5f6878; cursor: pointer; font-size: 14px;
-  padding: 0 2px; flex: none; line-height: 1;
+  background: none; border: 0; cursor: pointer; font-size: 13px; padding: 0 2px;
+  flex: none; line-height: 1; filter: grayscale(1) opacity(.5);
 }
-.tc-hold:hover { color: #e0a13a; }
-.tc-slot.is-held .tc-hold { color: #e0a13a; }
+.tc-hold:hover, .tc-slot.is-held .tc-hold, .tc-ench.is-held .tc-hold { filter: none; }
 
-/* --- the enchantments, as chips you can actually read --- */
-.tc-ench-strip {
-  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-  padding: 0 12px 11px;
-}
+.tc-ench-strip { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 0 11px 10px; }
 .tc-ench {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(111, 143, 191, .13);
-  box-shadow: inset 0 0 0 1px rgba(111, 143, 191, .26);
-  border-radius: 5px; padding: 4px 7px 4px 8px; max-width: 100%;
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 3px 6px 3px 5px;
 }
-.tc-ench.is-empty { background: rgba(255, 255, 255, .03); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); }
-.tc-ench.is-held { background: rgba(224, 161, 58, .15); box-shadow: inset 0 0 0 1px rgba(224, 161, 58, .4); }
+.tc-ench.is-empty { opacity: .55; }
+.tc-ench.is-held { border-color: var(--accent); opacity: 1; }
 .tc-ench-pick {
-  background: none; border: 0; color: #cfd6e6; font: inherit; font-size: 12px;
+  background: none; border: 0; color: var(--text); font: inherit; font-size: 12px;
   cursor: pointer; padding: 0; text-align: left; min-width: 0;
 }
-.tc-ench-pick:hover { color: #fff; }
-.tc-ench-pick em { color: #5f6878; font-style: normal; }
-.tc-ench u { text-decoration: none; color: #93a7c4; font-size: 11px; font-variant-numeric: tabular-nums; }
-.tc-uncounted { color: #b08a4c !important; }
-.tc-rarity { display: inline-flex; gap: 6px; align-items: center; font-size: 11px; color: #6d7688; }
-.tc-rarity select { padding: 1px 4px; }
+.tc-ench-pick em { color: var(--dim); font-style: normal; }
+.tc-ench u { text-decoration: none; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.tc-uncounted { color: var(--dim) !important; }
+.tc-rarity { display: inline-flex; gap: 5px; align-items: center; font-size: 10.5px; color: var(--dim); }
+.tc-rarity select { padding: 1px 4px; min-height: 0; }
+.tc-charm { display: inline-block; flex: none; image-rendering: pixelated;
+  background-repeat: no-repeat; vertical-align: middle; }
+.tc-charm-row { width: 30px; height: 30px; }
 
-/* --- the numbers --- */
+/* --- the target --- */
+.tc-bosses {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 4px; max-height: 168px; overflow-y: auto;
+}
+.tc-boss {
+  display: inline-flex; align-items: center; justify-content: center;
+  aspect-ratio: 1; padding: 0; cursor: pointer;
+  background: rgba(0, 0, 0, .18); border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.tc-boss:hover { background: rgba(255, 255, 255, .07); }
+.tc-boss.is-on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(121, 197, 232, .18) inset; }
+
+/* --- the fight and the curve --- */
+.tc-duel {
+  width: 100%; height: 170px; display: block; border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, .22); border: 1px solid var(--line);
+}
 .tc-facts {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: 6px; margin: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr));
+  gap: 6px; margin-top: 10px;
 }
 .tc-facts span {
   display: flex; flex-direction: column; gap: 2px;
-  background: rgba(255, 255, 255, .03); border-radius: 6px; padding: 7px 9px;
+  background: rgba(0, 0, 0, .18); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 7px 9px;
 }
 .tc-facts i {
-  font-style: normal; color: #6d7688; font-size: 10px;
-  letter-spacing: .07em; text-transform: uppercase;
+  font-style: normal; color: var(--dim); font-size: 10px;
+  letter-spacing: .7px; text-transform: uppercase; font-weight: 600;
 }
-.tc-facts b { color: #e8edf6; font-variant-numeric: tabular-nums; font-size: 13px; }
-.tc-facts span.tc-loud b { color: #f0c274; }
+.tc-facts b { color: var(--text); font-variant-numeric: tabular-nums; font-size: 14px; }
+.tc-facts span.tc-loud b { color: var(--accent); }
 
 .tc-graph { width: 100%; height: 200px; display: block; }
-.tc-key { display: flex; gap: 13px; font-size: 11px; color: #8b94a6; margin: 3px 0 8px; }
-.tc-key i { display: inline-block; width: 11px; height: 2px; margin-right: 5px; vertical-align: middle; }
-.tc-slide { display: flex; align-items: center; gap: 9px; font-size: 11px; color: #7b8496; margin: 5px 0; }
-.tc-slide-tight { margin: 4px 0 0; }
+#tcKey { display: inline-flex; gap: 11px; }
+#tcKey i { display: inline-block; width: 10px; height: 2px; margin-right: 4px; vertical-align: middle; }
+.tc-slide { display: flex; align-items: center; gap: 9px; font-size: 11.5px; color: var(--dim); margin-top: 6px; }
 .tc-slide input[type="range"] { flex: 1; }
-.tc-slide select { flex: 1; min-width: 0; }
-.tc-slide b { color: #cfd6e6; min-width: 9ch; font-variant-numeric: tabular-nums; }
+.tc-slide b { color: var(--text); min-width: 9ch; font-variant-numeric: tabular-nums; }
 
-/* --- the calculator --- */
-.tc-calc { border-top: 1px solid rgba(255, 255, 255, .06); padding-top: 13px; }
-.tc-calc-row { display: flex; flex-wrap: wrap; gap: 11px; align-items: flex-end; }
-.tc-calc-row label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #7b8496; }
-.tc-run {
-  background: rgba(224, 161, 58, .16); border: 1px solid rgba(224, 161, 58, .4);
-  color: #f0c274; border-radius: 5px; padding: 7px 15px; cursor: pointer; font: inherit;
+/* --- the search --- */
+.tc-goals { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.tc-goal {
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); color: var(--muted);
+  font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer;
 }
-.tc-run:hover { background: rgba(224, 161, 58, .26); }
-.tc-name input { min-width: 17ch; }
-.tc-said { color: #8b94a6; font-size: 11.5px; margin: 8px 0 0; min-height: 1.3em; }
-.tc-missing { color: #8b94a6; }
+.tc-goal:hover { color: var(--text); }
+.tc-goal.is-on { border-color: var(--accent); color: var(--text); }
+.tc-calc-row { display: flex; flex-wrap: wrap; gap: 11px; align-items: center; }
+.tc-run {
+  background: var(--accent); border: 0; border-radius: var(--radius-sm);
+  color: #10141c; font: inherit; font-weight: 650; padding: 8px 18px; cursor: pointer;
+}
+.tc-run:hover { filter: brightness(1.1); }
+.tc-name { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px;
+  text-transform: uppercase; letter-spacing: .7px; color: var(--dim); }
+.tc-name input { min-width: 16ch; }
+.tc-said { color: var(--muted); font-size: 11.5px; margin: 10px 0 0; min-height: 1.2em; }
+.tc-missing { color: var(--muted); }
 
 /* --- the picker --- */
 .tc-picker-wrap {
@@ -2176,84 +2150,27 @@ body.globe-wide .home-card-art { animation: none !important; }
   display: flex; align-items: center; justify-content: center; z-index: 40; padding: 24px;
 }
 .tc-picker-box {
-  background: #10141c; border: 1px solid rgba(255, 255, 255, .1); border-radius: 9px;
-  width: min(640px, 100%); max-height: min(72vh, 660px); display: flex; flex-direction: column;
+  width: min(640px, 100%); max-height: min(72vh, 660px);
+  display: flex; flex-direction: column; padding: 0;
 }
 .tc-picker-head {
   display: flex; gap: 10px; align-items: center; padding: 11px 13px;
-  border-bottom: 1px solid rgba(255, 255, 255, .07);
+  border-bottom: 1px solid var(--line);
 }
-.tc-picker-head b { color: #e8edf6; white-space: nowrap; }
+.tc-picker-head b { color: var(--text); white-space: nowrap; }
 .tc-picker-head input { flex: 1; min-width: 0; }
-.tc-picker { overflow-y: auto; overflow-x: hidden; padding: 5px; }
-.tc-row b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-picker { overflow-y: auto; overflow-x: hidden; padding: 6px; }
 .tc-row {
   display: flex; width: 100%; align-items: center; gap: 10px; text-align: left;
-  background: none; border: 0; color: #cfd6e6; font: inherit;
-  cursor: pointer; padding: 5px 8px; border-radius: 5px;
+  background: none; border: 0; color: var(--text); font: inherit;
+  cursor: pointer; padding: 5px 8px; border-radius: var(--radius-sm);
 }
 .tc-row:hover { background: rgba(255, 255, 255, .06); }
-.tc-row .tc-icon-big { width: 30px; height: 30px; padding: 2px; }
-.tc-row b { font-weight: 500; }
+.tc-row .tc-icon-big { width: 32px; height: 32px; padding: 2px; }
+.tc-row b { font-weight: 500; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
 .tc-row u {
-  text-decoration: none; color: #8b94a6; font-size: 11.5px;
+  text-decoration: none; color: var(--muted); font-size: 11.5px;
   margin-left: auto; text-align: right; white-space: nowrap;
 }
-.tc-more { color: #6d7688; font-size: 11.5px; padding: 6px 10px; }
-
-/* --- the three switches, and what you are pushing up --- */
-.tc-switches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.tc-switch {
-  background: rgba(255, 255, 255, .05);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07);
-  border: 0; border-radius: 5px; color: #9fb0c4;
-  font: inherit; font-size: 12px; padding: 6px 12px; cursor: pointer;
-}
-.tc-switch:hover { color: #e8edf6; }
-.tc-switch.is-on {
-  background: rgba(111, 143, 191, .2); color: #dbe6f6;
-  box-shadow: inset 0 0 0 1px rgba(111, 143, 191, .5);
-}
-.tc-pick { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #7b8496; }
-.tc-lvl { flex-direction: row !important; align-items: center; gap: 6px !important; }
-.tc-lvl input { width: 5ch; }
-
-.tc-goals { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0 11px; }
-.tc-goal {
-  background: rgba(255, 255, 255, .04);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
-  border: 0; border-radius: 5px; color: #8b94a6;
-  font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer;
-}
-.tc-goal:hover { color: #e8edf6; }
-.tc-goal.is-on {
-  background: rgba(224, 161, 58, .17); color: #f0c274;
-  box-shadow: inset 0 0 0 1px rgba(224, 161, 58, .45);
-}
-
-/* --- an enchantment's own picture, cut from the one sheet --- */
-.tc-charm {
-  display: inline-block; flex: none; image-rendering: pixelated;
-  background-repeat: no-repeat; vertical-align: middle;
-}
-.tc-charm-row { width: 30px; height: 30px; }
-.tc-hold { font-size: 12px; filter: grayscale(1) opacity(.55); }
-.tc-hold:hover { filter: none; }
-.tc-slot.is-held .tc-hold, .tc-ench.is-held .tc-hold { filter: none; }
-
-/* --- the things worth hitting, as their own pictures --- */
-.tc-bosses {
-  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
-  max-height: 96px; overflow-y: auto;
-}
-.tc-boss {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; padding: 0; cursor: pointer;
-  background: rgba(255, 255, 255, .03); border: 0; border-radius: 6px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
-}
-.tc-boss:hover { background: rgba(255, 255, 255, .09); }
-.tc-boss.is-on {
-  background: rgba(224, 161, 58, .16);
-  box-shadow: inset 0 0 0 1px rgba(224, 161, 58, .5);
-}
+.tc-more { color: var(--dim); font-size: 11.5px; padding: 6px 10px; }

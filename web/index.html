@@ -360,80 +360,83 @@
   <header class="masthead">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Theory Crafting</h1>
-    <p class="lede">Build a character out of the client's own numbers and watch what it does.</p>
+    <div class="masthead-row">
+      <div class="status">What a build would do</div>
+    </div>
   </header>
 
-  <div id="tcBody" class="tc">
-    <div id="tcTabs" class="tc-tabs"></div>
+  <div id="tcTabs" class="tab-bar" role="tablist" aria-label="Saved builds"></div>
 
-    <!--
-      The top strip: the fight on the left, who is fighting on the right. It
-      is the one thing on the page that is not a number, and it is there
-      because a rate is hard to feel until something dies of it.
-    -->
-    <div class="tc-top">
-      <section class="tc-duel-box">
-        <div class="tc-duel-head">
-          <h2>The fight</h2>
-          <button type="button" id="tcPause" class="tc-mini">pause</button>
-          <button type="button" id="tcAgain" class="tc-mini">again</button>
-        </div>
-        <canvas id="tcDuel" class="tc-duel"></canvas>
-        <div id="tcBosses" class="tc-bosses"></div>
-      </section>
+  <main class="layout" id="tcBody">
+    <section class="column config" aria-label="The build">
 
-      <section class="tc-who-box">
-        <h2>Stats</h2>
-        <div class="tc-who">
-          <label class="tc-pick">Class<select id="tcClass"></select></label>
-          <div class="tc-switches">
-            <button type="button" class="tc-switch" data-set="level20">Level 20</button>
-            <button type="button" class="tc-switch" data-set="maxed">8/8</button>
-            <button type="button" class="tc-switch" data-set="exalt">Exalted</button>
-            <label class="tc-pick tc-lvl">Level
-              <input id="tcLevel" type="number" min="1" max="20" step="1"></label>
-          </div>
+      <section class="card step" data-step="1">
+        <header><span class="step-badge">1</span><h2>The character</h2></header>
+        <label class="field">
+          <span class="field-label">Class</span>
+          <select id="tcClass"></select>
+        </label>
+        <div class="tc-switches">
+          <button type="button" class="tc-switch" data-set="level20">Level 20</button>
+          <button type="button" class="tc-switch" data-set="maxed">8/8</button>
+          <button type="button" class="tc-switch" data-set="exalt">Exalted</button>
+          <label class="tc-lvl">Level
+            <input id="tcLevel" type="number" min="1" max="20" step="1"></label>
         </div>
         <div id="tcStats" class="tc-stats"></div>
       </section>
-    </div>
 
-    <div class="tc-grid">
-      <section class="tc-col">
-        <h2>What they carry</h2>
+      <section class="card step" data-step="2">
+        <header><span class="step-badge">2</span><h2>The gear</h2>
+          <span class="header-aside">click the padlock to keep one</span></header>
         <div id="tcGear" class="tc-gear"></div>
       </section>
 
-      <section class="tc-col">
-        <h2>What they would do</h2>
-        <div id="tcNumbers" class="tc-facts"></div>
+      <section class="card step" data-step="3">
+        <header><span class="step-badge">3</span><h2>The target</h2>
+          <span class="header-aside" id="tcBossSay"></span></header>
+        <div id="tcBosses" class="tc-bosses"></div>
+      </section>
 
-        <h2>Against armour</h2>
+    </section>
+
+    <section class="column" aria-label="What it does">
+
+      <section class="card">
+        <header><h2>The fight</h2>
+          <span class="header-aside">
+            <button type="button" id="tcPause" class="link-button">pause</button>
+            <button type="button" id="tcAgain" class="link-button">again</button>
+          </span></header>
+        <canvas id="tcDuel" class="tc-duel"></canvas>
+        <div id="tcNumbers" class="tc-facts"></div>
+      </section>
+
+      <section class="card">
+        <header><h2>Against armour</h2>
+          <span class="header-aside" id="tcKey"></span></header>
         <canvas id="tcGraph" class="tc-graph" height="200"></canvas>
-        <div id="tcKey" class="tc-key"></div>
         <label class="tc-slide">Aim at
           <input id="tcAgainst" type="range" min="0" max="100" step="1">
           <b id="tcAgainstSay"></b>
         </label>
-        <p class="tc-note">Good for comparing builds. Assumes every shot hits.</p>
       </section>
-    </div>
 
-    <section class="tc-calc">
-      <h2>Let it look for a better one</h2>
-      <p class="tc-note">Click the padlock on anything you want kept. Then
-        pick what matters and let it hunt.</p>
-      <div id="tcGoals" class="tc-goals"></div>
-      <div class="tc-calc-row">
-        <button type="button" id="tcRun" class="tc-run">Look for a better build</button>
-        <label class="tc-name">Call it<input id="tcName" type="text" maxlength="40"></label>
-      </div>
-      <p id="tcSaid" class="tc-said"></p>
+      <section class="card">
+        <header><h2>Look for a better one</h2></header>
+        <div id="tcGoals" class="tc-goals"></div>
+        <div class="tc-calc-row">
+          <button type="button" id="tcRun" class="tc-run">Search</button>
+          <label class="tc-name">Call it<input id="tcName" type="text" maxlength="40"></label>
+        </div>
+        <p id="tcSaid" class="tc-said"></p>
+      </section>
+
     </section>
-  </div>
+  </main>
 
   <div id="tcPickerWrap" class="tc-picker-wrap" hidden>
-    <div class="tc-picker-box">
+    <div class="tc-picker-box card">
       <div class="tc-picker-head">
         <b id="tcPickerTitle"></b>
         <input id="tcSearch" type="search" placeholder="type to narrow it down">
