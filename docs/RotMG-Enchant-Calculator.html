@@ -2063,15 +2063,20 @@ body.globe-wide .home-card-art { animation: none !important; }
  * blue, everywhere in that game, and nobody reading a character sheet should
  * have to check which row they are on.
  */
+/* Each of the eight in its own colour, the game's. */
 .tc-bar span {
   display: block; height: 100%; border-radius: 3px;
-  background: linear-gradient(90deg, rgba(121, 197, 232, .5), var(--accent));
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--tint, var(--accent)) 45%, transparent),
+    var(--tint, var(--accent)));
   transition: width .18s ease-out;
 }
-.tc-stat.is-hp .tc-bar span { background: linear-gradient(90deg, #8c3a3a, #d95f5f); }
-.tc-stat.is-mp .tc-bar span { background: linear-gradient(90deg, #34558c, #5f8fd9); }
-.tc-stat.is-hp b { color: #e58b8b; }
-.tc-stat.is-mp b { color: #8fb4ec; }
+.tc-stat i { color: color-mix(in srgb, var(--tint, var(--dim)) 60%, var(--dim)); }
+.tc-stat b { color: var(--tint, var(--text)); }
+.tc-stat.is-over b { color: #f0c274; }
+.tc-stat.is-over .tc-bar span {
+  background: linear-gradient(90deg, var(--tint, var(--accent)), #f0c274);
+}
 .tc-stat.is-over .tc-bar span { background: linear-gradient(90deg, var(--accent), #f0c274); }
 .tc-stat b {
   color: var(--text); font-variant-numeric: tabular-nums; font-size: 13px;
@@ -2220,6 +2225,12 @@ body.globe-wide .home-card-art { animation: none !important; }
 .tc-ench-pick em { color: var(--dim); font-style: normal; }
 .tc-ench u { text-decoration: none; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .tc-uncounted { color: var(--dim) !important; }
+/* Taking one off again, which the lent dialogue has no row for. */
+.tc-drop {
+  flex: none; cursor: pointer; font: inherit; font-size: 14px; line-height: 1;
+  color: var(--dim); background: none; border: 0; padding: 0 2px;
+}
+.tc-drop:hover { color: var(--bad); }
 .tc-rarity { display: inline-flex; gap: 5px; align-items: center; font-size: 10.5px; color: var(--dim); }
 .tc-rarity select { padding: 1px 4px; min-height: 0; }
 /*
@@ -2291,19 +2302,38 @@ body.globe-wide .home-card-art { animation: none !important; }
 .tc-slide b { color: var(--text); min-width: 9ch; font-variant-numeric: tabular-nums; }
 
 /* --- the search --- */
-.tc-goals { display: flex; flex-direction: column; gap: 7px; margin-bottom: 13px; }
+/*
+  * What to push up, in two groups, each button wearing the colour of the thing
+  * it pushes. Nobody has to be told that the red one is life and the steel one
+  * is defence: they are the colours those two have had in that game for
+  * fifteen years, and the bars above use the same eight.
+  */
+.tc-goals { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .tc-goal-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-.tc-goal-row i {
-  font-style: normal; font-size: 10.5px; text-transform: uppercase;
-  letter-spacing: .7px; color: var(--dim); font-weight: 600; width: 6ch; flex: none;
+.tc-goal-row > i {
+  font-style: normal; font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: .8px; font-weight: 700; width: 6.5ch; flex: none;
+  color: var(--dim);
+}
+.tc-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex: none;
+  background: var(--tint, var(--muted)); opacity: .8;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--tint, #888) 60%, transparent);
 }
 .tc-goal {
+  display: inline-flex; align-items: center; gap: 7px;
   background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: var(--radius-sm); color: var(--muted);
-  font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer;
+  border-radius: 999px; color: var(--muted);
+  font: inherit; font-size: 12px; padding: 5px 12px 5px 9px; cursor: pointer;
+  transition: border-color .12s, color .12s, background .12s;
 }
-.tc-goal:hover { color: var(--text); }
-.tc-goal.is-on { border-color: var(--accent); color: var(--text); }
+.tc-goal:hover { color: var(--text); border-color: color-mix(in srgb, var(--tint) 45%, transparent); }
+.tc-goal.is-on {
+  color: var(--text); font-weight: 600;
+  border-color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 16%, transparent);
+}
+.tc-goal.is-on .tc-dot { opacity: 1; }
 .tc-calc-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .tc-now { margin-left: auto; }
 .tc-now .figure { flex-direction: column; align-items: flex-end; gap: 1px; }
@@ -5730,23 +5760,41 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * against each other. Time to kill is inverted, because less of it is
    * better and the search only knows how to climb.
    */
+/*
+ * A colour for each of the eight, the game's own.
+ *
+ * Life is red and magic is blue everywhere in that game; attack is the warm
+ * one, defence the steel one, and so on down. Carrying the same eight through
+ * the bars, the figures and the buttons means the page never has to write
+ * "this button raises your attack" - the button is attack-coloured and sits
+ * under a heading that says STATS.
+ */
+const TINT = {
+  hp: '#d9534f', mp: '#5b8cd9', att: '#e08a3c', def: '#93a3b5',
+  spd: '#d9c23c', dex: '#7fc45a', vit: '#d95fa0', wis: '#9b7fd9'
+};
+
   const GOALS = [
-    { group: 'Others', id: 'dps', say: 'Damage a second', of: n => n.total },
-    { group: 'Others', id: 'kill', say: 'Kill it fast', of: (n, s) => {
+    { group: 'Others', id: 'dps', say: 'Damage a second', tint: '#e08a3c',
+      of: n => n.total },
+    { group: 'Others', id: 'kill', say: 'Kill it fast', tint: '#f0c274', of: (n, s) => {
       const boss = data.byBoss[s.boss];
       if (!boss || !n.total) return 0;
       return -boss.hp / n.total;
     } },
-    { group: 'Others', id: 'shot', say: 'Damage a shot', of: n => n.gun.each * (n.gun.many || 1) },
-    { group: 'Others', id: 'gun', say: 'Weapon only', of: n => n.gun.dps },
-    { group: 'Others', id: 'spell', say: 'Ability only', of: n => n.spell.dps },
+    { group: 'Others', id: 'shot', say: 'Damage a shot', tint: '#e08a3c',
+      of: n => n.gun.each * (n.gun.many || 1) },
+    { group: 'Others', id: 'gun', say: 'Weapon only', tint: '#d9534f',
+      of: n => n.gun.dps },
+    { group: 'Others', id: 'spell', say: 'Ability only', tint: '#5b8cd9',
+      of: n => n.spell.dps },
     /*
      * Through armour: what the build still lands on the hardest thing it will
      * ever meet. A weapon that throws many small shots loses most of itself to
      * armour and a heavy one barely notices, so this and plain damage pull in
      * different directions - which is the whole reason the curve is drawn.
      */
-    { group: 'Others', id: 'pierce', say: 'Through armour', of: (n, s) => {
+    { group: 'Others', id: 'pierce', say: 'Through armour', tint: '#93a3b5', of: (n, s) => {
       const was = s.against;
       s.against = 80;
       const hard = numbersFor(s, 80);
@@ -5758,13 +5806,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * before you die, which is your life multiplied by what armour saves you
      * on an ordinary hit, plus what you heal back while it happens.
      */
-    { group: 'Others', id: 'live', say: 'Survival', of: n => {
+    { group: 'Others', id: 'live', say: 'Survival', tint: '#7fc45a', of: n => {
       const s = n.stats.now;
       const soak = 100 / Math.max(15, 100 - s.def);
       return s.hp * soak + HEAL_AT(s.vit) * 20;
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
-      of: n => n.stats.now[key] }))
+      tint: TINT[key], of: n => n.stats.now[key] }))
   ];
 
   function scoreOf(state, goal) {
@@ -5972,6 +6020,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           + '<button type="button" class="tc-hold" data-hold="' + hand + ':' + at
           + '" title="keep this one while the calculator works">'
           + (held ? 'kept' : 'keep') + '</button>'
+          + (one ? '<button type="button" class="tc-drop" data-drop="' + hand + ':' + at
+            + '" title="take this enchantment off">×</button>' : '')
           + '</span>');
       }
       chips.push('<label class="tc-rarity">slots'
@@ -6017,7 +6067,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
        * the ceiling is the thing being read.
        */
       return '<div class="tc-stat is-' + key + (over ? ' is-over' : '')
-        + (part >= 1 ? ' is-full' : '') + '">'
+        + (part >= 1 ? ' is-full' : '') + '" style="--tint:' + TINT[key] + '">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
         + '<b>' + round(now) + '<u>/' + top + '</u></b>'
@@ -6806,8 +6856,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     el('tcGoals').innerHTML = groups.map(name =>
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
       + GOALS.filter(one => one.group === name).map(one =>
-        '<button type="button" class="tc-goal" data-goal="' + one.id + '">'
-        + esc(one.say) + '</button>').join('')
+        '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
+        + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
+        + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
       + '</div>').join('');
   }
 
@@ -6865,6 +6916,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (ench) {
         const [hand, at] = ench.dataset.ench.split(':');
         openEnchants(hand, Number(at));
+        return;
+      }
+      const drop = event.target.closest('[data-drop]');
+      if (drop) {
+        const [hand, at] = drop.dataset.drop.split(':');
+        build.gear[hand].ench[Number(at)] = null;
+        delete build.locked[drop.dataset.drop];
+        keep(); paint();
         return;
       }
       const hold = event.target.closest('[data-hold]');

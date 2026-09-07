@@ -370,23 +370,41 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * against each other. Time to kill is inverted, because less of it is
    * better and the search only knows how to climb.
    */
+/*
+ * A colour for each of the eight, the game's own.
+ *
+ * Life is red and magic is blue everywhere in that game; attack is the warm
+ * one, defence the steel one, and so on down. Carrying the same eight through
+ * the bars, the figures and the buttons means the page never has to write
+ * "this button raises your attack" - the button is attack-coloured and sits
+ * under a heading that says STATS.
+ */
+const TINT = {
+  hp: '#d9534f', mp: '#5b8cd9', att: '#e08a3c', def: '#93a3b5',
+  spd: '#d9c23c', dex: '#7fc45a', vit: '#d95fa0', wis: '#9b7fd9'
+};
+
   const GOALS = [
-    { group: 'Others', id: 'dps', say: 'Damage a second', of: n => n.total },
-    { group: 'Others', id: 'kill', say: 'Kill it fast', of: (n, s) => {
+    { group: 'Others', id: 'dps', say: 'Damage a second', tint: '#e08a3c',
+      of: n => n.total },
+    { group: 'Others', id: 'kill', say: 'Kill it fast', tint: '#f0c274', of: (n, s) => {
       const boss = data.byBoss[s.boss];
       if (!boss || !n.total) return 0;
       return -boss.hp / n.total;
     } },
-    { group: 'Others', id: 'shot', say: 'Damage a shot', of: n => n.gun.each * (n.gun.many || 1) },
-    { group: 'Others', id: 'gun', say: 'Weapon only', of: n => n.gun.dps },
-    { group: 'Others', id: 'spell', say: 'Ability only', of: n => n.spell.dps },
+    { group: 'Others', id: 'shot', say: 'Damage a shot', tint: '#e08a3c',
+      of: n => n.gun.each * (n.gun.many || 1) },
+    { group: 'Others', id: 'gun', say: 'Weapon only', tint: '#d9534f',
+      of: n => n.gun.dps },
+    { group: 'Others', id: 'spell', say: 'Ability only', tint: '#5b8cd9',
+      of: n => n.spell.dps },
     /*
      * Through armour: what the build still lands on the hardest thing it will
      * ever meet. A weapon that throws many small shots loses most of itself to
      * armour and a heavy one barely notices, so this and plain damage pull in
      * different directions - which is the whole reason the curve is drawn.
      */
-    { group: 'Others', id: 'pierce', say: 'Through armour', of: (n, s) => {
+    { group: 'Others', id: 'pierce', say: 'Through armour', tint: '#93a3b5', of: (n, s) => {
       const was = s.against;
       s.against = 80;
       const hard = numbersFor(s, 80);
@@ -398,13 +416,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * before you die, which is your life multiplied by what armour saves you
      * on an ordinary hit, plus what you heal back while it happens.
      */
-    { group: 'Others', id: 'live', say: 'Survival', of: n => {
+    { group: 'Others', id: 'live', say: 'Survival', tint: '#7fc45a', of: n => {
       const s = n.stats.now;
       const soak = 100 / Math.max(15, 100 - s.def);
       return s.hp * soak + HEAL_AT(s.vit) * 20;
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
-      of: n => n.stats.now[key] }))
+      tint: TINT[key], of: n => n.stats.now[key] }))
   ];
 
   function scoreOf(state, goal) {
@@ -612,6 +630,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           + '<button type="button" class="tc-hold" data-hold="' + hand + ':' + at
           + '" title="keep this one while the calculator works">'
           + (held ? 'kept' : 'keep') + '</button>'
+          + (one ? '<button type="button" class="tc-drop" data-drop="' + hand + ':' + at
+            + '" title="take this enchantment off">×</button>' : '')
           + '</span>');
       }
       chips.push('<label class="tc-rarity">slots'
@@ -657,7 +677,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
        * the ceiling is the thing being read.
        */
       return '<div class="tc-stat is-' + key + (over ? ' is-over' : '')
-        + (part >= 1 ? ' is-full' : '') + '">'
+        + (part >= 1 ? ' is-full' : '') + '" style="--tint:' + TINT[key] + '">'
         + '<i>' + say + '</i>'
         + '<span class="tc-bar"><span style="width:' + (part * 100).toFixed(1) + '%"></span></span>'
         + '<b>' + round(now) + '<u>/' + top + '</u></b>'
@@ -1446,8 +1466,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     el('tcGoals').innerHTML = groups.map(name =>
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
       + GOALS.filter(one => one.group === name).map(one =>
-        '<button type="button" class="tc-goal" data-goal="' + one.id + '">'
-        + esc(one.say) + '</button>').join('')
+        '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
+        + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
+        + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
       + '</div>').join('');
   }
 
@@ -1505,6 +1526,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (ench) {
         const [hand, at] = ench.dataset.ench.split(':');
         openEnchants(hand, Number(at));
+        return;
+      }
+      const drop = event.target.closest('[data-drop]');
+      if (drop) {
+        const [hand, at] = drop.dataset.drop.split(':');
+        build.gear[hand].ench[Number(at)] = null;
+        delete build.locked[drop.dataset.drop];
+        keep(); paint();
         return;
       }
       const hold = event.target.closest('[data-hold]');
