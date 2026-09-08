@@ -450,6 +450,33 @@ const RealmIndex = (function () {
     return page;
   }
 
+  /*
+   * As many groups open as the screen will hold.
+   *
+   * With the whole window the rail can show every one of them; with a shorter
+   * window it cannot, and a page that scrolls to reach the categories is the
+   * thing the folding was for. So they are opened top down and the ones that
+   * would run off the bottom are shut again - measured rather than guessed,
+   * because a group's height is the number of chips in it and the width of
+   * the window at that moment.
+   */
+  function fitGroups() {
+    const box = el('ixFacets');
+    const panel = el('ixBody');
+    if (!box || !panel || panel.classList.contains('has-pick')) return;
+    const room = () => (window.innerHeight || 900)
+      - box.getBoundingClientRect().top - 24;
+    for (let guard = groups.length; guard > 0; guard--) {
+      if (box.scrollHeight <= room()) break;
+      const still = groups.filter(one => one.open && !one.inSub);
+      /* Never all of them shut: a rail of seven headings answers nothing. */
+      if (still.length <= 1) break;
+      const last = still[still.length - 1];
+      last.open = false;
+      drawFacets();
+    }
+  }
+
   /* Everything the rail touches, redrawn in one go. */
   /* Whether a record survives the rail as it stands - the same test the list
      makes, without the name being typed, which is nobody's category. */
@@ -474,8 +501,13 @@ const RealmIndex = (function () {
      * chosen and it folds down to what was chosen, and the list has the room.
      */
     const picked = narrowed.length > 0 || Boolean(kindWanted);
-    if (picked) for (const one of groups) one.open = false;
-    else if (groups[0]) groups[0].open = true;
+    /*
+     * Folded to fit. With the whole window to itself the rail has room for
+     * every group at once and there is nothing to be gained by making the
+     * reader open them; once it is a column down one side it has room for
+     * none, and the choice already made is standing at the top anyway.
+     */
+    for (const one of groups) one.open = !picked;
     const body = el('ixBody');
     if (body) {
       body.classList.toggle('has-pick', picked);
@@ -492,6 +524,7 @@ const RealmIndex = (function () {
     drawTypes();
     drawChosen();
     drawFacets();
+    fitGroups();
     drawResults();
   }
 
@@ -559,7 +592,8 @@ const RealmIndex = (function () {
     if (!box) return;
     box.innerHTML = groups.map((one, at) => (one.inSub ? '' :
       '<section class="ix-group' + (one.open ? ' is-open' : '')
-      + '" data-group="' + at + '">'
+      + '" data-group="' + at + '"'
+      + (one.chips.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
       + '<button type="button" class="ix-group-head" data-fold="' + at + '">'
       + '<b>' + esc(one.title) + '</b>'
       + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
@@ -567,13 +601,18 @@ const RealmIndex = (function () {
       + (one.chips.filter(x => x.on).length || '') + '</span></button>'
       + '<div class="ix-group-body"><div class="ix-group-inner">'
       + (one.note ? '<p class="ix-group-note">' + esc(one.note) + '</p>' : '')
+      /*
+       * No numbers here. The rail is a set of doors and the count belongs on
+       * the other side of one: the family row says how many are left the
+       * moment a door is opened. A chip that has nothing behind it still goes
+       * away, which is the part the number was really for.
+       */
       + one.chips.filter(x => x.on || x.here === undefined || x.here > 0)
         .map(x => '<button type="button" class="ix-facet'
-          + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
+          + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '"'
+          + ' title="' + esc(x.say) + '">'
           + (x.pic ? art(all.get(x.pic), 13) : '')
-          + esc(x.say) + '<i>'
-          + (x.here === undefined ? x.ids.size : x.here).toLocaleString('en-US')
-          + '</i></button>').join('')
+          + '<span>' + esc(x.say) + '</span></button>').join('')
       + '</div></div></section>')).join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
     const clear = el('ixClear');
@@ -1031,16 +1070,13 @@ const RealmIndex = (function () {
     }
     await loadWiki();
     buildFacets();
-    narrow();
     wire();
-    drawKinds();
-    drawTypes();
-    drawChosen();
-    drawFacets();
+    /* The same pass every change makes, so the first screen is not a special
+       case that forgets to unfold anything. */
+    repaint();
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built
       + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
-    drawResults();
     drawCard('');
     /*
      * The sprites are sized against the window, so a window that changes shape
@@ -1050,7 +1086,7 @@ const RealmIndex = (function () {
     window.addEventListener('resize', () => {
       clearTimeout(settling);
       settling = setTimeout(() => {
-        drawResults();
+        repaint();
         if (showing) drawCard(showing.id);
       }, 180);
     });
