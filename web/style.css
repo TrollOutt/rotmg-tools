@@ -2837,7 +2837,14 @@ body.globe-wide .home-card-art { animation: none !important; }
  */
 .ix-group-head { flex-wrap: wrap; }
 .ix-group.is-primary {
-  background: rgba(255, 255, 255, .045);
+  /*
+   * The anchor has a colour of its own rather than its group's. Which category
+   * it happens to be is beside the point here - what matters is that this is
+   * the one holding the others up, and it should read the same whichever
+   * group it turns out to be.
+   */
+  --ix-hue: #f2a63b;
+  background: rgba(242, 166, 59, .08);
   border: 1px solid var(--ix-hue); border-left-width: 3px;
   border-radius: var(--radius-sm);
 }
@@ -2860,6 +2867,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 /* And the same distinction where the choices are listed together. */
 .ix-chosen { background: var(--ix-hue, var(--accent)); border-color: var(--ix-hue, var(--accent)); }
+.ix-chosen.is-first { --ix-hue: #f2a63b; }
 .ix-chosen:not(.is-first) {
   background: transparent; color: var(--ix-hue, var(--accent));
   border-color: var(--ix-hue, var(--accent));
