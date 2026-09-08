@@ -2813,6 +2813,20 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-facet.is-on i { color: rgba(16, 20, 28, .6); }
 
 /* What the community says, kept visibly apart from what the client declares. */
+.ix-does {
+  margin: 0 0 10px; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.ix-does li {
+  font-size: 12px; color: var(--muted); line-height: 1.45;
+  padding-left: 11px; position: relative;
+}
+.ix-does li::before {
+  content: ''; position: absolute; left: 0; top: 7px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+}
+.ix-does b { color: var(--text); font-weight: 600; }
+
 .ix-said-block {
   margin-top: 14px; padding: 11px 13px 4px;
   border: 1px solid var(--line-soft); border-left: 2px solid var(--legendary);
@@ -9688,6 +9702,19 @@ const RealmIndex = (function () {
     return bits;
   }
 
+  /*
+   * What the client says a thing does where no number can say it. The Alien
+   * Cores carry no damage and no bonus and read as though they did nothing;
+   * the client writes their effect out in the tooltip block instead, and so
+   * does it for seven hundred other pieces of gear.
+   */
+  function drawDoes(one) {
+    if (!one.does || !one.does.length) return '';
+    return '<ul class="ix-does">' + one.does.map(said => '<li>'
+      + (said.length > 1 ? '<b>' + esc(said[0]) + '</b> ' + esc(said[1]) : esc(said[0]))
+      + '</li>').join('') + '</ul>';
+  }
+
   function drawCard(id) {
     const box = el('ixCard');
     const one = all.get(id);
@@ -9728,6 +9755,7 @@ const RealmIndex = (function () {
         : '')
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
+      + drawDoes(one)
       + (one.hidden
         ? '<p class="ix-warn"><b>Not offered by the tools</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
         : '')

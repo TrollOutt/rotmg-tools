@@ -466,6 +466,19 @@ const RealmIndex = (function () {
     return bits;
   }
 
+  /*
+   * What the client says a thing does where no number can say it. The Alien
+   * Cores carry no damage and no bonus and read as though they did nothing;
+   * the client writes their effect out in the tooltip block instead, and so
+   * does it for seven hundred other pieces of gear.
+   */
+  function drawDoes(one) {
+    if (!one.does || !one.does.length) return '';
+    return '<ul class="ix-does">' + one.does.map(said => '<li>'
+      + (said.length > 1 ? '<b>' + esc(said[0]) + '</b> ' + esc(said[1]) : esc(said[0]))
+      + '</li>').join('') + '</ul>';
+  }
+
   function drawCard(id) {
     const box = el('ixCard');
     const one = all.get(id);
@@ -506,6 +519,7 @@ const RealmIndex = (function () {
         : '')
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
+      + drawDoes(one)
       + (one.hidden
         ? '<p class="ix-warn"><b>Not offered by the tools</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
         : '')
