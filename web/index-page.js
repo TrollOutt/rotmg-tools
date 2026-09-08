@@ -645,8 +645,12 @@ const RealmIndex = (function () {
     for (const set of groups) for (const chip of set.chips) if (chip.on) on.push(chip);
     if (!on.length) { box.innerHTML = ''; box.hidden = true; return; }
     box.hidden = false;
+    /* Each carries the colour of the group it came from, so a chip up here is
+       recognisable without its heading beside it. */
     box.innerHTML = on.map(x => '<button type="button" class="ix-chosen'
       + (x === asked[0] ? ' is-first' : '') + '" data-facet="' + esc(x.key) + '"'
+      + ' data-key="' + esc(x.key.slice(0, x.key.indexOf('/')).toLowerCase()
+        .replace(/[^a-z]+/g, '-')) + '"'
       + ' title="' + (x === asked[0]
         ? 'The first choice — taking it off clears the rest'
         : 'Take this one off') + '">'
@@ -681,11 +685,14 @@ const RealmIndex = (function () {
       return '<section class="ix-group' + (one.open ? ' is-open' : '')
       + (isFirst ? ' is-primary' : (chosen.length ? ' is-chosen' : ''))
       + '" data-group="' + at + '"'
+      /* Its own colour, so a chip is recognisable away from its heading. */
+      + ' data-key="' + esc(one.title.toLowerCase().replace(/[^a-z]+/g, '-')) + '"'
       + (shown.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
       + '<button type="button" class="ix-group-head" data-fold="' + at + '"'
       + (isFirst ? ' title="The first choice. Taking it off clears the rest."' : '') + '>'
+      /* On its own line above the name, so it cannot be read as part of it. */
+      + (isFirst ? '<em class="ix-first">first choice — clears the rest</em>' : '')
       + '<b>' + esc(one.title) + '</b>'
-      + (isFirst ? '<em class="ix-first">first choice</em>' : '')
       + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
       + '<span class="ix-group-on">'
       + (chosen.length || '') + '</span></button>'
@@ -866,11 +873,13 @@ const RealmIndex = (function () {
     const body = el('ixBody');
     if (!one) {
       box.innerHTML = '';
-      box.hidden = true;
+      /*
+       * Left in the grid rather than taken out of it: its track shrinks to
+       * nothing and it fades with it, which a display switch cannot do.
+       */
       if (body) body.classList.remove('has-card');
       return;
     }
-    box.hidden = false;
     /*
      * A record on screen means the middle column has done its job, so it stays
      * open behind the card even when nothing was chosen to get here - a link
