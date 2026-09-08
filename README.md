@@ -19,7 +19,9 @@ was actually walked.
 
 **Index** — every item, creature, class, set and enchantment the game
 declares, with its picture cut from the client, where it came from, and what it
-is joined to. Search it, then step from one thing to the next.
+is joined to. Narrow it by class, slot, tier or season, then step from one
+thing to the next — including to who drops it, which the players know and the
+game's own files do not say.
 
 Want it offline? [`docs/Realm-Tools.html`](docs/Realm-Tools.html)
 is a single file — download it, double-click it, done.

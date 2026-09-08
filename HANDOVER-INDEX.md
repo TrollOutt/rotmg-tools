@@ -24,13 +24,16 @@ client at all.
 node tools/extract-client.js        # fills client-data/ from the installed game
 node tools/build-index.js           # records and links   -> data/Index/
 node tools/index-sprites.js         # pictures            -> web/assets/index/
+node tools/index-wiki.js            # community links     -> data/Index/wiki.json
 npm run build                       # the site            -> docs/
 ```
 
-The two index tools must run in that order and both must run: the sprite tool
-reads `data/Index/index.json`, writes the rectangles back into it, and copies
-the result to `web/assets/index/`. Running only the first leaves the served
-copy without art.
+The first three must run in that order. The sprite tool reads
+`data/Index/index.json`, writes the rectangles back into it and copies the
+result to `web/assets/index/`; running only the first leaves the served copy
+without art. The wiki tool is the one step that is optional — see
+[Community links](#community-links) — and it changes nothing when its snapshot
+is absent.
 
 ---
 
@@ -207,6 +210,27 @@ does that yet.
 
 ---
 
+## Ways in
+
+The search box only helps a reader who already knows the name. The rail down
+the left of the page is for the other one: `buildFacets()` in
+`web/index-page.js` builds one set of record ids per chip, once, and `narrow()`
+turns the chips that are down into one set per group. Within a group the
+choices add up; between groups they narrow. Archer and Wizard means either;
+Archer and Weapon means both.
+
+Every group is a division the client itself makes: **Class** (the slot a class
+declares against the slot an item declares — the same comparison the card
+makes), **Slot**, **Tier**, **Marks** (soulbound, shiny, reskin, boss, god, and
+what a tool hides), **Season** and **Biome**.
+
+**There is no Year, because neither source has one.** The client names a year
+on about sixty things (`MOTMG_2024`, `ORYXMAS2023`) and on nothing else, and
+the wiki's release-history pages link to other release pages rather than to
+items. A year axis would have been three chips over eleven thousand records, so
+the seasons carry what year information exists and no hollow axis sits beside
+them.
+
 ## How the page gets it
 
 `web/index-page.js` exports `{ start, show }` and looks for the data in this
@@ -231,19 +255,94 @@ the index is a hub and not a list.
 
 ---
 
-## What is deliberately absent
+<a id="community-links"></a>
 
-**Drop tables — who drops what — are not in here.** The client does not declare
-them in any form these tools read; that side lives on the server. Everything in
-the index is a declaration the client actually makes, and a guessed drop table
-would be the one thing in it that is not.
+## Community links
+
+**Who drops what is not in the client.** Loot is decided on the server, and no
+file in the installed game says which boss gives which bow. It is the one
+question the index could not answer from its own sources — so it answers it
+from the community wiki instead, and says on the card that it has.
+
+`tools/index-wiki.js` reads a local snapshot of that wiki and writes
+`data/Index/wiki.json`. That file is committed, so **the page works on a machine
+that has never seen the snapshot**; without the snapshot the tool prints a line
+and leaves the existing join alone.
+
+```bash
+REALM_INDEX_BUNDLE=<path to the snapshot> node tools/index-wiki.js
+```
+
+It also looks in `local/realm-linked-index/bundle` and `local/wiki-bundle`. The
+snapshot itself is large, is not ours to publish, and is in this repository
+under no path at all.
+
+**The join is exact, and that is the whole trick.** The snapshot files a client
+object under `Objects.NNN.xml|<type in decimal>|<its id>`, which is precisely
+the three things a record already carries in `from` and `alias`. So there is no
+name matching and nothing to arbitrate: of the 7,441 keys it knows, 5,992 are
+records this index holds, and not one of them is ambiguous on our side. The
+rest are portals and controllers the index does not keep.
+
+What comes out:
+
+| | |
+|---|---:|
+| records with a page of their own | 5,992 |
+| wiki pages referenced | 4,877 |
+| drop links kept | 12,793 |
+| summoning links kept | 1,586 |
+| links set aside as unreadable | 11,281 |
+
+The file is 596 KB and sits beside the index under the same bargain: the served
+page fetches it when somebody opens the Index, and only the downloadable copy
+carries it inside, as `wikiText`.
+
+Its shape: `pages` is `[slug, title]` and an address is `at` + slug; `ids` is
+the record ids it references; `page` maps a record to its page; `drop` and
+`spawn` are pairs of **page** numbers.
+
+**Page to page, not record to record.** One page answers to three client
+definitions wherever a name is claimed three times, and fanning the same drop
+list across all three writes it nine times and implies the wiki said something
+separate about each. It said it once, about the page; the card finds it through
+the page.
+
+**None of the wiki's own writing is published** — no prose, no tables, no
+images. A link is the honest way to send a reader to somebody else's work, and
+every record that has a page carries one.
+
+### Two things that were tried and thrown away
+
+**Its collections are not categories.** The snapshot turns every section of
+every page into a "collection", so membership means *linked from a section of
+that page*, not *is one of these*. It put the Doom Bow under Shiny Items, under
+Loot Containers and under Blueprints, and its Shiny Items list held 1,469
+things where the client labels 322. A browse rail built on that is a rail of
+plausible lies. Removed — the client's own labels do the same job truthfully.
+
+**A drop link does not carry its own direction.** The snapshot marks a link as
+a drop when it sits under a heading like "Drops" — but a monster page's Drops
+section names its loot while an item page's names the monsters, the same mark
+pointing opposite ways. Reading them all one way produced *"Septavius the Ghost
+God, dropped by Pet Skins"*. The pair settles it now (`shapeOf` and `READS` in
+the tool): a creature or a place on one side and a thing on the other is a
+drop, and any other shape is left out. That set 11,281 links aside, and a
+missing arrow is better than a wrong one.
+
+Summoning could not be settled that way at all: the wiki writes both "Spawns:"
+and "Spawns from:" under one "Reproduction" heading, and the link keeps the
+heading, not the line. So the card shows a single row — *spawns, or is spawned
+by* — which is exactly what is known.
+
+### A note on provenance
 
 A third-party analysis of the same client data exists on the machine this was
 written on, outside the repository, and is not published: it is somebody else's
-work and it is not the client. It was read while building this, and nothing was
-taken from it that the client does not also say. If a future join needs
-wiki-derived rosters, treat that as a new source with its own provenance rather
-than folding it into `from`.
+work and it is not the client. The wiki snapshot came with it. Nothing was
+taken from either that the client or the wiki does not itself say, and the two
+kinds of claim are kept apart everywhere — on the card the community block has
+its own frame, its own colour, and a line naming whose word it is.
 
 ---
 
@@ -260,3 +359,10 @@ than folding it into `from`.
 - **Nothing verifies the index against the tools.** A check that every item the
   bench shows has a record, and that every record the bench hides carries a
   `hidden` reason, would catch a drifted filter the moment it drifts.
+- **11,281 wiki links are set aside as unreadable**, most of them item to item
+  inside a Drops section. The page *text* does distinguish "Drops" from "Drops
+  of Interest" and "Spawns" from "Spawns from"; a reader of the text rather
+  than of the link graph could recover a good part of them.
+- **The wiki join is only as fresh as its snapshot.** `wiki.json` carries the
+  date it was built, but nothing on the page compares that date with the
+  client's, and a reader would want to know when the two disagree.

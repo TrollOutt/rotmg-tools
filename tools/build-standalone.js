@@ -124,6 +124,13 @@ const sources = {
    * offline copy; a page in it that cannot answer is worse than the weight.
    */
   indexText: readText('Index', 'index.json'),
+  /*
+   * And the community join beside it: which of our records has a page on the
+   * wiki, and what players have written down about where things come from.
+   * Same bargain as the index - carried by the kept copy, fetched by the
+   * served one - because it is only ever wanted on the same page.
+   */
+  wikiText: readText('Index', 'wiki.json'),
 };
 
 /* ---------------------------------------------------------------- *
@@ -471,6 +478,7 @@ const changes = fs.existsSync(changesPath) ? fs.readFileSync(changesPath, 'utf8'
  */
 const served = Object.assign({}, sources);
 delete served.indexText;
+delete served.wikiText;
 
 const dress = (bundleSources) => readWeb('index.html')
   .replace('</title>', `</title>\n  ${faviconTag}`)
@@ -610,10 +618,21 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  * And the index, which the served page fetches rather than carries. It is the
  * one thing on the site that lives beside the page instead of inside it.
  */
-const indexed = carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
-if (indexed.copied) {
-  console.log('  index   ' + kb(fs.statSync(path.join(pagesDir, 'assets', 'index', 'index.json')).size)
-    + ' beside the page, fetched only when that page is opened');
+carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+/*
+ * Reported whether or not anything moved: the point is what the page will
+ * find beside it, not what this run happened to copy.
+ */
+{
+  const beside = path.join(pagesDir, 'assets', 'index', 'index.json');
+  if (fs.existsSync(beside)) {
+    console.log('  index   ' + kb(fs.statSync(beside).size)
+      + ' beside the page, fetched only when that page is opened');
+  }
+  const join = path.join(pagesDir, 'assets', 'index', 'wiki.json');
+  if (fs.existsSync(join)) {
+    console.log('  wiki    ' + kb(fs.statSync(join).size) + ' of community links beside it');
+  }
 }
 if (carried.copied || carried.dropped) {
   console.log(`  atlas   ${carried.copied} files copied to docs/assets/atlas`

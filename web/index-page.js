@@ -18,6 +18,9 @@ const RealmIndex = (function () {
   let started = false;
   let showing = null;                // the record on screen
   let kindWanted = '';               // the category chip that is down
+  let wiki = null;                   // the community join, when there is one
+  let groups = [];                   // the browse rail, built once from the data
+  let narrowed = [];                 // one set of allowed ids per group in play
 
   const el = id => document.getElementById(id);
 
@@ -97,6 +100,146 @@ const RealmIndex = (function () {
     return true;
   }
 
+  /*
+   * And what the community knows, which is a separate file because it is a
+   * separate kind of claim. The client does not say where anything comes from
+   * - loot is the server's business - so "dropped by" can only ever be what
+   * players have written down. It is loaded beside the index, shown apart from
+   * it, and the page says whose word it is.
+   */
+  async function loadWiki() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.wikiText;
+    if (!raw) {
+      raw = await fetch('assets/index/wiki.json').then(r => (r.ok ? r.text() : ''))
+        .catch(() => fetch('../data/Index/wiki.json').then(r => r.text()).catch(() => ''));
+    }
+    if (!raw) return;
+    let said;
+    try { said = JSON.parse(raw); } catch (err) { return; }
+    const named = said.ids || [];
+    wiki = {
+      says: said.says, home: said.at, built: said.built, pages: said.pages || [],
+      page: new Map(),                 // our record -> the page about it
+      about: new Map(),                // that page -> every record it answers to
+      drop: new Map(), dropBy: new Map(), spawn: new Map(), spawnBy: new Map()
+    };
+    const tie = (map, key, value) => {
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(value);
+    };
+    for (const [who, where] of said.page || []) {
+      const id = named[who];
+      if (!id || !all.has(id)) continue;
+      wiki.page.set(id, where);
+      tie(wiki.about, where, id);
+    }
+    for (const [from, to] of said.drop || []) { tie(wiki.drop, from, to); tie(wiki.dropBy, to, from); }
+    for (const [from, to] of said.spawn || []) { tie(wiki.spawn, from, to); tie(wiki.spawnBy, to, from); }
+  }
+
+  /* ---------------- ways in ---------------- */
+  /*
+   * A search box only helps somebody who already knows the name. The rail is
+   * for the other reader: every way of cutting the index that the data really
+   * supports, with how many things each way holds. Each one is the client's
+   * own division - the wiki's own lists were tried and dropped, because what
+   * its pages call a list is anything linked from a section of them, which put
+   * the Doom Bow under Shiny Items and under Loot Containers.
+   *
+   * Within a group the choices add up, between groups they narrow: Archer and
+   * Wizard means either, Archer and Weapon means both.
+   */
+  function buildFacets() {
+    groups = [];
+    const group = (title, from, note) => {
+      const made = { title, from, note, chips: [], open: false };
+      groups.push(made);
+      return made;
+    };
+    const chip = (into, key, say, ids) => {
+      if (ids.size) into.chips.push({ key: into.title + '/' + key, say, ids });
+    };
+    const gather = test => {
+      const ids = new Set();
+      for (const one of all.values()) if (test(one)) ids.add(one.id);
+      return ids;
+    };
+
+    /* Which class may hold it - the slot the class declares against the slot
+       the item declares, the same comparison the card makes. */
+    const byClass = group('Class', 'client');
+    for (const one of [...all.values()].filter(x => x.kind === 'class')) {
+      const wants = new Set(one.slots || []);
+      const ids = gather(x => x.id === one.id
+        || (x.kind === 'item' && wants.has(x.slot)));
+      chip(byClass, one.name, one.name, ids);
+    }
+
+    const bySlot = group('Slot', 'client');
+    for (const [hand, say] of [['weapon', 'Weapon'], ['ability', 'Ability'],
+      ['armor', 'Armour'], ['ring', 'Ring']]) {
+      chip(bySlot, hand, say, gather(x => x.hand === hand));
+    }
+
+    const byTier = group('Tier', 'client');
+    chip(byTier, 'ut', 'Untiered', gather(x => (x.labels || []).includes('UT')));
+    chip(byTier, 'st', 'Set tier', gather(x => (x.labels || []).includes('ST')));
+    for (let t = 0; t <= 14; t++) {
+      chip(byTier, 't' + t, 'T' + t, gather(x => x.tier === t));
+    }
+
+    const marks = group('Marks', 'client');
+    chip(marks, 'sb', 'Soulbound', gather(x => Boolean(x.sb)));
+    chip(marks, 'shiny', 'Shiny', gather(x => (x.labels || []).includes('SHINY')));
+    chip(marks, 'reskin', 'Reskin', gather(x => (x.labels || []).includes('RESKIN')));
+    chip(marks, 'boss', 'Boss', gather(x => Boolean(x.boss)));
+    chip(marks, 'god', 'God', gather(x => Boolean(x.god)));
+    chip(marks, 'hidden', 'Hidden by a tool', gather(x => Boolean(x.hidden)));
+
+    /*
+     * The seasons, as far as the client names them. It labels a couple of
+     * hundred things with the event they belong to and sometimes with its
+     * year; it names no year at all for everything else, so there is no year
+     * axis here rather than a hollow one.
+     */
+    const when = group('Season', 'client', 'only where the client names one');
+    const SEASON = [
+      ['Oryxmas', /^ORYXMAS|^ORG_ORYXMAS/], ['Halloween', /^HALLOWEEN|^HAUNTEDHALLOWS/],
+      ['Easter', /^EASTER/], ["Valentine's", /^VALENTINE/],
+      ['MotMG', /^MOTMG/], ['Spring', /^SPRINGMEANING/]
+    ];
+    for (const [say, test] of SEASON) {
+      chip(when, say, say, gather(x => (x.labels || []).some(l => test.test(l))));
+    }
+
+    const where = group('Biome', 'client');
+    for (const one of [...all.values()].filter(x => x.kind === 'place')
+      .sort((a, b) => a.name.localeCompare(b.name))) {
+      const ids = gather(x => x.id === one.id
+        || (x.outLinks || []).some(([how, to]) => how === 'lives in' && to === one.id));
+      chip(where, one.name, one.name, ids);
+    }
+
+    for (const one of groups) {
+      one.chips.sort((a, b) => b.ids.size - a.ids.size);
+    }
+    groups = groups.filter(one => one.chips.length);
+    if (groups[0]) groups[0].open = true;
+  }
+
+  /* The sets a record has to be in to survive the rail, one per group in play. */
+  function narrow() {
+    narrowed = [];
+    for (const one of groups) {
+      const on = one.chips.filter(x => x.on);
+      if (!on.length) continue;
+      const any = new Set();
+      for (const chip of on) for (const id of chip.ids) any.add(id);
+      narrowed.push(any);
+    }
+  }
+
   /* ---------------- searching ---------------- */
   /*
    * Name first, then the client's own working name, and nothing clever: a
@@ -108,6 +251,9 @@ const RealmIndex = (function () {
     const out = [];
     for (const one of light) {
       if (kindWanted && one[2] !== kindWanted) continue;
+      let barred = false;
+      for (const set of narrowed) if (!set.has(one[0])) { barred = true; break; }
+      if (barred) continue;
       if (!term) { out.push(one); if (out.length > 400) break; continue; }
       const name = one[1].toLowerCase();
       const at = name.indexOf(term);
@@ -141,6 +287,28 @@ const RealmIndex = (function () {
       + '<i class="ix-kind is-' + one[2] + '">' + esc(KIND_SAY[one[2]] || one[2]) + '</i>'
       + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
       + '</button>').join('') || '<p class="ix-none">Nothing by that name.</p>';
+  }
+
+  function drawFacets() {
+    const box = el('ixFacets');
+    if (!box) return;
+    box.innerHTML = groups.map((one, at) =>
+      '<section class="ix-group' + (one.open ? ' is-open' : '')
+      + '" data-group="' + at + '">'
+      + '<button type="button" class="ix-group-head" data-fold="' + at + '">'
+      + '<b>' + esc(one.title) + '</b>'
+      + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
+      + '<span class="ix-group-on">'
+      + (one.chips.filter(x => x.on).length || '') + '</span></button>'
+      + '<div class="ix-group-body">'
+      + (one.note ? '<p class="ix-group-note">' + esc(one.note) + '</p>' : '')
+      + one.chips.map(x => '<button type="button" class="ix-facet'
+        + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
+        + esc(x.say) + '<i>' + x.ids.size.toLocaleString('en-US') + '</i></button>').join('')
+      + '</div></section>').join('');
+    const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
+    const clear = el('ixClear');
+    if (clear) clear.hidden = !on;
   }
 
   /* ---------------- one record, and everything it touches ---------------- */
@@ -227,6 +395,11 @@ const RealmIndex = (function () {
       + '<span class="ix-kind is-' + one.kind + '">' + esc(KIND_SAY[one.kind] || one.kind) + '</span>'
       + '<h3>' + esc(one.said || one.name) + '</h3>'
       + (one.alias ? '<code>' + esc(one.alias) + '</code>' : '')
+      + (wiki && wiki.page.has(one.id)
+        ? '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
+          + esc(wiki.home + (wiki.pages[wiki.page.get(one.id)] || [''])[0])
+          + '" title="Its page on the community wiki">RealmEye ↗</a>'
+        : '')
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
       + (one.hidden
@@ -245,7 +418,58 @@ const RealmIndex = (function () {
         : '')
       + drawTools(one)
       + (links.length ? drawLinks(links) : '')
+      + drawWiki(one)
       + '<p class="ix-from">Declared in <code>' + esc(where) + '</code></p>';
+  }
+
+  /*
+   * What the community says about this thing, kept in its own block and named
+   * as theirs. A drop list is not a client declaration and it is not a rate:
+   * it is what players have seen and written down, and it can be a patch out
+   * of date. Shown, because nothing else in the game's own files answers
+   * "where does this come from"; fenced, because it is somebody else's claim.
+   */
+  function drawWiki(one) {
+    if (!wiki) return '';
+    const mine = wiki.page.get(one.id);
+    if (mine === undefined) return '';
+    const rows = [];
+    const say = (how, list) => {
+      if (!list || !list.length) return;
+      rows.push('<div class="ix-link-row"><i>' + esc(how) + '</i><span>'
+        + list.slice(0, 24).map(at => {
+          const here = (wiki.about.get(at) || [])
+            .map(id => all.get(id)).filter(Boolean);
+          const pick = here.find(x => !x.twin) || here[0];
+          const [slug, title] = wiki.pages[at] || ['', '?'];
+          if (pick) {
+            return '<button type="button" class="ix-jump" data-open="' + esc(pick.id) + '">'
+              + art(pick, 14) + esc(pick.said || pick.name) + '</button>';
+          }
+          return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener"'
+            + ' href="' + esc(wiki.home + slug) + '">' + esc(title) + '</a>';
+        }).join('')
+        + (list.length > 24 ? '<em>and ' + (list.length - 24) + ' more</em>' : '')
+        + '</span></div>');
+    };
+    say('dropped by', wiki.dropBy.get(mine));
+    say('listed as dropping', wiki.drop.get(mine));
+    /*
+     * One row for summoning, not two. The wiki writes "Spawns:" and "Spawns
+     * from:" under the same heading, and the link keeps the heading but not
+     * the line - so which way round a pair reads is not in the data. Both
+     * directions together say the true thing: these two are named in each
+     * other's reproduction.
+     */
+    const kin = [...new Set([...(wiki.spawn.get(mine) || []),
+      ...(wiki.spawnBy.get(mine) || [])])];
+    say('spawns, or is spawned by', kin);
+    if (!rows.length) return '';
+    return '<div class="ix-said-block"><h4>What players have written down'
+      + '<em>' + esc(wiki.says) + '</em></h4>'
+      + '<p class="ix-group-note">What players have listed, not what the client'
+      + ' declares, and never a drop rate.</p>'
+      + '<div class="ix-links">' + rows.join('') + '</div></div>';
   }
 
   /* What another page can do with this thing. */
@@ -298,6 +522,29 @@ const RealmIndex = (function () {
       for (const one of el('ixKinds').querySelectorAll('[data-kind]')) {
         one.classList.toggle('is-on', one.dataset.kind === kindWanted);
       }
+      drawResults();
+    });
+    el('ixFacets').addEventListener('click', event => {
+      const fold = event.target.closest('[data-fold]');
+      if (fold) {
+        const one = groups[Number(fold.dataset.fold)];
+        one.open = !one.open;
+        fold.parentElement.classList.toggle('is-open', one.open);
+        return;
+      }
+      const hit = event.target.closest('[data-facet]');
+      if (!hit) return;
+      for (const one of groups) {
+        for (const chip of one.chips) if (chip.key === hit.dataset.facet) chip.on = !chip.on;
+      }
+      narrow();
+      drawFacets();
+      drawResults();
+    });
+    el('ixClear').addEventListener('click', () => {
+      for (const one of groups) for (const chip of one.chips) chip.on = false;
+      narrow();
+      drawFacets();
       drawResults();
     });
     document.getElementById('pageIndex').addEventListener('click', event => {
@@ -362,9 +609,13 @@ const RealmIndex = (function () {
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
     fillKinds();
+    await loadWiki();
+    buildFacets();
     wire();
+    drawFacets();
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
-      + ' things, read from the client of ' + all.built;
+      + ' things, read from the client of ' + all.built
+      + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
     drawResults();
     drawCard('');
   }
