@@ -77,10 +77,18 @@ const facts = JSON.parse(fs.readFileSync(INDEX, 'utf8'));
 const byKey = new Map();
 for (const one of facts.records) {
   if (!one.from) continue;
-  const key = facts.files[one.from[0]] + '|' + parseInt(one.from[1], 16)
-    + '|' + (one.alias || one.name);
-  if (!byKey.has(key)) byKey.set(key, []);
-  byKey.get(key).push(one.id);
+  /*
+   * Under every document that declares it. Four hundred objects are written
+   * out twice - Objects.002 and Objects.113 both hold the Frozen Chest - and
+   * the index keeps one record with both provenances, so a page filed against
+   * the second one has to find it too.
+   */
+  for (const where of [one.from[0], ...(one.also || [])]) {
+    const key = facts.files[where] + '|' + parseInt(one.from[1], 16)
+      + '|' + (one.alias || one.name);
+    if (!byKey.has(key)) byKey.set(key, []);
+    if (!byKey.get(key).includes(one.id)) byKey.get(key).push(one.id);
+  }
 }
 
 /* ---------------- the snapshot ---------------- */

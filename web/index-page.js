@@ -54,8 +54,8 @@ const RealmIndex = (function () {
    */
   const KINDS = [
     ['item', 'Gear'], ['class', 'Classes'], ['enemy', 'Enemies'],
-    ['place', 'Places'], ['set', 'Sets'], ['enchant', 'Enchantments'],
-    ['pool', 'Pools']
+    ['portal', 'Dungeons'], ['place', 'Biomes'], ['set', 'Sets'],
+    ['enchant', 'Enchantments'], ['pool', 'Pools (dev)']
   ];
   const KIND_SAY = Object.fromEntries(KINDS);
 
@@ -77,8 +77,14 @@ const RealmIndex = (function () {
     const said = JSON.parse(raw);
     all = new Map();
     for (const one of said.records) all.set(one.id, one);
-    light = said.records.map(one => [one.id, one.name, one.kind, one.alias || '',
-      one.hidden ? 1 : 0]);
+    /*
+     * The name the list prints is the one the card prints. Eight things are
+     * called Beehemoth Quiver and the build has already worked out what tells
+     * them apart; a list that prints the bare name shows the reader eight
+     * identical rows and hides the answer on the far side of a click.
+     */
+    light = said.records.map(one => [one.id, one.said || one.name, one.kind,
+      one.alias || '', one.hidden ? 1 : 0, one.dev ? 1 : 0]);
     /*
      * Both ends of every link, so a record can be asked what points at it
      * without walking the whole index. The file carries each link once.
@@ -95,6 +101,7 @@ const RealmIndex = (function () {
      */
     all.sheet = said.sheet;
     all.files = said.files || [];
+    all.slots = said.slots || {};
     all.built = said.built;
     all.count = said.records.length;
     return true;
@@ -176,10 +183,21 @@ const RealmIndex = (function () {
       chip(byClass, one.name, one.name, ids);
     }
 
-    const bySlot = group('Slot', 'client');
+    const byHand = group('Hand', 'client');
     for (const [hand, say] of [['weapon', 'Weapon'], ['ability', 'Ability'],
       ['armor', 'Armour'], ['ring', 'Ring']]) {
-      chip(bySlot, hand, say, gather(x => x.hand === hand));
+      chip(byHand, hand, say, gather(x => x.hand === hand));
+    }
+
+    /*
+     * And the finer division the client's own tiered gear agrees on: bows,
+     * quivers, leather. It is what a class card names, so a reader who taps
+     * Bow there lands on the same chip here.
+     */
+    const byType = group('Kind of gear', 'client');
+    for (const slot of Object.keys(all.slots)) {
+      chip(byType, 'slot' + slot, all.slots[slot][0],
+        gather(x => x.kind === 'item' && String(x.slot) === slot));
     }
 
     const byTier = group('Tier', 'client');
@@ -221,8 +239,18 @@ const RealmIndex = (function () {
       chip(where, one.name, one.name, ids);
     }
 
+    /*
+     * Two chips reading the same word are one way in, not two. Five patches of
+     * Low Forest are five records to the atlas and one place to a reader.
+     */
     for (const one of groups) {
-      one.chips.sort((a, b) => b.ids.size - a.ids.size);
+      const byName = new Map();
+      for (const it of one.chips) {
+        const had = byName.get(it.say);
+        if (had) { for (const id of it.ids) had.ids.add(id); continue; }
+        byName.set(it.say, it);
+      }
+      one.chips = [...byName.values()].sort((a, b) => b.ids.size - a.ids.size);
     }
     groups = groups.filter(one => one.chips.length);
     if (groups[0]) groups[0].open = true;
@@ -262,6 +290,12 @@ const RealmIndex = (function () {
     for (const one of light) {
       if (kindWanted && one[2] !== kindWanted) continue;
       if (one[4] && !wantsHidden) continue;
+      /*
+       * The plumbing waits to be asked for by name or by its own chip. An
+       * enchantment pool is a real thing worth looking up and no reader
+       * browsing the index is looking for one.
+       */
+      if (one[5] && !term && kindWanted !== one[2]) continue;
       let barred = false;
       for (const set of narrowed) if (!set.has(one[0])) { barred = true; break; }
       if (barred) continue;
@@ -381,6 +415,11 @@ const RealmIndex = (function () {
       if (notes.length) bits.push(['the shot', notes.join(', ')]);
     }
     if (one.worn) {
+      if (one.kind === 'set') {
+        bits.push(['the four pieces give', Object.keys(one.worn).map(stat =>
+          (one.worn[stat] > 0 ? '+' : '') + one.worn[stat] + ' '
+          + (WORN_SAY[stat] || stat.toLowerCase())).join(', ')]);
+      } else {
       /*
        * One row, not one per statistic: a creature's own life and armour are
        * already facts on this card, and "life +80" beside them reads as what
@@ -389,6 +428,7 @@ const RealmIndex = (function () {
       bits.push(['wearing it', Object.keys(one.worn).map(stat =>
         (one.worn[stat] > 0 ? '+' : '') + one.worn[stat] + ' '
         + (WORN_SAY[stat] || stat.toLowerCase())).join(', ')]);
+      }
     }
     if (one.hp) bits.push(['life', one.hp.toLocaleString('en-US')]);
     if (one.def) bits.push(['armour', one.def]);
@@ -397,6 +437,7 @@ const RealmIndex = (function () {
     if (one.refuses) bits.push(['never on', one.refuses]);
     if (one.beside) bits.push(['not beside', one.beside]);
     if (one.takes) bits.push(['takes', one.takes]);
+    if (one.skin) bits.push(['turns you into', one.skin]);
     if (one.ground) bits.push(['ground', one.ground]);
     if (one.tiles) bits.push(['tiles walked', one.tiles.toLocaleString('en-US')]);
     if (one.pic) bits.push(['picture', one.pic === 'wiki' ? 'from the wiki' : 'cut from the client']);
@@ -410,7 +451,16 @@ const RealmIndex = (function () {
     if (one.steps) {
       for (const many of Object.keys(one.steps)) {
         bits.push([many + ' pieces', Object.keys(one.steps[many])
-          .map(k => (one.steps[many][k] > 0 ? '+' : '') + one.steps[many][k] + ' ' + k).join(' ')]);
+          .map(k => (one.steps[many][k] > 0 ? '+' : '') + one.steps[many][k] + ' '
+            + (WORN_SAY[k] || k)).join(', ')]);
+      }
+      /*
+       * And what the pieces are worth on their own. Eight of the older sets
+       * pay nothing at all for being complete - they only change how you look
+       * - and a card that showed nothing read as though the set did nothing.
+       */
+      if (one.kind === 'set' && !Object.keys(one.steps).length) {
+        bits.push(['for wearing all four', 'nothing but the look']);
       }
     }
     return bits;
@@ -425,12 +475,19 @@ const RealmIndex = (function () {
       box.innerHTML = '<p class="ix-none">Pick something on the left.</p>';
       return;
     }
-    const held = heldBy(one).slice(0, 60);
     const links = [];
     for (const [how, to] of one.outLinks || []) links.push([how, to, false]);
     for (const [how, from] of one.inLinks || []) links.push([how, from, true]);
-    if (one.kind === 'class') held.forEach(x => links.push(['may hold', x.id, false]));
-    if (one.kind === 'item') held.forEach(x => links.push(['may hold', x.id, true]));
+    /*
+     * A class is told by the kinds of thing it may carry, not by the four
+     * hundred and thirty of them. An Archer holds a Bow, a Quiver, leather
+     * armour and a ring; listing every bow ever made under "may hold" answered
+     * a question nobody asked and buried the four that matter.
+     *
+     * An item keeps the list the other way round: nineteen classes at most,
+     * and which of them can hold the thing is the question a reader has.
+     */
+    if (one.kind === 'item') heldBy(one).forEach(x => links.push(['may hold', x.id, true]));
 
     const facts = factsOf(one);
     const where = one.from
@@ -464,6 +521,7 @@ const RealmIndex = (function () {
           '<i>' + esc(x) + '</i>').join('') + '</p>'
         : '')
       + drawTools(one)
+      + drawSlots(one)
       + (links.length ? drawLinks(links) : '')
       + drawWiki(one)
       + '<p class="ix-from">Declared in <code>' + esc(where) + '</code></p>';
@@ -553,6 +611,19 @@ const RealmIndex = (function () {
       + esc(say) + '</button>').join('') + '</p>';
   }
 
+  /* The kinds of gear a class may carry, each with the plainest of its kind. */
+  function drawSlots(one) {
+    if (one.kind !== 'class' || !one.slots || !all.slots) return '';
+    const said = one.slots.map(slot => all.slots[slot]).filter(Boolean);
+    if (!said.length) return '';
+    return '<div class="ix-links"><div class="ix-link-row"><i>may hold</i><span>'
+      + said.map(([say, plainest]) =>
+        '<button type="button" class="ix-jump" data-slot="' + esc(say) + '"'
+        + ' title="Show every ' + esc(say.toLowerCase()) + '">'
+        + art(all.get(plainest), 14) + esc(say) + '</button>').join('')
+      + '</span></div></div>';
+  }
+
   function drawLinks(links) {
     const byHow = new Map();
     for (const [how, id, backwards] of links) {
@@ -609,6 +680,19 @@ const RealmIndex = (function () {
       drawResults();
     });
     document.getElementById('pageIndex').addEventListener('click', event => {
+      const want = event.target.closest('[data-slot]');
+      if (want) {
+        for (const set of groups) {
+          for (const chip of set.chips) {
+            if (set.title === 'Kind of gear') chip.on = chip.say === want.dataset.slot;
+          }
+          if (set.title === 'Kind of gear') set.open = true;
+        }
+        narrow();
+        drawFacets();
+        drawResults();
+        return;
+      }
       const open = event.target.closest('[data-open]');
       if (open) {
         drawCard(open.dataset.open);

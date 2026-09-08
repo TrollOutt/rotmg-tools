@@ -2731,11 +2731,22 @@ body.globe-wide .home-card-art { animation: none !important; }
  * are looking at. The list keeps its own scroll so the card never     *
  * moves under the reader while they are reading it.                   *
  * ------------------------------------------------------------------ */
+/*
+ * Three columns that use the window they are given: the two on the left keep
+ * their own scroll and stand full height, so the list is as long as the screen
+ * rather than as long as a guess, and the card takes everything left over.
+ */
 .ix-layout {
-  display: grid; grid-template-columns: minmax(190px, 230px) minmax(260px, 340px) 1fr;
-  gap: clamp(10px, 1.4vw, 16px); align-items: start;
+  display: grid; grid-template-columns: minmax(190px, 250px) minmax(260px, 360px) 1fr;
+  gap: clamp(10px, 1.4vw, 16px); align-items: stretch;
+  height: calc(100vh - 118px); min-height: 420px;
 }
-@media (max-width: 1180px) { .ix-layout { grid-template-columns: minmax(240px, 320px) 1fr; }
+.ix-layout > .card { min-height: 0; max-height: 100%; }
+@media (max-width: 1180px) { .ix-layout { grid-template-columns: minmax(240px, 340px) 1fr;
+    height: auto; }
+  .ix-layout > .card { max-height: none; }
+  .ix-list { max-height: 60vh; }
+  .ix-card { max-height: none; }
   .ix-ways { grid-column: 1 / -1; }
   .ix-facets { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
   .ix-facets .ix-group { flex: 0 1 auto; min-width: 150px; }
@@ -2749,7 +2760,7 @@ body.globe-wide .home-card-art { animation: none !important; }
  * holds. The client's own divisions and the lists the community keeps are
  * different kinds of claim, so a group says which it is.
  */
-.ix-ways { max-height: 78vh; display: flex; flex-direction: column; min-height: 0; }
+.ix-ways { display: flex; flex-direction: column; min-height: 0; }
 .ix-facets { overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
 .ix-group { border-radius: var(--radius-sm); }
 .ix-group-head {
@@ -2816,14 +2827,17 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-jump.is-away { color: var(--legendary); text-decoration: none; }
 
 .ix-find { display: flex; flex-direction: column; min-height: 0; }
+.ix-card { overflow-y: auto; }
 #ixSearch {
+  /* The list is the part that grows; the box you type in is one line tall. */
+  flex: none;
   font: inherit; font-size: 13px; color: var(--text);
   background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
   border-radius: var(--radius-sm); padding: 9px 11px; margin-bottom: 9px;
 }
 #ixSearch:focus { outline: none; border-color: var(--accent); }
 
-.ix-kinds { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.ix-kinds { flex: none; display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .ix-chip {
   font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
   color: var(--dim); background: rgba(255, 255, 255, .04);
@@ -2832,7 +2846,8 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-chip:hover { color: var(--text); }
 .ix-chip.is-on { color: #10141c; background: var(--accent); border-color: var(--accent); }
 
-.ix-list { overflow-y: auto; max-height: 62vh; display: flex; flex-direction: column; gap: 2px; }
+.ix-list { flex: 1; overflow-y: auto; min-height: 0;
+  display: flex; flex-direction: column; gap: 2px; }
 .ix-row {
   display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left;
   font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer;
