@@ -508,6 +508,69 @@ fs.writeFileSync(path.join(pagesDir, 'Realm-Tools.html'), kept, 'utf8');
 // and folders starting with an underscore and rewrites some content.
 fs.writeFileSync(path.join(pagesDir, '.nojekyll'), '');
 
+/*
+ * Where an old link lands.
+ *
+ * This folder is published as the root of the site, so docs/index.html *is*
+ * the front page and there is no docs/ below it. It was not always so: while
+ * Pages was building the branch instead, the root was the whole repository and
+ * the signpost there forwarded every arrival to /docs/. Nobody ever landed on
+ * the address that works - the one that went into browser histories, into
+ * bookmarks and into search results was the one with /docs/ in it, and every
+ * one of those now returns a page saying File not found.
+ *
+ * GitHub Pages hands any missing path to 404.html, so that is where the old
+ * shape gets undone: a /docs/ segment in the path is exactly one level of
+ * nesting that no longer exists, and taking it out maps every old address onto
+ * its own new one - /rotmg-tools/docs/ to /rotmg-tools/, and anything deeper
+ * along with it. The query and the hash travel too, so a link that pointed at
+ * one of the tools still opens that tool.
+ *
+ * Anything else is a genuine miss and is told so, with a way home rather than
+ * a dead end. The rewrite is only followed when it actually changes the
+ * address, which is what keeps a page that cannot be found from asking for
+ * itself for ever.
+ */
+fs.writeFileSync(path.join(pagesDir, '404.html'), `<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realm Tools</title>
+<meta name="robots" content="noindex">
+<style>
+  html { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-content: center; gap: .75rem;
+         text-align: center; background: #0d0c13; color: #d8d3e6; padding: 24px;
+         font: 16px/1.6 system-ui, -apple-system, Segoe UI, sans-serif; }
+  a { color: #ca7aff; }
+  small { color: #8a83a0; }
+</style>
+<p id="said">Looking for that page…</p>
+<p><a id="home" href="/">Realm Tools</a></p>
+<script>
+(function () {
+  var here = location.pathname;
+  /*
+   * The site root: a project page hangs off the first segment of the path, a
+   * user page and a folder opened locally do not.
+   */
+  var parts = here.split('/').filter(Boolean);
+  var root = (/\\.github\\.io$/.test(location.hostname) && parts.length) ? '/' + parts[0] + '/' : '/';
+  document.getElementById('home').href = root;
+
+  // The one level of nesting that stopped existing.
+  var mended = here.replace(/\\/docs(\\/|$)/, '/');
+  if (mended !== here) {
+    location.replace(mended + location.search + location.hash);
+    return;
+  }
+  document.getElementById('said').innerHTML =
+    'That page is not here.<br><small>' +
+    here.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }) +
+    '</small>';
+})();
+</script>
+`, 'utf8');
+
 /* ---------------------------------------------------------------- *
  * 5. Report                                                         *
  * ---------------------------------------------------------------- */
