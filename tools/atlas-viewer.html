@@ -157,7 +157,7 @@
   <b>bench &mdash; local only</b>
   <label>tilt <input id="benchTilt" type="range" min="0" max="40" step="1" value="0"><i id="benchTiltAt">off</i></label>
   <label>turn <input id="benchTurn" type="range" min="-90" max="90" step="1" value="0"><i id="benchTurnAt">0&deg;</i></label>
-  <p>tilt works at the closest zoom</p>
+  <p>tilt works at the closest zoom; turn unwinds past the second</p>
 </aside>
 <aside id="panel"><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
 <div id="chat"></div>
@@ -169,7 +169,7 @@
   <span id="seen" hidden><b id="seenAll">&ndash;</b> <i>visitors total</i>
     <b id="seenToday">&ndash;</b> <i>today</i>
     <b id="seenNow">&ndash;</b> <i>here now</i></span>
-  <span id="hint">drag to pan · wheel to zoom · click a zone · double-click to fit</span>
+  <span id="hint">drag to pan · wheel to zoom · a/e to turn · double-click to fit</span>
 </div>
 <script>
 const A = /*ATLAS*/null;
@@ -4674,10 +4674,10 @@ function keepInSight(box, delta) {
  * has been cut out of a published copy.
  */
 const TURN_STEP = 6;
-function turnBy(by) {
-  let t = TUNE.turn + by;
+function turnTo(t) {
   while (t > 180) t -= 360;
   while (t < -180) t += 360;
+  if (t === TUNE.turn) return;
   TUNE.turn = t;
   const slider = document.getElementById('benchTurn');
   if (slider) {
@@ -4685,6 +4685,36 @@ function turnBy(by) {
     const said = document.getElementById('benchTurnAt');
     if (said) said.textContent = Math.round(t) + '\u00b0';
   }
+}
+function turnBy(by) { turnTo(TUNE.turn + by); }
+
+/*
+ * The turn only lives close in, and lets go as you pull back.
+ *
+ * A turned camera is a way of looking round what is in front of you: standing
+ * among the buildings of a place, swinging the view is how you see the far
+ * side of them. Pulled back to where the realm is an island on a globe there
+ * is nothing to look round and the world simply sits crooked, which is a
+ * thing to have done by accident rather than a thing to have asked for.
+ *
+ * It is not a saving. Measured, the turn costs 0.9 ms of ground drawing
+ * against 2.2 at the closest level - where it is kept - because that is the
+ * only level drawn flat, and a flat view that is turned has to take the
+ * leaning camera's path over a canvas wide enough for the corners the turn
+ * swings into view. Every level further out is drawn as a globe, which is
+ * turned by rotating the finished disc and costs the same either way. So the
+ * two nearest levels keep the turn and everything beyond unwinds, for how it
+ * looks and nothing else.
+ *
+ * It eases rather than snapping, because a world swinging level under a zoom
+ * is the same movement as the zoom and reads as one thing.
+ */
+const TURN_KEEPS = 1;                    // levels near enough to hold a turn
+const turnHolds = () => levelFor(view.scale) <= TURN_KEEPS;
+function unwindTurn(delta) {
+  if (!TUNE.turn || turnHolds()) return;
+  const left = TUNE.turn * (1 - Math.min(1, delta * 4));
+  turnTo(Math.abs(left) < 0.5 ? 0 : left);
 }
 
 /*
@@ -5175,6 +5205,7 @@ function frame(now) {
   const box = size();
   if (settleFor > 0) { settleFor--; settleInto(box); }
   keepInSight(box, delta);
+  unwindTurn(delta);
   warmAhead(box);
   ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, box.w, box.h);
@@ -5337,15 +5368,23 @@ const down = new Map();          // every pointer on the glass, and where it las
 let pinch = null;                // what the pair started from, if there is a pair
 let from = null, moved = 0;
 
-/* The span of the pair, and the point between them. */
+/* The span of the pair: how far apart, which way round, and their middle. */
 function spanOf() {
   const two = [...down.values()].slice(0, 2);
   if (two.length < 2) return null;
+  const dx = two[1].x - two[0].x, dy = two[1].y - two[0].y;
   return {
-    gap: Math.hypot(two[1].x - two[0].x, two[1].y - two[0].y),
+    gap: Math.hypot(dx, dy),
+    ang: Math.atan2(dy, dx) * 180 / Math.PI,
     x: (two[0].x + two[1].x) / 2,
     y: (two[0].y + two[1].y) / 2
   };
+}
+/* Degrees, brought back into the half turn either side of straight. */
+function halfTurn(a) {
+  while (a > 180) a -= 360;
+  while (a < -180) a += 360;
+  return a;
 }
 
 /*
@@ -5368,9 +5407,20 @@ function pinchFrom() {
   const on = toTile(now.x, now.y, size());
   return {
     gap: now.gap, scale: want.scale, x: on.x, y: on.y,
-    held: Number.isFinite(on.x) && Number.isFinite(on.y)
+    held: Number.isFinite(on.x) && Number.isFinite(on.y),
+    /*
+     * And which way round the pair lies, for the twist - a and e under two
+     * fingers, since a phone has no keyboard to hold them down on either.
+     * Turning does not begin with the pinch: nobody spreads two fingers on
+     * exactly the same line, so a few degrees of accident would swing the
+     * world every time somebody zoomed. It waits for a turn big enough to
+     * have been meant, and then counts from there, so it starts from nothing
+     * rather than jumping by the slop it was waiting for.
+     */
+    ang: now.ang, turn: TUNE.turn, twisting: false, wound: 0
   };
 }
+const TWIST_SLOP = 12;                   // degrees of accident allowed before it counts
 
 /*
  * The world is dragged in the frame it is drawn in. Turned a quarter, a pull
@@ -5432,6 +5482,20 @@ canvas.addEventListener('pointermove', event => {
     if (pinch.gap > 8 && now.gap > 8) {
       const box = size();
       view.scale = want.scale = holdZoom(pinch.scale * (now.gap / pinch.gap), box);
+      /*
+       * The twist, before the ground is put back under the fingers: turning
+       * moves what is under them, so holding the point has to be the last
+       * word. Only where a turn is kept at all - out past that the world is
+       * unwinding itself and two fingers fighting it would be a tug of war.
+       */
+      const twist = halfTurn(now.ang - pinch.ang);
+      if (turnHolds()) {
+        if (!pinch.twisting && Math.abs(twist) > TWIST_SLOP) {
+          pinch.twisting = true;
+          pinch.wound = twist;             // where the turning began
+        }
+        if (pinch.twisting) turnTo(pinch.turn + twist - pinch.wound);
+      }
       if (pinch.held) {
         const here = toTile(now.x, now.y, box);
         if (Number.isFinite(here.x) && Number.isFinite(here.y)) {
@@ -5487,10 +5551,10 @@ function letGo(event, lifted) {
 canvas.addEventListener('pointerup', event => letGo(event, true));
 canvas.addEventListener('pointercancel', event => letGo(event, false));
 canvas.addEventListener('pointerleave', () => { pointer = null; hovered = 0; hoveredBeacon = null; });
-/* The same four things, said the way the thing in your hands does them. */
+/* The same things, said the way the thing in your hands does them. */
 if (matchMedia('(pointer: coarse)').matches) {
   document.getElementById('hint').textContent =
-    'drag to pan · pinch to zoom · tap a zone · double-tap to fit';
+    'drag to pan · pinch to zoom · twist to turn · double-tap to fit';
 }
 canvas.addEventListener('dblclick', () => { shutPanel(); fit(); });
 addEventListener('resize', () => { if (!from) size(); });
