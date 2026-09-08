@@ -431,6 +431,25 @@ for (const [, one] of byType) {
       return Object.keys(out).length ? out : undefined;
     })(),
     set: text(one.body, 'SetName'),
+    /*
+     * How long the game makes you wait before using it again.
+     *
+     * The page worked an ability's rate out of its mana cost alone - how long
+     * until you can afford it again - which is only half the rule. Eighty-two
+     * items carry the client's COOLDOWN label and not one of them carried the
+     * number, because nothing here ever read it. An ability that is cheap and
+     * slow was therefore counted as firing as fast as the mana came back, and
+     * every figure downstream of that was too high.
+     *
+     * Undefined where the client does not say, and the page falls back to the
+     * mana rule alone, which is what it always did. So this is worth nothing
+     * until the generator is next run against a client, and costs nothing
+     * before then.
+     */
+    cool: (() => {
+      const n = Number(text(one.body, 'Cooldown'));
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    })(),
     labels: labels || undefined
   });
 }
