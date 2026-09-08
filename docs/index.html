@@ -9455,13 +9455,24 @@ const RealmIndex = (function () {
    */
   function look(words) {
     const term = words.trim().toLowerCase();
+    /*
+     * What a tool hides is in the index on purpose, and asking after it by
+     * name is half the reason this page exists - so a search always finds it.
+     * But a reader who has typed nothing has asked nothing, and the first
+     * screen they see should not open on test items and the machinery behind
+     * a proc. So those wait until they are asked for, by name or by the chip
+     * in Marks that calls for them.
+     */
+    const wantsHidden = Boolean(term) || groups.some(one =>
+      one.chips.some(chip => chip.on && /hidden/.test(chip.key)));
     const out = [];
     for (const one of light) {
       if (kindWanted && one[2] !== kindWanted) continue;
+      if (one[4] && !wantsHidden) continue;
       let barred = false;
       for (const set of narrowed) if (!set.has(one[0])) { barred = true; break; }
       if (barred) continue;
-      if (!term) { out.push(one); if (out.length > 400) break; continue; }
+      if (!term) { out.push(one); continue; }
       const name = one[1].toLowerCase();
       const at = name.indexOf(term);
       const alias = at < 0 && one[3] ? one[3].toLowerCase().indexOf(term) : -1;
@@ -9476,16 +9487,24 @@ const RealmIndex = (function () {
         if (x.length !== y.length) return x.length - y.length;
         return x.localeCompare(y);
       });
+    } else {
+      /* Nothing asked for: by name, so the same question gives the same page. */
+      out.sort((a, b) => a[1].localeCompare(b[1]));
     }
-    return out.slice(0, 300);
+    /* The count is of everything that matched, not of the page of it shown. */
+    const page = out.slice(0, 300);
+    page.total = out.length;
+    return page;
   }
 
   function drawResults() {
     const box = el('ixList');
     if (!box) return;
     const rows = look(el('ixSearch').value || '');
-    el('ixCount').textContent = rows.length >= 300
-      ? 'first 300 of many' : rows.length + (rows.length === 1 ? ' thing' : ' things');
+    const many = rows.total.toLocaleString('en-US');
+    el('ixCount').textContent = rows.total > rows.length
+      ? 'first ' + rows.length + ' of ' + many
+      : many + (rows.total === 1 ? ' thing' : ' things');
     box.innerHTML = rows.map(one =>
       '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
       + '" data-open="' + esc(one[0]) + '">'
@@ -9541,6 +9560,9 @@ const RealmIndex = (function () {
 
   const STAT_SAY = { hp: 'Life', mp: 'Magic', att: 'Attack', def: 'Defence',
     spd: 'Speed', dex: 'Dexterity', vit: 'Vitality', wis: 'Wisdom' };
+  /* The client's own stat names, in the words the game's own tooltips use. */
+  const WORN_SAY = { MAXHP: 'life', MAXMP: 'magic', ATT: 'attack', DEF: 'defence',
+    SPD: 'speed', DEX: 'dexterity', VIT: 'vitality', WIS: 'wisdom' };
 
   function factsOf(one) {
     const bits = [];
@@ -9550,6 +9572,31 @@ const RealmIndex = (function () {
     if (one.mp) bits.push(['mana', one.mp]);
     if (one.rate !== undefined) bits.push(['rate of fire', Math.round(one.rate * 100) + '%']);
     if (one.shots > 1) bits.push(['shots', one.shots]);
+    /*
+     * What the thing actually does when you swing it. A card that says only
+     * "ability (29), soulbound, 100 mana" has told the reader nothing they
+     * came for; the damage, the range and what wearing it is worth are the
+     * whole question.
+     */
+    for (const shot of one.fires || []) {
+      const many = (one.fires.length > 1 ? 'shot ' + (one.fires.indexOf(shot) + 1) : 'damage');
+      bits.push([many, shot.low === shot.high ? shot.low
+        : shot.low + '–' + shot.high]);
+      if (shot.reach !== undefined) bits.push(['range', shot.reach + ' tiles']);
+      const notes = [shot.pierce ? 'ignores armour' : '', shot.through ? 'goes through' : '']
+        .filter(Boolean);
+      if (notes.length) bits.push(['the shot', notes.join(', ')]);
+    }
+    if (one.worn) {
+      /*
+       * One row, not one per statistic: a creature's own life and armour are
+       * already facts on this card, and "life +80" beside them reads as what
+       * the thing has rather than as what it gives.
+       */
+      bits.push(['wearing it', Object.keys(one.worn).map(stat =>
+        (one.worn[stat] > 0 ? '+' : '') + one.worn[stat] + ' '
+        + (WORN_SAY[stat] || stat.toLowerCase())).join(', ')]);
+    }
     if (one.hp) bits.push(['life', one.hp.toLocaleString('en-US')]);
     if (one.def) bits.push(['armour', one.def]);
     if (one.weight !== undefined) bits.push(['roll weight', one.weight.toLocaleString('en-US')]);
@@ -9680,14 +9727,28 @@ const RealmIndex = (function () {
   }
 
   /* What another page can do with this thing. */
+  /*
+   * A door is only drawn where the other page will really open.
+   *
+   * The index used to offer both tools on every piece of gear, and both were
+   * sometimes locked: "Price its enchantments" on a Trick Mace opened the
+   * calculator on "not in the item list", because the client does not let that
+   * item be enchanted at all. What each tool holds is settled when the index
+   * is built, against those tools' own catalogues, so a door here means the
+   * thing is on the other side of it.
+   *
+   * Gear does not offer the bench. The bench dresses a class, and a piece of
+   * gear on its own has no class to be dressed on - a Summoner ability handed
+   * to whichever build happened to be open is not the reader's answer. Come at
+   * it from the class instead.
+   */
   function drawTools(one) {
     const doors = [];
-    if (one.kind === 'item' && !one.hidden) {
-      doors.push(['bench', 'Try it on the bench', 'Put this in the matching slot and see what it does']);
-      doors.push(['enchant', 'Price its enchantments', 'Open the calculator with this item']);
+    if (one.kind === 'item' && one.ench) {
+      doors.push(['enchant', 'Price its enchantments', 'Open the calculator on this item']);
     }
     if (one.kind === 'class') doors.push(['bench', 'Build this class', 'Open the bench on it']);
-    if (one.kind === 'enemy') {
+    if (one.kind === 'enemy' && one.fight) {
       doors.push(['bench', 'Fight it', 'Use it as the target on the bench']);
     }
     if (one.kind === 'place' || (one.outLinks || []).some(x => x[0] === 'lives in')) {

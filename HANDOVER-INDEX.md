@@ -79,6 +79,9 @@ and a record looks like this:
 { "id": "item:Doom Bow", "kind": "item", "name": "Doom Bow",
   "from": [12, "0xc02"],
   "slot": 3, "hand": "weapon", "rate": 0.33, "shots": 1,
+  "fires": [{ "low": 500, "high": 600, "reach": 7, "through": true }],
+  "worn": { "MAXHP": 80 },
+  "bench": 1, "ench": 1,
   "labels": ["EQUIPMENT", "WEAPON", "BOW", "UT"],
   "about": "No mortal can fire this dreaded bow...",
   "pic": "wiki",
@@ -115,6 +118,32 @@ something two numbers already say.
 `data/Index/search.json` is the same thing flattened to what a search box
 needs: `[id, shown name, kind, alias, hidden?]` per record, 906 KB against 3.9
 MB, so the list can be up before the full file lands.
+
+### Doors that are not locked
+
+`bench`, `ench` and `fight` say whether the other tools will really take the
+thing, and they are the only reason a door is drawn on the card. They are read
+at build time from those tools' own catalogues — `data/TheoryCraft/theorycraft.json`
+for the bench and its 119 targets, `data/Items/client-items.txt` for the 1,757
+items an installed client will enchant — so the index cannot claim a door the
+other page will not open. It used to: *Price its enchantments* on a Trick Mace
+landed the calculator on "not in the item list", because the client does not
+let that item be enchanted at all.
+
+Only the first record under a name gets them. Where the client declares three
+things called Doom Bow, the other tools know one of them, by that name, and
+cannot be told which — so the shiny and the retro send nobody anywhere.
+
+**Gear offers no bench door**, whether or not the bench knows it. The bench
+dresses a class; a piece of gear on its own has no class to be dressed on, and
+handing a Summoner ability to whichever build happened to be open put it on a
+Rogue. Come at the bench from the class.
+
+`fires` and `worn` are what the thing actually does — damage, range, whether
+the shot pierces or goes through, and what wearing it is worth. They are read
+with the same expressions `tools/build-theorycraft.js` uses, deliberately, so
+the card and the bench cannot drift apart: damage from the projectile, range
+from its speed times its lifetime, and the stats from `ActivateOnEquip`.
 
 ---
 
@@ -337,12 +366,10 @@ by* — which is exactly what is known.
 
 ### A note on provenance
 
-A third-party analysis of the same client data exists on the machine this was
-written on, outside the repository, and is not published: it is somebody else's
-work and it is not the client. The wiki snapshot came with it. Nothing was
-taken from either that the client or the wiki does not itself say, and the two
-kinds of claim are kept apart everywhere — on the card the community block has
-its own frame, its own colour, and a line naming whose word it is.
+Nothing is written down here that the client or the wiki does not itself say,
+and the two kinds of claim are kept apart everywhere — on the card the
+community block has its own frame, its own colour, and a line naming whose word
+it is.
 
 ---
 

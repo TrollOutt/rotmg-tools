@@ -93,7 +93,18 @@ for (const file of objectFiles) {
 }
 
 /* What the game calls it on screen; the client's id is the working name. */
-const nameOf = one => (text(one.body, 'DisplayId') || one.id).trim();
+/*
+ * What to call it. The DisplayId where there is one - but sixteen objects
+ * carry a localisation token the client never resolved, "{cave.Treasure_Thief}"
+ * and one that is four question marks, and a token is not a name. Those fall
+ * back to the client's own id, which in every one of those cases is the
+ * readable name the token was standing in for.
+ */
+const nameOf = one => {
+  const said = (text(one.body, 'DisplayId') || '').trim();
+  if (!said || /^\{[^}]*\}$/.test(said) || /^\?+$/.test(said)) return one.id.trim();
+  return said;
+};
 
 /* ---------------- the records ---------------- */
 const records = new Map();          // id -> record
@@ -185,6 +196,71 @@ const drawn = (() => {
  * dropping it: "the bench does not offer this because it is admin-only" is an
  * answer, and "it is not here" is not.
  */
+/*
+ * What a piece of gear does, read the way the bench reads it so that the two
+ * cannot drift: damage from the projectile, range from its speed multiplied by
+ * how long it lives, and what wearing it is worth from ActivateOnEquip.
+ */
+function shotOf(body) {
+  const out = [];
+  for (const m of body.matchAll(/<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/g)) {
+    const inner = m[1];
+    const low = num(inner, 'MinDamage'), high = num(inner, 'MaxDamage');
+    const flat = num(inner, 'Damage');
+    const fast = num(inner, 'Speed'), lives = num(inner, 'LifetimeMS');
+    if (low === undefined && high === undefined && flat === undefined) continue;
+    out.push({
+      low: low === undefined ? (high === undefined ? flat : high) : low,
+      high: high === undefined ? (low === undefined ? flat : low) : high,
+      reach: (fast !== undefined && lives !== undefined)
+        ? Math.round(fast * lives / 1000) / 10 : undefined,
+      pierce: /<ArmorPiercing\s*\/>/.test(inner) || undefined,
+      through: /<MultiHit\s*\/>/.test(inner) || undefined
+    });
+  }
+  return out.length ? out : undefined;
+}
+
+function wornOf(body) {
+  const out = {};
+  for (const m of body.matchAll(/<ActivateOnEquip\s+([^>]*)>\s*IncrementStat\s*</g)) {
+    const stat = /stat="([^"]+)"/.exec(m[1]);
+    const amount = /amount="([^"]+)"/.exec(m[1]);
+    if (!stat || !amount) continue;
+    const n = Number(amount[1]);
+    if (!Number.isFinite(n)) continue;
+    out[stat[1]] = (out[stat[1]] || 0) + n;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/*
+ * And whether the other two tools will actually take the thing.
+ *
+ * The index used to offer a door to the bench and to the calculator on every
+ * piece of gear, and both doors were sometimes locked: the Trick Mace opened
+ * the calculator on "not in the item list", because the client does not let it
+ * be enchanted at all. So membership is read from what those tools were built
+ * with rather than assumed - one is the bench's own catalogue, the other the
+ * list of everything an installed client will enchant.
+ */
+const offered = (() => {
+  const bench = new Set(), ench = new Set(), fought = new Set();
+  const at = path.join(root, 'data', 'TheoryCraft', 'theorycraft.json');
+  if (fs.existsSync(at)) {
+    const said = JSON.parse(fs.readFileSync(at, 'utf8'));
+    for (const one of said.items || []) bench.add(one.name);
+    for (const one of said.bosses || []) fought.add(one.name);
+  }
+  const list = path.join(root, 'data', 'Items', 'client-items.txt');
+  if (fs.existsSync(list)) {
+    for (const line of fs.readFileSync(list, 'utf8').split('\n')) {
+      if (line.startsWith('item|')) ench.add(line.slice(5, line.indexOf('|', 5)));
+    }
+  }
+  return { bench, ench, fought };
+})();
+
 const gear = [];
 for (const one of objects) {
   if (!has(one.body, 'Item')) continue;
@@ -211,6 +287,18 @@ for (const one of objects) {
     mp: num(one.body, 'MpCost'),
     rate: num(one.body, 'RateOfFire'),
     shots: num(one.body, 'NumProjectiles'),
+    fires: shotOf(one.body),
+    worn: wornOf(one.body),
+    /*
+     * Only the first record under a name is offered a door. Where the client
+     * declares three things called Doom Bow, the bench and the calculator know
+     * one of them, by that name, and cannot be told which - so the shiny and
+     * the retro send nobody anywhere.
+     */
+    bench: !records.has('item:' + nameOf(one)) && offered.bench.has(nameOf(one))
+      ? 1 : undefined,
+    ench: !records.has('item:' + nameOf(one)) && offered.ench.has(nameOf(one))
+      ? 1 : undefined,
     pic: drawn.has(nameOf(one)) ? 'wiki' : 'client',
     hidden: hidden.length ? hidden : undefined
   });
@@ -242,6 +330,9 @@ for (const one of objects) {
     def: num(one.body, 'Defense'),
     labels,
     about: text(one.body, 'Description'),
+    /* Only the creatures the bench will actually stand a build in front of. */
+    fight: !records.has('enemy:' + nameOf(one)) && offered.fought.has(nameOf(one))
+      ? 1 : undefined,
     boss: labels.includes('BOSS') || labels.includes('ENCOUNTER') || undefined,
     god: labels.includes('GOD') || undefined
   });
