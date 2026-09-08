@@ -10,20 +10,34 @@
 <div id="ambience" class="ambience" aria-hidden="true"></div>
 <div id="realmName" class="realm-name" aria-hidden="true"></div>
 
-<!-- The one control that belongs to every page ----------------------- -->
+<!-- The controls that belong to every page --------------------------- -->
 <!--
-  It used to sit in the Enchant Calculator's masthead, in twelve-point
-  grey, saying "Realm" - so on four of the five pages there was no way to
-  stop the movement at all, and on the fifth you had to know that the word
-  meant the background. It is one switch for the whole site now, always in
-  the same corner, big enough to find, and it says which way it is set
-  rather than leaving you to read it off the opacity.
+  Three things that belong to no single tool: a way through to the index, a
+  way to say something back, and the switch that stops the realms drifting
+  behind everything.
+
+  They were two strays pinned to the corner by hand - one at right: 14px and
+  the other at right: 186px, which is the first one's width written out as a
+  number - and the index was a fourth card on the way in, where it broke a
+  row of three into three and one and pushed the world down the page.
+
+  So the row is what is fixed to the corner now, and the buttons are laid
+  out inside it rather than measured into place. It reports its own width to
+  the mastheads, which stop short by that much instead of by 172px, and it
+  gives up its words for its glyphs when the window stops having room for
+  them. Adding a fourth costs nothing.
 -->
-<button id="ambienceToggle" type="button" class="ambience-toggle" aria-pressed="true"
-  title="Stop or start the drifting realms behind the interface">
-  <span class="ambience-toggle-glyph" aria-hidden="true">◐</span>
-  <span class="ambience-toggle-text">Animations on</span>
-</button>
+<div id="corner" class="corner">
+
+  <!--
+    The index is a place to look things up, not a tool you sit down at, so it
+    is a way through rather than one of the choices on the way in.
+  -->
+  <button type="button" class="corner-button corner-index" data-go="index"
+    title="Every item, class, enemy, set, enchantment and place the client declares">
+    <span class="corner-glyph" aria-hidden="true">☰</span>
+    <span class="corner-text">Index</span>
+  </button>
 
 <!--
   Saying something back.
@@ -39,10 +53,10 @@
   to once you have read it.
 -->
 <div id="sayBox" class="say">
-  <button id="sayOpen" type="button" class="say-open" aria-expanded="false"
+  <button id="sayOpen" type="button" class="corner-button say-open" aria-expanded="false"
     title="Report something broken, or ask for something">
-    <span class="say-glyph" aria-hidden="true">✉</span>
-    <span class="say-text">Feedback</span>
+    <span class="corner-glyph say-glyph" aria-hidden="true">✉</span>
+    <span class="corner-text say-text">Feedback</span>
   </button>
   <form id="sayMenu" class="say-menu" hidden>
     <div class="say-kinds" role="group" aria-label="What kind of thing this is">
@@ -73,6 +87,21 @@
     <span class="say-done-tick" aria-hidden="true">✓</span>
     <span><b>Sent</b><small>thank you — it goes straight to one mailbox</small></span>
   </div>
+</div>
+
+  <!--
+    It used to sit in the Enchant Calculator's masthead, in twelve-point
+    grey, saying "Realm" - so on four of the five pages there was no way to
+    stop the movement at all, and on the fifth you had to know that the word
+    meant the background. It is one switch for the whole site now, always in
+    the same corner, big enough to find, and it says which way it is set
+    rather than leaving you to read it off the opacity.
+  -->
+  <button id="ambienceToggle" type="button" class="corner-button ambience-toggle" aria-pressed="true"
+    title="Stop or start the drifting realms behind the interface">
+    <span class="corner-glyph ambience-toggle-glyph" aria-hidden="true">◐</span>
+    <span class="corner-text ambience-toggle-text">Animations on</span>
+  </button>
 </div>
 
 <!-- The way in ------------------------------------------------------- -->
@@ -109,15 +138,13 @@
       <em class="home-card-go">Open →</em>
     </button>
 
-    <button type="button" class="home-card" data-go="index" style="--i:2">
-      <img class="home-card-art" data-art="Item Types/Ring.png" alt="">
-      <span class="home-card-title">Index</span>
-      <span class="home-card-line">What exists, and what it is joined to.</span>
-      <small>Every item, class, enemy, set, enchantment and place the client declares - with where it came from, why a tool might be hiding it, and a way through to the tool that can use it.</small>
-      <em class="home-card-go">Open →</em>
-    </button>
-
-    <button type="button" class="home-card" data-go="fame" style="--i:3">
+    <!--
+      The index is not here. It is a reference rather than a fourth tool, and
+      as a card it turned a row of three into a row of three and a stray,
+      which moved the heading, the cards and the world under them. It is in
+      the corner with the other things that belong to every page.
+    -->
+    <button type="button" class="home-card" data-go="fame" style="--i:2">
       <img class="home-card-art" data-art="Dungeon Icons/Oryx's Sanctuary.gif" alt="">
       <span class="home-card-title">Fame Sweep</span>
       <span class="home-card-line">Which dungeons are worth the trip.</span>

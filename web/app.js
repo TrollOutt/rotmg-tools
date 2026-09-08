@@ -1617,6 +1617,7 @@ function bind() {
    * the ways out are the cross, the key, and anywhere off the frame.
    */
   wireSaying();
+  keepCornerRoom();
 
   const globeBox = document.getElementById('globeBox');
   if (globeBox) {
@@ -2611,6 +2612,40 @@ function sayContext() {
 function sayLetter(said, from) {
   return said + '\n\n—\n' + sayContext()
     + (from ? '\nReply to: ' + from : '');
+}
+
+/*
+ * How much room the corner is taking, told to the rest of the page.
+ *
+ * The corner floats, so nothing under it knows it is there; the mastheads
+ * used to stop short by 172px, which was one button plus another button's
+ * width copied out by hand. Three buttons, a label dropped under 760px, a
+ * browser with wider default text or a longer word in another language all
+ * make that number wrong in one direction or the other.
+ *
+ * So it is measured instead, whenever the row's own box changes: --corner-w
+ * is what the mastheads keep clear, --corner-h is how far down the page it
+ * reaches, and corner-wrapped says it has spilled onto a second line and the
+ * mastheads should start under it rather than beside it.
+ */
+function keepCornerRoom() {
+  const corner = document.getElementById('corner');
+  if (!corner) return;
+  const root = document.documentElement;
+  const measure = () => {
+    const box = corner.getBoundingClientRect();
+    root.style.setProperty('--corner-w', Math.ceil(box.width) + 'px');
+    root.style.setProperty('--corner-h', Math.ceil(box.height) + 'px');
+    // One row is however tall the tallest button standing is; more is a wrap.
+    let one = 0;
+    for (const button of corner.children) one = Math.max(one, button.getBoundingClientRect().height);
+    document.body.classList.toggle('corner-wrapped', one > 0 && box.height > one + 2);
+  };
+  measure();
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(corner);
+  else window.addEventListener('resize', measure);
+  // Web fonts land after the first paint and change every label's width.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(() => {});
 }
 
 function wireSaying() {

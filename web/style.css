@@ -179,24 +179,52 @@ img { image-rendering: pixelated; }
  * its whole page with a frame of its own.
  */
 /*
- * The way to say something back, in the corner the other page-wide control
- * lives in - just inside it, because it is the one you want less often. The
- * two of them read as a pair rather than as two strays.
+ * The corner row: the only thing up there with a position of its own.
+ *
+ * It is pinned to the top right and lays the buttons out from that edge
+ * back, so each one takes the width of its own label instead of the width
+ * somebody typed for it - which is what right: 186px was, the first
+ * button's width measured once and then left to go stale. It wraps if the
+ * window is too narrow even for the glyphs, and it tells the mastheads how
+ * much room it is taking (see --corner-w) so they can stop short of it.
  */
-.say { position: fixed; top: 12px; right: 186px; z-index: 41; }
-.say-open {
+.corner {
+  position: fixed; top: 12px; right: 14px; z-index: 41;
+  display: flex; flex-wrap: wrap; justify-content: flex-end;
+  align-items: flex-start; gap: 8px;
+  max-width: calc(100vw - 28px);
+}
+/* One button, three times over. */
+.corner-button {
   display: inline-flex; align-items: center; gap: 8px;
   font: inherit; font-size: 14px; font-weight: 600;
-  color: var(--dim); cursor: pointer;
+  color: var(--text); cursor: pointer; white-space: nowrap;
   background: rgba(26, 24, 36, .92); border: 1px solid var(--line);
   border-radius: 999px; padding: 9px 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
 }
+.corner-button:hover { color: var(--text); border-color: var(--accent); }
+.corner-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.corner-glyph { font-size: 15px; line-height: 1; }
+
+/*
+ * The index, which is a way through rather than a tool, so it is the
+ * quietest of the three - and it is not offered on the page it opens.
+ */
+.corner-index { color: var(--dim); }
+.corner-index:hover { color: var(--text); }
+body[data-page="index"] .corner-index { display: none; }
+
+/*
+ * The way to say something back, in the corner the other page-wide controls
+ * live in. The element is the panel's anchor and nothing else now: where it
+ * sits is the row's business.
+ */
+.say { position: relative; }
+.say-open { color: var(--dim); }
 .say-open:hover, .say-open[aria-expanded="true"] {
   color: var(--text); border-color: var(--accent);
 }
-.say-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.say-glyph { font-size: 15px; line-height: 1; }
 .say-menu {
   position: absolute; top: calc(100% + 8px); right: 0; width: 296px;
   background: var(--panel); border: 1px solid var(--line);
@@ -265,32 +293,29 @@ img { image-rendering: pixelated; }
 .say-note {
   margin: 4px 4px 2px; color: var(--dim); font-size: 10.5px; line-height: 1.45;
 }
-body.globe-wide .say { display: none; }
-@media (max-width: 760px) {
-  /* The word goes and the envelope stays, so the pair still fits a phone. */
-  .say { top: 8px; right: 120px; }
-  .say-open { padding: 7px 12px; font-size: 13px; }
-  .say-text { display: none; }
-  .say-menu { width: 240px; }
-}
-
-.ambience-toggle {
-  position: fixed; top: 12px; right: 14px; z-index: 40;
-  display: inline-flex; align-items: center; gap: 8px;
-  font: inherit; font-size: 14px; font-weight: 600;
-  color: var(--text); cursor: pointer;
-  background: rgba(26, 24, 36, .92); border: 1px solid var(--line);
-  border-radius: 999px; padding: 9px 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
-}
-.ambience-toggle:hover { color: var(--text); border-color: var(--accent); }
-.ambience-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ambience-toggle-glyph { font-size: 16px; line-height: 1; }
 .ambience-toggle[aria-pressed="false"] { color: var(--dim); }
 .ambience-toggle[aria-pressed="false"] .ambience-toggle-glyph { opacity: .45; }
+
+/*
+ * The words go before the row does.
+ *
+ * Three labels beside a masthead is more than a narrow window has room for,
+ * so under 760px each button keeps its glyph and gives up its word - the
+ * titles still say which is which - and the row stays one row.
+ */
 @media (max-width: 760px) {
-  .ambience-toggle { top: 8px; right: 8px; padding: 7px 12px; font-size: 13px; }
+  .corner { top: 8px; right: 8px; gap: 6px; max-width: calc(100vw - 16px); }
+  .corner-button { padding: 7px 11px; font-size: 13px; }
+  .corner-text { display: none; }
+  .say-menu { width: 240px; }
 }
+/*
+ * And it stands down when the atlas takes the window: the switch governs a
+ * background nobody can see behind a full-page map, and the other two are
+ * about the page you have just left.
+ */
+body.globe-wide .corner { display: none; }
 /*
  * And the room it takes, given back to the mastheads.
  *
@@ -298,14 +323,27 @@ body.globe-wide .say { display: none; }
  * over does not know it is there. On a wide window the calculator puts its
  * title, summary, data line and Reset on one row across the full width - so
  * the switch landed on top of Reset and made it unclickable. Every masthead
- * stops short by the width of the switch instead.
+ * stops short by the width of the corner instead.
+ *
+ * The width is measured rather than typed: the row watches its own size and
+ * writes it into --corner-w (see keepCornerRoom), so a button added, a label
+ * dropped at 760px or a browser with wider text all move the mastheads with
+ * it. The numbers here are what to do until the first measurement lands, and
+ * on the second row of a wrapped corner --corner-h buys the height too.
  *
  * The way in is the exception: its heading is centred and short, so there is
  * nothing under that corner and taking the padding would shift the title.
  */
-.masthead { padding-right: 172px; }
+.masthead { padding-right: calc(var(--corner-w, 172px) + 14px); }
 #pageHome .masthead { padding-right: 0; }
-@media (max-width: 760px) { .masthead { padding-right: 130px; } }
+@media (max-width: 760px) { .masthead { padding-right: calc(var(--corner-w, 116px) + 10px); } }
+/*
+ * And if it has wrapped after all - a very small window, or text scaled well
+ * up - the padding is no longer any help, because the second row is over the
+ * middle of the masthead rather than its end. So the masthead takes the whole
+ * width back and starts below the corner instead.
+ */
+body.corner-wrapped .masthead { padding-right: 0; padding-top: var(--corner-h, 0px); }
 
 /* ---------------- layout ---------------- */
 
@@ -1258,8 +1296,6 @@ body.globe-wide .globe-box {
 body.globe-wide .globe-box iframe { pointer-events: auto; }
 body.globe-wide .globe-glass { opacity: 0; }
 body.globe-wide .globe-name { display: none; }
-/* The switch governs a background nobody can see behind a full-page map. */
-body.globe-wide .ambience-toggle { display: none; }
 body.globe-wide .globe-shut {
   display: grid; place-items: center; position: absolute;
   top: 10px; right: 10px; z-index: 2; width: 34px; height: 34px;
