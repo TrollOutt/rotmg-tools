@@ -303,12 +303,23 @@ const offered = (() => {
     for (const one of said.bosses || []) fought.add(one.name);
   }
   const list = path.join(root, 'data', 'Items', 'client-items.txt');
+  const awakens = new Map();
   if (fs.existsSync(list)) {
     for (const line of fs.readFileSync(list, 'utf8').split('\n')) {
-      if (line.startsWith('item|')) ench.add(line.slice(5, line.indexOf('|', 5)));
+      if (!line.startsWith('item|')) continue;
+      const field = line.split('|');
+      ench.add(field[1]);
+      /*
+       * Which awakened enchantment an item unlocks. The client holds no such
+       * list - an awakened enchantment names the slot it goes on and a label
+       * only its own gear carries - and tools/generate-items.js already works
+       * it out for the calculator. Reading its answer rather than writing the
+       * rule a second time is the only way the two can agree.
+       */
+      if (field[8]) awakens.set(field[1], field[8].split(',').filter(Boolean));
     }
   }
-  return { bench, ench, fought };
+  return { bench, ench, fought, awakens };
 })();
 
 const gear = [];
@@ -387,7 +398,11 @@ for (const one of objects) {
     fight: !records.has('enemy:' + nameOf(one)) && offered.fought.has(nameOf(one))
       ? 1 : undefined,
     boss: labels.includes('BOSS') || labels.includes('ENCOUNTER') || undefined,
-    god: labels.includes('GOD') || undefined
+    god: labels.includes('GOD') || undefined,
+    /* What brought it, where it is not a creature of anywhere in particular. */
+    came: (labels.find(one => /_INVASION_/.test(one)) || '')
+      .replace(/_(ADEPT|VETERAN|MASTER)$/, '').split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ') || undefined
   });
 }
 
@@ -467,13 +482,28 @@ for (const one of objects) {
        * And its face. A set has no picture of its own, but the skin it turns
        * the wearer into is an object like any other, with art the client draws.
        */
-      const changes = /<ActivateOnEquipAll\s+skinType="([^"]+)"[^>]*>\s*ChangeSkin/.exec(body);
+      /*
+       * Any of the tags that changes a skin, not just the one for wearing all
+       * four. The Paths and the big multi-class sets hand out their skin with
+       * ActivateOnEquipCustom instead, and looking only for ActivateOnEquipAll
+       * left twenty-five sets with an empty frame.
+       */
+      const changes = /<ActivateOnEquip\w*\s+skinType="([^"]+)"[^>]*>\s*ChangeSkin/.exec(body);
       const skin = changes && byType.get(Number.parseInt(changes[1], 16));
+      /*
+       * Eighteen of them hand out no skin at all - the big multi-class stat
+       * sets, Agents of Oryx and the Venerable three - so there is no picture
+       * of the set anywhere in the client. Rather than an empty frame they
+       * wear the face of their first piece, and the card says that is what it
+       * is looking at.
+       */
+      const emblem = skin || pieces[0];
       const record = put('set', m[2], { id: m[2], type: 0, file: 'EquipmentSets.xml', body },
         { steps,
           worn: Object.keys(worn).length ? worn : undefined,
           skin: skin ? nameOf(skin) : undefined,
-          drawnAs: skin ? skin.id : undefined });
+          pic: skin ? 'skin' : (pieces[0] ? 'piece' : undefined),
+          drawnAs: emblem ? emblem.id : undefined });
       for (const got of pieces) tie(record.id, 'made of', 'item:' + nameOf(got));
     }
   }
@@ -569,6 +599,29 @@ for (const one of objects) {
   }
 }
 
+/*
+ * And which item wakes which enchantment. Fifty-one enchantments are awakened
+ * ones, each belonging to a particular piece of gear, and an enchantment card
+ * that did not say which was asking the reader to already know.
+ */
+{
+  const charms = new Map();
+  const bare = name => name.replace(/ \(Neo\)$/, '');
+  for (const one of records.values()) {
+    if (one.kind !== 'enchant') continue;
+    if (!charms.has(one.name)) charms.set(one.name, one);
+    if (!charms.has(bare(one.name))) charms.set(bare(one.name), one);
+  }
+  for (const [item, waking] of offered.awakens) {
+    const mine = records.get('item:' + item);
+    if (!mine) continue;
+    for (const name of waking) {
+      const charm = charms.get(name) || charms.get(bare(name));
+      if (charm) tie(mine.id, 'wakes', charm.id);
+    }
+  }
+}
+
 /* What an item rolls from, where it says so. */
 for (const it of gear) {
   const pool = /enchantmentList="([^"]+)"/.exec(it.one.body);
@@ -614,7 +667,22 @@ for (const it of gear) {
       });
       for (const lives of biome.lives) {
         const got = byType.get(lives.type);
-        if (got) tie('enemy:' + nameOf(got), 'lives in', record.id);
+        /*
+         * An invasion is not a home. The realm was walked while the aliens
+         * were landing, so thirteen of their creatures were written down in
+         * every biome the walk passed through - and a card saying an Alien
+         * Soldier is seen in the Coral Reef, the Dead Church and five other
+         * places is describing the day of the walk, not the creature. They
+         * carry the invasion's own label and keep that instead.
+         */
+        if (got && /_INVASION_/.test(labelsOf(got.body).join(','))) continue;
+        /*
+         * "Was seen in", not "lives in". The list comes from walking the realm
+         * and writing down what was standing there, so an event's creatures
+         * are recorded wherever the event happened to be - which reads as a
+         * home it does not have.
+         */
+        if (got) tie('enemy:' + nameOf(got), 'was seen in', record.id);
       }
     }
   }

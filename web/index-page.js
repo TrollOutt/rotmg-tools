@@ -55,7 +55,7 @@ const RealmIndex = (function () {
   const KINDS = [
     ['item', 'Gear'], ['class', 'Classes'], ['enemy', 'Enemies'],
     ['portal', 'Dungeons'], ['place', 'Biomes'], ['set', 'Sets'],
-    ['enchant', 'Enchantments'], ['pool', 'Pools (dev)']
+    ['enchant', 'Enchantments'], ['pool', 'Pools']
   ];
   const KIND_SAY = Object.fromEntries(KINDS);
 
@@ -235,7 +235,7 @@ const RealmIndex = (function () {
     for (const one of [...all.values()].filter(x => x.kind === 'place')
       .sort((a, b) => a.name.localeCompare(b.name))) {
       const ids = gather(x => x.id === one.id
-        || (x.outLinks || []).some(([how, to]) => how === 'lives in' && to === one.id));
+        || (x.outLinks || []).some(([how, to]) => how === 'was seen in' && to === one.id));
       chip(where, one.name, one.name, ids);
     }
 
@@ -264,7 +264,40 @@ const RealmIndex = (function () {
       if (!on.length) continue;
       const any = new Set();
       for (const chip of on) for (const id of chip.ids) any.add(id);
-      narrowed.push(any);
+      narrowed.push({ group: one, set: any });
+    }
+    refine();
+  }
+
+  /*
+   * What each way in is still worth, given the ways already taken.
+   *
+   * A rail that keeps offering Tome after you have picked Archer is a rail
+   * asking you to try things that cannot work. So every chip is counted
+   * against what the other groups have already allowed - its own group left
+   * out, or picking one option would rule out its neighbours - and a chip
+   * with nothing left behind it goes away until it has something again.
+   */
+  function refine() {
+    const alive = light.map(one => one[0]);
+    const withinKind = kindWanted
+      ? new Set(light.filter(one => one[2] === kindWanted).map(one => one[0]))
+      : null;
+    for (const set of groups) {
+      const others = narrowed.filter(one => one.group !== set);
+      let base = alive;
+      if (withinKind) base = base.filter(id => withinKind.has(id));
+      for (const one of others) base = base.filter(id => one.set.has(id));
+      const room = new Set(base);
+      for (const chip of set.chips) {
+        let n = 0;
+        if (chip.ids.size <= room.size) {
+          for (const id of chip.ids) if (room.has(id)) n++;
+        } else {
+          for (const id of room) if (chip.ids.has(id)) n++;
+        }
+        chip.here = n;
+      }
     }
   }
 
@@ -297,7 +330,7 @@ const RealmIndex = (function () {
        */
       if (one[5] && !term && kindWanted !== one[2]) continue;
       let barred = false;
-      for (const set of narrowed) if (!set.has(one[0])) { barred = true; break; }
+      for (const chosen of narrowed) if (!chosen.set.has(one[0])) { barred = true; break; }
       if (barred) continue;
       if (!term) { out.push(one); continue; }
       const name = one[1].toLowerCase();
@@ -355,9 +388,12 @@ const RealmIndex = (function () {
       + (one.chips.filter(x => x.on).length || '') + '</span></button>'
       + '<div class="ix-group-body">'
       + (one.note ? '<p class="ix-group-note">' + esc(one.note) + '</p>' : '')
-      + one.chips.map(x => '<button type="button" class="ix-facet'
-        + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
-        + esc(x.say) + '<i>' + x.ids.size.toLocaleString('en-US') + '</i></button>').join('')
+      + one.chips.filter(x => x.on || x.here === undefined || x.here > 0)
+        .map(x => '<button type="button" class="ix-facet'
+          + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
+          + esc(x.say) + '<i>'
+          + (x.here === undefined ? x.ids.size : x.here).toLocaleString('en-US')
+          + '</i></button>').join('')
       + '</div></section>').join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
     const clear = el('ixClear');
@@ -438,6 +474,7 @@ const RealmIndex = (function () {
     if (one.beside) bits.push(['not beside', one.beside]);
     if (one.takes) bits.push(['takes', one.takes]);
     if (one.skin) bits.push(['turns you into', one.skin]);
+    if (one.came) bits.push(['came with', 'the ' + one.came]);
     if (one.ground) bits.push(['ground', one.ground]);
     if (one.tiles) bits.push(['tiles walked', one.tiles.toLocaleString('en-US')]);
     if (one.pic) bits.push(['picture', one.pic === 'wiki' ? 'from the wiki' : 'cut from the client']);
@@ -616,7 +653,7 @@ const RealmIndex = (function () {
     if (one.kind === 'enemy' && one.fight) {
       doors.push(['bench', 'Fight it', 'Use it as the target on the bench']);
     }
-    if (one.kind === 'place' || (one.outLinks || []).some(x => x[0] === 'lives in')) {
+    if (one.kind === 'place' || (one.outLinks || []).some(x => x[0] === 'was seen in')) {
       doors.push(['atlas', 'Find it on the map', 'Open the realm atlas']);
     }
     if (!doors.length) return '';
@@ -668,6 +705,8 @@ const RealmIndex = (function () {
       for (const one of el('ixKinds').querySelectorAll('[data-kind]')) {
         one.classList.toggle('is-on', one.dataset.kind === kindWanted);
       }
+      narrow();
+      drawFacets();
       drawResults();
     });
     el('ixFacets').addEventListener('click', event => {
@@ -770,6 +809,7 @@ const RealmIndex = (function () {
     fillKinds();
     await loadWiki();
     buildFacets();
+    narrow();
     wire();
     drawFacets();
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
