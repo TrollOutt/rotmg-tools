@@ -156,6 +156,40 @@ const READS = {
     || (from === 'unknown' && to === 'foe')
 };
 
+/*
+ * And the ones the client gives no number.
+ *
+ * A set lives in EquipmentSets.xml with no type of its own, so the key join -
+ * document, number, id - cannot reach it, and every set card was missing the
+ * link to a page that plainly exists. The same is true of the realm's biomes.
+ * For those two families only, and only where exactly one page answers to the
+ * name once punctuation and case are set aside, the title is enough: a set
+ * name is not a word anything else in the wiki is called.
+ *
+ * Not for items or creatures. There the key join already works, and a name is
+ * claimed three times often enough that guessing would undo the whole point.
+ */
+{
+  const byTitle = new Map();
+  const norm = one => String(one).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  for (const [id, one] of seen) {
+    if (one.gone) continue;
+    const key = norm(one.title);
+    if (!byTitle.has(key)) byTitle.set(key, []);
+    byTitle.get(key).push(id);
+  }
+  let told = 0;
+  for (const one of facts.records) {
+    if (one.kind !== 'set' && one.kind !== 'place') continue;
+    const found = byTitle.get(norm(one.name)) || [];
+    if (found.length !== 1) continue;
+    const page = found[0];
+    if (!about.has(page)) about.set(page, []);
+    if (!about.get(page).includes(one.id)) { about.get(page).push(one.id); told++; }
+  }
+  if (told) console.log('  ' + told + ' sets and places matched by name, having no number to match on');
+}
+
 /* Second pass: the relations, now that every page's records are known. */
 const KEPT = { wiki_lists_drop: 'drop', wiki_lists_spawn: 'spawn' };
 const edges = { drop: new Set(), spawn: new Set() };
