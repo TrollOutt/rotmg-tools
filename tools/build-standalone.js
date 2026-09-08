@@ -557,10 +557,31 @@ fs.writeFileSync(path.join(pagesDir, '404.html'), `<!doctype html>
   var root = (/\\.github\\.io$/.test(location.hostname) && parts.length) ? '/' + parts[0] + '/' : '/';
   document.getElementById('home').href = root;
 
-  // The one level of nesting that stopped existing.
+  /*
+   * The one level of nesting that stopped existing - undone once, and once
+   * only.
+   *
+   * Once only because the thing this is rescuing people from is a forwarding
+   * page, and a forwarding page can sit in a browser cache long after it has
+   * been deleted from the site. If a stale copy of that page is still sending
+   * somebody to /docs/ while this one sends them back, the two of them will
+   * throw the reader between them for ever. One mark in the session settles
+   * it: the first miss is mended, and a second one in the same tab is told
+   * plainly what is happening instead of bouncing again.
+   */
   var mended = here.replace(/\\/docs(\\/|$)/, '/');
-  if (mended !== here) {
+  var tried = false;
+  try { tried = sessionStorage.getItem('mended') === '1'; } catch (e) { /* private mode */ }
+  if (mended !== here && !tried) {
+    try { sessionStorage.setItem('mended', '1'); } catch (e) { /* no matter */ }
     location.replace(mended + location.search + location.hash);
+    return;
+  }
+  if (mended !== here) {
+    document.getElementById('said').innerHTML =
+      'Your browser is holding on to an old copy of this address.<br>' +
+      '<small>Reload with Ctrl+Shift+R (Cmd+Shift+R on a Mac), or open the link below.</small>';
+    document.getElementById('home').href = mended;
     return;
   }
   document.getElementById('said').innerHTML =
