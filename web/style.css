@@ -2735,7 +2735,14 @@ body.globe-wide .home-card-art { animation: none !important; }
  * The index gets the whole window. Every other tool is a form and reads better
  * at a measured width; this one is three columns of list and wants the room.
  */
-#pageIndex.app { max-width: none; }
+#pageIndex.app {
+  max-width: none;
+  /*
+   * One size that everything on the page is a proportion of, so a wide screen
+   * gets a bigger index rather than the same small one with more wallpaper.
+   */
+  --ix-fs: clamp(12.5px, .34vw + 8.4px, 18px);
+}
 
 /*
  * Three columns that use the window they are given: the two on the left keep
@@ -2749,8 +2756,8 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 .ix-layout {
   transition: grid-template-columns .3s cubic-bezier(.4, 0, .2, 1);
-  display: grid; grid-template-columns: minmax(190px, 250px) minmax(260px, 360px) 1fr;
-  gap: clamp(10px, 1.4vw, 16px); align-items: stretch;
+  display: grid; grid-template-columns: minmax(190px, 17vw) minmax(260px, 24vw) 1fr;
+  gap: clamp(10px, 1.2vw, 20px); align-items: stretch;
   height: calc(100vh - 118px); min-height: 420px;
 }
 .ix-layout > .card { min-height: 0; max-height: 100%; }
@@ -2777,7 +2784,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-group { border-radius: var(--radius-sm); }
 .ix-group-head {
   display: flex; align-items: center; gap: 7px; width: 100%; text-align: left;
-  font: inherit; font-size: 11.5px; font-weight: 650; letter-spacing: .3px;
+  font: inherit; font-size: calc(var(--ix-fs) * .9); font-weight: 650; letter-spacing: .3px;
   color: var(--muted); background: transparent; border: 0; cursor: pointer;
   padding: 6px 8px; border-radius: var(--radius-sm);
 }
@@ -2815,11 +2822,11 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .ix-group.is-open > .ix-group-body > .ix-group-inner { padding: 2px 8px 9px; }
 .ix-group-note {
-  flex: 1 0 100%; margin: 0 0 3px; font-size: 10.5px; color: var(--dim); line-height: 1.4;
+  flex: 1 0 100%; margin: 0 0 3px; font-size: calc(var(--ix-fs) * .8); color: var(--dim); line-height: 1.4;
 }
 .ix-facet {
   display: inline-flex; align-items: center; gap: 5px;
-  font: inherit; font-size: 11px; cursor: pointer; color: var(--muted);
+  font: inherit; font-size: calc(var(--ix-fs) * .86); cursor: pointer; color: var(--muted);
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line-soft);
   border-radius: 999px; padding: 3px 9px;
 }
@@ -2834,7 +2841,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-chosen-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 8px 10px; }
 .ix-chosen {
   display: inline-flex; align-items: center; gap: 5px;
-  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  font: inherit; font-size: calc(var(--ix-fs) * .86); font-weight: 600; cursor: pointer;
   color: #10141c; background: var(--accent); border: 1px solid var(--accent);
   border-radius: 999px; padding: 3px 8px;
 }
@@ -2845,16 +2852,16 @@ body.globe-wide .home-card-art { animation: none !important; }
  * One step at a time. Until something is chosen the rail is the page; after
  * that it folds to what was chosen and the list takes the room.
  */
-.ix-layout.has-pick { grid-template-columns: minmax(150px, 195px) minmax(300px, 430px) 1fr; }
+.ix-layout.has-pick { grid-template-columns: minmax(150px, 14vw) minmax(300px, 26vw) 1fr; }
 /*
  * Nothing open on the right, nothing taking up room on the right - and until a
  * category is chosen or a name typed, the middle keeps to the box you type in.
  * The panels retract to what they have to say and the realm shows behind them.
  */
-.ix-layout:not(.has-card) { grid-template-columns: minmax(190px, 250px) 1fr; }
-.ix-layout.has-pick:not(.has-card) { grid-template-columns: minmax(150px, 195px) 1fr; }
+.ix-layout:not(.has-card) { grid-template-columns: minmax(190px, 20vw) 1fr; }
+.ix-layout.has-pick:not(.has-card) { grid-template-columns: minmax(150px, 16vw) 1fr; }
 .ix-layout:not(.has-list) {
-  grid-template-columns: minmax(220px, 300px) minmax(260px, 360px);
+  grid-template-columns: minmax(240px, 30vw) minmax(280px, 34vw);
   justify-content: start; align-items: start;
 }
 .ix-layout:not(.has-list) #ixKinds,
@@ -2869,7 +2876,7 @@ body.globe-wide .home-card-art { animation: none !important; }
   display: flex; flex-direction: column; gap: 3px;
 }
 .ix-does li {
-  font-size: 12px; color: var(--muted); line-height: 1.45;
+  font-size: calc(var(--ix-fs) * .94); color: var(--muted); line-height: 1.45;
   padding-left: 11px; position: relative;
 }
 .ix-does li::before {
@@ -2885,14 +2892,14 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .ix-said-block h4 {
   display: flex; align-items: baseline; gap: 8px; margin: 0 0 2px;
-  font-size: 12px; font-weight: 650; color: var(--text);
+  font-size: calc(var(--ix-fs) * .94); font-weight: 650; color: var(--text);
 }
 .ix-said-block h4 em {
   font-style: normal; font-size: 10px; font-weight: 600; color: var(--legendary);
 }
 .ix-said-block .ix-group-note { margin-bottom: 7px; }
 .ix-away {
-  flex: none; font-size: 10.5px; font-weight: 650; color: var(--legendary);
+  flex: none; font-size: calc(var(--ix-fs) * .82); font-weight: 650; color: var(--legendary);
   text-decoration: none; border: 1px solid rgba(202, 122, 255, .35);
   border-radius: 999px; padding: 2px 9px; white-space: nowrap;
 }
@@ -2914,7 +2921,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 #ixSearch {
   /* The list is the part that grows; the box you type in is one line tall. */
   flex: none;
-  font: inherit; font-size: 13px; color: var(--text);
+  font: inherit; font-size: var(--ix-fs); color: var(--text);
   background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
   border-radius: var(--radius-sm); padding: 9px 11px; margin-bottom: 9px;
 }
@@ -2922,7 +2929,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 .ix-kinds { flex: none; display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .ix-chip {
-  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  font: inherit; font-size: calc(var(--ix-fs) * .86); font-weight: 600; cursor: pointer;
   color: var(--dim); background: rgba(255, 255, 255, .04);
   border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
 }
@@ -2942,7 +2949,7 @@ body.globe-wide .home-card-art { animation: none !important; }
   display: flex; flex-direction: column; gap: 2px; }
 .ix-row {
   display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left;
-  font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer;
+  font: inherit; font-size: var(--ix-fs); color: var(--text); cursor: pointer;
   background: transparent; border: 1px solid transparent;
   border-radius: var(--radius-sm); padding: 6px 9px;
 }
@@ -2952,7 +2959,7 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 /* Each family in its own colour, so a list of mixed things still sorts itself. */
 .ix-kind {
-  flex: none; font-style: normal; font-size: 10px; font-weight: 700;
+  flex: none; font-style: normal; font-size: calc(var(--ix-fs) * .74); font-weight: 700;
   text-transform: uppercase; letter-spacing: .5px; color: var(--dim);
 }
 .ix-kind.is-item { color: #7fc45a; }
@@ -2971,9 +2978,9 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 .ix-card { max-height: 78vh; overflow-y: auto; }
 .ix-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-.ix-card-head h3 { margin: 0; font-size: 19px; color: #f6ecd2; }
+.ix-card-head h3 { margin: 0; font-size: calc(var(--ix-fs) * 1.45); color: #f6ecd2; }
 .ix-card-head code { font-size: 11px; color: var(--dim); }
-.ix-about { color: var(--muted); font-size: 12.5px; font-style: italic; margin: 0 0 12px; }
+.ix-about { color: var(--muted); font-size: var(--ix-fs); font-style: italic; margin: 0 0 12px; }
 .ix-warn {
   font-size: 12px; color: #f0c274; background: rgba(240, 194, 116, .08);
   border: 1px solid rgba(240, 194, 116, .25); border-radius: var(--radius-sm);
@@ -2984,21 +2991,21 @@ body.globe-wide .home-card-art { animation: none !important; }
   gap: 7px 14px; margin: 0 0 12px;
 }
 .ix-facts > div { min-width: 0; }
-.ix-facts dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--dim); }
+.ix-facts dt { font-size: calc(var(--ix-fs) * .8); text-transform: uppercase; letter-spacing: .5px; color: var(--dim); }
 .ix-facts dd {
-  margin: 1px 0 0; font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums;
+  margin: 1px 0 0; font-size: calc(var(--ix-fs) * 1.02); color: var(--text); font-variant-numeric: tabular-nums;
   /* A run of label names is one long word to a browser; let it break. */
   overflow-wrap: anywhere;
 }
 .ix-labels { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; }
 .ix-labels i {
-  font-style: normal; font-size: 9.5px; letter-spacing: .4px; color: var(--dim);
+  font-style: normal; font-size: calc(var(--ix-fs) * .74); letter-spacing: .4px; color: var(--dim);
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
   border-radius: 999px; padding: 2px 7px;
 }
 .ix-doors { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 14px; }
 .ix-door {
-  font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+  font: inherit; font-size: calc(var(--ix-fs) * .94); font-weight: 650; cursor: pointer;
   color: #10141c; background: var(--accent); border: 1px solid var(--accent);
   border-radius: 999px; padding: 6px 14px;
 }
@@ -3007,18 +3014,18 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-links { border-top: 1px solid var(--line); padding-top: 11px; }
 .ix-link-row { display: flex; gap: 10px; margin-bottom: 9px; align-items: baseline; }
 .ix-link-row > i {
-  flex: none; width: 11ch; font-style: normal; font-size: 10.5px; color: var(--dim);
+  flex: none; width: 11ch; font-style: normal; font-size: calc(var(--ix-fs) * .8); color: var(--dim);
   text-transform: uppercase; letter-spacing: .4px; text-align: right;
 }
 .ix-link-row > span { display: flex; flex-wrap: wrap; gap: 4px; }
 .ix-jump {
-  font: inherit; font-size: 11.5px; cursor: pointer; color: var(--text);
+  font: inherit; font-size: calc(var(--ix-fs) * .9); cursor: pointer; color: var(--text);
   background: rgba(255, 255, 255, .05); border: 1px solid var(--line);
   border-radius: 999px; padding: 3px 9px;
 }
 .ix-jump:hover { border-color: var(--accent); color: var(--accent); }
-.ix-link-row em { font-style: normal; font-size: 11px; color: var(--dim); align-self: center; }
-.ix-from { margin: 14px 0 0; font-size: 11px; color: var(--dim); }
+.ix-link-row em { font-style: normal; font-size: calc(var(--ix-fs) * .86); color: var(--dim); align-self: center; }
+.ix-from { margin: 14px 0 0; font-size: calc(var(--ix-fs) * .84); color: var(--dim); }
 .ix-from code { font-size: 11px; }
 
 /* The client's own art, from the one sheet the index cuts for itself. */
