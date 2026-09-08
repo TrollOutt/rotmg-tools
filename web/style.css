@@ -2801,6 +2801,9 @@ body.globe-wide .home-card-art { animation: none !important; }
   font-size: 10px; font-weight: 700; color: #10141c; background: var(--accent);
   border-radius: 999px; min-width: 15px; text-align: center; padding: 1px 5px;
 }
+/* Dungeon names run long; they get a wider column of their own. */
+.ix-group[data-wide] > .ix-group-body > .ix-group-inner { --ix-chipw: 230px; }
+
 .ix-said {
   font-style: normal; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .6px; color: var(--legendary);
@@ -2817,20 +2820,33 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-group-inner { overflow: hidden; min-height: 0; }
 .ix-group.is-open > .ix-group-body { grid-template-rows: 1fr; }
 .ix-group-inner > * { margin-top: 0; }
+/*
+ * Ranked rather than wrapped. Chips of every length flowing left to right
+ * leave a different ragged edge on every row; one track width per group puts
+ * them in columns, and a long dungeon name is cut with its full text kept on
+ * the hover.
+ */
 .ix-group-inner {
-  display: flex; flex-wrap: wrap; gap: 4px; padding: 0 8px;
+  display: grid; gap: 4px; padding: 0 8px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--ix-chipw, 150px), 1fr));
+  align-content: start;
 }
 .ix-group.is-open > .ix-group-body > .ix-group-inner { padding: 2px 8px 9px; }
 .ix-group-note {
-  flex: 1 0 100%; margin: 0 0 3px; font-size: calc(var(--ix-fs) * .8); color: var(--dim); line-height: 1.4;
+  grid-column: 1 / -1; margin: 0 0 3px;
+  font-size: calc(var(--ix-fs) * .8); color: var(--dim); line-height: 1.4;
 }
 .ix-facet {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: flex; align-items: center; gap: 5px; min-width: 0;
   font: inherit; font-size: calc(var(--ix-fs) * .86); cursor: pointer; color: var(--muted);
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line-soft);
   border-radius: 999px; padding: 3px 9px;
 }
 .ix-facet:hover { color: var(--text); border-color: var(--line); }
+.ix-facet > span {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ix-facet .ix-art { flex: none; }
 .ix-facet i { font-style: normal; font-size: 9.5px; color: var(--dim); }
 .ix-facet.is-on {
   color: #10141c; background: var(--accent); border-color: var(--accent); font-weight: 600;
