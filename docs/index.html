@@ -2525,8 +2525,8 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 /* What the bench draws straight that the game does not. */
 .tc-flight {
-  margin: 8px 0 0; font-size: 11px; color: var(--dim);
-  border-left: 2px solid rgba(224, 161, 58, .4); padding-left: 8px;
+  color: var(--dim); font-size: 11px; font-weight: 400; letter-spacing: 0;
+  text-transform: none; margin-right: 4px;
 }
 
 .tc-graph { width: 100%; height: 200px; display: block; }
@@ -3124,11 +3124,16 @@ body.globe-wide .home-card-art { animation: none !important; }
       <section class="card">
         <header><h2>The fight</h2>
           <span class="header-aside">
+            <!--
+              What the frame is, said where the frame is named rather than
+              underneath it: the shots are the weapon's own, the rate is the
+              weapon's own, but how they fly is an approximation.
+            -->
+            <span class="tc-flight">shots do not fly exactly as they do in the game</span>
             <button type="button" id="tcPause" class="link-button">pause</button>
             <button type="button" id="tcAgain" class="link-button">again</button>
           </span></header>
         <canvas id="tcDuel" class="tc-duel"></canvas>
-        <p id="tcFlight" class="tc-flight" hidden></p>
         <div id="tcNumbers" class="tc-facts"></div>
       </section>
 
@@ -7267,37 +7272,6 @@ const TINT = {
    * The bench draws a straight line, which is honest arithmetic for the
    * damage and a lie about the flight, so it says which.
    */
-  function drawFlight() {
-    const note = el('tcFlight');
-    if (!note) return;
-    const said = [];
-    {
-      const item = data.byItem[(build.gear.weapon || {}).name];
-      const how = item && item.shots && item.shots[0] && item.shots[0].moves;
-      /*
-       * Weaving is drawn now, from the amplitude and the frequency the
-       * client states, so it has come off the list of things this frame is
-       * not showing you.
-       */
-      const left = (how || '').split(', ').filter(one => one && one !== 'weaving');
-      if (left.length) said.push(item.name + ' - ' + left.join(', '));
-    }
-    /*
-     * And the frame says what it is, always.
-     *
-     * It fires at the rate the weapon fires, in the runs it fires them in,
-     * with the bolt it actually throws - but it is a bench, not the game.
-     * Nobody is dodging, the target does not move or shoot back, and a
-     * handful of shots travel a path the client states the parameters of
-     * without stating the arithmetic. Somebody reading a number off this
-     * frame should know which of the two they are looking at.
-     */
-    note.hidden = false;
-    note.textContent = 'A test bench, not the game: nothing dodges, nothing '
-      + 'shoots back, and every shot is drawn flying straight'
-      + (said.length ? ' - in the game: ' + said.join('; ') : '') + '.';
-  }
-
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -8166,7 +8140,6 @@ const TINT = {
     drawSlots();
     drawStats();
     drawNumbers();
-    drawFlight();
     resetDuel();
     drawDuel();
   }
