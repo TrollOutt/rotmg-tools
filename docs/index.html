@@ -3281,7 +3281,9 @@ body.globe-wide .home-card-art { animation: none !important; }
       <header><h2>Category</h2>
         <button type="button" id="ixClear" class="link-button header-aside" hidden>clear</button>
       </header>
-      <input id="ixSearch" type="search" placeholder="a name, or the client's own id…"
+      <input id="ixSearch" type="search"
+        placeholder="Search a bow, a boss, a dungeon…"
+        title="Anything the game has. The name the game shows you, or the working name it goes by in the files."
         autocomplete="off">
       <div id="ixChosen" class="ix-chosen-row" hidden></div>
       <div id="ixFacets" class="ix-facets"></div>
@@ -9991,6 +9993,9 @@ const RealmIndex = (function () {
   const STAT_SAY = { hp: 'Life', mp: 'Magic', att: 'Attack', def: 'Defence',
     spd: 'Speed', dex: 'Dexterity', vit: 'Vitality', wis: 'Wisdom' };
   /* The client's own stat names, in the words the game's own tooltips use. */
+  /* Where a picture came from, said the way a reader would ask it. */
+  const PIC_SAY = { wiki: 'drawn by the community', client: "the game's own art",
+    skin: 'the skin it gives you', piece: 'one of its pieces' };
   const WORN_SAY = { MAXHP: 'life', MAXMP: 'magic', ATT: 'attack', DEF: 'defence',
     SPD: 'speed', DEX: 'dexterity', VIT: 'vitality', WIS: 'wisdom' };
 
@@ -10035,16 +10040,16 @@ const RealmIndex = (function () {
     }
     if (one.hp) bits.push(['life', one.hp.toLocaleString('en-US')]);
     if (one.def) bits.push(['armour', one.def]);
-    if (one.weight !== undefined) bits.push(['roll weight', one.weight.toLocaleString('en-US')]);
+    if (one.weight !== undefined) bits.push(['how often it rolls', one.weight.toLocaleString('en-US')]);
     if (one.fits) bits.push(['goes on', one.fits]);
     if (one.refuses) bits.push(['never on', one.refuses]);
     if (one.beside) bits.push(['not beside', one.beside]);
-    if (one.takes) bits.push(['takes', one.takes]);
+    if (one.takes) bits.push(['it can give', one.takes]);
     if (one.skin) bits.push(['turns you into', one.skin]);
     if (one.came) bits.push(['came with', 'the ' + one.came]);
     if (one.ground) bits.push(['ground', one.ground]);
-    if (one.tiles) bits.push(['tiles walked', one.tiles.toLocaleString('en-US')]);
-    if (one.pic) bits.push(['picture', one.pic === 'wiki' ? 'from the wiki' : 'cut from the client']);
+    if (one.tiles) bits.push(['how big', one.tiles.toLocaleString('en-US') + ' tiles']);
+    if (one.pic) bits.push(['picture', PIC_SAY[one.pic] || one.pic]);
     if (one.stats) {
       for (const key of Object.keys(STAT_SAY)) {
         if (one.stats[key] === undefined) continue;
@@ -10160,10 +10165,10 @@ const RealmIndex = (function () {
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
       + drawDoes(one)
       + (one.hidden
-        ? '<p class="ix-warn"><b>Not offered by the tools</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
+        ? '<p class="ix-warn"><b>The other tools do not offer this</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
         : '')
       + (one.twin
-        ? '<p class="ix-warn">The client declares more than one thing under this name.</p>'
+        ? '<p class="ix-warn">The game has more than one thing by this name. The words in brackets are how they differ.</p>'
         : '')
       + (facts.length
         ? '<dl class="ix-facts">' + facts.map(([k, v]) =>
@@ -10177,7 +10182,7 @@ const RealmIndex = (function () {
       + drawSlots(one)
       + (links.length ? drawLinks(links) : '')
       + drawWiki(one)
-      + '<p class="ix-from">Declared in <code>' + esc(where) + '</code></p>';
+      + '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>';
   }
 
   /*
