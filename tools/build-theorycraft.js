@@ -372,6 +372,28 @@ for (const [, one] of byType) {
     worn: wornOf(one.body),
     share: shareOf(one.body),
     rel: bonusOf(one.body),
+    /*
+     * Weapons that fire in bursts.
+     *
+     * Fifty-one of them do: a run of shots at the usual rate and then a pause
+     * before the next run, which is the whole character of a longbow or the
+     * S.T.A.F.F. The client gives the length of the run and the two ends of
+     * the pause - longest at no dexterity, shortest at the cap - and a page
+     * that reads none of it has the weapon firing without pause, which both
+     * looks wrong and counts the damage of about two weapons.
+     */
+    burst: (() => {
+      const many = num(one.body, 'BurstCount');
+      if (!many || many < 2) return undefined;
+      const most = num(one.body, 'BurstDelay');
+      const least = num(one.body, 'BurstMinDelay');
+      if (most === undefined && least === undefined) return undefined;
+      return {
+        many,
+        wait: most === undefined ? least : most,
+        rush: least === undefined ? most : least
+      };
+    })(),
     shots: shotOf(one.body),
     // What the ability actually does, when it is not simply a projectile.
     does: text(one.body, 'Activate'),
@@ -564,6 +586,43 @@ for (const m of enchantText.matchAll(
      * BonusStatRelative and takes its share of the bonus. Two rules, two
      * names, and the client keeps them apart.
      */
+    /*
+     * The ones that change what the weapon fires.
+     *
+     * Twenty-six enchantments carry a sub-attack: an object of their own with
+     * its own projectile, which either joins what the weapon throws or takes
+     * its place. Buzzing Bullets adds a burst of bees to every shot; Venom
+     * Coating replaces the shot outright. They are the whole reason a player
+     * puts an awakened enchantment on a weapon, and read as nothing they were
+     * an enchantment that did nothing at all.
+     */
+    sub: (() => {
+      const out = [];
+      for (const one of inner.matchAll(
+        /<(Add|Set)SubAttack([^>]*)>[^<]*<\/\1SubAttack>/g)) {
+        const where = /subAttackObject="([^"]+)"/.exec(one[2]);
+        const from = where && byName.get(where[1]);
+        if (!from) continue;
+        const shots = shotOf(from.body);
+        if (!shots || !shots.length) continue;
+        out.push({
+          how: one[1] === 'Set' ? 'set' : 'add',
+          shots,
+          many: num(from.body, 'NumProjectiles') || 1,
+          rate: num(from.body, 'RateOfFire'),
+          burst: (() => {
+            const runs = num(from.body, 'BurstCount');
+            if (!runs || runs < 2) return undefined;
+            const most = num(from.body, 'BurstDelay');
+            const least = num(from.body, 'BurstMinDelay');
+            if (most === undefined && least === undefined) return undefined;
+            return { many: runs, wait: most === undefined ? least : most,
+              rush: least === undefined ? most : least };
+          })()
+        });
+      }
+      return out.length ? out : undefined;
+    })(),
     rel: (() => {
       const out = [];
       for (const one of inner.matchAll(
