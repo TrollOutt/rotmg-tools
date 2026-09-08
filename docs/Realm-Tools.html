@@ -10195,7 +10195,14 @@ const RealmIndex = (function () {
     box.innerHTML = groups.map((one, at) => {
       if (one.inSub) return '';
       const chosen = one.chips.filter(x => x.on);
-      const left = one.chips.filter(x => x.here === undefined || x.here > 0);
+      /*
+       * What is left to choose - and everything already chosen, whatever its
+       * count. A chip that has been picked and then narrowed down to nothing
+       * still has to be visible where it was picked, or the only way to undo
+       * it is the row at the top and the group looks like it is offering
+       * something it is not.
+       */
+      const left = one.chips.filter(x => x.on || x.here === undefined || x.here > 0);
       if (!chosen.length && !left.length) return '';
       /*
        * Only one of them is the first. Every choice narrows the ones after it,
