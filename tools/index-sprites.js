@@ -251,6 +251,11 @@ for (const one of facts.records) {
    */
   let art = null;
   if (one.kind === 'enchant') art = charmArt.get(one.alias || one.name);
+  /*
+   * A set has no picture of its own, but most of them turn the wearer into a
+   * skin, and that skin is an object the client draws. The build says which.
+   */
+  else if (one.drawnAs) art = artOf.get(one.drawnAs);
   else art = artOf.get(one.alias || one.name);
   const rect = rectFor(art);
   if (!rect || !rect.w || !rect.h) { none++; continue; }

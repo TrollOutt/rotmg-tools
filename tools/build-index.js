@@ -108,6 +108,7 @@ const nameOf = one => {
 
 /* ---------------- the records ---------------- */
 const records = new Map();          // id -> record
+let slotNames = {};                 // slot number -> [what it is called, its plainest item]
 const links = [];                   // {from, to, how}
 
 /*
@@ -123,7 +124,35 @@ function fileNumber(name) {
   return fileAt.get(name);
 }
 
+/*
+ * The same object, declared twice.
+ *
+ * Four hundred definitions appear in two documents at once - Objects.002 and
+ * Objects.113 both declare the Frozen Chest, same type, same life, same art -
+ * and they are not two chests. A type is the client's own number for a thing,
+ * so the same number under the same family is the same thing however many
+ * files repeat it. The second sighting adds its document to the first record's
+ * provenance and stops there.
+ */
+const byNumber = new Map();
+
 function put(kind, name, one, extra) {
+  /*
+   * Only for things the client numbers. A set, a pool and an enchantment list
+   * are given a type of nought by the reader above because they have none of
+   * their own, and nought is not an identity: merging on it collapsed a
+   * thousand enchantments into one.
+   */
+  if (one && one.type) {
+    const key = kind + '|' + one.type;
+    const twice = byNumber.get(key);
+    if (twice) {
+      const where = fileNumber(one.file);
+      if (!twice.also) twice.also = [];
+      if (twice.from[0] !== where && !twice.also.includes(where)) twice.also.push(where);
+      return twice;
+    }
+  }
   let id = kind + ':' + name;
   const had = records.get(id);
   if (had) {
@@ -146,6 +175,7 @@ function put(kind, name, one, extra) {
     from: one ? [fileNumber(one.file), '0x' + one.type.toString(16)] : undefined
   }, extra || {});
   records.set(id, made);
+  if (one && one.type) byNumber.set(kind + '|' + one.type, made);
   return made;
 }
 
@@ -338,6 +368,27 @@ for (const one of objects) {
   });
 }
 
+/* ---------------- the doors into places ---------------- */
+/*
+ * A dungeon is a portal in the client, and the community's drop lists are full
+ * of them: the Doom Bow comes from the Undead Lair, and the card had nothing to
+ * draw beside that name because the index kept no such thing. Two hundred and
+ * twenty-three portals, every one of them with its own art, so a dungeon in a
+ * list now looks like the dungeon.
+ */
+for (const one of objects) {
+  if (!/<Class>Portal<\/Class>/.test(one.body)) continue;
+  const labels = labelsOf(one.body);
+  const hidden = [];
+  if (has(one.body, 'AdminOnly')) hidden.push('admin only');
+  if (/(^|\s)(test|tester|testing)/i.test(one.id)) hidden.push('a test item');
+  put('portal', nameOf(one), one, {
+    labels,
+    about: text(one.body, 'Description'),
+    hidden: hidden.length ? hidden : undefined
+  });
+}
+
 /* ---------------- the sets ---------------- */
 {
   const file = path.join(XML, 'EquipmentSets.xml');
@@ -360,12 +411,41 @@ for (const one of objects) {
         }
         if (Object.keys(worn).length) steps[howMany] = worn;
       }
-      const record = put('set', m[2], { id: m[2], type: 0, file: 'EquipmentSets.xml', body },
-        { steps });
+      /*
+       * What the pieces are worth on their own, added up.
+       *
+       * Most of the older sets pay nothing for being complete - the Oryx
+       * Awesome Set only changes how you look - and a card that showed nothing
+       * read as though the set did nothing. It does: it is four pieces, and
+       * their bonuses are the reason to wear them. That total is what the wiki
+       * calls the overall stat bonus, and where the two disagree the client is
+       * the one holding the numbers. Its ring gives 140 life today against the
+       * 140 the wiki still adds up differently, and the wiki's page says the
+       * set stopped dropping in 2018.
+       */
+      const pieces = [];
+      const worn = {};
       for (const piece of body.matchAll(/<Setpiece\s+slot="(\d+)"\s+itemtype="([^"]+)"/g)) {
         const got = byType.get(Number.parseInt(piece[2], 16));
-        if (got) tie(record.id, 'made of', 'item:' + nameOf(got));
+        if (!got) continue;
+        pieces.push(got);
+        const mine = records.get('item:' + nameOf(got));
+        for (const stat of Object.keys((mine && mine.worn) || {})) {
+          worn[stat] = (worn[stat] || 0) + mine.worn[stat];
+        }
       }
+      /*
+       * And its face. A set has no picture of its own, but the skin it turns
+       * the wearer into is an object like any other, with art the client draws.
+       */
+      const changes = /<ActivateOnEquipAll\s+skinType="([^"]+)"[^>]*>\s*ChangeSkin/.exec(body);
+      const skin = changes && byType.get(Number.parseInt(changes[1], 16));
+      const record = put('set', m[2], { id: m[2], type: 0, file: 'EquipmentSets.xml', body },
+        { steps,
+          worn: Object.keys(worn).length ? worn : undefined,
+          skin: skin ? nameOf(skin) : undefined,
+          drawnAs: skin ? skin.id : undefined });
+      for (const got of pieces) tie(record.id, 'made of', 'item:' + nameOf(got));
     }
   }
 }
@@ -398,7 +478,13 @@ for (const one of objects) {
     const list = fs.readFileSync(pools, 'utf8');
     for (const m of list.matchAll(
       /<EnchantmentList\s+type="([^"]*)"\s+id="([^"]+)">([\s\S]*?)<\/EnchantmentList>/g)) {
+      /*
+       * Plumbing. A pool is how the game decides what an item may roll, and it
+       * is worth being able to look one up - but nobody browsing the index is
+       * looking for "Default Enchantment Pool", so it waits to be asked for.
+       */
       put('pool', m[2], { id: m[2], type: 0, file: 'EnchantmentLists.xml', body: m[3] }, {
+        dev: 1,
         takes: [...m[3].matchAll(/includeLabelsOR="([^"]+)"/g)].map(x => x[1]).join(' ')
       });
     }
@@ -418,13 +504,37 @@ for (const it of gear) {
   const atlas = path.join(root, 'web', 'assets', 'atlas', 'atlas.json');
   if (fs.existsSync(atlas)) {
     const said = JSON.parse(fs.readFileSync(atlas, 'utf8'));
+    /*
+     * A biome is a stretch of ground, and one realm holds several stretches of
+     * the same one - five separate patches of Low Forest, three of Dead
+     * Church. The atlas keeps them apart because they are in different places
+     * on the map; the index should not, because "Low Forest" is one kind of
+     * place and five chips reading Low Forest are five ways of saying it. The
+     * patches are added up into one, and everything that lives in any of them
+     * lives in it.
+     */
+    const together = new Map();
     for (const biome of said.biomes || []) {
+      const had = together.get(biome.name);
+      if (had) {
+        had.tiles += biome.tiles || 0;
+        had.patches++;
+        for (const lives of biome.lives || []) had.lives.push(lives);
+        continue;
+      }
+      together.set(biome.name, {
+        name: biome.name, ground: biome.ground, tiles: biome.tiles || 0,
+        patches: 1, lives: [...(biome.lives || [])]
+      });
+    }
+    for (const biome of together.values()) {
       const record = put('place', biome.name, null, {
         tiles: biome.tiles,
+        patches: biome.patches > 1 ? biome.patches : undefined,
         ground: biome.ground,
         from: [fileNumber('the realm as it was walked'), '']
       });
-      for (const lives of biome.lives || []) {
+      for (const lives of biome.lives) {
         const got = byType.get(lives.type);
         if (got) tie('enemy:' + nameOf(got), 'lives in', record.id);
       }
@@ -469,10 +579,59 @@ for (const it of gear) {
   if (told) console.log('  ' + told + ' told apart by what their working name adds');
 }
 
+/* ---------------- what each slot is a slot for ---------------- */
+/*
+ * A class card used to list every item the class may hold - four hundred of
+ * them for an Archer, which answers a question nobody asked. What it wants to
+ * say is Bow, Quiver, Leather armour, Ring.
+ *
+ * The client does not name its slots, but its tiered gear does: every tiered
+ * item in slot three carries BOW, every one in slot fifteen carries QUIVER. So
+ * the name of a slot is the label its tiered items agree on, and its picture
+ * is the plainest of them - the tier nought, which is the one a class is
+ * handed on the day it is made.
+ */
+{
+  const SKIP = /^(EQUIPMENT|TIERED|LOOTABLE|TRADEABLE|SOULBOUND|XPBONUS|SHINY|RESKIN|BASETYPE|ROLLABLE|MPCOST|STAT|STATMOD|SINGLESTAT|DUALSTAT|QUEST|PROC|CONSUMABLE|UT|ST|WEAPON|ABILITY|ARMOR|T\d+|POWERTIER_.*|ORG_.*|TAB_.*|STGEN.*|SET.*|HAS_.*|NUMPROJ.*|APPLY_STAT_EFF|CAUSE_STAT_EFF|COOLDOWN|SUMMONPOWERED|.*_ENCHANTABLE)$/;
+  const SAY = { LEATHER: 'Leather armour', HEAVY: 'Heavy armour', ROBE: 'Robe' };
+  const wanted = new Set();
+  for (const kind of classes) for (const slot of kind.record.slots || []) wanted.add(slot);
+  const table = {};
+  for (const slot of wanted) {
+    const here = gear.filter(x => x.slot === slot && x.record.tier !== undefined);
+    if (!here.length) continue;
+    const tally = new Map();
+    for (const it of here) {
+      for (const label of it.record.labels || []) {
+        if (SKIP.test(label)) continue;
+        tally.set(label, (tally.get(label) || 0) + 1);
+      }
+    }
+    const best = [...tally].sort((a, b) => b[1] - a[1])[0];
+    if (!best) continue;
+    /* The plainest real one: slot one's lowest tier is a test sword. */
+    const honest = here.filter(x => !x.record.hidden);
+    const plainest = (honest.length ? honest : here).reduce((low, x) =>
+      (low === null || x.record.tier < low.record.tier) ? x : low, null);
+    table[slot] = [SAY[best[0]]
+      || best[0].charAt(0) + best[0].slice(1).toLowerCase(), plainest.record.id];
+  }
+  slotNames = table;
+}
+
 /* ---------------- the links, from both ends ---------------- */
 const out = new Map(), back = new Map();
+/*
+ * Said once. Merging the five patches of Low Forest into one place made every
+ * creature that lives in two of them say so twice, and a card that lists the
+ * same neighbour five times is a card nobody reads to the end.
+ */
+const already = new Set();
 for (const one of links) {
   if (!records.has(one.from) || !records.has(one.to)) continue;
+  const said = JSON.stringify([one.from, one.how, one.to]);
+  if (already.has(said)) continue;
+  already.add(said);
   (out.get(one.from) || out.set(one.from, []).get(one.from)).push([one.how, one.to]);
   (back.get(one.to) || back.set(one.to, []).get(one.to)).push([one.how, one.from]);
 }
@@ -493,6 +652,7 @@ fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify({
     return tally;
   }, {}),
   links: links.length,
+  slots: slotNames,
   records: all
 }) + '\n');
 
