@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Realm Tools</title>
+<!--
+  A signpost, not the application. The page itself is docs/index.html.
+
+  Two deployments run on every push: this repository's workflow, which publishes
+  docs/ on its own, and GitHub's built-in branch build, which publishes the
+  whole repository. Whichever finishes last is what gets served, so the root has
+  to work under both. Under the workflow, docs/index.html *is* the root and this
+  file is never published at all. Under the branch build, the root is this
+  folder and would otherwise fall through to Jekyll's rendering of the README —
+  so it forwards to where the built page actually is.
+
+  Settings -> Pages -> Source: GitHub Actions ends the race, and then this file
+  and .nojekyll can both go.
+
+  The race is NOT over, whatever an earlier version of this comment claimed.
+  Observed within a few minutes of each other on the live site: /rotmg-tools/
+  serving the built page with /docs/ a 404, and then /rotmg-tools/ serving
+  Jekyll's README with /docs/ serving the built page. Both deployments are
+  running and they take turns, and this file was deleted once on the strength
+  of the first observation alone - which left the root showing a rendered
+  README for as long as the branch build held the site. Do not delete it again
+  without checking BOTH addresses more than once.
+
+  Each deployment is self-consistent; it is a reader's cache spanning the two
+  that breaks. A page held from the branch build forwards to /docs/, the
+  workflow answers that with File not found, and the reader concludes the site
+  is down. docs/404.html is what mends that: it puts an old /docs/ address back
+  onto the one that works, once per tab.
+
+  The cure for the cause rather than the symptom is one setting:
+  Settings -> Pages -> Source: GitHub Actions. Until somebody sets it, both of
+  these have to keep working, and this file is half of that.
+
+  The two lines below answer different questions, which is why they name
+  different places and both are right.
+
+  The forward is scoped to the deployment that serves this file: under the
+  branch build the root is this folder and the built page really is in ./docs/,
+  so that is where to send somebody who has landed here.
+
+  The canonical is not scoped to anything. It states the address of the site,
+  which is the one that answers today - and it used to name /docs/, a URL that
+  only exists in the fallback and returns 404 in the deployment that is
+  actually live. That is exactly the address anybody who bookmarked it or found
+  it through a search would have been handed.
+-->
+<meta http-equiv="refresh" content="0; url=./docs/">
+<link rel="canonical" href="https://trolloutt.github.io/rotmg-tools/">
+<style>
+  html { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-content: center; gap: .75rem;
+         text-align: center; background: #0d0c13; color: #d8d3e6;
+         font: 16px/1.6 system-ui, -apple-system, Segoe UI, sans-serif; }
+  a { color: #ca7aff; }
+</style>
+<p>Opening Realm Tools…</p>
+<p><a href="./docs/">Continue if nothing happens</a></p>
