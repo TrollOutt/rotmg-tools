@@ -10143,7 +10143,6 @@ const RealmIndex = (function () {
       const chosen = one.chips.filter(x => x.on);
       const left = one.chips.filter(x => x.here === undefined || x.here > 0);
       if (!chosen.length && !left.length) return '';
-      const shown = chosen.length ? chosen : left;
       /*
        * Only one of them is the first. Every choice narrows the ones after it,
        * but the first is the one they were all narrowed against - it is the
@@ -10151,6 +10150,14 @@ const RealmIndex = (function () {
        * as the anchor, and it says so.
        */
       const isFirst = Boolean(asked[0]) && chosen.includes(asked[0]);
+      /*
+       * And it is the only one that puts its alternatives away. Taking the
+       * first choice back clears everything, so offering its neighbours beside
+       * it would only invite the reader to start again. A later choice costs
+       * nothing to change or to add to - weapons and abilities together is a
+       * fair question - so those groups keep every option they have left.
+       */
+      const shown = isFirst && chosen.length ? chosen : left;
       return '<section class="ix-group' + (one.open ? ' is-open' : '')
       + (isFirst ? ' is-primary' : (chosen.length ? ' is-chosen' : ''))
       + '" data-group="' + at + '"'
