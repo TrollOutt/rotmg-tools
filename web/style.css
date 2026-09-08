@@ -2732,10 +2732,88 @@ body.globe-wide .home-card-art { animation: none !important; }
  * moves under the reader while they are reading it.                   *
  * ------------------------------------------------------------------ */
 .ix-layout {
-  display: grid; grid-template-columns: minmax(280px, 380px) 1fr;
-  gap: clamp(12px, 2vw, 20px); align-items: start;
+  display: grid; grid-template-columns: minmax(190px, 230px) minmax(260px, 340px) 1fr;
+  gap: clamp(10px, 1.4vw, 16px); align-items: start;
+}
+@media (max-width: 1180px) { .ix-layout { grid-template-columns: minmax(240px, 320px) 1fr; }
+  .ix-ways { grid-column: 1 / -1; }
+  .ix-facets { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+  .ix-facets .ix-group { flex: 0 1 auto; min-width: 150px; }
+  .ix-facets .ix-group.is-open { flex-basis: 100%; }
+  .ix-ways { max-height: none; }
 }
 @media (max-width: 860px) { .ix-layout { grid-template-columns: 1fr; } }
+
+/* ---------------- ways in ---------------- *
+ * Every division of the index the data really supports, with what each one
+ * holds. The client's own divisions and the lists the community keeps are
+ * different kinds of claim, so a group says which it is.
+ */
+.ix-ways { max-height: 78vh; display: flex; flex-direction: column; min-height: 0; }
+.ix-facets { overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.ix-group { border-radius: var(--radius-sm); }
+.ix-group-head {
+  display: flex; align-items: center; gap: 7px; width: 100%; text-align: left;
+  font: inherit; font-size: 11.5px; font-weight: 650; letter-spacing: .3px;
+  color: var(--muted); background: transparent; border: 0; cursor: pointer;
+  padding: 6px 8px; border-radius: var(--radius-sm);
+}
+.ix-group-head:hover { color: var(--text); background: rgba(255, 255, 255, .04); }
+.ix-group-head b { flex: 1; font-weight: 650; }
+.ix-group-head::after {
+  content: '\203A'; color: var(--dim); font-size: 14px; line-height: 1;
+  transform: rotate(90deg); transition: transform .15s ease;
+}
+.ix-group.is-open > .ix-group-head::after { transform: rotate(-90deg); }
+.ix-group.is-open > .ix-group-head { color: var(--text); }
+.ix-group-on:empty { display: none; }
+.ix-group-on {
+  font-size: 10px; font-weight: 700; color: #10141c; background: var(--accent);
+  border-radius: 999px; min-width: 15px; text-align: center; padding: 1px 5px;
+}
+.ix-said {
+  font-style: normal; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--legendary);
+}
+.ix-group-body { display: none; flex-wrap: wrap; gap: 4px; padding: 2px 8px 9px; }
+.ix-group.is-open > .ix-group-body { display: flex; }
+.ix-group-note {
+  flex: 1 0 100%; margin: 0 0 3px; font-size: 10.5px; color: var(--dim); line-height: 1.4;
+}
+.ix-facet {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  font: inherit; font-size: 11px; cursor: pointer; color: var(--muted);
+  background: rgba(255, 255, 255, .04); border: 1px solid var(--line-soft);
+  border-radius: 999px; padding: 3px 9px;
+}
+.ix-facet:hover { color: var(--text); border-color: var(--line); }
+.ix-facet i { font-style: normal; font-size: 9.5px; color: var(--dim); }
+.ix-facet.is-on {
+  color: #10141c; background: var(--accent); border-color: var(--accent); font-weight: 600;
+}
+.ix-facet.is-on i { color: rgba(16, 20, 28, .6); }
+
+/* What the community says, kept visibly apart from what the client declares. */
+.ix-said-block {
+  margin-top: 14px; padding: 11px 13px 4px;
+  border: 1px solid var(--line-soft); border-left: 2px solid var(--legendary);
+  border-radius: var(--radius-sm); background: rgba(202, 122, 255, .05);
+}
+.ix-said-block h4 {
+  display: flex; align-items: baseline; gap: 8px; margin: 0 0 2px;
+  font-size: 12px; font-weight: 650; color: var(--text);
+}
+.ix-said-block h4 em {
+  font-style: normal; font-size: 10px; font-weight: 600; color: var(--legendary);
+}
+.ix-said-block .ix-group-note { margin-bottom: 7px; }
+.ix-away {
+  flex: none; font-size: 10.5px; font-weight: 650; color: var(--legendary);
+  text-decoration: none; border: 1px solid rgba(202, 122, 255, .35);
+  border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+}
+.ix-away:hover { background: rgba(202, 122, 255, .14); }
+.ix-jump.is-away { color: var(--legendary); text-decoration: none; }
 
 .ix-find { display: flex; flex-direction: column; min-height: 0; }
 #ixSearch {
