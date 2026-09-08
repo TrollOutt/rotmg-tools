@@ -2794,3 +2794,15 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-link-row em { font-style: normal; font-size: 11px; color: var(--dim); align-self: center; }
 .ix-from { margin: 14px 0 0; font-size: 11px; color: var(--dim); }
 .ix-from code { font-size: 11px; }
+
+/* The client's own art, from the one sheet the index cuts for itself. */
+.ix-cell { flex: none; display: inline-grid; place-items: center; }
+.ix-art {
+  display: block; image-rendering: pixelated;
+  background-image: var(--ix-sheet); background-repeat: no-repeat;
+}
+.ix-card-head .ix-cell {
+  background: rgba(0, 0, 0, .28); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); width: 52px !important; height: 52px !important;
+}
+.ix-jump .ix-art { display: inline-block; vertical-align: -2px; margin-right: 5px; }

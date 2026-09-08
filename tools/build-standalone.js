@@ -226,6 +226,20 @@ let theorySheet = '';
   }
 }
 
+/*
+ * And one for the index: a still frame of every thing it holds, cut from the
+ * client, since the client's own art is the only art that settles which of
+ * three things called Doom Bow is the one in your hand. The kept copy carries
+ * it; the served page fetches it beside the index it belongs to.
+ */
+let indexSheet = '';
+{
+  const at = path.join(web, 'assets', 'index', 'sheet.png');
+  if (fs.existsSync(at)) {
+    indexSheet = 'data:image/png;base64,' + fs.readFileSync(at).toString('base64');
+  }
+}
+
 const realmMonsterSprites = {};
 const realmSpriteDir = path.join(web, 'assets', 'realm-monsters');
 const realmSpriteIndex = path.join(realmSpriteDir, 'index.json');
@@ -463,7 +477,7 @@ const dress = (bundleSources) => readWeb('index.html')
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemSprites, whatsNew,
-      theorySheet })};</script>`,
+      theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '' })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,
