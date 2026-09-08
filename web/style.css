@@ -2860,15 +2860,17 @@ body.globe-wide .home-card-art { animation: none !important; }
  */
 .ix-layout:not(.has-card) { grid-template-columns: minmax(190px, 20vw) 1fr; }
 .ix-layout.has-pick:not(.has-card) { grid-template-columns: minmax(150px, 16vw) 1fr; }
-.ix-layout:not(.has-list) {
-  grid-template-columns: minmax(240px, 30vw) minmax(280px, 34vw);
-  justify-content: start; align-items: start;
-}
-.ix-layout:not(.has-list) #ixKinds,
-.ix-layout:not(.has-list) #ixTypes,
-.ix-layout:not(.has-list) #ixList,
-.ix-layout:not(.has-list) #ixCount { display: none; }
-.ix-layout:not(.has-list) #ixSearch { margin-bottom: 0; }
+/*
+ * Nothing chosen and nothing typed: one panel, the whole width. The box you
+ * type in lives with the categories, so there is no second panel standing
+ * empty beside them waiting to be given something to hold.
+ */
+.ix-layout:not(.has-list) { grid-template-columns: 1fr; align-items: start; }
+.ix-layout:not(.has-list) .ix-find { display: none; }
+.ix-layout:not(.has-list) .ix-ways { max-height: none; }
+/* And the groups spread across it rather than queueing down one side. */
+.ix-layout:not(.has-list) .ix-facets { overflow: visible; }
+.ix-ways > #ixSearch { margin: 0 0 12px; }
 
 /* What the community says, kept visibly apart from what the client declares. */
 .ix-does {
@@ -2963,6 +2965,8 @@ body.globe-wide .home-card-art { animation: none !important; }
   text-transform: uppercase; letter-spacing: .5px; color: var(--dim);
 }
 .ix-kind.is-item { color: #7fc45a; }
+.ix-kind.is-use { color: #58bfa6; }
+.ix-chip.is-use.is-on { background: #58bfa6; border-color: #58bfa6; }
 .ix-kind.is-class { color: #79c5e8; }
 .ix-kind.is-enemy { color: #d4685f; }
 .ix-kind.is-place { color: #d9c23c; }

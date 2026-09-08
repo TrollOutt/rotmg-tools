@@ -64,7 +64,7 @@ const RealmIndex = (function () {
    * and the three that decide what goes on your gear.
    */
   const KINDS = [
-    ['item', 'Gear'], ['class', 'Classes'], ['enemy', 'Enemies'],
+    ['item', 'Gear'], ['use', 'Consumables'], ['class', 'Classes'], ['enemy', 'Enemies'],
     ['portal', 'Dungeons'], ['place', 'Biomes'], ['set', 'Sets'],
     ['enchant', 'Enchantments'], ['pool', 'Pools']
   ];
@@ -94,8 +94,14 @@ const RealmIndex = (function () {
      * them apart; a list that prints the bare name shows the reader eight
      * identical rows and hides the answer on the far side of a click.
      */
-    light = said.records.map(one => [one.id, one.said || one.name, one.kind,
-      one.alias || '', one.hidden ? 1 : 0, one.dev ? 1 : 0]);
+    /*
+     * A potion and a bow are both "item" to the client, and nobody looking for
+     * one is looking for the other - so the family a reader sees splits them.
+     * The record keeps its own kind; this is only what the list files it under.
+     */
+    light = said.records.map(one => [one.id, one.said || one.name,
+      one.use ? 'use' : one.kind, one.alias || '', one.hidden ? 1 : 0,
+      one.dev ? 1 : 0]);
     /*
      * Both ends of every link, so a record can be asked what points at it
      * without walking the whole index. The file carries each link once.
@@ -214,7 +220,8 @@ const RealmIndex = (function () {
         if (one.tier === undefined) continue;
         if (!plainest || one.tier < plainest.tier) plainest = one;
       }
-      chip(byHand, hand, say, gather(x => x.hand === hand), plainest && plainest.id);
+      chip(byHand, hand, say, gather(x => x.hand === hand && !x.use),
+        plainest && plainest.id);
     }
 
     /*

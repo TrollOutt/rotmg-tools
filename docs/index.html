@@ -2868,15 +2868,17 @@ body.globe-wide .home-card-art { animation: none !important; }
  */
 .ix-layout:not(.has-card) { grid-template-columns: minmax(190px, 20vw) 1fr; }
 .ix-layout.has-pick:not(.has-card) { grid-template-columns: minmax(150px, 16vw) 1fr; }
-.ix-layout:not(.has-list) {
-  grid-template-columns: minmax(240px, 30vw) minmax(280px, 34vw);
-  justify-content: start; align-items: start;
-}
-.ix-layout:not(.has-list) #ixKinds,
-.ix-layout:not(.has-list) #ixTypes,
-.ix-layout:not(.has-list) #ixList,
-.ix-layout:not(.has-list) #ixCount { display: none; }
-.ix-layout:not(.has-list) #ixSearch { margin-bottom: 0; }
+/*
+ * Nothing chosen and nothing typed: one panel, the whole width. The box you
+ * type in lives with the categories, so there is no second panel standing
+ * empty beside them waiting to be given something to hold.
+ */
+.ix-layout:not(.has-list) { grid-template-columns: 1fr; align-items: start; }
+.ix-layout:not(.has-list) .ix-find { display: none; }
+.ix-layout:not(.has-list) .ix-ways { max-height: none; }
+/* And the groups spread across it rather than queueing down one side. */
+.ix-layout:not(.has-list) .ix-facets { overflow: visible; }
+.ix-ways > #ixSearch { margin: 0 0 12px; }
 
 /* What the community says, kept visibly apart from what the client declares. */
 .ix-does {
@@ -2971,6 +2973,8 @@ body.globe-wide .home-card-art { animation: none !important; }
   text-transform: uppercase; letter-spacing: .5px; color: var(--dim);
 }
 .ix-kind.is-item { color: #7fc45a; }
+.ix-kind.is-use { color: #58bfa6; }
+.ix-chip.is-use.is-on { background: #58bfa6; border-color: #58bfa6; }
 .ix-kind.is-class { color: #79c5e8; }
 .ix-kind.is-enemy { color: #d4685f; }
 .ix-kind.is-place { color: #d9c23c; }
@@ -3261,13 +3265,13 @@ body.globe-wide .home-card-art { animation: none !important; }
       <header><h2>Category</h2>
         <button type="button" id="ixClear" class="link-button header-aside" hidden>clear</button>
       </header>
+      <input id="ixSearch" type="search" placeholder="a name, or the client's own id…"
+        autocomplete="off">
       <div id="ixChosen" class="ix-chosen-row" hidden></div>
       <div id="ixFacets" class="ix-facets"></div>
     </section>
     <section class="card ix-find">
       <header><h2>Sub category</h2><span id="ixCount" class="header-aside"></span></header>
-      <input id="ixSearch" type="search" placeholder="a name, or the client's own id…"
-        autocomplete="off">
       <div id="ixKinds" class="ix-kinds"></div>
       <div id="ixTypes" class="ix-kinds ix-types" hidden></div>
       <div id="ixList" class="ix-list"></div>
@@ -9392,7 +9396,7 @@ const RealmIndex = (function () {
    * and the three that decide what goes on your gear.
    */
   const KINDS = [
-    ['item', 'Gear'], ['class', 'Classes'], ['enemy', 'Enemies'],
+    ['item', 'Gear'], ['use', 'Consumables'], ['class', 'Classes'], ['enemy', 'Enemies'],
     ['portal', 'Dungeons'], ['place', 'Biomes'], ['set', 'Sets'],
     ['enchant', 'Enchantments'], ['pool', 'Pools']
   ];
@@ -9422,8 +9426,14 @@ const RealmIndex = (function () {
      * them apart; a list that prints the bare name shows the reader eight
      * identical rows and hides the answer on the far side of a click.
      */
-    light = said.records.map(one => [one.id, one.said || one.name, one.kind,
-      one.alias || '', one.hidden ? 1 : 0, one.dev ? 1 : 0]);
+    /*
+     * A potion and a bow are both "item" to the client, and nobody looking for
+     * one is looking for the other - so the family a reader sees splits them.
+     * The record keeps its own kind; this is only what the list files it under.
+     */
+    light = said.records.map(one => [one.id, one.said || one.name,
+      one.use ? 'use' : one.kind, one.alias || '', one.hidden ? 1 : 0,
+      one.dev ? 1 : 0]);
     /*
      * Both ends of every link, so a record can be asked what points at it
      * without walking the whole index. The file carries each link once.
@@ -9542,7 +9552,8 @@ const RealmIndex = (function () {
         if (one.tier === undefined) continue;
         if (!plainest || one.tier < plainest.tier) plainest = one;
       }
-      chip(byHand, hand, say, gather(x => x.hand === hand), plainest && plainest.id);
+      chip(byHand, hand, say, gather(x => x.hand === hand && !x.use),
+        plainest && plainest.id);
     }
 
     /*

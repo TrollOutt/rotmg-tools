@@ -340,7 +340,15 @@ for (const one of objects) {
   if (/\bProc\b/i.test(one.id)) hidden.push('the machinery behind a proc');
   /* Long Sword 1Rarity through 4Rarity: four copies for showing off a frame. */
   if (/\d+Rarity$/.test(one.id)) hidden.push('a swatch for drawing a rarity frame');
-  if (!hand) hidden.push('a slot no class uses');
+  /*
+   * A potion is not gear with a slot nobody uses; it is a different kind of
+   * thing. Two thousand of them were filed as hidden for a reason that was
+   * true of the slot and false of the object, which put every key, token and
+   * potion behind a warning. They are their own family now, and only the seven
+   * that are neither worn nor drunk keep the old reason.
+   */
+  const drunk = labels.includes('CONSUMABLE');
+  if (!hand && !drunk) hidden.push('a slot no class uses');
   const record = put('item', nameOf(one), one, {
     slot, hand,
     tier: num(one.body, 'Tier'),
@@ -350,6 +358,7 @@ for (const one of objects) {
     mp: num(one.body, 'MpCost'),
     rate: num(one.body, 'RateOfFire'),
     shots: num(one.body, 'NumProjectiles'),
+    use: drunk ? 1 : undefined,
     fires: shotOf(one.body),
     worn: wornOf(one.body),
     does: tipsOf(one.body),
