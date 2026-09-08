@@ -2732,6 +2732,12 @@ body.globe-wide .home-card-art { animation: none !important; }
  * moves under the reader while they are reading it.                   *
  * ------------------------------------------------------------------ */
 /*
+ * The index gets the whole window. Every other tool is a form and reads better
+ * at a measured width; this one is three columns of list and wants the room.
+ */
+#pageIndex.app { max-width: none; }
+
+/*
  * Three columns that use the window they are given: the two on the left keep
  * their own scroll and stand full height, so the list is as long as the screen
  * rather than as long as a guess, and the card takes everything left over.

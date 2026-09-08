@@ -2740,6 +2740,12 @@ body.globe-wide .home-card-art { animation: none !important; }
  * moves under the reader while they are reading it.                   *
  * ------------------------------------------------------------------ */
 /*
+ * The index gets the whole window. Every other tool is a form and reads better
+ * at a measured width; this one is three columns of list and wants the room.
+ */
+#pageIndex.app { max-width: none; }
+
+/*
  * Three columns that use the window they are given: the two on the left keep
  * their own scroll and stand full height, so the list is as long as the screen
  * rather than as long as a guess, and the card takes everything left over.
@@ -9444,6 +9450,7 @@ const RealmIndex = (function () {
     wiki = {
       says: said.says, home: said.at, built: said.built, pages: said.pages || [],
       page: new Map(),                 // our record -> the page about it
+      near: new Map(),                 // or, failing that, the page its pieces point at
       about: new Map(),                // that page -> every record it answers to
       drop: new Map(), dropBy: new Map(), spawn: new Map(), spawnBy: new Map()
     };
@@ -9456,6 +9463,10 @@ const RealmIndex = (function () {
       if (!id || !all.has(id)) continue;
       wiki.page.set(id, where);
       tie(wiki.about, where, id);
+    }
+    for (const [who, where] of said.near || []) {
+      const id = named[who];
+      if (id && all.has(id)) wiki.near.set(id, where);
     }
     for (const [from, to] of said.drop || []) { tie(wiki.drop, from, to); tie(wiki.dropBy, to, from); }
     for (const [from, to] of said.spawn || []) { tie(wiki.spawn, from, to); tie(wiki.spawnBy, to, from); }
@@ -9744,8 +9755,24 @@ const RealmIndex = (function () {
   }
 
   /* Everything the rail touches, redrawn in one go. */
+  /* Whether a record survives the rail as it stands - the same test the list
+     makes, without the name being typed, which is nobody's category. */
+  function stillAllowed(id) {
+    const one = all.get(id);
+    if (!one) return false;
+    if (kindWanted && one.kind !== kindWanted) return false;
+    for (const chosen of narrowed) if (!chosen.set.has(id)) return false;
+    return true;
+  }
+
   function repaint() {
     narrow();
+    /*
+     * A card left open on something the new category cannot contain is the
+     * page contradicting itself: Knight chosen on the left, a Summoner robe
+     * on the right. It closes itself.
+     */
+    if (showing && !stillAllowed(showing.id)) drawCard('');
     /*
      * One step at a time. Nothing chosen and the rail is the page; something
      * chosen and it folds down to what was chosen, and the list has the room.
@@ -9973,6 +10000,30 @@ const RealmIndex = (function () {
       + '</li>').join('') + '</ul>';
   }
 
+  /*
+   * The way out to the community's own page.
+   *
+   * Most records have one of their own. A dozen sets do not - the wiki files
+   * them under a family, Oryxmas Gear or Venerable Gear, which is what every
+   * one of their pieces links to - so those say where they are actually going
+   * rather than promising a page about the set.
+   */
+  function awayTo(one) {
+    if (!wiki) return '';
+    const mine = wiki.page.get(one.id);
+    if (mine !== undefined) {
+      return '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
+        + esc(wiki.home + (wiki.pages[mine] || [''])[0])
+        + '" title="Its page on the community wiki">RealmEye \u2197</a>';
+    }
+    const family = wiki.near.get(one.id);
+    if (family === undefined) return '';
+    const [slug, title] = wiki.pages[family] || ['', '?'];
+    return '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
+      + esc(wiki.home + slug) + '" title="The community wiki files this one under '
+      + esc(title) + ' rather than giving it a page">' + esc(title) + ' \u2197</a>';
+  }
+
   function drawCard(id) {
     const box = el('ixCard');
     const one = all.get(id);
@@ -10021,11 +10072,7 @@ const RealmIndex = (function () {
       + '<span class="ix-kind is-' + one.kind + '">' + esc(KIND_SAY[one.kind] || one.kind) + '</span>'
       + '<h3>' + esc(one.said || one.name) + '</h3>'
       + (one.alias ? '<code>' + esc(one.alias) + '</code>' : '')
-      + (wiki && wiki.page.has(one.id)
-        ? '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
-          + esc(wiki.home + (wiki.pages[wiki.page.get(one.id)] || [''])[0])
-          + '" title="Its page on the community wiki">RealmEye ↗</a>'
-        : '')
+      + awayTo(one)
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
       + drawDoes(one)
@@ -10221,7 +10268,8 @@ const RealmIndex = (function () {
       }
       const open = event.target.closest('[data-open]');
       if (open) {
-        drawCard(open.dataset.open);
+        /* Clicking the one already open shuts it, the way a chip comes off. */
+        drawCard(showing && showing.id === open.dataset.open ? '' : open.dataset.open);
         drawResults();
         const card = el('ixCard');
         if (card) card.scrollTop = 0;
