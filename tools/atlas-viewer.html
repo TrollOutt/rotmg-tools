@@ -4633,7 +4633,7 @@ function keepInSight(box, delta) {
   if (want.scale < least) want.scale = least;
   if (view.scale < least) view.scale = least;
 
-  if (from) { walkingHome = false; resting = 0; return; }   // a hand on it
+  if (from || pinch) { walkingHome = false; resting = 0; return; }   // a hand on it
   if (!mask) return;
 
   /*
@@ -5274,6 +5274,10 @@ function fit() {
  * and treating both as one notch made the trackpad unusable.
  */
 const WHEEL = 1.1;
+/*
+ * How far the scale may be pushed, wherever it is pushed from.
+ */
+const holdZoom = (scale, box) => Math.max(floorZoom(box), Math.min(40, scale));
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
   const box = size();
@@ -5286,8 +5290,7 @@ canvas.addEventListener('wheel', event => {
   view.x = want.x; view.y = want.y; view.scale = want.scale;
   const under = toTile(event.offsetX, event.offsetY, box);
   const notch = Math.max(-1.5, Math.min(1.5, event.deltaY / 100));
-  view.scale = want.scale = Math.max(floorZoom(box),
-    Math.min(40, want.scale * Math.pow(WHEEL, -notch)));
+  view.scale = want.scale = holdZoom(want.scale * Math.pow(WHEEL, -notch), box);
   const after = toTile(event.offsetX, event.offsetY, box);
   /*
    * Keeping the thing under the pointer under the pointer, when there is
@@ -5315,34 +5318,155 @@ canvas.addEventListener('wheel', event => {
   view.x = keep.x; view.y = keep.y; view.scale = keep.scale;
 }, { passive: false });
 
+/* --------------------------------------------------------------------
+ * Hands on the map.
+ *
+ * One pointer drags it and two fingers zoom it, so every pointer that is
+ * down is kept rather than only the latest. There was no pinch before, and a
+ * touchscreen has no wheel: on a phone or a tablet you could shove the world
+ * about and never get any closer to it.
+ *
+ * How far a gesture has travelled is measured from where the pointer was,
+ * because movementX is zero for a finger. It was the whole test for "was
+ * that a drag or a tap", so on a touchscreen every drag ended as a tap and
+ * panning the map opened the panel of whatever zone the finger was lifted
+ * over.
+ * ------------------------------------------------------------------ */
+const TAP_SLOP = 5;              // how far a tap may wander and still be a tap
+const down = new Map();          // every pointer on the glass, and where it last was
+let pinch = null;                // what the pair started from, if there is a pair
 let from = null, moved = 0;
-canvas.addEventListener('pointerdown', event => {
-  from = { x: event.offsetX, y: event.offsetY, vx: view.x, vy: view.y };
-  moved = 0;
+
+/* The span of the pair, and the point between them. */
+function spanOf() {
+  const two = [...down.values()].slice(0, 2);
+  if (two.length < 2) return null;
+  return {
+    gap: Math.hypot(two[1].x - two[0].x, two[1].y - two[0].y),
+    x: (two[0].x + two[1].x) / 2,
+    y: (two[0].y + two[1].y) / 2
+  };
+}
+
+/*
+ * A pinch, kept as what it started from rather than as what it last was.
+ *
+ * Two fingers do not move in the same event - the browser reports one and
+ * then the other - so read one move at a time the pair is forever half moved,
+ * and a step applied at one scale and undone at the next does not undo. Held
+ * against the start instead, every move is answered in full from the same
+ * place: the scale is the start's times how much wider the pair has become,
+ * and the world point the pair first closed on is put back under wherever
+ * their middle now is. Nothing accumulates, so nothing drifts.
+ *
+ * Off the limb of the world the middle is over no tile at all, and then the
+ * pinch is only a zoom - the same answer the wheel gives out there.
+ */
+function pinchFrom() {
+  const now = spanOf();
+  if (!now) return null;
+  const on = toTile(now.x, now.y, size());
+  return {
+    gap: now.gap, scale: want.scale, x: on.x, y: on.y,
+    held: Number.isFinite(on.x) && Number.isFinite(on.y)
+  };
+}
+
+/*
+ * The world is dragged in the frame it is drawn in. Turned a quarter, a pull
+ * to the right walked the map upwards, because the pull was being read in the
+ * screen's frame and applied in the world's.
+ */
+function inWorld(dx, dy) {
+  const S = spin();
+  if (!S) return { x: dx / view.scale, y: dy / view.scale };
+  dx /= view.scale; dy /= view.scale;
+  return { x: dx * S.cos + dy * S.sin, y: -dx * S.sin + dy * S.cos };
+}
+
+/* Taking the map, and carrying it: from where it was pressed, so that a long
+   drag cannot drift away from the finger a rounding error at a time. */
+function takeHold(x, y) {
+  from = { x, y, vx: view.x, vy: view.y };
   canvas.classList.add('drag');
-  canvas.setPointerCapture(event.pointerId);
+}
+function carryTo(x, y) {
+  const d = inWorld(x - from.x, y - from.y);
+  view.x = want.x = from.vx - d.x;
+  view.y = want.y = from.vy - d.y;
+}
+
+canvas.addEventListener('pointerdown', event => {
+  down.set(event.pointerId, { x: event.offsetX, y: event.offsetY });
+  if (down.size === 1) { moved = 0; takeHold(event.offsetX, event.offsetY); }
+  else {
+    // A second finger ends the drag and begins a pinch.
+    from = null;
+    canvas.classList.remove('drag');
+    pinch = pinchFrom();
+  }
+  /*
+   * Asked for last, and allowed to fail: capture is what keeps a finger that
+   * wanders off the canvas still talking to it, but a pointer the browser has
+   * already let go of throws rather than declining, and losing the gesture
+   * because of that is worse than following it only while it stays inside.
+   */
+  try { canvas.setPointerCapture(event.pointerId); } catch (e) { /* it has gone */ }
 });
 canvas.addEventListener('pointermove', event => {
   pointer = { x: event.offsetX, y: event.offsetY };
-  if (!from) return;
-  moved += Math.abs(event.movementX) + Math.abs(event.movementY);
-  /*
-   * The world is dragged in the frame it is drawn in. Turned a quarter, a
-   * pull to the right walked the map upwards, because the pull was being
-   * read in the screen's frame and applied in the world's.
-   */
-  let dx = (event.offsetX - from.x) / view.scale;
-  let dy = (event.offsetY - from.y) / view.scale;
-  const S = spin();
-  if (S) { const nx = dx * S.cos + dy * S.sin; dy = -dx * S.sin + dy * S.cos; dx = nx; }
-  view.x = want.x = from.vx - dx;
-  view.y = want.y = from.vy - dy;
+  const was = down.get(event.pointerId);
+  if (!was) return;                      // a mouse crossing the map, not holding it
+  moved += Math.abs(event.offsetX - was.x) + Math.abs(event.offsetY - was.y);
+  was.x = event.offsetX; was.y = event.offsetY;
+  if (pinch) {
+    const now = spanOf();
+    if (!now) return;
+    /*
+     * What the pair has done to the distance between them is the zoom, and
+     * where their middle has got to is the pan - both taken at once, so the
+     * map stays under both fingers instead of following them. Two fingers on
+     * the same spot have no distance between them to take a ratio of, hence
+     * the floor under the gap.
+     */
+    if (pinch.gap > 8 && now.gap > 8) {
+      const box = size();
+      view.scale = want.scale = holdZoom(pinch.scale * (now.gap / pinch.gap), box);
+      if (pinch.held) {
+        const here = toTile(now.x, now.y, box);
+        if (Number.isFinite(here.x) && Number.isFinite(here.y)) {
+          view.x = want.x = want.x + pinch.x - here.x;
+          view.y = want.y = want.y + pinch.y - here.y;
+        }
+      }
+      walkingHome = false;                 // two fingers are a hand on it too
+      resting = 0;
+    }
+    return;
+  }
+  if (from) carryTo(event.offsetX, event.offsetY);
 });
-canvas.addEventListener('pointerup', event => {
+/*
+ * A pointer lifted, or taken away by the browser. Only the last one off the
+ * glass can have been a tap, and only if the gesture stayed still enough.
+ */
+function letGo(event, lifted) {
+  down.delete(event.pointerId);
+  if (down.size >= 2) { pinch = pinchFrom(); return; }
+  pinch = null;
+  if (down.size === 1) {
+    /*
+     * One of the two lifted. The other keeps the map rather than doing
+     * nothing until it is lifted too, and takes it from where it is now, so
+     * the map does not jump by the width of the pinch.
+     */
+    const rest = [...down.values()][0];
+    takeHold(rest.x, rest.y);
+    return;
+  }
   canvas.classList.remove('drag');
-  const dragged = moved > 5;
   from = null;
-  if (dragged) return;
+  if (!lifted || moved > TAP_SLOP) return;
   // A click, not a drag: open what is under it, or close what is open.
   const box = size();
   const t = toTile(event.offsetX, event.offsetY, box);
@@ -5359,8 +5483,15 @@ canvas.addEventListener('pointerup', event => {
   if (near) { openBeacon(near); return; }
   const zone = zoneOf(t.x, t.y);
   if (zone) openZone(zone); else shutPanel();
-});
+}
+canvas.addEventListener('pointerup', event => letGo(event, true));
+canvas.addEventListener('pointercancel', event => letGo(event, false));
 canvas.addEventListener('pointerleave', () => { pointer = null; hovered = 0; hoveredBeacon = null; });
+/* The same four things, said the way the thing in your hands does them. */
+if (matchMedia('(pointer: coarse)').matches) {
+  document.getElementById('hint').textContent =
+    'drag to pan · pinch to zoom · tap a zone · double-tap to fit';
+}
 canvas.addEventListener('dblclick', () => { shutPanel(); fit(); });
 addEventListener('resize', () => { if (!from) size(); });
 addEventListener('keydown', event => {
