@@ -392,8 +392,25 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const each = landed(roll, stats.att, def, shot.pierce);
     const many = Math.max(1, Math.round((cast.shots || item.many || 1)
       + over * (cast.more || 0)));
-    const every = item.mp / MANA_AT(stats.wis);
-    return { each, many, every, dps: each * many / every, reach: shot.reach };
+    /*
+     * How often it can really be used, which is two limits and not one.
+     *
+     * This was the mana alone: how long until you can afford to cast it
+     * again. That is a true limit and it is not the only one - the game also
+     * makes you wait out the item's own cooldown, and where that is the
+     * longer of the two it is the one you feel. Eighty-two items say they
+     * have one. An ability that is cheap and slow was counted as firing as
+     * fast as the mana came back, which overstated it and everything worked
+     * out from it.
+     *
+     * Whichever wait is longer is the wait. Items whose cooldown the client
+     * has not been read for have none here, and those fall back to the mana
+     * rule by themselves.
+     */
+    const afford = item.mp / MANA_AT(stats.wis);
+    const every = Math.max(afford, item.cool || 0);
+    return { each, many, every, dps: each * many / every, reach: shot.reach,
+      held: item.cool && item.cool > afford ? 'cooldown' : 'mana' };
   }
 
   /*
