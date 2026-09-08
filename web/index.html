@@ -109,7 +109,15 @@
       <em class="home-card-go">Open →</em>
     </button>
 
-    <button type="button" class="home-card" data-go="fame" style="--i:2">
+    <button type="button" class="home-card" data-go="index" style="--i:2">
+      <img class="home-card-art" data-art="Item Types/Ring.png" alt="">
+      <span class="home-card-title">Index</span>
+      <span class="home-card-line">What exists, and what it is joined to.</span>
+      <small>Every item, class, enemy, set, enchantment and place the client declares - with where it came from, why a tool might be hiding it, and a way through to the tool that can use it.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
+
+    <button type="button" class="home-card" data-go="fame" style="--i:3">
       <img class="home-card-art" data-art="Dungeon Icons/Oryx's Sanctuary.gif" alt="">
       <span class="home-card-title">Fame Sweep</span>
       <span class="home-card-line">Which dungeons are worth the trip.</span>
@@ -161,6 +169,30 @@
   <main class="news-layout">
     <div class="news-groups" id="newsGroups"></div>
     <div id="newsNotes"></div>
+  </main>
+</div>
+
+<!-- The index -------------------------------------------------------- -->
+<!--
+  What exists, and what it is joined to. The three tools each read the client
+  and each keep what suits them; this holds all of it, including what they
+  hide, and says where every line of it was declared.
+-->
+<div id="pageIndex" class="app page" hidden>
+  <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>Index</h1>
+    <div class="masthead-row"><div id="ixBuilt" class="status"></div></div>
+  </header>
+  <main id="ixBody" class="ix-layout">
+    <section class="card ix-find">
+      <header><h2>Look for</h2><span id="ixCount" class="header-aside"></span></header>
+      <input id="ixSearch" type="search" placeholder="a name, or the client's own id…"
+        autocomplete="off">
+      <div id="ixKinds" class="ix-kinds"></div>
+      <div id="ixList" class="ix-list"></div>
+    </section>
+    <section class="card ix-card" id="ixCard"></section>
   </main>
 </div>
 
@@ -538,6 +570,7 @@
 <script src="fame-page.js"></script>
 <script src="whats-new.js"></script>
 <script src="theorycraft.js"></script>
+<script src="index-page.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
