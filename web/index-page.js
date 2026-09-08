@@ -30,8 +30,17 @@ const RealmIndex = (function () {
    * picture's own shape kept: a creature sixteen wide and eight tall is not
    * squared off into a box.
    */
+  /*
+   * Everything on this page is drawn at a size the window can afford. On a
+   * two-thousand-pixel screen a sixteen-pixel sprite and eleven-pixel text are
+   * a postage stamp in a field, so the pictures grow with the room the way the
+   * type does.
+   */
+  const zoomed = () => Math.min(1.7, Math.max(1, (window.innerWidth || 1400) / 1400));
+
   function art(one, side) {
     if (!one || !one.art || !all.sheet) return '';
+    side = Math.round(side * zoomed());
     const [x, y, w, h] = one.art;
     const zoom = side / Math.max(w, h);
     return '<span class="ix-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
@@ -41,7 +50,8 @@ const RealmIndex = (function () {
 
   /* The room a picture takes in a row, whether or not there is one to show. */
   function artCell(one, side) {
-    return '<span class="ix-cell" style="width:' + side + 'px;height:' + side + 'px">'
+    const box = Math.round(side * zoomed());
+    return '<span class="ix-cell" style="width:' + box + 'px;height:' + box + 'px">'
       + art(one, side) + '</span>';
   }
   const esc = s => String(s === undefined || s === null ? '' : s)
@@ -1025,6 +1035,18 @@ const RealmIndex = (function () {
       + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
     drawResults();
     drawCard('');
+    /*
+     * The sprites are sized against the window, so a window that changes shape
+     * wants them drawn again - once it has stopped changing.
+     */
+    let settling = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(settling);
+      settling = setTimeout(() => {
+        drawResults();
+        if (showing) drawCard(showing.id);
+      }, 180);
+    });
   }
 
   /* Somebody else may want to open a record: the atlas, or a search box. */
