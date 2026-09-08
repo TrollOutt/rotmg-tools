@@ -21,6 +21,7 @@ const RealmIndex = (function () {
   let wiki = null;                   // the community join, when there is one
   let groups = [];                   // the browse rail, built once from the data
   let narrowed = [];                 // one set of allowed ids per group in play
+  let kindsLeft = null;              // how many of each family survive the rail
 
   const el = id => document.getElementById(id);
 
@@ -243,6 +244,29 @@ const RealmIndex = (function () {
      * Two chips reading the same word are one way in, not two. Five patches of
      * Low Forest are five records to the atlas and one place to a reader.
      */
+    /*
+     * And where a thing comes from. The client says nothing about loot, so
+     * this one is the community's: the pages that list a dungeon's drops,
+     * turned round. Only the dungeons that actually give something, and
+     * marked as their word rather than the client's.
+     */
+    if (wiki) {
+      const fromThere = new Map();          // portal record -> what it gives
+      for (const [id, at] of wiki.page) {
+        const one = all.get(id);
+        if (!one || one.kind !== 'portal' || one.hidden || one.dev) continue;
+        const gives = new Set([id]);
+        for (const to of wiki.drop.get(at) || []) {
+          for (const got of wiki.about.get(to) || []) gives.add(got);
+        }
+        if (gives.size > 3) fromThere.set(one, gives);
+      }
+      if (fromThere.size) {
+        const out = group('Dungeon', 'wiki', 'what players list it as dropping');
+        for (const [one, gives] of fromThere) chip(out, one.name, one.said || one.name, gives);
+      }
+    }
+
     for (const one of groups) {
       const byName = new Map();
       for (const it of one.chips) {
@@ -279,10 +303,30 @@ const RealmIndex = (function () {
    * with nothing left behind it goes away until it has something again.
    */
   function refine() {
+    /*
+     * Counted against everything the index holds, hidden and all, because a
+     * chip that reads 322 and lists nothing is worse than one that reads 322.
+     */
     const alive = light.map(one => one[0]);
     const withinKind = kindWanted
       ? new Set(light.filter(one => one[2] === kindWanted).map(one => one[0]))
       : null;
+    /*
+     * And which families are still on the table. The sub-category row offers
+     * the reader a next step, so a step that leads to an empty list is not
+     * offered - the rail's own choice of family left out, the same way each
+     * group is left out of its own counting.
+     */
+    {
+      let base = alive;
+      for (const one of narrowed) base = base.filter(id => one.set.has(id));
+      const room = new Set(base);
+      kindsLeft = new Map();
+      for (const one of light) {
+        if (!room.has(one[0])) continue;
+        kindsLeft.set(one[2], (kindsLeft.get(one[2]) || 0) + 1);
+      }
+    }
     for (const set of groups) {
       const others = narrowed.filter(one => one.group !== set);
       let base = alive;
@@ -317,8 +361,16 @@ const RealmIndex = (function () {
      * a proc. So those wait until they are asked for, by name or by the chip
      * in Marks that calls for them.
      */
-    const wantsHidden = Boolean(term) || groups.some(one =>
-      one.chips.some(chip => chip.on && /hidden/.test(chip.key)));
+    /*
+     * Asking for anything at all is asking for the whole answer.
+     *
+     * What a tool hides is in the index on purpose, and the first screen keeps
+     * it back because a reader who has typed nothing has asked nothing. But
+     * picking Shiny off the rail is a question, and every shiny thing is
+     * hidden by the tools - so the old rule answered "322" on the chip and
+     * "nothing by that name" in the list.
+     */
+    const wantsHidden = Boolean(term) || narrowed.length > 0;
     const out = [];
     for (const one of light) {
       if (kindWanted && one[2] !== kindWanted) continue;
@@ -328,7 +380,7 @@ const RealmIndex = (function () {
        * enchantment pool is a real thing worth looking up and no reader
        * browsing the index is looking for one.
        */
-      if (one[5] && !term && kindWanted !== one[2]) continue;
+      if (one[5] && !term && !narrowed.length && kindWanted !== one[2]) continue;
       let barred = false;
       for (const chosen of narrowed) if (!chosen.set.has(one[0])) { barred = true; break; }
       if (barred) continue;
@@ -702,10 +754,8 @@ const RealmIndex = (function () {
       const chip = event.target.closest('[data-kind]');
       if (!chip) return;
       kindWanted = chip.dataset.kind === kindWanted ? '' : chip.dataset.kind;
-      for (const one of el('ixKinds').querySelectorAll('[data-kind]')) {
-        one.classList.toggle('is-on', one.dataset.kind === kindWanted);
-      }
       narrow();
+      drawKinds();
       drawFacets();
       drawResults();
     });
@@ -723,12 +773,15 @@ const RealmIndex = (function () {
         for (const chip of one.chips) if (chip.key === hit.dataset.facet) chip.on = !chip.on;
       }
       narrow();
+      drawKinds();
       drawFacets();
       drawResults();
     });
     el('ixClear').addEventListener('click', () => {
       for (const one of groups) for (const chip of one.chips) chip.on = false;
+      kindWanted = '';
       narrow();
+      drawKinds();
       drawFacets();
       drawResults();
     });
@@ -784,10 +837,16 @@ const RealmIndex = (function () {
     }
   }
 
-  function fillKinds() {
-    el('ixKinds').innerHTML = KINDS.map(([kind, say]) =>
-      '<button type="button" class="ix-chip is-' + kind + '" data-kind="' + kind + '">'
-      + esc(say) + '</button>').join('');
+  function drawKinds() {
+    el('ixKinds').innerHTML = KINDS
+      .filter(([kind]) => kind === kindWanted || !kindsLeft || kindsLeft.get(kind))
+      .map(([kind, say]) =>
+        '<button type="button" class="ix-chip is-' + kind
+        + (kind === kindWanted ? ' is-on' : '') + '" data-kind="' + kind + '">'
+        + esc(say)
+        + (kindsLeft && kindsLeft.get(kind)
+          ? '<i>' + kindsLeft.get(kind).toLocaleString('en-US') + '</i>' : '')
+        + '</button>').join('');
   }
 
   async function start() {
@@ -806,11 +865,11 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    fillKinds();
     await loadWiki();
     buildFacets();
     narrow();
     wire();
+    drawKinds();
     drawFacets();
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built

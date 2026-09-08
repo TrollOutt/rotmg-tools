@@ -2857,6 +2857,11 @@ body.globe-wide .home-card-art { animation: none !important; }
   color: var(--dim); background: rgba(255, 255, 255, .04);
   border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
 }
+.ix-chip i {
+  font-style: normal; font-size: 9.5px; font-weight: 600; margin-left: 5px;
+  color: var(--dim);
+}
+.ix-chip.is-on i { color: rgba(16, 20, 28, .6); }
 .ix-chip:hover { color: var(--text); }
 .ix-chip.is-on { color: #10141c; background: var(--accent); border-color: var(--accent); }
 
