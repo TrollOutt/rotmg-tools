@@ -216,16 +216,22 @@ const zoneById = new Map(A.zones.map(z => [z.id, z]));
 /*
  * How many device pixels to spend on one page pixel.
  *
- * Dropping frames is the wrong economy for a thing that drifts: clouds at
- * thirty a second on a sixty-hertz screen judder, because every picture is
- * held for two refreshes and the eye follows the motion between them. Pixels
- * are the cheaper thing to give up. A planet two inches across in the corner
- * of a page is drawn at two thirds of the resolution and still moves on every
- * refresh the screen has - which is smooth, and costs well under half of what
- * it cost before, because fill is by the pixel.
+ * There used to be a second factor here, cutting the small globe on the way in
+ * to two thirds in each direction. The reasoning for taking it out of the
+ * pixels rather than out of the frames was sound and still is - dropping
+ * frames is the wrong economy for a thing that drifts, because clouds at
+ * thirty a second on a sixty-hertz screen judder, and pixels are the cheaper
+ * thing to give up.
+ *
+ * What changed is that neither is worth giving up any more. That factor was
+ * set when a frame of the globe cost twenty milliseconds, nearly all of it
+ * stepping a realm the globe is far too small to show. With that gone, the
+ * same frame measures 0.41 ms at full size against 0.39 at two thirds: the cut
+ * was buying two hundredths of a millisecond and selling a third of the
+ * resolution of the one moving thing on the page. So it is gone, and the globe
+ * on the way in is drawn at the screen's own grain like everything else.
  */
-let sharp = 1;
-const screenDpr = () => Math.min(2, window.devicePixelRatio || 1) * sharp;
+const screenDpr = () => Math.min(2, window.devicePixelRatio || 1);
 
 function size() {
   const dpr = screenDpr();
@@ -725,6 +731,38 @@ function drawLevel(z, box, holes) {
 const COARSEST = A.levels.length - 1;
 
 /*
+ * And it is asked for before anything else.
+ *
+ * A chunk used to be requested by the act of drawing it, which put the one
+ * thing the page is for last in the queue behind everything that is only
+ * decoration on top of it. Timed on a fresh load: the mask, the water, the
+ * sky, the scenery and the roads were all asked for between 139 and 152 ms
+ * and finished by 206 - and the first picture of the ground was not asked
+ * for until the first frame ran, after all of them. Until it arrived there
+ * was nothing to look at but painted ocean, and that is the wait people
+ * describe as the planet being slow to start.
+ *
+ * The coarsest level is the whole realm in four pictures, it is the level
+ * the map opens at, and it is what every hole in every other level falls
+ * back on. It is never worth not having. So it is asked for here, the moment
+ * the manifest has been read, and from the middle of the realm outwards so
+ * that the piece under the opening view is the first to land.
+ */
+(function groundFirst() {
+  const have = haveChunk.get(COARSEST);
+  if (!have) return;
+  const span = A.chunk * (1 << COARSEST);
+  const midX = (B.minX + B.maxX) / 2, midY = (B.minY + B.maxY) / 2;
+  const fromMiddle = name => {
+    const at = name.split('_');
+    return Math.hypot((+at[0] + 0.5) * span - midX, (+at[1] + 0.5) * span - midY);
+  };
+  for (const name of [...have].sort((a, b) => fromMiddle(a) - fromMiddle(b))) {
+    chunkImage(COARSEST, name);
+  }
+})();
+
+/*
  * Fetch the level we are heading for, not the one we are on.
  *
  * The view eases towards where it was asked to go, so at the moment the
@@ -745,16 +783,28 @@ function warm(z, atX, atY, scale, box) {
   const half = { x: box.w / 2 / scale, y: box.h / 2 / scale };
   const c0 = Math.floor((atX - half.x) / span), c1 = Math.floor((atX + half.x) / span);
   const r0 = Math.floor((atY - half.y) / span), r1 = Math.floor((atY + half.y) / span);
-  let asked = 0;
+  /*
+   * Nearest the middle first.
+   *
+   * They were asked for in reading order, top-left corner to bottom-right,
+   * which is the one order that has nothing to do with where anyone is
+   * looking: on a wide window the piece under the middle of the screen could
+   * be the last of a dozen to be asked for, and so the last to sharpen. The
+   * browser keeps roughly the order it is given, so giving it the right one
+   * costs a sort of a dozen items and buys the middle of the picture
+   * arriving first.
+   */
+  const wanted = [];
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const name = c + '_' + r;
       if (!have.has(name)) continue;
-      chunkImage(z, name);
-      asked++;
+      wanted.push([Math.hypot((c + 0.5) * span - atX, (r + 0.5) * span - atY), name]);
     }
   }
-  return asked;
+  wanted.sort((a, b) => a[0] - b[0]);
+  for (const one of wanted) chunkImage(z, one[1]);
+  return wanted.length;
 }
 
 /*
@@ -778,6 +828,19 @@ function warmAhead(box) {
 function drawGround(box) {
   const z = levelFor(view.scale);
   ctx.imageSmoothingEnabled = view.scale < A.px / 2;
+  /*
+   * And when it is being shrunk, shrink it properly.
+   *
+   * The far view has no level coarse enough for it: the pyramid stops at four
+   * and the opening zoom wants something nearer six, so the coarsest pictures
+   * are being reduced about six times over in a single draw. A browser's
+   * default resampling takes one bilinear sample for that, which is four
+   * source pixels standing in for thirty-six - and what it throws away is
+   * most of the coastline. Asking for the good filter costs a couple of
+   * milliseconds on the frames that rebuild the disc and gives back a planet
+   * with edges on it, which is the whole point of drawing a map.
+   */
+  ctx.imageSmoothingQuality = 'high';
   const holes = [];
   const wanted = drawLevel(z, box, holes);
   /*
@@ -799,14 +862,38 @@ function drawGround(box) {
    * painted ocean, which is one colour and one grain at every zoom. It is
    * also cheaper: the wanted level no longer has to be drawn twice.
    */
+  /*
+   * And the stand-in is the nearest level that has a picture, not the
+   * coarsest one there is.
+   *
+   * Coming in from the far view to the ground crosses four levels. Whichever
+   * one you land on has to be fetched and decoded, and until it is, every
+   * chunk of it was being propped up by the coarsest - sixteen times too
+   * soft, whatever you had come from. But the level you have just left is
+   * already in hand and is only twice too soft, and the one before that four
+   * times: a zoom that outruns the loading should fall back one step at a
+   * time, not all the way to the bottom.
+   *
+   * So the levels are tried in order, each clipped to what the one before it
+   * could not fill. Canvas clipping intersects, which is what makes the
+   * ladder correct rather than merely layered: level z+2 can only paint where
+   * both z and z+1 were missing, so a coarse picture never lands on top of a
+   * sharp one.
+   */
   if (holes.length && z !== COARSEST) {
     const smooth = ctx.imageSmoothingEnabled;
     ctx.save();
-    ctx.beginPath();
-    for (const hole of holes) ctx.rect(hole[0], hole[1], hole[2], hole[3]);
-    ctx.clip();
     ctx.imageSmoothingEnabled = true;
-    drawLevel(COARSEST, box);
+    let gaps = holes;
+    for (let under = z + 1; under <= COARSEST && gaps.length; under++) {
+      ctx.beginPath();
+      for (const hole of gaps) ctx.rect(hole[0], hole[1], hole[2], hole[3]);
+      ctx.clip();
+      // The coarsest is the end of the ladder: nothing under it to ask.
+      const next = under === COARSEST ? null : [];
+      drawLevel(under, box, next);
+      gaps = next || [];
+    }
     ctx.restore();
     ctx.imageSmoothingEnabled = smooth;
   }
@@ -1306,6 +1393,17 @@ let sentFor = false;
 function callForOryx() {
   if (sentFor || !A.sky) return;
   sentFor = true;
+  /*
+   * Early, but behind the ground.
+   *
+   * Asking for him well before he is due means asking at about the moment the
+   * map opens, and he is a megabyte of decoration against four pictures of the
+   * thing people came to look at. Low priority puts him in the same queue
+   * without letting him into the front of it: the browser fetches him out of
+   * whatever room is left over, which over the seven or eight notches of wheel
+   * it takes to reach him is a great deal of room.
+   */
+  oryxSheet.fetchPriority = 'low';
   oryxSheet.src = asset('oryx.png');
 }
 
@@ -1495,15 +1593,36 @@ function oryxPaint() {
  * has it.
  */
 const ORYX_FROM = 1.85;                  // in floors, the distance he starts at
+const ORYX_SWIM = 700;                   // ms he takes to come up, if he lands late
+let oryxSince = 0;                       // when the picture first became usable
 
 function oryxShows(box) {
   if (!A.sky || !skyArt || !skyArt.oryx) return 0;
   if (!roundWorld(box)) return 0;
   const least = floorZoom(box), from = least * ORYX_FROM;
+  /*
+   * Sent for well before he is due.
+   *
+   * It used to be eight per cent of a zoom's warning, which is half a notch
+   * of the wheel: pull back quickly and the whole of his range went by while
+   * a megabyte of him was still on the wire, so he was invisible for the
+   * entire arrival and then simply there, whole, on whichever frame the
+   * picture landed. That is the opposite of what the fade below is for.
+   *
+   * Two and a half times the distance is several notches of warning, which on
+   * any ordinary connection is the difference between arriving and appearing.
+   */
+  if (view.scale < from * 2.5) callForOryx();
   if (view.scale >= from) return 0;
-  // Sent for a little before he is due, so he has arrived by the time he is.
-  if (view.scale < from * 1.08) callForOryx();
-  if (!oryxSheet.complete || !oryxSheet.naturalWidth) return 0;
+  if (!oryxSheet.complete || !oryxSheet.naturalWidth) { oryxSince = 0; return 0; }
+  /*
+   * And if he lands late anyway - a slow line, or somebody who went straight
+   * to the end of the wheel - he still swims up rather than snapping on. The
+   * clock starts the first frame the picture is usable, not the frame it was
+   * asked for.
+   */
+  if (!oryxSince) oryxSince = performance.now();
+  const arrived = Math.min(1, (performance.now() - oryxSince) / ORYX_SWIM);
   /*
    * Measured by ratio and eased at both ends.
    *
@@ -1515,7 +1634,7 @@ function oryxShows(box) {
    */
   const t = Math.max(0, Math.min(1,
     Math.log(from / view.scale) / Math.log(from / least)));
-  return t * t * (3 - 2 * t);
+  return t * t * (3 - 2 * t) * (arrived * arrived * (3 - 2 * arrived));
 }
 
 // The head, behind the world - so it is drawn before the world is.
@@ -4626,7 +4745,19 @@ let last = performance.now();
  * nobody can measure it, and it can be built out of a quarter as many pieces.
  */
 const SPHERE_TRUE = 0.5;
-const SPHERE_LOOSE = 3;
+/*
+ * Three pixels was too generous once the frame had room to spare.
+ *
+ * It was set when a frame at the far view cost twenty-two milliseconds and
+ * every one of them was needed elsewhere. Measured now, on the same window:
+ * three pixels rebuilds the disc in 0.70 ms, two in 0.74, one and a half in
+ * 0.88, one in 1.66 - and a half in 28.96, which is where the cliff is and
+ * why the close-in value is not used out here. A whole pixel is three times
+ * tighter for about a millisecond on the frames that rebuild the disc, and
+ * nothing at all on the frames that do not, since a disc standing still is
+ * kept rather than laid down again.
+ */
+const SPHERE_LOOSE = 1;
 const globePlain = () => view.scale < SHOW_LIFE;
 
 /*
@@ -5301,17 +5432,21 @@ window.addEventListener('message', event => {
   const said = event.data;
   if (!said || said.rotmg !== 'pace') return;
   /*
-   * Slow now means slow.
+   * Two states now, not three.
    *
-   * It only ever set sharp, which shrinks the canvas the map is drawn onto -
-   * and the cost was never in the canvas. A frame of the atlas standing in a
-   * small box on the way in measured 19.9 ms, 18.9 of it stepping a realm
-   * that box is far too small to show. So the word gets a frame interval as
-   * well, and a globe turning quietly in a corner is drawn thirty times a
-   * second rather than as often as the display can be bothered.
+   * 'slow' used to shrink the canvas, which was the wrong lever - the cost was
+   * never in the canvas. A frame of the atlas standing in a small box on the
+   * way in measured 19.9 ms, 18.9 of it stepping a realm that box is far too
+   * small to show. That is gone, and what is left of a quietly turning globe
+   * is 0.41 ms a frame at full size and full rate, which is not worth
+   * degrading in either direction.
+   *
+   * So 'slow' now asks for nothing at all and the word is kept only because
+   * the page on the other side of the message still says it. 'still' is the
+   * one that matters, and it is the one that was always doing the work: a
+   * globe scrolled off the page stops dead.
    */
-  pace = said.pace === 'still' ? Infinity : (said.pace === 'slow' ? 1000 / 30 : 0);
-  sharp = said.pace === 'slow' ? 0.66 : 1;
+  pace = said.pace === 'still' ? Infinity : 0;
 });
 
 function frame(now) {
