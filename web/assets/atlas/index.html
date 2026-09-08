@@ -3381,9 +3381,71 @@ function reward(one, beast) {
  * loose crowd into a group standing round the same encounter, without any
  * of them being told to.
  */
+/* ------------------------------------------------------------------ *
+ * Where everything is                                                 *
+ * ------------------------------------------------------------------ *
+ * Two thousand four hundred and fifty-three creatures are spread over a
+ * realm some thousands of tiles across, and two questions were being asked
+ * of all of them, every step, wherever they were: what is the best thing
+ * near this hero to attack, and is this shot touching anything. Timed, those
+ * two came to 12.3 ms of a 14.8 ms step - a hero looking for a fight
+ * measured its distance to every creature in the world, and a shot half a
+ * tile long was tested against every creature in the world.
+ *
+ * So the creatures are filed by where they are. The realm is cut into
+ * thirty-two-tile squares, each holding a list, and the filing is redone once
+ * a step: one pass of arithmetic over the list, which is cheaper than one
+ * pass of distance-taking and there were four of those. A hero then looks in
+ * the nine squares its reach can touch, and a shot in the one or two its own
+ * half-tile can, instead of both looking at the whole world.
+ *
+ * Thirty-two because a hero will cross twenty-six tiles for a fight, so nine
+ * squares always contain the whole of that reach with a little to spare - and
+ * because a power of two divides with a shift.
+ */
+const GRID = 32;                         // tiles to a square
+const gridW = Math.max(1, Math.ceil((B.maxX - B.minX) / GRID) + 1);
+const gridH = Math.max(1, Math.ceil((B.maxY - B.minY) / GRID) + 1);
+const squares = new Map();               // square -> the creatures standing in it
+
+const column = x => Math.min(gridW - 1, Math.max(0, Math.floor((x - B.minX) / GRID)));
+const rowOf  = y => Math.min(gridH - 1, Math.max(0, Math.floor((y - B.minY) / GRID)));
+
+function refile() {
+  squares.clear();
+  for (const beast of alive) {
+    if (beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
+    const key = rowOf(beast.y) * gridW + column(beast.x);
+    const held = squares.get(key);
+    if (held) held.push(beast); else squares.set(key, [beast]);
+  }
+}
+
+/*
+ * Everything filed within reach of a point, gathered into one array that is
+ * handed out again and again rather than allocated per question - a hundred
+ * and fifty shots and a hundred and sixty-eight heroes a step is a lot of
+ * garbage otherwise. Which means the answer is only good until the next
+ * question: read it before asking another, and never ask one inside a loop
+ * over another's answer.
+ */
+const gathered = [];
+function nearTo(x, y, reach) {
+  gathered.length = 0;
+  const c0 = column(x - reach), c1 = column(x + reach);
+  const r0 = rowOf(y - reach), r1 = rowOf(y + reach);
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const held = squares.get(r * gridW + c);
+      if (held) for (const beast of held) gathered.push(beast);
+    }
+  }
+  return gathered;
+}
+
 function preyFor(one) {
   let best = null, bestPull = 0;
-  for (const beast of alive) {
+  for (const beast of nearTo(one.x, one.y, FOLK_SEEK)) {
     if (beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
     const dx = beast.x - one.x, dy = beast.y - one.y;
     const far = dx * dx + dy * dy;
@@ -3447,8 +3509,69 @@ function dodge(one) {
   return { x: px / far, y: py / far };
 }
 
+/* ------------------------------------------------------------------ *
+ * The realm's own clock                                               *
+ * ------------------------------------------------------------------ *
+ * The realm used to be stepped once per drawn frame, at whatever rate the
+ * display ran, whether or not any of it was on the screen. Timed, that was
+ * almost the entire cost of the page: at the zoom the atlas opens on -
+ * 0.216, where nothing living is drawn at all, because life begins at 3 -
+ * stepping two and a half thousand creatures and a hundred and sixty-eight
+ * heroes came to 21.4 ms of a 22.1 ms frame. Ninety-seven per cent of the
+ * work went into a battle nobody could see, and the whole of the drawing
+ * came to 0.6.
+ *
+ * Two things follow from that, and they are the same thing.
+ *
+ * A crowd of pixel figures does not need stepping sixty times a second, and
+ * on a hundred-and-forty-four hertz screen it was being stepped a hundred and
+ * forty-four. It has its own step now - a thirtieth of a second of realm,
+ * taken as many times as the clock has earned and no more - so the simulation
+ * costs the same on every machine and the drawing still happens every frame.
+ *
+ * And when nothing living is drawn it steps twice a second instead of thirty
+ * times. Not stopped: the realm goes on, at about a fifteenth of its own
+ * pace, so that arriving somewhere finds a fight already in progress rather
+ * than two thousand creatures standing exactly where they were left. A step
+ * is always a thirtieth of realm-time whatever the rate, because a step of
+ * half a second would carry every shot four tiles through whatever it was
+ * meant to hit - the collision test assumes a shot moves about a tile.
+ *
+ * The debt is capped at three steps. A tab that has been asleep, or a frame
+ * that took a second, owes more time than it can pay back, and paying it in
+ * full is how an animation loop that is already behind falls further behind
+ * every frame until it stops.
+ */
+const SIM_STEP = 1 / 30;                 // seconds of realm in one step
+const SIM_IDLE = 0.5;                    // seconds between steps when unwatched
+let simOwed = 0, simIdle = 0;
+const watched = () => view.scale >= SHOW_LIFE;
+
+function stepWorld(delta) {
+  if (!watched()) {
+    simOwed = 0;
+    simIdle += delta;
+    if (simIdle < SIM_IDLE) return;
+    simIdle = 0;
+    stepLife(SIM_STEP);
+    stepFolk(SIM_STEP);
+    return;
+  }
+  simIdle = 0;
+  simOwed = Math.min(simOwed + delta, SIM_STEP * 3);
+  while (simOwed >= SIM_STEP) {
+    simOwed -= SIM_STEP;
+    stepLife(SIM_STEP);
+    stepFolk(SIM_STEP);
+  }
+}
+
 function stepFolk(delta) {
   if (!folk.length) return;
+
+  // Where everything is, once, for the two questions that would otherwise
+  // each go looking through the whole realm.
+  refile();
 
   // How many are already on each thing, so a fight draws a crowd.
   for (const beast of alive) beast.onIt = 0;
@@ -3482,8 +3605,26 @@ function stepFolk(delta) {
     one.hp = Math.min(one.full, one.hp + HEAL_AT(one.at.vit) * delta);
     one.mp = Math.min(one.mpFull, one.mp + MANA_AT(one.at.wis) * delta);
 
-    if (!one.target || one.target.down > 0 || one.target.dying > 0 || one.target.hp <= 0) {
+    /*
+     * What to go for, asked a few times a second rather than always.
+     *
+     * A hero with nothing in reach asked the question again on every step and
+     * got the same answer - nothing - which is the one case where the search
+     * is at its most expensive, because nothing within reach means everything
+     * gets measured. Choosing a third of a second late is not a thing anybody
+     * can see; asking two thousand times a minute for it is.
+     *
+     * The spread on the wait is so that a beacon's worth of heroes who set
+     * out together do not go on asking together for ever after.
+     */
+    if (one.target && (one.target.down > 0 || one.target.dying > 0 || one.target.hp <= 0)) {
+      one.target = null;
+    }
+    // Nought when it has never been set, so a new hero asks at once.
+    one.seek = (one.seek || 0) - delta;
+    if (!one.target && one.seek <= 0) {
       one.target = preyFor(one);
+      one.seek = 0.3 + Math.random() * 0.4;
     }
 
     const gun = one.kind.weapon && one.kind.weapon.shot;
@@ -3641,11 +3782,23 @@ function stepShots(delta) {
   for (let i = shots.length - 1; i >= 0; i--) {
     const s = shots[i];
     s.x += s.vx * delta; s.y += s.vy * delta; s.left -= delta;
+    /*
+     * How near counts as hit, which has to be at least as far as the shot
+     * just moved.
+     *
+     * Half a tile either side was enough while a step was a sixtieth of a
+     * second and the quickest shot crossed a fifth of a tile in one. On the
+     * realm's own clock a step is longer, and a shot that moves further than
+     * the test is wide passes through whatever it was aimed at without ever
+     * being over it. The width was always standing in for "it came through
+     * here", so it is that distance now when that is the larger.
+     */
+    const span = Math.max(0.7, Math.hypot(s.vx, s.vy) * delta);
     let gone = s.left <= 0;
     if (!gone && s.mine) {
-      for (const beast of alive) {
+      for (const beast of nearTo(s.x, s.y, span)) {
         if (beast.down > 0 || beast.dying > 0) continue;
-        if (Math.abs(beast.x - s.x) > 0.7 || Math.abs(beast.y - s.y) > 0.7) continue;
+        if (Math.abs(beast.x - s.x) > span || Math.abs(beast.y - s.y) > span) continue;
         beast.hp -= s.hurt;
         if (beast.hp <= 0 && !beast.dying) {
           beast.dying = DYING;
@@ -3659,7 +3812,7 @@ function stepShots(delta) {
     } else if (!gone) {
       for (const one of folk) {
         if (one.down > 0) continue;
-        if (Math.abs(one.x - s.x) > 0.7 || Math.abs(one.y - s.y) > 0.7) continue;
+        if (Math.abs(one.x - s.x) > span || Math.abs(one.y - s.y) > span) continue;
         one.hp -= s.hurt;
         gone = true; break;
       }
@@ -5147,7 +5300,17 @@ let drawnAt = -1e9;
 window.addEventListener('message', event => {
   const said = event.data;
   if (!said || said.rotmg !== 'pace') return;
-  pace = said.pace === 'still' ? Infinity : 0;
+  /*
+   * Slow now means slow.
+   *
+   * It only ever set sharp, which shrinks the canvas the map is drawn onto -
+   * and the cost was never in the canvas. A frame of the atlas standing in a
+   * small box on the way in measured 19.9 ms, 18.9 of it stepping a realm
+   * that box is far too small to show. So the word gets a frame interval as
+   * well, and a globe turning quietly in a corner is drawn thirty times a
+   * second rather than as often as the display can be bothered.
+   */
+  pace = said.pace === 'still' ? Infinity : (said.pace === 'slow' ? 1000 / 30 : 0);
   sharp = said.pace === 'slow' ? 0.66 : 1;
 });
 
@@ -5206,8 +5369,7 @@ function frame(now) {
   else if (roundWorld(box)) ground = groundGlobe(box, now);
   else if (turning()) ground = groundTilted(box, now);
   else ground = groundFlat(box, now);
-  stepLife(delta);
-  stepFolk(delta);
+  stepWorld(delta);
   stepChat(delta);
   const close = drawThings(box, now);
   const living = (close ? close.living : drawLife(box)) + drawFolk(box);

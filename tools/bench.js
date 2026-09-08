@@ -81,12 +81,26 @@ const zero = () => { for (const name of NAMES) spent[name] = 0; };
  * same length of time, because the loop's first act is to do nothing at all
  * when the tab is in the background and a benchmark tab often is.
  */
+/*
+ * One clock for the whole session, and it only ever goes forwards.
+ *
+ * It used to start again from performance.now() on every run, which was wrong
+ * in a way that hid itself: the page remembers the timestamp of the last frame
+ * it drew and skips anything not yet due, so a clock that restarts hands it
+ * frames from the past and it declines every one of them. While a frame cost
+ * fifteen milliseconds the synthetic clock and the real one advanced together
+ * and it hardly showed; the moment the frames got cheap the synthetic clock
+ * ran away, and the second run onwards measured a loop that was returning
+ * immediately - which reads as a spectacular optimisation and is a broken
+ * measurement.
+ */
+let clock = performance.now();
+
 function drive(count, dt, each) {
   const raf = window.requestAnimationFrame;
   window.requestAnimationFrame = () => 0;
   Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
   const frames = [];
-  let clock = performance.now();
   try {
     for (let i = 0; i < count; i++) {
       if (each) each(i);
