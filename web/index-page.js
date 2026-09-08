@@ -645,8 +645,11 @@ const RealmIndex = (function () {
     for (const set of groups) for (const chip of set.chips) if (chip.on) on.push(chip);
     if (!on.length) { box.innerHTML = ''; box.hidden = true; return; }
     box.hidden = false;
-    box.innerHTML = on.map(x => '<button type="button" class="ix-chosen"'
-      + ' data-facet="' + esc(x.key) + '" title="Take this one off">'
+    box.innerHTML = on.map(x => '<button type="button" class="ix-chosen'
+      + (x === asked[0] ? ' is-first' : '') + '" data-facet="' + esc(x.key) + '"'
+      + ' title="' + (x === asked[0]
+        ? 'The first choice — taking it off clears the rest'
+        : 'Take this one off') + '">'
       + (x.pic ? art(all.get(x.pic), 13) : '') + esc(x.say) + '<u>&times;</u></button>').join('');
   }
 
@@ -667,12 +670,22 @@ const RealmIndex = (function () {
       const chosen = one.chips.filter(x => x.on);
       const left = one.chips.filter(x => x.here === undefined || x.here > 0);
       if (!chosen.length && !left.length) return '';
-      const showing = chosen.length ? chosen : left;
+      const shown = chosen.length ? chosen : left;
+      /*
+       * Only one of them is the first. Every choice narrows the ones after it,
+       * but the first is the one they were all narrowed against - it is the
+       * one whose removal takes the rest with it - so it is the only one drawn
+       * as the anchor, and it says so.
+       */
+      const isFirst = Boolean(asked[0]) && chosen.includes(asked[0]);
       return '<section class="ix-group' + (one.open ? ' is-open' : '')
-      + (chosen.length ? ' is-primary' : '') + '" data-group="' + at + '"'
-      + (showing.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
-      + '<button type="button" class="ix-group-head" data-fold="' + at + '">'
+      + (isFirst ? ' is-primary' : (chosen.length ? ' is-chosen' : ''))
+      + '" data-group="' + at + '"'
+      + (shown.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
+      + '<button type="button" class="ix-group-head" data-fold="' + at + '"'
+      + (isFirst ? ' title="The first choice. Taking it off clears the rest."' : '') + '>'
       + '<b>' + esc(one.title) + '</b>'
+      + (isFirst ? '<em class="ix-first">first choice</em>' : '')
       + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
       + '<span class="ix-group-on">'
       + (chosen.length || '') + '</span></button>'
@@ -684,7 +697,7 @@ const RealmIndex = (function () {
        * moment a door is opened. A chip that has nothing behind it still goes
        * away, which is the part the number was really for.
        */
-      + showing
+      + shown
         .map(x => '<button type="button" class="ix-facet'
           + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '"'
           + ' title="' + esc(x.say) + '">'
@@ -1032,8 +1045,22 @@ const RealmIndex = (function () {
   }
 
   /* ---------------- wiring ---------------- */
+  /*
+   * One missing element must not take the page down with it.
+   *
+   * Everything here hangs off an id, and the whole page went dead once because
+   * a single lookup came back empty in the middle of wiring - the search still
+   * worked, nothing else did, and nothing said why. Each hook is attached on
+   * its own now, the delegated one first because it carries the rest.
+   */
+  function hook(id, kind, run) {
+    const node = id === 'pageIndex' ? document.getElementById(id) : el(id);
+    if (!node) { console.warn('index: no ' + id + ' to listen on'); return; }
+    node.addEventListener(kind, run);
+  }
+
   function wire() {
-    el('ixSearch').addEventListener('input', () => {
+    hook('ixSearch', 'input', () => {
       const body = el('ixBody');
       if (body) {
         body.classList.toggle('has-list',
@@ -1041,27 +1068,27 @@ const RealmIndex = (function () {
       }
       drawResults();
     });
-    el('ixKinds').addEventListener('click', event => {
+    hook('ixKinds', 'click', event => {
       const chip = event.target.closest('[data-kind]');
       if (!chip) return;
       kindWanted = chip.dataset.kind === kindWanted ? '' : chip.dataset.kind;
       repaint();
     });
-    el('ixFacets').addEventListener('click', event => {
+    hook('ixFacets', 'click', event => {
       const fold = event.target.closest('[data-fold]');
       if (!fold) return;
       const one = groups[Number(fold.dataset.fold)];
       one.open = !one.open;
       fold.parentElement.classList.toggle('is-open', one.open);
     });
-    el('ixClear').addEventListener('click', () => {
+    hook('ixClear', 'click', () => {
       for (const one of groups) for (const chip of one.chips) chip.on = false;
       asked = [];
       kindWanted = '';
       drawCard('');
       repaint();
     });
-    document.getElementById('pageIndex').addEventListener('click', event => {
+    hook('pageIndex', 'click', event => {
       /*
        * One listener for every chip, because they are drawn in two places now
        * and a chip is the same thing wherever it sits.

@@ -2801,14 +2801,36 @@ body.globe-wide .home-card-art { animation: none !important; }
  * The one that was chosen against the ones still to choose. The first is an
  * answer and reads as settled; the rest are questions and stay quiet.
  */
+/* The anchor: the one every later choice was narrowed against. */
 .ix-group.is-primary {
-  background: rgba(121, 197, 232, .07);
-  border-left: 2px solid var(--accent);
+  background: rgba(121, 197, 232, .09);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
 }
 .ix-group.is-primary > .ix-group-head { color: var(--accent); }
 .ix-group.is-primary > .ix-group-head b { letter-spacing: .5px; }
+.ix-first {
+  font-style: normal; font-size: calc(var(--ix-fs) * .68); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .7px; color: var(--accent);
+  border: 1px solid rgba(121, 197, 232, .45); border-radius: 999px; padding: 1px 7px;
+}
+/* A choice, but not the one holding the others up. */
+.ix-group.is-chosen { border-left: 3px solid var(--line); border-radius: var(--radius-sm); }
+.ix-group.is-chosen > .ix-group-head { color: var(--text); }
 .ix-group:not(.is-primary) > .ix-group-head b { font-weight: 550; }
+.ix-group.is-chosen .ix-facet.is-on {
+  background: rgba(121, 197, 232, .18); border-color: rgba(121, 197, 232, .5);
+  color: var(--text);
+}
+.ix-group.is-chosen .ix-facet.is-on i { color: var(--muted); }
+
+/* And the same distinction where the choices are listed together. */
+.ix-chosen:not(.is-first) {
+  background: transparent; color: var(--accent);
+  border-color: rgba(121, 197, 232, .45);
+}
+.ix-chosen:not(.is-first) u { color: rgba(121, 197, 232, .6); }
+.ix-chosen:not(.is-first):hover u { color: var(--accent); }
 .ix-group-on:empty { display: none; }
 .ix-group-on {
   font-size: 10px; font-weight: 700; color: #10141c; background: var(--accent);
@@ -2887,8 +2909,19 @@ body.globe-wide .home-card-art { animation: none !important; }
  * category is chosen or a name typed, the middle keeps to the box you type in.
  * The panels retract to what they have to say and the realm shows behind them.
  */
-.ix-layout:not(.has-card) { grid-template-columns: minmax(190px, 20vw) 1fr; }
-.ix-layout.has-pick:not(.has-card) { grid-template-columns: minmax(150px, 16vw) 1fr; }
+/*
+ * With no card open the list takes the width a row needs to read well and no
+ * more. Stretching it to the far edge put the name at one side of the screen
+ * and its family at the other with a metre of nothing between them.
+ */
+.ix-layout:not(.has-card) {
+  grid-template-columns: minmax(190px, 20vw) minmax(320px, 52ch);
+  justify-content: start;
+}
+.ix-layout.has-pick:not(.has-card) {
+  grid-template-columns: minmax(150px, 16vw) minmax(320px, 52ch);
+  justify-content: start;
+}
 /*
  * Nothing chosen and nothing typed: one panel, the whole width. The box you
  * type in lives with the categories, so there is no second panel standing
