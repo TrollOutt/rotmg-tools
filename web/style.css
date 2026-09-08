@@ -2382,10 +2382,22 @@ body.globe-wide .home-card-art { animation: none !important; }
   flex: 0 1 auto; min-width: 0; max-width: 18ch;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.tc-ench u { flex: 0 0 auto; }
 .tc-ench .tc-charm { flex: 0 0 auto; }
-.tc-ench { min-width: 0; }
-.tc-ench u { white-space: nowrap; }
+.tc-ench { min-width: 0; max-width: 100%; }
+/*
+ * What it does gives way before the buttons do.
+ *
+ * The text was allowed to take whatever room it wanted, so an enchantment
+ * with a long sentence in it pushed the padlock and the cross off the side of
+ * the card - where they could not be clicked, which meant an enchantment that
+ * could not be removed or replaced. It is the one part of the chip that can
+ * be cut short, so it is the one that gets cut, and the whole sentence is in
+ * the tooltip.
+ */
+.tc-ench u {
+  flex: 0 1 auto; min-width: 0; max-width: 22ch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .tc-facts b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tc-facts i { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .header-aside { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

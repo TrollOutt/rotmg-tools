@@ -1285,11 +1285,28 @@ const TINT = {
         const id = worn.ench[at];
         const one = id && data.byEnch[id];
         const held = !!build.locked[hand + ':' + at];
-        const swaps = one && one.sub
-          ? one.sub.map(part => (part.how === 'set' ? 'shoots ' : 'adds ')
-            + part.shots[0].low + '-' + part.shots[0].high
-            + (part.many > 1 ? ' x' + part.many : '')).join(' ')
-          : '';
+        /*
+         * Said once, however many parts there are. An enchantment that adds
+         * six volleys was reading "adds 50-70 adds 50-70 adds 50-70..." right
+         * out of its own chip and off the side of the card, taking the
+         * padlock and the way to remove it with it.
+         */
+        const swaps = one && one.sub ? (() => {
+          const set = one.sub.filter(part => part.how === 'set');
+          const add = one.sub.filter(part => part.how === 'add');
+          const words = [];
+          if (set.length) {
+            const it = set[set.length - 1];
+            words.push('shoots ' + it.shots[0].low + '-' + it.shots[0].high);
+          }
+          if (add.length) {
+            const most = add.reduce((a, b) =>
+              (b.shots[0].high || 0) > (a.shots[0].high || 0) ? b : a);
+            words.push('adds ' + (add.length > 1 ? add.length + ' x ' : '')
+              + most.shots[0].low + '-' + most.shots[0].high);
+          }
+          return words.join(', ');
+        })() : '';
         const shares = one && one.rel
           ? one.rel.map(part => plus(part.pct) + '% of bonus ' + part.of).join(' ')
           : '';
@@ -1306,8 +1323,12 @@ const TINT = {
           : shares ? '<u>' + esc(shares) + '</u>'
           : heals ? '<u>' + esc(heals) + '</u>'
           : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
+        // The whole sentence, for the one that has been cut short on the card.
+        const whole = one && (swaps || shares || heals
+          || (one.worn && Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ')));
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
-          + (one ? '' : ' is-empty') + '">'
+          + (one ? '' : ' is-empty') + '"'
+          + (whole ? ' title="' + esc(one.name + ' — ' + whole) + '"' : '') + '>'
           + (one ? sheetIcon(one.pic, 18) : '')
           + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '">'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
@@ -1532,10 +1553,20 @@ const TINT = {
       const left = (how || '').split(', ').filter(one => one && one !== 'weaving');
       if (left.length) said.push(item.name + ' - ' + left.join(', '));
     }
-    note.hidden = !said.length;
-    note.textContent = said.length
-      ? 'Shown flying straight. In the game: ' + said.join('; ') + '.'
-      : '';
+    /*
+     * And the frame says what it is, always.
+     *
+     * It fires at the rate the weapon fires, in the runs it fires them in,
+     * with the bolt it actually throws - but it is a bench, not the game.
+     * Nobody is dodging, the target does not move or shoot back, and a
+     * handful of shots travel a path the client states the parameters of
+     * without stating the arithmetic. Somebody reading a number off this
+     * frame should know which of the two they are looking at.
+     */
+    note.hidden = false;
+    note.textContent = 'A test bench, not the game: nothing dodges, nothing '
+      + 'shoots back, and every shot is drawn flying straight'
+      + (said.length ? ' - in the game: ' + said.join('; ') : '') + '.';
   }
 
   function drawNumbers() {
