@@ -283,18 +283,78 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * its own, which is why many small shots suffer more from it than one big
    * one - and is most of what theory crafting is about.
    */
-  function weaponRate(item, stats, def, scale) {
+  /*
+   * What the enchantments have done to the shot.
+   *
+   * Twenty-six of them carry a sub-attack - a projectile of their own that
+   * either joins what the weapon throws or replaces it. Buzzing Bullets adds
+   * a burst of bees to every shot, Venom Coating swaps the shot out. They are
+   * the reason anybody puts an awakened enchantment on a weapon, so they are
+   * read from the same place everything else is: the object the client points
+   * at, with its own damage, its own count and its own burst.
+   */
+  function subOf(state) {
+    const out = [];
+    for (const [hand] of HANDS) {
+      const worn = state.gear[hand];
+      for (const id of (worn && worn.ench) || []) {
+        const one = id && data.byEnch[id];
+        for (const part of (one && one.sub) || []) out.push(part);
+      }
+    }
+    return out;
+  }
+
+  function weaponRate(item, stats, def, scale, extra) {
     if (!item || !item.shots || !item.shots.length) return { each: 0, rate: 0, dps: 0 };
     const by = scale || { dmg: 1, rate: 1, life: 1, fast: 1 };
-    const shot = item.shots[0];
+    /*
+     * A sub-attack that says "set" is the shot now; the weapon's own is gone.
+     */
+    const swaps = (extra || []).filter(one => one.how === 'set');
+    const shot = swaps.length ? swaps[swaps.length - 1].shots[0] : item.shots[0];
     const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
       * by.dmg;
     const each = landed(roll, stats.att, def, shot.pierce);
     const rate = SHOTS_AT(stats.dex) * (item.rate === undefined ? 1 : item.rate)
       * by.rate;
-    const many = item.many || 1;
+    const many = (swaps.length ? swaps[swaps.length - 1].many : item.many) || 1;
+    /*
+     * A burst weapon does not fire steadily.
+     *
+     * It looses a run of shots at the usual rate and then stands still for a
+     * moment - four from a longbow, five from the S.T.A.F.F. - and the pause
+     * is the shorter the more dexterity there is, between the two ends the
+     * client states. So the honest figure is the whole cycle: the run takes
+     * as long as the shots in it, the pause follows, and what a second is
+     * worth is the damage of the run divided by both together. Counting only
+     * the run, which is what a page that has not read the burst does, credits
+     * these weapons with about twice what they do.
+     */
+    const cycle = item.burst && item.burst.many > 1 ? (() => {
+      const b = item.burst;
+      const quick = Math.max(0, Math.min(1, stats.dex / 75));
+      const wait = b.wait + (b.rush - b.wait) * quick;
+      const runs = b.many / rate;
+      return { every: runs + wait, shots: b.many, wait, run: runs };
+    })() : null;
+    /*
+     * And one that says "add" throws its own volley alongside, at the same
+     * rate the weapon fires, with its own damage and its own count.
+     */
+    let along = 0;
+    for (const one of (extra || [])) {
+      if (one.how !== 'add') continue;
+      const its = one.shots[0];
+      const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2 * by.dmg;
+      along += landed(mid, stats.att, def, its.pierce) * (one.many || 1);
+    }
+    const perShot = each * many + along;
+    const dps = cycle
+      ? perShot * cycle.shots / cycle.every
+      : perShot * rate;
     return {
-      each, rate, many, dps: each * many * rate,
+      each, rate, many, dps, burst: cycle, along,
       reach: (shot.reach || 0) * by.life * by.fast,
       fast: (shot.fast || 8) * by.fast
     };
@@ -364,7 +424,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const weapon = data.byItem[(state.gear.weapon || {}).name];
     const ability = data.byItem[(state.gear.ability || {}).name];
     const scale = scaleOf(state);
-    const gun = using === 'spell' ? NONE : weaponRate(weapon, stats.now, def, scale);
+    const gun = using === 'spell' ? NONE
+      : weaponRate(weapon, stats.now, def, scale, subOf(state));
     const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def);
     return { stats, gun, spell, total: gun.dps + spell.dps };
   }
@@ -514,6 +575,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     // A share of a bonus is worth what the bonus is; sixteen per cent of a
     // good one beats four flat points, and this only has to rank them.
     for (const part of one.rel || []) n += Math.abs(part.pct) / 2;
+    for (const part of one.sub || []) n += (part.shots[0].high || 0) / 4;
     return n;
   };
 
@@ -1026,7 +1088,7 @@ const TINT = {
             // Anything this page can count: a statistic, a scaling of the
             // weapon, or something that keeps you alive. The rest change the
             // shot in ways it does not model.
-            if (!one.worn && !one.mul && !one.heal && !one.rel) continue;
+            if (!one.worn && !one.mul && !one.heal && !one.rel && !one.sub) continue;
             worn.ench[at] = one.id;
             const now = scoreOf(work, goal);
             looked++;
@@ -1223,6 +1285,11 @@ const TINT = {
         const id = worn.ench[at];
         const one = id && data.byEnch[id];
         const held = !!build.locked[hand + ':' + at];
+        const swaps = one && one.sub
+          ? one.sub.map(part => (part.how === 'set' ? 'shoots ' : 'adds ')
+            + part.shots[0].low + '-' + part.shots[0].high
+            + (part.many > 1 ? ' x' + part.many : '')).join(' ')
+          : '';
         const shares = one && one.rel
           ? one.rel.map(part => plus(part.pct) + '% of bonus ' + part.of).join(' ')
           : '';
@@ -1235,6 +1302,7 @@ const TINT = {
         ].filter(Boolean).join(' ') : '';
         const said = one && one.worn
           ? '<u>' + Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ') + '</u>'
+          : swaps ? '<u>' + esc(swaps) + '</u>'
           : shares ? '<u>' + esc(shares) + '</u>'
           : heals ? '<u>' + esc(heals) + '</u>'
           : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
@@ -1503,6 +1571,15 @@ const TINT = {
       [spellOnly ? 'each cast' : 'each shot', commas(hand.each)
         + (hand.many > 1 ? ' x ' + hand.many : '')]
     ];
+    /*
+     * And where it fires in runs, what the run is - since the shots a second
+     * above is the rate inside the run, and on its own it reads as a weapon
+     * that never stops.
+     */
+    if (!spellOnly && hand.burst) {
+      rows.push(['in bursts of', hand.burst.shots
+        + ', then ' + round(hand.burst.wait) + 's']);
+    }
     if (kill !== null) {
       rows.push([esc(boss.name) + ' dies in', round(kill) + 's', true]);
     }
@@ -1624,7 +1701,7 @@ const TINT = {
    * "dies in" line agree by construction rather than by luck.
    */
   const duel = {
-    on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0,
+    on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0, left: 0,
     hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [],
     mp: 0, mpFull: 0
   };
@@ -1676,7 +1753,7 @@ const TINT = {
   function resetDuel() {
     const boss = data.byBoss[build.boss];
     duel.at = 0; duel.dealt = 0; duel.shots.length = 0;
-    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.over = 0;
+    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.over = 0; duel.left = 0;
     duel.full = boss ? boss.hp : 0;
     duel.hp = duel.full;
     duel.bits.length = 0;
@@ -1694,7 +1771,7 @@ const TINT = {
     const stats = statsOf(build).now;
     const weapon = data.byItem[(build.gear.weapon || {}).name];
     const ability = data.byItem[(build.gear.ability || {}).name];
-    const gun = weaponRate(weapon, stats, boss.def);
+    const gun = weaponRate(weapon, stats, boss.def, scaleOf(build), subOf(build));
     const spell = abilityRate(ability, stats, boss.def);
 
     stepBits(delta);
@@ -1705,7 +1782,16 @@ const TINT = {
     if (gun.rate > 0) {
       duel.cool -= delta;
       if (duel.cool <= 0) {
-        duel.cool += 1 / gun.rate;
+        /*
+         * In runs, where the weapon fires in runs. The shots inside one come
+         * at the ordinary rate; the pause comes after the last of them.
+         */
+        if (gun.burst) {
+          duel.left = duel.left > 0 ? duel.left - 1 : gun.burst.shots - 1;
+          duel.cool += duel.left > 0 ? 1 / gun.rate : gun.burst.wait;
+        } else {
+          duel.cool += 1 / gun.rate;
+        }
         duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
         loose(weapon, gun, true);
       }
@@ -1864,7 +1950,8 @@ const TINT = {
      */
     const kit = statsOf(build);
     const arm = data.byItem[(build.gear.weapon || {}).name];
-    const shooting = kit ? weaponRate(arm, kit.now, 0, scaleOf(build)) : {};
+    const shooting = kit
+      ? weaponRate(arm, kit.now, 0, scaleOf(build), subOf(build)) : {};
     const PX_TILE = 30;
     const piece = pieceOf(boss && boss.pic);
     const room = Math.min(88, tall * 0.64);
