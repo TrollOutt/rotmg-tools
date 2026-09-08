@@ -22,6 +22,14 @@ const RealmIndex = (function () {
   let groups = [];                   // the browse rail, built once from the data
   let narrowed = [];                 // one set of allowed ids per group in play
   let kindsLeft = null;              // how many of each family survive the rail
+  let asked = [];                    // the chips that are down, in the order they went down
+  /*
+   * The things somebody has starred. Kept in the browser rather than anywhere
+   * else: it is one reader's shortlist, nobody else's business, and it should
+   * survive closing the tab without asking them to make an account.
+   */
+  const LOVED = 'rotmg-tools/index-favourites';
+  let loved = new Set();
 
   const el = id => document.getElementById(id);
 
@@ -69,6 +77,24 @@ const RealmIndex = (function () {
     ['enchant', 'Enchantments'], ['pool', 'Pools']
   ];
   const KIND_SAY = Object.fromEntries(KINDS);
+
+  function readLoved() {
+    try {
+      const said = JSON.parse(window.localStorage.getItem(LOVED) || '[]');
+      if (Array.isArray(said)) loved = new Set(said.filter(one => typeof one === 'string'));
+    } catch (err) { loved = new Set(); }
+  }
+
+  function writeLoved() {
+    try { window.localStorage.setItem(LOVED, JSON.stringify([...loved])); } catch (err) { /* a
+      browser that refuses to remember is not a reason to stop working */ }
+  }
+
+  /* The star, wherever it is drawn. */
+  const star = id => '<span class="ix-love' + (loved.has(id) ? ' is-on' : '')
+    + '" data-love="' + esc(id) + '" role="button" tabindex="-1"'
+    + ' title="' + (loved.has(id) ? 'Take it off your list' : 'Keep it on your list')
+    + '">\u2605</span>';
 
   /* ---------------- reading it in ---------------- */
   async function load() {
@@ -199,6 +225,15 @@ const RealmIndex = (function () {
       for (const one of all.values()) if (test(one)) ids.add(one.id);
       return ids;
     };
+
+    /*
+     * The reader's own shortlist comes first: it is the only way in they made
+     * themselves, and it is the one they will want most often.
+     */
+    if (loved.size) {
+      const mine = new Set([...loved].filter(id => all.has(id)));
+      if (mine.size) chip(group('Favourites', 'client'), 'loved', 'Starred', mine);
+    }
 
     /* Which class may hold it - the slot the class declares against the slot
        the item declares, the same comparison the card makes. */
@@ -463,7 +498,7 @@ const RealmIndex = (function () {
   function fitGroups() {
     const box = el('ixFacets');
     const panel = el('ixBody');
-    if (!box || !panel || panel.classList.contains('has-pick')) return;
+    if (!box || !panel) return;
     const room = () => (window.innerHeight || 900)
       - box.getBoundingClientRect().top - 24;
     for (let guard = groups.length; guard > 0; guard--) {
@@ -475,6 +510,33 @@ const RealmIndex = (function () {
       last.open = false;
       drawFacets();
     }
+  }
+
+  /*
+   * A chip going down or coming up.
+   *
+   * The first choice is the one the rest were narrowed against - the classes
+   * left after a dungeon are that dungeon's classes - so taking it back off
+   * makes nonsense of everything under it. It clears the lot rather than
+   * leaving a Tier 12 and an Archer standing with nothing to be part of, and
+   * the record on screen goes with them.
+   */
+  function turn(chip) {
+    if (chip.on) {
+      const wasFirst = asked[0] === chip;
+      if (wasFirst) {
+        for (const one of groups) for (const x of one.chips) x.on = false;
+        asked = [];
+        kindWanted = '';
+        drawCard('');
+        return;
+      }
+      chip.on = false;
+      asked = asked.filter(one => one !== chip);
+      return;
+    }
+    chip.on = true;
+    asked.push(chip);
   }
 
   /* Everything the rail touches, redrawn in one go. */
@@ -502,12 +564,12 @@ const RealmIndex = (function () {
      */
     const picked = narrowed.length > 0 || Boolean(kindWanted);
     /*
-     * Folded to fit. With the whole window to itself the rail has room for
-     * every group at once and there is nothing to be gained by making the
-     * reader open them; once it is a column down one side it has room for
-     * none, and the choice already made is standing at the top anyway.
+     * Unfolded, always, and trimmed afterwards to what the screen will hold.
+     * A choice makes every other group shorter - after one dungeon there are
+     * four classes left rather than nineteen - so what is worth reading fits
+     * where the whole rail did not.
      */
-    for (const one of groups) one.open = !picked;
+    for (const one of groups) one.open = true;
     const body = el('ixBody');
     if (body) {
       body.classList.toggle('has-pick', picked);
@@ -543,6 +605,7 @@ const RealmIndex = (function () {
       + '<b>' + esc(one[1]) + '</b>'
       + '<i class="ix-kind is-' + one[2] + '">' + esc(KIND_SAY[one[2]] || one[2]) + '</i>'
       + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
+      + star(one[0])
       + '</button>').join('') || '<p class="ix-none">Nothing by that name.</p>';
   }
 
@@ -590,15 +653,29 @@ const RealmIndex = (function () {
   function drawFacets() {
     const box = el('ixFacets');
     if (!box) return;
-    box.innerHTML = groups.map((one, at) => (one.inSub ? '' :
-      '<section class="ix-group' + (one.open ? ' is-open' : '')
-      + '" data-group="' + at + '"'
-      + (one.chips.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
+    /*
+     * Once a choice is made its own group has nothing left to offer: the other
+     * dungeons are not narrower answers, they are different questions, and
+     * leaving ninety of them under a chosen one is asking the reader to undo
+     * their own work to read the page. So a group that holds the choice shows
+     * the choice and nothing else, and stands out as the one that was made;
+     * the others are what is left to ask, and a group with nothing left to
+     * ask goes away.
+     */
+    box.innerHTML = groups.map((one, at) => {
+      if (one.inSub) return '';
+      const chosen = one.chips.filter(x => x.on);
+      const left = one.chips.filter(x => x.here === undefined || x.here > 0);
+      if (!chosen.length && !left.length) return '';
+      const showing = chosen.length ? chosen : left;
+      return '<section class="ix-group' + (one.open ? ' is-open' : '')
+      + (chosen.length ? ' is-primary' : '') + '" data-group="' + at + '"'
+      + (showing.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
       + '<button type="button" class="ix-group-head" data-fold="' + at + '">'
       + '<b>' + esc(one.title) + '</b>'
       + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
       + '<span class="ix-group-on">'
-      + (one.chips.filter(x => x.on).length || '') + '</span></button>'
+      + (chosen.length || '') + '</span></button>'
       + '<div class="ix-group-body"><div class="ix-group-inner">'
       + (one.note ? '<p class="ix-group-note">' + esc(one.note) + '</p>' : '')
       /*
@@ -607,13 +684,14 @@ const RealmIndex = (function () {
        * moment a door is opened. A chip that has nothing behind it still goes
        * away, which is the part the number was really for.
        */
-      + one.chips.filter(x => x.on || x.here === undefined || x.here > 0)
+      + showing
         .map(x => '<button type="button" class="ix-facet'
           + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '"'
           + ' title="' + esc(x.say) + '">'
           + (x.pic ? art(all.get(x.pic), 13) : '')
           + '<span>' + esc(x.say) + '</span></button>').join('')
-      + '</div></div></section>')).join('');
+      + '</div></div></section>';
+    }).join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
     const clear = el('ixClear');
     if (clear) clear.hidden = !on;
@@ -811,6 +889,7 @@ const RealmIndex = (function () {
       + '<h3>' + esc(one.said || one.name) + '</h3>'
       + (one.alias ? '<code>' + esc(one.alias) + '</code>' : '')
       + awayTo(one)
+      + star(one.id)
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
       + drawDoes(one)
@@ -977,7 +1056,9 @@ const RealmIndex = (function () {
     });
     el('ixClear').addEventListener('click', () => {
       for (const one of groups) for (const chip of one.chips) chip.on = false;
+      asked = [];
       kindWanted = '';
+      drawCard('');
       repaint();
     });
     document.getElementById('pageIndex').addEventListener('click', event => {
@@ -985,11 +1066,37 @@ const RealmIndex = (function () {
        * One listener for every chip, because they are drawn in two places now
        * and a chip is the same thing wherever it sits.
        */
+      const loves = event.target.closest('[data-love]');
+      if (loves) {
+        const id = loves.dataset.love;
+        if (loved.has(id)) loved.delete(id); else loved.add(id);
+        writeLoved();
+        /*
+         * The Favourites way in is made out of the list itself, so it has to
+         * be rebuilt when the list changes - and the chips that were down stay
+         * down, because starring something is not choosing a category.
+         */
+        const down = new Set();
+        for (const one of groups) for (const chip of one.chips) if (chip.on) down.add(chip.key);
+        buildFacets();
+        for (const one of groups) for (const chip of one.chips) chip.on = down.has(chip.key);
+        asked = asked.map(old => {
+          for (const one of groups) for (const chip of one.chips) {
+            if (chip.key === old.key) return chip;
+          }
+          return old;
+        }).filter(chip => chip.on);
+        repaint();
+        if (showing) drawCard(showing.id);
+        return;
+      }
       const hit = event.target.closest('[data-facet]');
       if (hit) {
+        let touched = null;
         for (const one of groups) {
-          for (const chip of one.chips) if (chip.key === hit.dataset.facet) chip.on = !chip.on;
+          for (const chip of one.chips) if (chip.key === hit.dataset.facet) touched = chip;
         }
+        if (touched) turn(touched);
         repaint();
         return;
       }
@@ -997,7 +1104,10 @@ const RealmIndex = (function () {
       if (want) {
         for (const set of groups) {
           for (const chip of set.chips) {
-            if (set.title === 'Kind of gear') chip.on = chip.say === want.dataset.slot;
+            if (set.title === 'Kind of gear') {
+              const wants = chip.say === want.dataset.slot;
+              if (wants !== chip.on) turn(chip);
+            }
           }
           if (set.title === 'Kind of gear') set.open = true;
         }
@@ -1059,6 +1169,7 @@ const RealmIndex = (function () {
     if (started) return;
     const box = el('ixBody');
     if (!box) return;
+    readLoved();
     if (!await load()) {
       box.innerHTML = '<p class="tc-missing">The index is not built yet. '
         + 'Run <code>node tools/build-index.js</code>.</p>';
