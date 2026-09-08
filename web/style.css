@@ -2805,6 +2805,20 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-facet.is-on i { color: rgba(16, 20, 28, .6); }
 
 /* What the community says, kept visibly apart from what the client declares. */
+.ix-does {
+  margin: 0 0 10px; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.ix-does li {
+  font-size: 12px; color: var(--muted); line-height: 1.45;
+  padding-left: 11px; position: relative;
+}
+.ix-does li::before {
+  content: ''; position: absolute; left: 0; top: 7px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+}
+.ix-does b { color: var(--text); font-weight: 600; }
+
 .ix-said-block {
   margin-top: 14px; padding: 11px 13px 4px;
   border: 1px solid var(--line-soft); border-left: 2px solid var(--legendary);

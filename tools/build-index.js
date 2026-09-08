@@ -251,6 +251,26 @@ function shotOf(body) {
   return out.length ? out : undefined;
 }
 
+/*
+ * What the client says a thing does when a number cannot say it.
+ *
+ * Twenty-five pieces of visible gear carry no damage, no bonus and no rate,
+ * and read on the card as though they did nothing: the Alien Cores, the
+ * Reactors. They do plenty, and the client writes it out - "Gain strength
+ * based on the amount of Alien Gear you wear" - in the tooltip block rather
+ * than as a mutator. Five thousand item definitions carry one.
+ */
+function tipsOf(body) {
+  const out = [];
+  for (const m of body.matchAll(
+    /<EffectInfo\s+name="([^"]*)"\s+description="([^"]*)"/g)) {
+    const name = m[1].trim(), said = m[2].trim();
+    if (!said) continue;
+    out.push(name ? [name, said] : [said]);
+  }
+  return out.length ? out : undefined;
+}
+
 function wornOf(body) {
   const out = {};
   for (const m of body.matchAll(/<ActivateOnEquip\s+([^>]*)>\s*IncrementStat\s*</g)) {
@@ -319,6 +339,7 @@ for (const one of objects) {
     shots: num(one.body, 'NumProjectiles'),
     fires: shotOf(one.body),
     worn: wornOf(one.body),
+    does: tipsOf(one.body),
     /*
      * Only the first record under a name is offered a door. Where the client
      * declares three things called Doom Bow, the bench and the calculator know
@@ -385,6 +406,12 @@ for (const one of objects) {
   put('portal', nameOf(one), one, {
     labels,
     about: text(one.body, 'Description'),
+    /*
+     * The ones that are wiring rather than a way in: the teleporters inside
+     * the Spectral Penitentiary, the bare "Teleport". Kept, because the index
+     * keeps what the client declares, but not offered to a reader browsing.
+     */
+    dev: /TP|^Teleport$|Return/i.test(one.id) ? 1 : undefined,
     hidden: hidden.length ? hidden : undefined
   });
 }
@@ -487,6 +514,55 @@ for (const one of objects) {
         dev: 1,
         takes: [...m[3].matchAll(/includeLabelsOR="([^"]+)"/g)].map(x => x[1]).join(' ')
       });
+    }
+  }
+}
+
+/*
+ * Which enchantments a pool can actually give.
+ *
+ * A pool names none of them. It says "everything labelled ROLLABLE" and then
+ * changes the odds - so the link is the label, and eight hundred and ninety
+ * enchantments that looked unattached are simply attached by a rule rather
+ * than by a list. Where a pool does name one, it is naming a favourite: the
+ * Fool Pool multiplies Jester's Trick fifteenfold, and that is worth saying
+ * out loud beside the enchantment as well as beside the pool.
+ */
+{
+  const charms = [...records.values()].filter(one => one.kind === 'enchant');
+  const file = path.join(XML, 'EnchantmentLists.xml');
+  if (fs.existsSync(file)) {
+    const raw = fs.readFileSync(file, 'utf8');
+    for (const m of raw.matchAll(
+      /<EnchantmentList\s+type="([^"]*)"\s+id="([^"]+)">([\s\S]*?)<\/EnchantmentList>/g)) {
+      const pool = 'pool:' + m[2];
+      if (!records.has(pool)) continue;
+      const takes = new Set(), refuses = new Set();
+      for (const rule of m[3].matchAll(/<EnchantmentEntryLabel\s+([^>]*)\/>/g)) {
+        const yes = /includeLabelsOR="([^"]+)"/.exec(rule[1]);
+        const no = /excludeLabelsOR="([^"]+)"/.exec(rule[1]);
+        for (const label of (yes ? yes[1] : '').split(',')) if (label) takes.add(label);
+        for (const label of (no ? no[1] : '').split(',')) if (label) refuses.add(label);
+      }
+      /*
+       * Counted, not listed. Nine hundred rollable enchantments against
+       * fifty-five pools is forty-eight thousand edges saying the same dull
+       * thing, and it doubled the file; how many pools can give you this is
+       * the fact worth having, and the two that name it are below.
+       */
+      if (takes.size) {
+        for (const charm of charms) {
+          const labels = charm.labels || [];
+          if (!labels.some(label => takes.has(label))) continue;
+          if (labels.some(label => refuses.has(label))) continue;
+          charm.pools = (charm.pools || 0) + 1;
+        }
+      }
+      for (const named of m[3].matchAll(/<ModifyEnchantmentWeight\s+id="([^"]+)"[^>]*mult="([^"]+)"/g)) {
+        const charm = charms.find(one => one.alias === named[1] || one.name === named[1]);
+        if (!charm) continue;
+        tie(charm.id, Number(named[2]) >= 1 ? 'favoured by' : 'held back by', pool);
+      }
     }
   }
 }
