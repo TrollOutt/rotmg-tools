@@ -439,7 +439,17 @@ const RealmIndex = (function () {
     if (picked) for (const one of groups) one.open = false;
     else if (groups[0]) groups[0].open = true;
     const body = el('ixBody');
-    if (body) body.classList.toggle('has-pick', picked);
+    if (body) {
+      body.classList.toggle('has-pick', picked);
+      /*
+       * And the middle column keeps to the box you type in until there is
+       * something to put under it. Nothing chosen and nothing typed is not a
+       * list of eight thousand things; it is a question not yet asked.
+       */
+      body.classList.toggle('has-list', picked
+        || Boolean(showing)
+        || Boolean(((el('ixSearch') || {}).value || '').trim()));
+    }
     drawKinds();
     drawTypes();
     drawChosen();
@@ -517,7 +527,7 @@ const RealmIndex = (function () {
       + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
       + '<span class="ix-group-on">'
       + (one.chips.filter(x => x.on).length || '') + '</span></button>'
-      + '<div class="ix-group-body">'
+      + '<div class="ix-group-body"><div class="ix-group-inner">'
       + (one.note ? '<p class="ix-group-note">' + esc(one.note) + '</p>' : '')
       + one.chips.filter(x => x.on || x.here === undefined || x.here > 0)
         .map(x => '<button type="button" class="ix-facet'
@@ -526,7 +536,7 @@ const RealmIndex = (function () {
           + esc(x.say) + '<i>'
           + (x.here === undefined ? x.ids.size : x.here).toLocaleString('en-US')
           + '</i></button>').join('')
-      + '</div></section>')).join('');
+      + '</div></div></section>')).join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
     const clear = el('ixClear');
     if (clear) clear.hidden = !on;
@@ -653,10 +663,25 @@ const RealmIndex = (function () {
     const one = all.get(id);
     showing = one || null;
     if (!box) return;
+    /*
+     * No record, no box. An empty panel the height of the window saying "pick
+     * something on the left" is a lot of furniture for an instruction, and the
+     * two columns that do have something to show would rather have the room.
+     */
+    const body = el('ixBody');
     if (!one) {
-      box.innerHTML = '<p class="ix-none">Pick something on the left.</p>';
+      box.innerHTML = '';
+      box.hidden = true;
+      if (body) body.classList.remove('has-card');
       return;
     }
+    box.hidden = false;
+    /*
+     * A record on screen means the middle column has done its job, so it stays
+     * open behind the card even when nothing was chosen to get here - a link
+     * inside another card is a way in too.
+     */
+    if (body) body.classList.add('has-card', 'has-list');
     const links = [];
     for (const [how, to] of one.outLinks || []) links.push([how, to, false]);
     for (const [how, from] of one.inLinks || []) links.push([how, from, true]);
@@ -829,7 +854,14 @@ const RealmIndex = (function () {
 
   /* ---------------- wiring ---------------- */
   function wire() {
-    el('ixSearch').addEventListener('input', drawResults);
+    el('ixSearch').addEventListener('input', () => {
+      const body = el('ixBody');
+      if (body) {
+        body.classList.toggle('has-list',
+          narrowed.length > 0 || Boolean(kindWanted) || Boolean(el('ixSearch').value.trim()));
+      }
+      drawResults();
+    });
     el('ixKinds').addEventListener('click', event => {
       const chip = event.target.closest('[data-kind]');
       if (!chip) return;

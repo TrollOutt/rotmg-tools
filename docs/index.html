@@ -2744,7 +2744,13 @@ body.globe-wide .home-card-art { animation: none !important; }
  * their own scroll and stand full height, so the list is as long as the screen
  * rather than as long as a guess, and the card takes everything left over.
  */
+@keyframes ix-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
 .ix-layout {
+  transition: grid-template-columns .3s cubic-bezier(.4, 0, .2, 1);
   display: grid; grid-template-columns: minmax(190px, 250px) minmax(260px, 360px) 1fr;
   gap: clamp(10px, 1.4vw, 16px); align-items: stretch;
   height: calc(100vh - 118px); min-height: 420px;
@@ -2794,8 +2800,22 @@ body.globe-wide .home-card-art { animation: none !important; }
   font-style: normal; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .6px; color: var(--legendary);
 }
-.ix-group-body { display: none; flex-wrap: wrap; gap: 4px; padding: 2px 8px 9px; }
-.ix-group.is-open > .ix-group-body { display: flex; }
+/*
+ * Folded by rows rather than by display, so it can be watched happening. A
+ * grid whose single row goes from nought to its own height is the one way to
+ * animate to a height nobody has measured.
+ */
+.ix-group-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .26s cubic-bezier(.4, 0, .2, 1);
+}
+.ix-group-inner { overflow: hidden; min-height: 0; }
+.ix-group.is-open > .ix-group-body { grid-template-rows: 1fr; }
+.ix-group-inner > * { margin-top: 0; }
+.ix-group-inner {
+  display: flex; flex-wrap: wrap; gap: 4px; padding: 0 8px;
+}
+.ix-group.is-open > .ix-group-body > .ix-group-inner { padding: 2px 8px 9px; }
 .ix-group-note {
   flex: 1 0 100%; margin: 0 0 3px; font-size: 10.5px; color: var(--dim); line-height: 1.4;
 }
@@ -2828,6 +2848,22 @@ body.globe-wide .home-card-art { animation: none !important; }
  * that it folds to what was chosen and the list takes the room.
  */
 .ix-layout.has-pick { grid-template-columns: minmax(150px, 195px) minmax(300px, 430px) 1fr; }
+/*
+ * Nothing open on the right, nothing taking up room on the right - and until a
+ * category is chosen or a name typed, the middle keeps to the box you type in.
+ * The panels retract to what they have to say and the realm shows behind them.
+ */
+.ix-layout:not(.has-card) { grid-template-columns: minmax(190px, 250px) 1fr; }
+.ix-layout.has-pick:not(.has-card) { grid-template-columns: minmax(150px, 195px) 1fr; }
+.ix-layout:not(.has-list) {
+  grid-template-columns: minmax(220px, 300px) minmax(260px, 360px);
+  justify-content: start; align-items: start;
+}
+.ix-layout:not(.has-list) #ixKinds,
+.ix-layout:not(.has-list) #ixTypes,
+.ix-layout:not(.has-list) #ixList,
+.ix-layout:not(.has-list) #ixCount { display: none; }
+.ix-layout:not(.has-list) #ixSearch { margin-bottom: 0; }
 
 /* What the community says, kept visibly apart from what the client declares. */
 .ix-does {
@@ -2867,6 +2903,16 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 .ix-find { display: flex; flex-direction: column; min-height: 0; }
 .ix-card { overflow-y: auto; }
+.ix-card:not([hidden]), #ixTypes:not([hidden]), #ixChosen:not([hidden]) {
+  animation: ix-in .26s cubic-bezier(.4, 0, .2, 1) both;
+}
+.ix-facet, .ix-chip, .ix-chosen, .ix-group-head {
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ix-layout, .ix-group-body { transition: none; }
+  .ix-card:not([hidden]), #ixTypes:not([hidden]), #ixChosen:not([hidden]) { animation: none; }
+}
 #ixSearch {
   /* The list is the part that grows; the box you type in is one line tall. */
   flex: none;
@@ -9708,7 +9754,17 @@ const RealmIndex = (function () {
     if (picked) for (const one of groups) one.open = false;
     else if (groups[0]) groups[0].open = true;
     const body = el('ixBody');
-    if (body) body.classList.toggle('has-pick', picked);
+    if (body) {
+      body.classList.toggle('has-pick', picked);
+      /*
+       * And the middle column keeps to the box you type in until there is
+       * something to put under it. Nothing chosen and nothing typed is not a
+       * list of eight thousand things; it is a question not yet asked.
+       */
+      body.classList.toggle('has-list', picked
+        || Boolean(showing)
+        || Boolean(((el('ixSearch') || {}).value || '').trim()));
+    }
     drawKinds();
     drawTypes();
     drawChosen();
@@ -9786,7 +9842,7 @@ const RealmIndex = (function () {
       + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
       + '<span class="ix-group-on">'
       + (one.chips.filter(x => x.on).length || '') + '</span></button>'
-      + '<div class="ix-group-body">'
+      + '<div class="ix-group-body"><div class="ix-group-inner">'
       + (one.note ? '<p class="ix-group-note">' + esc(one.note) + '</p>' : '')
       + one.chips.filter(x => x.on || x.here === undefined || x.here > 0)
         .map(x => '<button type="button" class="ix-facet'
@@ -9795,7 +9851,7 @@ const RealmIndex = (function () {
           + esc(x.say) + '<i>'
           + (x.here === undefined ? x.ids.size : x.here).toLocaleString('en-US')
           + '</i></button>').join('')
-      + '</div></section>')).join('');
+      + '</div></div></section>')).join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
     const clear = el('ixClear');
     if (clear) clear.hidden = !on;
@@ -9922,10 +9978,25 @@ const RealmIndex = (function () {
     const one = all.get(id);
     showing = one || null;
     if (!box) return;
+    /*
+     * No record, no box. An empty panel the height of the window saying "pick
+     * something on the left" is a lot of furniture for an instruction, and the
+     * two columns that do have something to show would rather have the room.
+     */
+    const body = el('ixBody');
     if (!one) {
-      box.innerHTML = '<p class="ix-none">Pick something on the left.</p>';
+      box.innerHTML = '';
+      box.hidden = true;
+      if (body) body.classList.remove('has-card');
       return;
     }
+    box.hidden = false;
+    /*
+     * A record on screen means the middle column has done its job, so it stays
+     * open behind the card even when nothing was chosen to get here - a link
+     * inside another card is a way in too.
+     */
+    if (body) body.classList.add('has-card', 'has-list');
     const links = [];
     for (const [how, to] of one.outLinks || []) links.push([how, to, false]);
     for (const [how, from] of one.inLinks || []) links.push([how, from, true]);
@@ -10098,7 +10169,14 @@ const RealmIndex = (function () {
 
   /* ---------------- wiring ---------------- */
   function wire() {
-    el('ixSearch').addEventListener('input', drawResults);
+    el('ixSearch').addEventListener('input', () => {
+      const body = el('ixBody');
+      if (body) {
+        body.classList.toggle('has-list',
+          narrowed.length > 0 || Boolean(kindWanted) || Boolean(el('ixSearch').value.trim()));
+      }
+      drawResults();
+    });
     el('ixKinds').addEventListener('click', event => {
       const chip = event.target.closest('[data-kind]');
       if (!chip) return;
