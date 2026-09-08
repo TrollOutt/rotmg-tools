@@ -2792,7 +2792,7 @@ body.globe-wide .home-card-art { animation: none !important; }
   flex: 1 0 100%; margin: 0 0 3px; font-size: 10.5px; color: var(--dim); line-height: 1.4;
 }
 .ix-facet {
-  display: inline-flex; align-items: baseline; gap: 5px;
+  display: inline-flex; align-items: center; gap: 5px;
   font: inherit; font-size: 11px; cursor: pointer; color: var(--muted);
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line-soft);
   border-radius: 999px; padding: 3px 9px;
@@ -2803,6 +2803,23 @@ body.globe-wide .home-card-art { animation: none !important; }
   color: #10141c; background: var(--accent); border-color: var(--accent); font-weight: 600;
 }
 .ix-facet.is-on i { color: rgba(16, 20, 28, .6); }
+
+/* What has been chosen, and how to take it back off. */
+.ix-chosen-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 8px 10px; }
+.ix-chosen {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+  color: #10141c; background: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 3px 8px;
+}
+.ix-chosen u { text-decoration: none; color: rgba(16, 20, 28, .55); font-size: 12px; }
+.ix-chosen:hover u { color: #10141c; }
+
+/*
+ * One step at a time. Until something is chosen the rail is the page; after
+ * that it folds to what was chosen and the list takes the room.
+ */
+.ix-layout.has-pick { grid-template-columns: minmax(150px, 195px) minmax(300px, 430px) 1fr; }
 
 /* What the community says, kept visibly apart from what the client declares. */
 .ix-does {
@@ -2865,6 +2882,10 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-chip:hover { color: var(--text); }
 .ix-chip.is-on { color: #10141c; background: var(--accent); border-color: var(--accent); }
 
+.ix-types {
+  padding-top: 8px; margin-top: -3px;
+  border-top: 1px solid var(--line-soft);
+}
 .ix-list { flex: 1; overflow-y: auto; min-height: 0;
   display: flex; flex-direction: column; gap: 2px; }
 .ix-row {
