@@ -772,6 +772,35 @@ window.openEnchantPicker = function (options) {
 /* And the dataset it was built from, for anybody who needs the same rules. */
 window.enchantRules = () => state.data;
 
+/*
+ * An item handed over from the bench.
+ *
+ * Somebody who has just been told to put four enchantments on a weapon wants
+ * to know what that will cost before they believe it, and that is this page's
+ * only question - so the item and what is meant to go on it arrive here
+ * rather than being typed in again. What cannot be resolved is dropped rather
+ * than guessed: an enchantment this page does not know is one it cannot price.
+ */
+window.enchantThis = function (said) {
+  if (!said || !said.item || !state.data) return false;
+  const resolved = resolveItem(said.item);
+  const slots = (said.slots || [])
+    .filter(name => state.data.byName.has(name))
+    .slice(0, 4)
+    .map(name => ({ name, locked: false }));
+  applySetup({
+    item: said.item,
+    rarity: String(Math.max(slots.length, resolved && resolved.slots ? resolved.slots : 0) || ''),
+    type: (resolved && resolved.type) || '',
+    dust: (resolved && resolved.dust) || '',
+    slots
+  });
+  refresh();
+  location.hash = 'enchant';
+  routeFromHash();
+  return true;
+};
+
 /* ------------------------------------------------------------------ *
  * Item picker                                                         *
  * ------------------------------------------------------------------ */
@@ -3037,7 +3066,13 @@ function showPage(name) {
 }
 
 function routeFromHash() {
-  showPage(String(location.hash || '').replace(new RegExp('^#\\/?'), ''));
+  /*
+   * The address may carry more than the page: a build handed over from one
+   * tool to another rides behind a question mark, and the page is the part
+   * in front of it.
+   */
+  const said = String(location.hash || '').replace(new RegExp('^#\\/?'), '');
+  showPage(said.split('?')[0]);
 }
 
 document.addEventListener('click', event => {
