@@ -1358,6 +1358,9 @@ const TINT = {
         + '<span class="tc-item-name">' + (worn.name ? esc(worn.name) : 'nothing') + '</span>'
         + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
         + '</span></button>'
+        + (worn.name ? '<button type="button" class="tc-take" data-take="' + hand
+          + '" title="Take this item and what is on it to the enchant calculator">'
+          + 'enchant</button>' : '')
         + '<button type="button" class="tc-hold" data-hold="' + hand
         + '" title="keep this item while the calculator works">'
         + (locked ? 'kept' : 'keep') + '</button>'
@@ -2306,6 +2309,78 @@ const TINT = {
     paint();
   }
 
+  /* ---------------- a build, carried between the tools ---------------- */
+  /*
+   * A build is a thing you want to show somebody, or take to the other tool,
+   * and neither is possible while it lives only in this browser's storage. So
+   * it goes in the address: the four items, what is on them, the class, what
+   * is being fought, and nothing else - no damage figure, no cost, nothing
+   * calculated. Whoever opens the link works it out again from the same
+   * declarations, which is the only way two tools can agree.
+   *
+   * Plain JSON in base64url. Not a secret, not signed, and never executed:
+   * every name in it is looked up in the catalogue and dropped if it is not
+   * there, so a link from a different build of the site degrades to whatever
+   * it can still resolve rather than to an error.
+   */
+  const SHARE_V = 1;
+
+  function packBuild(state) {
+    const gear = HANDS.map(([hand]) => {
+      const worn = state.gear[hand] || {};
+      if (!worn.name) return null;
+      return [worn.name, (worn.ench || []).map(id => {
+        const one = id && data.byEnch[id];
+        return one ? one.name : null;
+      })];
+    });
+    const say = {
+      v: SHARE_V, k: state.klass, g: gear, t: state.boss,
+      m: state.maxed ? 1 : 0, e: state.exalt ? 1 : 0
+    };
+    const raw = JSON.stringify(say);
+    // Base64url: an address can carry it, and nothing in it needs escaping.
+    return btoa(unescape(encodeURIComponent(raw)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function unpackBuild(token) {
+    let said = null;
+    try {
+      const raw = decodeURIComponent(escape(atob(
+        String(token).replace(/-/g, '+').replace(/_/g, '/'))));
+      said = JSON.parse(raw);
+    } catch (e) { return null; }
+    if (!said || said.v !== SHARE_V || !data.byClass[said.k]) return null;
+    const start = fresh(said.k);
+    start.maxed = said.m !== 0;
+    start.exalt = said.e !== 0;
+    if (data.byBoss[said.t]) start.boss = said.t;
+    HANDS.forEach(([hand], i) => {
+      const one = (said.g || [])[i];
+      if (!one || !data.byItem[one[0]]) return;
+      start.gear[hand] = {
+        name: one[0],
+        slots: 4,
+        ench: [0, 1, 2, 3].map(at => {
+          const name = (one[1] || [])[at];
+          const found = name && data.enchants.find(e => e.name === name);
+          return found ? found.id : null;
+        })
+      };
+    });
+    start.name = data.byClass[said.k].name + ' build';
+    return start;
+  }
+
+  /* Whatever build the address is carrying, if it is carrying one. */
+  function buildFromAddress() {
+    const at = String(location.hash || '').indexOf('build=');
+    if (at < 0) return null;
+    const token = String(location.hash).slice(at + 6).split('&')[0];
+    return token ? unpackBuild(token) : null;
+  }
+
   /* ---------------- tabs, kept the way the enchanter keeps them ---------------- */
 
   const STORE = 'rotmg.theorycraft.v1';
@@ -2459,6 +2534,41 @@ const TINT = {
       build.scope = scope.dataset.scope;
       keep(); paint();
     });
+    /*
+     * The other tool, with this item in it.
+     *
+     * Somebody who has just been told to put four enchantments on a weapon
+     * wants to know what that costs before they believe it, and that answer
+     * is one page away - so the item and everything on it go there rather
+     * than being typed in again.
+     */
+    el('tcBody').addEventListener('click', event => {
+      const take = event.target.closest('[data-take]');
+      if (!take) return;
+      const worn = build.gear[take.dataset.take];
+      if (!worn || !worn.name || typeof window.enchantThis !== 'function') return;
+      const held = rulesFor();
+      const wanted = [];
+      for (const id of worn.ench || []) {
+        const one = id && data.byEnch[id];
+        if (!one) continue;
+        // The calculator knows them by its own spelling; this is the same
+        // translation the search uses when it reads what is already on an item.
+        const bare = plainly(one.name);
+        let name = null;
+        for (const key of [one.name, one.name.replace(NUMERAL, '').trim()]) {
+          if (held && held.byName && held.byName.get(key)) { name = key; break; }
+        }
+        if (!name && held) {
+          for (const [other] of held.byName) {
+            if (plainly(other) === bare) { name = other; break; }
+          }
+        }
+        if (name) wanted.push(name);
+      }
+      window.enchantThis({ item: worn.name, slots: wanted });
+    });
+
     el('tcBody').addEventListener('click', event => {
       const back = event.target.closest('[data-unban]');
       if (!back) return;
@@ -2529,6 +2639,25 @@ const TINT = {
       el('tcPause').textContent = duel.on ? 'pause' : 'play';
     });
     el('tcAgain').addEventListener('click', resetDuel);
+    const link = el('tcShare');
+    if (link) {
+      link.addEventListener('click', () => {
+        const token = share();
+        if (!token) return;
+        const at = location.href.split('#')[0] + '#theory?build=' + token;
+        const said = word => { link.textContent = word;
+          setTimeout(() => { link.textContent = 'copy a link'; }, 2200); };
+        /*
+         * Written into the address whether or not the clipboard co-operates,
+         * so the link is always there to be copied by hand.
+         */
+        location.hash = 'theory?build=' + token;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(at).then(() => said('copied'), () => said('in the address bar'));
+        } else said('in the address bar');
+      });
+    }
+
     el('tcName').addEventListener('input', event => {
       build.name = event.target.value; keep(); drawTabs();
     });
@@ -2749,11 +2878,40 @@ const TINT = {
       for (const [key] of STATS) one.exalts[key] = exaltOf(key);
     }
     wire();
+    /*
+     * And a build carried in by the address wins over what was left here
+     * last time - somebody following a link came to see that build, not the
+     * one they were working on. It arrives as a new tab so it cannot take
+     * anybody's work away from them.
+     */
+    const shared = buildFromAddress();
+    if (shared) {
+      tabs.push(shared);
+      onTab = tabs.length - 1;
+      build = shared;
+      keep();
+    }
     paint();
     keepPainting();
   }
 
-  return { start };
+  /*
+   * The other tools ask for this by name: a build handed over as a token they
+   * can put in an address, and one taken back the same way.
+   */
+  function share() { return data && build ? packBuild(build) : ''; }
+  function open(token) {
+    if (!data) return false;
+    const got = unpackBuild(token);
+    if (!got) return false;
+    tabs.push(got);
+    onTab = tabs.length - 1;
+    build = got;
+    keep(); paint();
+    return true;
+  }
+
+  return { start, share, open };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryCraft;
