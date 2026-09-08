@@ -160,13 +160,18 @@ const RealmIndex = (function () {
    */
   function buildFacets() {
     groups = [];
-    const group = (title, from, note) => {
-      const made = { title, from, note, chips: [], open: false };
+    /*
+     * `inSub` marks a group that belongs in the middle column rather than the
+     * rail: the same machinery counts and narrows it, it is simply drawn where
+     * the reader has already said what family they are after.
+     */
+    const group = (title, from, note, inSub) => {
+      const made = { title, from, note, inSub, chips: [], open: false };
       groups.push(made);
       return made;
     };
-    const chip = (into, key, say, ids) => {
-      if (ids.size) into.chips.push({ key: into.title + '/' + key, say, ids });
+    const chip = (into, key, say, ids, pic) => {
+      if (ids.size) into.chips.push({ key: into.title + '/' + key, say, ids, pic });
     };
     const gather = test => {
       const ids = new Set();
@@ -181,13 +186,20 @@ const RealmIndex = (function () {
       const wants = new Set(one.slots || []);
       const ids = gather(x => x.id === one.id
         || (x.kind === 'item' && wants.has(x.slot)));
-      chip(byClass, one.name, one.name, ids);
+      chip(byClass, one.name, one.name, ids, one.id);
     }
 
-    const byHand = group('Hand', 'client');
+    const byHand = group('Gears', 'client');
     for (const [hand, say] of [['weapon', 'Weapon'], ['ability', 'Ability'],
       ['armor', 'Armour'], ['ring', 'Ring']]) {
-      chip(byHand, hand, say, gather(x => x.hand === hand));
+      /* Pictured by the plainest of its kind, the way the finer ones are. */
+      let plainest = null;
+      for (const one of all.values()) {
+        if (one.kind !== 'item' || one.hand !== hand || one.hidden || !one.art) continue;
+        if (one.tier === undefined) continue;
+        if (!plainest || one.tier < plainest.tier) plainest = one;
+      }
+      chip(byHand, hand, say, gather(x => x.hand === hand), plainest && plainest.id);
     }
 
     /*
@@ -195,7 +207,12 @@ const RealmIndex = (function () {
      * quivers, leather. It is what a class card names, so a reader who taps
      * Bow there lands on the same chip here.
      */
-    const byType = group('Kind of gear', 'client');
+    /*
+     * The finer division waits for the coarse one. Twenty-nine kinds of gear
+     * in the rail is a wall to read before choosing anything; four slots and
+     * then the kinds that slot holds is one question after another.
+     */
+    const byType = group('Kind of gear', 'client', undefined, true);
     for (const slot of Object.keys(all.slots)) {
       chip(byType, 'slot' + slot, all.slots[slot][0],
         gather(x => x.kind === 'item' && String(x.slot) === slot));
@@ -263,7 +280,9 @@ const RealmIndex = (function () {
       }
       if (fromThere.size) {
         const out = group('Dungeon', 'wiki', 'what players list it as dropping');
-        for (const [one, gives] of fromThere) chip(out, one.name, one.said || one.name, gives);
+        for (const [one, gives] of fromThere) {
+          chip(out, one.name, one.said || one.name, gives, one.id);
+        }
       }
     }
 
@@ -409,6 +428,25 @@ const RealmIndex = (function () {
     return page;
   }
 
+  /* Everything the rail touches, redrawn in one go. */
+  function repaint() {
+    narrow();
+    /*
+     * One step at a time. Nothing chosen and the rail is the page; something
+     * chosen and it folds down to what was chosen, and the list has the room.
+     */
+    const picked = narrowed.length > 0 || Boolean(kindWanted);
+    if (picked) for (const one of groups) one.open = false;
+    else if (groups[0]) groups[0].open = true;
+    const body = el('ixBody');
+    if (body) body.classList.toggle('has-pick', picked);
+    drawKinds();
+    drawTypes();
+    drawChosen();
+    drawFacets();
+    drawResults();
+  }
+
   function drawResults() {
     const box = el('ixList');
     if (!box) return;
@@ -427,10 +465,51 @@ const RealmIndex = (function () {
       + '</button>').join('') || '<p class="ix-none">Nothing by that name.</p>';
   }
 
+  /*
+   * The middle column's second row: the kinds of gear, once the reader has
+   * said they are looking at gear. Shown when a family, a hand or a class has
+   * been chosen and gear survives it - never as a wall of twenty-nine.
+   */
+  function drawTypes() {
+    const box = el('ixTypes');
+    if (!box) return;
+    const set = groups.find(one => one.inSub);
+    const asked = kindWanted === 'item'
+      || (set && set.chips.some(chip => chip.on))
+      || groups.some(one => (one.title === 'Gears' || one.title === 'Class')
+        && one.chips.some(chip => chip.on));
+    const chips = set ? set.chips.filter(x => x.on || x.here > 0) : [];
+    if (!set || !asked || !chips.length) { box.innerHTML = ''; box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = chips.map(x => '<button type="button" class="ix-chip is-item'
+      + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
+      + esc(x.say) + '<i>' + x.here.toLocaleString('en-US') + '</i></button>').join('');
+  }
+
+  /*
+   * What has been chosen, once something has.
+   *
+   * The rail is a long thing to read, and past the first choice the reader is
+   * no longer reading it - they are looking at the list. So the groups fold
+   * away and what is left is the choices themselves, each one a button that
+   * takes itself back off.
+   */
+  function drawChosen() {
+    const box = el('ixChosen');
+    if (!box) return;
+    const on = [];
+    for (const set of groups) for (const chip of set.chips) if (chip.on) on.push(chip);
+    if (!on.length) { box.innerHTML = ''; box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = on.map(x => '<button type="button" class="ix-chosen"'
+      + ' data-facet="' + esc(x.key) + '" title="Take this one off">'
+      + (x.pic ? art(all.get(x.pic), 13) : '') + esc(x.say) + '<u>&times;</u></button>').join('');
+  }
+
   function drawFacets() {
     const box = el('ixFacets');
     if (!box) return;
-    box.innerHTML = groups.map((one, at) =>
+    box.innerHTML = groups.map((one, at) => (one.inSub ? '' :
       '<section class="ix-group' + (one.open ? ' is-open' : '')
       + '" data-group="' + at + '">'
       + '<button type="button" class="ix-group-head" data-fold="' + at + '">'
@@ -443,10 +522,11 @@ const RealmIndex = (function () {
       + one.chips.filter(x => x.on || x.here === undefined || x.here > 0)
         .map(x => '<button type="button" class="ix-facet'
           + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
+          + (x.pic ? art(all.get(x.pic), 13) : '')
           + esc(x.say) + '<i>'
           + (x.here === undefined ? x.ids.size : x.here).toLocaleString('en-US')
           + '</i></button>').join('')
-      + '</div></section>').join('');
+      + '</div></section>')).join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
     const clear = el('ixClear');
     if (clear) clear.hidden = !on;
@@ -754,38 +834,33 @@ const RealmIndex = (function () {
       const chip = event.target.closest('[data-kind]');
       if (!chip) return;
       kindWanted = chip.dataset.kind === kindWanted ? '' : chip.dataset.kind;
-      narrow();
-      drawKinds();
-      drawFacets();
-      drawResults();
+      repaint();
     });
     el('ixFacets').addEventListener('click', event => {
       const fold = event.target.closest('[data-fold]');
-      if (fold) {
-        const one = groups[Number(fold.dataset.fold)];
-        one.open = !one.open;
-        fold.parentElement.classList.toggle('is-open', one.open);
-        return;
-      }
-      const hit = event.target.closest('[data-facet]');
-      if (!hit) return;
-      for (const one of groups) {
-        for (const chip of one.chips) if (chip.key === hit.dataset.facet) chip.on = !chip.on;
-      }
-      narrow();
-      drawKinds();
-      drawFacets();
-      drawResults();
+      if (!fold) return;
+      const one = groups[Number(fold.dataset.fold)];
+      one.open = !one.open;
+      fold.parentElement.classList.toggle('is-open', one.open);
     });
     el('ixClear').addEventListener('click', () => {
       for (const one of groups) for (const chip of one.chips) chip.on = false;
       kindWanted = '';
-      narrow();
-      drawKinds();
-      drawFacets();
-      drawResults();
+      repaint();
     });
     document.getElementById('pageIndex').addEventListener('click', event => {
+      /*
+       * One listener for every chip, because they are drawn in two places now
+       * and a chip is the same thing wherever it sits.
+       */
+      const hit = event.target.closest('[data-facet]');
+      if (hit) {
+        for (const one of groups) {
+          for (const chip of one.chips) if (chip.key === hit.dataset.facet) chip.on = !chip.on;
+        }
+        repaint();
+        return;
+      }
       const want = event.target.closest('[data-slot]');
       if (want) {
         for (const set of groups) {
@@ -794,9 +869,7 @@ const RealmIndex = (function () {
           }
           if (set.title === 'Kind of gear') set.open = true;
         }
-        narrow();
-        drawFacets();
-        drawResults();
+        repaint();
         return;
       }
       const open = event.target.closest('[data-open]');
@@ -870,6 +943,8 @@ const RealmIndex = (function () {
     narrow();
     wire();
     drawKinds();
+    drawTypes();
+    drawChosen();
     drawFacets();
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built
