@@ -724,6 +724,109 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       && !out[one.name]);
   }
 
+  /* ---------------- what the search need not try ---------------- *
+   *
+   * The search spends its time where the choices are, and the choices are not
+   * where they look. Counted on one class: five hundred and forty-two pieces
+   * of gear to try against a thousand and sixteen enchantments, which comes
+   * out at eight per cent of the work on what you wear and ninety-two on what
+   * is rolled onto it.
+   *
+   * Both lists carry things that cannot win. An enchantment or an item that
+   * is worse than another one on every count the page measures, and better on
+   * none, will never be chosen however the shares are set - so trying it is
+   * work with a known answer.
+   *
+   * The care is all in "on every count". Two traps, both found by measuring
+   * rather than by thinking about it:
+   *
+   * The tiers of a thing are not a ladder. Attack -Defense Tradeoff IV gives
+   * more attack than II and loses more defence for it, which makes it a
+   * different bargain and not a better one - of eight hundred and twelve
+   * tiered enchantments, four hundred and forty-one are genuinely beaten by
+   * their own top tier and a hundred and sixty-eight are trades that have to
+   * stay. The same is true of gear: the T2 Spiral Shuriken hits harder than
+   * the T10, and the T5 Ice Star carries nine vitality the T10 has not.
+   *
+   * And anything whose worth is not in its own numbers is left alone
+   * entirely. A weak piece can be the second half of a set, a share of
+   * another statistic, or an effect the page does not model, and none of
+   * those show up in a comparison of what it wears.
+   */
+  const COUNTS = ['ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS', 'MAXHP', 'MAXMP'];
+  const stat = (one, key) => (one && one.worn && one.worn[key]) || 0;
+  // Worth more than its own statistics: not comparable, so not dropped.
+  const deeper = one => !!(one.set || one.share || one.rel || one.sub || one.mul
+    || one.heal || one.alters || one.does || one.cast || one.many || one.burst);
+
+  let beaten = null;
+  function beatenOnes() {
+    if (beaten) return beaten;
+    beaten = { ench: new Set(), gear: new Set() };
+
+    /*
+     * Enchantments, within one family: same identifier but for the tier on
+     * the end, so the four Attack -Defense Tradeoffs are compared with each
+     * other and with nothing else.
+     */
+    const family = new Map();
+    for (const one of data.enchants || []) {
+      const stem = String(one.id).replace(/_[1-4]$/, '');
+      if (stem === String(one.id)) continue;              // not a tiered one
+      if (!family.has(stem)) family.set(stem, []);
+      family.get(stem).push(one);
+    }
+    for (const kin of family.values()) {
+      if (kin.length < 2) continue;
+      for (const one of kin) {
+        if (deeper(one)) continue;
+        if (kin.some(other => other !== one && !deeper(other)
+          && COUNTS.every(key => stat(other, key) >= stat(one, key))
+          && COUNTS.some(key => stat(other, key) > stat(one, key)))) {
+          beaten.ench.add(one.id);
+        }
+      }
+    }
+
+    /* Gear, within one hand and one slot, on its statistics and its shot. */
+    const hurt = one => (one.shots && one.shots[0])
+      ? (one.shots[0].low + (one.shots[0].high === undefined
+        ? one.shots[0].low : one.shots[0].high)) / 2 : 0;
+    const far = one => (one.shots && one.shots[0] && one.shots[0].reach) || 0;
+    const shelf = new Map();
+    for (const one of data.items) {
+      const key = one.hand + '/' + one.slot;
+      if (!shelf.has(key)) shelf.set(key, []);
+      shelf.get(key).push(one);
+    }
+    for (const kin of shelf.values()) {
+      for (const one of kin) {
+        if (deeper(one)) continue;
+        if (kin.some(other => other !== one && !deeper(other)
+          && COUNTS.every(key => stat(other, key) >= stat(one, key))
+          && hurt(other) >= hurt(one) && far(other) >= far(one)
+          && (other.mp || 0) <= (one.mp || 0)
+          && (COUNTS.some(key => stat(other, key) > stat(one, key))
+            || hurt(other) > hurt(one)))) {
+          beaten.gear.add(one.name);
+        }
+      }
+    }
+    return beaten;
+  }
+
+  /*
+   * The same two lists, for the search only.
+   *
+   * The reader's own picker goes on offering everything: a thing that cannot
+   * win a search is still a thing somebody may want to put on and look at,
+   * and hiding it would be answering a question nobody asked.
+   */
+  const searchItems = (hand, klass) =>
+    itemsFor(hand, klass).filter(one => !beatenOnes().gear.has(one.name));
+  const searchEnchants = (name, already, at) =>
+    enchantsFor(name, already, at).filter(one => !beatenOnes().ench.has(one.id));
+
   /* ---------------- the optimiser ---------------- */
 
   /*
@@ -1094,7 +1197,7 @@ const TINT = {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of itemsFor(hand, work.klass)) {
+        for (const one of searchItems(hand, work.klass)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
@@ -1125,7 +1228,7 @@ const TINT = {
           if (trial.locked[hand]) continue;
           let best = null, mark = -Infinity;
           const mine = new Set(kit.pieces);
-          for (const one of itemsFor(hand, trial.klass)) {
+          for (const one of searchItems(hand, trial.klass)) {
             if (!mine.has(one.name)) continue;
             const was = trial.gear[hand].name;
             trial.gear[hand].name = one.name;
@@ -1191,7 +1294,7 @@ const TINT = {
           let best = was;
           let bestScore = score;
           let bestWorth = worth(data.byEnch[was]);
-          for (const one of enchantsFor(worn.name, worn.ench, at)) {
+          for (const one of searchEnchants(worn.name, worn.ench, at)) {
             // Anything this page can count: a statistic, a scaling of the
             // weapon, or something that keeps you alive. The rest change the
             // shot in ways it does not model.
@@ -1221,7 +1324,7 @@ const TINT = {
            */
           if (!best && fills) {
             let common = null;
-            for (const one of enchantsFor(worn.name, worn.ench, at)) {
+            for (const one of searchEnchants(worn.name, worn.ench, at)) {
               // Loot and dust bonuses are rolled for the bag, not for the
               // fight, so they are the last thing to put in a fighting slot.
               const spoils = (one.labels || '').includes('REWARD');
