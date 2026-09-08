@@ -327,6 +327,8 @@ for (const one of objects) {
   if (labels.includes('EFFECT')) hidden.push('an effect, not a thing worn');
   if (/(^|\s)(test|tester|testing|testiken)/i.test(one.id)) hidden.push('a test item');
   if (/\bProc\b/i.test(one.id)) hidden.push('the machinery behind a proc');
+  /* Long Sword 1Rarity through 4Rarity: four copies for showing off a frame. */
+  if (/\d+Rarity$/.test(one.id)) hidden.push('a swatch for drawing a rarity frame');
   if (!hand) hidden.push('a slot no class uses');
   const record = put('item', nameOf(one), one, {
     slot, hand,
