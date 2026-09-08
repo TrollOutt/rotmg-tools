@@ -1538,37 +1538,6 @@ const TINT = {
    * The bench draws a straight line, which is honest arithmetic for the
    * damage and a lie about the flight, so it says which.
    */
-  function drawFlight() {
-    const note = el('tcFlight');
-    if (!note) return;
-    const said = [];
-    {
-      const item = data.byItem[(build.gear.weapon || {}).name];
-      const how = item && item.shots && item.shots[0] && item.shots[0].moves;
-      /*
-       * Weaving is drawn now, from the amplitude and the frequency the
-       * client states, so it has come off the list of things this frame is
-       * not showing you.
-       */
-      const left = (how || '').split(', ').filter(one => one && one !== 'weaving');
-      if (left.length) said.push(item.name + ' - ' + left.join(', '));
-    }
-    /*
-     * And the frame says what it is, always.
-     *
-     * It fires at the rate the weapon fires, in the runs it fires them in,
-     * with the bolt it actually throws - but it is a bench, not the game.
-     * Nobody is dodging, the target does not move or shoot back, and a
-     * handful of shots travel a path the client states the parameters of
-     * without stating the arithmetic. Somebody reading a number off this
-     * frame should know which of the two they are looking at.
-     */
-    note.hidden = false;
-    note.textContent = 'A test bench, not the game: nothing dodges, nothing '
-      + 'shoots back, and every shot is drawn flying straight'
-      + (said.length ? ' - in the game: ' + said.join('; ') : '') + '.';
-  }
-
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -2437,7 +2406,6 @@ const TINT = {
     drawSlots();
     drawStats();
     drawNumbers();
-    drawFlight();
     resetDuel();
     drawDuel();
   }
