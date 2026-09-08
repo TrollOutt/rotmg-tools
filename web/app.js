@@ -773,6 +773,24 @@ window.openEnchantPicker = function (options) {
 window.enchantRules = () => state.data;
 
 /*
+ * A thing handed over from the index to the bench: an item into the slot it
+ * belongs in, a class as the class, an enemy as the thing being fought. The
+ * bench decides what it can use; anything it cannot is ignored.
+ */
+window.benchWith = function (said) {
+  if (!said || typeof TheoryCraft === 'undefined') return false;
+  location.hash = 'theory';
+  routeFromHash();
+  // The page reads its data on first opening, so the hand-over waits for it.
+  const tryIt = (left) => {
+    if (typeof TheoryCraft.put === 'function' && TheoryCraft.put(said)) return;
+    if (left > 0) setTimeout(() => tryIt(left - 1), 120);
+  };
+  tryIt(40);
+  return true;
+};
+
+/*
  * An item handed over from the bench.
  *
  * Somebody who has just been told to put four enchantments on a weapon wants
@@ -2757,7 +2775,7 @@ async function load() {
  * and 'realm' means the way in with that frame opened out.
  */
 const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame',
-  news: 'pageNews', theory: 'pageTheory' };
+  news: 'pageNews', theory: 'pageTheory', index: 'pageIndex' };
 
 /*
  * Pointed at the atlas once, and not before the way in has painted.
@@ -3036,6 +3054,12 @@ function showPage(name) {
    * asked for, and nobody who came for the enchanter pays for it.
    */
   if (page === 'theory' && typeof TheoryCraft !== 'undefined') TheoryCraft.start();
+  /*
+   * And the index, which is three and a half megabytes of records: it is read
+   * the first time somebody asks for it and not a moment before, the same way
+   * the other two heavy pages are.
+   */
+  if (page === 'index' && typeof RealmIndex !== 'undefined') RealmIndex.start();
   /*
    * The frame is asked for while the browser is idle, and only on the page
    * that holds it. Anything else that was open is put away.

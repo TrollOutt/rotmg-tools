@@ -2911,7 +2911,39 @@ const TINT = {
     return true;
   }
 
-  return { start, share, open };
+  /*
+   * Something handed over from the index.
+   *
+   * An item goes into the slot the client gives it, a class becomes the
+   * class, an enemy becomes the thing being fought - and each of those is
+   * checked against this page's own catalogue rather than trusted, since the
+   * index holds things this page deliberately does not offer.
+   */
+  function put(said) {
+    if (!data || !build || !said) return false;
+    let moved = false;
+    if (said.klass && data.byClass[said.klass] && said.klass !== build.klass) {
+      const start = fresh(said.klass);
+      start.name = start.klass + ' build';
+      tabs.push(start);
+      onTab = tabs.length - 1;
+      build = start;
+      moved = true;
+    }
+    if (said.item && data.byItem[said.item]) {
+      const item = data.byItem[said.item];
+      const hand = item.hand;
+      if (hand && build.gear[hand]) {
+        build.gear[hand] = { name: item.name, slots: 4, ench: [null, null, null, null] };
+        moved = true;
+      }
+    }
+    if (said.target && data.byBoss[said.target]) { build.boss = said.target; moved = true; }
+    if (moved) { keep(); paint(); }
+    return moved;
+  }
+
+  return { start, share, open, put };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryCraft;

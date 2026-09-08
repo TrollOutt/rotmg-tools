@@ -116,6 +116,14 @@ const sources = {
   // Every class, item, enchantment, set and thing worth hitting, as taken out
   // of the installed client by tools/build-theorycraft.js.
   theoryText: readText('TheoryCraft', 'theorycraft.json'),
+  /*
+   * And the index, which is what every other page's list is a subset of. It
+   * is three and a half megabytes - a third of it the joins - so the offline
+   * copy carries it and the served page fetches it only when somebody opens
+   * that page. One file that works with no server is the whole point of the
+   * offline copy; a page in it that cannot answer is worse than the weight.
+   */
+  indexText: readText('Index', 'index.json'),
 };
 
 /* ---------------------------------------------------------------- *
@@ -331,6 +339,7 @@ const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
 const theorySource = readWeb('theorycraft.js');
+const indexSource = readWeb('index-page.js');
 const whatsNewSource = readWeb('whats-new.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
@@ -413,7 +422,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -437,11 +446,23 @@ const built = new Date().toISOString().slice(0, 10);
 const changesPath = path.join(dataRoot, 'client-changes.txt');
 const changes = fs.existsSync(changesPath) ? fs.readFileSync(changesPath, 'utf8') : '';
 
-page = page
+/*
+ * Two copies, one difference.
+ *
+ * The served page leaves the index outside itself and fetches it from
+ * assets/ if somebody opens that page; the file you download to keep
+ * carries it inside, because a kept file that cannot answer without a
+ * server is not a kept file. The same three and a half megabytes either
+ * way - the question is only who pays for it, and when.
+ */
+const served = Object.assign({}, sources);
+delete served.indexText;
+
+const dress = (bundleSources) => readWeb('index.html')
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources, assets, itemSprites, whatsNew,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemSprites, whatsNew,
       theorySheet })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
@@ -449,9 +470,13 @@ page = page
     `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(whatsNewSource)}\n</script>`,
     `<script>\n${safe(theorySource)}\n</script>`,
+    `<script>\n${safe(indexSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);
+
+page = dress(served);
+const kept = dress(sources);
 
 // Refuse before writing, so a failed build never leaves a broken artifact
 // behind for someone to pick up and ship.
@@ -464,7 +489,7 @@ if (missing.length) {
 
 fs.mkdirSync(pagesDir, { recursive: true });
 fs.writeFileSync(outFile, page, 'utf8');
-fs.writeFileSync(path.join(pagesDir, 'Realm-Tools.html'), page, 'utf8');
+fs.writeFileSync(path.join(pagesDir, 'Realm-Tools.html'), kept, 'utf8');
 // Without this GitHub Pages runs Jekyll over the folder, which ignores files
 // and folders starting with an underscore and rewrites some content.
 fs.writeFileSync(path.join(pagesDir, '.nojekyll'), '');
@@ -483,6 +508,15 @@ console.log(`  realm   ${Object.keys(realmMonsterSprites).length} client sprites
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');
 const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDir, 'assets', 'atlas'));
+/*
+ * And the index, which the served page fetches rather than carries. It is the
+ * one thing on the site that lives beside the page instead of inside it.
+ */
+const indexed = carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+if (indexed.copied) {
+  console.log('  index   ' + kb(fs.statSync(path.join(pagesDir, 'assets', 'index', 'index.json')).size)
+    + ' beside the page, fetched only when that page is opened');
+}
 if (carried.copied || carried.dropped) {
   console.log(`  atlas   ${carried.copied} files copied to docs/assets/atlas`
     + (carried.dropped ? `, ${carried.dropped} no longer there removed` : ''));
