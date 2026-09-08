@@ -2914,8 +2914,18 @@ body.globe-wide .home-card-art { animation: none !important; }
 }
 .ix-facet:hover { color: var(--text); border-color: var(--line); }
 .ix-facet > span {
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/*
+ * A chosen chip carries its own way off. The room is always there so the word
+ * beside it never moves; only the cross fades in under the pointer.
+ */
+.ix-off {
+  flex: none; text-decoration: none; font-size: calc(var(--ix-fs) * .95);
+  line-height: 1; opacity: 0; transition: opacity .15s ease;
+}
+.ix-facet.is-on:hover .ix-off, .ix-facet.is-on:focus-visible .ix-off { opacity: .75; }
+.ix-facet.is-on:hover { filter: brightness(1.08); }
 .ix-facet .ix-art { flex: none; }
 .ix-facet i { font-style: normal; font-size: 9.5px; color: var(--dim); }
 .ix-facet.is-on {

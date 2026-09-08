@@ -357,7 +357,7 @@ const RealmIndex = (function () {
   }
 
   /* The sets a record has to be in to survive the rail, one per group in play. */
-  function narrow() {
+  function gather() {
     narrowed = [];
     for (const one of groups) {
       const on = one.chips.filter(x => x.on);
@@ -367,6 +367,27 @@ const RealmIndex = (function () {
       narrowed.push({ group: one, set: any });
     }
     refine();
+  }
+
+  function narrow() {
+    gather();
+    /*
+     * A sub category belongs to the category above it. Take Weapon off and the
+     * Bow chosen under it is still down, holding a filter that nothing can
+     * satisfy - which is how the list came to say "0 things" with a chip lit
+     * beside it. Any sub-category choice left with nothing behind it lets go.
+     */
+    let letGo = false;
+    for (const one of groups) {
+      if (!one.inSub) continue;
+      for (const chip of one.chips) {
+        if (chip.on && chip.here === 0) { chip.on = false; letGo = true; }
+      }
+    }
+    if (letGo) {
+      asked = asked.filter(chip => chip.on);
+      gather();
+    }
   }
 
   /*
@@ -533,6 +554,20 @@ const RealmIndex = (function () {
       }
       chip.on = false;
       asked = asked.filter(one => one !== chip);
+      /*
+       * A sub category is offered because of the category above it, so it goes
+       * when that goes. The kinds of gear are a division of the slots: drop
+       * Weapon and the Bow picked underneath it has nothing left to be a
+       * division of, whether or not it would still match anything on its own.
+       */
+      const mine = groups.find(one => one.chips.includes(chip));
+      if (mine && mine.title === 'Gears') {
+        for (const one of groups) {
+          if (!one.inSub) continue;
+          for (const under of one.chips) under.on = false;
+        }
+        asked = asked.filter(one => one.on);
+      }
       return;
     }
     chip.on = true;
@@ -641,8 +676,17 @@ const RealmIndex = (function () {
   function drawChosen() {
     const box = el('ixChosen');
     if (!box) return;
+    /*
+     * Categories only. A kind of gear is chosen in the middle column and is
+     * shown down there, lit, where it was picked; repeating it up here put a
+     * sub category among the categories and gave it two places to be taken
+     * off from.
+     */
     const on = [];
-    for (const set of groups) for (const chip of set.chips) if (chip.on) on.push(chip);
+    for (const set of groups) {
+      if (set.inSub) continue;
+      for (const chip of set.chips) if (chip.on) on.push(chip);
+    }
     if (!on.length) { box.innerHTML = ''; box.hidden = true; return; }
     box.hidden = false;
     /* Each carries the colour of the group it came from, so a chip up here is
@@ -716,7 +760,10 @@ const RealmIndex = (function () {
           + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '"'
           + ' title="' + esc(x.say) + '">'
           + (x.pic ? art(all.get(x.pic), 13) : '')
-          + '<span>' + esc(x.say) + '</span></button>').join('')
+          + '<span>' + esc(x.say) + '</span>'
+          /* The way off, shown when the pointer is on it. */
+          + (x.on ? '<u class="ix-off">&times;</u>' : '')
+          + '</button>').join('')
       + '</div></div></section>';
     }).join('');
     const on = groups.reduce((n, one) => n + one.chips.filter(x => x.on).length, 0);
