@@ -341,6 +341,43 @@ for (const it of gear) {
   }
 }
 
+/*
+ * Telling apart the ones that share a name.
+ *
+ * Three things called Doom Bow in a list of four is a list nobody can use, so
+ * where a name is claimed more than once every claimant says what makes it
+ * itself. The words come from the client's own working name, which is where
+ * the difference is written: "Doom Bow Shiny" and "Retro Doom Bow" against a
+ * plain "Doom Bow" give Shiny and Retro. Whichever one is filed under exactly
+ * its own display name is the plain one and keeps the bare name.
+ */
+{
+  const groups = new Map();
+  for (const one of records.values()) {
+    const key = one.kind + ':' + one.name;
+    (groups.get(key) || groups.set(key, []).get(key)).push(one);
+  }
+  let told = 0;
+  for (const [, group] of groups) {
+    if (group.length < 2) continue;
+    for (const one of group) {
+      if (!one.alias) continue;                    // the plain one keeps the name
+      /*
+       * What the working name adds to the shown name, in the order the client
+       * wrote it - a leading "Retro", a trailing "Shiny" - and the whole
+       * working name where the two have nothing in common.
+       */
+      const said = one.name.toLowerCase().split(/\s+/);
+      const extra = one.alias.split(/\s+/)
+        .filter(word => !said.includes(word.toLowerCase()))
+        .join(' ');
+      one.said = one.name + ' (' + (extra || one.alias) + ')';
+      told++;
+    }
+  }
+  if (told) console.log('  ' + told + ' told apart by what their working name adds');
+}
+
 /* ---------------- the links, from both ends ---------------- */
 const out = new Map(), back = new Map();
 for (const one of links) {
@@ -373,7 +410,7 @@ fs.copyFileSync(path.join(OUT, 'index.json'), path.join(SERVED, 'index.json'));
 
 /* And the light list, which is what a search box needs and nothing more. */
 fs.writeFileSync(path.join(OUT, 'search.json'), JSON.stringify(all.map(one => [
-  one.id, one.name, one.kind, one.alias || '', one.hidden ? 1 : 0
+  one.id, one.said || one.name, one.kind, one.alias || '', one.hidden ? 1 : 0
 ])) + '\n');
 
 const tally = all.reduce((got, one) => {

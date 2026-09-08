@@ -1,6 +1,6 @@
 # Realm Tools
 
-Four things for Realm of the Mad God, read out of the game's own files.
+Five things for Realm of the Mad God, read out of the game's own files.
 
 **→ [trolloutt.github.io/rotmg-tools](https://trolloutt.github.io/rotmg-tools/)** — opens in your browser, nothing to install.
 
@@ -16,6 +16,10 @@ the collection bonuses have paid and where to go next.
 
 **Realm Atlas** — the realm as a planet you can turn, built from ground that
 was actually walked.
+
+**Index** — every item, creature, class, set and enchantment the game
+declares, with its picture cut from the client, where it came from, and what it
+is joined to. Search it, then step from one thing to the next.
 
 Want it offline? [`docs/Realm-Tools.html`](docs/Realm-Tools.html)
 is a single file — download it, double-click it, done.

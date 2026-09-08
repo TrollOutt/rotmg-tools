@@ -20,6 +20,26 @@ const RealmIndex = (function () {
   let kindWanted = '';               // the category chip that is down
 
   const el = id => document.getElementById(id);
+
+  /*
+   * A window onto the one sheet, at whatever size is asked for, with the
+   * picture's own shape kept: a creature sixteen wide and eight tall is not
+   * squared off into a box.
+   */
+  function art(one, side) {
+    if (!one || !one.art || !all.sheet) return '';
+    const [x, y, w, h] = one.art;
+    const zoom = side / Math.max(w, h);
+    return '<span class="ix-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
+      + 'px;background-size:' + (all.sheet.wide * zoom) + 'px ' + (all.sheet.tall * zoom)
+      + 'px;background-position:' + (-x * zoom) + 'px ' + (-y * zoom) + 'px"></span>';
+  }
+
+  /* The room a picture takes in a row, whether or not there is one to show. */
+  function artCell(one, side) {
+    return '<span class="ix-cell" style="width:' + side + 'px;height:' + side + 'px">'
+      + art(one, side) + '</span>';
+  }
   const esc = s => String(s === undefined || s === null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
@@ -64,6 +84,13 @@ const RealmIndex = (function () {
       one.outLinks = one.out || [];
       one.inLinks = one.in || [];
     }
+    /*
+     * One sheet holds every picture, cut from the client by
+     * tools/index-sprites.js, and each record carries its rectangle in it.
+     * The client's own art is the only art that settles which of three things
+     * called Doom Bow is the one in your hand.
+     */
+    all.sheet = said.sheet;
     all.files = said.files || [];
     all.built = said.built;
     all.count = said.records.length;
@@ -109,6 +136,7 @@ const RealmIndex = (function () {
     box.innerHTML = rows.map(one =>
       '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
       + '" data-open="' + esc(one[0]) + '">'
+      + artCell(all.get(one[0]), 20)
       + '<b>' + esc(one[1]) + '</b>'
       + '<i class="ix-kind is-' + one[2] + '">' + esc(KIND_SAY[one[2]] || one[2]) + '</i>'
       + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
@@ -195,8 +223,9 @@ const RealmIndex = (function () {
       : 'not declared in the client';
 
     box.innerHTML = '<header class="ix-card-head">'
+      + artCell(one, 44)
       + '<span class="ix-kind is-' + one.kind + '">' + esc(KIND_SAY[one.kind] || one.kind) + '</span>'
-      + '<h3>' + esc(one.name) + '</h3>'
+      + '<h3>' + esc(one.said || one.name) + '</h3>'
       + (one.alias ? '<code>' + esc(one.alias) + '</code>' : '')
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
@@ -251,7 +280,7 @@ const RealmIndex = (function () {
         + ids.slice(0, 40).map(id => {
           const one = all.get(id);
           return '<button type="button" class="ix-jump" data-open="' + esc(id) + '">'
-            + esc(one ? one.name : id) + '</button>';
+            + art(one, 14) + esc(one ? (one.said || one.name) : id) + '</button>';
         }).join('')
         + (ids.length > 40 ? '<em>and ' + (ids.length - 40) + ' more</em>' : '')
         + '</span></div>';
@@ -326,6 +355,12 @@ const RealmIndex = (function () {
       return;
     }
     started = true;
+    // The sheet's address, once, for every picture on the page to point at.
+    {
+      const bundle = window.ROTMG_BUNDLE;
+      el('ixBody').style.setProperty('--ix-sheet', 'url('
+        + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
+    }
     fillKinds();
     wire();
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
