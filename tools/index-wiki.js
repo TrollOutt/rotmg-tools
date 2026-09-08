@@ -156,6 +156,8 @@ const READS = {
     || (from === 'unknown' && to === 'foe')
 };
 
+const near = [];
+
 /*
  * And the ones the client gives no number.
  *
@@ -178,16 +180,85 @@ const READS = {
     if (!byTitle.has(key)) byTitle.set(key, []);
     byTitle.get(key).push(id);
   }
+  /*
+   * And the wiki does not always spell a set the way the client does. It calls
+   * the Corrupted Paladin "Corrupted Paladin Set" and the four Paths
+   * "Path of the Magus Engraving"; the client leaves the noun off. So the name
+   * is tried with and without the words the wiki habitually adds, still on the
+   * condition that exactly one page answers.
+   */
+  const TRIES = [
+    name => name,
+    name => name + ' set',
+    name => name.replace(/ set$/, ''),
+    name => name + ' engraving',
+    name => name + ' gear'
+  ];
   let told = 0;
+  const stillLoose = [];
   for (const one of facts.records) {
     if (one.kind !== 'set' && one.kind !== 'place') continue;
-    const found = byTitle.get(norm(one.name)) || [];
-    if (found.length !== 1) continue;
-    const page = found[0];
+    let page = null;
+    for (const shape of TRIES) {
+      const found = byTitle.get(shape(norm(one.name))) || [];
+      if (found.length === 1) { page = found[0]; break; }
+    }
+    if (!page) { if (one.kind === 'set') stillLoose.push(one); continue; }
     if (!about.has(page)) about.set(page, []);
     if (!about.get(page).includes(one.id)) { about.get(page).push(one.id); told++; }
   }
   if (told) console.log('  ' + told + ' sets and places matched by name, having no number to match on');
+  /*
+   * And where a set has no page at all, the way a player would find one:
+   * open one of its pieces and see what the piece points at. Every piece of
+   * the Oryxmas Miracle Set links to "Oryxmas Gear", every Venerable piece to
+   * "Venerable Gear" - the wiki files those sets under the family rather than
+   * one page each.
+   *
+   * That is not the set's own page, so it is kept apart as `near` and the card
+   * names it rather than pretending. A candidate has to be linked from the
+   * body of nearly every piece and share a word with the set, or "Enchanting"
+   * and "Forge" - which every piece links to - would win every time.
+   */
+  const DULL = new Set(['set', 'sets', 'gear', 'the', 'of', 'a', 'i', 'ii', 'iii', 'and']);
+  for (const one of stillLoose) {
+    const pieces = (one.out || []).filter(([how]) => how === 'made of').map(([, to]) => to);
+    const mine = new Set(norm(one.name).split(' ').filter(word => !DULL.has(word)));
+    if (!mine.size || pieces.length < 3) continue;
+    const tally = new Map();
+    let looked = 0;
+    for (const piece of pieces) {
+      const where = [...about].find(([, ids]) => ids.includes(piece));
+      if (!where) continue;
+      looked++;
+      const row = search.find(x => x.id === where[0]);
+      if (!row) continue;
+      const raw = JSON.parse(fs.readFileSync(path.join(BUNDLE, row.file), 'utf8'));
+      const here = new Set();
+      for (const link of raw.links || []) {
+        if (link.region !== 'content' || !link.targetId) continue;
+        here.add(link.targetId);
+      }
+      for (const id of here) tally.set(id, (tally.get(id) || 0) + 1);
+    }
+    if (!looked) continue;
+    let best = null;
+    for (const [id, n] of tally) {
+      if (n < looked * 0.8) continue;
+      const said = seen.get(id);
+      if (!said || /^template/i.test(said.title)) continue;
+      const theirs = norm(said.title).split(' ').filter(word => !DULL.has(word));
+      if (!theirs.some(word => mine.has(word))) continue;
+      if (!best || n > best.n) best = { id, n, title: said.title, slug: said.slug };
+    }
+    if (best) near.push([one.id, best]);
+  }
+  if (near.length) {
+    console.log('  ' + near.length + ' sets pointed at the family page their own pieces point at: '
+      + near.slice(0, 4).map(([, x]) => x.title).join(', '));
+  }
+  const stillNone = stillLoose.length - near.length;
+  if (stillNone) console.log('  ' + stillNone + ' sets the wiki does not write about at all');
 }
 
 /* Second pass: the relations, now that every page's records are known. */
@@ -236,11 +307,16 @@ for (const [id, mine] of about) {
 }
 const pairs = kind => [...edges[kind]].map(one => one.split(',').map(Number));
 
+const nearby = [];
+for (const [id, best] of near) {
+  nearby.push([idNumber(id), pageNumber(best.id, best.slug, best.title)]);
+}
+
 const said = {
   built: new Date().toISOString().slice(0, 10),
   says: 'the RealmEye community wiki',
   at: 'https://www.realmeye.com/wiki/',
-  pages, ids, page,
+  pages, ids, page, near: nearby,
   drop: pairs('drop'), spawn: pairs('spawn')
 };
 fs.mkdirSync(OUT, { recursive: true });
