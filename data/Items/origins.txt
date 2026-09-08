@@ -1,0 +1,93 @@
+## Where the client says an item comes from.
+##
+## The client tags 337 items with an ORG_ label naming the place they drop —
+## ORG_UDL, ORG_TOMB, ORG_LOD — and says nothing at all about the other 1476.
+## That label is the only provenance in the game's own files: there is no drop
+## table, and the index's links table is empty.
+##
+## It is worth having because Fame Sweep already works out, for every dungeon,
+## whether it is in the realm all year or only in season. Joining the two gives
+## an item's availability without anybody keeping a list of items: an item from
+## a seasonal dungeon is seasonal, and it stops being seasonal the day the
+## dungeon does, on its own.
+##
+## The codes are abbreviations and the dungeons are the names Fame Sweep uses,
+## so this file is the translation between them. Left of the bar is the label
+## with ORG_ taken off; right is the dungeon exactly as
+## data/Fame/dungeon-pages.txt spells it. A code with no dungeon beside it is
+## carried as "unknown" rather than guessed at, because a wrong join here would
+## silently mark a farmable item as out of reach.
+##
+## code|dungeon
+
+## --- unambiguous: the abbreviation and the name agree ---
+OSANC|Oryx's Sanctuary
+SHTT|The Shatters
+LOD|Lair of Draconis
+UDL|Undead Lair
+WLAB|Woodland Labyrinth
+3D|The Third Dimension
+OTRENCH|Ocean Trench
+MWOODS|Magic Woods
+CEM|Haunted Cemetery
+LAB|Mad Lab
+SPIT|Snake Pit
+CDEPTHS|The Crawling Depths
+CLAND|Candyland Hunting Grounds
+DDOCKS|Deadwater Docks
+MTEMPLE|Mountain Temple
+FMAZE|Forest Maze
+PCAVE|Pirate Cave
+MOONLIGHT|Moonlight Village
+KOGBOLD|Kogbold Steamworks
+SPECTRAL|Spectral Penitentiary
+CRYSTAL|Crystal Cavern
+TOMB|Tomb of the Ancients
+MANOR|Manor of the Immortals
+ABYSS|Abyss of Demons
+FUNGAL|Fungal Cavern
+PARASITE|Parasite Chambers
+HTT|High Tech Terror
+SPRITE|Sprite World
+DAVY|Davy Jones' Locker
+LH|Lost Halls
+CULT|Cultist Hideout
+SPIDER|Spider Den
+TAVERN|The Tavern
+CASTLE|Oryx's Castle
+LIBRARY|Cursed Library
+VOID|The Void
+WETLANDS|Sulfurous Wetlands
+RUINS|Ancient Ruins
+JUNGLE|Forbidden Jungle
+SHAITAN|Lair of Shaitan
+THICKET|Secluded Thicket
+ENCORE|Puppet Master's Encore
+SEWER|Toxic Sewers
+REEF|Cnidarian Reef
+HIVE|The Hive
+
+## --- the game has two of these and the abbreviation does not say which ---
+##
+## Left unresolved on purpose. PUPPET could be the Theatre or the Encore, and
+## the Encore already has its own code, which is an argument for the Theatre
+## but not a proof. NEST could be The Nest or the Plagued Nest. ICECAVE has no
+## dungeon of that name at all — the Ice Citadel and the Ice Tomb are the only
+## two with ice in them. UMI matches nothing in the list.
+##
+## Anything here classes as unknown, which is the safe direction: the item
+## stays in the running and is shown as unverified rather than being hidden.
+##
+## PUPPET|Puppet Master's Theatre
+## NEST|The Nest
+## ICECAVE|
+## UMI|
+
+## --- not a dungeon ---
+##
+## SETPIECE is realm scenery rather than a place you enter, so what it marks
+## drops in the realm itself and is available whenever the realm is, which is
+## always. ORYXMAS is the Christmas event; its dungeon is the Santa Workshop,
+## but the item is gated by the event rather than by the dungeon, and the
+## event labels already say so.
+SETPIECE|*realm*

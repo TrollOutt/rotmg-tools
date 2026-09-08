@@ -1,0 +1,70 @@
+## What a status effect actually does.
+##
+## The client says which effects an item or an enchantment grants, and for how
+## long. It never says what they are worth: Berserk is implemented in the
+## game's code, not declared in its files, so no amount of reading the client
+## will produce the number. That makes this file the same kind of thing as
+## data/Fame/availability-overrides.txt — knowledge of the live game written
+## down where it can be seen and corrected, rather than buried in a source
+## file as a magic constant.
+##
+## Taken from the RotMG wiki's Status Effects page:
+##   https://www.realmeye.com/wiki/status-effects
+##
+## effect|what it multiplies or adds|value|note
+##
+## The "what" column is the name the page's own model uses, so that a reader
+## can follow a number from here to the figure it changes:
+##
+##   rate    shots a second, before anything else scales it
+##   damage  the damage of a weapon shot, after armour is taken off
+##   def     defence, in the armour calculation
+##   hpregen life a second
+##   mpregen magic a second
+##   range   how far a shot travels
+##   speed   how fast the character walks
+##
+## A multiplier is written as a factor; an addition is written in the unit of
+## the thing it adds to.
+
+## --- the five that appear on this game's enchantments ---
+Berserk|rate|x1.25|attack speed, not DEX. Dazed negates it and takes priority.
+Damaging|damage|x1.25|weapon damage, not ATT. Weak negates it and takes priority.
+Armored|def|x1.5|rounded down. Armor Broken negates it and takes priority.
+Healing|hpregen|+20|the default where the source states no figure of its own. Several do not stack: the strongest wins. Sick negates it.
+Energized|mpregen|+10|
+
+## --- the rest of the positive ones, for when they turn up ---
+##
+## Not reached by anything the page models today. Written down now because the
+## reading was done now, and because the next person to need one of them
+## should not have to do it again.
+Inspired|range|x1.25|every inspiring item grants this except Lullaby, which is x0.25 instead.
+Speedy|speed|x1.5|movement, which the fight does not model.
+Invulnerable|damage|x0|takes no damage from attacks; still takes hazards and effects.
+Invincible|damage|x0|cannot be hit at all; attacks pass through.
+
+## --- the one whose size is not written here ---
+##
+## Stat Increase is the ordinary temporary buff, and it is on a great deal of
+## common gear: every tiered Seal, every Sheath, most of the Bard's lutes.
+## There is no value for it in this file because there is no single value —
+## the amount is declared by the item granting it, so it comes out of the
+## client with the item and not out of the wiki.
+##
+## Two rules that do belong here, because they are the effect's and not the
+## item's. Several buffs from different sources do not add: the strongest
+## overrides. Several from the same source do not add either: each one after
+## the first is worth half the one before it. A model that simply totals them
+## will overstate a build wearing two of them.
+StatIncrease||from the item|the size comes with the item. Strongest wins across sources; halves on each repeat from one source.
+
+## --- things that are not a number ---
+##
+## Left out rather than guessed at. Invisible, Purify, Immune, Stasis, Petrify
+## and Lethal Strike change what happens rather than scaling a figure, and a
+## model that has no notion of being targeted, of being cured, or of leaving
+## sneak has nothing for them to multiply. Lethal Strike in particular is two
+## extra projectiles for 2.4 seconds after a cloak ends, which is real damage
+## and is worth having one day — but it needs the fight to know about sneak
+## first.
