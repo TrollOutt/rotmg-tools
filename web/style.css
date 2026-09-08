@@ -2754,9 +2754,19 @@ body.globe-wide .home-card-art { animation: none !important; }
   to { opacity: 1; transform: none; }
 }
 
+/*
+ * Three tracks at all times, and every one of them a length.
+ *
+ * A grid can only be animated from one column list to another when the two
+ * lists are the same shape - so a panel that is not wanted is a track of
+ * nothing rather than a track that has gone, and every width is a length or a
+ * percentage rather than a fraction. That is what makes the panels grow and
+ * shrink instead of jumping from one arrangement to the next.
+ */
 .ix-layout {
-  transition: grid-template-columns .3s cubic-bezier(.4, 0, .2, 1);
-  display: grid; grid-template-columns: minmax(190px, 17vw) minmax(260px, 24vw) 1fr;
+  transition: grid-template-columns .34s cubic-bezier(.4, 0, .2, 1);
+  display: grid;
+  grid-template-columns: minmax(150px, 14vw) minmax(300px, 26vw) minmax(280px, 100%);
   gap: clamp(10px, 1.2vw, 20px); align-items: stretch;
   height: calc(100vh - 118px); min-height: 420px;
 }
@@ -2781,7 +2791,24 @@ body.globe-wide .home-card-art { animation: none !important; }
  */
 .ix-ways { display: flex; flex-direction: column; min-height: 0; }
 .ix-facets { overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
-.ix-group { border-radius: var(--radius-sm); }
+/*
+ * A colour for each way in.
+ *
+ * Eight groups all in the interface blue meant a chip told you nothing about
+ * where it came from once it was sitting in the row of choices at the top. The
+ * colours are the ones the site already uses - the rarity frames and the
+ * family badges - so nothing new was invented for them.
+ */
+.ix-group { border-radius: var(--radius-sm); --ix-hue: var(--accent); }
+:is(.ix-group, .ix-chosen)[data-key="favourites"] { --ix-hue: #ffd026; }
+:is(.ix-group, .ix-chosen)[data-key="class"]      { --ix-hue: #79c5e8; }
+:is(.ix-group, .ix-chosen)[data-key="gears"]      { --ix-hue: #7fc45a; }
+:is(.ix-group, .ix-chosen)[data-key="tier"]       { --ix-hue: #e0975a; }
+:is(.ix-group, .ix-chosen)[data-key="marks"]      { --ix-hue: #9aa7ff; }
+:is(.ix-group, .ix-chosen)[data-key="season"]     { --ix-hue: #f28ea8; }
+:is(.ix-group, .ix-chosen)[data-key="biome"]      { --ix-hue: #58bfa6; }
+:is(.ix-group, .ix-chosen)[data-key="dungeon"]    { --ix-hue: #d4685f; }
+:is(.ix-group, .ix-chosen)[data-key="kind-of-gear"] { --ix-hue: #7fc45a; }
 .ix-group-head {
   display: flex; align-items: center; gap: 7px; width: 100%; text-align: left;
   font: inherit; font-size: calc(var(--ix-fs) * .9); font-weight: 650; letter-spacing: .3px;
@@ -2801,39 +2828,47 @@ body.globe-wide .home-card-art { animation: none !important; }
  * The one that was chosen against the ones still to choose. The first is an
  * answer and reads as settled; the rest are questions and stay quiet.
  */
-/* The anchor: the one every later choice was narrowed against. */
+/*
+ * The anchor: the one every later choice was narrowed against.
+ *
+ * It is not just a brighter version of the others - it is banded across the
+ * top with what it does, on its own line, so it cannot be read as another
+ * chosen category that happens to be first in the list.
+ */
+.ix-group-head { flex-wrap: wrap; }
 .ix-group.is-primary {
-  background: rgba(121, 197, 232, .09);
-  border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid var(--ix-hue); border-left-width: 3px;
   border-radius: var(--radius-sm);
 }
-.ix-group.is-primary > .ix-group-head { color: var(--accent); }
-.ix-group.is-primary > .ix-group-head b { letter-spacing: .5px; }
+.ix-group.is-primary > .ix-group-head b { letter-spacing: .5px; font-weight: 750; }
 .ix-first {
-  font-style: normal; font-size: calc(var(--ix-fs) * .68); font-weight: 700;
-  text-transform: uppercase; letter-spacing: .7px; color: var(--accent);
-  border: 1px solid rgba(121, 197, 232, .45); border-radius: 999px; padding: 1px 7px;
+  flex: 0 0 100%; order: -1; margin: 0 0 5px;
+  font-style: normal; font-size: calc(var(--ix-fs) * .64); font-weight: 800;
+  text-transform: uppercase; letter-spacing: .9px;
+  color: #10141c; background: var(--ix-hue);
+  border-radius: 4px; padding: 2px 7px; text-align: center;
 }
 /* A choice, but not the one holding the others up. */
-.ix-group.is-chosen { border-left: 3px solid var(--line); border-radius: var(--radius-sm); }
-.ix-group.is-chosen > .ix-group-head { color: var(--text); }
+.ix-group.is-chosen { border-left: 3px solid var(--ix-hue); border-radius: var(--radius-sm); }
 .ix-group:not(.is-primary) > .ix-group-head b { font-weight: 550; }
 .ix-group.is-chosen .ix-facet.is-on {
-  background: rgba(121, 197, 232, .18); border-color: rgba(121, 197, 232, .5);
-  color: var(--text);
+  background: transparent; border-color: var(--ix-hue); color: var(--ix-hue);
+  font-weight: 600;
 }
 .ix-group.is-chosen .ix-facet.is-on i { color: var(--muted); }
 
 /* And the same distinction where the choices are listed together. */
+.ix-chosen { background: var(--ix-hue, var(--accent)); border-color: var(--ix-hue, var(--accent)); }
 .ix-chosen:not(.is-first) {
-  background: transparent; color: var(--accent);
-  border-color: rgba(121, 197, 232, .45);
+  background: transparent; color: var(--ix-hue, var(--accent));
+  border-color: var(--ix-hue, var(--accent));
 }
-.ix-chosen:not(.is-first) u { color: rgba(121, 197, 232, .6); }
-.ix-chosen:not(.is-first):hover u { color: var(--accent); }
+.ix-chosen:not(.is-first) u { color: var(--ix-hue, var(--accent)); opacity: .6; }
+.ix-chosen:not(.is-first):hover u { opacity: 1; }
 .ix-group-on:empty { display: none; }
 .ix-group-on {
-  font-size: 10px; font-weight: 700; color: #10141c; background: var(--accent);
+  font-size: 10px; font-weight: 700; color: #10141c; background: var(--ix-hue, var(--accent));
   border-radius: 999px; min-width: 15px; text-align: center; padding: 1px 5px;
 }
 /* Dungeon names run long; they get a wider column of their own. */
@@ -2884,9 +2919,13 @@ body.globe-wide .home-card-art { animation: none !important; }
 .ix-facet .ix-art { flex: none; }
 .ix-facet i { font-style: normal; font-size: 9.5px; color: var(--dim); }
 .ix-facet.is-on {
-  color: #10141c; background: var(--accent); border-color: var(--accent); font-weight: 600;
+  color: #10141c; background: var(--ix-hue, var(--accent));
+  border-color: var(--ix-hue, var(--accent)); font-weight: 600;
 }
 .ix-facet.is-on i { color: rgba(16, 20, 28, .6); }
+.ix-group-head b { color: inherit; }
+.ix-group.is-open > .ix-group-head b,
+.ix-group.is-chosen > .ix-group-head b { color: var(--ix-hue); }
 
 /* What has been chosen, and how to take it back off. */
 .ix-chosen-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 8px 10px; }
@@ -2903,7 +2942,7 @@ body.globe-wide .home-card-art { animation: none !important; }
  * One step at a time. Until something is chosen the rail is the page; after
  * that it folds to what was chosen and the list takes the room.
  */
-.ix-layout.has-pick { grid-template-columns: minmax(150px, 14vw) minmax(300px, 26vw) 1fr; }
+
 /*
  * Nothing open on the right, nothing taking up room on the right - and until a
  * category is chosen or a name typed, the middle keeps to the box you type in.
@@ -2915,11 +2954,11 @@ body.globe-wide .home-card-art { animation: none !important; }
  * and its family at the other with a metre of nothing between them.
  */
 .ix-layout:not(.has-card) {
-  grid-template-columns: minmax(190px, 20vw) minmax(320px, 52ch);
+  grid-template-columns: minmax(190px, 20vw) minmax(320px, 52ch) minmax(0px, 0px);
   justify-content: start;
 }
 .ix-layout.has-pick:not(.has-card) {
-  grid-template-columns: minmax(150px, 16vw) minmax(320px, 52ch);
+  grid-template-columns: minmax(150px, 16vw) minmax(320px, 52ch) minmax(0px, 0px);
   justify-content: start;
 }
 /*
@@ -2927,8 +2966,10 @@ body.globe-wide .home-card-art { animation: none !important; }
  * type in lives with the categories, so there is no second panel standing
  * empty beside them waiting to be given something to hold.
  */
-.ix-layout:not(.has-list) { grid-template-columns: 1fr; align-items: start; }
-.ix-layout:not(.has-list) .ix-find { display: none; }
+.ix-layout:not(.has-list) {
+  grid-template-columns: minmax(240px, 100%) minmax(0px, 0px) minmax(0px, 0px);
+  align-items: start;
+}
 .ix-layout:not(.has-list) .ix-ways { max-height: none; }
 /* And the groups spread across it rather than queueing down one side. */
 .ix-layout:not(.has-list) .ix-facets { overflow: visible; }
@@ -2972,7 +3013,22 @@ body.globe-wide .home-card-art { animation: none !important; }
 
 .ix-find { display: flex; flex-direction: column; min-height: 0; }
 .ix-card { overflow-y: auto; }
-.ix-card:not([hidden]), #ixTypes:not([hidden]), #ixChosen:not([hidden]) {
+/*
+ * A panel that is on its way out fades and slides rather than blinking off.
+ * The track under it is shrinking at the same time, so the two read as one
+ * movement.
+ */
+.ix-find, .ix-card {
+  transition: opacity .26s ease, transform .26s ease,
+    padding .3s ease, border-width .3s ease;
+}
+.ix-layout:not(.has-list) .ix-find,
+.ix-layout:not(.has-card) .ix-card {
+  opacity: 0; transform: translateX(-10px);
+  padding-left: 0; padding-right: 0; border-width: 0;
+  overflow: hidden; pointer-events: none;
+}
+#ixTypes:not([hidden]), #ixChosen:not([hidden]) {
   animation: ix-in .26s cubic-bezier(.4, 0, .2, 1) both;
 }
 .ix-facet, .ix-chip, .ix-chosen, .ix-group-head {
