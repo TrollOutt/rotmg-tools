@@ -14,9 +14,27 @@
 
   Settings -> Pages -> Source: GitHub Actions ends the race, and then this file
   and .nojekyll can both go.
+
+  The race is over: the workflow is what serves, so the site answers at
+  /rotmg-tools/ and /rotmg-tools/docs/ is a 404. This file is therefore not
+  published at all at present, and is kept only as the fallback if the source
+  is ever set back to the branch build.
+
+  The two lines below answer different questions, which is why they name
+  different places and both are right.
+
+  The forward is scoped to the deployment that serves this file: under the
+  branch build the root is this folder and the built page really is in ./docs/,
+  so that is where to send somebody who has landed here.
+
+  The canonical is not scoped to anything. It states the address of the site,
+  which is the one that answers today - and it used to name /docs/, a URL that
+  only exists in the fallback and returns 404 in the deployment that is
+  actually live. That is exactly the address anybody who bookmarked it or found
+  it through a search would have been handed.
 -->
 <meta http-equiv="refresh" content="0; url=./docs/">
-<link rel="canonical" href="https://trolloutt.github.io/rotmg-tools/docs/">
+<link rel="canonical" href="https://trolloutt.github.io/rotmg-tools/">
 <style>
   html { color-scheme: dark; }
   body { margin: 0; min-height: 100vh; display: grid; place-content: center; gap: .75rem;
