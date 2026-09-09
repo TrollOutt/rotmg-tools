@@ -507,7 +507,9 @@ async function main() {
       + (difficulty ? '   difficulty ' + difficulty : ''));
   }
 
-  const lines = ['## How hard the game says each dungeon is, and whether its',
+  const lines = [require('./provenance').header({ tool: 'tools/fetch-sprites.js',
+    built: new Date().toISOString(), from: { kind: 'community', source: 'RealmEye' }
+  }).trimEnd(), '## How hard the game says each dungeon is, and whether its',
     '## portal is drawn moving. Both from the wiki page of the dungeon.',
     '##',
     '## Written by tools/fetch-sprites.js.',

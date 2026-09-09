@@ -1,5 +1,9 @@
 # The Index — where the work got to
 
+**9 September 2026 update:** catalogue extraction and projection now follow
+[HANDOVER-SOURCE.md](HANDOVER-SOURCE.md). Its commands supersede the independent
+generator and sprite commands below; the rest of this document is historical context.
+
 Written to be picked up on another machine. Everything below is about the
 Index module: `tools/build-index.js`, `tools/index-sprites.js`,
 `web/index-page.js` and what they write into `data/Index/` and

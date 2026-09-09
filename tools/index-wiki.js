@@ -314,6 +314,10 @@ for (const [id, best] of near) {
 
 const said = {
   built: new Date().toISOString().slice(0, 10),
+  tool: 'tools/index-wiki.js',
+  from: { kind: 'community', source: 'RealmEye',
+    snapshot: require('crypto').createHash('sha256').update(JSON.stringify(search)).digest('hex'),
+    joinedClient: facts.from },
   says: 'the RealmEye community wiki',
   at: 'https://www.realmeye.com/wiki/',
   pages, ids, page, near: nearby,

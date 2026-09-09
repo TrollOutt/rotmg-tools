@@ -7,7 +7,7 @@
  * weapon, ability, armour and ring states what it gives you for being worn
  * and the projectile it throws. Every one of the thousand enchantments states
  * its effect as a mutator rather than as prose. All of that is read out of the
- * installed client by tools/build-theorycraft.js and used here untouched.
+ * index by tools/build-theorycraft.js and used here untouched.
  *
  * Four things are NOT in the client, and they are the four formulas that turn
  * a statistic into a rate. They are the ones the game's own players worked out
@@ -679,34 +679,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       return out;
     }
 
-    /*
-     * And if the calculator is not on the page - somebody opened this file on
-     * its own - the client's own labels are the fallback: an enchantment says
-     * which labels an item must and must not carry, and which enchantments it
-     * will not sit beside.
-     */
-    const has = labelsOf(item.labels);
-    const beside = new Set();
-    (already || []).forEach((id, i) => {
-      if (i === at || !id) return;
-      const one = data.byEnch[id];
-      if (one) for (const label of labelsOf(one.labels)) beside.add(label);
-    });
-    return data.enchants.filter(one => {
-      // Retired ones carry a weight of nought, and the seasonal ones come out
-      // of an engraving rather than an enchanting: neither can be planned for.
-      if (!(one.weight > 0) || !labelsOf(one.labels).has('ROLLABLE')) return false;
-      const wants = labelsOf(one.fits);
-      if (wants.size) {
-        let met = false;
-        for (const label of wants) if (has.has(label)) { met = true; break; }
-        if (!met) return false;
-      }
-      for (const label of labelsOf(one.notFits)) if (has.has(label)) return false;
-      for (const label of labelsOf(one.notOn)) if (label === itemName) return false;
-      for (const label of labelsOf(one.notWith)) if (beside.has(label)) return false;
-      return true;
-    });
+    throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
   }
 
   function itemsFor(hand, klass) {
@@ -3045,8 +3018,10 @@ const TINT = {
       && window.ROTMG_BUNDLE.sources.theoryText;
     let raw = bundled;
     if (!raw) {
-      raw = await fetch('../data/TheoryCraft/theorycraft.json')
-        .then(r => r.text()).catch(() => '');
+      for (const url of ['assets/theory/theorycraft.json', '../data/TheoryCraft/theorycraft.json']) {
+        raw = await fetch(url).then(r => r.ok ? r.text() : '').catch(() => '');
+        if (raw) break;
+      }
     }
     if (!raw) {
       const box = el('tcBody');
@@ -3062,6 +3037,11 @@ const TINT = {
     for (const one of data.items) data.byItem[one.name] = one;
     for (const one of data.enchants) data.byEnch[one.id] = one;
     for (const one of data.bosses) data.byBoss[one.name] = one;
+    if (!rulesFor()) {
+      const box = el('tcBody');
+      if (box) box.textContent = 'The enchanting data could not be loaded. Reload this page before planning a build.';
+      return;
+    }
     started = true;
 
     // The sheet's address, once, for every icon on the page to point at.

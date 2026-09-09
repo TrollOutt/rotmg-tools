@@ -372,7 +372,9 @@ async function main() {
   const lines = buildSnapshot({ build, enchantments, pools, artifacts, items });
   const current = parseSnapshot(lines.join('\n'));
 
-  const header = `## What an installed RotMG client says about enchanting, as of the build below.
+  const provenance = require('./provenance');
+  const meta = provenance.stamp(__filename, { kind: 'client', build, date: fs.statSync(client.assets).mtime.toISOString().slice(0, 10) });
+  const header = provenance.header(meta) + `## What an installed RotMG client says about enchanting, as of the build below.
 ##
 ## Written by tools/read-client.js --snapshot. Its only purpose is to be
 ## compared against the next read: run the tool after a game update and it will
@@ -415,9 +417,9 @@ async function main() {
       const entry = [`## ${when} — build ${build}`, ...body, ''];
       // A run of consecutive "nothing moved" entries is noise, so a quiet run
       // replaces the previous quiet one rather than stacking on top of it.
-      const before = fs.existsSync(CHANGES) ? fs.readFileSync(CHANGES, 'utf8') : '';
+      const before = fs.existsSync(CHANGES) ? fs.readFileSync(CHANGES, 'utf8').replace(/^## provenance: .+\r?\n/, '') : '';
       const keep = quiet ? before.replace(/^## [^\n]*\n= nothing moved\n\n/, '') : before;
-      fs.writeFileSync(CHANGES, `${entry.join('\n')}\n${keep}`, 'utf8');
+      fs.writeFileSync(CHANGES, provenance.header(meta) + `${entry.join('\n')}\n${keep}`, 'utf8');
       console.log(`\n  written to ${path.relative(root, CHANGES)}`);
     }
   }

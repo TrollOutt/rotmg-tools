@@ -145,7 +145,7 @@ const RealmIndex = (function () {
     all.sheet = said.sheet;
     all.files = said.files || [];
     all.slots = said.slots || {};
-    all.built = said.built;
+    all.built = (said.from && said.from.date) || said.built;
     all.count = said.records.length;
     return true;
   }
@@ -979,6 +979,7 @@ const RealmIndex = (function () {
       + (one.hidden
         ? '<p class="ix-warn"><b>The other tools do not offer this</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
         : '')
+      + (one.benchWhy ? '<p class="ix-warn"><b>Not offered on the bench</b> — ' + esc(one.benchWhy) + '.</p>' : '')
       + (one.twin
         ? '<p class="ix-warn">The game has more than one thing by this name. The words in brackets are how they differ.</p>'
         : '')
