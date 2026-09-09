@@ -917,6 +917,18 @@ table.mini td { padding: 3px 8px; border: 0; }
   html, body { height: 100%; }
   body { overflow: hidden; }
 
+  /*
+   * Except on the way in, which is a document and not a working screen.
+   *
+   * The shell holds the tools still and scrolls their columns inside
+   * themselves, which is what a form wants. The way in has nothing to scroll
+   * inside itself: it is a heading, some cards and a world, and when those
+   * come to more than a screen the honest answer is a page that scrolls.
+   * Clipping them was how the atlas came to be cut off along the bottom.
+   */
+  body[data-page="home"] { overflow-y: auto; }
+  body[data-page="home"] .app { height: auto; }
+
   .app {
     height: 100%;
     display: flex;
@@ -1193,8 +1205,26 @@ table.mini td { padding: 3px 8px; border: 0; }
  * that is left, and the credit line sits under it - so on a tall window the
  * world is large and on a short one it is still there.
  */
+/*
+ * The way in fills the window and is allowed to outgrow it.
+ *
+ * It used to be exactly 100vh, which is right for a heading and one row of
+ * cards and wrong the moment there are four of them: on a wide window the
+ * cards fall into two rows, and the heading, the bell, two rows of cards, the
+ * footer and the frame's own floor come to more than a screen. A fixed height
+ * does not push back at that, it simply cuts - and the shell rule further
+ * down turns the overflow off, so what was cut could not even be scrolled to.
+ * The reported symptom was the atlas sliced off along the bottom.
+ *
+ * A minimum rather than a height: it still fills a tall window, and on a short
+ * one the page becomes a page again.
+ *
+ * dvh rather than vh because a phone's address bar slides away: vh is the tall
+ * measurement whatever the bar is doing, so a globe sized to fill the screen
+ * spent the first scroll of every visit hidden behind it.
+ */
 #pageHome {
-  min-height: 100vh; height: 100vh; display: flex; flex-direction: column;
+  min-height: 100dvh; display: flex; flex-direction: column;
   gap: clamp(10px, 2vh, 22px);
 }
 #pageHome > .home-head, #pageHome > .home-cards, #pageHome > .news-bell { flex: none; }
@@ -1207,7 +1237,21 @@ table.mini td { padding: 3px 8px; border: 0; }
  * The frame takes the leftover height, and never less than enough to be a
  * planet rather than a stripe.
  */
-.globe-stage { flex: 1 1 auto; min-height: min(300px, 34vh); display: flex; }
+/*
+ * The frame takes the leftover height, and takes it as leftover.
+ *
+ * It used to insist on three hundred pixels or a third of the window,
+ * whichever was smaller. That is a floor, and a floor does not negotiate: at
+ * 1600 by 780 there were a hundred and sixty-eight pixels left over and it
+ * demanded two hundred and sixty-five, so the page grew past the window and
+ * the world went off the bottom of it. The size it wanted was the reason it
+ * could not be seen.
+ *
+ * So it is given what is left, and the only thing it insists on is being
+ * bigger than a stripe. On a tall window that is a large planet, on a short
+ * one a small one, and on neither is it cut in half.
+ */
+.globe-stage { flex: 1 1 auto; min-height: 140px; display: flex; }
 /*
  * The frame, and its edge.
  *
@@ -1219,9 +1263,29 @@ table.mini td { padding: 3px 8px; border: 0; }
  * while it is moving, because a transition left on top and left would also
  * catch the window being resized and make that lag.
  */
+/*
+ * Its width is `auto`, and that is a correction rather than a preference.
+ *
+ * It used to say `width: min(1100px, 100%)` with `margin: 0 auto` beside it,
+ * which reads as "eleven hundred at most, centred" and was neither: in a flex
+ * row `width` is only the basis, `flex-grow: 1` then spends all the free
+ * space on the item, and auto margins get what is left over, which is
+ * nothing. So the cap never applied and the centring never happened - the box
+ * was simply as wide as the stage, which is what everyone has always seen.
+ *
+ * That would be harmless if it stayed in the flow. It does not: opening it
+ * out pins it with `position: fixed`, and an out-of-flow box is not a flex
+ * item, so `flex-grow` stops applying and the specified width is suddenly the
+ * truth again. Measured on a 1400 window: 1344 laid out, 1100 the instant it
+ * is pinned. The frame collapsed by 244 pixels and then grew out of it, which
+ * is the recoil you could see at the start of every opening.
+ *
+ * `auto` says what was already happening, so being taken out of the flow
+ * changes nothing and the movement starts where the panel was.
+ */
 .globe-box {
   position: relative; flex: 1 1 auto; min-height: 0;
-  width: min(1100px, 100%); margin: 0 auto;
+  width: auto; margin: 0;
   background: #05070c; border-radius: var(--radius);
   border: 1px solid rgba(255, 255, 255, .12);
   overflow: hidden; cursor: zoom-in;
@@ -1351,6 +1415,31 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   display: grid; gap: clamp(12px, 2vw, 22px);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
   width: min(1100px, 100%); margin: 0 auto;
+}
+/*
+ * On a wide, short window the row lies flat instead of folding.
+ *
+ * The grid only ever watched the width, so at 1600 by 780 it made the two
+ * columns it had room for and the four cards became two rows of two - four
+ * hundred and fifty-seven pixels of them, which is most of the reason the
+ * world underneath ended up off the bottom of the screen. Height is half of
+ * how much room there is and it was not being asked.
+ *
+ * Wide enough for four to be readable, short enough to need it. Both halves
+ * of that were checked rather than guessed: at 1280 the four cards come out
+ * two hundred and ninety pixels across, and every title breaks over two lines
+ * with the words below it in a ribbon - shorter than two rows and worse to
+ * look at, which is not a trade. At seventeen hundred there is room for four
+ * of four hundred and forty and they read as cards again.
+ *
+ * Anywhere else nothing changes, and nothing needs to: a window with the
+ * height for two rows keeps them.
+ */
+@media (min-width: 1700px) and (max-height: 900px) {
+  .home-cards {
+    width: min(1520px, 100%);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 .home-card {
   display: grid; text-align: left; font: inherit; cursor: pointer;
@@ -3225,3 +3314,179 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   align-self: center;
 }
 .ix-jump .ix-art { display: inline-block; vertical-align: -2px; margin-right: 5px; }
+
+/* ---------------- the ring home ---------------- *
+ *
+ * The other front page, thrown by the switch in the corner. Four modules laid
+ * round the realm instead of four cards under it: the atlas stops being a
+ * panel on the page and becomes the page, its sky fills the window, and the
+ * world turns in the middle of the ring at whatever size the ring needs.
+ *
+ * All of it hangs off one attribute on the body, so nothing here can reach
+ * the ordinary home by accident, and the ordinary home is still what an
+ * arrival gets.
+ */
+
+/* Only offered on the page it changes. */
+body:not([data-page="home"]) .ring-way { display: none; }
+.ring-way[aria-pressed="true"] { color: var(--locked); border-color: var(--locked); }
+
+body[data-home="ring"] .corner {
+  left: 50%; right: auto; transform: translateX(-50%);
+  justify-content: center;
+}
+
+body[data-home="ring"] .home-head,
+body[data-home="ring"] .home-cards,
+body[data-home="ring"] .news-bell,
+body[data-home="ring"] .app-foot { display: none; }
+
+/* The atlas, promoted from a panel to the ground. Its own furniture goes with
+   the promotion: there is nothing to click through the ring, and the name it
+   carries is said by the ring instead. */
+body[data-home="ring"] { overflow: hidden; }
+body[data-home="ring"] .app { height: 100%; padding: 0; }
+body[data-home="ring"] .globe-stage {
+  position: fixed; inset: 0; z-index: 0; margin: 0; padding: 0;
+  min-height: 0; flex: none;
+}
+body[data-home="ring"] .globe-box {
+  position: absolute; inset: 0; width: auto; height: auto;
+  border: 0; border-radius: 0; box-shadow: none; background: #05070d;
+  pointer-events: none;
+}
+body[data-home="ring"] .globe-glass,
+body[data-home="ring"] .globe-name,
+body[data-home="ring"] .globe-shut { display: none; }
+body[data-home="ring"] #realmFrame { border-radius: 0; }
+
+/* The stage is the window, so its middle is the window's middle - which is
+   where the atlas puts the world. Nothing has to be nudged to agree. */
+.ring-stage {
+  position: fixed; inset: 0; z-index: 1;
+  display: grid; place-items: center;
+  --wheel: 640px;
+  --card: 250px;
+  --k: 64px;                       /* the step past the wheel a block sits at */
+  --dx: calc(.3465 * var(--wheel) + var(--k));
+  /* How wide the world is drawn, as a length rather than a share: the stage
+     is the whole window and the wheel is a box inside it, so a percentage
+     here would be a percentage of the wrong thing - and was, which made the
+     world's own patch half the window and it swallowed clicks meant for the
+     quarters. */
+  --core: 282px;
+  --ink: 214, 26%, 82%;            /* the one ink the quarters are drawn in */
+  --ring-lit: #eaf1ff;             /* and what one turns under the cursor */
+}
+.ring-wheel {
+  width: var(--wheel); height: var(--wheel);
+  overflow: visible;               /* an open quarter reaches past the box */
+}
+
+/* A quarter, in pieces on the same outline, because they do not all do the
+   same thing when it opens. The face is the body, lit from the world
+   outwards; the ends are the two straight edges, which are what brightens;
+   the inner arc holds the line against the world; the outer arc is the one
+   that goes. */
+.ring-seg { cursor: pointer; }
+.ring-seg .back { fill: rgba(4, 6, 12, .62); transition: fill .22s ease; }
+.ring-seg .face { fill: url(#ringGlow); opacity: .85; transition: opacity .22s ease; }
+.ring-seg .end  { fill: none; stroke: hsla(var(--ink), .34); stroke-width: .4;
+  stroke-linecap: round; transition: stroke .22s ease, stroke-width .22s ease; }
+.ring-seg .lip  { fill: none; stroke: hsla(var(--ink), .42); stroke-width: .5;
+  transition: stroke .22s ease; }
+.ring-seg .cap  { fill: none; stroke: hsla(var(--ink), .20); stroke-width: .4; }
+.ring-seg image { image-rendering: pixelated; opacity: .8; transition: opacity .22s ease; }
+.ring-seg.on .back  { fill: rgba(4, 6, 12, .72); }
+.ring-seg.on .face  { opacity: 1.6; }
+.ring-seg.on .end   { stroke: var(--ring-lit); stroke-width: .7; }
+.ring-seg.on .lip   { stroke: hsla(var(--ink), .62); }
+.ring-seg.on image  { opacity: 1; }
+
+/* The world's own patch: a circle the size of the world, and nothing else. */
+.ring-core {
+  position: absolute; left: 50%; top: 50%; z-index: 3;
+  width: var(--core); height: var(--core);
+  transform: translate(-50%, -50%);
+  padding: 0; border: 0; background: none; border-radius: 50%;
+  cursor: pointer; color: inherit; font: inherit;
+  transition: width .45s cubic-bezier(.22, .7, .3, 1),
+              height .45s cubic-bezier(.22, .7, .3, 1);
+}
+.ring-core b {
+  position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%);
+  font-size: 12px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+  white-space: nowrap; color: var(--ring-lit); opacity: 0;
+  transition: opacity .3s ease; text-shadow: 0 2px 12px #000, 0 0 30px #000;
+}
+body.ring-near .ring-core b { opacity: 1; }
+
+/* The writing. No frame: it is set against the outer edge of its quarter and
+   reads outwards, so the left two are left-aligned and the right two
+   right-aligned, and each block hangs off its corner of the window.
+
+   The block is anchored by its title - pinned to the top of its box in the
+   two upper corners and to the bottom in the two lower ones - so the
+   description always opens towards the wheel and the title never moves,
+   neither when the description arrives nor when the quarter opens out under
+   it. The quarter comes to the writing; the writing stays where it was. */
+.ring-tag {
+  position: absolute; z-index: 4; width: var(--card); height: 56px;
+  transform: translate(-50%, -50%); pointer-events: none;
+  transition: opacity .3s ease;
+}
+body.ring-near .ring-tag { opacity: 0; }
+.ring-tag .ring-card { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; }
+.ring-tag.tl .ring-card, .ring-tag.tr .ring-card { top: 0; }
+.ring-tag.bl .ring-card, .ring-tag.br .ring-card { bottom: 0; }
+.ring-tag.tl, .ring-tag.bl { text-align: left; }
+.ring-tag.tr, .ring-tag.br { text-align: right; }
+.ring-tag .t {
+  font-size: 17px; font-weight: 600; line-height: 1.25; white-space: nowrap;
+  text-shadow: 0 2px 10px #000, 0 0 22px rgba(0, 0, 0, .9);
+  transition: color .22s ease;
+}
+.ring-tag .s {
+  font-size: 12.5px; color: var(--dim);
+  text-shadow: 0 1px 8px #000, 0 0 18px rgba(0, 0, 0, .9);
+  transition: color .22s ease;
+}
+.ring-tag.on .t { color: var(--ring-lit); }
+.ring-tag.on .s { color: var(--muted); }
+/* Not display:none, so its height is something that can be transitioned. */
+.ring-tag .d {
+  font-size: 12px; line-height: 1.5; color: var(--muted);
+  text-shadow: 0 1px 8px #000, 0 0 18px rgba(0, 0, 0, .95);
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height .32s ease, opacity .26s ease, margin .32s ease;
+}
+.ring-tag.on .d { max-height: 130px; opacity: 1; }
+.ring-tag.tl.on .d, .ring-tag.tr.on .d { margin-top: 8px; }
+/* The lower corners read the same way down the page, but their description
+   has to open upwards or it would walk off the bottom of the window. */
+.ring-tag.bl .d, .ring-tag.br .d { order: -1; }
+.ring-tag.bl.on .d, .ring-tag.br.on .d { margin-bottom: 8px; }
+
+.ring-tag.tl { left: calc(50% - var(--dx)); top: calc(50% - var(--dx)); }
+.ring-tag.tr { left: calc(50% + var(--dx)); top: calc(50% - var(--dx)); }
+.ring-tag.br { left: calc(50% + var(--dx)); top: calc(50% + var(--dx)); }
+.ring-tag.bl { left: calc(50% - var(--dx)); top: calc(50% + var(--dx)); }
+
+/* The writing is what stops the wheel growing, so it is what gives way when
+   there is less room - first a size down, then, on a phone, the line each
+   module leads with goes altogether and only the name is left. */
+@media (max-width: 1150px), (max-height: 760px) {
+  .ring-stage { --card: 200px; --k: 50px; }
+  .ring-tag { height: 50px; }
+  .ring-tag .t { font-size: 15px; }
+  .ring-tag .s { font-size: 11.5px; }
+  .ring-tag .d { font-size: 11.5px; }
+}
+@media (max-width: 620px) {
+  .ring-stage { --card: 148px; --k: 30px; }
+  .ring-tag { height: 38px; }
+  .ring-tag .t { font-size: 12.5px; }
+  .ring-tag .s { display: none; }
+  .ring-tag .d { font-size: 10.5px; }
+  .ring-tag.on .d { max-height: 100px; }
+}

@@ -91,6 +91,21 @@
     <span class="corner-glyph ambience-toggle-glyph" aria-hidden="true">◐</span>
     <span class="corner-text ambience-toggle-text">Animations on</span>
   </button>
+
+  <!--
+    The other front page.
+
+    Four modules laid round the realm instead of four cards under it: the
+    atlas becomes the whole background, its sky is the page's sky, and each
+    quarter opens under the cursor. It is prettier and it is harder to read,
+    which is why it is a switch and not a replacement - the cards are still
+    what a first-time arrival gets. Only shown on the page it changes.
+  -->
+  <button id="ringWay" type="button" class="corner-button ring-way" aria-pressed="false"
+    title="Try the ring home: the four modules laid round the realm. Experimental.">
+    <span class="corner-glyph ring-way-glyph" aria-hidden="true">◍</span>
+    <span class="corner-text ring-way-text">Experimental UI</span>
+  </button>
 </div>
 
 <!-- The way in ------------------------------------------------------- -->
@@ -109,6 +124,39 @@
     <span class="news-bell-text">Month of the Mad God</span>
     <span class="news-bell-dot" aria-hidden="true"></span>
   </button>
+
+  <!--
+    The ring, which is the same four ways in as the cards below and the same
+    atlas behind them, arranged round it rather than under it. Empty until
+    the switch in the corner is thrown: nothing here costs anything while the
+    cards are the front page.
+  -->
+  <div id="ringStage" class="ring-stage" hidden>
+    <svg class="ring-wheel" id="ringWheel" viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <!-- One light, in the middle, for all four: the world is what they
+             are lit by, so each is brightest against its inner edge. -->
+        <radialGradient id="ringGlow" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="58">
+          <stop offset="0.38" stop-color="#dce6f7" stop-opacity="0.17"/>
+          <stop offset="0.74" stop-color="#c8d6ee" stop-opacity="0.085"/>
+          <stop offset="1"    stop-color="#b9c9e6" stop-opacity="0.035"/>
+        </radialGradient>
+        <!-- The corners come off every picture the same way, so it is one
+             mask in the picture's own box rather than four gradients rewritten
+             in pixels on every frame. Nothing in here ever changes. -->
+        <radialGradient id="ringSoftFade" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0.34" stop-color="#fff"/>
+          <stop offset="0.72" stop-color="#fff" stop-opacity="0.6"/>
+          <stop offset="1"    stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <mask id="ringSoft" maskContentUnits="objectBoundingBox">
+          <rect x="0" y="0" width="1" height="1" fill="url(#ringSoftFade)"/>
+        </mask>
+      </defs>
+    </svg>
+    <button type="button" class="ring-core" id="ringCore"
+      aria-label="Realm Atlas — open it full size"><b>Realm Atlas</b></button>
+  </div>
 
   <div class="home-cards" id="homeCards">
     <button type="button" class="home-card" data-go="enchant" style="--i:0">

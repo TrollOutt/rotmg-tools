@@ -2834,6 +2834,20 @@ function pointAtAtlas() {
         atlasPace = '';                  // a fresh document knows nothing yet
         paceAtlas();
         tellAtlas({ rotmg: 'settle', frames: 12 });
+        /*
+         * And with nothing written on it.
+         *
+         * The atlas prints counts and a hint along its bottom edge, addressed
+         * to somebody reading a map. In a panel the height of a letterbox
+         * that is four lines across the world, and nobody in front of the
+         * front page is reading them. They come back when it is opened out,
+         * which is when there is a map to read.
+         *
+         * No `of` with it: only the writing goes. How the world is framed in
+         * the panel is the ordinary fit and stays that way.
+         */
+        if (!globeWide()) tellAtlas({ rotmg: 'bare', on: true });
+        if (typeof Ring !== 'undefined' && Ring.is()) Ring.greet();
       });
       frame.src = base + 'index.html';
     })
@@ -3022,16 +3036,31 @@ function setGlobe(open) {
   holdAmbience(open);
 
   /*
+   * Going back in, the writing goes at once: it has no business in a panel
+   * and the panel is what this is about to be again. Going out, it is held
+   * off for the whole journey - see below.
+   */
+  if (!open) tellAtlas({ rotmg: 'bare', on: true, of: null });
+
+  /*
    * And handed back to the layout once it has arrived. Left pinned, it would
    * be a fixed box the size of a hole in a column that has since been
    * resized - so the inline pinning comes off and the stage owns it again.
+   *
+   * The writing comes back here too, at the end of the journey out rather
+   * than the start. Bare is also what stops the atlas snapping its own view
+   * onto Oryx's distance the moment the box begins to grow, so holding it for
+   * the whole movement is what makes the enlargement start at the size the
+   * panel actually was. `snap: false` hands it over without a jump: only the
+   * target moves, and by then the view is already at it.
    */
   clearTimeout(globeSettling);
   globeSettling = setTimeout(() => {
     box.classList.remove('is-moving');
     globeMoving = false;
     paceAtlas();
-    if (!globeWide()) {
+    if (globeWide()) tellAtlas({ rotmg: 'bare', on: false, snap: false });
+    else {
       box.style.position = '';
       box.style.top = ''; box.style.left = ''; box.style.width = ''; box.style.height = '';
     }
@@ -3103,6 +3132,18 @@ function showPage(name) {
     if (window.requestIdleCallback) requestIdleCallback(pointAtAtlas, { timeout: 1500 });
     else setTimeout(pointAtAtlas, 700);
   }
+  /*
+   * The ring is an arrangement of the home page rather than a page of its
+   * own, so coming home puts back whichever of the two you last chose, and
+   * opening the atlas out to the window takes it off for as long as that
+   * lasts - without forgetting that you wanted it.
+   */
+  if (typeof Ring !== 'undefined') {
+    if (page !== 'home') Ring.set(false, false);
+    else if (wideOpen) Ring.set(false, false);
+    else Ring.wanted();
+  }
+
   setGlobe(wideOpen);
   paceAtlas();
   window.scrollTo(0, 0);
@@ -3269,3 +3310,447 @@ load();
   setInterval(tick, 20000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 })();
+
+/* ---------------- the ring home ---------------- *
+ *
+ * The other front page: the four modules laid round the realm rather than
+ * under it. Same ways in as the cards and the same atlas behind them - it is
+ * an arrangement, not a second copy of anything - and it is a switch rather
+ * than a replacement, because it is prettier than the cards and harder to
+ * read, and an arrival should get the readable one.
+ *
+ * Nothing in here runs until the switch is thrown for the first time.
+ */
+/*
+ * `var`, and on purpose. The router runs long before this line does, and it
+ * asks whether the ring is there with `typeof` - which answers "undefined"
+ * for a var that has not been reached yet and throws for a const, because a
+ * const is in its temporal dead zone until its own line executes. The guard
+ * has to be able to run before the thing it guards exists.
+ */
+var Ring = (() => {
+
+/*
+ * Geometry, in viewBox units out of a hundred-wide box centred on fifty.
+ *
+ * REST and GROWN are the outer edge; FAR and NEAR the inner one. A quarter
+ * under the cursor does not simply get longer - it opens in every direction:
+ * out past the ring, in towards the world until it is nearly on it, and
+ * sideways until the gap is a hairline. NEAR is a unit and a half off the
+ * world's own edge, which at any real size is a few pixels of daylight.
+ */
+const C = 50;
+const REST = 44, GROWN = 50.5;           // outer edge, at rest and open
+const FAR = 27,  NEAR = 23.5;            // inner edge, at rest and open
+const WORLD = 22;                        // radius of the world itself
+const WIDE = 4,  TIGHT = 1.2;            // how far a quarter keeps off its axis
+const PUSH = 6;                          // how far all four back off the world
+
+/*
+ * The gap is a distance, not an angle, and that is the whole of it.
+ *
+ * A quarter that ends on a radial cut ends on a straight line, but one that
+ * points at the middle - so the gap between two of them is a wedge: tight
+ * against the world and gaping by the outer edge, opening further every time
+ * one grows. An end that is a line parallel to the axis leaves a strip of the
+ * same width all the way along, and a quarter can be drawn as long as you
+ * like without ever reaching into the one beside it.
+ *
+ * Which means how much of the circle a quarter covers depends on where you
+ * measure it: the same chord takes a bigger bite out of a small circle than a
+ * large one, so it is nearly a right angle's worth at the outer edge and
+ * noticeably less against the world.
+ */
+const halfAt = (r, gap) => 45 - Math.asin(Math.min(0.999, gap / r)) * 180 / Math.PI;
+
+const MODULES = [
+  { mid: 225, at: 'tl', go: 'enchant', name: 'Enchant Calculator',
+    line: 'What an enchantment really costs.',
+    detail: 'Describe the item you hold, mark what you want on it, and compare '
+          + 'every artifact and every order to roll them in.',
+    art: 'Page Art/Enchanting.png' },
+  { mid: 315, at: 'tr', go: 'theory', name: 'Theory Crafting',
+    line: 'What a build would actually do.',
+    detail: 'Dress a class in anything the game has, enchant every slot, and '
+          + "watch the damage move as the enemy's armour rises.",
+    art: 'Page Art/Forge.png' },
+  { mid: 45, at: 'br', go: 'fame', name: 'Fame Sweep',
+    line: 'Which dungeons are worth the trip.',
+    detail: 'Tick off what you have finished and it works out what the '
+          + 'collection bonuses have paid, and where to go next.',
+    art: "Dungeon Icons/Oryx's Sanctuary.gif" },
+  { mid: 135, at: 'bl', go: 'index', name: 'Index',
+    line: 'Everything the game has, in one place.',
+    detail: 'Every item, class, creature, dungeon, set and enchantment the '
+          + 'game declares, with its picture and what it is joined to.',
+    art: 'Page Art/Index.png', frames: 8 }
+];
+
+const NS = 'http://www.w3.org/2000/svg';
+const rad = a => a * Math.PI / 180;
+const mix = (a, b, t) => a + (b - a) * t;
+
+const el = (name, into, attrs) => {
+  const node = document.createElementNS(NS, name);
+  for (const k in (attrs || {})) node.setAttribute(k, attrs[k]);
+  if (into) into.append(node);
+  return node;
+};
+
+let parts = null, stage = null, wheel = null, core = null;
+let planetOn = false, run = 0, on = false;
+
+function build() {
+  stage = document.getElementById('ringStage');
+  wheel = document.getElementById('ringWheel');
+  core = document.getElementById('ringCore');
+  if (!stage || !wheel || !core) return false;
+  const defs = wheel.querySelector('defs');
+  parts = [];
+
+  for (const m of MODULES) {
+    /* The whole quarter, from one state object, so every piece of it is drawn
+       from the same numbers on the same frame. */
+    const now = { inner: FAR, outer: REST, gap: WIDE, off: 0 };
+
+    const at = (r, a) => {
+      const o = rad(m.mid);
+      return [C + Math.cos(o) * now.off + r * Math.cos(rad(a)),
+              C + Math.sin(o) * now.off + r * Math.sin(rad(a))];
+    };
+    const face = () => {
+      const ho = halfAt(now.outer, now.gap), hi = halfAt(now.inner, now.gap);
+      const [ax, ay] = at(now.outer, m.mid - ho), [bx, by] = at(now.outer, m.mid + ho);
+      const [cx, cy] = at(now.inner, m.mid + hi), [dx, dy] = at(now.inner, m.mid - hi);
+      return 'M ' + ax + ' ' + ay
+        + ' A ' + now.outer + ' ' + now.outer + ' 0 0 1 ' + bx + ' ' + by
+        + ' L ' + cx + ' ' + cy
+        + ' A ' + now.inner + ' ' + now.inner + ' 0 0 0 ' + dx + ' ' + dy + ' Z';
+    };
+    const rim = r => {
+      const h = halfAt(r, now.gap);
+      const [ax, ay] = at(r, m.mid - h), [bx, by] = at(r, m.mid + h);
+      return 'M ' + ax + ' ' + ay + ' A ' + r + ' ' + r + ' 0 0 1 ' + bx + ' ' + by;
+    };
+    /* The two straight ends: each runs from the inner arc to the outer one
+       along a line the gap's width clear of its axis, and stays on that line
+       however far the quarter is drawn out. */
+    const ends = () => {
+      const ho = halfAt(now.outer, now.gap), hi = halfAt(now.inner, now.gap);
+      const [a, b] = at(now.inner, m.mid - hi), [c, d] = at(now.outer, m.mid - ho);
+      const [e, f] = at(now.inner, m.mid + hi), [g, h] = at(now.outer, m.mid + ho);
+      return 'M ' + a + ' ' + b + ' L ' + c + ' ' + d
+           + ' M ' + e + ' ' + f + ' L ' + g + ' ' + h;
+    };
+
+    /*
+     * The dissolve.
+     *
+     * A quarter that simply got longer would still end at a hard line, and
+     * the writing would sit outside a wall. What opens instead is a quarter
+     * whose far end stops being there: one radial gradient about the middle
+     * of the wheel, solid out to where the fade starts and clear at the outer
+     * edge, used as a mask. At rest the fade is a sliver and the edge reads
+     * as an edge; open, it takes the last quarter of the band and the writing
+     * is inside the haze rather than beyond a boundary.
+     *
+     * It is hung on the group only while the quarter is actually opening, and
+     * taken off the moment it is shut. A mask is not a cheap attribute: it
+     * puts the group in an offscreen buffer the size of the mask and rebuilds
+     * that whenever anything inside it changes, and four of them standing
+     * over a canvas that is painting a turning world is most of what this
+     * costs. Shut, none of them exist - which is the state all four are in
+     * for the whole of the other movement, the one where the world comes
+     * forward.
+     */
+    const grad = el('radialGradient', defs, { id: 'ringFade-' + m.at,
+      gradientUnits: 'userSpaceOnUse', cx: C, cy: C, r: GROWN });
+    const near = el('stop', grad, { offset: 0, 'stop-color': '#fff' });
+    const bend = el('stop', grad, { offset: 1, 'stop-color': '#fff' });
+    const far = el('stop', grad, { offset: 1, 'stop-color': '#fff', 'stop-opacity': 1 });
+    const veil = el('mask', defs, { id: 'ringMask-' + m.at,
+      maskUnits: 'userSpaceOnUse', x: -14, y: -14, width: 128, height: 128 });
+    el('rect', veil, { x: -14, y: -14, width: 128, height: 128,
+      fill: 'url(#ringFade-' + m.at + ')' });
+
+    const g = el('g', wheel, { class: 'ring-seg' });
+    const back = el('path', g, { class: 'back' });  // dims the sky it stands on
+    const skin = el('path', g, { class: 'face' });  // and the light on top of it
+
+    /* The picture, inside the quarter: clipped to the quarter's own outline
+       and faded off at its corners. Both are svg, the same renderer as the
+       shape it belongs to, so neither has to be restated in pixels on every
+       frame the way a css clip-path and mask-image would. */
+    const cut = el('clipPath', defs, { id: 'ringCut-' + m.at,
+      clipPathUnits: 'userSpaceOnUse' });
+    const hole = el('path', cut, {});
+    const pot = el('g', g, { 'clip-path': 'url(#ringCut-' + m.at + ')' });
+    const art = el('image', pot, { mask: 'url(#ringSoft)',
+      preserveAspectRatio: m.frames ? 'xMinYMid slice' : 'xMidYMid meet' });
+    const src = asset('GUI Files', ...m.art.split('/'));
+    if (src) art.setAttribute('href', src); else pot.remove();
+
+    const lip = el('path', g, { class: 'lip' });    // inner arc, against the world
+    const cap = el('path', g, { class: 'cap' });    // outer arc, the one that goes
+    const side = el('path', g, { class: 'end' });   // the two straight ends
+
+    const tag = document.createElement('div');
+    tag.className = 'ring-tag ' + m.at;
+    tag.innerHTML = '<div class="ring-card"><span class="t"></span>'
+      + '<span class="s"></span><span class="d"></span></div>';
+    tag.querySelector('.t').textContent = m.name;
+    tag.querySelector('.s').textContent = m.line;
+    tag.querySelector('.d').textContent = m.detail;
+    stage.append(tag);
+
+    /* Writing an attribute marks it dirty whether or not it says anything
+       new, and most frames of most quarters say nothing new. */
+    const put = (node, name, value) => {
+      const said = String(value);
+      if (node.getAttribute(name) !== said) node.setAttribute(name, said);
+    };
+
+    let open = 0, wantOpen = 0;          // 0 shut, 1 under the cursor
+    let away = 0, wantAway = 0;          // 0 in place, 1 backed off the world
+    let veiled = false;
+
+    function draw() {
+      now.outer = mix(REST, GROWN, open);
+      now.inner = mix(FAR, NEAR, open);
+      now.gap = mix(WIDE, TIGHT, open);
+      now.off = away * PUSH;
+
+      const shape = face();
+      put(back, 'd', shape);
+      put(skin, 'd', shape);
+      put(hole, 'd', shape);
+      put(lip, 'd', rim(now.inner));
+      put(cap, 'd', rim(now.outer));
+      put(cap, 'opacity', Math.max(0, 1 - open * 1.7));
+      put(side, 'd', ends());
+
+      const wants = open > 0.002;
+      if (wants !== veiled) {
+        veiled = wants;
+        if (wants) g.setAttribute('mask', 'url(#ringMask-' + m.at + ')');
+        else g.removeAttribute('mask');
+      }
+      if (wants) {
+        const across = now.outer - now.inner;
+        put(near, 'offset', (now.inner * 0.8) / GROWN);
+        put(bend, 'offset', (now.outer - across * mix(0.04, 0.26, open)) / GROWN);
+        put(far, 'offset', now.outer / GROWN);
+        put(far, 'stop-opacity', 1 - open * 0.72);
+      }
+
+      /*
+       * And the picture with it.
+       *
+       * Dead centre of the band at rest, on the diagonal, which is the only
+       * place it looks placed rather than put. As the quarter opens it grows -
+       * some of the way, not all - and moves inwards, into the room the inner
+       * edge has just given up. That is what keeps it clear of the
+       * description, which is arriving from the other end of the same band:
+       * picture inside, words outside, and neither has to be shifted off the
+       * diagonal to get out of the other's way.
+       */
+      const band = now.outer - now.inner, room = REST - FAR;
+      const wide = room * 0.8 + (band - room) * 0.4;
+      const [ax, ay] = at(now.inner + band * mix(0.5, 0.3, open), m.mid);
+      put(art, 'x', ax - wide / 2); put(art, 'y', ay - wide / 2);
+      put(art, 'width', wide); put(art, 'height', wide);
+    }
+
+    parts.push({
+      draw,
+      still: () => Math.abs(wantOpen - open) < .003 && Math.abs(wantAway - away) < .003,
+      ease: () => { open += (wantOpen - open) * .2; away += (wantAway - away) * .16; },
+      land: () => { open = wantOpen; away = wantAway; },
+      back: yes => {                     // the world asking for room
+        wantAway = yes ? 1 : 0;
+        if (yes) { wantOpen = 0; g.classList.remove('on'); tag.classList.remove('on'); }
+        nudge();
+      }
+    });
+
+    g.addEventListener('pointerenter', () => {
+      if (planetOn) return;
+      wantOpen = 1; nudge();
+      g.classList.add('on'); tag.classList.add('on');
+    });
+    g.addEventListener('pointerleave', () => {
+      wantOpen = 0; nudge();
+      g.classList.remove('on'); tag.classList.remove('on');
+    });
+    g.addEventListener('click', () => { location.hash = m.go; routeFromHash(); });
+  }
+  return true;
+}
+
+/*
+ * One clock for the four of them.
+ *
+ * Four loops would mean four callbacks, four style recalculations and four
+ * chances for the browser to lay the page out again inside a single frame -
+ * for a movement that is almost always all four moving together.
+ */
+function tick() {
+  let moving = false;
+  for (const one of parts) {
+    if (one.still()) one.land(); else { one.ease(); moving = true; }
+    one.draw();
+  }
+  run = moving ? requestAnimationFrame(tick) : 0;
+}
+function nudge() { if (!run) run = requestAnimationFrame(tick); }
+
+/*
+ * The world.
+ *
+ * How big it is drawn is not the atlas's business to guess: it is the middle
+ * of a ring drawn on top of it, and it has to sit inside that ring at
+ * whatever size the ring happens to be. So the page works out the fraction of
+ * the window the world should fill and says so - every time the wheel is
+ * measured, and every time the cursor arrives at it or leaves. The atlas eases
+ * there on its own, which is what makes coming closer a movement rather than
+ * a jump.
+ */
+let told = null;
+function tellAtlasSize(snap) {
+  if (!on || !stage) return;
+  const room = Math.min(window.innerWidth, window.innerHeight);
+  const across = (planetOn ? WORLD + PUSH - 1.5 : WORLD) * 2;   // in wheel units
+  const wide = parseFloat(getComputedStyle(stage).getPropertyValue('--wheel')) || 640;
+  stage.style.setProperty('--core', (across / 100) * wide + 'px');
+  const of = (across / 100) * wide / room;
+  if (!snap && told !== null && Math.abs(of - told) < 0.002) return;
+  told = of;
+  tellAtlas({ rotmg: 'bare', on: true, of, snap: !!snap });
+}
+
+/*
+ * How big the wheel can be.
+ *
+ * Not simply the shorter axis: the writing sits outside it, and how far
+ * outside is itself a fraction of its size. A block's centre is OUT*wheel from
+ * the middle on each axis, plus a fixed step, and it needs half its own width
+ * past that - so the wheel plus what hangs off both ends has to fit:
+ *
+ *   wheel + 2*(OUT*wheel + K + half + margin)  <=  axis
+ *
+ * which is the cap below, solved per axis, because the blocks are wide and
+ * short and width and height do not bind at the same size. The step and the
+ * block's size are read from the stylesheet rather than repeated here: they
+ * move at breakpoints, and two copies of a breakpoint is one copy quietly
+ * wrong.
+ */
+const OUT = .3465;
+function fit() {
+  if (!on || !stage) return;
+  const seen = getComputedStyle(stage);
+  const K = parseFloat(seen.getPropertyValue('--k')) || 64;
+  const tag = stage.querySelector('.ring-tag');
+  if (!tag) return;
+  const halfW = tag.offsetWidth / 2, halfH = tag.offsetHeight / 2;
+  const EDGE = 16;                       // and a margin off the window itself
+  const cap = (axis, half) => (axis - 2 * (K + half + EDGE)) / (1 - 2 * (.5 - OUT));
+  const side = Math.max(240, Math.min(860, Math.min(
+    cap(window.innerWidth, halfW), cap(window.innerHeight, halfH))));
+  stage.style.setProperty('--wheel', Math.round(side) + 'px');
+  for (const one of parts) one.draw();
+  tellAtlasSize(false);
+}
+
+/* The world is not a module, so clicking it does what clicking it does on the
+   other front page: opens the atlas out to the whole window. The ring stands
+   down while that lasts and is put back when you come home.
+
+   Named rather than written where it is attached, because the switch can be
+   thrown any number of times and the browser only drops a duplicate listener
+   if it is the same function - which a fresh arrow written at the point of
+   attachment never is. */
+function wide() { location.hash = 'realm'; routeFromHash(); }
+
+function wake() {
+  planetOn = true;
+  document.body.classList.add('ring-near');
+  for (const one of parts) one.back(true);
+  tellAtlasSize(false);
+}
+function rest() {
+  planetOn = false;
+  document.body.classList.remove('ring-near');
+  for (const one of parts) one.back(false);
+  tellAtlasSize(false);
+}
+
+/*
+ * `remember` is what separates a choice from a detour. Throwing the switch is
+ * a choice and is kept; being taken off it - because the atlas was opened out
+ * to the window, or because you went to a module - is a detour, and coming
+ * home afterwards should put you back where you were.
+ */
+function set(want, remember) {
+  if (want === on) return;
+  if (want && !parts && !build()) return;
+  on = want;
+  document.body.dataset.home = on ? 'ring' : 'cards';
+  const stageBox = document.getElementById('ringStage');
+  if (stageBox) stageBox.hidden = !on;
+  const knob = document.getElementById('ringWay');
+  if (knob) knob.setAttribute('aria-pressed', String(on));
+  if (remember !== false) {
+    try { localStorage.setItem('rotmg-home', on ? 'ring' : 'cards'); } catch (e) {}
+  }
+
+  if (on) {
+    pointAtAtlas();                      // it may not have been asked for yet
+    core.addEventListener('pointerenter', wake);
+    core.addEventListener('pointerleave', rest);
+    core.addEventListener('click', wide);
+    window.addEventListener('resize', fit);
+    fit();
+    tellAtlasSize(true);
+  } else {
+    rest();
+    window.removeEventListener('resize', fit);
+    core.removeEventListener('pointerenter', wake);
+    core.removeEventListener('pointerleave', rest);
+    core.removeEventListener('click', wide);
+    /* Back to the panel, which wants the writing off too - it is only the
+       distance the ring asked for that is given up here. */
+    tellAtlas({ rotmg: 'bare', on: true, of: null, snap: false });
+    told = null;
+  }
+}
+
+/* What was chosen, last time anybody chose. */
+function stored() {
+  try { return localStorage.getItem('rotmg-home') === 'ring'; } catch (e) { return false; }
+}
+
+return {
+  set,
+  is: () => on,
+  wanted: () => set(stored(), false),
+  /* The atlas is loaded lazily and may arrive after the switch was thrown, so
+     the size is said again once it is there. */
+  greet: () => { told = null; tellAtlasSize(true); },
+  fit
+};
+})();
+
+/*
+ * The switch, and what it remembers.
+ *
+ * A choice about which front page you want is a choice you make once, so it
+ * is kept - but only for this browser, and the cards are still what an
+ * arrival with nothing stored gets.
+ */
+{
+  const knob = document.getElementById('ringWay');
+  if (knob) {
+    knob.addEventListener('click', () => Ring.set(!Ring.is(), true));
+    if (document.body.dataset.page === 'home') Ring.wanted();
+  }
+}
