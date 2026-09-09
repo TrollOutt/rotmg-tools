@@ -39,7 +39,10 @@ function check(root) {
   let tracked = null;
   try {
     tracked = new Set(require('child_process')
-      .execFileSync('git', ['-C', root, 'ls-files', 'data'], { encoding: 'utf8' })
+      // stderr ignored: outside a checkout git says so loudly, and the answer
+      // to that is the fallback below, not a page of noise in the test output.
+      .execFileSync('git', ['-C', root, 'ls-files', 'data'],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
       .split('\n').filter(Boolean));
   } catch (err) { tracked = null; }
   function walk(directory) {
@@ -69,6 +72,26 @@ function check(root) {
     if (relative === 'client-snapshot.txt') {
       const build = /^build\|(.+)$/m.exec(fs.readFileSync(path.join(root, file), 'utf8'))?.[1].trim();
       if (build !== meta.from.build) throw new Error(file + ': header disagrees with snapshot build ' + build);
+    }
+  }
+  /*
+   * And the community join, which is not a client catalogue but is read
+   * against one.
+   *
+   * A wiki join written before the last game update points at record ids that
+   * may not exist any more, and nothing said so: the page simply showed fewer
+   * links and nobody could tell whether the community had gone quiet or the
+   * join had gone stale. It records the client it was joined against, so that
+   * can be compared. Older joins that never recorded one are left alone -
+   * saying "unknown" is not the same as saying "wrong".
+   */
+  const join = path.join(root, 'data/Index/wiki.json');
+  if (first && fs.existsSync(join)) {
+    const meta = read(join), against = meta?.from?.joinedClient;
+    if (against && typeof against === 'object' && against.build && against.build !== first.meta.from.build) {
+      throw new Error('data/Index/wiki.json was joined against client ' + against.build
+        + ' (' + against.date + ') and the catalogues come from ' + first.meta.from.build
+        + ' (' + first.meta.from.date + '). Run tools/index-wiki.js against the snapshot again.');
     }
   }
   return discovered.size;

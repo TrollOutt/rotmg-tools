@@ -163,6 +163,32 @@ enchantable item arrives without a picture; both are at 100%.
 
 Served page: 4.02 MB to 2.52 MB. Download: 13.8 MB to 12.3 MB.
 
+## The inventory, widened
+
+The item loop asked for the `EQUIPMENT` label, so eight thousand eight hundred
+`<Item />` declarations never became records: marks, artifacts, keys, set
+shards, dyes, pet skins. It now takes anything the client puts in a bag and
+reads a family off the client - the `Activate` verb first, the labels second -
+so the index holds the inventory and not only the wardrobe. 19,302 records.
+
+The calculators did not move. Their membership comes from their own catalogues
+through `offered`, not from what the index happens to hold, which is why all
+196 checks, the 3,134-record comparison and the rule corpus reproduce exactly
+across a change that grew the index by 70%.
+
+`index-wiki.js` was re-run against the September snapshot and the widened
+index: 6,620 records have a page against 6,055, the three records that had a
+page but no link are linked, and the join records the snapshot hash and the
+client build it was made against instead of "unrecorded legacy". That build is
+now compared against the catalogues' in `provenance.check()`, so a join left
+behind by a game update fails the suite rather than quietly thinning the page.
+
+`tools/png.js` holds the PNG reader and writer that `index-sprites.js` kept to
+itself, because the realm atlas needed to cut an item out of the index sheet
+too and a second copy of a decoder is how two tools start disagreeing about a
+pixel. `merge-realm-roles.js` cuts from that sheet now instead of reading the
+deleted wiki folder.
+
 ## Runtime verification and remaining source decisions
 
 The served page previously embedded Theory Crafting too. To keep calculator

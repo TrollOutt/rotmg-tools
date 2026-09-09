@@ -38,7 +38,7 @@ const ATLAS = asked
 const BOSS = path.join(ATLAS, 'boss');
 const CATALOG = path.join(root, 'web', 'assets', 'realm-catalog');
 const MONSTERS = path.join(root, 'web', 'assets', 'realm-monsters');
-const ITEMS = path.join(root, 'web', 'assets', 'items');
+const ITEM_ART = path.join(root, 'data', 'Index', 'item-art.json');
 const DUNGEONS = path.join(root, 'data', 'GUI Files', 'Dungeon Icons');
 const SLOTS = path.join(root, 'data', 'GUI Files', 'Item Types');
 const LOOT = path.join(ATLAS, 'loot');
@@ -127,7 +127,7 @@ function carry(from, file, as) {
 }
 
 // Built when first asked for, because slug is declared further down.
-let dungeonArt = null, itemArt = null;
+let dungeonArt = null, itemArt = null, sheet = null;
 function artIndex(where, pattern) {
   const out = new Map();
   if (!fs.existsSync(where)) return out;
@@ -135,7 +135,45 @@ function artIndex(where, pattern) {
   return out;
 }
 const dungeons_ = () => (dungeonArt || (dungeonArt = artIndex(DUNGEONS, /[.](png|gif)$/i)));
-const items_ = () => (itemArt || (itemArt = artIndex(ITEMS, /[.](png|gif|webp)$/i)));
+
+/*
+ * An item's picture comes from the index, like everywhere else on this site.
+ *
+ * This used to read a folder of renders downloaded from the wiki, which was
+ * the calculator's private copy of item art and is gone. The index cuts every
+ * object out of the installed client onto one sheet and says where each one
+ * sits; the atlas wants a file per item, so the rectangle is cut back out into
+ * the loot folder. Same pixels the calculator and the bench draw.
+ */
+const items_ = () => {
+  if (itemArt) return itemArt;
+  itemArt = new Map();
+  if (!fs.existsSync(ITEM_ART)) return itemArt;
+  const said = JSON.parse(fs.readFileSync(ITEM_ART, 'utf8'));
+  for (const name of Object.keys(said.art)) itemArt.set(slug(name), said.art[name]);
+  const at = path.join(root, 'web', 'assets', 'index', 'sheet.png');
+  if (fs.existsSync(at)) sheet = require('./png').readPng(fs.readFileSync(at));
+  return itemArt;
+};
+
+/*
+ * One rectangle off that sheet, written where the atlas expects a file. Named
+ * by the slug, so a second dungeon asking for the same item finds it already
+ * there rather than cutting it again.
+ */
+function cutItem(rect, as) {
+  if (!sheet || carriedLoot.has(as)) return carriedLoot.has(as) ? as : null;
+  const [x, y, w, h] = rect;
+  if (x + w > sheet.width || y + h > sheet.height) return null;
+  const out = Buffer.alloc(w * h * 4);
+  for (let j = 0; j < h; j++) {
+    sheet.pixels.copy(out, j * w * 4, ((y + j) * sheet.width + x) * 4, ((y + j) * sheet.width + x + w) * 4);
+  }
+  fs.mkdirSync(LOOT, { recursive: true });
+  fs.writeFileSync(path.join(LOOT, as), require('./png').writePng(w, h, out));
+  carriedLoot.set(as, true);
+  return as;
+}
 const SLOT_OF = {
   Weapons: 'weapon', 'Alternate Weapons': 'weapon',
   Armor: 'armor', Rings: 'ring', Abilities: 'ability'
@@ -172,7 +210,7 @@ function sortTiers(loot) {
     }
     const kit = items_().get(key);
     if (kit) {
-      const art = carry(ITEMS, kit, kit);
+      const art = cutItem(kit, key + '.png');
       if (art) { gear.push({ name, art }); continue; }
     }
     rest.push(name);

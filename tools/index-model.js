@@ -63,9 +63,23 @@ function attach(records, mechanics, objects) {
       return r.id;
     });
   }
+  /*
+   * Why the bench does not offer it, in words that are true of the thing.
+   *
+   * There was one fallback reason and it was a duplicate's reason, so once the
+   * index started holding dyes, marks and pet skins, five thousand of them
+   * were told they were another copy of a name the bench already had. They are
+   * not copies of anything; they are not gear. The family the client gives
+   * them says so, and saying so is cheaper than a reader working it out.
+   */
+  const article = say => (/^[aeiou]/.test(say) ? 'an ' : 'a ') + say;
   for (const r of records.values()) {
     if (r.kind === 'item' && !r.bench && !r.hidden?.length) {
-      r.benchWhy = r.use ? 'consumable; not worn on the bench' : 'another copy of a name offered on the bench';
+      r.benchWhy = r.family && r.family !== 'other'
+        ? article(r.family) + ', not gear anybody wears'
+        : r.family === 'other' ? 'not gear anybody wears'
+        : r.use ? 'consumable; not worn on the bench'
+        : 'another copy of a name offered on the bench';
     }
   }
   return view;

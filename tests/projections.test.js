@@ -36,6 +36,22 @@ try {
     ['data/Index/index.json', 'data/Fame/client-fame.txt', '2000-01-01', 'another-build'].every(s => error.message.includes(s)));
   fs.writeFileSync(target, original.replace(/^## provenance: .+\n/, ''));
   assert.throws(() => provenance.check(temporary), /missing .*provenance/);
+  fs.writeFileSync(target, original);
+
+  /*
+   * And the community join, which records the client it was joined against.
+   * A join left behind by a game update is the failure this catches.
+   */
+  const join = path.join(temporary, 'data/Index/wiki.json');
+  fs.copyFileSync(path.join(root, 'data/Index/wiki.json'), join);
+  assert.equal(provenance.check(temporary), 10);
+  const wiki = JSON.parse(fs.readFileSync(join, 'utf8'));
+  assert.ok(wiki.from.joinedClient.build, 'The shipped join must say which client it was joined against');
+  wiki.from = { ...wiki.from, joinedClient: { kind: 'client', build: 'an-older-build', date: '2000-01-01' } };
+  fs.writeFileSync(join, JSON.stringify(wiki));
+  assert.throws(() => provenance.check(temporary), error =>
+    ['wiki.json', 'an-older-build', '2000-01-01'].every(s => error.message.includes(s)));
+  fs.rmSync(join);
   const conditions = require('../tools/item-conditions');
   assert.deepEqual(conditions('<Projectile id="2"><ConditionEffect duration="2.5">Weak</ConditionEffect></Projectile>'),
     [{ on: 'hit', projectile: '2', effect: 'Weak', duration: '2.5' }]);

@@ -331,6 +331,59 @@ creatures and 1 item whose declared texture does not resolve.
 
 ---
 
+### Everything in a bag, not only what a class wears
+
+The item loop asked for the `EQUIPMENT` label and stopped. That kept **8,800
+things out of the index**: every mark, artifact, key, set shard, dye, pet skin,
+gravestone, emote and title the client puts in your inventory - and the Paper
+Machete, which the client lets you enchant and simply never labelled, so the
+calculator offered an item the index had never heard of.
+
+It now takes anything the client marks `<Item />`, and gives it a **family**
+read from the client rather than guessed. Two signals, in this order:
+
+1. the verb its `Activate` fires - `UnlockPetSkin` is a pet skin, `CreatePet`
+   is an egg, `AddDust` is enchant dust, `CreatePortal` is a key;
+2. failing that, a label - `MARK`, `ARTIFACT`, `KEY`, `MATERIAL`, `CONSUMABLE`.
+
+`FORGESTORE` is never a family: it is on almost anything you can dismantle and
+says nothing about what a thing is. Between the two, nine in ten of what used
+to be filed as "a slot no class uses" now has a name.
+
+| family | records | | family | records |
+|---|---:|---|---|---:|
+| skin | 1,342 | | pet egg | 175 |
+| dye | 802 | | gravestone | 154 |
+| pet skin | 633 | | enchant dust | 100 |
+| shard | 606 | | consumable | 92 |
+| material | 340 | | supporter reward | 60 |
+| emote | 320 | | mark | 57 |
+| artifact | 280 | | entrance | 40 |
+| key | 265 | | title | 18 |
+| | | | token | 15 |
+
+11,020 records became **19,302**; index.json went from 5.9 MB to 9.7 MB and the
+sheet from 618 KB to 985 KB. The bench and the calculator did not move: their
+membership is read from their own catalogues, and all 196 checks, the 3,134
+record comparison and the rule corpus reproduce exactly.
+
+They browse under **Kind of thing**, a way in of their own - dropping them into
+Gears would have been wrong twice over, since they are not gear and four chips
+would have become twenty. The badge on a row says the family now, so a Mark of
+Oryx no longer goes about labelled as a piece of gear, and `benchWhy` says "a
+mark, not gear anybody wears" where it used to tell five thousand things they
+were another copy of a name.
+
+### The community join, re-run
+
+Re-joined against the widened index and the September snapshot: **6,620 records
+have a page**, up from 6,055, and the join finally records what it was made
+from - the snapshot's hash and the client build. `provenance.check()` compares
+that build with the catalogues' and fails when they diverge, which is the last
+place a file could quietly go stale. The three records that had a page but no
+link - Sunken Treasure, and the Encore Huntress and Trickster puppets - are
+linked.
+
 ### One sheet, every module
 
 An item's picture is the rectangle the index cut out of the client, and there
@@ -528,11 +581,6 @@ it is.
   it should move into the build rather than be written twice.
 - **The card's link list is flat.** Two thousand `same name as` edges make some
   cards long; grouping by `how` with a count would read better.
-- **The realm atlas still wants the deleted folder.** `merge-realm-roles.js`
-  read `web/assets/items` for the loot icons it copies into the atlas. The
-  folder is gone and the tool degrades quietly - those items land in the
-  "rest" list without a picture - so it wants pointing at the index sheet the
-  way the calculator and the bench now are.
 - **Six thousand wiki links are set aside as unreadable**, most of them item to
   item inside a Drops section, and four thousand more could point either way.
   The page *text* does distinguish "Drops" from "Drops of Interest" and
@@ -541,6 +589,16 @@ it is.
 - **Twelve sets have no page anywhere on the wiki** — the three Agents of Oryx,
   Legion Elite, the three MotMG 2021, Chronicle of Decades and the four Paths.
   Their pieces describe the set inline instead of linking to one.
-- **The wiki join is only as fresh as its snapshot.** `wiki.json` carries the
-  date it was built, but nothing on the page compares that date with the
-  client's, and a reader would want to know when the two disagree.
+- **The reader is not told when the wiki join is behind.** The build is:
+  `provenance.check()` fails when `joinedClient` names a different client from
+  the catalogues. The page itself still says nothing, and a reader looking at a
+  thin set of community links would want to know why.
+- **Stacks are one record each.** `Green Dust x1` through `x10`, and the
+  fifteen `Mystery ST Shard` sizes, are fifteen separate declarations in the
+  client and fifteen records here. That is honest and it reads badly: one
+  record with the sizes folded into it would be better, and the `also`
+  machinery is already there for it.
+- **2,837 things are filed as "a slot no class uses".** What is left after the
+  families is mostly machinery - Subattack Containers, proc attacks - which is
+  correctly hidden but has no name of its own. A family for "the machinery
+  behind a weapon" would say it properly.
