@@ -3159,8 +3159,23 @@ for (const image of document.querySelectorAll('[data-art]')) {
    * would have to be told the size of one frame, and the card would rather
    * decide its own size.
    */
-  if (image.tagName === 'IMG') image.src = src;
-  else image.style.backgroundImage = 'url(' + src + ')';
+  if (image.tagName === 'IMG') { image.src = src; continue; }
+  image.style.backgroundImage = 'url(' + src + ')';
+  /*
+   * How many frames there are is the strip's own business, not something the
+   * stylesheet should be told twice. The cells are square, so the count is the
+   * picture's width over its height - and the animation is written out here
+   * because steps() cannot be given a custom property.
+   */
+  const strip = new Image();
+  strip.addEventListener('load', () => {
+    const many = Math.max(1, Math.round(strip.naturalWidth / strip.naturalHeight));
+    image.style.backgroundSize = (many * 100) + '% 100%';
+    image.style.animation = 'index-book ' + (many * 0.12).toFixed(2) + 's'
+      + ' steps(' + many + ', jump-none) infinite,'
+      + ' enchanting 4.4s ease-in-out infinite';
+  });
+  strip.src = src;
 }
 
 
