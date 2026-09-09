@@ -50,6 +50,7 @@ node tools/extract-client.js        # needs the game installed
 node tools/build-index.js           # records and links   -> data/Index/
 node tools/index-sprites.js         # pictures            -> web/assets/index/
 REALM_INDEX_BUNDLE=<path> node tools/index-wiki.js   # community links
+node tools/index-art.js             # the card's book     -> Page Art/Index.png
 npm run build                       # the site            -> docs/
 ```
 
@@ -57,6 +58,12 @@ The first three must run in that order. The sprite tool reads
 `data/Index/index.json`, writes the rectangles back into it and copies the
 result to `web/assets/index/`; running only the first leaves the served copy
 without art. The wiki step is optional — see [Community links](#community-links).
+
+`tools/index-art.js` is the odd one out: it needs neither the client nor the
+snapshot, only `data/GUI Files/Page Art/Index-sheet.png`, which is committed.
+It finds the twenty frames on that contact sheet, lines them up by the foot of
+the book rather than by their bounding boxes — the glow grows and shrinks, so
+boxes would make the book jump — and writes one strip the card walks along.
 
 **A rebuild changes only the date it stamps.** The build reads every text file
 with its line endings settled, so a clone that checks out CRLF produces the

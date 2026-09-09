@@ -211,9 +211,6 @@ img { image-rendering: pixelated; }
  * The index, which is a way through rather than a tool, so it is the
  * quietest of the three - and it is not offered on the page it opens.
  */
-.corner-index { color: var(--dim); }
-.corner-index:hover { color: var(--text); }
-body[data-page="index"] .corner-index { display: none; }
 
 /*
  * The way to say something back, in the corner the other page-wide controls
@@ -1340,12 +1337,19 @@ body.globe-wide .aurora span,
 body.globe-wide .news-bell-glyph,
 body.globe-wide .news-bell-dot,
 body.globe-wide .home-card-art { animation: none !important; }
+body.globe-wide .home-card-film { background-position-x: 45%; }
 .home-head { max-width: 62ch; margin: 0 auto; text-align: center; }
 .home-head h1 { font-size: clamp(28px, 5vw, 52px); }
 
+/*
+ * Four cards, so two rows of two rather than a row of three and a stray. The
+ * minimum is what decides it: at the eleven hundred pixels this is allowed,
+ * four hundred and sixty leaves room for two across and no more, and a narrow
+ * window still falls to one.
+ */
 .home-cards {
   display: grid; gap: clamp(12px, 2vw, 22px);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
   width: min(1100px, 100%); margin: 0 auto;
 }
 .home-card {
@@ -1381,8 +1385,29 @@ body.globe-wide .home-card-art { animation: none !important; }
  * blue of the rune circle in the middle of it. Small on purpose — enough to
  * catch the eye on the way past, not enough to read as a warning.
  */
-.home-card-art[data-art^="Page Art"] {
+.home-card-art {
   animation: enchanting 4.4s ease-in-out infinite;
+}
+
+/*
+ * The index's book, twenty frames on one strip.
+ *
+ * The strip is twenty cells wide, so the box shows one twentieth of it and
+ * walks from the first cell to the last in twenty steps. Percentages measure
+ * the overflow rather than the image, which is why nought to a hundred is
+ * exactly the nineteen cells between the first and the twentieth.
+ */
+.home-card-film {
+  background-repeat: no-repeat;
+  background-size: 2000% 100%;
+  background-position: 0% 50%;
+  image-rendering: auto;
+  animation: index-book 2.4s steps(20) infinite,
+    enchanting 4.4s ease-in-out infinite;
+}
+@keyframes index-book {
+  from { background-position-x: 0%; }
+  to   { background-position-x: 100%; }
 }
 
 .realm-card-glyph {
@@ -1481,10 +1506,12 @@ body.globe-wide .home-card-art { animation: none !important; }
   50%      { filter: drop-shadow(0 0 12px rgba(126, 196, 255, .62)) brightness(1.08); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-card-art[data-art^="Page Art"] {
+  .home-card-art {
     animation: none;
     filter: drop-shadow(0 0 4px rgba(96, 168, 236, .3));
   }
+  /* Still the open book, still lit, simply not turning its own pages. */
+  .home-card-film { background-position-x: 45%; }
 }
 .home-card-title, .home-card-line, .home-card-go, .home-card small { grid-column: 2; }
 .home-card-title { font-size: clamp(18px, 2vw, 24px); font-weight: 600; color: #f6ecd2; }
