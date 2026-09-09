@@ -11,11 +11,34 @@
   #seen i { font-style: normal; opacity: .6; }
   #seen b { font-size: 14px; font-weight: 650; color: #e8eef8;
     font-variant-numeric: tabular-nums; }
+  /*
+   * Stood in the middle of something else.
+   *
+   * The home page frames this in a circle with its own things around it, and
+   * there the atlas is scenery rather than a map: nobody is reading the
+   * counts, the hint names keys they are not going to press, and the chat
+   * knob is a button they cannot reach through the frame. The page asks for
+   * the chrome to come off, and the writing goes with it.
+   */
+  body.bare #chat, body.bare #chatKnob, body.bare #panel,
+  body.bare #bench { display: none !important; }
+  /*
+   * The writing is the exception, and it fades rather than being taken away.
+   *
+   * It sits on its own gradient into the page's near-black, so dropping the
+   * whole bar's opacity takes the words and the dark they are written on
+   * together - which is a fade to black rather than four lines vanishing off
+   * a picture. It cannot be `display` for the same reason: there is nothing
+   * to interpolate between none and flex.
+   */
+  body.bare #bar { opacity: 0; }
+
   #bar {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 12px;
     display: flex; gap: 20px; align-items: baseline;
     background: linear-gradient(rgba(7,10,16,0), rgba(7,10,16,.92) 55%);
     pointer-events: none;
+    transition: opacity .5s ease;
   }
   #where { color: #b9c2d4; }
   #chat {
@@ -1127,10 +1150,55 @@ const starInk = warm => warm < 0.62
 const starField = document.createElement('canvas');
 const starCtx = starField.getContext('2d');
 let starKey = null;
+let starWas = null;                      // the size the frame before asked for
+let starAt = null;                       // and the size the field was painted at
 
+/* How far the box may drift from the size its stars were drawn for before
+   they are drawn again. A field of dots stretched by an eighth is a field of
+   dots; stretched by five, which is what a letterbox opening out to a window
+   does to the vertical, it is a field of dashes. */
+const STAR_SLACK = 1.12;
+
+/*
+ * Painted when the box comes to rest, not while it is on its way there.
+ *
+ * The field is four hundred stars, three galaxies of stacked gradients and a
+ * handful of meteors, drawn into an offscreen canvas the size of the frame -
+ * and it was rebuilt every time that size changed by a pixel. Which is once a
+ * frame for the whole of an opening panel: measured, forty-seven rebuilds of
+ * a small window cost fifty milliseconds of the main thread, and it scales
+ * with the area, so a real one costs several times that. Two thirds of a
+ * second of animation, spent redrawing the same stars at forty-seven sizes.
+ *
+ * It does not need redrawing on every one of them. The field is blitted with
+ * `drawImage(starField, 0, 0, box.w, box.h)`, which already stretches
+ * whatever it has to whatever the box now is - so a box in motion can carry
+ * the picture it had for a while, and be redrawn sharp on the first frame the
+ * size holds still.
+ *
+ * For a while, not for the whole journey. Carried the whole way, the stars
+ * are stretched by however much the box grew: a letterbox opening out to a
+ * window is five times taller at the end, and round dots come out as vertical
+ * dashes - which is worse than the stall it was meant to save. So the field
+ * is redrawn whenever the box has drifted more than an eighth from the size
+ * it was drawn for, which caps the stretch at something nobody can see and
+ * still costs a handful of repaints instead of one per frame.
+ *
+ * "Moving" is the size differing from the frame before rather than anything
+ * being told to this function, so it covers a window being dragged as well as
+ * a panel being opened, and there is nothing to keep in step.
+ */
 function paintSpace(box, grain) {
   const key = Math.round(box.w) + 'x' + Math.round(box.h) + '@' + grain;
+  const moving = starWas !== null && key !== starWas;
+  starWas = key;
   if (key === starKey) return;
+  if (moving && starAt) {
+    const off = Math.max(box.w / starAt.w, starAt.w / box.w,
+                         box.h / starAt.h, starAt.h / box.h);
+    if (off < STAR_SLACK) return;         // still close enough; stretch instead
+  }
+  starAt = { w: box.w, h: box.h };
   starField.width = Math.max(1, Math.round(box.w * grain));
   starField.height = Math.max(1, Math.round(box.h * grain));
   starCtx.setTransform(grain, 0, 0, grain, 0, 0);
@@ -1609,11 +1677,55 @@ function oryxPaint() {
  * has it.
  */
 const ORYX_FROM = 1.85;                  // in floors, the distance he starts at
+
+/*
+ * Whether this atlas is standing inside somebody else's frame as scenery.
+ *
+ * True from the start when it is in one, which is not a guess: a page that
+ * frames this wants the writing off, and waiting to be told means the words
+ * are painted and then faded away on every arrival - a flicker on the front
+ * page, every time. Opened on its own it is a map and keeps everything.
+ *
+ * The `bare` message near the bottom of the file changes it after that; it is
+ * read up here as well, which is why it is declared this far up.
+ */
+let bare = window.parent !== window;
+
+/*
+ * And how much of the frame the world is to fill while it is - as a fraction
+ * of the shorter side, the same way floorZoom reckons it.
+ *
+ * It is asked for rather than assumed because the page that framed this knows
+ * something the atlas cannot: the world is the middle of a ring drawn on top
+ * of it, and how big it has to be to sit inside that ring depends on how big
+ * the ring is. It also changes on its own - somebody putting the cursor on
+ * the planet is asking for it to come closer - and because only the target
+ * moves, the ordinary ease carries the view there.
+ *
+ * Null when nothing has been asked, which is a different thing from bare and
+ * the common case: a page that only wants the writing off - the panel on the
+ * ordinary front page - leaves the framing exactly as it would have been.
+ */
+let bareOf = null;
+const bareZoom = box => (bareOf / 2) * Math.min(box.w, box.h) / PLANET;
+
+/* How far back the view may go. Pulled back past the point where the world
+   fills the window there is nothing further to see - except when the frame
+   asked for a smaller world on purpose, and then that is the limit instead. */
+const leastZoom = box => (bare && bareOf) ? Math.min(floorZoom(box), bareZoom(box))
+                                          : floorZoom(box);
 const ORYX_SWIM = 700;                   // ms he takes to come up, if he lands late
 let oryxSince = 0;                       // when the picture first became usable
 
 function oryxShows(box) {
   if (!A.sky || !skyArt || !skyArt.oryx) return 0;
+  /*
+   * Not into a decoration. He is an arrival - the reward for pulling all the
+   * way back - and pulling all the way back is exactly where a bare frame
+   * starts and stays. He would simply be there, filling the top of a circle
+   * somebody is trying to read four module names around.
+   */
+  if (bare) return 0;
   if (!roundWorld(box)) return 0;
   const least = floorZoom(box), from = least * ORYX_FROM;
   /*
@@ -4792,6 +4904,40 @@ let globeKeptKey = null;
 let globeKeptGround = null;
 
 /*
+ * And what it was drawn at, so a box that is on the move can borrow it.
+ *
+ * Laying the disc down is a couple of thousand pieces of chart, and its key
+ * has the size of the window in it - so a window that changes size every
+ * frame rebuilds it every frame. Measured across the seven hundred and eighty
+ * milliseconds a panel takes to open out: forty-seven rebuilds, a hundred and
+ * thirty-seven milliseconds of the main thread, against nothing at all for
+ * the same forty-seven frames at a size that holds still. It was two thirds
+ * of everything the atlas spent on that movement.
+ *
+ * It does not have to be rebuilt for every one of them. The disc is a circle
+ * of a known radius drawn in the middle of a canvas, so the one from the
+ * frame before can be put down again scaled by the ratio of the two radii -
+ * uniformly, which is the whole point: a disc stretched to a box that has
+ * changed shape comes out an ellipse, and an ellipse is not a planet. Scaled
+ * about its own centre it stays round and only goes soft, and it is redrawn
+ * sharp the moment the size holds still.
+ *
+ * `globeKeptSay` is the part of the key that is not about size - where the
+ * camera is, what is under the cursor, which zone is chosen. If any of that
+ * changed the picture is genuinely different and no amount of scaling will
+ * do; only a size that moved may be borrowed against.
+ */
+let globeKeptSay = null;                 // the key, less anything about size
+let globeKeptR = 0;                      // the radius it was drawn at
+let globeKeptFor = null;                 // and the box it was drawn for
+let globeWas = null;                     // the size the frame before asked for
+
+/* How far the kept disc may be magnified before it is worth drawing again.
+   An eighth is soft enough to see if you are looking for it and only for the
+   frame or two before the next rebuild; past that it reads as blurred. */
+const GLOBE_SLACK = 1.18;
+
+/*
  * The ground, straight onto the screen. Close in the world is flat to less
  * than half a pixel and there is nothing to bend it round.
  */
@@ -4905,7 +5051,7 @@ let resting = 0;                         // seconds since the view last moved
 const lastBox = { w: 0, h: 0 };
 
 function keepInSight(box, delta) {
-  const least = floorZoom(box);
+  const least = leastZoom(box);
   if (box.w !== lastBox.w || box.h !== lastBox.h) {
     lastBox.w = box.w; lastBox.h = box.h;
     if (want.scale < least && lastBox.w > 1) settleInto(box);
@@ -5052,14 +5198,37 @@ function groundGlobe(box, now) {
    */
   const plain = globePlain();
   const grain = dpr;
-  const key = still ? [Math.round(view.x * 8), Math.round(view.y * 8),
-    Math.round(view.scale * 4096), hovered, chosen, box.w, box.h, arrived,
-    TUNE.turn].join() : null;
+  const say = still ? [Math.round(view.x * 8), Math.round(view.y * 8),
+    hovered, chosen, arrived, TUNE.turn].join() : null;
+  const key = still ? [say, Math.round(view.scale * 4096), box.w, box.h].join() : null;
+  const sized = box.w + 'x' + box.h;
+  const moving = globeWas !== null && sized !== globeWas;
+  globeWas = sized;
+
   if (still && key === globeKeptKey && globeKeptGround) {
     ctx.drawImage(globeKept, 0, 0, box.w, box.h);
     return globeKeptGround;
   }
+
   const R = globe();
+
+  /*
+   * Nothing but the size moved, and it is still moving: borrow the last one.
+   *
+   * Scaled about the middle by the ratio of the radii, which keeps it a
+   * circle whatever the box is doing to its own shape. What falls outside the
+   * box is clipped by the canvas and what falls short of it is sky, which is
+   * painted before this and shows through.
+   */
+  if (still && moving && globeKeptGround && say === globeKeptSay
+      && globeKeptR > 0 && globeKeptFor) {
+    const k = R / globeKeptR;
+    if (k > 1 / GLOBE_SLACK && k < GLOBE_SLACK) {
+      const dw = globeKeptFor.w * k, dh = globeKeptFor.h * k;
+      ctx.drawImage(globeKept, (box.w - dw) / 2, (box.h - dh) / 2, dw, dh);
+      return globeKeptGround;
+    }
+  }
   /*
    * How much flat chart has to be drawn to fill this window.
    *
@@ -5267,6 +5436,9 @@ function groundGlobe(box, now) {
   ctx = screen;
   ctx.drawImage(globeKept, 0, 0, box.w, box.h);
   globeKeptKey = key;
+  globeKeptSay = say;
+  globeKeptR = R;
+  globeKeptFor = { w: box.w, h: box.h };
   globeKeptGround = ground;
   return ground;
 }
@@ -5383,6 +5555,22 @@ function settleInto(box) {
    */
   shutPanel();
   fit();
+  /*
+   * And that is all of it while the frame is bare.
+   *
+   * What follows floors the view at Oryx's distance and *snaps* it there,
+   * which is right when a panel is opening out over a page: the box grows
+   * under a view that is already past him, and the growth is what reads as a
+   * zoom. It is wrong at the first frame of that growth, because the snap
+   * moves the world before the box has moved at all - so the enlargement
+   * starts somewhere other than where the small one was, which is the one
+   * thing an enlargement must not do.
+   *
+   * A bare frame is either scenery or a panel on its way out to the window.
+   * Neither wants him, and neither wants the jump: the ordinary ease against
+   * a growing box gets there on its own, from exactly where it started.
+   */
+  if (bare) return;
   const least = floorZoom(box);
   const past = least * ORYX_FROM * 1.06;
   if (want.scale < past) want.scale = past;
@@ -5582,9 +5770,49 @@ function frame(now) {
  * the radius of the world negative. Everything downstream of that is
  * nonsense, and a negative radius handed to arc() threw once a frame.
  */
+/*
+ * Bare: the chrome off and the camera all the way back.
+ *
+ * Asked for by the page that framed this, and it changes two things. The
+ * writing goes, because none of it is addressed to somebody looking at a
+ * decoration. And the view sits on the floor of the wheel rather than on the
+ * home fit, which is what puts the planet at under half the frame and leaves
+ * the rest of the circle to the sky - stars, galaxies and the odd meteor,
+ * all of which are already painted and were simply never visible with the
+ * disc filling the box. That sky is the reason the frame is bigger than the
+ * planet at all.
+ *
+ * It is a mode rather than a one-off jump because the frame it stands in
+ * resizes, and every re-fit has to land in the same place. Asking again with
+ * `on: false` puts the map back, which is what the page does when the circle
+ * is opened out to the window and somebody is going to read it after all.
+ */
+window.addEventListener('message', event => {
+  const said = event.data;
+  if (!said || said.rotmg !== 'bare') return;
+  bare = said.on !== false;
+  /* Said, and said as nothing, are different: `of: null` gives the framing
+     back to the ordinary fit, which is how the ring hands the atlas over to
+     the panel it came from. Not mentioning `of` at all leaves it alone. */
+  if ('of' in said) {
+    const of = Number(said.of);
+    bareOf = Number.isFinite(of) && of > 0 ? Math.max(0.05, Math.min(1.8, of)) : null;
+  }
+  document.body.classList.toggle('bare', bare);
+  fit();
+  /*
+   * Snapped the first time, eased after that. Landing in a frame is not a
+   * movement anybody watched begin, so it should simply be there; being asked
+   * to come closer is, so it travels - and the ordinary ease already does
+   * that, which is why this only has to leave `view` alone.
+   */
+  if (said.snap !== false) { view.scale = want.scale; view.x = want.x; view.y = want.y; }
+});
+
 function fit() {
   const home = homeView(size());
-  want.x = home.x; want.y = home.y; want.scale = home.scale;
+  want.x = home.x; want.y = home.y;
+  want.scale = (bare && bareOf) ? bareZoom(size()) : home.scale;
 }
 /*
  * The wheel.
@@ -5940,6 +6168,9 @@ addEventListener('keydown', event => {
 })();
 
 fit();
+/* Bare from the first frame when it is framed, so nothing is ever painted
+   and then faded away on arrival. */
+document.body.classList.toggle('bare', bare);
 view.scale = want.scale; view.x = want.x; view.y = want.y;
 /* ---------------- the bench, wired up ---------------- */
 /*
