@@ -18,8 +18,7 @@
 
   They were two strays pinned to the corner by hand - one at right: 14px and
   the other at right: 186px, which is the first one's width written out as a
-  number - and the index was a fourth card on the way in, where it broke a
-  row of three into three and one and pushed the world down the page.
+  number.
 
   So the row is what is fixed to the corner now, and the buttons are laid
   out inside it rather than measured into place. It reports its own width to
@@ -28,16 +27,6 @@
   them. Adding a fourth costs nothing.
 -->
 <div id="corner" class="corner">
-
-  <!--
-    The index is a place to look things up, not a tool you sit down at, so it
-    is a way through rather than one of the choices on the way in.
-  -->
-  <button type="button" class="corner-button corner-index" data-go="index"
-    title="Every item, class, enemy, set, enchantment and place the client declares">
-    <span class="corner-glyph" aria-hidden="true">☰</span>
-    <span class="corner-text">Index</span>
-  </button>
 
 <!--
   Saying something back.
@@ -138,17 +127,25 @@
       <em class="home-card-go">Open →</em>
     </button>
 
-    <!--
-      The index is not here. It is a reference rather than a fourth tool, and
-      as a card it turned a row of three into a row of three and a stray,
-      which moved the heading, the cards and the world under them. It is in
-      the corner with the other things that belong to every page.
-    -->
     <button type="button" class="home-card" data-go="fame" style="--i:2">
       <img class="home-card-art" data-art="Dungeon Icons/Oryx's Sanctuary.gif" alt="">
       <span class="home-card-title">Fame Sweep</span>
       <span class="home-card-line">Which dungeons are worth the trip.</span>
       <small>Tick off what you have finished and it works out what the collection bonuses have paid, what is left, and where to go next.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
+
+    <!--
+      The index's picture is twenty frames on one strip rather than one
+      drawing, so it is a span with the strip behind it instead of an img:
+      an img would have to be scaled to the frame, and the card decides its
+      own size. app.js hands it the picture the same way either way.
+    -->
+    <button type="button" class="home-card" data-go="index" style="--i:3">
+      <span class="home-card-art home-card-film" data-art="Page Art/Index.png"></span>
+      <span class="home-card-title">Index</span>
+      <span class="home-card-line">Everything the game has, in one place.</span>
+      <small>Every item, class, creature, dungeon, set and enchantment the game declares — with its own picture, what it is joined to, and what players have written down about where it comes from.</small>
       <em class="home-card-go">Open →</em>
     </button>
 

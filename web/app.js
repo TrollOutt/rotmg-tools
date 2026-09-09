@@ -3152,7 +3152,15 @@ window.addEventListener('hashchange', routeFromHash);
 for (const image of document.querySelectorAll('[data-art]')) {
   const [folder, file] = image.dataset.art.split('/');
   const src = asset('GUI Files', folder, file);
-  if (src) image.src = src; else image.remove();
+  if (!src) { image.remove(); continue; }
+  /*
+   * One picture, or twenty on a strip. The index's book is an animation, so
+   * its card holds the strip as a background and walks along it; an image
+   * would have to be told the size of one frame, and the card would rather
+   * decide its own size.
+   */
+  if (image.tagName === 'IMG') image.src = src;
+  else image.style.backgroundImage = 'url(' + src + ')';
 }
 
 
