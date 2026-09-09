@@ -1,30 +1,9 @@
-/*
- * A picture for every record in the index, cut out of the installed client.
- *
- * The client's own art is the only art that settles an argument: the wiki is a
- * patch behind, a name can belong to three different things, and two of those
- * three are told apart by nothing except how they look. So every record that
- * has a texture gets its own cut - one still frame, at the size the client
- * draws it - onto a single sheet, with the rectangle written into the record.
- *
- *     node tools/build-index.js && node tools/index-sprites.js
- *
- * One sheet rather than eleven thousand files: eleven thousand requests is not
- * a page, and the offline copy would have to carry every one of them as its
- * own data URI.
- */
 'use strict';
-
-const fs = require('fs');
-const path = require('path');
-const zlib = require('zlib');
-
-const root = path.join(__dirname, '..');
-const XML = path.join(root, 'client-data');
-const SHEETS = path.join(XML, 'textures');
-const INDEX = path.join(root, 'data', 'Index', 'index.json');
-const OUT = path.join(root, 'web', 'assets', 'index');
-
+// Artwork decoration called by build-index with its already-read source.
+// It writes the sheet only; catalogue membership belongs to the index.
+const fs=require('fs'),path=require('path'),zlib=require('zlib');
+module.exports=function({ root, documents, readAsset, facts }) {
+const OUT=path.join(root,'web','assets','index');
 /* ---------------- just enough FlatBuffers ---------------- */
 class Flat {
   constructor(b) { this.b = b; }
@@ -127,23 +106,8 @@ function writePng(width, height, rgba) {
 const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
 const sheetName = field => SHEET_OF[field] || 'mapObjects';
 
-/*
- * The installed game, or a plain word about why not.
- *
- * client-data/ is read out of an installed client and is not in this
- * repository - it is DECA's, it is large, and it is reproduced in seconds. But
- * a clone that has never seen it should say so rather than throw a stack trace
- * at somebody who has just pulled the project onto a new machine.
- */
-if (!fs.existsSync(XML)) {
-  console.log('\n  No client-data/ here, so there is nothing to read.');
-  console.log('  On a machine with the game installed:  node tools/extract-client.js');
-  console.log('  Everything this would write is already committed, so the site');
-  console.log('  builds and runs without it - npm run build is enough.\n');
-  process.exit(0);
-}
-
-const flat = new Flat(fs.readFileSync(path.join(XML, 'spritesheet.bin')));
+// The caller owns source access; both sprite decorators share its asset cache.
+const flat = new Flat(readAsset('spritesheet.bin'));
 const rootFields = flat.fields(flat.root());
 
 const still = new Map();                       // atlas -> index -> rectangle
@@ -196,18 +160,18 @@ const moving = new Map();
 const sheets = new Map();
 const sheetFor = name => {
   if (sheets.has(name)) return sheets.get(name);
-  const file = path.join(SHEETS, name + '.png');
-  const got = fs.existsSync(file) ? readPng(fs.readFileSync(file)) : null;
+  const bytes = readAsset('textures/' + name + '.png');
+  const got = bytes ? readPng(bytes) : null;
   sheets.set(name, got);
   return got;
 };
 
 /* ---------------- which texture each thing declares ---------------- */
-const objectFiles = fs.readdirSync(XML)
+const objectFiles = [...documents.keys()]
   .filter(name => /^Objects\.\d+\.xml$/.test(name)).sort();
 const artOf = new Map();                       // client id -> {atlas, index, moves}
 for (const file of objectFiles) {
-  const raw = fs.readFileSync(path.join(XML, file), 'utf8');
+  const raw = documents.get(file);
   for (const m of raw.matchAll(/<Object\b([^>]*)>([\s\S]*?)<\/Object>/g)) {
     const id = /\bid="([^"]*)"/.exec(m[1]);
     if (!id || artOf.has(id[1])) continue;
@@ -231,7 +195,7 @@ for (const file of objectFiles) {
 /* The enchantments carry their texture themselves, not through an object. */
 const charmArt = new Map();
 {
-  const raw = fs.readFileSync(path.join(XML, 'Enchantments.xml'), 'utf8');
+  const raw = documents.get('Enchantments.xml');
   for (const m of raw.matchAll(
     /<Enchantment id="([^"]+)"[\s\S]*?<Texture(?:\s[^>]*)?>\s*<File>([^<]+)<\/File>\s*<Index>([^<]+)<\/Index>/g)) {
     const index = m[3].trim();
@@ -243,7 +207,7 @@ const charmArt = new Map();
 }
 
 /* ---------------- the cutting ---------------- */
-const facts = JSON.parse(fs.readFileSync(INDEX, 'utf8'));
+
 
 function rectFor(art) {
   if (!art) return null;
@@ -332,13 +296,12 @@ facts.sheet = { wide: WIDE, tall };
 fs.mkdirSync(OUT, { recursive: true });
 const png = path.join(OUT, 'sheet.png');
 fs.writeFileSync(png, writePng(WIDE, tall, sheet));
-fs.writeFileSync(INDEX, JSON.stringify(facts) + '\n');
-fs.copyFileSync(INDEX, path.join(OUT, 'index.json'));
 
-console.log('\n  ' + drawn.toLocaleString('en-US') + ' records drawn from '
-  + cut.length.toLocaleString('en-US') + ' cuts, ' + none.toLocaleString('en-US')
-  + ' with no picture the client would draw');
-console.log('  -> ' + path.relative(root, png) + '  '
-  + WIDE + 'x' + tall + '  (' + (fs.statSync(png).size / 1024).toFixed(0) + ' KB)');
-console.log('  -> ' + path.relative(root, INDEX) + '  ('
-  + (fs.statSync(INDEX).size / 1024).toFixed(0) + ' KB)\n');
+
+
+return facts;
+};
+if (require.main === module) {
+  console.error('Run node tools/build-index.js --sprites, then npm run project-data.');
+  process.exitCode = 1;
+}

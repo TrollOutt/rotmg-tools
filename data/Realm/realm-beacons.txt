@@ -1,3 +1,4 @@
+## provenance: {"tool":"tools/trace-realm-map.js","built":"unknown (legacy export)","from":{"kind":"map","source":"https://i.imgur.com/0L1g8pP.png"}}
 ## Where the beacons are, in cells of realm-terrain.txt.
 ##
 ## Written by tools/trace-realm-map.js. Do not edit by hand.

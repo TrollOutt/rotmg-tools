@@ -1,3 +1,4 @@
+## provenance: {"built":"2026-09-09T16:51:54.387Z","from":{"kind":"client","build":"15a3ce058fe946c792c23558bdb10e2c","date":"2026-09-09"},"tool":"tools/read-client.js"}
 ## What an installed RotMG client says about enchanting, as of the build below.
 ##
 ## Written by tools/read-client.js --snapshot. Its only purpose is to be
@@ -7,7 +8,7 @@
 ## One sorted line per fact, so git can diff it as well.
 ## Format: kind|name|fields…
 
-build|cc64814365a64de583f547b036685ac2
+build|15a3ce058fe946c792c23558bdb10e2c
 ench|ALIEN_NEO_ONSHOOT_ATTACK|Neo Alien OnShoot Attack Boost|7500||ALIEN,ARMOR,ATTACK,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCATTACK,RING,STATBOOST,WEAPON|ONSHOOTSTAT,PROCATTACK|EQUIPMENT|ABILITY,NEO_ALIEN
 ench|ALIEN_NEO_ONSHOOT_ATTACK_ROLLABLE|Neo Alien OnShoot Attack Boost|10000||ALIEN,ARMOR,ATTACK,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCATTACK,RING,ROLLABLE,STATBOOST,WEAPON|ONSHOOTSTAT,PROCATTACK|EQUIPMENT,NEO_ALIEN|ABILITY
 ench|ALIEN_NEO_ONSHOOT_DEFENSE|Neo Alien OnShoot Defense Boost|7500||ALIEN,ARMOR,DEFENSE,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCDEFENSE,RING,STATBOOST,WEAPON|ONSHOOTSTAT,PROCDEFENSE|EQUIPMENT|ABILITY,NEO_ALIEN

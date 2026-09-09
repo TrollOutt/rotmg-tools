@@ -28,6 +28,12 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
+try {
+  console.log(`\n  ${require('./provenance').check(root)} client catalogues share one build`);
+} catch (error) {
+  console.error('\n  ' + error.message);
+  process.exit(1);
+}
 const engine = require(path.join(root, 'web', 'engine.js'));
 
 const snapshot = fs.readFileSync(path.join(root, 'data', 'client-snapshot.txt'), 'utf8')
