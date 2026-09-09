@@ -12,6 +12,6 @@
     "scrape": "node tools/extract-client.js && node tools/build-index.js && npm run project-data && node tools/read-client.js --snapshot --news",
     "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
     "release": "npm test && npm run build",
-    "project-data": "node tools/build-theorycraft.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js"
+    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js"
   }
 }

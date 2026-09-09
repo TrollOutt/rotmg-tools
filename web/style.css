@@ -506,6 +506,15 @@ select option { background: var(--panel); color: var(--text); }
 }
 .item-art img { width: 38px; height: 38px; object-fit: contain; }
 .item-art img.as-type { width: 26px; height: 26px; opacity: .8; }
+/*
+ * A window onto the index's sheet. One picture holds every item on the site,
+ * so a row costs a background offset rather than a request, and the address
+ * is written into the page once as --sheet.
+ */
+.sheet-art {
+  display: block; flex: none; image-rendering: pixelated;
+  background-image: var(--sheet); background-repeat: no-repeat;
+}
 .item-art-fallback { font-size: 20px; color: var(--dim); }
 
 .item-facts { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -2522,6 +2531,13 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
     inset 0 -6px 12px rgba(0, 0, 0, .45),
     0 1px 2px rgba(0, 0, 0, .5);
 }
+/*
+ * The same cell with a picture in it. The empty one is a lit slot - a sheen
+ * over a dark ground - and that sheen is a background image, so it won the
+ * layer the sprite wanted and every item came out as an empty square. A cell
+ * holding a picture keeps the frame and the ground and gives up the sheen.
+ */
+.tc-icon-big.sheet-art { background-image: var(--sheet); padding: 0; }
 .tc-icon-big.is-low { border-color: rgba(255, 255, 255, .12); }
 .tc-icon-big.is-mid { border-color: rgba(121, 197, 232, .45); }
 .tc-icon-big.is-high { border-color: rgba(178, 132, 226, .5); }

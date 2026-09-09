@@ -680,17 +680,17 @@ number that trades detail for frames there.
   than jumping forward and flinging every cloud across the sky. Fixed means
   out of the flow, so every masthead was given room on the right — without it
   the switch sat on top of "Reset everything" and made it unclickable.
-- **One base of item artwork.** There were two sets and neither knew about
-  the other: `assets/items` holds sixteen hundred still icons and is what the
-  calculator reads, `assets/whats-new` holds the hundred-odd pieces cut from
-  the newest client — every item the last update added — and was read only by
-  the What's New page. So an update's own items were the only ones in the
-  picker with no picture. `foldNewsSprites()` joins them, and is the only
-  place that happens: nothing is copied and nothing is moved, the curated icon
-  wins where there is one, and stills only, since a multi-frame clip is one
-  strip in one file and an `<img>` pointed at a strip shows the whole run. The
-  next update needs no work. The three Venerable rings have art in neither set
-  and keep their slot glyph.
+- **One base of item artwork: the index's sheet.** There used to be three
+  answers to what an item looks like — a folder of sixteen hundred renders
+  downloaded from the wiki, the pieces cut from the newest client for the
+  What's New page, and the index's own sheet — and the pages disagreed about
+  which items had a picture at all. All of it comes off the index sheet now.
+  `tools/generate-item-art.js` projects a name to rectangle table out of the
+  index; the calculator reads it, the bench gets the same rectangle as `icon`
+  on its own projection, and both draw from `web/assets/index/sheet.png`. The
+  wiki folder is deleted. All 1,757 enchantable items have a picture where
+  1,553 did, the served page dropped from 4.02 MB to 2.52 MB, and a check
+  fails the build if one ever arrives without.
 - **The data line carries two dates.** The update the items and notes cover,
   and the client the enchanting odds were read from. Both, because they are
   not interchangeable and showing only the newer would claim the odds are as

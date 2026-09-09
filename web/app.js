@@ -47,7 +47,7 @@ const state = {
   lastResults: null,
   picker: null,
   tabs: [],
-  itemSprites: {},
+  itemArt: null,   // the index's sheet, and where each item sits on it
   updateMade: null,   // when the update the data covers went out
   activeTab: null,
   loadingTab: false,
@@ -138,17 +138,47 @@ function itemSpriteName(item) {
 }
 
 /*
- * Artwork for an item, best source first:
- *   1. the item's own sprite (web/assets/items, see tools/fetch-item-sprites.js)
- *   2. the awakenable group artwork shipped with the Qt build
- * Returns null when we have neither, and the caller falls back to a slot icon.
+ * Artwork for an item, from the one place the site keeps it.
+ *
+ * The picture is a rectangle on the index's sheet, cut out of the installed
+ * client - which means every page of this site draws the same item the same
+ * way, and an item the game added this morning has its picture the moment the
+ * index is rebuilt. What used to be here was a folder of downloaded wiki
+ * renders that this page read and no other did, so the calculator and the
+ * bench disagreed about which items had a picture at all.
+ *
+ * The awakenable group artwork stays as a second answer: it is one drawing for
+ * a whole family, which is not a thing the client has a sprite for.
  */
-function itemArtUrl(name, awokenKey) {
-  const own = state.itemSprites[name] || (awokenKey ? state.itemSprites[awokenKey] : null);
-  if (own) return own;
-  const group = itemSpriteName(awokenKey || name);
-  return group ? asset('GUI Files', 'Awakenable Items', `${group}.png`) : null;
+function itemArtRect(name, awokenKey) {
+  const art = state.itemArt && state.itemArt.art;
+  if (!art) return null;
+  return art[name] || (awokenKey ? art[awokenKey] : null) || null;
 }
+
+/*
+ * A window onto that sheet, the picture's own shape kept: an eight by eight
+ * ring and a sixteen by eight bow are not both squared off into the same box.
+ */
+function sheetArt(rect, side, className) {
+  const [x, y, w, h] = rect;
+  const zoom = side / Math.max(w, h);
+  const sheet = state.itemArt.sheet;
+  return `<span class="${className} sheet-art" style="width:${w * zoom}px;height:${h * zoom}px`
+    + `;background-size:${sheet.wide * zoom}px ${sheet.tall * zoom}px`
+    + `;background-position:${-x * zoom}px ${-y * zoom}px"></span>`;
+}
+
+function itemArt(name, awokenKey, side, className) {
+  const rect = itemArtRect(name, awokenKey);
+  if (rect) return sheetArt(rect, side, className);
+  const group = itemSpriteName(awokenKey || name);
+  const src = group ? asset('GUI Files', 'Awakenable Items', `${group}.png`) : '';
+  return src ? `<img class="${className}" src="${src}" alt="" loading="lazy" onerror="this.classList.add('missing')">` : '';
+}
+
+const hasItemArt = (name, awokenKey) =>
+  !!(itemArtRect(name, awokenKey) || itemSpriteName(awokenKey || name));
 
 /* ------------------------------------------------------------------ *
  * What the item itself tells us                                       *
@@ -477,11 +507,10 @@ function renderItemCard(config) {
   if (!resolved.type) missing.push('slot');
   if (!resolved.dust) missing.push('dust');
 
-  const spriteSrc = itemArtUrl(resolved.name, resolved.awokenKey) || '';
+  const own = itemArt(resolved.name, resolved.awokenKey, 38, 'item-art-pic');
   const typeSrc = resolved.type ? asset('GUI Files', 'Item Types', `${resolved.type.toLowerCase()}.png`) : '';
-  const art = spriteSrc
-    ? `<img src="${spriteSrc}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'item-art-fallback',textContent:'?'}))">`
-    : typeSrc ? `<img class="as-type" src="${typeSrc}" alt="">` : '<span class="item-art-fallback">?</span>';
+  const art = own
+    || (typeSrc ? `<img class="as-type" src="${typeSrc}" alt="">` : '<span class="item-art-fallback">?</span>');
 
   const facts = [];
   if (resolved.type) facts.push(`<i class="fact type">${html(TYPE_LABEL[resolved.type] || resolved.type)}</i>`);
@@ -826,8 +855,8 @@ window.enchantThis = function (said) {
 // Sprite for an item row: its own artwork when we have it, otherwise the icon
 // for its slot so the list still reads at a glance.
 function itemArtHtml(resolved, name) {
-  const src = itemArtUrl(name, resolved && resolved.awokenKey);
-  if (src) return `<img class="picker-icon" src="${src}" alt="" loading="lazy" onerror="this.classList.add('missing')">`;
+  const own = itemArt(name, resolved && resolved.awokenKey, 26, 'picker-icon');
+  if (own) return own;
   if (resolved && resolved.type) {
     const src = asset('GUI Files', 'Item Types', `${resolved.type.toLowerCase()}.png`);
     if (src) return `<img class="picker-icon as-type" src="${src}" alt="" loading="lazy" onerror="this.classList.add('missing')">`;
@@ -862,8 +891,8 @@ function renderItemPickerList(query) {
   };
   // Items with their own artwork first: they are the ones worth recognising.
   const shown = state.picker.entries.filter(matches).sort((a, b) => {
-    const artA = itemArtUrl(a.name, a.resolved && a.resolved.awokenKey) ? 0 : 1;
-    const artB = itemArtUrl(b.name, b.resolved && b.resolved.awokenKey) ? 0 : 1;
+    const artA = hasItemArt(a.name, a.resolved && a.resolved.awokenKey) ? 0 : 1;
+    const artB = hasItemArt(b.name, b.resolved && b.resolved.awokenKey) ? 0 : 1;
     return artA - artB || a.name.localeCompare(b.name);
   }).slice(0, 400);
 
@@ -2313,48 +2342,17 @@ function onFieldChange(element) {
 
 
 /*
- * One base of item artwork, joined here and nowhere else.
+ * One base of item artwork: the index's sheet, and nothing else.
  *
- * There were two sets and neither knew about the other.
- * assets/items holds sixteen hundred still icons keyed by item name and is
- * what the calculator reads; assets/whats-new holds the hundred-odd pieces
- * cut from the newest client - which is to say every item the last update
- * added - and was read only by the What's New page. So the moment an update
- * landed, its own items were the only ones in the picker with no picture:
- * the twelve Venerable weapons, armours and rings went in as a blank slot
- * glyph each, while nine of those sprites sat one folder away being shown
- * on another page of the same site.
- *
- * So the two are folded into one lookup, and this is the only place that
- * happens. Nothing is copied and nothing is moved: the curated icon wins
- * wherever there is one, since it was drawn to sit in a list, and anything
- * the update brought that the icon set has not caught up with comes from
- * the art the update itself shipped. The next update needs no work: its
- * items arrive in the picker wearing the pictures it came with.
- *
- * The three Venerable rings have no art in either set - the client draws
- * them from a sheet the cutter did not reach - so they keep the slot glyph.
+ * There used to be two sets here and neither knew about the other, so a folder
+ * of downloaded wiki renders was folded into the pieces the last update
+ * shipped, and the join was written out at length because it was fiddly. Both
+ * are gone. The index cuts every object out of the installed client onto one
+ * sheet; this page reads a name to rectangle projection of it, the bench reads
+ * the same, and the picture of an item is the same picture wherever the site
+ * draws it. An update needs no work at all: rebuild the index and its items
+ * arrive wearing the art the client came with.
  */
-function foldNewsSprites(map, index, urlFor) {
-  for (const drawer of Object.values((index && index.drawers) || {})) {
-    for (const why of ['added', 'changed']) {
-      for (const thing of drawer[why] || []) {
-        if (!thing.id || map[thing.id]) continue;
-        const clip = thing.sprite && thing.sprite.clips && thing.sprite.clips.stand;
-        /*
-         * Stills only. A clip of several frames is one strip in one file,
-         * and an <img> pointed at a strip shows the whole run side by side
-         * - which is right on the What's New page, where the frames are
-         * stepped through in a window of their own, and wrong in a list.
-         */
-        if (!clip || !clip.file || (clip.frames || 1) > 1) continue;
-        const url = urlFor(clip.file);
-        if (url) map[thing.id] = url;
-      }
-    }
-  }
-  return map;
-}
 
 /*
  * Reading that index also settles when the update it describes went out,
@@ -2366,28 +2364,27 @@ function newsMadeOn(index) {
   return (index.notes && index.notes.date) || index.made || null;
 }
 
-async function loadItemSprites() {
+async function loadItemArt() {
+  // The sheet's address, once, for every picture on the page to point at.
+  document.documentElement.style.setProperty('--sheet',
+    'url(' + ((BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png') + ')');
   if (BUNDLE) {
-    const news = BUNDLE.whatsNew || {};
-    state.updateMade = newsMadeOn(news.index);
-    return foldNewsSprites(Object.assign({}, BUNDLE.itemSprites || {}),
-      news.index, file => (news.art || {})[file]);
-  }
-  let map = {};
-  try {
-    const index = await fetch('assets/items/index.json').then(response => response.json());
-    for (const [name, file] of Object.entries(index)) map[name] = 'assets/items/' + encodeURIComponent(file);
-  } catch (error) {
-    /* sprites are decoration; the calculator does not need them */
+    state.updateMade = newsMadeOn((BUNDLE.whatsNew || {}).index);
+    if (BUNDLE.itemArt) return BUNDLE.itemArt;
   }
   try {
     const news = await fetch('assets/whats-new/index.json').then(response => response.json());
     state.updateMade = newsMadeOn(news);
-    map = foldNewsSprites(map, news, file => 'assets/whats-new/' + encodeURIComponent(file));
   } catch (error) {
-    /* the same: the update's items fall back to their slot glyph */
+    /* only the date line loses, and it says nothing rather than a wrong one */
   }
-  return map;
+  try {
+    return await fetch('assets/index/item-art.json').then(response => response.json());
+  } catch (error) {
+    // Pictures are decoration: without them every row falls back to its slot
+    // icon, which is what the calculator did for its first year.
+    return null;
+  }
 }
 
 
@@ -2773,7 +2770,7 @@ async function load() {
     const sources = await readSources();
     state.data = EnchantEngine.buildDataset(sources);
     EnchantItems.loadClient(sources.clientItemText);
-    state.itemSprites = await loadItemSprites();
+    state.itemArt = await loadItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${knownItemNames().length.toLocaleString('en-US')} items — the slot, dust and base come with it`;
     initAmbience();

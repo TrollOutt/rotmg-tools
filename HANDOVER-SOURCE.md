@@ -138,6 +138,31 @@ Forgotten Ring; Legacy Ring of Pure Wishes; Legacy Spectral Ring of Horrors;
 Venerable Ring of the Nile; Venerable Ring of the Pyramid; Venerable Ring of the
 Sphinx; Shortbow; Legacy Etherite Dagger; Ravenous Wand.
 
+## Artwork, after the fact
+
+The data was one source before the pictures were. The calculator and Theory
+Crafting both drew items from `web/assets/items`, a folder of wiki renders that
+nothing else on the site read, and the bench fell back to a second sheet of its
+own for what the folder lacked. So the fifty restored items came back to the
+bench without artwork following them, and the three Venerable rings showed a
+picture on the index and an empty square on the other two pages.
+
+`tools/generate-item-art.js` is the sixth projection: name to rectangle on the
+index's sheet, `data/Index/item-art.json`, 153 KB. The bench carries the same
+rectangle as `icon`, projected through `index-model.js`. The folder, its
+downloader and its manifest are deleted, and with them the index's own
+dependency on them - `pic` no longer says "drawn by the community" about a
+picture that was always the client's, and `theory-sprites.js` no longer cuts a
+second copy of an item onto the theory sheet, which is now only what moves.
+
+Two items the client lets you enchant carry no `Labels` block, so the index had
+no record of them and no picture: the Paper Machete and an Agents of Oryx
+shard. Membership now reads `EnchantmentSlots` as well as the label, which is
+what closed the last two gaps. `check-index.js` fails if a bench item or an
+enchantable item arrives without a picture; both are at 100%.
+
+Served page: 4.02 MB to 2.52 MB. Download: 13.8 MB to 12.3 MB.
+
 ## Runtime verification and remaining source decisions
 
 The served page previously embedded Theory Crafting too. To keep calculator

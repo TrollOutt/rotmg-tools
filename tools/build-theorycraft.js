@@ -7,6 +7,8 @@ const index = JSON.parse(fs.readFileSync(path.join(root, 'data/Index/index.json'
 const out = { ...require('./provenance').stamp(__filename, index.from, index.built),
   ...require('./index-model').project(index, true) };
 if (index.theorySheet) out.sheet = index.theorySheet;
+// And the sheet the item pictures sit on, which is the index's own.
+if (index.sheet) out.iconSheet = index.sheet;
 const file = path.join(root, 'data/TheoryCraft/theorycraft.json');
 fs.mkdirSync(path.dirname(file), { recursive: true });
 fs.writeFileSync(file, JSON.stringify(out) + '\n');

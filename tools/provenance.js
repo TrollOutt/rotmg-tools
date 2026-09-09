@@ -19,7 +19,7 @@ function read(file) {
   return match ? JSON.parse(match[1]) : null;
 }
 const catalogues = [
-  'Index/index.json', 'Index/search.json', 'TheoryCraft/theorycraft.json',
+  'Index/index.json', 'Index/search.json', 'Index/item-art.json', 'TheoryCraft/theorycraft.json',
   'Items/client-items.txt', 'Enchantment documents/client-enchantments.txt',
   'Artifacts/client-artifacts.txt', 'Fame/client-fame.txt', 'client-snapshot.txt', 'client-changes.txt'
 ];

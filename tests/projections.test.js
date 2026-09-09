@@ -9,21 +9,25 @@ try {
   fs.mkdirSync(path.join(temporary, 'tools'));
   fs.mkdirSync(path.join(temporary, 'data/Index'), { recursive: true });
   fs.copyFileSync(path.join(root, 'data/Index/index.json'), path.join(temporary, 'data/Index/index.json'));
-  const generators = ['build-theorycraft', 'generate-items', 'generate-enchantments', 'generate-artifacts', 'generate-fame'];
+  const generators = ['build-theorycraft', 'generate-item-art', 'generate-items', 'generate-enchantments', 'generate-artifacts', 'generate-fame'];
   for (const name of [...generators, 'index-model', 'provenance']) {
     fs.copyFileSync(path.join(root, 'tools', name + '.js'), path.join(temporary, 'tools', name + '.js'));
   }
   for (const name of generators) cp.execFileSync(process.execPath, [path.join(temporary, 'tools', name + '.js')]);
-  for (const relative of provenance.catalogues.filter(p => !p.startsWith('Index/') && !p.startsWith('client-'))) {
+  // index.json and search.json are what build-index writes and what the
+  // projections read; everything else in the list is projected from them.
+  const projected = provenance.catalogues.filter(p =>
+    !['Index/index.json', 'Index/search.json'].includes(p) && !p.startsWith('client-'));
+  for (const relative of projected) {
     assert.equal(fs.readFileSync(path.join(temporary, 'data', relative), 'utf8'), read('data/' + relative), relative + ': committed projection drifted');
   }
-  console.log('All five projections reproduce the shipped files with only the index present.');
+  console.log('All six projections reproduce the shipped files with only the index present.');
   for (const relative of provenance.catalogues) {
     const target = path.join(temporary, 'data', relative);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, read('data/' + relative));
   }
-  assert.equal(provenance.check(temporary), 9);
+  assert.equal(provenance.check(temporary), 10);
   const target = path.join(temporary, 'data/Fame/client-fame.txt');
   const original = fs.readFileSync(target, 'utf8'), meta = provenance.read(target);
   meta.from = { ...meta.from, build: 'another-build', date: '2000-01-01' };

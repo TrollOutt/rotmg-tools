@@ -885,7 +885,7 @@ const RealmIndex = (function () {
     spd: 'Speed', dex: 'Dexterity', vit: 'Vitality', wis: 'Wisdom' };
   /* The client's own stat names, in the words the game's own tooltips use. */
   /* Where a picture came from, said the way a reader would ask it. */
-  const PIC_SAY = { wiki: 'drawn by the community', client: "the game's own art",
+  const PIC_SAY = { client: "the game's own art",
     skin: 'the skin it gives you', piece: 'one of its pieces' };
   const WORN_SAY = { MAXHP: 'life', MAXMP: 'magic', ATT: 'attack', DEF: 'defence',
     SPD: 'speed', DEX: 'dexterity', VIT: 'vitality', WIS: 'wisdom' };
