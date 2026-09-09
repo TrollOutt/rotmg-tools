@@ -7808,14 +7808,22 @@ const TINT = {
   function bareOf(state) {
     const out = JSON.parse(JSON.stringify(state));
     HANDS.forEach(([hand], i) => {
-      if (out.locked[hand]) return;
       const kind = data.byClass[out.klass];
       const plain = bottomOf((kind && kind.slots || [])[i]);
+      const held = out.locked[hand];
+      const worn = state.gear[hand] || {};
+      /*
+       * A held item stays, with the number of slots it actually has - there
+       * you are describing the copy in your bag. Anything else is stripped
+       * back to the plainest thing that fits, with all four slots, because
+       * there the question is what the item could be.
+       */
       out.gear[hand] = {
-        name: (plain && data.byItem[plain]) ? plain : null,
-        slots: 4,
+        name: held ? (worn.name || null)
+                   : ((plain && data.byItem[plain]) ? plain : null),
+        slots: held ? (worn.slots || 4) : 4,
         ench: [0, 1, 2, 3].map(at =>
-          out.locked[hand + ':' + at] ? (state.gear[hand].ench || [])[at] || null : null)
+          out.locked[hand + ':' + at] ? (worn.ench || [])[at] || null : null)
       };
     });
     return out;
@@ -7824,21 +7832,35 @@ const TINT = {
   function optimise(state, goal, report) {
     const work = JSON.parse(JSON.stringify(state));
     /*
-     * A kept item is kept whole.
+     * Each padlock holds the one thing it is on.
      *
-     * Holding a weapon used to hold only the weapon: the search would leave
-     * the item alone and then rearrange all four of its enchantments, which
-     * is not what anybody means by keeping something. A padlock on the item
-     * now fixes what is on it as well.
+     * It used to be that holding an item held everything on it too, on the
+     * argument that leaving the weapon alone and rearranging all four of its
+     * enchantments is not what anybody means by keeping something. That reads
+     * well and is wrong twice over.
      *
-     * And anything not kept is assumed to have all four slots. You are
-     * planning a build, not describing the copy in your bag - the question is
-     * what the item could be, and every one of them can roll four.
+     * It is wrong about the page, which puts five padlocks on every item -
+     * one on the item and one on each of its four slots - and says "keep this
+     * item" on the first of them. If the first held the other four there
+     * would be no reason for them to exist, and pressing it would do
+     * something the button does not say.
+     *
+     * And it is wrong about the question people bring. Keeping a weapon is
+     * usually how you say "this is the one I own"; what you want to know next
+     * is what to roll on it. Held whole, an item you own and have not
+     * enchanted yet comes back exactly as empty as it went in, and the search
+     * quietly refuses to answer the thing you asked.
+     *
+     * So a padlock on the item fixes the item, a padlock on a slot fixes that
+     * slot, and to hold the lot you press all five. What is not kept is
+     * assumed to have all four slots, since there you are planning rather
+     * than describing - but a kept item keeps the count it really has.
      */
     for (const [hand] of HANDS) {
-      if (work.locked[hand]) continue;
-      work.gear[hand].slots = 4;
-      while (work.gear[hand].ench.length < 4) work.gear[hand].ench.push(null);
+      const held = work.locked[hand];
+      if (!held) work.gear[hand].slots = 4;
+      const many = Math.max(0, work.gear[hand].slots || 0);
+      while (work.gear[hand].ench.length < many) work.gear[hand].ench.push(null);
       /*
        * And every slot that is not being kept starts empty.
        *
@@ -7849,7 +7871,7 @@ const TINT = {
        * was asking about survival. Everything is worked out again from
        * nothing; what is kept is kept, and the rest has to earn its place.
        */
-      for (let at = 0; at < 4; at++) {
+      for (let at = 0; at < many; at++) {
         if (!work.locked[hand + ':' + at]) work.gear[hand].ench[at] = null;
       }
     }
@@ -7930,7 +7952,9 @@ const TINT = {
       for (const [hand] of HANDS) {
         if (work.scope === 'gear') break;
         const worn = work.gear[hand];
-        if (!worn.name || work.locked[hand]) continue;
+        /* Held or not: the padlock on the item holds the item, and the slots
+           on it answer to their own. */
+        if (!worn.name) continue;
         for (let at = 0; at < worn.slots; at++) {
           if (work.locked[hand + ':' + at]) continue;
           const was = worn.ench[at];
