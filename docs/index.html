@@ -2567,9 +2567,26 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * room of its own.
  */
 .tc-ench-pick {
-  flex: 0 1 auto; min-width: 0; max-width: 18ch;
+  flex: 0 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/*
+ * The buttons at the far end of the chip, and the writing given everything up
+ * to them.
+ *
+ * Everything used to pack from the left, so the padlock and the cross sat
+ * wherever the sentence happened to stop - a different place on every row,
+ * and with the whole right-hand side of the chip standing empty beside them.
+ * Pushed to the end they line up down the column, and what they leave is one
+ * run of room the name and the effect can spread into instead of being cut at
+ * a fixed number of characters that had nothing to do with the width.
+ *
+ * The caps those two had - eighteen characters for the name, twenty-two for
+ * the effect - are gone with it. They were sized for a chip that shared its
+ * row with three others; a chip that has a line to itself does not need
+ * telling how much of it to use, only that the buttons come first.
+ */
+.tc-ench > .tc-hold { margin-left: auto; }
 .tc-ench .tc-charm { flex: 0 0 auto; }
 .tc-ench { min-width: 0; max-width: 100%; }
 /*
@@ -2583,7 +2600,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * the tooltip.
  */
 .tc-ench u {
-  flex: 0 1 auto; min-width: 0; max-width: 22ch;
+  flex: 0 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .tc-facts b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
