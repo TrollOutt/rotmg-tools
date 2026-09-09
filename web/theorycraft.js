@@ -3038,9 +3038,34 @@ const TINT = {
 
   /* ---------------- opening ---------------- */
 
+  /*
+   * Two flags, and the same reason as the index has two. `started` is set
+   * after the data is read so a failed load can be asked for again - but that
+   * is after an `await`, and a flag set after an await guards nothing during
+   * it. The router calls this twice on every arrival, because opening a page
+   * from a card sets `location.hash` and then routes, and setting the hash
+   * fires `hashchange`, which routes again. Both calls went past the guard and
+   * wired every listener twice. `starting` covers the window `started` cannot.
+   */
   let started = false;
+  let starting = false;
+  /*
+   * And the page's own markup, kept before anything is written over it.
+   *
+   * Saying "the data is not here yet" replaces the whole of the body - which
+   * is also every element the working page is built out of. Say it once and
+   * the pickers, the lists and the boxes this fills in are gone; a later
+   * attempt that succeeds then goes looking for them and throws on the first
+   * one, leaving the page stuck on a message about a file that is present.
+   *
+   * A load can fail for a moment and be worth trying again - a server that
+   * blinked, a connection that dropped - so the message has to be undoable.
+   * The markup is put back before anything is filled in.
+   */
+  let shell = null;
   async function start() {
-    if (started) return;
+    if (started || starting) return;
+    starting = true;
     const bundled = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources
       && window.ROTMG_BUNDLE.sources.theoryText;
     let raw = bundled;
@@ -3049,8 +3074,10 @@ const TINT = {
         .then(r => r.text()).catch(() => '');
     }
     if (!raw) {
+      starting = false;                // it may be worth asking again
       const box = el('tcBody');
       if (box) {
+        if (shell === null) shell = box.innerHTML;
         box.innerHTML = '<p class="tc-missing">The build data is not here yet. '
           + 'Run <code>node tools/build-theorycraft.js</code>.</p>';
       }
@@ -3063,6 +3090,11 @@ const TINT = {
     for (const one of data.enchants) data.byEnch[one.id] = one;
     for (const one of data.bosses) data.byBoss[one.name] = one;
     started = true;
+    starting = false;                  // `started` has it from here
+    {
+      const box = el('tcBody');
+      if (shell !== null && box) { box.innerHTML = shell; shell = null; }
+    }
 
     // The sheet's address, once, for every icon on the page to point at.
     {
