@@ -1,0 +1,17 @@
+# Line endings, settled once.
+#
+# Everything here is written by a tool: the build writes the pages, the readers
+# write the data files, and all of them write LF. On Windows git checks the
+# same files out as CRLF by default, so the moment anybody rebuilt, git called
+# a dozen files modified that were byte for byte what was already committed.
+#
+# Stored LF, checked out LF, on every machine. Editors have coped with this for
+# twenty years; a phantom diff after every build is harder to live with.
+* text=auto eol=lf
+
+# And the ones that are not text at all, so nothing goes near their bytes.
+*.png binary
+*.ico binary
+*.webp binary
+*.bin binary
+*.etl binary
