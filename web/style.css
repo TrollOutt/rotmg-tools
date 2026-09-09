@@ -1392,13 +1392,20 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 /*
  * The index's book, twenty frames on one strip.
  *
- * The strip is twenty cells wide, so the box shows one twentieth of it and
- * walks from the first cell to the last. Percentages measure the overflow
- * rather than the image, so nought to a hundred per cent is the nineteen cells
- * between the first frame and the twentieth - which is why the step is
- * jump-none: twenty stops that include both ends, one cell apart. Plain
- * steps(20) would take those nineteen cells in twenty strides and land the
- * book between its own frames every time.
+ * The box shows one cell of it and walks from the first to the last.
+ * Percentages measure the overflow rather than the image, so nought to a
+ * hundred per cent is the distance between the first frame and the last, one
+ * cell short of the whole strip - which is why the step is jump-none: as many
+ * stops as there are frames, both ends included, one cell apart. Plain steps()
+ * would take those n-1 cells in n strides and land the book between its own
+ * frames every time.
+ *
+ * How many frames there are is not written here. app.js reads it off the
+ * strip - the cells are square, so it is the width over the height - and sets
+ * the size and the stepping to match, because a sheet with a different number
+ * of drawings on it should not need the stylesheet edited. What is here is
+ * what a strip of twenty would want, so something sensible shows in the
+ * moment before the picture has loaded.
  */
 .home-card-film {
   background-repeat: no-repeat;
