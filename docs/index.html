@@ -6879,6 +6879,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           for (const part of (one && one.rel) || []) takes(part);
         }
       }
+      /* Kept, so the page can say what a share came to without working the
+         bonus out a second time and drifting from the sum that counted. */
+      from.bonus = bonus;
     }
 
     /*
@@ -8122,7 +8125,36 @@ const TINT = {
     return cut || '<span class="tc-icon-big ' + grade + '"></span>';
   }
 
+  /*
+   * What a share of the bonus actually comes to.
+   *
+   * "+12% of bonus MAXMP" is a rule, not an answer: what it gives depends on
+   * everything else worn, which is the whole reason to put one on - it grows
+   * with the rest of the build. Read on its own it tells you nothing you can
+   * weigh against a flat "+65 MAXMP" sitting in the slot beside it.
+   *
+   * So the rule is followed by what it is worth on the build in front of you,
+   * taken from the same bonus the statistics themselves were taken from. Null
+   * when there is nothing to read it against, and then only the rule is said.
+   */
+  function relWorth(part, bonus) {
+    const key = OF_STAT[part.stat], of = OF_STAT[part.of];
+    if (!key || !of || !bonus) return null;
+    const much = (bonus[of] || 0) * part.pct / 100;
+    return Math.round(much * 10) / 10;
+  }
+  const saysRel = (part, bonus) => {
+    const much = relWorth(part, bonus);
+    return plus(part.pct) + '% of bonus ' + part.of
+      + (part.of === part.stat ? '' : ' as ' + part.stat)
+      + (much === null ? '' : ' = ' + plus(much) + ' ' + part.stat);
+  };
+
   function drawSlots() {
+    /* The build as it stands, once, so every share on the page is measured
+       against the same bonus rather than four slightly different ones. */
+    const kit = statsOf(build);
+    const bonus = kit && kit.from && kit.from.bonus;
     const box = el('tcGear');
     if (!box) return;
     box.innerHTML = HANDS.map(([hand, say]) => {
@@ -8170,10 +8202,7 @@ const TINT = {
           bits.push(plus(part.pct) + '% of ' + part.of
             + (part.of === part.stat ? '' : ' as ' + part.stat));
         }
-        for (const part of item.rel || []) {
-          bits.push(plus(part.pct) + '% of bonus ' + part.of
-            + (part.of === part.stat ? '' : ' as ' + part.stat));
-        }
+        for (const part of item.rel || []) bits.push(saysRel(part, bonus));
         if (item.sb) bits.push('soulbound');
       }
 
@@ -8206,7 +8235,7 @@ const TINT = {
           return words.join(', ');
         })() : '';
         const shares = one && one.rel
-          ? one.rel.map(part => plus(part.pct) + '% of bonus ' + part.of).join(' ')
+          ? one.rel.map(part => saysRel(part, bonus)).join(' ')
           : '';
         const heals = one && one.heal ? [
           one.heal.flatHP ? '+' + one.heal.flatHP + ' HP/s' : '',
@@ -10438,6 +10467,28 @@ const RealmIndex = (function () {
    * because a group's height is the number of chips in it and the width of
    * the window at that moment.
    */
+  /*
+   * Measured again once the rail has finished changing width.
+   *
+   * How many groups can be unfolded depends on the room the rail has, and the
+   * rail changes width whenever a choice is made or taken back - over a third
+   * of a second, because the columns are animated. Measured at the moment of
+   * the click, the rail is still the width it was: taking a choice off
+   * measured the narrow rail, worked out that almost nothing would fit, and
+   * folded everything down just as the room to unfold it was arriving. It
+   * then stayed folded, because nothing measures a second time.
+   *
+   * `fitGroups` only ever folds, so this unfolds the lot first and lets it
+   * trim again from there - the same pass `repaint` makes, without redoing
+   * the lists and the card that have not changed.
+   */
+  function refitGroups() {
+    if (!groups.length) return;
+    for (const one of groups) one.open = true;
+    drawFacets();
+    fitGroups();
+  }
+
   function fitGroups() {
     const box = el('ixFacets');
     const panel = el('ixBody');
@@ -11212,6 +11263,15 @@ const RealmIndex = (function () {
     /* The same pass every change makes, so the first screen is not a special
        case that forgets to unfold anything. */
     repaint();
+    /*
+     * And measured again on the next frame.
+     *
+     * The first pass runs the moment the rail is written, before the browser
+     * has laid any of it out - so it reads a rail taller than the one that
+     * ends up on screen and folds groups that would have fitted. On a wide
+     * window that left one heading unfolded out of seven where six fit.
+     */
+    requestAnimationFrame(refitGroups);
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built
       + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
@@ -11228,6 +11288,17 @@ const RealmIndex = (function () {
         if (showing) drawCard(showing.id);
       }, 180);
     });
+
+    /* And whenever the columns have finished sliding, which is the other way
+       the rail's width changes and the only one nothing was watching. */
+    const body = el('ixBody');
+    if (body) {
+      body.addEventListener('transitionend', event => {
+        if (event.target === body && event.propertyName === 'grid-template-columns') {
+          refitGroups();
+        }
+      });
+    }
   }
 
   /* Somebody else may want to open a record: the atlas, or a search box. */

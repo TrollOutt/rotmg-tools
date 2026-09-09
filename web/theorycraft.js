@@ -215,6 +215,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           for (const part of (one && one.rel) || []) takes(part);
         }
       }
+      /* Kept, so the page can say what a share came to without working the
+         bonus out a second time and drifting from the sum that counted. */
+      from.bonus = bonus;
     }
 
     /*
@@ -1458,7 +1461,36 @@ const TINT = {
     return cut || '<span class="tc-icon-big ' + grade + '"></span>';
   }
 
+  /*
+   * What a share of the bonus actually comes to.
+   *
+   * "+12% of bonus MAXMP" is a rule, not an answer: what it gives depends on
+   * everything else worn, which is the whole reason to put one on - it grows
+   * with the rest of the build. Read on its own it tells you nothing you can
+   * weigh against a flat "+65 MAXMP" sitting in the slot beside it.
+   *
+   * So the rule is followed by what it is worth on the build in front of you,
+   * taken from the same bonus the statistics themselves were taken from. Null
+   * when there is nothing to read it against, and then only the rule is said.
+   */
+  function relWorth(part, bonus) {
+    const key = OF_STAT[part.stat], of = OF_STAT[part.of];
+    if (!key || !of || !bonus) return null;
+    const much = (bonus[of] || 0) * part.pct / 100;
+    return Math.round(much * 10) / 10;
+  }
+  const saysRel = (part, bonus) => {
+    const much = relWorth(part, bonus);
+    return plus(part.pct) + '% of bonus ' + part.of
+      + (part.of === part.stat ? '' : ' as ' + part.stat)
+      + (much === null ? '' : ' = ' + plus(much) + ' ' + part.stat);
+  };
+
   function drawSlots() {
+    /* The build as it stands, once, so every share on the page is measured
+       against the same bonus rather than four slightly different ones. */
+    const kit = statsOf(build);
+    const bonus = kit && kit.from && kit.from.bonus;
     const box = el('tcGear');
     if (!box) return;
     box.innerHTML = HANDS.map(([hand, say]) => {
@@ -1506,10 +1538,7 @@ const TINT = {
           bits.push(plus(part.pct) + '% of ' + part.of
             + (part.of === part.stat ? '' : ' as ' + part.stat));
         }
-        for (const part of item.rel || []) {
-          bits.push(plus(part.pct) + '% of bonus ' + part.of
-            + (part.of === part.stat ? '' : ' as ' + part.stat));
-        }
+        for (const part of item.rel || []) bits.push(saysRel(part, bonus));
         if (item.sb) bits.push('soulbound');
       }
 
@@ -1542,7 +1571,7 @@ const TINT = {
           return words.join(', ');
         })() : '';
         const shares = one && one.rel
-          ? one.rel.map(part => plus(part.pct) + '% of bonus ' + part.of).join(' ')
+          ? one.rel.map(part => saysRel(part, bonus)).join(' ')
           : '';
         const heals = one && one.heal ? [
           one.heal.flatHP ? '+' + one.heal.flatHP + ' HP/s' : '',

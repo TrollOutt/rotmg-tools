@@ -556,6 +556,28 @@ const RealmIndex = (function () {
    * because a group's height is the number of chips in it and the width of
    * the window at that moment.
    */
+  /*
+   * Measured again once the rail has finished changing width.
+   *
+   * How many groups can be unfolded depends on the room the rail has, and the
+   * rail changes width whenever a choice is made or taken back - over a third
+   * of a second, because the columns are animated. Measured at the moment of
+   * the click, the rail is still the width it was: taking a choice off
+   * measured the narrow rail, worked out that almost nothing would fit, and
+   * folded everything down just as the room to unfold it was arriving. It
+   * then stayed folded, because nothing measures a second time.
+   *
+   * `fitGroups` only ever folds, so this unfolds the lot first and lets it
+   * trim again from there - the same pass `repaint` makes, without redoing
+   * the lists and the card that have not changed.
+   */
+  function refitGroups() {
+    if (!groups.length) return;
+    for (const one of groups) one.open = true;
+    drawFacets();
+    fitGroups();
+  }
+
   function fitGroups() {
     const box = el('ixFacets');
     const panel = el('ixBody');
@@ -1330,6 +1352,15 @@ const RealmIndex = (function () {
     /* The same pass every change makes, so the first screen is not a special
        case that forgets to unfold anything. */
     repaint();
+    /*
+     * And measured again on the next frame.
+     *
+     * The first pass runs the moment the rail is written, before the browser
+     * has laid any of it out - so it reads a rail taller than the one that
+     * ends up on screen and folds groups that would have fitted. On a wide
+     * window that left one heading unfolded out of seven where six fit.
+     */
+    requestAnimationFrame(refitGroups);
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built
       + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
@@ -1346,6 +1377,17 @@ const RealmIndex = (function () {
         if (showing) drawCard(showing.id);
       }, 180);
     });
+
+    /* And whenever the columns have finished sliding, which is the other way
+       the rail's width changes and the only one nothing was watching. */
+    const body = el('ixBody');
+    if (body) {
+      body.addEventListener('transitionend', event => {
+        if (event.target === body && event.propertyName === 'grid-template-columns') {
+          refitGroups();
+        }
+      });
+    }
   }
 
   /* Somebody else may want to open a record: the atlas, or a search box. */
