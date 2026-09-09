@@ -386,27 +386,6 @@ for (const [, one] of byType) {
   items.push(itemOf(one, hand, slot, labels));
 }
 /*
- * Which of them the site already has a picture of.
- *
- * The folder of item pictures was gathered from the wiki, so it holds what
- * the wiki has had time to draw - and nothing from the update that came out
- * last week. Dropping what was missing from it dropped every new item in the
- * game: the whole Venerable set, the Decades Chronicle, the lot, all of them
- * sitting in the client with their art. So nothing is dropped for that any
- * more. What the folder does not have, tools/theory-sprites.js cuts out of
- * the client itself, which is where the game gets it from too.
- */
-{
-  const index = path.join(root, 'web', 'assets', 'items', 'index.json');
-  if (fs.existsSync(index)) {
-    const have = new Set(Object.keys(JSON.parse(fs.readFileSync(index, 'utf8'))));
-    let ours = 0;
-    for (const one of items) if (!have.has(one.name)) { one.cut = 1; ours++; }
-    console.log('  ' + ours + ' of them want their picture cut from the client');
-  }
-}
-
-/*
  * One of each thing.
  *
  * The client keeps retro copies of a good many items - Retro Doom Bow beside

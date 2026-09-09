@@ -1354,15 +1354,6 @@ const TINT = {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-  function artFor(name) {
-    const bundle = window.ROTMG_BUNDLE;
-    if (bundle && bundle.itemSprites && bundle.itemSprites[name]) {
-      return bundle.itemSprites[name];
-    }
-    if (window.ITEM_SPRITE_PATH) return window.ITEM_SPRITE_PATH(name);
-    return '';
-  }
-
   /*
    * A piece of the one sheet, as a plain element. The sheet is a single
    * picture and every icon on the page is a window onto it, so an
@@ -1396,6 +1387,27 @@ const TINT = {
   }
 
   /*
+   * The same window, onto the other sheet.
+   *
+   * Two sheets, because they hold two different things. The theory sheet holds
+   * what moves - a bolt in flight, a target in its three poses - and the index
+   * sheet holds every object in the game standing still. An item's picture is
+   * the index's, and it comes down as a rectangle on the projection, so this
+   * page and the calculator draw the same item from the same pixels.
+   */
+  function indexIcon(rect, side, extra) {
+    const sheet = data.iconSheet;
+    if (!rect || !sheet) return '';
+    const [x, y, w, h] = rect;
+    const zoom = side / Math.max(w, h);
+    return '<span class="sheet-art' + (extra ? ' ' + extra : '') + '"'
+      + ' style="width:' + (w * zoom) + 'px;height:' + (h * zoom) + 'px'
+      + ';background-size:' + (sheet.wide * zoom) + 'px ' + (sheet.tall * zoom) + 'px'
+      + ';background-position:' + (-x * zoom) + 'px ' + (-y * zoom) + 'px'
+      + '"></span>';
+  }
+
+  /*
    * What the game would call this thing, so the cell can be framed the way
    * the game frames it. Untiered gear - the drops people actually want - is
    * marked UT in the client's own labels, and the tiered stuff bands the way
@@ -1424,13 +1436,8 @@ const TINT = {
    */
   function itemIcon(name) {
     const grade = gradeOf(name);
-    const src = artFor(name);
-    if (src) {
-      return '<img class="tc-icon-big ' + grade + '" src="' + esc(src)
-        + '" alt="" loading="lazy">';
-    }
     const item = data.byItem[name];
-    const cut = item && item.art && sheetIcon(item.art, 34, 'tc-icon-big ' + grade);
+    const cut = item && item.icon && indexIcon(item.icon, 34, 'tc-icon-big ' + grade);
     return cut || '<span class="tc-icon-big ' + grade + '"></span>';
   }
 
@@ -3184,6 +3191,14 @@ const TINT = {
         + ((bundle && bundle.theorySheet) || 'assets/theory/sheet.png') + ')');
       const wrap = el('tcPickerWrap');
       if (wrap) wrap.style.setProperty('--tc-sheet', el('tcBody').style.getPropertyValue('--tc-sheet'));
+      /*
+       * And the index's sheet, which the item pictures come from. The
+       * calculator writes the same address onto the document when it loads;
+       * this repeats it so the bench draws its items whether or not the other
+       * page ever opened.
+       */
+      document.documentElement.style.setProperty('--sheet', 'url('
+        + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
     fillPickers();
     if (!recall()) tabs = [fresh('Wizard')];

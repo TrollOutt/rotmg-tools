@@ -331,6 +331,23 @@ creatures and 1 item whose declared texture does not resolve.
 
 ---
 
+### One sheet, every module
+
+An item's picture is the rectangle the index cut out of the client, and there
+is nowhere else to get one. `tools/generate-item-art.js` projects those
+rectangles out under the item's name into `data/Index/item-art.json`, which the
+calculator reads; the bench gets the same rectangle on its own projection, as
+`icon`. Both point at `web/assets/index/sheet.png`.
+
+What this replaced: a folder of sixteen hundred renders downloaded from the
+wiki that the calculator read and the bench half-read, plus a second sheet the
+bench cut for the items that folder was missing. Three answers to one question,
+so the three Venerable rings had a picture on the index and an empty square on
+the other two pages while their pixels sat in a sheet nobody else opened. The
+folder is deleted. Coverage went from 1,553 of 1,757 enchantable items to all
+of them, the served page from 4.02 MB to 2.52 MB, and `check-index.js` now
+fails the build if a single bench or enchantable item arrives without one.
+
 ## Ways in
 
 The search box only helps a reader who already knows the name. The rail down
@@ -507,17 +524,15 @@ it is.
   the atlas already cuts; a pool is an idea and probably never will.
 - **7 creatures declare a texture that does not resolve.** Worth finding out
   whether the atlas is missing it or the index is wrong about it.
-- **The bench has no tier-nought bow.** 28 tier-nought items and nothing in
-  slot 3, though the client declares the Shortbow and hands it to every Archer
-  ever made. Found by the index, which is what the index is for; the fix
-  belongs in `tools/build-theorycraft.js`.
 - **Class↔item is computed in the page.** If a second consumer ever needs it,
   it should move into the build rather than be written twice.
 - **The card's link list is flat.** Two thousand `same name as` edges make some
   cards long; grouping by `how` with a count would read better.
-- **Nothing verifies the index against the tools.** A check that every item the
-  bench shows has a record, and that every record the bench hides carries a
-  `hidden` reason, would catch a drifted filter the moment it drifts.
+- **The realm atlas still wants the deleted folder.** `merge-realm-roles.js`
+  read `web/assets/items` for the loot icons it copies into the atlas. The
+  folder is gone and the tool degrades quietly - those items land in the
+  "rest" list without a picture - so it wants pointing at the index sheet the
+  way the calculator and the bench now are.
 - **Six thousand wiki links are set aside as unreadable**, most of them item to
   item inside a Drops section, and four thousand more could point either way.
   The page *text* does distinguish "Drops" from "Drops of Interest" and

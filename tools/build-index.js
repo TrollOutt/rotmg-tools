@@ -235,18 +235,6 @@ for (const one of objects) {
   });
 }
 
-/*
- * Which of them the site already has a picture of. The folder came from the
- * wiki, so it is a patch behind the game; the bench cuts what is missing out
- * of the client. Either way the index can say which, because "no picture" was
- * for a long time the reason a thing was nowhere to be seen.
- */
-const drawn = (() => {
-  const file = path.join(root, 'web', 'assets', 'items', 'index.json');
-  if (!fs.existsSync(file)) return new Set();
-  return new Set(Object.keys(JSON.parse(fs.readFileSync(file, 'utf8'))));
-})();
-
 /* ---------------- everything wearable ---------------- */
 /*
  * The index keeps all of it and marks what a tool would hide, rather than
@@ -308,7 +296,17 @@ const gear = [];
 for (const one of objects) {
   if (!has(one.body, 'Item')) continue;
   const labels = labelsOf(one.body);
-  if (!labels.includes('EQUIPMENT')) continue;
+  /*
+   * Labelled EQUIPMENT, or carrying enchantment slots.
+   *
+   * Two things the client lets you enchant carry no Labels block at all - the
+   * Paper Machete and an Agents of Oryx shard - so a rule that read only the
+   * label left them out of the index while the calculator went on offering
+   * them, and the picture the client draws them with had nowhere to be found.
+   * A thing the enchanter accepts is an item, whether or not anybody wrote
+   * EQUIPMENT above it.
+   */
+  if (!labels.includes('EQUIPMENT') && !/<EnchantmentSlots[\s/>]/.test(one.body)) continue;
   const slot = num(one.body, 'SlotType');
   const hand = SLOT_KIND.get(slot);
   const hidden = [];
@@ -354,7 +352,7 @@ for (const one of objects) {
       ? 1 : undefined,
     ench: !records.has('item:' + nameOf(one)) && offered.ench.has(nameOf(one))
       ? 1 : undefined,
-    pic: drawn.has(nameOf(one)) ? 'wiki' : 'client',
+    pic: 'client',
     hidden: hidden.length ? hidden : undefined
   });
   gear.push({ record, one, slot });

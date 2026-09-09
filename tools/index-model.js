@@ -3,7 +3,7 @@
 // The index and bench use different names for a few fields. Keep those
 // translations here so the index card can retain its existing public shape.
 const fields = {
-  items: 'name id hand slot sb tier bag mp rate many fan worn share rel burst shots does cast set cool labels cut art pic',
+  items: 'name id hand slot sb tier bag mp rate many fan worn share rel burst shots does cast set cool labels art pic icon',
   classes: 'name about hp hpTop mp mpTop att attTop def defTop spd spdTop dex dexTop vit vitTop wis wisTop grow slots kit art pic',
   enchants: 'id name says labels fits notFits notWith notOn weight worn mul sub rel heal alters pic',
   sets: 'name pieces steps',
@@ -12,6 +12,15 @@ const fields = {
 const kinds = { items: 'item', classes: 'class', enchants: 'enchant', sets: 'set', bosses: 'enemy' };
 function key(group, field) {
   if (field === 'id') return 'clientId';
+  /*
+   * The picture of an item is the index's own picture: the rectangle it cut
+   * out of the client, on the sheet every page of this site draws from. The
+   * bench used to look items up in a folder of downloaded wiki renders and
+   * fall back to a second sheet of its own, so the same item had two pictures
+   * and sometimes none. It carries the index's rectangle now, like everything
+   * else it knows.
+   */
+  if (field === 'icon') return 'art';
   if (['art', 'strip', 'pic'].includes(field)) return 'bench' + field[0].toUpperCase() + field.slice(1);
   if (group === 'items') return ({ shots: 'fires', does: 'activate' })[field] || field;
   if (group === 'enchants') return ({ says: 'about', notFits: 'refuses', notWith: 'beside' })[field] || field;
@@ -19,7 +28,8 @@ function key(group, field) {
 }
 function assign(record, group, value) {
   for (const field of fields[group].split(' ')) {
-    if (field === 'name') continue;
+    // `icon` is read off the record on the way out; nothing puts it there.
+    if (field === 'name' || field === 'icon') continue;
     let v = value[field];
     if (group === 'classes' && /^(hp|mp|att|def|spd|dex|vit|wis)(Top)?$/.test(field)) {
       (record.stats ||= {})[field] = v; continue;
@@ -77,7 +87,7 @@ function project(index, runtime = false) {
         if (group === 'enchants' && ['fits', 'notFits', 'notWith', 'notOn'].includes(field)) v ||= undefined;
         if (v !== undefined) value[field] = v;
       }
-      if (runtime && group === 'items') { delete value.id; delete value.cut; }
+      if (runtime && group === 'items') delete value.id;
       return value;
     });
   }

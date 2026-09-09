@@ -195,25 +195,20 @@ const homeArt = [...fs.readFileSync(path.join(web, 'index.html'), 'utf8')
   .map(([, folder, file]) => { embed(folder, file); return `GUI Files/${folder}/${file}`; });
 
 /* ---------------------------------------------------------------- *
- * 2b. Item sprites                                                  *
+ * 2b. Item pictures                                                 *
  * ---------------------------------------------------------------- */
 
-// Downloaded once by tools/fetch-item-sprites.js. Optional: without them the
-// interface falls back to the slot icons, so a fresh clone still builds.
-const itemSprites = {};
-let itemSpriteBytes = 0;
-const itemDir = path.join(web, 'assets', 'items');
-const itemIndexPath = path.join(itemDir, 'index.json');
-if (fs.existsSync(itemIndexPath)) {
-  const index = JSON.parse(fs.readFileSync(itemIndexPath, 'utf8'));
-  for (const [name, file] of Object.entries(index)) {
-    const absolute = path.join(itemDir, file);
-    if (!fs.existsSync(absolute)) continue;
-    const bytes = fs.readFileSync(absolute);
-    itemSpriteBytes += bytes.length;
-    const mime = path.extname(file).toLowerCase() === '.gif' ? 'image/gif' : 'image/png';
-    itemSprites[name] = `data:${mime};base64,${bytes.toString('base64')}`;
-  }
+/*
+ * Where each item sits on the index's sheet, projected out of the index by
+ * tools/generate-item-art.js. It used to be sixteen hundred separate renders
+ * downloaded from the wiki, inlined one base64 string at a time, which was a
+ * megabyte and a half of the served page and still left two hundred items
+ * without a picture. One sheet and a table of rectangles covers four thousand.
+ */
+let itemArt = null;
+{
+  const at = path.join(root, 'data', 'Index', 'item-art.json');
+  if (fs.existsSync(at)) itemArt = JSON.parse(fs.readFileSync(at, 'utf8'));
 }
 
 // Realm Atlas creature portraits are individual, lazy-loaded files while the
@@ -494,7 +489,7 @@ const dress = (bundleSources) => readWeb('index.html')
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
-    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemSprites, whatsNew,
+    `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
       theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '' })};</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
@@ -619,7 +614,7 @@ console.log(`\nStandalone build -> ${path.relative(root, pagesDir)}/\n`);
 for (const [folder, added] of Object.entries(counts)) console.log(`  ${String(added).padStart(3)} sprites  ${folder}`);
 console.log(`\n  ${dataset.enchants.length} enchantments - ${dataset.artifacts.length} artifacts - ${dataset.awakenings.size} awakenable items`);
 console.log(`  sprites ${kb(assetBytes)} raw -> ${kb(JSON.stringify(assets).length)} inlined`);
-  console.log(`  items   ${Object.keys(itemSprites).length} sprites, ${kb(itemSpriteBytes)} raw -> ${kb(JSON.stringify(itemSprites).length)} inlined`);
+  console.log(`  items   ${Object.keys((itemArt && itemArt.art) || {}).length} pictures on the index sheet, ${kb(JSON.stringify(itemArt || {}).length)} of rectangles`);
 console.log(`  realm   ${Object.keys(realmMonsterSprites).length} client sprites + ${Object.keys(realmCatalogSprites).length} imported sprites + ${Object.keys(realmMonsterAnimations).length} animated loops inlined`);
 console.log(`  total   ${kb(fs.statSync(outFile).size)}`);
 console.log('  every sprite the interface can request is embedded.');

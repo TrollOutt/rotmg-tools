@@ -344,24 +344,15 @@ for (const one of facts.classes) {
 }
 
 /*
- * And a picture for every item the site does not already have one of.
+ * Items are not cut here.
  *
- * The folder of item art came from the wiki, so it is always a patch behind
- * the game: the week an update lands, every new thing in it is missing from
- * that folder, and a bench that hides what it has no picture of hides exactly
- * the items everybody has come to ask about. The client has the art - it is
- * drawing it - so it is cut from there, the same way the bolts and the things
- * worth hitting are.
+ * They used to be, because the folder of wiki renders this page read was
+ * always a patch behind the game and the newest items had no picture at all.
+ * That folder is gone: an item's picture is the rectangle the index cut out of
+ * the client, on the index's own sheet, and every page of the site draws it
+ * from there. Cutting a second copy onto this sheet would be two pictures of
+ * one thing, which is the arrangement that let them disagree.
  */
-let drawn = 0;
-for (const one of facts.items) {
-  if (!one.cut) continue;
-  // Cut by the client's own name for it, which is what the art is filed
-  // under - the name on screen is often a different word entirely.
-  const where = one.id || one.name;
-  if (cutOne('i:' + where, where, false)) { one.art = 'i:' + where; drawn++; }
-}
-// Artwork never decides whether a valid item belongs to the catalogue.
 
 /*
  * And an icon for each enchantment, which is the one thing on that side of
