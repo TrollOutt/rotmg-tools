@@ -2479,7 +2479,25 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   background: rgba(121, 197, 232, .06);
 }
 
-.tc-slot-head { display: flex; align-items: center; gap: 11px; padding: 9px 11px 7px; }
+/*
+ * The item, the two buttons, and then what the item does across the lot.
+ *
+ * A row of three boxes left the description in a column that ends where the
+ * buttons begin, so it was cut off mid-sentence with the width underneath
+ * them standing empty. It is a grid now: the row on top, the description on
+ * its own line below, indented to start under the name rather than under the
+ * picture so it still reads as belonging to it.
+ */
+.tc-slot-head {
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 3px 11px; padding: 9px 11px 7px;
+  /* The picture, and the gap beside it - what the writing is indented past. */
+  --tc-indent: 63px;
+}
+.tc-slot-head > .tc-bits {
+  grid-column: 1 / -1; margin-left: var(--tc-indent);
+  white-space: normal; overflow: visible; text-overflow: clip;
+}
 .tc-item-pick {
   flex: 1; display: flex; align-items: center; gap: 11px; text-align: left; min-width: 0;
   background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; padding: 0;

@@ -2487,7 +2487,25 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   background: rgba(121, 197, 232, .06);
 }
 
-.tc-slot-head { display: flex; align-items: center; gap: 11px; padding: 9px 11px 7px; }
+/*
+ * The item, the two buttons, and then what the item does across the lot.
+ *
+ * A row of three boxes left the description in a column that ends where the
+ * buttons begin, so it was cut off mid-sentence with the width underneath
+ * them standing empty. It is a grid now: the row on top, the description on
+ * its own line below, indented to start under the name rather than under the
+ * picture so it still reads as belonging to it.
+ */
+.tc-slot-head {
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 3px 11px; padding: 9px 11px 7px;
+  /* The picture, and the gap beside it - what the writing is indented past. */
+  --tc-indent: 63px;
+}
+.tc-slot-head > .tc-bits {
+  grid-column: 1 / -1; margin-left: var(--tc-indent);
+  white-space: normal; overflow: visible; text-overflow: clip;
+}
 .tc-item-pick {
   flex: 1; display: flex; align-items: center; gap: 11px; text-align: left; min-width: 0;
   background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; padding: 0;
@@ -8355,7 +8373,6 @@ const TINT = {
           '<i class="chip is-' + kind + '">' + esc(said) + '</i>').join('') + '</span>' : '')
         + '</span>'
         + '<span class="tc-item-name">' + (worn.name ? esc(worn.name) : 'nothing') + '</span>'
-        + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
         + '</span></button>'
         + (worn.name ? '<button type="button" class="tc-take" data-take="' + hand
           + '" title="Take this item and what is on it to the enchant calculator">'
@@ -8364,6 +8381,15 @@ const TINT = {
         + '" aria-pressed="' + (locked ? 'true' : 'false')
         + '" title="' + lockSays(locked) + ' while the calculator works"'
         + ' aria-label="' + lockSays(locked) + '">' + LOCK(locked) + '</button>'
+        /*
+         * What the item does goes under the row rather than in it.
+         *
+         * It used to sit inside the button that changes the item, which put
+         * it in a column ending where the two buttons begin - so it was cut
+         * off mid-sentence while the width beneath those buttons sat empty.
+         * On its own line it has the whole card and says all of it.
+         */
+        + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';

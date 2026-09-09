@@ -1658,7 +1658,6 @@ const TINT = {
           '<i class="chip is-' + kind + '">' + esc(said) + '</i>').join('') + '</span>' : '')
         + '</span>'
         + '<span class="tc-item-name">' + (worn.name ? esc(worn.name) : 'nothing') + '</span>'
-        + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
         + '</span></button>'
         + (worn.name ? '<button type="button" class="tc-take" data-take="' + hand
           + '" title="Take this item and what is on it to the enchant calculator">'
@@ -1667,6 +1666,15 @@ const TINT = {
         + '" aria-pressed="' + (locked ? 'true' : 'false')
         + '" title="' + lockSays(locked) + ' while the calculator works"'
         + ' aria-label="' + lockSays(locked) + '">' + LOCK(locked) + '</button>'
+        /*
+         * What the item does goes under the row rather than in it.
+         *
+         * It used to sit inside the button that changes the item, which put
+         * it in a column ending where the two buttons begin - so it was cut
+         * off mid-sentence while the width beneath those buttons sat empty.
+         * On its own line it has the whole card and says all of it.
+         */
+        + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';
