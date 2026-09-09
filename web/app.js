@@ -3171,8 +3171,18 @@ for (const image of document.querySelectorAll('[data-art]')) {
   strip.addEventListener('load', () => {
     const many = Math.max(1, Math.round(strip.naturalWidth / strip.naturalHeight));
     image.style.backgroundSize = (many * 100) + '% 100%';
-    image.style.animation = 'index-book ' + (many * 0.12).toFixed(2) + 's'
-      + ' steps(' + many + ', jump-none) infinite,'
+    /*
+     * Forward and back rather than round and round, and slowly.
+     *
+     * The strip is the light coming and going over an open book, so running it
+     * one way and jumping back to the start read as a loop of film rather than
+     * as a light breathing. Alternating turns the same eight drawings into a
+     * rise and a fall, and holds the quiet frame at each end for a beat, which
+     * is where the pause belongs. A quarter of a second a frame: any faster
+     * and the sparkle flickers instead of glimmering.
+     */
+    image.style.animation = 'index-book ' + (many * 0.26).toFixed(2) + 's'
+      + ' steps(' + many + ', jump-none) infinite alternate,'
       + ' enchanting 4.4s ease-in-out infinite';
   });
   strip.src = src;
