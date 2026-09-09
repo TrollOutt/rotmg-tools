@@ -465,7 +465,14 @@ const built = new Date().toISOString().slice(0, 10);
 // the file so an offline copy can still say which build its numbers were
 // checked against; absent if nobody has run the reader yet.
 const changesPath = path.join(dataRoot, 'client-changes.txt');
-const changes = fs.existsSync(changesPath) ? fs.readFileSync(changesPath, 'utf8') : '';
+/*
+ * With the line endings settled, the same way every other text the build reads
+ * is settled. A clone that checks out CRLF was baking carriage returns into
+ * the page, so a rebuild on one machine differed from a rebuild on another for
+ * no reason anybody could see.
+ */
+const changes = fs.existsSync(changesPath)
+  ? fs.readFileSync(changesPath, 'utf8').replace(/\r\n/g, '\n') : '';
 
 /*
  * Two copies, one difference.
