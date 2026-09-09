@@ -1,3 +1,4 @@
+## provenance: {"tool":"tools/fetch-sprites.js","built":"unknown (legacy export)","from":{"kind":"community","source":"RealmEye"}}
 ## How hard the game says each dungeon is, and whether its
 ## portal is drawn moving. Both from the wiki page of the dungeon.
 ##

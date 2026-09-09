@@ -1,38 +1,9 @@
-/*
- * The pictures theory crafting needs, cut out of the installed client.
- *
- * Two of them, and neither is drawn here:
- *
- *   the targets      every thing worth hitting, with the whole run of poses
- *                    the client keeps for it - standing, walking, swinging,
- *                    in each direction it has one for. The registry files
- *                    them by facing and action, so a boss in the frame moves
- *                    the way it moves in the game.
- *
- *   the shots        a weapon's projectile names an object of its own, and
- *                    that object has a texture. So the thing crossing the
- *                    frame is the actual bolt the actual weapon throws,
- *                    rather than a line.
- *
- * Everything lands on one sheet with an index of rectangles, the way the
- * atlas keeps its scenery. Six hundred separate files would be six hundred
- * requests served and six hundred data URIs carried in the offline copy; one
- * sheet is one of each.
- *
- *   node tools/theory-sprites.js        (after tools/build-theorycraft.js)
- */
 'use strict';
-
-const fs = require('fs');
-const path = require('path');
-const zlib = require('zlib');
-
-const root = path.join(__dirname, '..');
-const XML = path.join(root, 'client-data');
-const SHEETS = path.join(XML, 'textures');
-const OUT = path.join(root, 'web', 'assets', 'theory');
-const FACTS = path.join(root, 'data', 'TheoryCraft', 'theorycraft.json');
-
+// Artwork decoration called by build-index with its already-read source.
+// It writes the sheet only; catalogue membership belongs to the index.
+const fs=require('fs'),path=require('path'),zlib=require('zlib');
+module.exports=function({ root, documents, readAsset, facts }) {
+const OUT=path.join(root,'web','assets','theory');
 /* ---------------- just enough FlatBuffers ---------------- */
 class Flat {
   constructor(b) { this.b = b; }
@@ -148,14 +119,7 @@ function writePng(width, height, rgba) {
 const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
 const sheetName = field => SHEET_OF[field] || 'mapObjects';
 
-for (const needed of [path.join(XML, 'spritesheet.bin'), FACTS]) {
-  if (fs.existsSync(needed)) continue;
-  console.error('\n  ' + path.relative(root, needed) + ' is missing.'
-    + (needed === FACTS ? '  Run: node tools/build-theorycraft.js' : '') + '\n');
-  process.exit(1);
-}
-
-const flat = new Flat(fs.readFileSync(path.join(XML, 'spritesheet.bin')));
+const flat = new Flat(readAsset('spritesheet.bin'));
 const rootFields = flat.fields(flat.root());
 
 // Still pictures, by atlas and index.
@@ -212,8 +176,8 @@ const moving = new Map();
 const sheets = new Map();
 const sheetFor = name => {
   if (sheets.has(name)) return sheets.get(name);
-  const file = path.join(SHEETS, name + '.png');
-  const got = fs.existsSync(file) ? readPng(fs.readFileSync(file)) : null;
+  const bytes = readAsset('textures/' + name + '.png');
+  const got = bytes ? readPng(bytes) : null;
   sheets.set(name, got);
   return got;
 };
@@ -226,9 +190,9 @@ const sheetFor = name => {
  */
 const SHAPE = /<Object\b[^>]*\bid="([^"]*)"[^>]*>([\s\S]*?)<\/Object>/g;
 
-const objectText = fs.readdirSync(XML)
+const objectText = [...documents.keys()]
   .filter(name => /^Objects\.\d+\.xml$/.test(name)).sort()
-  .map(name => fs.readFileSync(path.join(XML, name), 'utf8'));
+  .map(name => documents.get(name));
 
 const artOf = new Map();          // object id -> { atlas, index, size }
 for (const text of objectText) {
@@ -325,7 +289,7 @@ function cutOne(key, where, wantPoses) {
   return out;
 }
 
-const facts = JSON.parse(fs.readFileSync(FACTS, 'utf8'));
+
 
 // The things worth hitting, moving.
 let hitters = 0;
@@ -397,22 +361,7 @@ for (const one of facts.items) {
   const where = one.id || one.name;
   if (cutOne('i:' + where, where, false)) { one.art = 'i:' + where; drawn++; }
 }
-/*
- * And what has no picture anywhere still goes. A hundred and twenty of them
- * are marked "(SB)" in the client - soulbound twins of things already on the
- * list, kept without art of their own - and an empty grey box in a picker is
- * worse than one choice fewer: there is nothing to recognise and nothing to
- * pick.
- */
-{
-  let gone = 0;
-  for (let i = facts.items.length - 1; i >= 0; i--) {
-    const one = facts.items[i];
-    if (one.cut && !one.art) { facts.items.splice(i, 1); gone++; }
-    else { delete one.cut; delete one.id; }
-  }
-  if (gone) console.log('  ' + gone + ' with no picture anywhere dropped');
-}
+// Artwork never decides whether a valid item belongs to the catalogue.
 
 /*
  * And an icon for each enchantment, which is the one thing on that side of
@@ -423,7 +372,7 @@ for (const one of facts.items) {
  */
 let charms = 0;
 {
-  const raw = fs.readFileSync(path.join(XML, 'Enchantments.xml'), 'utf8');
+  const raw = documents.get('Enchantments.xml');
   const byId = new Map(facts.enchants.map(one => [one.id, one]));
   const shape = new RegExp('<Enchantment id="([^"]+)"[\\s\\S]*?<Texture>'
     + '\\s*<File>([^<]+)</File>\\s*<Index>([^<]+)</Index>', 'g');
@@ -526,12 +475,11 @@ facts.sheet = {
     ...(one.poses ? { poses: one.poses } : {})
   }]))
 };
-fs.writeFileSync(FACTS, JSON.stringify(facts) + '\n');
 
-console.log('\n  ' + hitters + ' targets, ' + folk + ' classes, ' + bolts
-  + ' bolts, ' + drawn + ' items and ' + charms + ' enchantment icons on one '
-  + WIDE + 'x' + tall + ' sheet'
-  + '\n  -> ' + path.relative(root, png)
-  + '  (' + (fs.statSync(png).size / 1024).toFixed(0) + ' KB)'
-  + '\n  -> ' + path.relative(root, FACTS)
-  + '  (' + (fs.statSync(FACTS).size / 1024).toFixed(0) + ' KB)\n');
+
+return facts;
+};
+if (require.main === module) {
+  console.error('Run node tools/build-index.js --sprites, then npm run project-data.');
+  process.exitCode = 1;
+}

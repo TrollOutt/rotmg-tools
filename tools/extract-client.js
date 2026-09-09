@@ -85,6 +85,13 @@ while (position < size) {
 }
 fs.closeSync(handle);
 
+const boot = fs.readFileSync(path.join(path.dirname(client.assets), 'boot.config'), 'utf8');
+const build = /build-guid=([0-9a-f]+)/i.exec(boot)?.[1];
+const provenance = require('./provenance');
+const meta = provenance.stamp(__filename, {
+  kind: 'client', build, date: fs.statSync(client.assets).mtime.toISOString().slice(0, 10)
+});
+
 fs.mkdirSync(OUT, { recursive: true });
 for (const file of fs.readdirSync(OUT)) if (file.endsWith('.xml')) fs.unlinkSync(path.join(OUT, file));
 
@@ -106,3 +113,4 @@ for (const [name, list] of [...documents].sort((a, b) => a[0].localeCompare(b[0]
 }
 
 console.log(`\n  ${total} documents, ${(bytes / 1048576).toFixed(1)} MB -> client-data/\n`);
+fs.writeFileSync(path.join(OUT, 'provenance.json'), JSON.stringify(meta) + '\n');
