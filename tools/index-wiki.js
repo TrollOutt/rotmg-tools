@@ -283,6 +283,26 @@ for (const row of search) {
     if (link.targetId === raw.id) { dropped++; continue; }
     if (!READS[kind](shapeOf(here), shapeOf(there))) { unread++; continue; }
     /*
+     * And the thing at the far end has to be a thing.
+     *
+     * Both readings put what is given at the target end, so that end should
+     * name something the index knows. Often it does not: a boss's Drops
+     * section links the categories its loot belongs to as readily as the loot
+     * - Weapons, Armor, Rings, Ability Items - and those pages answer to no
+     * record of ours at all.
+     *
+     * Measured on the snapshot of 8 September: 3,613 of 12,954 drop edges
+     * pointed at a page carrying no record, and five titles accounted for two
+     * and a half thousand of them. "Oryx the Mad God drops Weapons" is true
+     * and it is not a fact anything can use - worse, anything reading this
+     * table to ask where an item comes from has to wade through it.
+     *
+     * The check above already threw away an edge with a record at neither
+     * end. This throws away the ones with a record only at the near end,
+     * which is the same argument carried one step further.
+     */
+    if (!there.length) { dropped++; continue; }
+    /*
      * Page to page, not record to record. One page answers to three client
      * definitions where a name is claimed three times, and fanning the same
      * drop list out across all three would write it nine times and imply that
