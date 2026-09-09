@@ -1479,11 +1479,23 @@ const TINT = {
     const much = (bonus[of] || 0) * part.pct / 100;
     return Math.round(much * 10) / 10;
   }
+  /*
+   * The number first, and the rule after it.
+   *
+   * A chip has about twenty characters before it is cut short with an
+   * ellipsis, and "+12% of bonus MAXMP = +37 MAXMP" is longer than that - so
+   * the answer was the half that got cut, which is the half worth having. Led
+   * with, it reads like the flat enchantment in the slot beside it and can be
+   * weighed against it at a glance; the rule that produced it follows, and
+   * the whole sentence is on the chip's tooltip either way.
+   */
   const saysRel = (part, bonus) => {
     const much = relWorth(part, bonus);
-    return plus(part.pct) + '% of bonus ' + part.of
-      + (part.of === part.stat ? '' : ' as ' + part.stat)
-      + (much === null ? '' : ' = ' + plus(much) + ' ' + part.stat);
+    const rule = plus(part.pct) + '% of bonus ' + part.of;
+    if (much === null) {
+      return rule + (part.of === part.stat ? '' : ' as ' + part.stat);
+    }
+    return plus(much) + ' ' + part.stat + ' (' + rule + ')';
   };
 
   function drawSlots() {
