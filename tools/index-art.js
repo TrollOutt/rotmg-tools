@@ -150,7 +150,7 @@ const rowHasInk = y => { for (let x = 0; x < W; x++) if (drawn(x, y)) return tru
 const bands = runsIn(0, H - 1, rowHasInk).filter(([a, b]) => b - a > 100);
 if (!bands.length) throw new Error('no rows of frames in the sheet');
 
-const frames = [];
+let frames = [];
 for (const [top, bottom] of bands) {
   const colHasInk = x => {
     for (let y = top; y <= bottom; y++) if (drawn(x, y)) return true;
@@ -189,10 +189,22 @@ for (const [top, bottom] of bands) {
   }
 }
 
-if (frames.length !== 20) {
-  console.log('\n  Found ' + frames.length + ' frames, not twenty. The sheet may have');
-  console.log('  changed shape; check it before trusting what comes out.\n');
-}
+/*
+ * And only the part worth watching.
+ *
+ * The sheet draws the whole business: the book shut, opening, wide open with
+ * the light coming and going, then closing again. On a card the size of a
+ * thumbnail the opening reads as a flicker rather than as a book, so the strip
+ * keeps the frames where it is already open and the light is breathing - here,
+ * the tenth to the seventeenth. The card plays those forward and back, which
+ * is what that stretch is: the glow rises to the fifth of them and settles.
+ *
+ * Frame numbers on the sheet, counted from one. Change them, or set KEEP to
+ * null for the lot, if the drawing changes.
+ */
+const KEEP = [10, 17];
+const drawnFrames = frames.length;
+if (KEEP) frames = frames.slice(Math.max(0, KEEP[0] - 1), KEEP[1]);
 
 /* ---------------- one strip, every cell the same ---------------- */
 /*
@@ -286,8 +298,9 @@ function smaller(width, height, rgba, by) {
 const small = smaller(stripW, cellH, strip, SHRINK);
 
 fs.writeFileSync(TO, writePng(small.width, small.height, small.rgba));
-console.log('\n  ' + frames.length + ' frames, ' + cellW + 'x' + cellH
-  + ' each, shrunk by ' + SHRINK);
+console.log('\n  ' + frames.length + ' of the sheet\u2019s ' + drawnFrames
+  + ' frames' + (KEEP ? ' (' + KEEP[0] + ' to ' + KEEP[1] + ')' : '')
+  + ', ' + cellW + 'x' + cellH + ' each, shrunk by ' + SHRINK);
 console.log('  -> ' + path.relative(root, TO) + '  ' + small.width + 'x' + small.height
   + '  (' + (fs.statSync(TO).size / 1024).toFixed(0) + ' KB)');
 console.log('  one cell is ' + Math.floor(cellW / SHRINK) + 'x'
