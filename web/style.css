@@ -3014,6 +3014,10 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   transition: grid-template-rows .26s cubic-bezier(.4, 0, .2, 1);
 }
 .ix-group-inner { overflow: hidden; min-height: 0; }
+/* Held still while the script is working out how many of them fit: every step
+   of that sum is a height read off the rail, and a rail in the middle of a
+   quarter-second fold gives a different answer every time it is asked. */
+#ixFacets.is-measuring .ix-group-body { transition: none; }
 .ix-group.is-open > .ix-group-body { grid-template-rows: 1fr; }
 .ix-group-inner > * { margin-top: 0; }
 /*

@@ -557,31 +557,48 @@ const RealmIndex = (function () {
    * the window at that moment.
    */
   /*
-   * Measured again once the rail has finished changing width.
+   * How many of the groups can be unfolded, and folding to it in a way that
+   * can be watched.
    *
-   * How many groups can be unfolded depends on the room the rail has, and the
-   * rail changes width whenever a choice is made or taken back - over a third
-   * of a second, because the columns are animated. Measured at the moment of
-   * the click, the rail is still the width it was: taking a choice off
-   * measured the narrow rail, worked out that almost nothing would fit, and
-   * folded everything down just as the room to unfold it was arriving. It
-   * then stayed folded, because nothing measures a second time.
+   * Two things were wrong with doing this by redrawing the rail.
    *
-   * `fitGroups` only ever folds, so this unfolds the lot first and lets it
-   * trim again from there - the same pass `repaint` makes, without redoing
-   * the lists and the card that have not changed.
+   * It could not be seen happening. The bodies fold on a grid row going from
+   * nothing to its own height, over a quarter of a second - but a body that
+   * has just been written into the page starts at whatever it is and has
+   * nothing to travel from, so every fold and unfold arrived as a jump. The
+   * open state is a class on a section that is already there, so it is set as
+   * a class and the transition already in the stylesheet does the rest.
+   *
+   * And it was measured at the wrong moment. How much room the rail has
+   * depends on how wide it is, and it changes width whenever a choice is made
+   * or taken back - over a third of a second, because the columns are
+   * animated too. Measured at the click, the rail is still the width it was:
+   * taking a choice off measured the narrow rail, decided almost nothing
+   * would fit, and folded everything just as the room to unfold it arrived.
+   * This is called again when the columns have finished sliding.
+   *
+   * The measuring itself has to be instant, or every step of it would be read
+   * off a rail that is still moving - so the transition is held off while the
+   * answer is worked out, the screen is put back where it was, and only then
+   * is it let go and the answer applied. What you see is one movement from
+   * where it was to where it belongs.
    */
-  function refitGroups() {
-    if (!groups.length) return;
-    for (const one of groups) one.open = true;
-    drawFacets();
-    fitGroups();
-  }
-
   function fitGroups() {
     const box = el('ixFacets');
     const panel = el('ixBody');
-    if (!box || !panel) return;
+    if (!box || !panel || !groups.length) return;
+    const nodes = groups.map((one, at) => box.querySelector('[data-group="' + at + '"]'));
+    if (!nodes.some(Boolean)) return;
+    const was = nodes.map(node => !!(node && node.classList.contains('is-open')));
+    const show = () => nodes.forEach((node, at) => {
+      if (node) node.classList.toggle('is-open', !!groups[at].open);
+    });
+
+    box.classList.add('is-measuring');
+    /* Unfolded, always, and trimmed from there - so a group that was folded
+       when there was no room for it comes back the moment there is. */
+    for (const one of groups) one.open = true;
+    show();
     const room = () => (window.innerHeight || 900)
       - box.getBoundingClientRect().top - 24;
     for (let guard = groups.length; guard > 0; guard--) {
@@ -589,10 +606,14 @@ const RealmIndex = (function () {
       const still = groups.filter(one => one.open && !one.inSub);
       /* Never all of them shut: a rail of seven headings answers nothing. */
       if (still.length <= 1) break;
-      const last = still[still.length - 1];
-      last.open = false;
-      drawFacets();
+      still[still.length - 1].open = false;
+      show();
     }
+
+    nodes.forEach((node, at) => { if (node) node.classList.toggle('is-open', was[at]); });
+    void box.offsetHeight;              // let that stand as where it starts
+    box.classList.remove('is-measuring');
+    show();
   }
 
   /*
@@ -661,12 +682,11 @@ const RealmIndex = (function () {
      */
     const picked = narrowed.length > 0 || Boolean(kindWanted);
     /*
-     * Unfolded, always, and trimmed afterwards to what the screen will hold.
-     * A choice makes every other group shorter - after one dungeon there are
-     * four classes left rather than nineteen - so what is worth reading fits
-     * where the whole rail did not.
+     * What is unfolded is worked out in fitGroups below, against the room the
+     * rail actually has. A choice makes every other group shorter - after one
+     * dungeon there are four classes left rather than nineteen - so what is
+     * worth reading often fits where the whole rail did not.
      */
-    for (const one of groups) one.open = true;
     const body = el('ixBody');
     if (body) {
       body.classList.toggle('has-pick', picked);
@@ -1360,7 +1380,7 @@ const RealmIndex = (function () {
      * ends up on screen and folds groups that would have fitted. On a wide
      * window that left one heading unfolded out of seven where six fit.
      */
-    requestAnimationFrame(refitGroups);
+    requestAnimationFrame(fitGroups);
     el('ixBuilt').textContent = all.count.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built
       + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
@@ -1384,7 +1404,7 @@ const RealmIndex = (function () {
     if (body) {
       body.addEventListener('transitionend', event => {
         if (event.target === body && event.propertyName === 'grid-template-columns') {
-          refitGroups();
+          fitGroups();
         }
       });
     }
