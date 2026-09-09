@@ -38,6 +38,10 @@ const OUT_BEACONS = path.join(root, 'data', 'Realm', 'realm-beacons.txt');
 const BIOMES = path.join(root, 'data', 'Realm', 'realm-biomes.txt');
 const CACHE = path.join(root, 'client-data', 'realm-map-roads.png');
 const SOURCE = 'https://i.imgur.com/0L1g8pP.png';
+const provenance = require('./provenance').header({
+  tool: 'tools/trace-realm-map.js', built: new Date().toISOString(),
+  from: { kind: 'map', source: SOURCE }
+}).trimEnd();
 
 // How many cells across. The island fills most of the picture here, so this
 // puts about 240 cells across the realm — every bay and inlet kept, and still
@@ -269,6 +273,7 @@ function findBeacons(image) {
         : named.get(entry.hex) || 'unnamed'));
 
   const header = [
+    provenance,
     '## The shape of the New Realm, as a grid of terrain classes.',
     '##',
     '## Written by tools/trace-realm-map.js. Do not edit by hand.',
@@ -307,6 +312,7 @@ function findBeacons(image) {
   const beacons = findBeacons(image);
   const sizes = new Set(beacons.map(b => b.w + 'x' + b.h));
   const beaconLines = [
+    provenance,
     '## Where the beacons are, in cells of realm-terrain.txt.',
     '##',
     '## Written by tools/trace-realm-map.js. Do not edit by hand.',

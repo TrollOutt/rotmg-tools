@@ -486,6 +486,9 @@ const changes = fs.existsSync(changesPath)
 const served = Object.assign({}, sources);
 delete served.indexText;
 delete served.wikiText;
+// The refreshed bench catalogue is paid for when the bench is opened.
+// The downloadable copy still embeds it, together with its sheet.
+delete served.theoryText;
 
 const dress = (bundleSources) => readWeb('index.html')
   .replace('</title>', `</title>\n  ${faviconTag}`)
@@ -626,6 +629,9 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  * one thing on the site that lives beside the page instead of inside it.
  */
 carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
+fs.copyFileSync(path.join(root, 'data', 'TheoryCraft', 'theorycraft.json'),
+  path.join(pagesDir, 'assets', 'theory', 'theorycraft.json'));
 /*
  * Reported whether or not anything moved: the point is what the page will
  * find beside it, not what this run happened to copy.

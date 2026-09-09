@@ -2,10 +2,8 @@
  * The index: one record for every thing the site talks about, and the links
  * between them.
  *
- * The other three tools each read the client for themselves and each decide
- * what to keep - so when an item is missing from the bench or an enchantment
- * from the calculator, there is nowhere to look up whether the thing exists at
- * all. This is that place. It holds everything the client declares in the
+ * The catalogue tools project this file rather than opening the client.
+ * This is the source of their records, filters and provenance. It holds everything the client declares in the
  * families the site deals in, whether or not any tool shows it, and says for
  * each one where it came from and why a tool might be hiding it.
  *
@@ -29,8 +27,8 @@
  * What it does not do.
  *
  * It does not compute damage, cost or odds, and it does not decide what a
- * tool should show. It records declarations and their provenance; the tools
- * apply their own rules on top and the index says what those rules hid.
+ * tool calculates. It records declarations, catalogue membership and provenance;
+ * the browser applies combat and enchanting rules to those declarations.
  */
 'use strict';
 
@@ -66,7 +64,11 @@ if (!fs.existsSync(XML)) {
   process.exit(0);
 }
 
-const objectFiles = fs.readdirSync(XML)
+const meta = require('./provenance').clientStamp(XML, __filename);
+const documents = new Map(fs.readdirSync(XML).filter(name => name.endsWith('.xml')).sort()
+  .map(name => [name, fs.readFileSync(path.join(XML, name), 'utf8')]));
+
+const objectFiles = [...documents.keys()]
   .filter(name => /^Objects\.\d+\.xml$/.test(name)).sort();
 
 /*
@@ -95,7 +97,7 @@ const labelsOf = body => (text(body, 'Labels') || '').split(',').filter(Boolean)
 const objects = [];
 const byType = new Map();
 for (const file of objectFiles) {
-  const raw = fs.readFileSync(path.join(XML, file), 'utf8');
+  const raw = documents.get(file);
   for (const m of raw.matchAll(SHAPE)) {
     const id = /\bid="([^"]*)"/.exec(m[1]);
     const said = /\btype="([^"]+)"/.exec(m[1]);
@@ -109,6 +111,15 @@ for (const file of objectFiles) {
 }
 
 /* What the game calls it on screen; the client's id is the working name. */
+const byName = new Map();
+for (const one of objects) if (!byName.has(one.id)) byName.set(one.id, one);
+const catalogues = {};
+catalogues.fame = require('./extract-index-fame')(documents);
+catalogues.artifacts = require('./extract-index-artifacts')(documents);
+catalogues.enchantments = require('./extract-index-enchantments')(documents);
+catalogues.items = require('./extract-index-items')(documents);
+const mechanics = require('./extract-index-mechanics')({ root, byType, byName, documents });
+
 /*
  * What to call it. The DisplayId where there is one - but sixteen objects
  * carry a localisation token the client never resolved, "{cave.Treasure_Thief}"
@@ -247,25 +258,7 @@ const drawn = (() => {
  * cannot drift: damage from the projectile, range from its speed multiplied by
  * how long it lives, and what wearing it is worth from ActivateOnEquip.
  */
-function shotOf(body) {
-  const out = [];
-  for (const m of body.matchAll(/<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/g)) {
-    const inner = m[1];
-    const low = num(inner, 'MinDamage'), high = num(inner, 'MaxDamage');
-    const flat = num(inner, 'Damage');
-    const fast = num(inner, 'Speed'), lives = num(inner, 'LifetimeMS');
-    if (low === undefined && high === undefined && flat === undefined) continue;
-    out.push({
-      low: low === undefined ? (high === undefined ? flat : high) : low,
-      high: high === undefined ? (low === undefined ? flat : low) : high,
-      reach: (fast !== undefined && lives !== undefined)
-        ? Math.round(fast * lives / 1000) / 10 : undefined,
-      pierce: /<ArmorPiercing\s*\/>/.test(inner) || undefined,
-      through: /<MultiHit\s*\/>/.test(inner) || undefined
-    });
-  }
-  return out.length ? out : undefined;
-}
+const shotOf = mechanics.shotOf;
 
 /*
  * What the client says a thing does when a number cannot say it.
@@ -287,18 +280,7 @@ function tipsOf(body) {
   return out.length ? out : undefined;
 }
 
-function wornOf(body) {
-  const out = {};
-  for (const m of body.matchAll(/<ActivateOnEquip\s+([^>]*)>\s*IncrementStat\s*</g)) {
-    const stat = /stat="([^"]+)"/.exec(m[1]);
-    const amount = /amount="([^"]+)"/.exec(m[1]);
-    if (!stat || !amount) continue;
-    const n = Number(amount[1]);
-    if (!Number.isFinite(n)) continue;
-    out[stat[1]] = (out[stat[1]] || 0) + n;
-  }
-  return Object.keys(out).length ? out : undefined;
-}
+const wornOf = mechanics.wornOf;
 
 /*
  * And whether the other two tools will actually take the thing.
@@ -307,33 +289,17 @@ function wornOf(body) {
  * piece of gear, and both doors were sometimes locked: the Trick Mace opened
  * the calculator on "not in the item list", because the client does not let it
  * be enchanted at all. So membership is read from what those tools were built
- * with rather than assumed - one is the bench's own catalogue, the other the
- * list of everything an installed client will enchant.
+ * with rather than assumed. Both catalogues are extracted in this build;
+ * no older projection participates in deciding membership.
  */
 const offered = (() => {
   const bench = new Set(), ench = new Set(), fought = new Set();
-  const at = path.join(root, 'data', 'TheoryCraft', 'theorycraft.json');
-  if (fs.existsSync(at)) {
-    const said = JSON.parse(fs.readFileSync(at, 'utf8'));
-    for (const one of said.items || []) bench.add(one.name);
-    for (const one of said.bosses || []) fought.add(one.name);
-  }
-  const list = path.join(root, 'data', 'Items', 'client-items.txt');
+  for (const one of mechanics.items) bench.add(one.name);
+  for (const one of mechanics.bosses) fought.add(one.name);
   const awakens = new Map();
-  if (fs.existsSync(list)) {
-    for (const line of fs.readFileSync(list, 'utf8').split('\n')) {
-      if (!line.startsWith('item|')) continue;
-      const field = line.split('|');
-      ench.add(field[1]);
-      /*
-       * Which awakened enchantment an item unlocks. The client holds no such
-       * list - an awakened enchantment names the slot it goes on and a label
-       * only its own gear carries - and tools/generate-items.js already works
-       * it out for the calculator. Reading its answer rather than writing the
-       * rule a second time is the only way the two can agree.
-       */
-      if (field[8]) awakens.set(field[1], field[8].split(',').filter(Boolean));
-    }
+  for (const item of catalogues.items) {
+    ench.add(item.name);
+    if (item.awoken.length) awakens.set(item.name, item.awoken);
   }
   return { bench, ench, fought, awakens };
 })();
@@ -462,7 +428,7 @@ for (const one of objects) {
 {
   const file = path.join(XML, 'EquipmentSets.xml');
   if (fs.existsSync(file)) {
-    const raw = fs.readFileSync(file, 'utf8');
+    const raw = documents.get(path.basename(file));
     for (const m of raw.matchAll(
       /<EquipmentSet\s+type="([^"]*)"\s+id="([^"]+)">([\s\S]*?)<\/EquipmentSet>/g)) {
       const body = m[3];
@@ -536,7 +502,7 @@ for (const one of objects) {
 
 /* ---------------- the enchantments and their pools ---------------- */
 {
-  const raw = fs.readFileSync(path.join(XML, 'Enchantments.xml'), 'utf8');
+  const raw = documents.get('Enchantments.xml');
   for (const m of raw.matchAll(
     /<Enchantment id="([^"]+)"[^>]*>([\s\S]*?)<\/Enchantment>/g)) {
     const body = m[2];
@@ -559,7 +525,7 @@ for (const one of objects) {
 
   const pools = path.join(XML, 'EnchantmentLists.xml');
   if (fs.existsSync(pools)) {
-    const list = fs.readFileSync(pools, 'utf8');
+    const list = documents.get(path.basename(pools));
     for (const m of list.matchAll(
       /<EnchantmentList\s+type="([^"]*)"\s+id="([^"]+)">([\s\S]*?)<\/EnchantmentList>/g)) {
       /*
@@ -589,7 +555,7 @@ for (const one of objects) {
   const charms = [...records.values()].filter(one => one.kind === 'enchant');
   const file = path.join(XML, 'EnchantmentLists.xml');
   if (fs.existsSync(file)) {
-    const raw = fs.readFileSync(file, 'utf8');
+    const raw = documents.get(path.basename(file));
     for (const m of raw.matchAll(
       /<EnchantmentList\s+type="([^"]*)"\s+id="([^"]+)">([\s\S]*?)<\/EnchantmentList>/g)) {
       const pool = 'pool:' + m[2];
@@ -790,6 +756,8 @@ for (const it of gear) {
   slotNames = table;
 }
 
+const theoryView = require('./index-model').attach(records, mechanics, objects);
+
 /* ---------------- the links, from both ends ---------------- */
 const out = new Map(), back = new Map();
 /*
@@ -815,8 +783,10 @@ for (const [id, record] of records) {
 /* ---------------- written down ---------------- */
 fs.mkdirSync(OUT, { recursive: true });
 const all = [...records.values()];
-fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify({
-  built: new Date().toISOString().slice(0, 10),
+const result = {
+  ...meta,
+  views: { theory: theoryView },
+  catalogues,
   files: fileList,
   kinds: all.reduce((tally, one) => {
     tally[one.kind] = (tally[one.kind] || 0) + 1;
@@ -825,15 +795,42 @@ fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify({
   links: links.length,
   slots: slotNames,
   records: all
-}) + '\n');
+};
+const priorFile = path.join(OUT, 'index.json');
+if (process.argv.includes('--sprites')) {
+  const assets = new Map();
+  const readAsset = name => {
+    if (!assets.has(name)) {
+      const file = path.join(XML, name);
+      assets.set(name, fs.existsSync(file) ? fs.readFileSync(file) : null);
+    }
+    return assets.get(name);
+  };
+  if (!readAsset('spritesheet.bin')) throw new Error('Sprite registry missing; extract client textures first.');
+  require('./index-sprites')({root, documents, readAsset, facts: result});
+  const theory = require('./index-model').project(result);
+  require('./theory-sprites')({root, documents, readAsset, facts: theory});
+  require('./index-model').artwork(result, theory);
+} else if (fs.existsSync(priorFile)) {
+  const prior = JSON.parse(fs.readFileSync(priorFile, 'utf8'));
+  const had = new Map(prior.records.map(r => [r.id, r]));
+  for (const r of result.records) {
+    const before = had.get(r.id);
+    if (!before) continue;
+    for (const field of ['art', 'benchArt', 'benchPic']) if (before[field] !== undefined) r[field] = before[field];
+  }
+  if (prior.sheet) result.sheet = prior.sheet;
+  if (prior.theorySheet) result.theorySheet = prior.theorySheet;
+}
+fs.writeFileSync(priorFile, JSON.stringify(result) + '\n');
 
 fs.mkdirSync(SERVED, { recursive: true });
 fs.copyFileSync(path.join(OUT, 'index.json'), path.join(SERVED, 'index.json'));
 
 /* And the light list, which is what a search box needs and nothing more. */
-fs.writeFileSync(path.join(OUT, 'search.json'), JSON.stringify(all.map(one => [
+fs.writeFileSync(path.join(OUT, 'search.json'), JSON.stringify({ ...meta, records: all.map(one => [
   one.id, one.said || one.name, one.kind, one.alias || '', one.hidden ? 1 : 0
-])) + '\n');
+]) }) + '\n');
 
 const tally = all.reduce((got, one) => {
   got[one.kind] = (got[one.kind] || 0) + 1;
