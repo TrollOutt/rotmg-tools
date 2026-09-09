@@ -1498,6 +1498,32 @@ const TINT = {
     return plus(much) + ' ' + part.stat + ' (' + rule + ')';
   };
 
+  /*
+   * The padlock.
+   *
+   * It was a padlock once and became the word "keep", because the padlock of
+   * the day was a grey glyph from a font that nobody could see - and a
+   * control nobody can see is the same as not having one. The word was
+   * readable, and it cost a great deal of room: five of them on every item,
+   * four items on the page at once, on a column that has to share the screen
+   * with the fight.
+   *
+   * So it is a padlock again, and the thing that went wrong last time is what
+   * this is drawn to avoid. It is drawn rather than borrowed, in the button's
+   * own colour, so it lights exactly the way the word did - dim at rest,
+   * bright under the cursor, dark on the accent when it is holding. And the
+   * shackle is open when the thing is free and shut when it is kept, so the
+   * state is said by the shape and does not rest on the colour at all.
+   */
+  const LOCK = held => '<svg viewBox="0 0 12 12" width="12" height="12"'
+    + ' aria-hidden="true" focusable="false">'
+    + '<path d="M4.4 5.6V3.9a1.6 1.6 0 0 1 3.2 0'
+    + (held ? 'v1.7' : '') + '" fill="none" stroke="currentColor"'
+    + ' stroke-width="1.25" stroke-linecap="round"/>'
+    + '<rect x="2.6" y="5.4" width="6.8" height="5.2" rx="1.1" fill="currentColor"/>'
+    + '</svg>';
+  const lockSays = held => (held ? 'Kept - click to let it change' : 'Keep this one');
+
   function drawSlots() {
     /* The build as it stands, once, so every share on the page is measured
        against the same bonus rather than four slightly different ones. */
@@ -1608,9 +1634,10 @@ const TINT = {
           + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '">'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
           + said
-          + '<button type="button" class="tc-hold" data-hold="' + hand + ':' + at
-          + '" title="keep this one while the calculator works">'
-          + (held ? 'kept' : 'keep') + '</button>'
+          + '<button type="button" class="tc-hold tc-lock" data-hold="'
+          + hand + ':' + at + '" aria-pressed="' + (held ? 'true' : 'false')
+          + '" title="' + lockSays(held) + ' while the calculator works"'
+          + ' aria-label="' + lockSays(held) + '">' + LOCK(held) + '</button>'
           + (one ? '<button type="button" class="tc-drop" data-drop="' + hand + ':' + at
             + '" title="take this enchantment off">×</button>' : '')
           + '</span>');
@@ -1636,9 +1663,10 @@ const TINT = {
         + (worn.name ? '<button type="button" class="tc-take" data-take="' + hand
           + '" title="Take this item and what is on it to the enchant calculator">'
           + 'enchant</button>' : '')
-        + '<button type="button" class="tc-hold" data-hold="' + hand
-        + '" title="keep this item while the calculator works">'
-        + (locked ? 'kept' : 'keep') + '</button>'
+        + '<button type="button" class="tc-hold tc-lock" data-hold="' + hand
+        + '" aria-pressed="' + (locked ? 'true' : 'false')
+        + '" title="' + lockSays(locked) + ' while the calculator works"'
+        + ' aria-label="' + lockSays(locked) + '">' + LOCK(locked) + '</button>'
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';

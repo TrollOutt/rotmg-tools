@@ -2585,6 +2585,14 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px;
 }
 .tc-hold:hover { color: var(--text); border-color: var(--muted); }
+/* The same pill, sized to a square around the drawing rather than to a word.
+   Everything else about it - the colours, and what it turns when it is
+   holding - is the rule above and applies unchanged. */
+.tc-hold.tc-lock {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 3px; border-radius: 6px; line-height: 0;
+}
+.tc-hold.tc-lock svg { display: block; }
 .tc-slot.is-held > .tc-slot-head > .tc-hold,
 .tc-ench.is-held .tc-hold {
   color: #10141c; background: var(--accent); border-color: var(--accent);
