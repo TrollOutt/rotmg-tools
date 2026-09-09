@@ -2598,7 +2598,28 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   color: #10141c; background: var(--accent); border-color: var(--accent);
 }
 
-.tc-ench-strip { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 0 11px 10px; }
+/*
+ * One size for every slot, filled or not.
+ *
+ * They were laid out as a row that wrapped, so a chip was as wide as whatever
+ * happened to be written in it: an empty slot came out a third the width of a
+ * full one, and four of them left a different ragged edge on every item. Read
+ * quickly, an item looked like it had fewer slots than it does.
+ *
+ * A grid of equal columns instead - two across in a narrow panel, four in a
+ * wide one - so four slots read as four slots whatever is in them, and the
+ * same slot of two different items sits in the same place.
+ */
+.tc-ench-strip {
+  display: grid; gap: 5px; padding: 0 11px 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  align-items: stretch;
+}
+/* How many slots the item has is not one of the slots: it goes under them. */
+.tc-ench-strip > .tc-rarity { grid-column: 1 / -1; justify-self: start; }
+/* An empty one keeps the room a picture would take, so the names down a
+   column all start at the same place. */
+.tc-ench .tc-charm.is-blank { width: 18px; height: 18px; background: none; }
 /* A slotted-in enchantment, sitting in its own little well. */
 .tc-ench {
   display: inline-flex; align-items: center; gap: 6px; max-width: 100%;

@@ -1630,7 +1630,8 @@ const TINT = {
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
           + (one ? '' : ' is-empty') + '"'
           + (whole ? ' title="' + esc(one.name + ' — ' + whole) + '"' : '') + '>'
-          + (one ? sheetIcon(one.pic, 18) : '')
+          + (one ? sheetIcon(one.pic, 18)
+                 : '<span class="tc-charm is-blank"></span>')
           + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '">'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
           + said
