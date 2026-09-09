@@ -13993,8 +13993,8 @@ function pointAtAtlas() {
          * No `of` with it: only the writing goes. How the world is framed in
          * the panel is the ordinary fit and stays that way.
          */
-        if (!globeWide()) tellAtlas({ rotmg: 'bare', on: true });
-        if (typeof Ring !== 'undefined' && Ring.is()) Ring.greet();
+        tellAtlas({ rotmg: 'settle', frames: 12 });
+        dressAtlas(true);              // it has only just arrived; no glide
       });
       frame.src = base + 'index.html';
     })
@@ -14029,6 +14029,39 @@ const GLOBE_TAKES = 780;                 // milliseconds the frame takes
  * for it - a count it draws through cannot be missed the way a deadline can.
  */
 const GLOBE_FRAMES = 66;
+
+/*
+ * What the atlas is wearing, decided in one place.
+ *
+ * Three things have an opinion about it - the router, the frame opening out,
+ * and the ring - and they were each telling the atlas directly. That is three
+ * messages racing on every move between them, and the last one to speak wins
+ * whether or not it knew the most: coming home from the opened-out map, the
+ * ring asked for its distance and the frame closing behind it then said "no
+ * distance", which left the world filling the window with a ring drawn round
+ * it. There is no order of those three calls that is right, because none of
+ * them knows what the other two are doing.
+ *
+ * So none of them says anything now. They change the page and call this,
+ * which reads the page and says one thing. Calling it twice is harmless,
+ * calling it from the wrong place is harmless, and there is nothing to keep
+ * in step.
+ */
+function dressAtlas(snap) {
+  /* Opened out to the window it is a map, and a map is read: everything it
+     writes belongs to somebody reading one. It is only handed back at the end
+     of the journey out, because holding it bare for the movement is what stops
+     the atlas snapping its own view forward as the box begins to grow. */
+  if (globeWide() && !globeMoving) {
+    tellAtlas({ rotmg: 'bare', on: false, snap: false });
+    return;
+  }
+  /* Otherwise it is scenery, and the only question is how much of the frame
+     the world should fill. The ring knows, because it is drawing a ring round
+     it; nobody else does, and null leaves the framing alone. */
+  const of = (typeof Ring !== 'undefined' && Ring.is()) ? Ring.worldShare() : null;
+  tellAtlas({ rotmg: 'bare', on: true, of, snap: !!snap });
+}
 
 function tellAtlas(what) {
   const frame = document.getElementById('realmFrame');
@@ -14184,10 +14217,11 @@ function setGlobe(open) {
 
   /*
    * Going back in, the writing goes at once: it has no business in a panel
-   * and the panel is what this is about to be again. Going out, it is held
-   * off for the whole journey - see below.
+   * and the panel is what this is about to be again. Going out, `globeMoving`
+   * is set just above, so this leaves it bare for the whole journey - which
+   * is what stops the atlas snapping its view forward as the box grows.
    */
-  if (!open) tellAtlas({ rotmg: 'bare', on: true, of: null });
+  dressAtlas(false);
 
   /*
    * And handed back to the layout once it has arrived. Left pinned, it would
@@ -14206,8 +14240,8 @@ function setGlobe(open) {
     box.classList.remove('is-moving');
     globeMoving = false;
     paceAtlas();
-    if (globeWide()) tellAtlas({ rotmg: 'bare', on: false, snap: false });
-    else {
+    dressAtlas(false);             // arrived, so a wide frame gets its writing
+    if (!globeWide()) {
       box.style.position = '';
       box.style.top = ''; box.style.left = ''; box.style.width = ''; box.style.height = '';
     }
@@ -14763,16 +14797,25 @@ function nudge() { if (!run) run = requestAnimationFrame(tick); }
  * a jump.
  */
 let told = null;
-function tellAtlasSize(snap) {
-  if (!on || !stage) return;
+
+/* What share of the window the world should fill for the ring to sit round
+   it. Also where the world's own patch is sized, since the two are the same
+   number and reading it is what keeps them the same. */
+function worldShare() {
+  if (!stage) return null;
   const room = Math.min(window.innerWidth, window.innerHeight);
   const across = (planetOn ? WORLD + PUSH - 1.5 : WORLD) * 2;   // in wheel units
   const wide = parseFloat(getComputedStyle(stage).getPropertyValue('--wheel')) || 640;
   stage.style.setProperty('--core', (across / 100) * wide + 'px');
-  const of = (across / 100) * wide / room;
+  return (across / 100) * wide / room;
+}
+
+function tellAtlasSize(snap) {
+  if (!on || !stage) return;
+  const of = worldShare();
   if (!snap && told !== null && Math.abs(of - told) < 0.002) return;
   told = of;
-  tellAtlas({ rotmg: 'bare', on: true, of, snap: !!snap });
+  dressAtlas(snap);
 }
 
 /*
@@ -14838,14 +14881,23 @@ function rest() {
  * home afterwards should put you back where you were.
  */
 function set(want, remember) {
-  if (want === on) return;
   if (want && !parts && !build()) return;
+  const change = want !== on;
   on = want;
+  /*
+   * Written every time, not only on a change. The whole of the ring's layout
+   * hangs off this one attribute - the cards hidden, the atlas promoted from
+   * a panel to the page, the corner row moved - so if it ever drifted from
+   * `on`, what you would get is the ordinary front page with the ring's
+   * layout still on it. Setting it again when it already says the right thing
+   * costs nothing and takes that whole class of breakage away.
+   */
   document.body.dataset.home = on ? 'ring' : 'cards';
   const stageBox = document.getElementById('ringStage');
   if (stageBox) stageBox.hidden = !on;
   const knob = document.getElementById('ringWay');
   if (knob) knob.setAttribute('aria-pressed', String(on));
+  if (!change) return;
   if (remember !== false) {
     try { localStorage.setItem('rotmg-home', on ? 'ring' : 'cards'); } catch (e) {}
   }
@@ -14864,11 +14916,9 @@ function set(want, remember) {
     core.removeEventListener('pointerenter', wake);
     core.removeEventListener('pointerleave', rest);
     core.removeEventListener('click', wide);
-    /* Back to the panel, which wants the writing off too - it is only the
-       distance the ring asked for that is given up here. */
-    tellAtlas({ rotmg: 'bare', on: true, of: null, snap: false });
     told = null;
   }
+  dressAtlas(want);                    // and one voice says what that means
 }
 
 /* What was chosen, last time anybody chose. */
@@ -14879,6 +14929,7 @@ function stored() {
 return {
   set,
   is: () => on,
+  worldShare,
   wanted: () => set(stored(), false),
   /* The atlas is loaded lazily and may arrive after the switch was thrown, so
      the size is said again once it is there. */
