@@ -207,14 +207,35 @@ for (const one of frames) {
   rightRoom = Math.max(rightRoom, Math.ceil(one.right - one.middle));
   headRoom = Math.max(headRoom, one.foot - one.top);
 }
-const cellW = leftRoom + rightRoom + 1 + AIR * 2;
-const cellH = headRoom + 1 + AIR * 2;
+/*
+ * A cell has to survive the shrink as a whole number of pixels.
+ *
+ * Two hundred and thirty-three halved is a hundred and sixteen and a half, so
+ * the strip came out ten pixels wider than twenty cells and every cell after
+ * the first sat half a pixel further along than the box showing it. On the
+ * card that read as a strip sliding past rather than a book turning its pages,
+ * with two books in frame at once. So the shrink is chosen first and the cell
+ * is rounded up to fit it exactly.
+ */
+const SHRINK = Math.max(1, Math.round((headRoom + 1 + AIR * 2) / 124));
+const whole = n => Math.ceil(n / SHRINK) * SHRINK;
+/*
+ * And square, because the card's picture is. A cell a little taller than it is
+ * wide has to be either stretched to fill a square box or scaled to fit and
+ * clipped at the top, and the top is where the glow is. Squaring it here costs
+ * a few transparent pixels and saves the page from knowing the shape.
+ */
+const side = whole(Math.max(leftRoom + rightRoom + 1, headRoom + 1) + AIR * 2);
+const cellW = side;
+const cellH = side;
 const stripW = cellW * frames.length;
 const strip = Buffer.alloc(stripW * cellH * 4);
 
 frames.forEach((one, at) => {
-  const originX = at * cellW + AIR + leftRoom - Math.round(one.middle);
-  const originY = AIR + headRoom - (one.foot - one.top) - one.top;
+  /* Centred in its cell, whatever rounding the cell picked up. */
+  const originX = at * cellW + Math.round((cellW - leftRoom - rightRoom - 1) / 2)
+    + leftRoom - Math.round(one.middle);
+  const originY = cellH - AIR - 1 - (one.foot - one.top) - one.top;
   for (let y = one.top; y <= one.bottom; y++) {
     for (let x = one.left; x <= one.right; x++) {
       const alpha = P[(y * W + x) * 4 + 3];
@@ -236,7 +257,6 @@ frames.forEach((one, at) => {
  * is a plain average of each block - no sharpening a drawing that was never
  * sharp.
  */
-const SHRINK = Math.max(1, Math.round(cellH / 124));
 function smaller(width, height, rgba, by) {
   if (by < 2) return { width, height, rgba };
   const w = Math.floor(width / by), h = Math.floor(height / by);

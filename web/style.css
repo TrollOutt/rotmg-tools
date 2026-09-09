@@ -1393,16 +1393,19 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * The index's book, twenty frames on one strip.
  *
  * The strip is twenty cells wide, so the box shows one twentieth of it and
- * walks from the first cell to the last in twenty steps. Percentages measure
- * the overflow rather than the image, which is why nought to a hundred is
- * exactly the nineteen cells between the first and the twentieth.
+ * walks from the first cell to the last. Percentages measure the overflow
+ * rather than the image, so nought to a hundred per cent is the nineteen cells
+ * between the first frame and the twentieth - which is why the step is
+ * jump-none: twenty stops that include both ends, one cell apart. Plain
+ * steps(20) would take those nineteen cells in twenty strides and land the
+ * book between its own frames every time.
  */
 .home-card-film {
   background-repeat: no-repeat;
   background-size: 2000% 100%;
   background-position: 0% 50%;
   image-rendering: auto;
-  animation: index-book 2.4s steps(20) infinite,
+  animation: index-book 2.4s steps(20, jump-none) infinite,
     enchanting 4.4s ease-in-out infinite;
 }
 @keyframes index-book {
