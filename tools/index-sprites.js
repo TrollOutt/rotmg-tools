@@ -127,6 +127,22 @@ function writePng(width, height, rgba) {
 const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
 const sheetName = field => SHEET_OF[field] || 'mapObjects';
 
+/*
+ * The installed game, or a plain word about why not.
+ *
+ * client-data/ is read out of an installed client and is not in this
+ * repository - it is DECA's, it is large, and it is reproduced in seconds. But
+ * a clone that has never seen it should say so rather than throw a stack trace
+ * at somebody who has just pulled the project onto a new machine.
+ */
+if (!fs.existsSync(XML)) {
+  console.log('\n  No client-data/ here, so there is nothing to read.');
+  console.log('  On a machine with the game installed:  node tools/extract-client.js');
+  console.log('  Everything this would write is already committed, so the site');
+  console.log('  builds and runs without it - npm run build is enough.\n');
+  process.exit(0);
+}
+
 const flat = new Flat(fs.readFileSync(path.join(XML, 'spritesheet.bin')));
 const rootFields = flat.fields(flat.root());
 

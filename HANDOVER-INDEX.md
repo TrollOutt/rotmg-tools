@@ -14,26 +14,54 @@ too, and they matter more than anything in this file. Pin the git identity
 before the first commit in a fresh clone — the hook that enforces it lives in
 `.git/hooks/` and is never cloned.
 
-**The index needs an installed client.** Both tools read `client-data/`, which
-is gitignored on purpose: it is DECA's, it is large, and it is reproduced from
-any installed client in seconds. Without it, nothing here can be rebuilt — but
-the built output *is* committed, so the page works on a machine that has no
-client at all.
+### A fresh clone is enough to work
+
+Nothing has to be fetched, installed or copied. `git clone`, and:
 
 ```bash
-node tools/extract-client.js        # fills client-data/ from the installed game
+npm test          # 196 checks, and the odds against the client's own numbers
+npm run build     # the whole site -> docs/
+npm run dev       # serve it at http://localhost:5173
+```
+
+Both were run from a clean clone of `main` to make sure. There are no
+dependencies to install: `package.json` declares none and the two scripts that
+need a server reach for `npx serve` when they are called.
+
+**Everything the index shows is committed** — `data/Index/index.json`, its
+`wiki.json`, the sprite sheet under `web/assets/index/`, and the built site in
+`docs/`. So the page runs, and can be changed and rebuilt, on a machine that
+has never seen the game.
+
+### The two things that are not in the repository, and why
+
+| | |
+|---|---|
+| `client-data/` | The installed game's XML and textures. DECA's, large, and reproduced in seconds from any install. Gitignored. |
+| the wiki snapshot | Somebody else's scrape of RealmEye. Not ours to publish. Named by an environment variable, never by a path in here. |
+
+Neither is needed to build or to change the site. They are needed only to
+**re-read the sources** — that is, to pick up a new game patch or a newer wiki.
+Both tools that want them say so plainly and exit rather than failing, so
+running the whole chain on a machine without them is harmless:
+
+```bash
+node tools/extract-client.js        # needs the game installed
 node tools/build-index.js           # records and links   -> data/Index/
 node tools/index-sprites.js         # pictures            -> web/assets/index/
-node tools/index-wiki.js            # community links     -> data/Index/wiki.json
+REALM_INDEX_BUNDLE=<path> node tools/index-wiki.js   # community links
 npm run build                       # the site            -> docs/
 ```
 
 The first three must run in that order. The sprite tool reads
 `data/Index/index.json`, writes the rectangles back into it and copies the
 result to `web/assets/index/`; running only the first leaves the served copy
-without art. The wiki tool is the one step that is optional — see
-[Community links](#community-links) — and it changes nothing when its snapshot
-is absent.
+without art. The wiki step is optional — see [Community links](#community-links).
+
+**A rebuild changes only the date it stamps.** The build reads every text file
+with its line endings settled, so a clone that checks out CRLF produces the
+same page as one that checks out LF; the only line that differs from one
+machine to the next is the `built` date. Commit that or discard it as you like.
 
 ---
 
@@ -54,13 +82,28 @@ Current reading, from a client of 2026-09-08:
 
 | kind | count | kind | count |
 |---|---:|---|---:|
-| enemy | 5,577 | pool | 55 |
-| item | 4,396 | place | 37 |
+| enemy | 5,167 | pool | 55 |
+| item | 4,396 | place | 19 |
 | enchant | 1,016 | class | 19 |
-| set | 125 | **total** | **11,225** |
+| portal | 220 | set | 125 |
+| | | **total** | **11,017** |
 
-6,368 links, 138 source documents, 2,615 records carrying a reason a tool hides
-them.
+6,021 links across seven kinds, 138 source documents.
+
+**A portal is a dungeon**, and the index keeps all 220 of them with their own
+art, because the community's drop lists are made of dungeon names and a card
+that could not draw one was the poorer for it.
+
+**A place is a biome, once.** The atlas keeps five separate patches of Low
+Forest because they are in five places on the map; the index adds them up, so
+19 places rather than 37 chips reading the same word.
+
+**The same object declared twice is one record.** Four hundred definitions
+appear in two documents at once — `Objects.002` and `Objects.113` both hold the
+Frozen Chest, same type, same life, same art. A type is the client's own number
+for a thing, so the same number under the same family is the same thing however
+many files repeat it; the second sighting adds its document to `also` and stops
+there. That is what took the creatures from 5,577 to 5,167.
 
 ---
 
@@ -81,6 +124,7 @@ and a record looks like this:
   "slot": 3, "hand": "weapon", "rate": 0.33, "shots": 1,
   "fires": [{ "low": 500, "high": 600, "reach": 7, "through": true }],
   "worn": { "MAXHP": 80 },
+  "does": [["Alien Catalyst", "Gain strength based on..."]],
   "bench": 1, "ench": 1,
   "labels": ["EQUIPMENT", "WEAPON", "BOW", "UT"],
   "about": "No mortal can fire this dreaded bow...",
@@ -100,16 +144,37 @@ the pair is what makes a record findable.
 top. 138 documents against 11,000 records: spelling the file name out on every
 one of them costs half a megabyte to say the same forty things over and over.
 
-**`out` and `in` are the same 6,368 links seen from both ends**, each a
-`[how, id]` pair. There are five kinds of link:
+**`out` and `in` are the same 6,021 links seen from both ends**, each a
+`[how, id]` pair. There are seven kinds of link:
 
 | how | n | between |
 |---|---:|---|
-| `same name as` | 2,602 | records the client filed under one display name |
+| `same name as` | 2,208 | records the client filed under one display name |
 | `rolls from` | 2,071 | item → enchantment pool |
-| `made of` | 1,212 | set → its pieces |
-| `lives in` | 419 | creature → place |
+| `made of` | 1,112 | set → its pieces |
+| `wakes` | 144 | item → the awakened enchantment it unlocks |
+| `was seen in` | 122 | creature → biome |
+| `favoured by` | 58 | enchantment → a pool that names it by hand |
 | `starts with` | 57 | class → its tier-nought kit |
+
+**`was seen in`, not "lives in".** The list comes from walking the realm and
+writing down what was standing there. The realm was walked during an alien
+invasion, so thirteen of its creatures had been recorded in every biome the
+walk crossed; anything carrying an `_INVASION_` label is kept out of the biomes
+and says `came` instead.
+
+**`wakes` is read rather than re-derived.** The client holds no list of which
+item unlocks which awakened enchantment — an awakened enchantment names the
+slot it goes on and a label only its own gear carries — and
+`tools/generate-items.js` already works it out for the calculator. The index
+reads its answer out of `data/Items/client-items.txt`, which is the only way
+the two can stay in step.
+
+**Enchantment → pool is a count, not a list.** A pool names no enchantment; it
+says "everything labelled ROLLABLE" and then changes the odds. So an
+enchantment carries `pools`, how many can give it, and only the fifty-eight a
+pool names by hand are edges. Listing the rest was forty-eight thousand edges
+saying the same dull thing, and it doubled the file.
 
 Class↔item is *not* a link. It is worked out in the page from `slot` against
 the class's `slots`, because storing it would be 4,396 × 19 edges to say
@@ -186,25 +251,34 @@ these records should print `said || name`.
 
 ## Why a tool hides something
 
-`hidden` is a comma-joined string of reasons, and the card prints them. The
-whole tally:
+`hidden` is a list of reasons, and the card prints them. 658 records carry one:
 
 | reason | n |
 |---|---:|
-| a slot no class uses | 1,983 |
 | shiny | 328 |
-| an effect | 133 |
-| not a thing worn | 133 |
+| an effect, not a thing worn | 133 |
 | not rollable by enchanting | 115 |
 | the machinery behind a proc | 97 |
-| a test item | 30 |
-| retired — weight nought | 24 |
-| never rolled again | 24 |
+| a test item | 35 |
+| retired — weight nought, never rolled again | 24 |
 | admin only | 12 |
+| a slot no class uses | 7 |
+| a swatch for drawing a rarity frame | 4 |
 | not available to players | 1 |
 
 This is the answer to "why is this not in the bench", and it is the reason the
 index holds things no tool will ever show.
+
+**"A slot no class uses" used to be 1,983 of these, and it was wrong about
+nearly all of them.** Two thousand keys, tokens and potions are consumables:
+that reason is true of the slot and false of the object, and it put a Health
+Potion behind the same warning as a test item. They carry `use: 1` and are
+their own family in the list — **Consumables, 1,976** — leaving seven things
+that are genuinely neither worn nor drunk.
+
+`dev: 1` is a third state, neither hidden nor offered: the 55 enchantment pools
+and the teleporters inside a dungeon. Real things worth being able to look up,
+kept out of a browse nobody asked for.
 
 ---
 
@@ -221,21 +295,28 @@ declared `<File>`/`<Index>` to a rectangle on one of the three texture pages
 mapped `1/2/4`), and cuts it out. Animated things give up one standing frame,
 preferring `doing` 0 and `facing` 3 — standing, facing the reader.
 
-Identical rectangles are cut once and shared, which is why 11,015 records come
-out of 5,863 cuts. Those are packed into rows of a fixed height, tallest first:
-`web/assets/index/sheet.png`, 1024×776, 575 KB. Each record keeps its own
-rectangle in `art: [x, y, w, h]`, and the sheet's size lands in `sheet`.
+Identical rectangles are cut once and shared. They are packed into rows of a
+fixed height, tallest first: `web/assets/index/sheet.png`, 1024×808, 604 KB.
+Each record keeps its own rectangle in `art: [x, y, w, h]`, and the sheet's
+size lands in `sheet`.
 
 The page draws it as a background-position window (`.ix-art` / `.ix-cell`, with
 the sheet's URL in the `--ix-sheet` custom property), so an eight-pixel sprite
 scales up with no smoothing and there is one request for the lot rather than
 eleven thousand.
 
-**210 records still have no picture**, and almost all of them are things the
-client never draws: 125 sets, 55 pools and 37 places are ideas rather than
-objects. Beyond those, 7 creatures and 1 item declare a texture that does not
-resolve. Sets could reasonably borrow the art of their first piece; nothing
-does that yet.
+**A set has no picture of its own, so it wears one.** Most of them turn the
+wearer into a skin, and that skin is an object the client draws — the build
+puts its client id in `drawnAs` and the cutter uses it. Watch the tag: seven of
+them hand the skin out with `ActivateOnEquipCustom` rather than
+`ActivateOnEquipAll`, and looking only for the latter left the Paths and the
+Venerable three with an empty frame. The eighteen with no skin at all — the big
+multi-class stat sets — borrow their first piece, and `pic: "piece"` makes the
+card say so rather than pass a piece off as the set. **125 of 125 have a face.**
+
+**82 records have no picture**, and 74 of them are things the client never
+draws: 55 pools and 19 places are ideas rather than objects. The rest are 7
+creatures and 1 item whose declared texture does not resolve.
 
 ---
 
@@ -248,10 +329,46 @@ turns the chips that are down into one set per group. Within a group the
 choices add up; between groups they narrow. Archer and Wizard means either;
 Archer and Weapon means both.
 
-Every group is a division the client itself makes: **Class** (the slot a class
-declares against the slot an item declares — the same comparison the card
-makes), **Slot**, **Tier**, **Marks** (soulbound, shiny, reskin, boss, god, and
-what a tool hides), **Season** and **Biome**.
+The groups: **Favourites** (the reader's own, first), **Class** (the slot a
+class declares against the slot an item declares — the same comparison the card
+makes), **Gears** (the four slots), **Tier**, **Marks**, **Season**, **Biome**,
+and **Dungeon**, which is the community's word rather than the client's and
+says so. **Kind of gear** — the twenty-nine names the client's own tiered gear
+agrees on, bow, quiver, leather — is built the same way but flagged `inSub`, so
+it is drawn in the middle column once the reader has said they are looking at
+gear.
+
+### How the page moves
+
+Worth reading before changing any of it, because each rule exists to answer a
+complaint:
+
+- **Nothing chosen, one panel, the width of the window.** The middle column
+  appears when a category is chosen or a name typed, the card when there is a
+  record to put in it. Three grid tracks exist at all times and every width is
+  a length, because a grid only animates between column lists of the same
+  shape — a panel that is not wanted is a track of nothing that closes.
+- **The groups open as far as the window allows.** `fitGroups()` measures after
+  drawing and shuts them from the bottom until the rail fits, never all of them.
+- **`refine()` recounts every chip against the other groups** — its own group
+  left out, so choosing one option never rules out its neighbours — and a chip
+  with nothing behind it goes away.
+- **The first choice is the anchor.** `asked[0]`. It alone puts its
+  alternatives away, it is framed and banded with what it does, and taking it
+  off clears everything under it, including the open card.
+- **A sub category goes with its category.** Dropping a slot drops the kinds of
+  gear under it, and any sub-category choice left with nothing behind it lets
+  go on its own.
+- **Anything chosen stays visible where it was chosen**, whatever its count has
+  fallen to, or the only way to undo it is the row at the top.
+- **A colour per group**, carried by the heading, the chip, the count and the
+  chip once it has moved up to the row of choices.
+- **Sizes are a share of the window.** `--ix-fs` on `#pageIndex` is what every
+  piece of type is a proportion of, and `zoomed()` in the page scales the
+  sprites to match. Two numbers to change if it is ever too small.
+
+**Favourites live in `localStorage`** under `rotmg-tools/index-favourites`. One
+reader's shortlist, nobody else's business, and no account to make.
 
 **There is no Year, because neither source has one.** The client names a year
 on about sixty things (`MOTMG_2024`, `ORYXMAS2023`) and on nothing else, and
@@ -317,13 +434,13 @@ What comes out:
 
 | | |
 |---|---:|
-| records with a page of their own | 5,992 |
-| wiki pages referenced | 4,877 |
-| drop links kept | 12,793 |
+| records with a page | 6,055 |
+| sets pointed at a family page instead | 8 |
+| wiki pages referenced | 4,974 |
+| drop links kept | 12,954 |
 | summoning links kept | 1,586 |
-| links set aside as unreadable | 11,281 |
 
-The file is 596 KB and sits beside the index under the same bargain: the served
+The file is 603 KB and sits beside the index under the same bargain: the served
 page fetches it when somebody opens the Index, and only the downloadable copy
 carries it inside, as `wikiText`.
 
@@ -375,10 +492,14 @@ it is.
 
 ## Still open
 
-- **Sets, pools and places have no art.** A set could show its first piece; a
-  place could show its ground tile, which the atlas already cuts.
+- **Places and pools have no art.** A place could show its ground tile, which
+  the atlas already cuts; a pool is an idea and probably never will.
 - **7 creatures declare a texture that does not resolve.** Worth finding out
   whether the atlas is missing it or the index is wrong about it.
+- **The bench has no tier-nought bow.** 28 tier-nought items and nothing in
+  slot 3, though the client declares the Shortbow and hands it to every Archer
+  ever made. Found by the index, which is what the index is for; the fix
+  belongs in `tools/build-theorycraft.js`.
 - **Class↔item is computed in the page.** If a second consumer ever needs it,
   it should move into the build rather than be written twice.
 - **The card's link list is flat.** Two thousand `same name as` edges make some
@@ -386,10 +507,14 @@ it is.
 - **Nothing verifies the index against the tools.** A check that every item the
   bench shows has a record, and that every record the bench hides carries a
   `hidden` reason, would catch a drifted filter the moment it drifts.
-- **11,281 wiki links are set aside as unreadable**, most of them item to item
-  inside a Drops section. The page *text* does distinguish "Drops" from "Drops
-  of Interest" and "Spawns" from "Spawns from"; a reader of the text rather
-  than of the link graph could recover a good part of them.
+- **Six thousand wiki links are set aside as unreadable**, most of them item to
+  item inside a Drops section, and four thousand more could point either way.
+  The page *text* does distinguish "Drops" from "Drops of Interest" and
+  "Spawns" from "Spawns from"; a reader of the text rather than of the link
+  graph could recover a good part of them.
+- **Twelve sets have no page anywhere on the wiki** — the three Agents of Oryx,
+  Legion Elite, the three MotMG 2021, Chronicle of Decades and the four Paths.
+  Their pieces describe the set inline instead of linking to one.
 - **The wiki join is only as fresh as its snapshot.** `wiki.json` carries the
   date it was built, but nothing on the page compares that date with the
   client's, and a reader would want to know when the two disagree.
