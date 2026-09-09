@@ -67,21 +67,50 @@ SEWER|Toxic Sewers
 REEF|Cnidarian Reef
 HIVE|The Hive
 
-## --- the game has two of these and the abbreviation does not say which ---
+## --- settled since, against the index rather than by guessing ---
 ##
-## Left unresolved on purpose. PUPPET could be the Theatre or the Encore, and
-## the Encore already has its own code, which is an argument for the Theatre
-## but not a proof. NEST could be The Nest or the Plagued Nest. ICECAVE has no
-## dungeon of that name at all — the Ice Citadel and the Ice Tomb are the only
-## two with ice in them. UMI matches nothing in the list.
+## UMI is a sub-origin, not a place of its own: all five items it marks —
+## Tezutsu Hanabi, Kagenohikari, Fortitude, Makakoyumi, Vigor — also carry
+## ORG_MOONLIGHT. It is the Kitsune Umi encounter inside Moonlight Village,
+## and the index has an enemy called "MV Umi Complete" that says as much. The
+## five were already resolved by MOONLIGHT; the line below only makes it
+## explicit.
+UMI|Moonlight Village
 ##
-## Anything here classes as unknown, which is the safe direction: the item
-## stays in the running and is shown as unverified rather than being hidden.
+## PUPPET, by elimination against the real portal names. The index has both
+## "Puppet Master's Theatre" and "Puppet Master's Encore" as portals, and the
+## Encore already has its own code, so PUPPET is the Theatre.
+PUPPET|Puppet Master's Theatre
+
+## --- still unresolved, and why ---
 ##
-## PUPPET|Puppet Master's Theatre
+## ICECAVE names a place the client knows and Fame Sweep does not. The index
+## has a portal called "Ice Cave" and two enemies called Esben — the Unwilling
+## and the Neurotic — and every item the code marks is an Esben item. But
+## data/Fame/dungeon-pages.txt has only Ice Citadel and Ice Tomb, so there is
+## nothing there to ask whether it is in the realm this month. Translating it
+## would name a dungeon Fame Sweep cannot answer for, which is worse than
+## leaving it unknown. Whoever adds Ice Cave to dungeon-pages.txt can uncomment
+## the line.
+##
+## ICECAVE|Ice Cave
+##
+## NEST: every item is bee gear — Hivemaster Helm, Beekeeper's Flamethrower,
+## Queen's Stinger, Beehemoth Armor — and both "The Nest" and "Plagued Nest"
+## exist as portals. The classic bee set belongs to The Nest, but that is
+## recollection rather than evidence, and the two dungeons are on different
+## rotations, so getting it wrong marks farmable gear out of reach.
+##
 ## NEST|The Nest
-## ICECAVE|
-## UMI|
+##
+## The wiki's drop table was tried for both and does not answer either. It is
+## a sound table - an earlier note here said otherwise and was wrong, on a
+## misreading of how it is encoded: the pairs are pages, not records - but it
+## joins a page to the pages it lists, and neither The Nest nor Ice Cave is
+## separated from its neighbour by anything in it.
+##
+## Anything left here classes as unknown, which is the safe direction: the item
+## stays in the running and is shown as unverified rather than being hidden.
 
 ## --- not a dungeon ---
 ##
