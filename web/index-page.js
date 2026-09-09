@@ -328,7 +328,7 @@ const RealmIndex = (function () {
     chip(marks, 'reskin', 'Reskin', gather(x => (x.labels || []).includes('RESKIN')));
     chip(marks, 'boss', 'Boss', gather(x => Boolean(x.boss)));
     chip(marks, 'god', 'God', gather(x => Boolean(x.god)));
-    chip(marks, 'hidden', 'Hidden by a tool', gather(x => Boolean(x.hidden)));
+    chip(marks, 'hidden', 'No Category', gather(x => Boolean(x.hidden)));
 
     /*
      * The seasons, as far as the client names them. It labels a couple of
