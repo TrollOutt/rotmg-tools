@@ -292,21 +292,73 @@ const offered = (() => {
   return { bench, ench, fought, awakens };
 })();
 
+/*
+ * What kind of thing this is, when it is not gear.
+ *
+ * Everything the client marks with <Item /> goes into a bag: it is a thing you
+ * own, and the index is where you go to find out about a thing. But most of
+ * them are not worn, and calling them all "an item" the way the gear is called
+ * an item tells a reader nothing at all.
+ *
+ * The client says which is which, in two different ways, and both are read
+ * here rather than guessed. Some things carry a label - MARK, ARTIFACT, KEY -
+ * and some carry nothing but the verb they fire when you use them, which is
+ * just as plain: a thing whose Activate says UnlockPetSkin is a pet skin, and
+ * a thing that says CreatePet is an egg. Between them they name nine in ten of
+ * what used to be filed as "a slot no class uses".
+ *
+ * The verb is asked first, because a label like FORGESTORE is on almost
+ * anything you can dismantle and says nothing about what the thing is.
+ */
+const DOES = new Map([
+  ['UnlockSkin', 'skin'], ['UnlockPetSkin', 'pet skin'],
+  ['UnlockGravestone', 'gravestone'], ['UnlockTitle', 'title'],
+  ['CreatePet', 'pet egg'], ['PermaPet', 'pet egg'],
+  ['CreatePortal', 'key'], ['AddDust', 'enchant dust'],
+  ['GrantSupporterPoints', 'supporter reward']
+]);
+const LABELLED = [
+  ['mark', labels => labels.includes('MARK')],
+  ['artifact', labels => labels.includes('ARTIFACT')],
+  ['key', labels => labels.some(l => /(^|_)KEY$/.test(l))],
+  ['shard', (labels, id) => labels.includes('NILSHARD') || /Shard( x\d+)?$/.test(id)],
+  ['material', labels => labels.includes('MATERIAL') || labels.includes('UPGRADECORE')],
+  ['engraving', labels => labels.includes('ENGRAVING')],
+  ['emote', labels => labels.some(l => /_EMOTE$/.test(l))],
+  ['token', labels => labels.includes('RATCOIN') || labels.includes('TOKEN')],
+  ['consumable', labels => labels.includes('CONSUMABLE')]
+];
+const familyOf = (labels, one) => {
+  const cls = text(one.body, 'Class');
+  if (cls === 'Dye') return 'dye';
+  if (cls === 'Entrance') return 'entrance';
+  for (const m of one.body.matchAll(/<Activate[^>]*>([^<]*)<\/Activate>/g)) {
+    const say = DOES.get(m[1].trim());
+    if (say) return say;
+  }
+  for (const [say, test] of LABELLED) if (test(labels, one.id)) return say;
+  return 'other';
+};
+
 const gear = [];
 for (const one of objects) {
   if (!has(one.body, 'Item')) continue;
   const labels = labelsOf(one.body);
   /*
-   * Labelled EQUIPMENT, or carrying enchantment slots.
+   * Everything in a bag, not only what a class can wear.
    *
-   * Two things the client lets you enchant carry no Labels block at all - the
-   * Paper Machete and an Agents of Oryx shard - so a rule that read only the
-   * label left them out of the index while the calculator went on offering
-   * them, and the picture the client draws them with had nowhere to be found.
-   * A thing the enchanter accepts is an item, whether or not anybody wrote
-   * EQUIPMENT above it.
+   * This asked for the EQUIPMENT label and stopped, which kept eight thousand
+   * eight hundred things out of the index: every mark, every artifact, the
+   * keys, the set shards, the dyes and the pet stones - and the Paper Machete,
+   * which the client lets you enchant and simply never labelled. So the
+   * calculator offered an item the index had never heard of, and six hundred
+   * pages of the community wiki had nothing here to point at.
+   *
+   * A thing the client puts in your bag is a thing this index knows about. The
+   * label decides what family it belongs to, not whether it exists.
    */
-  if (!labels.includes('EQUIPMENT') && !/<EnchantmentSlots[\s/>]/.test(one.body)) continue;
+  const isGear = labels.includes('EQUIPMENT') || /<EnchantmentSlots[\s/>]/.test(one.body);
+  const family = isGear ? undefined : familyOf(labels, one);
   const slot = num(one.body, 'SlotType');
   const hand = SLOT_KIND.get(slot);
   const hidden = [];
@@ -327,8 +379,16 @@ for (const one of objects) {
    * potion behind a warning. They are their own family now, and only the seven
    * that are neither worn nor drunk keep the old reason.
    */
+  /*
+   * "A slot no class uses" was the reason given to everything that was not
+   * worn, which was true of the slot and false of the object: a key is not a
+   * ring nobody can equip, it is a key. Anything the client gives a family to
+   * is filed under that family and is not hidden at all. What is left - a
+   * handful of things that are neither worn, drunk, nor anything the client
+   * names - keeps the old reason, which for them is the honest one.
+   */
   const drunk = labels.includes('CONSUMABLE');
-  if (!hand && !drunk) hidden.push('a slot no class uses');
+  if (!hand && !drunk && (!family || family === 'other')) hidden.push('a slot no class uses');
   const record = put('item', nameOf(one), one, {
     slot, hand,
     tier: num(one.body, 'Tier'),
@@ -339,6 +399,7 @@ for (const one of objects) {
     rate: num(one.body, 'RateOfFire'),
     shots: num(one.body, 'NumProjectiles'),
     use: drunk ? 1 : undefined,
+    family,
     fires: shotOf(one.body),
     worn: wornOf(one.body),
     does: tipsOf(one.body),
@@ -417,7 +478,7 @@ for (const one of objects) {
      * the Spectral Penitentiary, the bare "Teleport". Kept, because the index
      * keeps what the client declares, but not offered to a reader browsing.
      */
-    dev: /TP|^Teleport$|Return/i.test(one.id) ? 1 : undefined,
+    dev: /TP|^Teleport$|Return/i.test(one.id) ? 1 : undefined,
     hidden: hidden.length ? hidden : undefined
   });
 }

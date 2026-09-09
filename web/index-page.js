@@ -118,6 +118,21 @@ const RealmIndex = (function () {
   ];
   const KIND_SAY = Object.fromEntries(KINDS);
 
+  /*
+   * What to call a thing on its badge.
+   *
+   * "Gear" was right while every item was worn. It stopped being right when
+   * the index started holding what the client puts in a bag as well as what a
+   * class puts on, and a Mark of Oryx went about labelled as a piece of gear.
+   * The family the client gives it is the better word, and where there is none
+   * the kind still answers.
+   */
+  const sayKind = key => KIND_SAY[key]
+    || (key ? key[0].toUpperCase() + key.slice(1) : key);
+
+  /* Which of those a record is filed under, asked in one place by everything. */
+  const filedAs = one => one.family || (one.use ? 'use' : one.kind);
+
   function readLoved() {
     try {
       const said = JSON.parse(window.localStorage.getItem(LOVED) || '[]');
@@ -166,7 +181,7 @@ const RealmIndex = (function () {
      * The record keeps its own kind; this is only what the list files it under.
      */
     light = said.records.map(one => [one.id, one.said || one.name,
-      one.use ? 'use' : one.kind, one.alias || '', one.hidden ? 1 : 0,
+      filedAs(one), one.alias || '', one.hidden ? 1 : 0,
       one.dev ? 1 : 0]);
     /*
      * Both ends of every link, so a record can be asked what points at it
@@ -297,6 +312,31 @@ const RealmIndex = (function () {
       }
       chip(byHand, hand, say, gather(x => x.hand === hand && !x.use),
         plainest && plainest.id);
+    }
+
+    /*
+     * And everything in a bag that nobody wears.
+     *
+     * Eight thousand things the client puts in your inventory are not gear:
+     * marks, artifacts, keys, set shards, dyes, pet skins, the lot. They were
+     * missing from the index entirely until the build stopped asking for the
+     * EQUIPMENT label, and dropping them into Gears would have been the wrong
+     * answer twice over - they are not gear, and four chips would have become
+     * a wall of twenty. They get their own way in, named the way the client
+     * names them.
+     */
+    const byBag = group('Kind of thing', 'client', 'what the client puts in a bag');
+    const families = new Map();
+    for (const one of all.values()) {
+      if (one.kind !== 'item' || !one.family) continue;
+      if (!families.has(one.family)) families.set(one.family, []);
+      families.get(one.family).push(one);
+    }
+    for (const family of [...families.keys()].sort()) {
+      /* Pictured by the first of its kind that has a picture and no warning. */
+      const shown = families.get(family).find(one => one.art && !one.hidden);
+      chip(byBag, family, family[0].toUpperCase() + family.slice(1),
+        gather(x => x.family === family), shown && shown.id);
     }
 
     /*
@@ -663,7 +703,7 @@ const RealmIndex = (function () {
   function stillAllowed(id) {
     const one = all.get(id);
     if (!one) return false;
-    if (kindWanted && one.kind !== kindWanted) return false;
+    if (kindWanted && filedAs(one) !== kindWanted) return false;
     for (const chosen of narrowed) if (!chosen.set.has(id)) return false;
     return true;
   }
@@ -720,7 +760,7 @@ const RealmIndex = (function () {
       + '" data-open="' + esc(one[0]) + '">'
       + artCell(all.get(one[0]), 20)
       + '<b>' + esc(one[1]) + '</b>'
-      + '<i class="ix-kind is-' + one[2] + '">' + esc(KIND_SAY[one[2]] || one[2]) + '</i>'
+      + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
       + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
       + star(one[0])
       + '</button>').join('') || '<p class="ix-none">Nothing by that name.</p>';
@@ -893,6 +933,8 @@ const RealmIndex = (function () {
   function factsOf(one) {
     const bits = [];
     if (one.hand) bits.push(['slot', one.hand + ' (' + one.slot + ')']);
+    /* What it is, when it is not gear: a mark, a key, a pet skin. */
+    if (one.family) bits.push(['kind', one.family]);
     if (one.tier !== undefined) bits.push(['tier', 'T' + one.tier]);
     if (one.sb) bits.push(['soulbound', 'yes']);
     if (one.mp) bits.push(['mana', one.mp]);
@@ -1050,7 +1092,8 @@ const RealmIndex = (function () {
 
     box.innerHTML = '<header class="ix-card-head">'
       + artCell(one, 44)
-      + '<span class="ix-kind is-' + one.kind + '">' + esc(KIND_SAY[one.kind] || one.kind) + '</span>'
+      + '<span class="ix-kind is-' + esc(filedAs(one).replace(/ /g, '-'))
+        + '">' + esc(sayKind(filedAs(one))) + '</span>'
       + '<h3>' + esc(one.said || one.name) + '</h3>'
       + (one.alias ? '<code>' + esc(one.alias) + '</code>' : '')
       + awayTo(one)
@@ -1334,12 +1377,21 @@ const RealmIndex = (function () {
   }
 
   function drawKinds() {
-    el('ixKinds').innerHTML = KINDS
-      .filter(([kind]) => kind === kindWanted || !kindsLeft || kindsLeft.get(kind))
-      .map(([kind, say]) =>
-        '<button type="button" class="ix-chip is-' + kind
-        + (kind === kindWanted ? ' is-on' : '') + '" data-kind="' + kind + '">'
-        + esc(say)
+    /*
+     * The nine families the page was built around, and then whatever the
+     * client's own bag turned out to hold - marks, keys, dyes, pet skins. They
+     * come after, in alphabetical order, because they are the long tail and
+     * the first nine are what anybody is actually looking for.
+     */
+    const extra = kindsLeft
+      ? [...kindsLeft.keys()].filter(key => !KIND_SAY[key]).sort()
+      : [];
+    el('ixKinds').innerHTML = [...KINDS.map(([kind]) => kind), ...extra]
+      .filter(kind => kind === kindWanted || !kindsLeft || kindsLeft.get(kind))
+      .map(kind =>
+        '<button type="button" class="ix-chip is-' + esc(kind.replace(/ /g, '-'))
+        + (kind === kindWanted ? ' is-on' : '') + '" data-kind="' + esc(kind) + '">'
+        + esc(sayKind(kind))
         + (kindsLeft && kindsLeft.get(kind)
           ? '<i>' + kindsLeft.get(kind).toLocaleString('en-US') + '</i>' : '')
         + '</button>').join('');
