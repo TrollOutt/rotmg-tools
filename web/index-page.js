@@ -243,7 +243,8 @@ const RealmIndex = (function () {
       page: new Map(),                 // our record -> the page about it
       near: new Map(),                 // or, failing that, the page its pieces point at
       about: new Map(),                // that page -> every record it answers to
-      drop: new Map(), dropBy: new Map(), spawn: new Map(), spawnBy: new Map()
+      drop: new Map(), dropBy: new Map(), spawn: new Map(), spawnBy: new Map(),
+      dungeon: new Map(), dungeonBy: new Map()
     };
     const tie = (map, key, value) => {
       if (!map.has(key)) map.set(key, []);
@@ -261,6 +262,10 @@ const RealmIndex = (function () {
     }
     for (const [from, to] of said.drop || []) { tie(wiki.drop, from, to); tie(wiki.dropBy, to, from); }
     for (const [from, to] of said.spawn || []) { tie(wiki.spawn, from, to); tie(wiki.spawnBy, to, from); }
+    for (const [from, to] of said.dungeon || []) {
+      tie(wiki.dungeon, from, to);
+      tie(wiki.dungeonBy, to, from);
+    }
   }
 
   /* ---------------- ways in ---------------- */
@@ -418,8 +423,6 @@ const RealmIndex = (function () {
     chip(marks, 'sb', 'Soulbound', gather(x => Boolean(x.sb)));
     chip(marks, 'shiny', 'Shiny', gather(x => (x.labels || []).includes('SHINY')));
     chip(marks, 'reskin', 'Reskin', gather(x => (x.labels || []).includes('RESKIN')));
-    chip(marks, 'boss', 'Boss', gather(x => Boolean(x.boss)));
-    chip(marks, 'god', 'God', gather(x => Boolean(x.god)));
     chip(marks, 'hidden', 'No Category', gather(x => Boolean(x.hidden)));
 
     /*
@@ -463,6 +466,11 @@ const RealmIndex = (function () {
         if (!one || one.kind !== 'portal' || one.hidden || one.dev) continue;
         const gives = new Set([id]);
         for (const to of wiki.drop.get(at) || []) {
+          for (const got of wiki.about.get(to) || []) gives.add(got);
+        }
+        /* A dungeon is also a way into the enemies explicitly listed on its
+           community page, not only into the objects its drop table names. */
+        for (const to of wiki.dungeon.get(at) || []) {
           for (const got of wiki.about.get(to) || []) gives.add(got);
         }
         if (gives.size > 3) fromThere.set(one, gives);
@@ -1238,11 +1246,12 @@ const RealmIndex = (function () {
    */
   function drawFolds(one) {
     if (!one.folds || one.folds.length < 2) return '';
-    return '<div class="ix-folds"><b>The client declares this '
-      + one.folds.length + ' times</b>'
+    return '<div class="ix-folds"><b>This common entry represents '
+      + one.folds.length + ' client declarations</b>'
       + '<ul>' + one.folds.map(x =>
         '<li><span>' + esc(x.as) + '</span>'
         + (x.why ? '<em>' + esc(x.why) + '</em>' : '')
+        + (x.diff ? '<small>' + esc(x.diff) + '</small>' : '')
         + '<code>' + esc((all.files[x.from && x.from[0]] || '?')
           + (x.from && x.from[1] ? ' · ' + x.from[1] : '')) + '</code></li>').join('')
       + '</ul></div>';
@@ -1280,6 +1289,8 @@ const RealmIndex = (function () {
     };
     say('dropped by', wiki.dropBy.get(mine));
     say('listed as dropping', wiki.drop.get(mine));
+    say('found in', wiki.dungeonBy.get(mine));
+    say('enemies found here', wiki.dungeon.get(mine));
     /*
      * One row for summoning, not two. The wiki writes "Spawns:" and "Spawns
      * from:" under the same heading, and the link keeps the heading but not

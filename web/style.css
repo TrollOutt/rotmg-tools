@@ -525,6 +525,7 @@ select option { background: var(--panel); color: var(--text); }
 }
 .ix-folds li > span { font-weight: 600; }
 .ix-folds li > em { font-style: normal; color: var(--dim); }
+.ix-folds li > small { color: var(--dim); flex-basis: 100%; padding-left: 4px; }
 .ix-folds li > code { margin-left: auto; font-size: .85em; color: var(--dim); }
 
 .sheet-art {

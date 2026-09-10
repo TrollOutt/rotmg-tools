@@ -707,6 +707,10 @@ for (const it of gear) {
      */
     const together = new Map();
     for (const biome of said.biomes || []) {
+      // "Zone N" is an intermediate atlas label for a patch whose real name
+      // is resolved later. Older atlas files retained that stale snapshot;
+      // it is not a location and must never become an Index record.
+      if (/^Zone \d+$/.test(biome.name || '')) continue;
       const had = together.get(biome.name);
       if (had) {
         had.tiles += biome.tiles || 0;
@@ -849,25 +853,76 @@ for (const it of gear) {
  */
 {
   const held = [...records.values()];
-  const named = new Map(held.map(r => [r.kind + '|' + r.name, r]));
   const offers = one => Boolean(one.bench || one.ench);
-  /* The one that keeps the row: what a tool knows, else the caller's choice. */
-  const pick = here => here.find(one => offers(one)) || here[0];
-  function fold(here, say, why) {
+  const foldStats = {};
+  let foldGroups = 0;
+  const identity = new Set(['id', 'name', 'said', 'alias', 'from', 'also',
+    'twin', 'folded', 'folds', 'art', 'benchArt', 'benchPic', 'pic', 'in',
+    'out', 'clientId', 'bench', 'ench', 'fight']);
+  /*
+   * The one that keeps the row. A catalogue member wins first; otherwise a
+   * visible, playable creature wins over an invisible helper carrying the
+   * same DisplayId. The final terms make the choice deterministic.
+   */
+  const pick = here => [...here].sort((a, b) => {
+    const score = one => (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
+      + (!one.hidden ? 1000 : 0) + (!one.spawns ? 500 : 0)
+      + (!one.alias ? 100 : 0) + (one.hp !== undefined ? 20 : 0)
+      + ((one.labels || []).includes('BOSS') ? 10 : 0);
+    return score(b) - score(a) || a.id.localeCompare(b.id);
+  })[0];
+  function fold(here, say, why, rule) {
+    here = [...new Set(here)].filter(one => one && !one.folded);
     const into = pick(here);
-    if (here.length < 2 || into.folded) return;
-    /* Named before the survivor is renamed, or it loses its own label. */
-    into.folds = here.map(one => ({ as: one.said || one.name,
-      was: one.alias || undefined, from: one.from, why: why(one) }));
+    if (here.length < 2 || !into) return false;
+    /*
+     * Facts that vary stay visible on the common card. The full record also
+     * remains addressable through an exact working-id search, but the summary
+     * must not pretend that a 1,100-life historical Lich and its 300,000-life
+     * replacement are numerically identical.
+     */
+    const fields = new Set(here.flatMap(one => Object.keys(one)));
+    const varied = [...fields].filter(key => !identity.has(key)
+      && new Set(here.map(one => JSON.stringify(one[key]))).size > 1);
+    const label = { hp: 'life', def: 'armour', slot: 'slot', tier: 'tier',
+      labels: 'labels', hidden: 'warnings', about: 'description', fires: 'shot',
+      worn: 'bonuses', does: 'effects', spawns: 'spawner', came: 'invasion' };
+    const brief = (key, value) => {
+      if (value === undefined) return (label[key] || key) + ': none';
+      if (typeof value === 'number') return (label[key] || key) + ': ' + value.toLocaleString('en-US');
+      if (typeof value === 'string' || typeof value === 'boolean') {
+        return (label[key] || key) + ': ' + String(value);
+      }
+      if (key === 'labels' || key === 'hidden') return (label[key] || key) + ': ' + value.join(', ');
+      return (label[key] || key) + ' differ';
+    };
+    /* Named before the survivor is renamed, or it loses its own label. A
+       representative may already carry a smaller family; expand it here so
+       the final card lists every original declaration, not intermediate rows. */
+    into.folds = here.flatMap(one => one.folds?.length ? one.folds : [{
+      as: one.said || one.name,
+      was: one.alias || undefined, from: one.from,
+      why: typeof why === 'function' ? why(one) : undefined,
+      diff: varied.length ? varied.slice(0, 5).map(key => brief(key, one[key])).join('; ') : undefined
+    }]);
     into.said = say;
     for (const one of here) if (one !== into && !one.folded) one.folded = into.id;
+    foldGroups++;
+    foldStats[rule] = (foldStats[rule] || 0) + here.length - 1;
+    return true;
   }
 
-  /* A stack size: "Amethyst Shard x1" and "Amethyst Shard x 10" are one thing. */
+  /*
+   * A stack size: "Amethyst Shard x1" and "Amethyst Shard x 10" are one
+   * thing. Some newer artifacts hide the quantity in the working id while
+   * giving every stack the same DisplayId (Permafrost Snowflake and Ivory
+   * Heart); both names therefore participate.
+   */
   const stacks = new Map();
   for (const one of held) {
     if (one.kind !== 'item' || one.folded) continue;
-    const m = /^(.*[^\s])\s*x\s*(\d+)$/.exec(one.name);
+    const m = [one.name, one.alias].filter(Boolean)
+      .map(name => /^(.*[^\s])\s*x\s*(\d+)$/i.exec(name)).find(Boolean);
     if (!m) continue;
     const key = one.kind + '|' + m[1];
     if (!stacks.has(key)) stacks.set(key, []);
@@ -876,12 +931,17 @@ for (const it of gear) {
   }
   for (const [key, here] of stacks) {
     const base = key.split('|').slice(1).join('|');
+    for (const one of held) {
+      if (one.kind === 'item' && !one.folded && one.name === base && !here.includes(one)) {
+        here.push(one);
+      }
+    }
     here.sort((a, b) => a.many - b.many);
-    const plain = named.get(key);
-    fold(plain && !plain.many ? [plain, ...here] : here, base,
-      one => one.many ? 'a stack of ' + one.many : 'one of them');
+    fold(here, base, one => one.many ? 'a stack of ' + one.many : 'one of them', 'stack');
     for (const one of here) delete one.many;
   }
+
+  const named = new Map(held.filter(r => !r.folded).map(r => [r.kind + '|' + r.name, r]));
 
   /*
    * The soulbound copy of a thing that also drops tradeable. Only where the
@@ -893,7 +953,8 @@ for (const it of gear) {
     const plain = named.get(one.kind + '|' + m[1]);
     if (!plain || plain.folded || plain.slot !== one.slot || plain.tier !== one.tier) continue;
     if ((plain.about || '') !== (one.about || '')) continue;
-    fold([plain, one], m[1], x => (x === one ? 'the soulbound copy' : 'the tradeable one'));
+    fold([plain, one], m[1],
+      x => (x === one ? 'the soulbound copy' : 'the tradeable one'), 'soulbound copy');
   }
 
   /*
@@ -906,25 +967,194 @@ for (const it of gear) {
    * only the invitation; what folds them is the client agreeing, field for
    * field, that they are the same thing.
    */
-  const same = one => JSON.stringify([one.slot, one.hand, one.tier, one.sb,
-    (one.labels || []).join(','), one.about, one.fires, one.worn, one.mp,
-    one.rate, one.does, one.family]);
+  const same = one => JSON.stringify(Object.fromEntries(Object.entries(one)
+    .filter(([key]) => !identity.has(key)).sort(([a], [b]) => a.localeCompare(b))));
   const letters = new Map();
   for (const one of held) {
-    if (one.kind !== 'item' || one.folded) continue;
-    const m = /^(.{4,}?)([A-Z])$/.exec(one.name);
+    if (one.folded) continue;
+    const m = /^(.{4,}[a-z0-9])([A-Z])$/.exec(one.name);
     if (!m) continue;
-    const key = m[1] + '|' + same(one);
+    const key = one.kind + '|' + m[1] + '|' + same(one);
     if (!letters.has(key)) letters.set(key, { base: m[1], here: [] });
     letters.get(key).here.push(one);
   }
   for (const { base, here } of letters.values()) {
-    fold(here, base, () => undefined);
+    fold(here, base.trimEnd(), one => 'variant ' + one.name.slice(base.length),
+      'lettered variant');
+  }
+
+  /*
+   * The same DisplayId is one browse entry.
+   *
+   * The client routinely gives helpers, difficulty variants and historical
+   * copies the same player-facing name: six Adult Basilisks, forty Shatters
+   * waypoints called Magi Conductor, nineteen definitions called Oryx the Mad
+   * God. They are still separate records and exact working-id searches still
+   * reveal them, but repeating the same row is not useful navigation. Every
+   * working id and source remains listed on the common card.
+   */
+  const displayed = new Map();
+  for (const one of held) {
+    if (one.folded) continue;
+    const key = one.kind + '|' + one.name;
+    if (!displayed.has(key)) displayed.set(key, []);
+    displayed.get(key).push(one);
+  }
+  for (const here of displayed.values()) {
+    fold(here, here[0].name,
+      one => one.alias ? 'client id ' + one.alias : 'the plain client id',
+      'same display name');
+  }
+
+  /* Capitalisation and punctuation are not separate identities. This catches
+     client typos such as "Mk II"/"Mk.II" and SHamrock without erasing either
+     working id. */
+  const spellings = new Map();
+  const spelling = name => name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  for (const one of held) {
+    if (one.folded) continue;
+    const key = one.kind + '|' + spelling(one.name);
+    if (!spellings.has(key)) spellings.set(key, []);
+    spellings.get(key).push(one);
+  }
+  for (const here of spellings.values()) {
+    if (new Set(here.map(one => one.name)).size < 2) continue;
+    fold(here, here[0].name.replace(/^\+/, ''),
+      one => 'spelled in the client as ' + one.name, 'spelling variant');
+  }
+
+  /*
+   * Internal effect pieces are often lettered or numbered only to address a
+   * different projectile. They are already marked as hidden machinery, and
+   * a common entry with the varying shot called out is more useful than five
+   * consecutive 2ArcherST1 rows. The restriction to hidden item machinery
+   * deliberately leaves real lettered gear (the five SulfW rings) separate.
+   *
+   * A few enemy-side controllers use the same scheme without a hidden flag:
+   * MV Regular Loot 0..4, beam points, helpers and tiered snowman shells. The
+   * technical noun is required so Oryx the Mad God 1/2/3 cannot be folded by
+   * this broader rule.
+   */
+  const technical = new Map();
+  for (const one of held) {
+    if (one.folded) continue;
+    const itemMachine = one.kind === 'item' && (one.hidden?.some(reason =>
+      /effect|machinery|test/i.test(reason))
+      || (one.hidden?.length && /\b(?:Subattack|Projectile|Proc|Shot|Effect)\b/i.test(one.name))
+      || /^\d+[A-Za-z]+ST\d+[A-Z]$/.test(one.name));
+    const enemyMachine = one.kind === 'enemy'
+      && /\b(?:Loot|Point|Helper|Wall|Beam|Spawner|Initiator|Object|Segment|Switch|Tier|Guill)\b/i.test(one.name);
+    if (!itemMachine && !enemyMachine) continue;
+    const m = /^(.*?)(?:\s+(\d+)|([A-Z]))$/.exec(one.name);
+    if (!m || m[1].length < 4) continue;
+    const key = one.kind + '|' + m[1];
+    if (!technical.has(key)) technical.set(key, { base: m[1], here: [] });
+    technical.get(key).here.push(one);
+  }
+  for (const { base, here } of technical.values()) {
+    const plain = held.find(one => !one.folded && one.kind === here[0]?.kind && one.name === base);
+    if (plain && !here.includes(plain)) here.push(plain);
+    if (here.length < 2) continue;
+    fold(here, base, one => 'technical variant ' + one.name.slice(base.length).trim(),
+      'technical variant');
+  }
+
+  /* A duplicate plain DisplayId can make the early (SB) lookup ambiguous.
+     Once same-name copies are common entries, join any remaining pair. */
+  for (const one of held) {
+    if (one.folded) continue;
+    const m = /^(.+?)\s*\(SB\)$/.exec(one.name);
+    if (!m) continue;
+    const plain = held.find(x => !x.folded && x.kind === one.kind && x.name === m[1]
+      && x.slot === one.slot && x.tier === one.tier && (x.about || '') === (one.about || ''));
+    if (plain) fold([plain, one], m[1], x => x === one
+      ? 'the soulbound copy' : 'the tradeable one', 'soulbound copy');
+  }
+
+  /*
+   * Names that differ only by a mechanical counter or by New/Actual are
+   * joined when every indexed fact agrees. This catches Broken Heart 1..8,
+   * old/new realm heroes and similar families without combining meaningful
+   * numbered tiers or different Oryx incarnations.
+   */
+  function foldByShape(shape, rule, why) {
+    const groups = new Map();
+    for (const one of held) {
+      if (one.folded) continue;
+      const base = shape(one.name);
+      if (!base || base === one.name) continue;
+      const key = one.kind + '|' + base + '|' + same(one);
+      if (!groups.has(key)) groups.set(key, { base, here: [] });
+      groups.get(key).here.push(one);
+      const plain = held.find(x => !x.folded && x.kind === one.kind
+        && x.name === base && same(x) === same(one));
+      if (plain && !groups.get(key).here.includes(plain)) groups.get(key).here.push(plain);
+    }
+    for (const { base, here } of groups.values()) fold(here, base, why(base), rule);
+  }
+  foldByShape(name => /\s+\d+$/.test(name) ? name.replace(/\s+\d+$/, '') : '',
+    'numbered variant', base => one => one.name === base
+      ? 'the unnumbered form' : 'variant ' + one.name.slice(base.length).trim());
+  /* New/Actual marks an edition of an enemy even when its life or contextual
+     label changed. Those differences are retained in `diff` on the card. */
+  const editions = new Map();
+  const editionBase = name => {
+    const base = name.replace(/^(?:New\s+Actual|Actual|New)\s+/i, '')
+      .replace(/\s+(?:New\s+Actual|Actual|New)$/i, '')
+      .replace(/\s+\((?:New\s+Actual|Actual|New|(?:New\s+)?MV Event)\)$/i, '');
+    return base === name ? '' : base;
+  };
+  for (const one of held) {
+    if (one.folded || one.kind !== 'enemy') continue;
+    const base = editionBase(one.name);
+    if (!base) continue;
+    const key = one.kind + '|' + base;
+    if (!editions.has(key)) editions.set(key, { base, here: [] });
+    editions.get(key).here.push(one);
+    const plain = held.find(x => !x.folded && x.kind === one.kind && x.name === base);
+    if (plain && !editions.get(key).here.includes(plain)) editions.get(key).here.push(plain);
+  }
+  for (const { base, here } of editions.values()) {
+    fold(here, base, one => {
+      const words = one.name.replace(base, '').replace(/[()]/g, '').trim();
+      return words ? words + ' edition' : 'the plain edition';
+    }, 'edition variant');
+  }
+
+  /* A progression prefix changes the unlocked appearance, not the item kind. */
+  const progressions = new Map();
+  for (const one of held) {
+    if (one.folded || one.kind !== 'item' || one.family !== 'gravestone') continue;
+    const m = /^(Level\s+\d+(?:-\d+)?|\d+\/\d+)\s+(.+?\s+Unlocker)$/i.exec(one.name);
+    if (!m) continue;
+    const key = one.kind + '|' + m[2] + '|' + same(one);
+    if (!progressions.has(key)) progressions.set(key, { base: m[2], here: [] });
+    progressions.get(key).here.push(one);
+  }
+  for (const { base, here } of progressions.values()) {
+    fold(here, base, one => one.name.slice(0, -base.length).trim(),
+      'progression variant');
+  }
+
+  /* Every hidden declaration points straight to the final common entry. */
+  for (const one of held) {
+    if (!one.folded) continue;
+    const seen = new Set([one.id]);
+    let into = records.get(one.folded);
+    while (into?.folded && !seen.has(into.id)) {
+      seen.add(into.id);
+      into = records.get(into.folded);
+    }
+    if (!into || seen.has(into.id)) throw new Error('Invalid fold chain at ' + one.id);
+    one.folded = into.id;
   }
 
   const folded = held.filter(r => r.folded).length;
   console.log('  ' + folded.toLocaleString('en-US')
     + ' further declarations folded into the thing they are a copy of');
+  console.log('  ' + foldGroups.toLocaleString('en-US') + ' common entries: '
+    + Object.entries(foldStats).map(([rule, count]) => count + ' ' + rule).join(', '));
+  records.folding = { groups: foldGroups, declarations: folded, byRule: foldStats };
 }
 
 const theoryView = require('./index-model').attach(records, mechanics, objects);
@@ -963,6 +1193,7 @@ const result = {
     tally[one.kind] = (tally[one.kind] || 0) + 1;
     return tally;
   }, {}),
+  folding: records.folding,
   links: links.length,
   slots: slotNames,
   records: all
