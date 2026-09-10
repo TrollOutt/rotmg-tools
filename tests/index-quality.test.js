@@ -72,9 +72,14 @@ assert(dungeonPairs.has(recordPage.get('portal:Snake Pit') + ','
   + recordPage.get('enemy:Stheno the Snake Queen')), 'Stheno belongs to the Snake Pit');
 
 const pageSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'utf8');
+const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
 assert(!/chip\(marks, 'boss'/.test(pageSource), 'Boss is an enemy category, not a generic mark');
 assert(!/chip\(marks, 'god'/.test(pageSource), 'God is an enemy category, not a generic mark');
 assert(/propertyName === 'grid-template-columns'[\s\S]{0,160}fitList\(list\)/.test(pageSource),
   'closing a record card must refit the result list after the column transition');
+assert(/\.ix-layout:not\(\.has-list\) \.ix-facets\s*\{[^}]*overflow-y:\s*auto/.test(styleSource),
+  'the full category rail must scroll so its lowest dungeon choices remain reachable');
+assert(/\.ix-layout:not\(\.has-list\) \.ix-ways\s*\{[^}]*max-height:\s*100%/.test(styleSource),
+  'the full category card must stay within the viewport for its rail to scroll');
 
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
