@@ -74,5 +74,7 @@ assert(dungeonPairs.has(recordPage.get('portal:Snake Pit') + ','
 const pageSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'utf8');
 assert(!/chip\(marks, 'boss'/.test(pageSource), 'Boss is an enemy category, not a generic mark');
 assert(!/chip\(marks, 'god'/.test(pageSource), 'God is an enemy category, not a generic mark');
+assert(/propertyName === 'grid-template-columns'[\s\S]{0,160}fitList\(list\)/.test(pageSource),
+  'closing a record card must refit the result list after the column transition');
 
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
