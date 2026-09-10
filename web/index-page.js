@@ -1588,13 +1588,17 @@ const RealmIndex = (function () {
       }, 180);
     });
 
-    /* And whenever the columns have finished sliding, which is the other way
-       the rail's width changes and the only one nothing was watching. */
+    /* And whenever the columns have finished sliding. Both the category rail
+       and the result list depend on their final width: when a card closes,
+       measuring the list during the slide keeps its old narrow size and its
+       names stay clipped even though the third column has gone away. */
     const body = el('ixBody');
     if (body) {
       body.addEventListener('transitionend', event => {
         if (event.target === body && event.propertyName === 'grid-template-columns') {
           fitGroups();
+          const list = el('ixList');
+          if (list) fitList(list);
         }
       });
     }
