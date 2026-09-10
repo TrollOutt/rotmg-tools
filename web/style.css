@@ -3207,9 +3207,14 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   grid-template-columns: minmax(240px, 100%) minmax(0px, 0px) minmax(0px, 0px);
   align-items: start;
 }
-.ix-layout:not(.has-list) .ix-ways { max-height: none; }
-/* And the groups spread across it rather than queueing down one side. */
-.ix-layout:not(.has-list) .ix-facets { overflow: visible; }
+.ix-layout:not(.has-list) .ix-ways { max-height: 100%; }
+/* And the groups spread across it rather than queueing down one side. When a
+   manually opened group is taller than the screen, the rail keeps the room
+   below the search box and scrolls inside it instead of growing off-screen. */
+.ix-layout:not(.has-list) .ix-facets {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
+}
 .ix-ways > #ixSearch { margin: 0 0 12px; }
 
 /* What the community says, kept visibly apart from what the client declares. */
