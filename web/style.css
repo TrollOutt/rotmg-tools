@@ -511,6 +511,22 @@ select option { background: var(--panel); color: var(--text); }
  * so a row costs a background offset rather than a request, and the address
  * is written into the page once as --sheet.
  */
+/*
+ * Every declaration of one thing, on its card. Read left to right: what the
+ * client calls that copy, why it is a copy, and the file and number it is
+ * filed under - which is the whole point of listing them.
+ */
+.ix-folds { margin: 12px 0 0; font-size: .92em; }
+.ix-folds > b { display: block; font-size: .88em; letter-spacing: .3px; color: var(--dim); }
+.ix-folds ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.ix-folds li {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  padding: 3px 8px; border-radius: 5px; background: rgba(255, 255, 255, .03);
+}
+.ix-folds li > span { font-weight: 600; }
+.ix-folds li > em { font-style: normal; color: var(--dim); }
+.ix-folds li > code { margin-left: auto; font-size: .85em; color: var(--dim); }
+
 .sheet-art {
   display: block; flex: none; image-rendering: pixelated;
   background-image: var(--sheet); background-repeat: no-repeat;
@@ -3174,11 +3190,11 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * and its family at the other with a metre of nothing between them.
  */
 .ix-layout:not(.has-card) {
-  grid-template-columns: minmax(190px, 20vw) minmax(320px, 52ch) minmax(0px, 0px);
+  grid-template-columns: minmax(190px, 20vw) minmax(320px, var(--ix-listw, 52ch)) minmax(0px, 0px);
   justify-content: start;
 }
 .ix-layout.has-pick:not(.has-card) {
-  grid-template-columns: minmax(150px, 16vw) minmax(320px, 52ch) minmax(0px, 0px);
+  grid-template-columns: minmax(150px, 16vw) minmax(320px, var(--ix-listw, 52ch)) minmax(0px, 0px);
   justify-content: start;
 }
 /*

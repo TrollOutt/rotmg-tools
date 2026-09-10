@@ -321,7 +321,7 @@ const LABELLED = [
   ['mark', labels => labels.includes('MARK')],
   ['artifact', labels => labels.includes('ARTIFACT')],
   ['key', labels => labels.some(l => /(^|_)KEY$/.test(l))],
-  ['shard', (labels, id) => labels.includes('NILSHARD') || /Shard( x\d+)?$/.test(id)],
+  ['shard', (labels, id) => labels.includes('NILSHARD') || /Shard(\s*x\s*\d+)?$/.test(id)],
   ['material', labels => labels.includes('MATERIAL') || labels.includes('UPGRADECORE')],
   ['engraving', labels => labels.includes('ENGRAVING')],
   ['emote', labels => labels.some(l => /_EMOTE$/.test(l))],
@@ -449,6 +449,17 @@ for (const one of objects) {
       ? 1 : undefined,
     boss: labels.includes('BOSS') || labels.includes('ENCOUNTER') || undefined,
     god: labels.includes('GOD') || undefined,
+    /*
+     * The invisible machinery that puts creatures on the map.
+     *
+     * A spawner is a GameObject with an Enemy flag and no picture: the client
+     * counts it as something that fights so that it can be killed to stop the
+     * wave, and the player never sees it. Three hundred and seventy-four of
+     * them sat in the list of things to fight with a blank where the creature
+     * should be, so they are marked for what they are.
+     */
+    spawns: text(one.body, 'Class') === 'GameObject'
+      && /<File>invisible<\/File>/.test(one.body) || undefined,
     /* What brought it, where it is not a creature of anywhere in particular. */
     came: (labels.find(one => /_INVASION_/.test(one)) || '')
       .replace(/_(ADEPT|VETERAN|MASTER)$/, '').split('_')
@@ -813,6 +824,107 @@ for (const it of gear) {
       || best[0].charAt(0) + best[0].slice(1).toLowerCase(), plainest.record.id];
   }
   slotNames = table;
+}
+
+/* ---------------- one thing, however many times the client says it ---------------- */
+/*
+ * Three thousand rows of the same object.
+ *
+ * The client declares a stack size as its own object, so Amethyst Shard is
+ * eleven declarations, Ancient Fossil is fifteen, and a reader scrolling the
+ * index met ten Forgotten Tomes in a row before reaching anything new. Same
+ * again for the soulbound copy of a thing that also drops tradeable, and for
+ * the lettered placeholders a set uses - 2KenseiST2A through Q, which say
+ * nothing at all beyond their own name.
+ *
+ * Nothing is thrown away. Every declaration keeps its record, its client id
+ * and its number, because "which of these is the one in my bag" is a question
+ * this index exists to answer. One of them carries the row and the rest are
+ * folded into it and listed on its card; the page hides a folded row while
+ * you browse and hands it back the moment you search for it by name.
+ *
+ * Where a tool offers one of them, that one carries the row. The calculator
+ * knows an Agents of Oryx Shard x15 by exactly that name, and folding it into
+ * a stack of one would have hidden the only door to it.
+ */
+{
+  const held = [...records.values()];
+  const named = new Map(held.map(r => [r.kind + '|' + r.name, r]));
+  const offers = one => Boolean(one.bench || one.ench);
+  /* The one that keeps the row: what a tool knows, else the caller's choice. */
+  const pick = here => here.find(one => offers(one)) || here[0];
+  function fold(here, say, why) {
+    const into = pick(here);
+    if (here.length < 2 || into.folded) return;
+    /* Named before the survivor is renamed, or it loses its own label. */
+    into.folds = here.map(one => ({ as: one.said || one.name,
+      was: one.alias || undefined, from: one.from, why: why(one) }));
+    into.said = say;
+    for (const one of here) if (one !== into && !one.folded) one.folded = into.id;
+  }
+
+  /* A stack size: "Amethyst Shard x1" and "Amethyst Shard x 10" are one thing. */
+  const stacks = new Map();
+  for (const one of held) {
+    if (one.kind !== 'item' || one.folded) continue;
+    const m = /^(.*[^\s])\s*x\s*(\d+)$/.exec(one.name);
+    if (!m) continue;
+    const key = one.kind + '|' + m[1];
+    if (!stacks.has(key)) stacks.set(key, []);
+    stacks.get(key).push(one);
+    one.many = Number(m[2]);
+  }
+  for (const [key, here] of stacks) {
+    const base = key.split('|').slice(1).join('|');
+    here.sort((a, b) => a.many - b.many);
+    const plain = named.get(key);
+    fold(plain && !plain.many ? [plain, ...here] : here, base,
+      one => one.many ? 'a stack of ' + one.many : 'one of them');
+    for (const one of here) delete one.many;
+  }
+
+  /*
+   * The soulbound copy of a thing that also drops tradeable. Only where the
+   * client says the same about both: same slot, same tier, same description.
+   */
+  for (const one of held) {
+    const m = /^(.+?)\s*\(SB\)$/.exec(one.name);
+    if (!m || one.folded) continue;
+    const plain = named.get(one.kind + '|' + m[1]);
+    if (!plain || plain.folded || plain.slot !== one.slot || plain.tier !== one.tier) continue;
+    if ((plain.about || '') !== (one.about || '')) continue;
+    fold([plain, one], m[1], x => (x === one ? 'the soulbound copy' : 'the tradeable one'));
+  }
+
+  /*
+   * A letter on the end of a working name - but only where the client says
+   * exactly the same thing about every one of them.
+   *
+   * 2KenseiST2A through Q looked like eleven copies of one ability and are
+   * two: five that fire one shot and six that fire another. SulfW Ring A
+   * through E look the same and are five different rings. So the names are
+   * only the invitation; what folds them is the client agreeing, field for
+   * field, that they are the same thing.
+   */
+  const same = one => JSON.stringify([one.slot, one.hand, one.tier, one.sb,
+    (one.labels || []).join(','), one.about, one.fires, one.worn, one.mp,
+    one.rate, one.does, one.family]);
+  const letters = new Map();
+  for (const one of held) {
+    if (one.kind !== 'item' || one.folded) continue;
+    const m = /^(.{4,}?)([A-Z])$/.exec(one.name);
+    if (!m) continue;
+    const key = m[1] + '|' + same(one);
+    if (!letters.has(key)) letters.set(key, { base: m[1], here: [] });
+    letters.get(key).here.push(one);
+  }
+  for (const { base, here } of letters.values()) {
+    fold(here, base, () => undefined);
+  }
+
+  const folded = held.filter(r => r.folded).length;
+  console.log('  ' + folded.toLocaleString('en-US')
+    + ' further declarations folded into the thing they are a copy of');
 }
 
 const theoryView = require('./index-model').attach(records, mechanics, objects);
