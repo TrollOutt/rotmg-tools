@@ -133,6 +133,21 @@ const RealmIndex = (function () {
   /* Which of those a record is filed under, asked in one place by everything. */
   const filedAs = one => one.family || (one.use ? 'use' : one.kind);
 
+  /*
+   * The name of the thing a record was folded into, lower case, or ''.
+   *
+   * Carried on the row so a search can tell "amethyst", which is asking for
+   * the shard, from "amethyst shard x5", which is asking for one of the ten
+   * declarations behind it. A name rather than a flag, because the question
+   * the list has to answer is whether the reader has already been shown what
+   * they are looking for.
+   */
+  function foldedInto(one) {
+    if (!one.folded) return '';
+    const into = all.get(one.folded);
+    return ((into && (into.said || into.name)) || one.folded).toLowerCase();
+  }
+
   function readLoved() {
     try {
       const said = JSON.parse(window.localStorage.getItem(LOVED) || '[]');
@@ -182,7 +197,7 @@ const RealmIndex = (function () {
      */
     light = said.records.map(one => [one.id, one.said || one.name,
       filedAs(one), one.alias || '', one.hidden ? 1 : 0,
-      one.dev ? 1 : 0]);
+      one.dev ? 1 : 0, foldedInto(one)]);
     /*
      * Both ends of every link, so a record can be asked what points at it
      * without walking the whole index. The file carries each link once.
@@ -275,9 +290,15 @@ const RealmIndex = (function () {
     const chip = (into, key, say, ids, pic) => {
       if (ids.size) into.chips.push({ key: into.title + '/' + key, say, ids, pic });
     };
+    /*
+     * A chip counts what the list will show, which is not every record: the
+     * copies folded into another thing are that thing's rows, not their own,
+     * and counting them made the chip promise ten Amethyst Shards and the
+     * list hand back one.
+     */
     const gather = test => {
       const ids = new Set();
-      for (const one of all.values()) if (test(one)) ids.add(one.id);
+      for (const one of all.values()) if (!one.folded && test(one)) ids.add(one.id);
       return ids;
     };
 
@@ -337,6 +358,37 @@ const RealmIndex = (function () {
       const shown = families.get(family).find(one => one.art && !one.hidden);
       chip(byBag, family, family[0].toUpperCase() + family.slice(1),
         gather(x => x.family === family), shown && shown.id);
+    }
+
+    /*
+     * And the things that fight back, told apart the way the client tells
+     * them apart. Five thousand creatures with no way in but a name was the
+     * biggest hole left in the rail: a reader after the gods, or after what
+     * Oryx sends at a realm, had to know one by name to find any of them.
+     */
+    const byFoe = group('Enemies', 'client');
+    const marked = label => gather(x => x.kind === 'enemy' && (x.labels || []).includes(label));
+    const foes = [
+      ['god', 'Gods', gather(x => Boolean(x.god))],
+      ['hero', 'Heroes of Oryx', marked('HERO')],
+      ['boss', 'Bosses', marked('BOSS')],
+      ['miniboss', 'Minibosses', marked('MINIBOSS')],
+      ['encounter', 'Encounters',
+        gather(x => x.kind === 'enemy' && (x.labels || []).some(l => /ENCOUNTER$/.test(l)))],
+      ['quest', 'Quest', marked('QUEST')],
+      ['minion', 'Minions', marked('MINION')],
+      ['critter', 'Critters', marked('CRITTER')],
+      ['chest', 'Chests', marked('CHEST')],
+      ['spawner', 'Spawners', gather(x => Boolean(x.spawns))]
+    ];
+    for (const [key, say, ids] of foes) {
+      /* Pictured by one of its own that has a picture worth showing. */
+      let shown = null;
+      for (const id of ids) {
+        const one = all.get(id);
+        if (one && one.art && !one.hidden && !one.spawns) { shown = one; break; }
+      }
+      chip(byFoe, key, say, ids, shown && shown.id);
     }
 
     /*
@@ -558,6 +610,13 @@ const RealmIndex = (function () {
        * browsing the index is looking for one.
        */
       if (one[5] && !term && !narrowed.length && kindWanted !== one[2]) continue;
+      /*
+       * A folded copy waits to be asked for by name, and by a name that tells
+       * it apart from the thing it was folded into. Ten stack sizes of one
+       * shard are ten rows of the same thing to anyone browsing and to anyone
+       * typing "amethyst"; type the number and you get the one in your bag.
+       */
+      if (one[6] && (!term || one[6].includes(term))) continue;
       let barred = false;
       for (const chosen of narrowed) if (!chosen.set.has(one[0])) { barred = true; break; }
       if (barred) continue;
@@ -764,6 +823,50 @@ const RealmIndex = (function () {
       + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
       + star(one[0])
       + '</button>').join('') || '<p class="ix-none">Nothing by that name.</p>';
+    fitList(box);
+  }
+
+  /*
+   * The list is as wide as its longest name, while there is nothing beside it.
+   *
+   * With no card open the third column is empty and the list had a fixed cap,
+   * so "Antinomy Mad God Token x10" came out as "Antinomy Mad God T…" with
+   * half the screen standing empty to the right of it. The cap is a measured
+   * length now: every name is asked how much it is losing to the ellipsis and
+   * the column is given it back, up to a point - a column wider than nine
+   * hundred pixels is a name at one edge and its family at the other.
+   *
+   * A length rather than max-content, because the panels animate between
+   * arrangements and grid only interpolates lengths.
+   */
+  function fitList(box) {
+    const body = el('ixBody');
+    if (!body || body.classList.contains('has-card')) return;
+    /*
+     * What the widest row would need if nothing clipped it: everything in the
+     * row but the name, plus the name at its full length. Asked of the row
+     * rather than of the panel, because the panel is exactly as wide as the
+     * cap this is trying to work out.
+     */
+    let need = 0;
+    for (const row of box.querySelectorAll('.ix-row')) {
+      const name = row.querySelector('b');
+      if (!name) continue;
+      need = Math.max(need, row.clientWidth - name.clientWidth + name.scrollWidth);
+    }
+    if (!need) { body.style.removeProperty('--ix-listw'); return; }
+    /* The panel around the list: its padding, its border, its scrollbar. */
+    const card = box.closest('.card') || box;
+    const round = card.getBoundingClientRect().width - box.clientWidth;
+    /*
+     * Measured against the row of panels, not the window. A window is not
+     * always willing to say how wide it is - an embedded one reports nought -
+     * and half of nought is a column that never grows past its floor.
+     */
+    const across = body.getBoundingClientRect().width;
+    const cap = Math.min(900, across ? across * 0.5 : 900);
+    const room = Math.max(320, Math.min(need + round + 2, cap));
+    body.style.setProperty('--ix-listw', Math.round(room) + 'px');
   }
 
   /*
@@ -1117,10 +1220,32 @@ const RealmIndex = (function () {
           '<i>' + esc(x) + '</i>').join('') + '</p>'
         : '')
       + drawTools(one)
+      + drawFolds(one)
       + drawSlots(one)
       + (links.length ? drawLinks(links) : '')
       + drawWiki(one)
       + '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>';
+  }
+
+  /*
+   * Every time the client declares this thing.
+   *
+   * A stack size is its own object, and so is the soulbound copy, so one
+   * Amethyst Shard is eleven declarations with eleven numbers. The list shows
+   * one row for them, which is what a reader wants while browsing and exactly
+   * not what they want once they are holding one - "which of these is in my
+   * bag" is answered by the number, and the number is here.
+   */
+  function drawFolds(one) {
+    if (!one.folds || one.folds.length < 2) return '';
+    return '<div class="ix-folds"><b>The client declares this '
+      + one.folds.length + ' times</b>'
+      + '<ul>' + one.folds.map(x =>
+        '<li><span>' + esc(x.as) + '</span>'
+        + (x.why ? '<em>' + esc(x.why) + '</em>' : '')
+        + '<code>' + esc((all.files[x.from && x.from[0]] || '?')
+          + (x.from && x.from[1] ? ' · ' + x.from[1] : '')) + '</code></li>').join('')
+      + '</ul></div>';
   }
 
   /*
@@ -1434,7 +1559,8 @@ const RealmIndex = (function () {
      * window that left one heading unfolded out of seven where six fit.
      */
     requestAnimationFrame(fitGroups);
-    el('ixBuilt').textContent = all.count.toLocaleString('en-US')
+    /* What you can browse: the copies folded into another thing are its rows. */
+    el('ixBuilt').textContent = light.filter(one => !one[6]).length.toLocaleString('en-US')
       + ' things, read from the client of ' + all.built
       + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
     drawCard('');

@@ -374,6 +374,60 @@ Oryx no longer goes about labelled as a piece of gear, and `benchWhy` says "a
 mark, not gear anybody wears" where it used to tell five thousand things they
 were another copy of a name.
 
+### One thing, however many times the client says it
+
+A stack size is its own object in the client, so Amethyst Shard is eleven
+declarations and Ancient Fossil fifteen, and a reader scrolling the index met
+ten Forgotten Tomes in a row before reaching anything new. Same for the
+soulbound copy of a thing that also drops tradeable, and for lettered
+placeholders like 2KenseiST2A through Q.
+
+Nothing is thrown away. Every declaration keeps its record, its client id and
+its number - "which of these is in my bag" is a question the index exists to
+answer - but one of them carries the row and the rest are `folded` into it and
+listed on its card, with the file and hex number each was read from. **3,366
+declarations fold into 378 things**, so 19,302 records browse as 15,936.
+
+Three rules, in `tools/build-index.js` just before the theory view is built:
+
+| rule | fires on | guard |
+|---|---|---|
+| stack | `Amethyst Shard x1` … `x10` | — |
+| soulbound | `X (SB)` beside `X` | same slot, tier and description |
+| letter | `2KenseiST2A` … `Q` | the client says *exactly* the same about each |
+
+That last guard matters: 2KenseiST2A through Q look like eleven copies of one
+ability and are two - five that fire one shot, six that fire another - while
+SulfW Ring A through E look identical and are five different rings. The name
+is only the invitation; what folds them is the client agreeing field for field.
+Where a tool offers one of the copies, **that** one carries the row: the
+calculator knows an Agents of Oryx Shard x15 by exactly that name.
+
+On the page, a folded row is hidden while you browse and comes back the moment
+you type a name that tells it apart from the thing it was folded into -
+"amethyst" gives you the shard, "amethyst shard x5" gives you that declaration.
+Chip counts count what the list will show, or a chip promising ten shards would
+hand back one.
+
+### The things that fight back have a way in
+
+Five thousand creatures and no way to reach them but a name. There is an
+**Enemies** group now: Gods, Heroes of Oryx, Bosses, Minibosses, Encounters,
+Quest, Minions, Critters, Chests and Spawners, every one of them read off the
+client's own labels. Spawners needed a new fact - `spawns`, set on a
+`GameObject` that carries an `Enemy` flag and an invisible texture, which is
+how the client files the machinery that puts a wave on the map. 289 of them
+were sitting in the list with a blank where the creature should be.
+
+### The list is as wide as its longest name
+
+With no card open the third column is empty and the list had a fixed 52ch cap,
+so "Antinomy Mad God Token x10" came out as "Antinomy Mad God T…" with half the
+screen standing empty beside it. `fitList()` asks every row how much it is
+losing to the ellipsis and gives the column that back, up to half the row of
+panels or 900px. A measured length rather than `max-content`, because the
+panels animate between arrangements and grid only interpolates lengths.
+
 ### The community join, re-run
 
 Re-joined against the widened index and the September snapshot: **6,620 records
@@ -593,12 +647,12 @@ it is.
   `provenance.check()` fails when `joinedClient` names a different client from
   the catalogues. The page itself still says nothing, and a reader looking at a
   thin set of community links would want to know why.
-- **Stacks are one record each.** `Green Dust x1` through `x10`, and the
-  fifteen `Mystery ST Shard` sizes, are fifteen separate declarations in the
-  client and fifteen records here. That is honest and it reads badly: one
-  record with the sizes folded into it would be better, and the `also`
-  machinery is already there for it.
-- **2,837 things are filed as "a slot no class uses".** What is left after the
-  families is mostly machinery - Subattack Containers, proc attacks - which is
-  correctly hidden but has no name of its own. A family for "the machinery
-  behind a weapon" would say it properly.
+- **125 soulbound twins stay apart.** `X` and `X (SB)` fold into one row only
+  where neither is on the bench. The bench lists both as things you can build
+  with, and the fold would have left the reader looking at one row for two
+  items a tool treats as two. Fixing that means the bench agreeing they are
+  one item first.
+- **423 things are still filed as "a slot no class uses".** What is left after
+  the families and the folding is mostly machinery - Subattack Containers,
+  proc attacks - correctly hidden but with no name of its own. A family for
+  "the machinery behind a weapon" would say it properly.
