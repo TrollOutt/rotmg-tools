@@ -2305,12 +2305,21 @@ function main() {
 
   const levels = buildPyramid();
 
+  /*
+   * A patch that could not be named from its floor starts life as "Zone N".
+   * It may be named later from its creatures or from zone-names.txt, but the
+   * early biome snapshot keeps the placeholder. Publishing that stale copy
+   * invented places such as Zone 12 beside the real Lime Plains that replaced
+   * it. Unresolved placeholders are construction state, not locations.
+   */
+  const publicBiomes = map.found.filter(one => !/^Zone \d+$/.test(one.name));
+
   const summary = {
     px: PX, chunk: CHUNK, levels,
     bounds: { minX: map.minX, minY: map.minY, maxX: map.maxX, maxY: map.maxY },
     mask: { width: map.width, height: map.height, none: map.NONE, sea: map.SEA },
     focus: map.focus,
-    biomes: map.found,
+    biomes: publicBiomes,
     zones: map.zones,
     folk: map.folk || [],
     marks: map.marks || { graves: [], bags: [] },

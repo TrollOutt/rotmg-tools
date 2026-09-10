@@ -14372,17 +14372,6 @@
    ]
   },
   {
-   "index": 11,
-   "name": "Zone 12",
-   "tiles": 50953,
-   "at": [
-    763,
-    1429
-   ],
-   "ground": "",
-   "lives": []
-  },
-  {
    "index": 12,
    "name": "Haunted Hallows",
    "tiles": 47443,
@@ -35227,17 +35216,6 @@
    ]
   },
   {
-   "index": 29,
-   "name": "Zone 30",
-   "tiles": 20106,
-   "at": [
-    830,
-    1813
-   ],
-   "ground": "",
-   "lives": []
-  },
-  {
    "index": 30,
    "name": "Sanguine Forest",
    "tiles": 19024,
@@ -38048,28 +38026,6 @@
      ]
     }
    ]
-  },
-  {
-   "index": 35,
-   "name": "Zone 36",
-   "tiles": 10279,
-   "at": [
-    598,
-    1315
-   ],
-   "ground": "",
-   "lives": []
-  },
-  {
-   "index": 36,
-   "name": "Zone 37",
-   "tiles": 2094,
-   "at": [
-    849,
-    1612
-   ],
-   "ground": "",
-   "lives": []
   }
  ],
  "zones": [

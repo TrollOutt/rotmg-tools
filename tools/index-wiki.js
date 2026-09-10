@@ -341,7 +341,24 @@ const said = {
   says: 'the RealmEye community wiki',
   at: 'https://www.realmeye.com/wiki/',
   pages, ids, page, near: nearby,
-  drop: pairs('drop'), spawn: pairs('spawn')
+  drop: pairs('drop'), spawn: pairs('spawn'),
+  /*
+   * Dungeon populations are enriched separately from a local RealmEye export.
+   * Preserve them when refreshing this page join so a machine with only the
+   * bundle used here does not silently erase a separately sourced relation.
+   */
+  ...(() => {
+    const priorFile = path.join(OUT, 'wiki.json');
+    if (!fs.existsSync(priorFile)) return {};
+    const prior = JSON.parse(fs.readFileSync(priorFile, 'utf8'));
+    /* Page-number pairs are reusable only while the page table is identical. */
+    if (JSON.stringify(prior.pages || []) !== JSON.stringify(pages)) return {};
+    const kept = {};
+    for (const key of ['dungeon', 'dungeonSections', 'dungeonEvidence', 'dungeonFrom']) {
+      if (prior[key] !== undefined) kept[key] = prior[key];
+    }
+    return kept;
+  })()
 };
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, 'wiki.json'), JSON.stringify(said) + '\n');
