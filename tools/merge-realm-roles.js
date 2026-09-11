@@ -574,6 +574,18 @@ for (const zone of atlas.zones) {
   }
 }
 
+/*
+ * Once build-index has published biome facts, it is the master representation
+ * consumed by the Atlas. A first build can still use the freshly imported
+ * reference above; subsequent builds converge on the checked Index contract.
+ */
+const indexFile = path.join(root, 'data', 'Index', 'index.json');
+let indexBiomes = 0;
+if (fs.existsSync(indexFile)) {
+  const index = JSON.parse(readFile(indexFile, 'utf8'));
+  indexBiomes = require('./biome-data').applyIndexToAtlas(index, atlas);
+}
+
 writeFile(atlasFile, JSON.stringify(atlas, null, 1).replace(/\n/g, '\r\n') + '\r\n');
 
 const pageFile = path.join(ATLAS, 'index.html');
@@ -591,6 +603,7 @@ console.log('zones given a rank and a cast: ' + touched + ' of ' + atlas.zones.l
 console.log('  encounters listed  ' + count('encounters'));
 console.log('  heroes listed      ' + count('heroes'));
 console.log('  beacons guarded    ' + guarded + ' of ' + atlas.beacons.length);
+console.log('  biome records read from the Index: ' + indexBiomes);
 console.log('  creatures already on the map marked with their part: ' + tagged
   + ' listings, ' + already + ' of the cast entries flagged as standing there already');
 console.log('');

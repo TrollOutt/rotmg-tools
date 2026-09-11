@@ -28,6 +28,35 @@ for (const name of placeholderZones) {
   assert.equal(active(name).length, 0, name + ' is an atlas construction label, not a place');
   assert(!atlas.biomes.some(one => one.name === name), name + ' must not be published as a biome');
 }
+for (const place of index.records.filter(one => one.kind === 'place')) {
+  assert(place.art || place.icon, place.name + ' must use its Realm beacon sprite');
+  assert(place.beacon && records.has(place.beacon), place.name + ' must identify its beacon record');
+  if (place.icon) continue;
+  const visible = records.get(place.beaconArt || place.beacon);
+  assert(visible, place.name + ' must identify a visible beacon or guardian record');
+  assert.deepEqual(place.art, visible.art, place.name + ' must reuse its visible beacon artwork');
+}
+assert(records.get('place:Carboniferous').icon?.startsWith('data:image/png;base64,'),
+  'Carboniferous must use the green beacon actually drawn in the Atlas');
+assert.equal(records.get('place:Runic Tundra').beaconArt,
+  'enemy:Legion Principal Portal#Beacon Guardian Runic Tundra Big Portal',
+  'Runic Tundra must use its beacon portal rather than its guardian');
+const documentedBiomes = index.records.filter(one => one.kind === 'place' && one.loot);
+assert.equal(documentedBiomes.length, 14, 'all reference-backed realm biomes must publish their loot');
+for (const place of documentedBiomes) {
+  assert(['Rookie', 'Adept', 'Veteran'].includes(place.rank), place.name + ' must publish its realm rank');
+  assert(Object.keys(place.loot.tiers || {}).length, place.name + ' must publish its tiered loot');
+  const atlasCopies = [...atlas.biomes, ...atlas.zones].filter(one => one.name === place.name);
+  assert(atlasCopies.length, place.name + ' must remain connected to the Atlas');
+  for (const copy of atlasCopies) assert.deepEqual(copy.loot, place.loot,
+    place.name + ' Atlas loot must be read from the Index contract');
+}
+
+const ancientCity = records.get('place:Ancient City');
+assert(ancientCity.untiered.includes('item:Cavalry Lance'),
+  'a biome must resolve its named UT drops onto Index item records');
+assert(ancientCity.dungeons.includes('portal:Snake Pit'),
+  'a biome must resolve its dungeon entrances onto Index portal records');
 
 const broken = index.records.find(one => !one.folded && one.said === 'Broken Heart');
 assert(broken && broken.folds.length === 8, 'numbered identical enemies should form one family');
@@ -91,5 +120,9 @@ assert(/\.ix-layout:not\(\.has-list\) \.ix-facets\s*\{[^}]*overflow-y:\s*auto/.t
   'the full category rail must scroll so its lowest dungeon choices remain reachable');
 assert(/\.ix-layout:not\(\.has-list\) \.ix-ways\s*\{[^}]*max-height:\s*100%/.test(styleSource),
   'the full category card must stay within the viewport for its rail to scroll');
+assert(/chip\(where, one\.name, one\.name, ids, one\.id\)/.test(pageSource),
+  'biome category choices must reuse the artwork of their place record');
+assert(/drawBiomeLoot\(one\)/.test(pageSource),
+  'biome cards must display their normalised loot');
 
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');

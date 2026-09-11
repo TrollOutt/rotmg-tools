@@ -9,13 +9,14 @@ const harness = require('./theory-harness');
 // An explicit fixture catches accidental traversal into portals, summoned
 // bosses, unknown drops, or a similarly named item without an exact join.
 const records = [
-  { id: 'place:Forest', kind: 'place', name: 'Forest', in: [['was seen in', 'enemy:Sprite']] },
+  { id: 'place:Forest', kind: 'place', name: 'Forest', rank: 'Rookie',
+    in: [['was seen in', 'enemy:Sprite']], setTier: ['item:Forest set staff'] },
   { id: 'portal:Cave', kind: 'portal', name: 'Cave' },
   { id: 'portal:Endgame', kind: 'portal', name: 'Endgame' },
   { id: 'enemy:Sprite', kind: 'enemy', name: 'Sprite' },
   { id: 'enemy:Boss', kind: 'enemy', name: 'Boss' },
   { id: 'enemy:Final', kind: 'enemy', name: 'Final' },
-  ...['Starter', 'Forest staff', 'Cave staff', 'Final staff', 'Unknown staff', 'Final ring'].map(name => ({ id: 'item:' + name, kind: 'item', name }))
+  ...['Starter', 'Forest staff', 'Cave staff', 'Final staff', 'Unknown staff', 'Final ring', 'Forest set staff'].map(name => ({ id: 'item:' + name, kind: 'item', name }))
 ];
 const ids = records.map(r => r.id);
 const pages = records.map(r => [r.name.toLowerCase().replace(/ /g, '-'), r.name]);
@@ -29,11 +30,15 @@ assert(template);
 const items = ['Starter', 'Forest staff', 'Cave staff', 'Final staff', 'Unknown staff'].map((name, n) => ({
   ...template, name, tier: n, shots: [{ low: (n + 1) * 20, high: (n + 1) * 20, reach: 8 }]
 }));
+items.push({ ...template, name: 'Forest set staff', tier: 0,
+  labels: ((template.labels || '') + ',ST').replace(/^,/, ''),
+  shots: [{ low: 15, high: 15, reach: 8 }] });
 items.push({ name: 'Final ring', hand: 'ring', slot: 9, worn: { ATT: 100 }, set: 'Final set' });
 const cat = P.catalogue(fixtureIndex, fixtureWiki, items);
 const personal = { version: 1, mode: 'personal', zones: ['place:Forest'] };
 assert(P.allows(cat, personal, 'Starter'));
 assert(P.allows(cat, personal, 'Forest staff'));
+assert(P.allows(cat, personal, 'Forest set staff'), 'Index-resolved biome ST gear must be available directly');
 assert(!P.allows(cat, personal, 'Cave staff'));
 assert(!P.allows(cat, personal, 'Final staff'), 'Biome must not unlock a dropped portal or summoned boss');
 assert(!P.allows(cat, personal, 'Unknown staff'));
@@ -46,7 +51,8 @@ assert.equal(P.normalize({ ...personal, zones: ['removed-zone'] }, cat), null);
 assert.equal(P.normalize({ ...personal, zones: {} }, cat), null);
 assert.equal(P.normalize({ ...personal, zones: ['place:Forest'] }, cat), null, 'Old biome-only profiles must repeat setup');
 assert.deepEqual(P.normalize({ ...personal, zones: ['dungeon:cave', 'dungeon:cave', 'unknown'] }, cat),
-  { version: 2, mode: 'personal', selection: 'manual', difficulty: null, zones: ['dungeon:cave'] });
+  { version: 3, mode: 'personal', selection: 'manual', difficulty: null,
+    zones: ['dungeon:cave'], biomeRanks: ['Rookie'] });
 
 const testData = { ...raw, items, enchants: [], sets: [{ name: 'Final set', pieces: ['Final staff', 'Final ring'], steps: { 2: { ATT: 200 } } }] };
 const t = harness({}, testData, false);
@@ -93,7 +99,8 @@ assert(P.allows(shipped, beach, 'Comet Staff'), 'Rookie loot must include explic
 assert(!P.allows(shipped, beach, 'Staff of the Cosmic Whole'), 'Rookie zone must not unlock top tiers');
 assert(!P.allows(shipped, beach, 'Comet Staff (SB)'), 'Generic tiers must not grant soulbound copies');
 assert(shipped.zones.some(z => z.id === 'biome:beach' && z.rank === 'Rookie'));
-const ratedProfile = n => ({ version: 2, mode: 'personal', selection: 'difficulty', difficulty: n, zones: [] });
+const ratedProfile = n => ({ version: 3, mode: 'personal', selection: 'difficulty', difficulty: n,
+  zones: [], biomeRanks: ['Rookie'] });
 for (let n = 1; n <= 10; n += 0.5) {
   const saved = P.normalize(ratedProfile(n), shipped);
   assert(saved && saved.zones.length);
@@ -117,6 +124,25 @@ assert(P.forDifficulty(shipped, 10).includes('dungeon:the-shatters'));
 assert(!P.forDifficulty(shipped, 10).includes('dungeon:beachzone'), 'Unknown difficulty is never inferred');
 assert(P.normalize({ ...ratedProfile(2), selection: 'manual', zones: ['dungeon:beachzone', 'dungeon:the-shatters'] }, shipped), 'Manual selection overrides difficulty, including unrated dungeons');
 assert(!P.normalize(ratedProfile(1), shipped).zones.some(id => id.startsWith('place:')), 'Difficulty must not silently unlock biomes');
+const rookieOnly = P.normalize(ratedProfile(1), shipped);
+assert.deepEqual(rookieOnly.biomeRanks, ['Rookie']);
+assert(!P.allows(shipped, rookieOnly, 'Crystal Mace'), 'Rare Adept biome loot is opt-in');
+assert(!P.allows(shipped, rookieOnly, 'Cloak of the Deep'), 'Rare Veteran biome loot is opt-in');
+const adept = P.normalize({ ...ratedProfile(1), biomeRanks: ['Rookie', 'Adept'] }, shipped);
+assert(P.allows(shipped, adept, 'Crystal Mace'), 'Selecting Adept unlocks its direct biome UT loot');
+assert(P.allows(shipped, adept, "Traveler's Trinket"),
+  'Selecting Adept unlocks its direct biome ST loot');
+assert(!P.allows(shipped, adept, 'Cloak of the Deep'), 'Adept does not silently unlock Veteran loot');
+const veteran = P.normalize({ ...ratedProfile(1), biomeRanks: ['Veteran'] }, shipped);
+assert.deepEqual(veteran.biomeRanks, ['Veteran'], 'Rookie can be deselected after the initial default');
+assert(P.allows(shipped, veteran, 'Cloak of the Deep'), 'Selecting Veteran unlocks its direct biome UT loot');
+assert(P.allows(shipped, veteran, 'Electric Guitar'),
+  'Selecting Veteran unlocks its direct biome ST loot');
+assert(!P.allows(shipped, rookieOnly, 'Kiritsukeru'),
+  'Biome ST loot stays unavailable until its biome rank is selected');
+const noBiomes = P.normalize({ ...ratedProfile(1), biomeRanks: [] }, shipped);
+assert.deepEqual(noBiomes.biomeRanks, [], 'All biome ranks may be deselected');
+assert(!P.allows(shipped, noBiomes, 'Quiver of Thunder'), 'Deselected Rookie loot stays unavailable');
 const early = P.normalize(ratedProfile(2.5), shipped);
 const highestReachableTier = hand => Math.max(...raw.items
   .filter(item => item.hand === hand && Number.isFinite(item.tier) && P.allows(shipped, early, item.name))

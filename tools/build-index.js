@@ -705,6 +705,7 @@ for (const it of gear) {
      * patches are added up into one, and everything that lives in any of them
      * lives in it.
      */
+    const biomeFacts = require('./biome-data').fromAtlas(said);
     const together = new Map();
     for (const biome of said.biomes || []) {
       // "Zone N" is an intermediate atlas label for a patch whose real name
@@ -720,7 +721,8 @@ for (const it of gear) {
       }
       together.set(biome.name, {
         name: biome.name, ground: biome.ground, tiles: biome.tiles || 0,
-        patches: 1, lives: [...(biome.lives || [])]
+        patches: 1, lives: [...(biome.lives || [])],
+        facts: biomeFacts.get(require('./biome-data').plain(biome.name))
       });
     }
     for (const biome of together.values()) {
@@ -728,6 +730,9 @@ for (const it of gear) {
         tiles: biome.tiles,
         patches: biome.patches > 1 ? biome.patches : undefined,
         ground: biome.ground,
+        rank: biome.facts && biome.facts.rank,
+        wiki: biome.facts && biome.facts.wiki,
+        loot: biome.facts && biome.facts.loot,
         from: [fileNumber('the realm as it was walked'), '']
       });
       for (const lives of biome.lives) {
@@ -1157,6 +1162,47 @@ for (const it of gear) {
   records.folding = { groups: foldGroups, declarations: folded, byRule: foldStats };
 }
 
+/*
+ * Resolve the named biome drops onto the Index's own item and portal records.
+ * The imported reference uses typographic apostrophes while the client often
+ * uses straight ones, so display text is not a safe identifier by itself.
+ */
+{
+  const plain = require('./biome-data').plain;
+  const named = new Map();
+  for (const one of records.values()) {
+    if (!['item', 'portal'].includes(one.kind)) continue;
+    for (const name of [one.name, one.said, one.alias].filter(Boolean)) {
+      const key = one.kind + ':' + plain(name);
+      if (!named.has(key) || named.get(key).folded) named.set(key, one);
+    }
+  }
+  const final = one => {
+    const seen = new Set();
+    while (one && one.folded && !seen.has(one.id)) {
+      seen.add(one.id);
+      one = records.get(one.folded);
+    }
+    return one;
+  };
+  for (const place of records.values()) {
+    if (place.kind !== 'place' || !place.loot) continue;
+    const gearHere = (place.loot.gear || [])
+      .map(entry => final(named.get('item:' + plain(entry.name))))
+      .filter(Boolean);
+    place.untiered = [...new Set(gearHere
+      .filter(one => (one.labels || []).includes('UT')).map(one => one.id))];
+    place.setTier = [...new Set(gearHere
+      .filter(one => (one.labels || []).includes('ST')).map(one => one.id))];
+    place.dungeons = [...new Set((place.loot.dungeons || [])
+      .map(entry => final(named.get('portal:' + plain(entry.name))))
+      .filter(Boolean).map(one => one.id))];
+    if (!place.untiered.length) delete place.untiered;
+    if (!place.setTier.length) delete place.setTier;
+    if (!place.dungeons.length) delete place.dungeons;
+  }
+}
+
 const theoryView = require('./index-model').attach(records, mechanics, objects);
 
 /* ---------------- the links, from both ends ---------------- */
@@ -1224,6 +1270,7 @@ if (process.argv.includes('--sprites')) {
   if (prior.sheet) result.sheet = prior.sheet;
   if (prior.theorySheet) result.theorySheet = prior.theorySheet;
 }
+require('./biome-art')(result, { root });
 fs.writeFileSync(priorFile, JSON.stringify(result) + '\n');
 
 fs.mkdirSync(SERVED, { recursive: true });

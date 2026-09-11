@@ -19,7 +19,7 @@ var BuildProgression = (function () {
       if (!pagesById.has(key)) pagesById.set(key, new Set());
       pagesById.get(key).add(page);
     }
-    const zones = new Map(), placesByPage = new Map();
+    const zones = new Map(), placesByPage = new Map(), directBiomeSources = new Map();
     const addPage = (page, zone) => {
       if (!placesByPage.has(page)) placesByPage.set(page, new Set());
       placesByPage.get(page).add(zone);
@@ -41,7 +41,15 @@ var BuildProgression = (function () {
     }
     for (const record of index.records) {
       if (record.kind !== 'place') continue;
-      zones.set(record.id, { id: record.id, name: record.name, kind: 'biome' });
+      zones.set(record.id, { id: record.id, name: record.name, kind: 'biome', rank: record.rank,
+        art: record.art, icon: record.icon });
+      // Named biome gear is already resolved by the Index onto exact client
+      // records. Keep both UT and ST pieces: neither is covered by a generic
+      // tier band, and both are opt-in through the biome rank selector.
+      for (const itemId of [...(record.untiered || []), ...(record.setTier || [])]) {
+        if (!directBiomeSources.has(itemId)) directBiomeSources.set(itemId, new Set());
+        directBiomeSources.get(itemId).add(record.id);
+      }
       for (const page of pagesById.get(record.id) || []) addPage(page, record.id);
       for (const [relation, enemy] of record.in || []) {
         if (relation !== 'was seen in') continue;
@@ -55,13 +63,20 @@ var BuildProgression = (function () {
     const slugOf = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const biomeIds = new Map(), tierSources = new Map();
     const aliases = { 'abandoned-city': 'place:Ancient City', 'coral-reefs': 'place:Coral Reef' };
+    const biomeArt = {
+      beach: (records.get('enemy:Captured Shores Beacon') || {}).art,
+      'ancient-city': (records.get('enemy:Captured Abandoned Beacon') || {}).art,
+      'deep-sea-abyss': (records.get('enemy:Captured Abyssal Beacon') || {}).art
+    };
     for (const biome of Object.values((realm || {}).biomes || {})) {
       const existing = [...zones.values()].find(z => z.kind === 'biome' && slugOf(z.name) === biome.slug);
       const key = existing ? existing.id : (aliases[biome.slug] || 'biome:' + biome.slug);
       const page = pageBySlug.get(biome.slug);
       const name = (zones.get(key) || {}).name || (wiki.pages[page] || [])[1]
         || biome.slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      zones.set(key, { id: key, name, kind: 'biome', rank: biome.rank });
+      zones.set(key, { id: key, name, kind: 'biome', rank: biome.rank,
+        art: (zones.get(key) || {}).art || biomeArt[biome.slug],
+        icon: (zones.get(key) || {}).icon });
       biomeIds.set(biome.id, key);
       if (page !== undefined) addPage(page, key);
     }
@@ -112,6 +127,7 @@ var BuildProgression = (function () {
       for (const page of pagesById.get(id) || []) {
         for (const zone of sourcesByPage.get(page) || []) found.add(zone);
       }
+      for (const zone of directBiomeSources.get(id) || []) found.add(zone);
       sources.set(record.name, found);
     }
     for (const item of items) {
@@ -139,7 +155,7 @@ var BuildProgression = (function () {
       ((ranks[a.rank] ?? 4) - (ranks[b.rank] ?? 4)) || a.name.localeCompare(b.name)), sources, starter };
   }
   function normalize(value, cat) {
-    if (!value || ![1, 2].includes(value.version) || !['personal', 'best'].includes(value.mode)
+    if (!value || ![1, 2, 3].includes(value.version) || !['personal', 'best'].includes(value.mode)
       || !Array.isArray(value.zones)) return null;
     const selection = value.version === 1 ? 'manual' : value.selection;
     if (!['manual', 'difficulty'].includes(selection)) return null;
@@ -155,9 +171,13 @@ var BuildProgression = (function () {
     const zones = selection === 'difficulty' && cat ? eligible.filter(id => !excludedSet.has(id))
       : [...new Set(value.zones.filter(id => typeof id === 'string' && id.startsWith('dungeon:') && (!known || known.has(id))))];
     if (value.mode === 'personal' && !zones.length) return null;
-    return { version: 2, mode: value.mode, selection,
+    const permittedRanks = new Set(['Rookie', 'Adept', 'Veteran']);
+    const biomeRanks = (value.version >= 3 && Array.isArray(value.biomeRanks) ? value.biomeRanks : ['Rookie'])
+      .filter(rank => permittedRanks.has(rank));
+    return { version: 3, mode: value.mode, selection,
       difficulty: Number.isFinite(difficulty) && Number.isInteger(difficulty * 2)
         && difficulty >= 1 && difficulty <= 10 ? difficulty : null, zones,
+      biomeRanks: [...new Set(biomeRanks)],
       ...(selection === 'difficulty' ? { excluded } : {}) };
   }
   function forDifficulty(cat, difficulty) {
@@ -169,8 +189,15 @@ var BuildProgression = (function () {
     if (!profile) return false;
     if (profile.mode === 'best') return true;
     if (!cat) return false;
-    return cat.starter.has(name) || profile.zones.some(id => (cat.sources.get(name) || new Set()).has(id));
+    const sources = cat.sources.get(name) || new Set();
+    return cat.starter.has(name) || selectedZoneIds(cat, profile).some(id => sources.has(id));
   }
-  return { catalogue, normalize, allows, forDifficulty };
+  function selectedZoneIds(cat, profile) {
+    if (!cat || !profile) return [];
+    const ranks = new Set(Array.isArray(profile.biomeRanks) ? profile.biomeRanks : ['Rookie']);
+    return [...new Set([...(profile.zones || []), ...cat.zones
+      .filter(zone => zone.kind === 'biome' && ranks.has(zone.rank)).map(zone => zone.id)])];
+  }
+  return { catalogue, normalize, allows, forDifficulty, selectedZoneIds };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = BuildProgression;
