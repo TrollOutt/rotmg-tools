@@ -1,12 +1,15 @@
 {
-  "schema": 1,
-  "digest": "12f62534b426",
-  "enemies": 235,
-  "observed": 111,
-  "clips": 668,
+  "schema": 2,
+  "digest": "649e64c25237",
+  "enemies": 308,
+  "observed": 121,
+  "clips": 681,
   "folk": 19,
   "reactors": 2,
-  "attacks": 358,
-  "sprites": 208,
-  "bytes": 794063
+  "attacks": 894,
+  "items": 104,
+  "lootTables": 190,
+  "portalTables": 183,
+  "sprites": 658,
+  "bytes": 1201563
 }

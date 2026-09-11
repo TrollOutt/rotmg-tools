@@ -12,8 +12,8 @@ const viewer = fs.readFileSync(path.join(root, 'tools', 'atlas-viewer.html'), 'u
 const published = fs.readFileSync(path.join(root, 'web', 'assets', 'atlas', 'index.html'), 'utf8');
 
 const types = new Set(atlas.zones.flatMap(zone => (zone.lives || []).map(one => String(one.type))));
-assert.strictEqual(Object.keys(combat.enemies).length, types.size,
-  'every creature placed by the Atlas must receive its complete attack catalogue');
+assert(Object.keys(combat.enemies).length >= types.size,
+  'the combat corpus must include wildlife plus bound encounters and heroes');
 for (const type of types) {
   assert(combat.enemies[type], `missing combat definition for creature ${type}`);
   for (const shot of combat.enemies[type].attacks) {
@@ -23,6 +23,19 @@ for (const type of types) {
       assert(fs.existsSync(path.join(root, 'web', 'assets', 'atlas', 'combat', shot.visual.file)),
         `${type}/${shot.id} is missing projectile art`);
     }
+  }
+}
+const allowedTypes = new Set([...types, ...Object.values(combat.landmarkBindings || {}).map(String)]);
+assert(Object.keys(combat.landmarkBindings || {}).length >= 70,
+  'the laboratory encounter/Hero bindings must be imported');
+for (const [name, type] of Object.entries(combat.landmarkBindings || {})) {
+  const enemy = combat.enemies[type];
+  assert(enemy, `${name} must have a live combat definition`);
+  // A handful such as Sea Dragon already use the Atlas wildlife sheet.
+  if (!types.has(String(type))) {
+    assert(enemy.sprite, `${name} must have a live client body`);
+    assert(fs.existsSync(path.join(root, 'web', 'assets', 'atlas', 'combat', enemy.sprite.file)),
+      `${name} is missing its live body art`);
   }
 }
 
@@ -55,6 +68,31 @@ for (const [type, clips] of Object.entries(combat.observed)) {
 }
 assert.strictEqual(clipCount, summary.clips, 'summary clip count must describe the payload');
 
+assert.strictEqual(combat.schema, 2, 'combat payload must include the loot/death integration');
+assert.strictEqual(summary.schema, 2, 'combat summary must describe the same payload schema');
+assert(Object.keys(combat.items).length > 0, 'known equipment drops must be imported');
+assert(Object.keys(combat.loot).length > 0, 'monster loot tables must be imported');
+for (const [type, names] of Object.entries(combat.loot)) {
+  assert(allowedTypes.has(type), `loot table ${type} does not belong to an Atlas creature`);
+  for (const name of names) {
+    const item = combat.items[name];
+    assert(item, `${type} refers to missing item ${name}`);
+    if (item.visual) assert(fs.existsSync(path.join(root, 'web', 'assets', 'atlas', 'combat', item.visual.file)),
+      `${type}/${name} is missing item art`);
+  }
+}
+for (const [type, portals] of Object.entries(combat.portals)) {
+  assert(allowedTypes.has(type), `portal table ${type} does not belong to an Atlas creature`);
+  for (const portal of portals) {
+    assert(portal.name && portal.sprite, `${type} has an incomplete portal drop`);
+    assert(fs.existsSync(path.join(root, 'web', 'assets', 'atlas', 'combat', portal.sprite.file)),
+      `${type}/${portal.name} is missing portal art`);
+  }
+}
+assert.strictEqual(summary.items, Object.keys(combat.items).length);
+assert.strictEqual(summary.lootTables, Object.keys(combat.loot).length);
+assert.strictEqual(summary.portalTables, Object.keys(combat.portals).length);
+
 // Guard the Git Atlas performance work that this merge is required to retain.
 for (const phrase of ['const GRID = 32', 'function nearTo(', 'const SIM_STEP = 1 / 30',
   'const SIM_IDLE = 0.5', 'if (watched()) ensureCombat()', 'function installAlienReactors()',
@@ -62,6 +100,29 @@ for (const phrase of ['const GRID = 32', 'function nearTo(', 'const SIM_STEP = 1
   assert(viewer.includes(phrase), `Atlas optimization missing: ${phrase}`);
 }
 assert(viewer.includes("fetch(asset('combat.json'))"), 'combat corpus must remain lazy-loaded');
+for (const phrase of ['function equipLoot(', 'one.lootGoal = usefulLootFor(one)',
+  'beast.down = beast.kind.role === \'hero\'', 'combatData.portals',
+  'formerOwnerLeft: 12', 'Every death with a resolved equipment table leaves one item',
+  'const next = zone && pointBy(zone, null, 0, Infinity)', 'outlined: true',
+  'if (one.down > 0 || one.dying > 0 || one.hp <= 0) continue;',
+  'function installLiveLandmarks()', 'landmarkAnchor: { x: mark.x, y: mark.y }',
+  'function distributedRoam(', 'clearOfFolk(x, y, 7)',
+  'const pull = worth / (crowd * (4 + far))',
+  'if ((beast.onIt || 0) >= capacity) continue;',
+  'if (one.lootGoal) one.lootGoal.claimedBy = one;',
+  'apart < 3.5', 'const MONSTERS_PER_FOLK = 6;',
+  'function balancePopulation(delta)', 'spawnWanderer(zone, anchor, true)',
+  'function sparePreyNear(one, skip)', 'function reinforcementFor(one, forecast)',
+  'one.target.hp <= one.target.full * 0.22',
+  'if (!one.target) one.target = reinforcementFor(one, false)',
+  'const STARTING_SHARE = { Rookie: 0.20, Adept: 0.50, Veteran: 0.30 };',
+  'const MAX_FOLK = 120;', 'const MAX_LOOT_BAGS = 100;', 'function leaveBag(bit)',
+  'function usefulLootFor(one)', 'const populations = new Map();',
+  'const TYPE_CHARS_PER_SECOND = 14;', 'function beginSpeech(who, filled)',
+  'function finishSpeech(who)', 'who.speechQueue.push(filled)',
+  'if (one.chatPause > 0)', 'if (one.chatPause <= 0) finishSpeech(one)']) {
+  assert(viewer.includes(phrase), `Atlas death/loot behavior missing: ${phrase}`);
+}
 assert(!published.includes('local live captures plus client projectile declarations'),
   'the combat payload must not be inlined into the initial Atlas page');
 
