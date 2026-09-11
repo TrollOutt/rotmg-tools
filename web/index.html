@@ -508,9 +508,11 @@
     </div>
   </header>
 
-  <div id="tcTabs" class="tab-bar" role="tablist" aria-label="Saved builds"></div>
+  <dialog id="tcWelcome" class="card tc-welcome" aria-labelledby="tcWelcomeTitle"><h2 id="tcWelcomeTitle">Loading your crafter…</h2></dialog>
+  <section id="tcProgress" class="card tc-progress" aria-label="Your progression" hidden></section>
+  <div id="tcTabs" class="tab-bar" role="tablist" aria-label="Saved builds" hidden></div>
 
-  <main class="layout" id="tcBody">
+  <main class="layout" id="tcBody" hidden>
     <section class="column config" aria-label="The build">
 
       <section class="card step" data-step="1">
@@ -651,6 +653,7 @@
 <script src="fame.js"></script>
 <script src="fame-page.js"></script>
 <script src="whats-new.js"></script>
+<script src="progression.js"></script>
 <script src="theorycraft.js"></script>
 <script src="index-page.js"></script>
 <script src="app.js"></script>

@@ -9,7 +9,10 @@ module.exports = function(sources, raw, withEngine = true) {
   const script = original.replace(marker, `return {
     statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate,
     numbersFor, optimise, scoreOf, aimOf, beatenOnes, enchantsFor, itemsFor, fresh, GOALS,
+    prepareAccessible, searchItems,
+    progression(catalogue, saved) { access = catalogue; profile = saved; beaten = null; },
     configure(raw) {
+      profile = { version: 1, mode: 'best', zones: [] };
       data = raw; data.byClass = {}; data.byItem = {}; data.byEnch = {}; data.byBoss = {};
       for (const one of data.classes) data.byClass[one.name] = one;
       for (const one of data.items) data.byItem[one.name] = one;
@@ -17,7 +20,8 @@ module.exports = function(sources, raw, withEngine = true) {
       for (const one of data.bosses) data.byBoss[one.name] = one;
     }, use(state) { build = state; }
   };`);
-  const context = { window: { ROTMG_BUNDLE: { sources } }, module: { exports: {} }, console };
+  const context = { window: { ROTMG_BUNDLE: { sources } }, module: { exports: {} }, console,
+    BuildProgression: require('../web/progression') };
   if (withEngine) context.EnchantEngine = require('../web/engine');
   vm.runInNewContext(script, context, { filename: file });
   const api = context.module.exports;

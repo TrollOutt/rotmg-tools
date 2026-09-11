@@ -131,6 +131,15 @@ const sources = {
    * served one - because it is only ever wanted on the same page.
    */
   wikiText: readText('Index', 'wiki.json'),
+  // Compact, existing Atlas evidence for biome populations and tiered loot.
+  realmLootText: JSON.stringify((() => {
+    const source = JSON.parse(fs.readFileSync(path.join(root, 'web', 'realmeye-data.json'), 'utf8'));
+    return { generatedAt: source.generatedAt, source: source.source,
+      biomes: Object.fromEntries(Object.entries(source.biomes).map(([key, b]) =>
+        [key, { id: b.id, slug: b.slug, rank: b.rank }])),
+      creatures: Object.fromEntries(Object.entries(source.creatures).map(([key, c]) =>
+        [key, { groups: c.groups, detail: { drops: (c.detail || {}).drops || [] } }])) };
+  })()),
 };
 
 /* ---------------------------------------------------------------- *
@@ -355,6 +364,7 @@ const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
 const theorySource = readWeb('theorycraft.js');
+const progressionSource = readWeb('progression.js');
 const indexSource = readWeb('index-page.js');
 const whatsNewSource = readWeb('whats-new.js');
 const engine = require(path.join(web, 'engine.js'));
@@ -438,7 +448,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -484,6 +494,7 @@ delete served.wikiText;
 // The refreshed bench catalogue is paid for when the bench is opened.
 // The downloadable copy still embeds it, together with its sheet.
 delete served.theoryText;
+delete served.realmLootText;
 
 const dress = (bundleSources) => readWeb('index.html')
   .replace('</title>', `</title>\n  ${faviconTag}`)
@@ -496,6 +507,7 @@ const dress = (bundleSources) => readWeb('index.html')
     `<script>\n${safe(fameSource)}\n</script>`,
     `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(whatsNewSource)}\n</script>`,
+    `<script>\n${safe(progressionSource)}\n</script>`,
     `<script>\n${safe(theorySource)}\n</script>`,
     `<script>\n${safe(indexSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
@@ -625,6 +637,7 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  */
 carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
+fs.writeFileSync(path.join(pagesDir, 'assets', 'theory', 'progression.json'), sources.realmLootText + '\n');
 fs.copyFileSync(path.join(root, 'data', 'TheoryCraft', 'theorycraft.json'),
   path.join(pagesDir, 'assets', 'theory', 'theorycraft.json'));
 /*

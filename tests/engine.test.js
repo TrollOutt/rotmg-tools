@@ -42,6 +42,14 @@ const baseCfg = extra => Object.assign({
   locks: [], desired: '', goals: []
 }, extra);
 
+const candyPool = engine.rollablePool(data, baseCfg({ type: 'ARMOR', item: 'Candy-Coated Armor' }));
+check('the shared ordinary-roll pool contains only live rollable enchantments',
+  candyPool.every(mod => mod.weight > 0 && mod.tags.has('ROLLABLE')));
+check('seasonal and retired entries stay outside the shared ordinary-roll pool',
+  ['Cool Protection', 'Giver', 'Glorious', 'Insightful', 'Iron Plating (Legacy)',
+    'Living Hive (Legacy)', 'Snowstorm', 'Thankful']
+    .every(name => !candyPool.some(mod => mod.name === name)));
+
 /* ------------------------------------------------------------------ *
  * 1. Data loading                                                     *
  * ------------------------------------------------------------------ */

@@ -10,6 +10,13 @@ cost in dust.
 
 **Theory Crafting** — dress a class in anything the game has, enchant every
 slot, watch it fight, and let it hunt for something better.
+On the first visit, use a slider to choose the highest dungeon difficulty you
+have completed (1–10, in 0.5 steps). Dungeons at that rating and below are included automatically; an
+optional compact list lets you remove individual dungeons and restore the level selection at any time.
+Switch between personalized and best-possible searches at any time; the
+progression profile is saved in this browser. Personalized searches use the
+index's loot links and recorded tier drops, plus starter gear.
+Unconfirmed sources are excluded, and locked items you already own stay put.
 
 **Fame Sweep** — tick off the dungeons you have finished and it works out what
 the collection bonuses have paid and where to go next.

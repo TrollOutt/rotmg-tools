@@ -71,6 +71,16 @@ assert(dungeonPairs.has(recordPage.get('portal:The Shatters') + ','
 assert(dungeonPairs.has(recordPage.get('portal:Snake Pit') + ','
   + recordPage.get('enemy:Stheno the Snake Queen')), 'Stheno belongs to the Snake Pit');
 
+assert.equal((wiki.tierDropLists || []).length, 46, 'every RealmEye tier drop list must be collected');
+assert((wiki.tierDrop || []).length > 950, 'the Index must retain enemy-to-tier relations');
+for (const [enemy, hand, tier, alternate, list] of wiki.tierDrop || []) {
+  assert(pageKinds.get(enemy)?.has('enemy'), 'tier drop relation must begin on a client enemy page');
+  assert(wiki.tierDropHands[hand], 'tier drop relation must name an equipment slot');
+  assert(Number.isInteger(tier) && tier >= 0 && tier <= 14, 'tier drop relation must carry a real tier');
+  assert(alternate === 0 || alternate === 1, 'alternate weapon marker must be binary');
+  assert(wiki.tierDropLists[list], 'tier drop relation must retain its RealmEye evidence page');
+}
+
 const pageSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'utf8');
 const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
 assert(!/chip\(marks, 'boss'/.test(pageSource), 'Boss is an enemy category, not a generic mark');
