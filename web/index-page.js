@@ -59,6 +59,7 @@ const RealmIndex = (function () {
   let showing = null;                // the record on screen
   let kindWanted = '';               // the category chip that is down
   let wiki = null;                   // the community join, when there is one
+  let dungeonDifficulties = new Map(); // RealmEye's 1–10 dungeon ratings
   let groups = [];                   // the browse rail, built once from the data
   let narrowed = [];                 // one set of allowed ids per group in play
   let kindsLeft = null;              // how many of each family survive the rail
@@ -105,6 +106,8 @@ const RealmIndex = (function () {
   const esc = s => String(s === undefined || s === null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+  const dungeonKey = name => String(name || '').toLowerCase().replace(/[’]/g, "'")
+    .replace(/\s+/g, ' ').trim();
 
   /*
    * The seven families, in the order somebody looks for them rather than
@@ -244,7 +247,9 @@ const RealmIndex = (function () {
       near: new Map(),                 // or, failing that, the page its pieces point at
       about: new Map(),                // that page -> every record it answers to
       drop: new Map(), dropBy: new Map(), spawn: new Map(), spawnBy: new Map(),
-      dungeon: new Map(), dungeonBy: new Map()
+      dungeon: new Map(), dungeonBy: new Map(), tierDrop: new Map(), tierDropBy: new Map(),
+      tierDropHands: said.tierDropHands || ['weapon', 'ability', 'armor', 'ring'],
+      tierDropLists: said.tierDropLists || []
     };
     const tie = (map, key, value) => {
       if (!map.has(key)) map.set(key, []);
@@ -266,6 +271,38 @@ const RealmIndex = (function () {
       tie(wiki.dungeon, from, to);
       tie(wiki.dungeonBy, to, from);
     }
+    for (const [enemy, handAt, tier, alternate, listAt] of said.tierDrop || []) {
+      const entry = { hand: wiki.tierDropHands[handAt], tier, alternate: Boolean(alternate), listAt };
+      tie(wiki.tierDrop, enemy, entry);
+      tie(wiki.tierDropBy, entry.hand + ':' + tier + ':' + entry.alternate, enemy);
+    }
+  }
+
+  /*
+   * Dungeon difficulty is community data, just like the loot links beside it.
+   * Keep it outside the client facts and name RealmEye wherever it is shown.
+   * Names are normalised because the client and wiki disagree on punctuation
+   * and capitalisation in a few places (notably Cave of A Thousand Treasures).
+   */
+  async function loadDungeonDifficulties() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.dungeonText;
+    if (!raw) {
+      raw = await fetch('../data/Fame/dungeon-pages.txt').then(r => (r.ok ? r.text() : ''))
+        .catch(() => '');
+    }
+    dungeonDifficulties = new Map();
+    for (const line of String(raw || '').split(/\r?\n/)) {
+      if (!line.trim() || line.startsWith('#')) continue;
+      const [name, value] = line.split('|'), difficulty = Number(value);
+      if (Number.isFinite(difficulty) && Number.isInteger(difficulty * 2)
+        && difficulty >= 1 && difficulty <= 10) dungeonDifficulties.set(dungeonKey(name), difficulty);
+    }
+  }
+
+  function dungeonDifficultyOf(one) {
+    if (!one || one.kind !== 'portal') return null;
+    return dungeonDifficulties.get(dungeonKey(one.name)) || null;
   }
 
   /* ---------------- ways in ---------------- */
@@ -822,15 +859,18 @@ const RealmIndex = (function () {
     el('ixCount').textContent = rows.total > rows.length
       ? 'first ' + rows.length + ' of ' + many
       : many + (rows.total === 1 ? ' thing' : ' things');
-    box.innerHTML = rows.map(one =>
-      '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
-      + '" data-open="' + esc(one[0]) + '">'
-      + artCell(all.get(one[0]), 20)
-      + '<b>' + esc(one[1]) + '</b>'
-      + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
-      + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
-      + star(one[0])
-      + '</button>').join('') || '<p class="ix-none">Nothing by that name.</p>';
+    box.innerHTML = rows.map(one => {
+      const difficulty = dungeonDifficultyOf(all.get(one[0]));
+      return '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
+        + '" data-open="' + esc(one[0]) + '">'
+        + artCell(all.get(one[0]), 20)
+        + '<b>' + esc(one[1]) + '</b>'
+        + (difficulty ? '<small class="ix-difficulty" title="RealmEye difficulty rating">☠ ' + difficulty + '/10</small>' : '')
+        + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
+        + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
+        + star(one[0])
+        + '</button>';
+    }).join('') || '<p class="ix-none">Nothing by that name.</p>';
     fitList(box);
   }
 
@@ -1132,6 +1172,13 @@ const RealmIndex = (function () {
       + '</li>').join('') + '</ul>';
   }
 
+  function drawDungeonDifficulty(one) {
+    const difficulty = dungeonDifficultyOf(one);
+    if (!difficulty) return '';
+    return '<p class="ix-dungeon-difficulty"><b>☠ Difficulty ' + difficulty
+      + ' / 10</b><span>RealmEye dungeon rating</span></p>';
+  }
+
   /*
    * The way out to the community's own page.
    *
@@ -1211,6 +1258,7 @@ const RealmIndex = (function () {
       + star(one.id)
       + '</header>'
       + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
+      + drawDungeonDifficulty(one)
       + drawDoes(one)
       + (one.hidden
         ? '<p class="ix-warn"><b>The other tools do not offer this</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
@@ -1289,8 +1337,24 @@ const RealmIndex = (function () {
     };
     say('dropped by', wiki.dropBy.get(mine));
     say('listed as dropping', wiki.drop.get(mine));
+    if (one.kind === 'item' && one.hand && one.tier !== undefined) {
+      const alternate = one.hand === 'weapon' && (one.labels || []).includes('SUBTYPE');
+      const listed = [...new Set(wiki.tierDropBy.get(one.hand + ':' + one.tier + ':' + alternate) || [])];
+      say('tier drop locations', listed);
+    }
     say('found in', wiki.dungeonBy.get(mine));
     say('enemies found here', wiki.dungeon.get(mine));
+    const tiers = wiki.tierDrop.get(mine) || [];
+    if (tiers.length) {
+      const labels = { weapon: 'weapons', ability: 'abilities', armor: 'armor', ring: 'rings' };
+      rows.push('<div class="ix-link-row"><i>listed tier drops</i><span>'
+        + tiers.map(entry => {
+          const slug = wiki.tierDropLists[entry.listAt] || '';
+          return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener" href="'
+            + esc(wiki.home + slug) + '">T' + entry.tier + (entry.alternate ? ' alternate ' : ' ')
+            + esc(labels[entry.hand] || entry.hand) + '</a>';
+        }).join('') + '</span></div>');
+    }
     /*
      * One row for summoning, not two. The wiki writes "Spawns:" and "Spawns
      * from:" under the same heading, and the link keeps the heading but not
@@ -1555,7 +1619,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    await loadWiki();
+    await Promise.all([loadWiki(), loadDungeonDifficulties()]);
     buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special

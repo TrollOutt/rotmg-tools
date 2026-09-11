@@ -450,6 +450,21 @@ var EnchantEngine = (function () {
     });
   }
 
+  /*
+   * What a normal enchanting roll can actually produce. eligiblePool() is
+   * deliberately wider because artifact pools may name seasonal entries and
+   * the catalogue retains retired entries so an existing item can still be
+   * read. Pickers and planners without an artifact need this narrower set.
+   * Keeping the predicate here gives every module the same boundary.
+   */
+  function isNaturallyRollable(mod) {
+    return !!(mod && mod.weight > 0 && mod.tags && mod.tags.has('ROLLABLE'));
+  }
+
+  function rollablePool(data, cfg) {
+    return eligiblePool(data, cfg, null).filter(isNaturallyRollable);
+  }
+
   /* ------------------------------------------------------------------ *
    * Weights                                                             *
    * ------------------------------------------------------------------ */
@@ -1095,7 +1110,7 @@ var EnchantEngine = (function () {
 
   const engine = {
     readBracketGroups, splitSet, parseMods, parseClientMods, parseClientArtifacts, parseClientItems, parseAwakenings, buildDataset,
-    lockCount, rollsRemaining, lockedLabels, eligiblePool, weightFor, weightedPool,
+    lockCount, rollsRemaining, lockedLabels, eligiblePool, isNaturallyRollable, rollablePool, weightFor, weightedPool,
     goalDistribution, distributionFor, oddsAny, oddsAll, tradeoffFamilies, membersOf, tierMultiplier, tierMass, tierRules,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,
     planGoals, planSimultaneous,

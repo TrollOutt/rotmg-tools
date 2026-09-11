@@ -12,10 +12,15 @@ function bundle(file) {
   return { html, data: JSON.parse(match[1]) };
 }
 const served = bundle('docs/index.html'), offline = bundle('docs/Realm-Tools.html');
-for (const name of ['indexText', 'wikiText', 'theoryText']) {
+for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText']) {
   assert(!served.data.sources[name], name + ' must not increase calculator startup');
   assert(offline.data.sources[name], name + ' missing from the downloadable copy');
 }
+for (const version of [served, offline]) {
+  assert(version.html.includes('var BuildProgression'), 'Progression code missing');
+}
+assert(JSON.parse(offline.data.sources.realmLootText).creatures, 'Biome loot evidence missing');
+assert.equal(read('docs/assets/theory/progression.json').trim(), offline.data.sources.realmLootText);
 const index = read('data/Index/index.json').replace(/\r\n/g, '\n');
 const theory = read('data/TheoryCraft/theorycraft.json').replace(/\r\n/g, '\n');
 assert.equal(offline.data.sources.indexText.trim(), index.trim());

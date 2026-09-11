@@ -419,7 +419,9 @@ async function main() {
   /*
    * The dungeon portals, and how hard the game says each dungeon is.
    *
-   * From each dungeon's own wiki page rather than the index: the index labels
+   * Difficulty comes from RealmEye's dungeon directory, which publishes the
+   * whole 1–10 scale in one table and includes half points. Portal art comes
+   * from each dungeon's own wiki page rather than the index: the index labels
    * a few of them with the wrong picture — it has "Ice Citadel Key" and no
    * portal at all — and only the individual pages carry the difficulty rating.
    * An animated portal is preferred where one exists; most are drawn as a
@@ -465,6 +467,22 @@ async function main() {
   let fetched = 0;
   let animated = 0;
 
+  const directory = String(await get(DUNGEON_PAGE));
+  const textOf = html => String(html).replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&#0?39;|&apos;|&rsquo;/g, "'")
+    .replace(/\s+/g, ' ').trim();
+  const difficultyBySlug = new Map();
+  const directoryNames = new Map();
+  for (const row of directory.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const cells = [...row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(match => match[1]);
+    if (cells.length < 2) continue;
+    const link = /<a[^>]+href="\/wiki\/([^"#?]+)"[^>]*>([^<]+)<\/a>/i.exec(cells[0]);
+    const difficulty = Number(textOf(cells[cells.length - 1]));
+    if (!link || !Number.isFinite(difficulty) || difficulty < 1 || difficulty > 10) continue;
+    difficultyBySlug.set(link[1], difficulty);
+    directoryNames.set(link[1], textOf(link[2]));
+  }
+
   for (const dungeon of fameData.dungeons) {
     const target = path.join(dungeonDir, dungeon.name + '.png');
     let page = null;
@@ -474,7 +492,9 @@ async function main() {
     }
     if (!page) { noPortal.push(dungeon.name + ' (no page)'); continue; }
 
-    const difficulty = (/Difficulty:\s*(\d+)/.exec(page) || [, ''])[1];
+    const difficulty = slugsFor(dungeon.name).map(slug => difficultyBySlug.get(slug))
+      .find(value => value !== undefined)
+      || Number((/Difficulty:\s*(\d+(?:[.]5)?)/.exec(page) || [, ''])[1]) || '';
     if (difficulty) info.set(dungeon.name, { difficulty: Number(difficulty) });
 
     const images = [...page.matchAll(/<img[^>]*>/g)].map(m => ({
@@ -510,7 +530,8 @@ async function main() {
   const lines = [require('./provenance').header({ tool: 'tools/fetch-sprites.js',
     built: new Date().toISOString(), from: { kind: 'community', source: 'RealmEye' }
   }).trimEnd(), '## How hard the game says each dungeon is, and whether its',
-    '## portal is drawn moving. Both from the wiki page of the dungeon.',
+    '## portal is drawn moving. Difficulty comes from RealmEye\'s dungeon',
+    '## directory; portal format comes from the dungeon page.',
     '##',
     '## Written by tools/fetch-sprites.js.',
     '##',
@@ -522,10 +543,15 @@ async function main() {
       : fs.existsSync(path.join(dungeonDir, dungeon.name + '.png')) ? 'png' : '';
     lines.push([dungeon.name, entry.difficulty || '', file].join('|'));
   }
+  const fameSlugs = new Set(fameData.dungeons.flatMap(dungeon => slugsFor(dungeon.name)));
+  for (const [slug, difficulty] of difficultyBySlug) {
+    if (!fameSlugs.has(slug)) lines.push([directoryNames.get(slug), difficulty, ''].join('|'));
+  }
   fs.writeFileSync(infoFile, lines.join('\n') + '\n', 'utf8');
 
   console.log('\n  ' + fetched + ' portals written, ' + animated + ' of them animated');
-  console.log('  ' + info.size + ' of ' + fameData.dungeons.length + ' have a difficulty -> '
+  console.log('  ' + difficultyBySlug.size + ' rated dungeons in the directory; '
+    + info.size + ' of ' + fameData.dungeons.length + ' fame dungeons matched -> '
     + path.relative(root, infoFile));
   if (noPortal.length) console.log('  no portal drawn for: ' + noPortal.join(', '));
   console.log('');

@@ -143,9 +143,12 @@ var FamePage = (function () {
   }
 
   function difficultyOf(name) {
-    const entry = state.info.get(name);
+    const entry = state.info.get(name) || state.info.get(dungeonKey(name));
     return entry && entry.difficulty ? entry.difficulty : null;
   }
+
+  const dungeonKey = name => String(name || '').toLowerCase().replace(/[’]/g, "'")
+    .replace(/\s+/g, ' ').trim();
 
   function save() {
     try {
@@ -381,8 +384,8 @@ var FamePage = (function () {
       .filter(dungeon => !term || dungeon.name.toLowerCase().includes(term));
     if (state.sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
     else if (state.sort === 'hard') {
-      // The game's own rating, 1 to 10, off each dungeon's wiki page. Easiest
-      // first, because that is the order you would actually do them in.
+      // RealmEye's 1-to-10 rating. Easiest first, because that is the order
+      // you would actually do them in.
       rows.sort((a, b) => (difficultyOf(a.name) || 99) - (difficultyOf(b.name) || 99)
         || a.name.localeCompare(b.name));
     }
@@ -465,7 +468,9 @@ var FamePage = (function () {
       const line = raw.trim();
       if (!line || line.startsWith('##')) continue;
       const [name, difficulty, picture] = line.split('|');
-      state.info.set(name, { difficulty: Number(difficulty) || 0, picture: picture || 'png' });
+      const entry = { difficulty: Number(difficulty) || 0, picture: picture || 'png' };
+      state.info.set(name, entry);
+      state.info.set(dungeonKey(name), entry);
     }
     load();
     $('fameBase').value = state.base || '';

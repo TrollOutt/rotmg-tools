@@ -68,6 +68,251 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   let tabs = [];
   let onTab = 0;
   let picking = null;                  // which slot a picker is open for
+  const PROFILE_STORE = 'rotmg-build-progression-v1';
+  let access = null, profile = null, profileDraft = null, profileSaved = true;
+
+  async function loadAccess() {
+    async function read(key, paths, asText = false) {
+      const sources = (window.ROTMG_BUNDLE || {}).sources || {};
+      if (sources[key]) return asText ? sources[key] : JSON.parse(sources[key]);
+      for (const path of paths) {
+        try {
+          const response = await fetch(path);
+          if (response.ok) return asText ? await response.text() : await response.json();
+        } catch (_) { /* Try the local checkout path next. */ }
+      }
+      throw new Error('Progression data unavailable');
+    }
+    try {
+      const [index, wiki, realm, ratings] = await Promise.all([
+        read('indexText', ['assets/index/index.json', '../data/Index/index.json']),
+        read('wikiText', ['assets/index/wiki.json', '../data/Index/wiki.json']),
+        read('realmLootText', ['assets/theory/progression.json', 'realmeye-data.json']),
+        read('dungeonText', ['../data/Fame/dungeon-pages.txt'], true)
+      ]);
+      access = BuildProgression.catalogue(index, wiki, data.items, realm, ratings);
+    } catch (_) { access = null; }
+  }
+
+  const accessible = name => BuildProgression.allows(access, profile, name);
+  function sourceSaid(name) {
+    if (!profile || profile.mode !== 'personal' || !access || !name) return '';
+    const sources = access.sources.get(name) || new Set();
+    const selected = access.zones.filter(z => profile.zones.includes(z.id) && sources.has(z.id));
+    if (selected.length) return 'Loot: ' + selected.slice(0, 2).map(z => z.name).join(' · ')
+      + (selected.length > 2 ? ' · +' + (selected.length - 2) + ' more' : '');
+    return access.starter.has(name) ? 'Basic starter gear' : 'Outside your selected loot sources';
+  }
+  function prepareAccessible(state) {
+    const out = JSON.parse(JSON.stringify(state));
+    if (profile && profile.mode === 'personal') {
+      for (const [hand] of HANDS) {
+        if (out.locked[hand] || accessible(out.gear[hand].name)) continue;
+        const first = itemsFor(hand, out.klass, out)[0];
+        out.gear[hand] = { name: first ? first.name : null, slots: 4, ench: [null, null, null, null] };
+      }
+    }
+    return out;
+  }
+
+  function editProfile() {
+    profileDraft = profile ? JSON.parse(JSON.stringify(profile))
+      : { version: 2, mode: 'personal', selection: 'difficulty', difficulty: 1,
+        zones: BuildProgression.forDifficulty(access, 1), excluded: [] };
+    drawWelcome();
+    drawProgress();
+    el('tcWelcomeTitle').focus();
+  }
+
+  const difficultyIcon = '<svg class="tc-difficulty-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M4 1h8v1h2v2h1v7h-3v4h-2v-3H9v3H7v-3H6v3H4v-4H1V4h1V2h2z"/><path fill="var(--panel)" d="M3 5h3v3H3zm7 0h3v3h-3zM7 9h2v2H7z"/></svg>';
+
+  function selectedDungeons(draft) {
+    const selected = new Set(draft.zones);
+    return access ? access.zones.filter(z => z.kind === 'dungeon' && selected.has(z.id))
+      .sort((a, b) => (a.difficulty || 99) - (b.difficulty || 99) || a.name.localeCompare(b.name)) : [];
+  }
+
+  function dungeonCards(dungeons) {
+    return dungeons.map(z => '<button type="button" class="tc-dungeon-card" data-remove-zone="' + esc(z.id)
+      + '" data-zone-name="' + esc(z.name.toLowerCase()) + '" aria-label="Remove ' + esc(z.name) + ' from selected dungeons">'
+      + '<span class="tc-dungeon-remove" aria-hidden="true">×</span><span class="tc-dungeon-art">'
+      + (z.art ? indexIcon(z.art, 48, '') : '') + '</span><span class="tc-dungeon-name">' + esc(z.name)
+      + '</span><span class="tc-zone-rating">' + (z.difficulty ? difficultyIcon + ' ' + z.difficulty : 'Unrated') + '</span></button>').join('');
+  }
+
+  function filterDungeonCards(query) {
+    const list = el('tcZones-dungeon');
+    const empty = el('tcZoneEmpty-dungeon');
+    if (!list || !empty) return;
+    const rows = [...list.querySelectorAll('[data-zone-name]')];
+    for (const row of rows) row.hidden = !row.dataset.zoneName.includes(query);
+    empty.hidden = rows.some(row => !row.hidden);
+  }
+
+  function drawDungeonCards() {
+    const list = el('tcZones-dungeon');
+    if (!list) return;
+    list.innerHTML = dungeonCards(selectedDungeons(profileDraft));
+    filterDungeonCards((el('tcZoneSearch').value || '').trim().toLowerCase());
+  }
+
+  function drawWelcome() {
+    const draft = profileDraft;
+    if (!draft) return;
+    const dungeons = selectedDungeons(draft);
+    el('tcWelcome').innerHTML = '<div class="tc-welcome-intro"><span class="tc-eyebrow">BUILD CRAFTER · WELCOME</span>'
+      + '<h2 id="tcWelcomeTitle" tabindex="-1">What’s the highest dungeon difficulty you’ve completed?</h2></div>'
+      + '<div class="tc-slider-block"><div class="tc-slider-value">' + difficultyIcon + '<output id="tcDifficultyValue" for="tcDifficultySlider">'
+        + (draft.difficulty || 1) + '</output><span>/ 10</span></div>'
+      + '<div class="tc-slider-range"><input id="tcDifficultySlider" class="tc-difficulty-slider" type="range" min="1" max="10" step="0.5" value="'
+        + (draft.difficulty || 1) + '" aria-label="Highest dungeon difficulty"'
+      + (!access ? ' disabled' : '') + ' style="--difficulty-progress:' + (((draft.difficulty || 1) - 1) / 9 * 100) + '%">'
+      + '<div class="tc-difficulty-ticks" aria-hidden="true">'
+        + Array.from({ length: 10 }, (_, i) => '<span style="left:' + (i / 9 * 100) + '%">' + (i + 1) + '</span>').join('') + '</div></div>'
+      + '<div class="tc-difficulty-caption"><span>First adventures</span><span>Hardest challenges</span></div></div>'
+      + (!access ? '<p class="tc-access-note">Dungeon data could not be loaded.</p><button type="button" class="tc-undo" id="tcRetryAccess">Retry loading sources</button>' : '')
+      + '<section id="tcZoneEditor" aria-labelledby="tcSelectedDungeons"><div class="tc-zone-heading"><div><h3 id="tcSelectedDungeons">Selected dungeons</h3>'
+      + '<span id="tcZoneCount-dungeon"></span></div><div class="tc-zone-toolbar"><input id="tcZoneSearch" type="search" aria-label="Find a selected dungeon" placeholder="Search selected dungeons…" autocomplete="off">'
+      + '<button type="button" class="tc-undo" id="tcRestoreDungeons">Restore level selection</button></div></div>'
+      + '<div class="tc-zone-list" id="tcZones-dungeon">'
+      + dungeonCards(dungeons)
+      + '</div><p class="tc-zone-empty" id="tcZoneEmpty-dungeon"' + (dungeons.length ? ' hidden' : '')
+      + '>No selected dungeons match this search.</p></section>'
+      + '<p class="tc-onboarding-note">Click a dungeon to remove it. Moving the slider restores the automatic selection for the new difficulty.</p>'
+      + '<div class="tc-welcome-footer"><span id="tcProfilePreview"></span><div>'
+      + (profile ? '<button type="button" id="tcProfileCancel" class="tc-undo">Cancel</button>' : '')
+      + '<button type="button" id="tcProfileSave" class="tc-run">' + (profile ? 'Save progression' : 'Start crafting') + '</button></div></div>';
+    updateProfilePreview();
+  }
+
+  function updateProfilePreview() {
+    const draft = profileDraft;
+    const validDifficulty = Number.isFinite(draft.difficulty) && draft.difficulty >= 1
+      && draft.difficulty <= 10 && Number.isInteger(draft.difficulty * 2);
+    const valid = !!access && draft.zones.length > 0
+      && (draft.selection === 'manual' || validDifficulty);
+    el('tcProfileSave').disabled = !valid;
+    el('tcProfilePreview').textContent = valid
+      ? draft.zones.length + (draft.zones.length === 1 ? ' dungeon included' : ' dungeons included')
+      : draft.selection === 'manual' ? 'Choose at least one dungeon.' : 'Keep at least one dungeon to continue.';
+    const countNode = el('tcZoneCount-dungeon');
+    countNode.textContent = draft.zones.length + (draft.zones.length === 1 ? ' dungeon selected' : ' dungeons selected');
+    const restore = el('tcRestoreDungeons');
+    if (restore) restore.disabled = !draft.excluded || !draft.excluded.length;
+  }
+  function drawProgress() {
+    const editing = !!profileDraft || !profile;
+    el('tcWelcome').hidden = !editing;
+    if (editing && !el('tcWelcome').open) el('tcWelcome').showModal();
+    if (!editing && el('tcWelcome').open) el('tcWelcome').close();
+    el('tcProgress').hidden = editing;
+    el('tcBody').hidden = editing;
+    el('tcTabs').hidden = editing;
+    el('tcRun').disabled = editing || (profile.mode === 'personal' && !access);
+    if (editing) return;
+    const personal = profile.mode === 'personal';
+    const allowed = data.items.filter(item => accessible(item.name)).length;
+    const outside = HANDS.filter(([hand]) => build.gear[hand].name && !accessible(build.gear[hand].name));
+    el('tcProgress').innerHTML = '<div class="tc-progress-top"><div><span class="tc-eyebrow">YOUR PROGRESSION</span><h2>'
+      + (personal ? 'A build within your reach' : 'The best possible build') + '</h2></div>'
+      + '<button type="button" class="tc-undo" id="tcEditProfile">Edit progression</button></div>'
+      + '<div class="tc-progress-controls"><div class="tc-access-mode" role="group" aria-label="Calculation mode">'
+      + '<button type="button" data-access-mode="personal" aria-pressed="' + personal + '">Personalized</button>'
+      + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></div>'
+      + '<span>' + (personal ? (profile.selection === 'difficulty' ? 'Difficulty ≤ ' + profile.difficulty + '/10 · ' : 'Manual selection · ')
+        + profile.zones.length + ' dungeons · ' : 'All sources · ') + allowed.toLocaleString('en-US') + ' choices across all classes</span></div>'
+      + (personal ? '<p class="tc-progress-detail">Only equipment linked to your places and starter gear. Unconfirmed sources are excluded.</p>' : '<p class="tc-progress-detail">Full equipment catalogue. Your selected places are saved for personalized mode.</p>')
+      + (outside.length ? '<p class="tc-progress-detail">Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.</p>' : '')
+      + (!access && personal ? '<p class="tc-progress-detail">Loot sources are unavailable. Edit progression to retry.</p>' : '')
+      + (!profileSaved ? '<p class="tc-progress-detail">Browser storage is unavailable. This profile lasts for this visit only.</p>' : '');
+  }
+
+  function saveProfile(value) {
+    profile = value;
+    profileSaved = true;
+    try { localStorage.setItem(PROFILE_STORE, JSON.stringify(profile)); }
+    catch (_) { profileSaved = false; }
+    before = null;
+    el('tcSaid').textContent = '';
+    beaten = null;
+  }
+
+  function wireProgress() {
+    el('tcWelcome').addEventListener('cancel', event => {
+      event.preventDefault();
+      if (profile) { profileDraft = null; drawProgress(); el('tcEditProfile').focus(); }
+    });
+    el('tcWelcome').addEventListener('close', () => {
+      // Native dialogs may still close on Escape in some embedded browsers.
+      // First-time setup remains required; editing an existing profile may close.
+      if (!profile && profileDraft && !el('tcWelcome').open) el('tcWelcome').showModal();
+    });
+    el('tcWelcome').addEventListener('click', async event => {
+      const target = event.target.closest('button');
+      if (!target) return;
+      if (target.dataset.removeZone) {
+        const id = target.dataset.removeZone;
+        profileDraft.mode = 'personal';
+        if (profileDraft.selection === 'difficulty') {
+          profileDraft.excluded = [...new Set([...(profileDraft.excluded || []), id])];
+        }
+        profileDraft.zones = profileDraft.zones.filter(zone => zone !== id);
+        const cards = [...el('tcZones-dungeon').querySelectorAll('[data-remove-zone]')];
+        const next = cards[cards.indexOf(target) + 1] || cards[cards.indexOf(target) - 1];
+        target.remove();
+        updateProfilePreview();
+        if (!profileDraft.zones.length) el('tcZoneEmpty-dungeon').hidden = false;
+        if (next) next.focus(); else el('tcRestoreDungeons').focus();
+      } else if (target.id === 'tcRestoreDungeons') {
+        profileDraft.selection = 'difficulty';
+        profileDraft.excluded = [];
+        profileDraft.zones = BuildProgression.forDifficulty(access, profileDraft.difficulty);
+        drawWelcome(); el('tcRestoreDungeons').focus();
+      } else if (target.id === 'tcProfileSave') {
+        const valid = BuildProgression.normalize(profileDraft, access);
+        if (!valid || (valid.mode === 'personal' && !access)) return;
+        saveProfile(valid); profileDraft = null; paint(); el('tcEditProfile').focus();
+      } else if (target.id === 'tcProfileCancel') {
+        profileDraft = null; drawProgress(); el('tcEditProfile').focus();
+      } else if (target.id === 'tcRetryAccess') {
+        target.disabled = true; target.textContent = 'Loading…';
+        await loadAccess();
+        if (profileDraft.selection === 'difficulty') {
+          profileDraft.excluded = [];
+          profileDraft.zones = BuildProgression.forDifficulty(access, profileDraft.difficulty);
+        }
+        drawWelcome();
+      }
+    });
+    el('tcWelcome').addEventListener('input', event => {
+      if (event.target.id === 'tcDifficultySlider') {
+        profileDraft.difficulty = Number(event.target.value);
+        profileDraft.selection = 'difficulty';
+        profileDraft.mode = 'personal';
+        profileDraft.excluded = [];
+        profileDraft.zones = BuildProgression.forDifficulty(access, profileDraft.difficulty);
+        event.target.style.setProperty('--difficulty-progress', ((profileDraft.difficulty - 1) / 9 * 100) + '%');
+        el('tcDifficultyValue').value = String(profileDraft.difficulty);
+        drawDungeonCards();
+        updateProfilePreview();
+        return;
+      }
+      if (event.target.id !== 'tcZoneSearch') return;
+      filterDungeonCards(event.target.value.trim().toLowerCase());
+    });
+    el('tcProgress').addEventListener('click', event => {
+      const target = event.target.closest('button');
+      if (!target) return;
+      if (target.id === 'tcEditProfile') { editProfile(); return; }
+      const mode = target.dataset.accessMode;
+      if (!mode || profile.mode === mode) return;
+      if (mode === 'personal' && (!profile.zones.length || !access)) {
+        editProfile(); profileDraft.mode = 'personal'; drawWelcome(); el('tcWelcomeTitle').focus(); return;
+      }
+      saveProfile({ ...profile, mode }); paint();
+      el('tcProgress').querySelector('[data-access-mode="' + mode + '"]').focus();
+    });
+  }
 
   /* ---------------- the numbers ---------------- */
 
@@ -654,7 +899,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         locks,
         subtypes: new Set()
       };
-      const pool = EnchantEngine.eligiblePool(held, cfg, null);
+      const pool = EnchantEngine.rollablePool(held, cfg);
       const out = [];
       const seen = new Set();
       for (const mod of pool) {
@@ -671,7 +916,6 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
          * difference with a ROLLABLE label. This page has no artifact in it,
          * so it plans with what a plain enchanting can roll and nothing else.
          */
-        if (!(mod.weight > 0) || !mod.tags || !mod.tags.has('ROLLABLE')) continue;
         if (seen.has(mod.name)) continue;
         seen.add(mod.name);
         const mine = charmNamed(mod.name);
@@ -685,7 +929,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
   }
 
-  function itemsFor(hand, klass) {
+  function itemsFor(hand, klass, state = build) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
     /*
@@ -694,10 +938,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * dungeon they do not run, an exalted drop three hundred hours away - and
      * an answer built out of those is not an answer to their question.
      */
-    const out = (build && build.banned) || {};
+    const out = (state && state.banned) || {};
     return data.items.filter(one => one.hand === hand
       && (slot === undefined || one.slot === slot)
-      && !out[one.name]);
+      && !out[one.name] && accessible(one.name));
   }
 
   /* ---------------- what the search need not try ---------------- *
@@ -798,8 +1042,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * win a search is still a thing somebody may want to put on and look at,
    * and hiding it would be answering a question nobody asked.
    */
-  const searchItems = (hand, klass) =>
-    itemsFor(hand, klass).filter(one => !beatenOnes().gear.has(one.name));
+  const searchItems = (hand, klass, state) =>
+    itemsFor(hand, klass, state).filter(one =>
+      // A stronger item outside this profile must never prune an accessible one.
+      (profile && profile.mode === 'personal') || !beatenOnes().gear.has(one.name));
   const searchEnchants = (name, already, at) =>
     enchantsFor(name, already, at).filter(one => !beatenOnes().ench.has(one.id));
 
@@ -1142,7 +1388,8 @@ const TINT = {
   }
 
   function optimise(state, goal, report) {
-    const work = JSON.parse(JSON.stringify(state));
+    if (!profile || (profile.mode === 'personal' && !access)) throw new Error('Set up your progression before crafting.');
+    const work = prepareAccessible(state);
     /*
      * Each padlock holds the one thing it is on.
      *
@@ -1195,7 +1442,7 @@ const TINT = {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of searchItems(hand, work.klass)) {
+        for (const one of searchItems(hand, work.klass, work)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
@@ -1203,7 +1450,22 @@ const TINT = {
             (id && enchantsFor(one.name, kept, i).some(e => e.id === id)) ? id : null);
           const now = scoreOf(work, goal);
           looked++;
-          if (now > score) { score = now; best = one.name; }
+          /*
+           * A stat goal often cannot see whole equipment slots. Life, for
+           * example, gives an ordinary staff the same score as the starter
+           * staff. Keep improving the tier when two tiered items tie so a
+           * reachable T10 weapon is not reported as T0 merely because neither
+           * changes Life. Untiered gear still has to win on the requested
+           * goal, so this tie-break cannot replace a useful UT arbitrarily.
+           */
+          const current = data.byItem[best];
+          const tierTie = Math.abs(now - score) <= 1e-9
+            && Number.isFinite(one.tier) && Number.isFinite(current && current.tier)
+            && one.tier > current.tier;
+          if (now > score + 1e-9 || tierTie) {
+            score = Math.max(score, now);
+            best = one.name;
+          }
           work.gear[hand].ench = kept;
         }
         work.gear[hand].name = best;
@@ -1226,7 +1488,7 @@ const TINT = {
           if (trial.locked[hand]) continue;
           let best = null, mark = -Infinity;
           const mine = new Set(kit.pieces);
-          for (const one of searchItems(hand, trial.klass)) {
+          for (const one of searchItems(hand, trial.klass, trial)) {
             if (!mine.has(one.name)) continue;
             const was = trial.gear[hand].name;
             trial.gear[hand].name = one.name;
@@ -1655,6 +1917,7 @@ const TINT = {
          * On its own line it has the whole card and says all of it.
          */
         + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
+        + (sourceSaid(worn.name) ? '<span class="tc-loot-source">' + esc(sourceSaid(worn.name)) + '</span>' : '')
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';
@@ -2493,13 +2756,13 @@ const TINT = {
     if (held && typeof window.openEnchantPicker === 'function') {
       const item = data.byItem[worn.name];
       const locks = locksOn(held, worn.ench, at);
-      const pool = EnchantEngine.eligiblePool(held, {
+      const pool = EnchantEngine.rollablePool(held, {
         item: worn.name,
         type: OF_HAND[item.hand] || 'WEAPON',
         slots: worn.slots,
         locks,
         subtypes: new Set()
-      }, null);
+      });
       const opened = window.openEnchantPicker({
         title: 'Slot ' + (at + 1) + ' · ' + worn.name,
         sub: pool.length + ' available'
@@ -2772,6 +3035,7 @@ const TINT = {
     drawSlots();
     drawStats();
     drawNumbers();
+    drawProgress();
     resetDuel();
     drawDuel();
   }
@@ -3062,6 +3326,7 @@ const TINT = {
     });
 
     el('tcRun').addEventListener('click', () => {
+      if (!profile || profileDraft || (profile.mode === 'personal' && !access)) { editProfile(); return; }
       const wanted = goalsOf(build);
       const said = el('tcSaid');
       before = JSON.parse(JSON.stringify(build));
@@ -3077,7 +3342,7 @@ const TINT = {
          * build, not off whatever the last search left behind - so pressing
          * the button twice cannot wander.
          */
-        const plain = bareOf(build);
+        const plain = prepareAccessible(bareOf(build));
         const aim = aimOf(plain, wanted);
         const was = wanted.map(one => scoreOf(build, one));
         const fromPlain = optimise(plain, aim, null);
@@ -3158,6 +3423,8 @@ const TINT = {
     }
     if (!raw) {
       starting = false;                // it may be worth asking again
+      el('tcWelcome').hidden = true;
+      el('tcBody').hidden = false;
       const box = el('tcBody');
       if (box) {
         if (shell === null) shell = box.innerHTML;
@@ -3172,7 +3439,13 @@ const TINT = {
     for (const one of data.items) data.byItem[one.name] = one;
     for (const one of data.enchants) data.byEnch[one.id] = one;
     for (const one of data.bosses) data.byBoss[one.name] = one;
+    await loadAccess();
+    try { profile = BuildProgression.normalize(JSON.parse(localStorage.getItem(PROFILE_STORE)), access); }
+    catch (_) { profile = null; }
     if (!rulesFor()) {
+      starting = false;
+      el('tcWelcome').hidden = true;
+      el('tcBody').hidden = false;
       const box = el('tcBody');
       if (box) box.textContent = 'The enchanting data could not be loaded. Reload this page before planning a build.';
       return;
@@ -3216,6 +3489,7 @@ const TINT = {
       for (const [key] of STATS) one.exalts[key] = exaltOf(key);
     }
     wire();
+    wireProgress();
     /*
      * And a build carried in by the address wins over what was left here
      * last time - somebody following a link came to see that build, not the
@@ -3230,6 +3504,7 @@ const TINT = {
       keep();
     }
     paint();
+    if (!profile) editProfile();
     keepPainting();
   }
 

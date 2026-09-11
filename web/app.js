@@ -277,7 +277,7 @@ function eligibleForItem(mod, config) {
   // Only what the game will actually roll. Every pool the client defines asks
   // for ROLLABLE, including the default one; the handful that are not rollable
   // exist so an artifact can name one outright, and none can be aimed at.
-  if (!mod.tags.has('ROLLABLE')) return false;
+  if (!EnchantEngine.isNaturallyRollable(mod)) return false;
   if (!config.type || !mod.itemTags.has(config.type)) return false;
   if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return false;
   for (const requirement of mod.special) if (!config.subtypes.has(requirement)) return false;
@@ -339,7 +339,6 @@ function candidatesFor(slot, config) {
      * nobody can roll among the things you might want is how a list stops
      * being trustworthy.
      */
-    .filter(mod => mod.weight > 0)
     .filter(mod => eligibleForItem(mod, config))
     .filter(mod => !conflictWith(mod, slot, others))
     .sort((a, b) => a.name.localeCompare(b.name));
