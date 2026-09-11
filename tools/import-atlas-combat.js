@@ -27,6 +27,9 @@ const atlas = JSON.parse(fs.readFileSync(path.join(out, 'atlas.json'), 'utf8'));
 const combat = JSON.parse(fs.readFileSync(path.join(source, 'combat-data.json'), 'utf8'));
 const observed = JSON.parse(fs.readFileSync(path.join(source, 'observed-behaviors.json'), 'utf8'));
 const atlasTypes = new Set(atlas.zones.flatMap(zone => (zone.lives || []).map(one => String(one.type))));
+const landmarkBindings = Object.fromEntries(Object.entries(combat.landmarkBindings || {})
+  .map(([name, type]) => [name, String(type)]));
+const combatTypes = new Set([...atlasTypes, ...Object.values(landmarkBindings)]);
 const spriteOut = path.join(out, 'combat');
 fs.mkdirSync(spriteOut, { recursive: true });
 
@@ -89,6 +92,20 @@ function shotOf(shot) {
   });
 }
 
+function bodyVisualOf(enemy) {
+  const render = enemy && enemy.animation && enemy.animation.render;
+  const visual = visualOf(render);
+  if (!visual) return undefined;
+  const face = { right: 0, base: 0, left: 1, up: 2, down: 3 };
+  const action = { idle: 0, walk: 1, attack: 2 };
+  const poses = {};
+  for (const [key, frames] of Object.entries(render.groups || {})) {
+    const [doing, facing] = key.split('|');
+    poses[(face[facing] ?? 0) + '/' + (action[doing] ?? 0)] = frames;
+  }
+  return { ...visual, size: enemy.entity && enemy.entity.size, poses };
+}
+
 function segments(clip) {
   if (!clip.discontinuous) return [clip];
   const result = [];
@@ -125,11 +142,19 @@ function clipOf(clip, attacks) {
 
 const enemies = {};
 const clips = {};
-for (const type of [...atlasTypes].sort((a, b) => Number(a) - Number(b))) {
+for (const type of [...combatTypes].sort((a, b) => Number(a) - Number(b))) {
   const sourceEnemy = combat.enemies[type];
   if (!sourceEnemy) continue;
   const attacks = (sourceEnemy.attacks || []).map(shotOf);
-  enemies[type] = { attacks };
+  enemies[type] = clean({
+    attacks,
+    name: sourceEnemy.name || sourceEnemy.id,
+    hp: sourceEnemy.hp,
+    def: sourceEnemy.def,
+    exp: sourceEnemy.entity && sourceEnemy.entity.exp,
+    size: sourceEnemy.entity && sourceEnemy.entity.size,
+    sprite: atlasTypes.has(type) ? undefined : bodyVisualOf(sourceEnemy)
+  });
   const sourceObserved = observed.types[type];
   if (!sourceObserved) continue;
   const usable = sourceObserved.clips.flatMap(segments).map(one => clipOf(one, attacks)).filter(Boolean);
@@ -139,6 +164,56 @@ for (const type of [...atlasTypes].sort((a, b) => Number(a) - Number(b))) {
 const equipmentByName = new Map();
 for (const item of combat.equipment) {
   if (!equipmentByName.has(item.name)) equipmentByName.set(item.name, item);
+}
+
+/* Keep only equipment that can actually fall from a creature present in this
+ * Atlas.  The laboratory knows thousands of client items; shipping all of
+ * them would undo the lazy, compact combat companion this importer preserves. */
+const lootNames = new Set();
+for (const type of combatTypes) {
+  for (const entry of (combat.lootByEnemy[type] && combat.lootByEnemy[type].items) || []) {
+    lootNames.add(typeof entry === 'object' ? entry.id : entry);
+  }
+}
+function itemOf(item) {
+  const projectiles = (item.projectiles || []).map(shotOf);
+  return clean({
+    name: item.name,
+    slot: item.slot === 'armor' ? 'armour' : item.slot,
+    classes: item.classes && item.classes.length ? item.classes : undefined,
+    tier: item.tier === null ? undefined : item.tier,
+    bag: item.bag === null ? undefined : item.bag,
+    worn: item.worn && Object.keys(item.worn).length ? item.worn : undefined,
+    mp: round(item.mp),
+    cooldown: round(item.cooldown),
+    shot: projectiles[0],
+    projectiles: projectiles.length > 1 ? projectiles : undefined,
+    visual: visualOf(item.icon)
+  });
+}
+const items = {};
+for (const name of [...lootNames].sort()) {
+  const item = equipmentByName.get(name);
+  if (item && ['weapon', 'ability', 'armor', 'armour', 'ring'].includes(item.slot)) {
+    items[name] = itemOf(item);
+  }
+}
+const loot = {};
+for (const type of [...combatTypes].sort((a, b) => Number(a) - Number(b))) {
+  const table = combat.lootByEnemy[type];
+  if (!table || !table.items) continue;
+  const known = table.items.map(entry => typeof entry === 'object' ? entry.id : entry)
+    .filter(name => items[name]);
+  if (known.length) loot[type] = [...new Set(known)];
+}
+const portals = {};
+for (const type of [...combatTypes].sort((a, b) => Number(a) - Number(b))) {
+  const choices = combat.portalDrops[type];
+  if (!choices || !choices.length) continue;
+  portals[type] = choices.map(portal => clean({
+    name: portal.name,
+    sprite: visualOf(portal.visual)
+  })).filter(portal => portal.sprite);
 }
 const folk = {};
 for (const kind of atlas.folk) {
@@ -174,18 +249,22 @@ for (const file of spriteFiles) {
 }
 
 const payload = {
-  schema: 1,
+  schema: 2,
   source: 'local live captures plus client projectile declarations',
   enemies,
   folk,
   reactors,
-  observed: clips
+  observed: clips,
+  landmarkBindings,
+  items,
+  loot,
+  portals
 };
 const json = JSON.stringify(payload);
 fs.writeFileSync(path.join(out, 'combat.json'), json + '\n');
 const digest = crypto.createHash('sha1').update(json).digest('hex').slice(0, 12);
 fs.writeFileSync(path.join(out, 'combat-summary.json'), JSON.stringify({
-  schema: 1,
+  schema: 2,
   digest,
   enemies: Object.keys(enemies).length,
   observed: Object.keys(clips).length,
@@ -193,6 +272,9 @@ fs.writeFileSync(path.join(out, 'combat-summary.json'), JSON.stringify({
   folk: Object.keys(folk).length,
   reactors: Object.values(reactors).filter(Boolean).length,
   attacks: Object.values(enemies).reduce((sum, one) => sum + one.attacks.length, 0),
+  items: Object.keys(items).length,
+  lootTables: Object.keys(loot).length,
+  portalTables: Object.keys(portals).length,
   sprites: spriteFiles.size,
   bytes: Buffer.byteLength(json)
 }, null, 2) + '\n');

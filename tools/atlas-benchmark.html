@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Atlas CPU benchmark</title>
+<style>
+  body { margin: 0; background: #0b0e14; color: #dce6f2; font: 14px/1.45 system-ui; }
+  main { padding: 18px; }
+  iframe { position: fixed; left: -10000px; width: 1280px; height: 720px; border: 0; }
+  table { border-collapse: collapse; min-width: 720px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid #293142; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  #error { color: #ff8d8d; white-space: pre-wrap; }
+</style>
+<iframe id="atlas" src="../web/assets/atlas/?cpu-benchmark"></iframe>
+<main>
+  <h1>Atlas CPU benchmark</h1>
+  <p id="status">Loading the Atlas…</p>
+  <table hidden id="results">
+    <thead><tr><th>Scene</th><th>Median frame</th><th>P95 frame</th><th>Measured stages</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <h2>Most expensive stages</h2>
+  <table hidden id="stages"><thead><tr><th>Stage</th><th>Average per frame</th></tr></thead><tbody></tbody></table>
+  <pre id="error"></pre>
+</main>
+<script>
+(async () => {
+  const frame = document.getElementById('atlas');
+  const status = document.getElementById('status');
+  try {
+    await new Promise((resolve, reject) => {
+      frame.addEventListener('load', resolve, { once: true });
+      setTimeout(() => reject(new Error('Atlas load timed out')), 15000);
+    });
+    const page = frame.contentWindow;
+    for (let i = 0; i < 100 && !/creatures/.test(page.document.getElementById('count').textContent); i++) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    const source = await fetch('bench.js').then(response => response.text());
+    page.eval(source);
+    status.textContent = 'Benchmark running…';
+    const report = await page.BENCH.atlas();
+    const results = document.getElementById('results');
+    for (const scene of report.scenes) {
+      const row = results.tBodies[0].insertRow();
+      for (const value of [scene.scene, scene.frameMedianMs + ' ms', scene.frameP95Ms + ' ms', scene.accountedMs + ' ms']) {
+        row.insertCell().textContent = value;
+      }
+    }
+    results.hidden = false;
+    const totals = new Map();
+    for (const scene of report.scenes) for (const stage of scene.stages) {
+      totals.set(stage.stage, (totals.get(stage.stage) || 0) + stage.msPerFrame);
+    }
+    const stages = document.getElementById('stages');
+    for (const [name, ms] of [...totals].sort((a, b) => b[1] - a[1]).slice(0, 12)) {
+      const row = stages.tBodies[0].insertRow();
+      row.insertCell().textContent = name;
+      row.insertCell().textContent = (ms / report.scenes.length).toFixed(2) + ' ms';
+    }
+    stages.hidden = false;
+    status.textContent = 'Complete — ' + report.where.canvas + ', ' + page.document.getElementById('count').textContent;
+    document.title = 'Atlas benchmark complete';
+  } catch (error) {
+    status.textContent = 'Benchmark failed';
+    document.getElementById('error').textContent = error.stack || String(error);
+    document.title = 'Atlas benchmark failed';
+  }
+})();
+</script>

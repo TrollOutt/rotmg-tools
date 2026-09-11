@@ -229,8 +229,11 @@ const asset = name => BASE + name + MARK;
  */
 let combatData = null, combatLoading = null;
 const observedCombat = new Map();
+const lootItems = new Map();
 function installCombat(data) {
   combatData = data;
+  lootItems.clear();
+  for (const [name, item] of Object.entries(data.items || {})) lootItems.set(name, item);
   for (const zone of A.zones) for (const kind of zone.lives || []) {
     const exact = data.enemies && data.enemies[kind.type];
     if (exact && exact.attacks && exact.attacks.length) {
@@ -253,6 +256,7 @@ function installCombat(data) {
   for (const [type, clips] of Object.entries(data.observed || {})) {
     if (clips && clips.length) observedCombat.set(Number(type), clips);
   }
+  installLiveLandmarks();
   installAlienReactors();
 }
 function ensureCombat() {
@@ -2392,6 +2396,10 @@ const seen = seenRange(box, 80);
    */
   mob.length = 0;
   for (const one of alive) {
+    // drawLife already rejects defeated creatures. The close depth-sorted
+    // renderer must use the same rule or the intact sprite remains under its
+    // own death particles until the respawn timer ends.
+    if (one.down > 0 || one.dying > 0 || one.hp <= 0) continue;
     if (one.x < near.x - 6 || one.x > far.x + 6) continue;
     if (one.y < near.y - 6 || one.y > far.y + 6) continue;
     mob.push(one);
@@ -2571,12 +2579,16 @@ function drawLit(box, id, alpha) {
 // One creature to about seven hundred tiles of its own patch, which is
 // nearer to how a realm feels than the one in twelve hundred it was.
 const perZone = area => Math.max(7, Math.min(150, Math.round(area / 700)));
+// A party needs several independent targets or its members immediately pile
+// onto the same fight. Area still supplies the natural background population;
+// busy zones are raised to at least six active wanderers per adventurer.
+const MONSTERS_PER_FOLK = 6;
 const alive = [];
 const lifeArt = new Map();
 const projectileArt = new Map();
 
 function artFor(sprite) {
-  const key = (sprite.combat ? 'combat/' : 'life/') + sprite.file;
+  const key = (sprite.combat ? 'combat/' : sprite.boss ? 'boss/' : 'life/') + sprite.file;
   let img = lifeArt.get(key);
   if (!img) {
     img = new Image();
@@ -2644,50 +2656,117 @@ function weighted(zone) {
   return zone.pick.length - 1;
 }
 
+function folkByZone() {
+  const counts = new Map();
+  for (const one of folk) {
+    if (one.down > 0) continue;
+    const zone = zoneOf(one.x, one.y) || one.roamZone;
+    if (zone) counts.set(zone, (counts.get(zone) || 0) + 1);
+  }
+  return counts;
+}
+
+function populationTarget(zone, manyFolk) {
+  return Math.max(perZone(zone.tiles), manyFolk * MONSTERS_PER_FOLK);
+}
+
+function spawnWanderer(zone, anchor, crowdSpawn) {
+  const at = anchor
+    ? (pointBy(zone, anchor, 8, 24) || pointBy(zone, null, 0, Infinity))
+    : pointBy(zone, null, 0, Infinity);
+  if (!at) return null;
+  const kind = zone.lives[weighted(zone)];
+  const angle = Math.random() * Math.PI * 2;
+  const pace = Math.max(1.6, Math.min(5.2, 5.2 - Math.log10(Math.max(10, kind.hp || 200)) * 0.85));
+  const beast = {
+    kind, home: zone.id, x: at.x, y: at.y,
+    hp: kind.hp || 200, full: kind.hp || 200, down: 0,
+    vx: Math.cos(angle) * pace, vy: Math.sin(angle) * pace,
+    phase: Math.random() * 100,
+    wanderer: true,
+    crowdSpawn: !!crowdSpawn
+  };
+  alive.push(beast);
+  return beast;
+}
+
 function populate() {
   alive.length = 0;
   raiseFolk();
   if (!WANDERERS) return;
+  const crowds = folkByZone();
   for (const zone of A.zones) {
     if (!zone.lives || !zone.lives.length) continue;
-    const [x0, y0, x1, y1] = zone.box;
-    const wanted = perZone(zone.tiles);
+    const residents = folk.filter(one => one.down <= 0
+      && (zoneOf(one.x, one.y) || one.roamZone) === zone.id);
+    const wanted = populationTarget(zone, crowds.get(zone.id) || 0);
     let placed = 0, tries = 0;
     while (placed < wanted && tries < wanted * 60) {
       tries++;
-      const x = x0 + Math.random() * (x1 - x0 + 1);
-      const y = y0 + Math.random() * (y1 - y0 + 1);
-      // Its own patch, and ground it could actually stand on.
-      if (!canStand(x, y, zone.id)) continue;
-      /*
-       * Picked in proportion to how often each was actually met here, so a
-       * place looks like itself: the thing you walk into constantly is
-       * everywhere and the thing seen twice is seen twice. Uniform picking
-       * made every zone an even mix of its twenty kinds, which no part of the
-       * realm has ever looked like.
-       */
-      const kind = zone.lives[weighted(zone)];
-      const angle = Math.random() * Math.PI * 2;
-      // Heavier things are slower, which is the only handle the client gives.
-      const pace = Math.max(1.6, Math.min(5.2, 5.2 - Math.log10(Math.max(10, kind.hp || 200)) * 0.85));
-      alive.push({
-        kind, home: zone.id, x, y,
-        // What the client gives it, so a Lich King is a wall and a bat is not.
-        hp: kind.hp || 200, full: kind.hp || 200, down: 0,
-        /*
-         * At something like the pace the thing keeps in the game. Half a
-         * tile a second - what this was - is a creature standing still with
-         * a limp; the big slow ones amble at two and the small ones scurry
-         * at five, so it is taken off how heavy the thing is.
-         */
-        vx: Math.cos(angle) * pace, vy: Math.sin(angle) * pace,
-        phase: Math.random() * 100
-      });
-      placed++;
+      // Population added for a party is kept near that party, but never on
+      // top of it. Natural area population remains spread over the whole zone.
+      const extra = placed >= perZone(zone.tiles) && residents.length;
+      const anchor = extra ? residents[placed % residents.length] : null;
+      if (spawnWanderer(zone, anchor, extra)) placed++;
     }
   }
   standUpLandmarks();
   if (combatData) installAlienReactors();
+  countAt.textContent = alive.length + ' creatures and ' + landmarks.length
+    + ' set pieces across ' + A.zones.length + ' zones';
+}
+
+let populationClock = 0;
+function balancePopulation(delta) {
+  populationClock -= delta;
+  if (populationClock > 0) return;
+  populationClock = 1;
+
+  const residents = new Map();
+  for (const one of folk) {
+    if (one.down > 0) continue;
+    const zone = zoneOf(one.x, one.y) || one.roamZone;
+    if (!zone) continue;
+    const held = residents.get(zone);
+    if (held) held.push(one); else residents.set(zone, [one]);
+  }
+
+  const populations = new Map();
+  for (const beast of alive) {
+    if (!beast.wanderer) continue;
+    const held = populations.get(beast.home);
+    if (held) held.push(beast); else populations.set(beast.home, [beast]);
+  }
+
+  for (const zone of A.zones) {
+    if (!zone.lives || !zone.lives.length) continue;
+    const party = residents.get(zone.id) || [];
+    const target = populationTarget(zone, party.length);
+    // Downed wanderers still belong to the zone population. Counting only
+    // active ones created a replacement for every kill and then kept both
+    // when the original respawned, so the realm grew without a ceiling.
+    const present = populations.get(zone.id) || [];
+    // Add gradually so a party crossing a border produces a stream of nearby
+    // encounters instead of a single-frame burst.
+    const add = Math.min(8, target - present.length);
+    for (let n = 0; n < add; n++) {
+      const anchor = party.length ? party[n % party.length] : null;
+      if (!spawnWanderer(zone, anchor, true)) break;
+    }
+
+    // Only dynamic reinforcements are retired. Natural wildlife and the live
+    // encounter/Hero/reactor population are never removed by this balancing.
+    let excess = present.length - target;
+    if (excess > 0) {
+      for (let i = alive.length - 1; i >= 0 && excess > 0; i--) {
+        const beast = alive[i];
+        if (!beast.crowdSpawn || beast.home !== zone.id || beast.onIt) continue;
+        if (party.some(one => Math.hypot(one.x - beast.x, one.y - beast.y) < FOLK_SEEK)) continue;
+        alive.splice(i, 1);
+        excess--;
+      }
+    }
+  }
   countAt.textContent = alive.length + ' creatures and ' + landmarks.length
     + ' set pieces across ' + A.zones.length + ' zones';
 }
@@ -2706,7 +2785,7 @@ function pointBy(zone, anchor, least, reach) {
       x = zone.box[0] + Math.random() * (zone.box[2] - zone.box[0]);
       y = zone.box[1] + Math.random() * (zone.box[3] - zone.box[1]);
     }
-    if (canStand(x, y, zone.id)) return { x, y };
+    if (canStand(x, y, zone.id) && clearOfFolk(x, y, 7)) return { x, y };
   }
   return null;
 }
@@ -2723,6 +2802,60 @@ function reactorKind(data) {
       poses: { '0/0': [0] }
     }
   };
+}
+
+function landmarkKind(mark, data) {
+  if (!data || !data.sprite) {
+    /* Four composite/ambiguous client encounters have no single safe entity
+     * binding. They still become live actors using the existing Atlas boss
+     * art and roster stats, rather than remaining decorative PNGs. */
+    return {
+      name: mark.name, displayName: mark.name, role: mark.role,
+      hp: mark.hp || 10000, def: mark.def || 0, exp: mark.exp || 0,
+      shots: mark.shots || [],
+      sprite: { file: mark.art, boss: true, frames: 1, size: 40 }
+    };
+  }
+  return {
+    type: Number(mark.type), name: data.name || mark.name, displayName: mark.name,
+    hp: data.hp || mark.hp || 10000, def: data.def || mark.def || 0,
+    exp: data.exp || mark.exp || 0, role: mark.role, shots: data.attacks || [],
+    sprite: {
+      file: data.sprite.file, combat: true,
+      tile: data.sprite.width, height: data.sprite.height,
+      frames: data.sprite.frames || 1, size: (data.size || 100) * SS,
+      poses: data.sprite.poses || { '0/0': [0] }
+    }
+  };
+}
+
+/* A distant encounter is a stable map marker. As soon as detailed life is
+ * loaded, replace every marker with one simulated creature at the same
+ * position. This is the missing laboratory behavior that left some bosses
+ * permanently motionless. */
+function installLiveLandmarks() {
+  if (!combatData || !landmarks.length) return;
+  for (let i = landmarks.length - 1; i >= 0; i--) {
+    const mark = landmarks[i];
+    const type = combatData.landmarkBindings && combatData.landmarkBindings[mark.name];
+    const data = type && combatData.enemies[type];
+    const kind = landmarkKind({ ...mark, type }, data);
+    const angle = Math.random() * Math.PI * 2;
+    const pace = Math.max(1.4, Math.min(3.2,
+      4.5 - Math.log10(Math.max(10, kind.hp || 200)) * 0.5));
+    const zone = zoneById.get(mark.home);
+    const start = clearOfFolk(mark.x, mark.y, 7) ? mark
+      : pointBy(zone, mark, 7, 18);
+    if (!start) continue;
+    alive.push({
+      kind, home: mark.home, x: start.x, y: start.y,
+      hp: kind.hp, full: kind.hp, down: 0, dying: 0,
+      vx: Math.cos(angle) * pace, vy: Math.sin(angle) * pace,
+      phase: Math.random() * 100, landmarkAnchor: { x: mark.x, y: mark.y },
+      leash: 42, localLandmark: true
+    });
+    landmarks.splice(i, 1);
+  }
 }
 
 /* The alien event is a camp, not wildlife spread over a biome.  One real
@@ -2911,7 +3044,16 @@ function stepLife(delta) {
     if (one.down > 0) {
       one.observed = null;
       one.down -= delta;
-      if (one.down <= 0) { one.hp = one.full; }
+      if (one.down <= 0) {
+        one.hp = one.full;
+        /* A defeated wanderer is restocked elsewhere in its own zone. This
+         * keeps its old corpse position visibly empty after the explosion. */
+        if (!one.stationary && !one.reactor) {
+          const zone = zoneById.get(one.home);
+          const next = zone && pointBy(zone, null, 0, Infinity);
+          if (next) { one.x = next.x; one.y = next.y; }
+        }
+      }
       continue;
     }
     one.phase += delta;
@@ -2926,13 +3068,14 @@ function stepLife(delta) {
     const vx = one.vx * cos - one.vy * sin;
     const vy = one.vx * sin + one.vy * cos;
     one.vx = vx; one.vy = vy;
-    if (one.reactor && Math.hypot(one.x - one.reactor.x, one.y - one.reactor.y) > one.leash) {
-      const homeAngle = Math.atan2(one.reactor.y - one.y, one.reactor.x - one.x);
+    const anchor = one.reactor || one.landmarkAnchor;
+    if (anchor && Math.hypot(one.x - anchor.x, one.y - anchor.y) > one.leash) {
+      const homeAngle = Math.atan2(anchor.y - one.y, anchor.x - one.x);
       const pace = Math.max(1.6, Math.hypot(one.vx, one.vy));
       one.vx = Math.cos(homeAngle) * pace; one.vy = Math.sin(homeAngle) * pace;
     }
     const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
-    if (one.reactor && Math.hypot(nx - one.reactor.x, ny - one.reactor.y) > one.leash) {
+    if (anchor && Math.hypot(nx - anchor.x, ny - anchor.y) > one.leash) {
       one.vx = -one.vx; one.vy = -one.vy; continue;
     }
     if (canStand(nx, ny, one.home)) { one.x = nx; one.y = ny; continue; }
@@ -3094,7 +3237,8 @@ function standUpLandmarks() {
       for (let tries = 0; tries < 400; tries++) {
         const x = x0 + roll() * (x1 - x0 + 1), y = y0 + roll() * (y1 - y0 + 1);
         if (!canStand(x, y, zone.id)) continue;
-        landmarks.push({ name: one.name, art: one.art, role, x, y, home: zone.id });
+        landmarks.push({ name: one.name, art: one.art, role, x, y, home: zone.id,
+          hp: one.hp, def: one.def, exp: one.exp, shots: one.shots });
         stoodUp[role]++;
         break;
       }
@@ -3123,6 +3267,9 @@ const CHAT_KEEP = 8;                     // lines held in the feed
 const CHAT_LASTS = 26;                   // seconds one stays in the feed
 const CHAT_QUIET = 1.1;                  // seconds between unprompted lines
 const BUBBLE_LASTS = 4.2;                // seconds one stays over a head
+const TYPE_CHARS_PER_SECOND = 14;
+const writingTime = text => Math.min(BUBBLE_LASTS,
+  Math.max(0.45, 0.3 + Array.from(text).length / TYPE_CHARS_PER_SECOND));
 const chat = [];
 let chatIn = CHAT_QUIET;
 let scene = null;
@@ -3251,19 +3398,41 @@ function lineFor(tag) {
   return anyOf(list);
 }
 
-function speak(tag, who, text) {
-  const said = text === undefined ? lineFor(tag) : text;
-  if (!said) return;
-  if (who && !who.name) who.name = madeName();
-  const filled = fillIn(said, who);
+function publishSpeech(who, filled) {
   chat.push({
     who: who && who.name ? who.name : madeName(),
     said: filled,
     left: CHAT_LASTS
   });
   while (chat.length > CHAT_KEEP) chat.shift();
-  // And over their head, so it is plain who said it.
   if (who) { who.bubble = filled; who.bubbleLeft = BUBBLE_LASTS; }
+}
+
+function beginSpeech(who, filled) {
+  who.pendingSpeech = filled;
+  who.chatPause = writingTime(filled);
+}
+
+function finishSpeech(who) {
+  if (!who.pendingSpeech) return;
+  publishSpeech(who, who.pendingSpeech);
+  who.pendingSpeech = null;
+  const next = who.speechQueue && who.speechQueue.shift();
+  if (next) beginSpeech(who, next);
+}
+
+function speak(tag, who, text) {
+  const said = text === undefined ? lineFor(tag) : text;
+  if (!said) return;
+  if (who && !who.name) who.name = madeName();
+  const filled = fillIn(said, who);
+  if (!who) { publishSpeech(null, filled); return; }
+  // The line appears only after its writing time. If this speaker is already
+  // writing, preserve the order instead of replacing the unfinished line.
+  if (who.pendingSpeech) {
+    if (!who.speechQueue) who.speechQueue = [];
+    who.speechQueue.push(filled);
+  } else beginSpeech(who, filled);
 }
 
 /*
@@ -3423,7 +3592,9 @@ const PACE_AT = spd => 4 + 5.6 * (spd / 75);      // tiles a second
 const HEAL_AT = vit => 1 + 0.12 * vit;            // hit points a second
 const MANA_AT = wis => 0.5 + 0.06 * wis;          // magic a second
 
-const FOLK_AT_A_BEACON = 4;              // mine: how many set out from each
+const FOLK_AT_A_BEACON = 4;              // keeps the established realm-wide headcount
+const MAX_FOLK = 120;
+const STARTING_SHARE = { Rookie: 0.20, Adept: 0.50, Veteran: 0.30 };
 const FOLK_BACK = 9;                     // mine: seconds before a dead one returns
 const FOLK_SEEK = 26;                    // mine: tiles they will cross for a fight
 const FOLK_HOLD = 0.78;                  // mine: how much of their reach they keep
@@ -3502,16 +3673,14 @@ function bagsFor(name) {
 
 /* ---------------- what a death leaves ---------------- */
 /*
- * A creature that is killed does not blink out. It goes over about a third
- * of a second, fading while it comes apart into a handful of its own colours
- * thrown outward - which is the shape of the thing the game does, and reads
- * as a kill rather than as a sprite being switched off. A character that is
- * killed leaves a gravestone, and which of the eleven depends on how far
- * they got, because that is the game's own way of saying a death mattered.
+ * A killed creature uses the laboratory's immediate outlined explosion and
+ * stays down before respawning. A killed character leaves a gravestone, and
+ * which of the eleven depends on how far they got, because that is the
+ * game's own way of saying a death mattered.
  *
- * Nobody picks any of it up, so it goes by itself: a bag after a minute, a
- * stone after four. A realm watched for an hour would otherwise be a
- * graveyard with a map underneath it.
+ * A real imported equipment item sits inside every simulated bag. Compatible
+ * characters seek useful nearby bags, equip the item and recalculate their
+ * statistics. Unclaimed bags expire after a minute and stones after four.
  */
 const SHOW_NAMES = 11;                   // zoom at which names are worth reading
 let chosenFolk = null, sheetIn = 0;
@@ -3519,6 +3688,24 @@ const DYING = 0.36;
 const BAG_LASTS = 60;
 const GRAVE_LASTS = 240;
 const litter = [];
+let lootSequence = 0;
+const MAX_LOOT_BAGS = 100;
+
+function leaveBag(bit) {
+  litter.push(bit);
+  if (!bit.item) return bit;
+  let bags = litter.reduce((many, one) => many + (one.item ? 1 : 0), 0);
+  while (bags > MAX_LOOT_BAGS) {
+    const oldest = litter.findIndex(one => one.item);
+    if (oldest < 0) break;
+    const gone = litter[oldest];
+    gone.left = 0;
+    if (gone.claimedBy && gone.claimedBy.lootGoal === gone) gone.claimedBy.lootGoal = null;
+    litter.splice(oldest, 1);
+    bags--;
+  }
+  return bit;
+}
 
 /*
  * A few of a creature's own colours, read off its sprite once and kept, so
@@ -3555,42 +3742,33 @@ function burst(beast, size) {
   /*
    * What a death throws off.
    *
-   * The client does not describe one. Its data files carry three particles -
-   * mist, steam and dirt, all ambient - a death sound for nearly everything,
-   * and a splash of blood for seventy-one things out of five thousand, given
-   * as a colour and a likelihood. That last is used here exactly as stated:
-   * a creature that declares green blood at even odds throws green, half the
-   * time. Everything else is thrown in its own colours, read off its own
-   * sprite, because those at least are the game's. The motion is not the
-   * game's and there is nothing in the client to take it from.
+   * This is the captured laboratory's visible death: evenly spread outlined
+   * pieces in the creature's own sprite colours, followed by its longer
+   * laboratory respawn delay. The client has no reusable death animation to
+   * import, so this remains an observed display rule rather than client art.
    */
-  const blood = beast.kind.blood;
-  const colours = (blood && blood.tint && (blood.odds === undefined
-    || Math.random() < blood.odds))
-    ? [blood.tint] : coloursFor(beast.kind.sprite);
-  const heft = Math.min(3, 0.8 + Math.log10(Math.max(10, beast.full || 400)) / 3);
-  const many = Math.round((14 + Math.min(30, (beast.full || 400) / 900)) * (size || 1));
-  /*
-   * The flash goes in first so the pieces are thrown over it and not under
-   * it. Painted last it was a white disc with the whole burst hidden behind
-   * it, which is a puff of smoke where a death should be.
-   */
-  sparks.push({
-    x: beast.x, y: beast.y, vx: 0, vy: 0,
-    left: 0.16, full: 0.16, flash: heft, tint: '#fff6df'
-  });
+  const colours = coloursFor(beast.kind.sprite);
+  const heft = Math.min(2.2, 0.8 + Math.log10(Math.max(10, beast.full || 400)) / 4);
+  const many = Math.round(24 * heft * (size || 1));
   for (let i = 0; i < many; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const fast = (2.4 + Math.random() * 7) * heft;
+    const angle = Math.PI * 2 * (i + Math.random() * 0.6) / many;
+    const fast = (3 + Math.random() * 5) * heft;
+    const life = 0.65 + Math.random() * 0.45;
     sparks.push({
       x: beast.x, y: beast.y,
       vx: Math.cos(angle) * fast, vy: Math.sin(angle) * fast,
-      // Long enough to be seen. Half a second was a death nobody caught.
-      left: 0.9 + Math.random() * 0.9, full: 1.8,
-      wide: heft * (0.55 + Math.random() * 0.85),
-      tint: colours[Math.floor(Math.random() * colours.length)]
+      left: life, full: life, wide: 0.65 + Math.random() * 0.65,
+      tint: colours[i % colours.length], outlined: true
     });
   }
+  /* The capture laboratory removes a killed monster on the explosion frame.
+   * The old published Atlas faded the intact sprite over the burst, hiding
+   * the animation and allowing a much faster respawn. */
+  beast.dying = 0;
+  beast.down = beast.kind.role === 'hero' || beast.reactorCore
+    ? 35 : 12 + Math.random() * 10;
+  beast.hp = 0;
+  beast.vx = 0; beast.vy = 0;
 }
 
 /* The same, in one colour, for something that has just gone up a level. */
@@ -3620,47 +3798,78 @@ function stepSparks(delta) {
 /*
  * Whether anything falls, and in which colour of bag.
  *
- * The colour is not reasoned about at all any more: the client says which
- * bag every item falls in, and the roster says which items a creature drops,
- * so a creature that only ever drops brown-bag things leaves brown bags and
- * one with a tier eleven weapon on its table can leave the bag that goes
- * with it. How likely each of its own colours is comes from how much of its
- * table is that colour. Only the chance of anything at all is still
- * reasoned, because the real tables are the server's: it climbs with the
- * root of what was killed, so the median creature here leaves something
- * about twice in a hundred kills and the largest about once in six.
+ * The item comes from that creature's imported RealmEye/client relationship.
+ * Every death with a resolved equipment table leaves one item during this
+ * observable simulation, because the server's individual rates are absent
+ * and an invisible low-probability rule cannot be inspected or validated.
  */
 function dropFrom(beast) {
   const bags = (A.marks && A.marks.bags) || [];
-  if (!bags.length) return;
-  const worth = beast.full || 200;
-  const chance = Math.max(0.005, Math.min(0.35, Math.sqrt(worth / 1000) * 0.02));
-  if (Math.random() > chance) return;
-
-  let tier = 0;
-  const mine = bagsFor(beast.kind.name);
-  if (mine && mine.length) {
-    /*
-     * Weighted against how common that colour is on its own table, so the
-     * one rare line on a long table stays the rare one.
-     */
-    let total = 0;
-    for (const one of mine) total += 1 / Math.max(1, one.many);
-    let roll = Math.random() * total;
-    tier = mine[0].bag;
-    for (const one of mine) {
-      roll -= 1 / Math.max(1, one.many);
-      if (roll <= 0) { tier = one.bag; break; }
-    }
-  } else {
-    // Nothing known about its table: the plain brown bag.
-    tier = 0;
+  if (!combatData) return;
+  const choices = combatData.portals && combatData.portals[beast.kind.type];
+  if (choices && choices.length && (beast.kind.role === 'hero' || beast.reactorCore)) {
+    const portal = choices[0];
+    litter.push({
+      sprite: { file: portal.sprite.file, combat: true, tile: portal.sprite.width,
+        height: portal.sprite.height, frames: portal.sprite.frames || 1, size: 100,
+        poses: { '0/0': [0] } },
+      x: beast.x, y: beast.y, left: 60, full: 60, portal: true,
+      name: portal.name
+    });
   }
+  if (!bags.length) return;
+  const table = combatData.loot && combatData.loot[beast.kind.type];
+  if (!table || !table.length) return;
+  const available = table.map(name => lootItems.get(name)).filter(Boolean);
+  if (!available.length) return;
+  const item = available[Math.floor(Math.random() * available.length)];
+  if (!item) return;
+  let tier = Number(item.bag) || 0;
   tier = Math.max(0, Math.min(bags.length - 1, tier));
-  litter.push({
+  leaveBag({
     sprite: bags[tier].sprite, x: beast.x, y: beast.y,
-    left: BAG_LASTS, full: BAG_LASTS, tier
+    left: Number(item.bag) === 6 ? 120 : BAG_LASTS,
+    full: Number(item.bag) === 6 ? 120 : BAG_LASTS,
+    tier, item, id: ++lootSequence
   });
+
+}
+
+function canEquip(one, item) {
+  return item && ['weapon', 'ability', 'armour', 'ring'].includes(item.slot)
+    && (!item.classes || item.classes.some(name => name.toLowerCase() === one.kind.name.toLowerCase()));
+}
+function lootValue(item) {
+  const worn = Object.values(item.worn || {}).reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+  const shot = item.shot || {};
+  return (Number(item.tier) || 0) * 100 + worn * 3
+    + ((Number(shot.low) || 0) + (Number(shot.high) || 0)) / 2;
+}
+function equipLoot(one, bit) {
+  const item = bit.item;
+  if (!canEquip(one, item)) return false;
+  if (bit.formerOwner === one && bit.formerOwnerLeft > 0) return false;
+  const current = one.kind[item.slot];
+  if (current && lootValue(item) <= lootValue(current)) return false;
+  one.kind = { ...one.kind, [item.slot]: item };
+  one.at = statsAt(one.kind, one.level);
+  one.full = one.at.hp; one.mpFull = one.at.mp;
+  one.hp = Math.min(one.hp, one.full); one.mp = Math.min(one.mp, one.mpFull);
+  one.lootGoal = null;
+  one.rose = 0.9;
+  bit.left = 0;
+  if (current) {
+    const bags = (A.marks && A.marks.bags) || [];
+    const oldTier = Math.max(0, Math.min(bags.length - 1, Number(current.bag) || 0));
+    if (bags[oldTier]) leaveBag({
+      sprite: bags[oldTier].sprite, x: one.x, y: one.y,
+      left: BAG_LASTS, full: BAG_LASTS, tier: oldTier,
+      item: { ...current, slot: item.slot, classes: [one.kind.name] },
+      id: ++lootSequence, formerOwner: one, formerOwnerLeft: 12,
+      exchanged: true
+    });
+  }
+  return true;
 }
 
 /* And the stone, chosen by how far the one under it got. */
@@ -3679,8 +3888,9 @@ function stepLitter(delta) {
   for (let i = litter.length - 1; i >= 0; i--) {
     const bit = litter[i];
     bit.left -= delta;
+    if (bit.formerOwnerLeft > 0) bit.formerOwnerLeft -= delta;
     if (bit.left <= 0) { litter.splice(i, 1); continue; }
-    if (bit.grave) continue;
+    if (bit.grave || bit.portal) continue;
     /*
      * A bag on the floor is picked up by whoever walks over it, and what is
      * in it is a potion - which in that game is not a heal but a permanent
@@ -3690,9 +3900,10 @@ function stepLitter(delta) {
     for (const one of folk) {
       if (one.down > 0) continue;
       if (Math.abs(one.x - bit.x) > 0.8 || Math.abs(one.y - bit.y) > 0.8) continue;
-      drink(one, bit.tier || 0);
-      litter.splice(i, 1);
-      break;
+      if (bit.item ? equipLoot(one, bit) : (drink(one, bit.tier || 0), true)) {
+        litter.splice(i, 1);
+        break;
+      }
     }
   }
 }
@@ -3767,10 +3978,28 @@ function raiseFolk() {
   shots.length = 0;
   sparks.length = 0;
   if (!A.folk || !A.folk.length || !A.beacons) return;
-  for (const beacon of A.beacons) {
-    for (let i = 0; i < FOLK_AT_A_BEACON; i++) {
-      folk.push(newFolk(A.folk[Math.floor(Math.random() * A.folk.length)], beacon, 1));
-      folk[folk.length - 1].name = madeName();
+  const total = Math.min(MAX_FOLK, A.beacons.length * FOLK_AT_A_BEACON);
+  const many = {
+    Rookie: Math.round(total * STARTING_SHARE.Rookie),
+    Adept: Math.round(total * STARTING_SHARE.Adept)
+  };
+  many.Veteran = total - many.Rookie - many.Adept;
+  const levelFor = rank => rank === 'Veteran'
+    ? 14 + Math.floor(Math.random() * 7)
+    : rank === 'Adept' ? 7 + Math.floor(Math.random() * 7)
+      : 1 + Math.floor(Math.random() * 5);
+  for (const rank of ['Rookie', 'Adept', 'Veteran']) {
+    const beacons = A.beacons.filter(beacon => {
+      const zone = zoneById.get(beacon.zone || zoneOf(beacon.x, beacon.y));
+      return zone && zone.rank === rank;
+    }).sort(() => Math.random() - 0.5);
+    if (!beacons.length) continue;
+    for (let i = 0; i < many[rank]; i++) {
+      const beacon = beacons[i % beacons.length];
+      const one = newFolk(A.folk[Math.floor(Math.random() * A.folk.length)], beacon, levelFor(rank));
+      one.name = madeName();
+      one.startingRank = rank;
+      folk.push(one);
     }
   }
 }
@@ -3778,7 +4007,7 @@ function raiseFolk() {
 function newFolk(kind, beacon, level) {
   const angle = Math.random() * Math.PI * 2;
   const at = statsAt(kind, level);
-  return {
+  const one = {
     kind, beacon, at,
     x: beacon.x + Math.cos(angle) * 3,
     y: beacon.y + Math.sin(angle) * 3,
@@ -3794,8 +4023,46 @@ function newFolk(kind, beacon, level) {
     target: null,
     cool: Math.random() * 0.5,
     spell: 1 + Math.random(),
-    down: 0
+    down: 0,
+    roamZone: beacon.zone || zoneOf(beacon.x, beacon.y),
+    roam: null
   };
+  one.roam = distributedRoam(one, one.roamZone);
+  // The simulated realm is already in progress when the Atlas is opened:
+  // place each adventurer in their assigned sector instead of stacking the
+  // four members of every beacon party around the same three tiles.
+  if (one.roam) { one.x = one.roam.x; one.y = one.roam.y; }
+  return one;
+}
+
+/* Pick several valid candidates and keep the one furthest from the other
+ * adventurers' destinations. This gives every character a different part of
+ * the chosen zone instead of sending the entire beacon group to one point. */
+function distributedRoam(one, zoneId) {
+  const zone = zoneById.get(zoneId);
+  if (!zone) return { x: one.beacon.x, y: one.beacon.y };
+  let best = null, bestGap = -1;
+  for (let attempt = 0; attempt < 36; attempt++) {
+    const point = pointBy(zone, null, 0, Infinity);
+    if (!point) continue;
+    let gap = Infinity;
+    for (const other of folk) {
+      const destination = other.roamZone === zoneId && other.roam ? other.roam : other;
+      gap = Math.min(gap, Math.hypot(point.x - destination.x, point.y - destination.y));
+    }
+    if (gap > bestGap) { best = point; bestGap = gap; }
+  }
+  return best || { x: one.beacon.x, y: one.beacon.y };
+}
+
+function clearOfFolk(x, y, least) {
+  const square = least * least;
+  for (const one of folk) {
+    if (one.down > 0) continue;
+    const dx = one.x - x, dy = one.y - y;
+    if (dx * dx + dy * dy < square) return false;
+  }
+  return true;
 }
 
 /* Experience carries them up, and the client says what a kill is worth. */
@@ -3816,7 +4083,14 @@ function reward(one, beast) {
      * which is the shape of the whole game: you go where your statistics
      * let you go and no further.
      */
+    const previousZone = one.beacon.zone || zoneOf(one.beacon.x, one.beacon.y);
     one.beacon = beaconFor(one.level) || one.beacon;
+    one.roamZone = one.beacon.zone || zoneOf(one.beacon.x, one.beacon.y);
+    one.roam = distributedRoam(one, one.roamZone);
+    if (one.roamZone !== previousZone && one.roam) {
+      one.x = one.roam.x; one.y = one.roam.y;
+      one.vx = 0; one.vy = 0;
+    }
     if (Math.random() < 0.4) speak('progression', one);
   }
 }
@@ -3826,10 +4100,8 @@ function reward(one, beast) {
  *
  * The nearest thing is not always the thing worth fighting, and a realm
  * where everyone shoots the nearest bat is a realm where nothing ever dies
- * that matters. So a big thing pulls harder than a small one, and a thing
- * somebody else is already on pulls harder still - which is what turns a
- * loose crowd into a group standing round the same encounter, without any
- * of them being told to.
+ * that matters. A big thing pulls harder than a small one, while an occupied
+ * target pulls less so the population divides itself among available fights.
  */
 /* ------------------------------------------------------------------ *
  * Where everything is                                                 *
@@ -3900,10 +4172,75 @@ function preyFor(one) {
     const dx = beast.x - one.x, dy = beast.y - one.y;
     const far = dx * dx + dy * dy;
     if (far > FOLK_SEEK * FOLK_SEEK) continue;
+    const capacity = beast.kind.role === 'hero' || beast.kind.role === 'encounter'
+      || beast.reactorCore ? 3 : 1;
+    if ((beast.onIt || 0) >= capacity) continue;
     const worth = Math.sqrt(beast.full || 200);
-    const crowd = 1 + Math.min(2, (beast.onIt || 0) * 0.5);
-    const pull = worth * crowd / (4 + far);
+    // An occupied target becomes less attractive, distributing adventurers
+    // across the available fights instead of making one permanent pile.
+    const crowd = 1 + (beast.onIt || 0) * 0.9;
+    const pull = worth / (crowd * (4 + far));
     if (pull > bestPull) { bestPull = pull; best = beast; }
+  }
+  return best;
+}
+
+function sparePreyNear(one, skip) {
+  for (const beast of nearTo(one.x, one.y, FOLK_SEEK)) {
+    if (beast === skip || beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
+    const dx = beast.x - one.x, dy = beast.y - one.y;
+    if (dx * dx + dy * dy > FOLK_SEEK * FOLK_SEEK) continue;
+    const capacity = beast.kind.role === 'hero' || beast.kind.role === 'encounter'
+      || beast.reactorCore ? 3 : 1;
+    if ((beast.onIt || 0) < capacity) return true;
+  }
+  return false;
+}
+
+function placeReinforcement(beast, at) {
+  const angle = Math.random() * Math.PI * 2;
+  const pace = Math.max(1.6, Math.min(5.2,
+    5.2 - Math.log10(Math.max(10, beast.kind.hp || 200)) * 0.85));
+  beast.x = at.x; beast.y = at.y;
+  beast.hp = beast.full; beast.down = 0; beast.dying = 0;
+  beast.vx = Math.cos(angle) * pace; beast.vy = Math.sin(angle) * pace;
+  beast.observed = null;
+  return beast;
+}
+
+/* Keep a next fight ready before the present one ends. Zone totals cannot see
+ * that every nearby creature is already claimed, which was what left a hero
+ * changing direction every frame without actually going anywhere. */
+function reinforcementFor(one, forecast) {
+  const zoneId = zoneOf(one.x, one.y) || one.roamZone;
+  const zone = zoneById.get(zoneId);
+  if (!zone || !zone.lives || !zone.lives.length) return null;
+  const at = pointBy(zone, one, 8, 24) || pointBy(zone, null, 0, Infinity);
+  if (!at) return null;
+  // Reuse a defeated wanderer first. This supplies the local fight without
+  // growing the global array every time a character finishes a target.
+  const sleeping = alive.find(beast => beast.home === zoneId && beast.wanderer
+    && !beast.stationary && (beast.down > 0 || beast.dying > 0 || beast.hp <= 0));
+  let beast = sleeping ? placeReinforcement(sleeping, at) : null;
+  let manyFolk = 0, population = 0;
+  for (const player of folk) {
+    if (player.down <= 0 && (zoneOf(player.x, player.y) || player.roamZone) === zoneId) manyFolk++;
+  }
+  for (const candidate of alive) if (candidate.home === zoneId && candidate.wanderer) population++;
+  const ceiling = populationTarget(zone, manyFolk) + Math.max(2, manyFolk);
+  if (!beast && population < ceiling) beast = spawnWanderer(zone, one, true);
+  if (beast) beast.forecastSpawn = !!forecast;
+  return beast;
+}
+
+function usefulLootFor(one) {
+  let best = null, nearest = Infinity;
+  for (const bit of litter) {
+    if (!bit.item || (bit.claimedBy && bit.claimedBy !== one) || !canEquip(one, bit.item)) continue;
+    if (bit.formerOwner === one && bit.formerOwnerLeft > 0) continue;
+    if (lootValue(bit.item) <= lootValue(one.kind[bit.item.slot])) continue;
+    const far = Math.hypot(one.x - bit.x, one.y - bit.y);
+    if (far <= FOLK_SEEK && far < nearest) { best = bit; nearest = far; }
   }
   return best;
 }
@@ -4082,6 +4419,10 @@ function stepWorld(delta) {
 function stepFolk(delta) {
   if (!folk.length) return;
 
+  // Keep encounter supply correlated with the people currently standing in
+  // each zone, including after a party crosses a zone boundary.
+  balancePopulation(delta);
+
   // Where everything is, once, for the two questions that would otherwise
   // each go looking through the whole realm.
   refile();
@@ -4096,6 +4437,10 @@ function stepFolk(delta) {
      * came from, at the first level, with nothing to show for it.
      */
     if (one.down > 0) {
+      if (one.chatPause > 0) {
+        one.chatPause = Math.max(0, one.chatPause - delta);
+        if (one.chatPause <= 0) finishSpeech(one);
+      }
       one.down -= delta;
       if (one.down <= 0) {
         // Back at the first level, and back at ground a first level survives.
@@ -4112,6 +4457,35 @@ function stepFolk(delta) {
     one.spell -= delta;
     if (one.rose > 0) one.rose -= delta;
     if (one.swing > 0) one.swing -= delta;
+
+    // A speaker cannot walk, fire a weapon or cast while writing. Existing
+    // targets and loot reservations are retained, so work resumes cleanly.
+    if (one.hp <= 0) {
+      one.pendingSpeech = null;
+      one.speechQueue = [];
+      one.chatPause = 0;
+      graveFor(one);
+      speak('death', one);
+      one.down = FOLK_BACK; one.vx = 0; one.vy = 0; one.target = null;
+      continue;
+    }
+    if (one.chatPause > 0) {
+      one.chatPause = Math.max(0, one.chatPause - delta);
+      one.vx = 0; one.vy = 0; one.swing = 0;
+      if (one.chatPause <= 0) finishSpeech(one);
+      continue;
+    }
+
+    // A nearly finished fight consumes its reservation very soon. Prepare the
+    // next local target now, before the character reaches an empty decision
+    // cycle and begins to twitch between equivalent directions.
+    one.forecastIn = (one.forecastIn || 0) - delta;
+    if (one.target && one.target.hp > 0
+      && one.target.hp <= one.target.full * 0.22
+      && one.forecastIn <= 0 && !sparePreyNear(one, one.target)) {
+      reinforcementFor(one, true);
+      one.forecastIn = 1.5;
+    }
 
     // Flesh and magic both come back on their own, at the rate the two
     // statistics for exactly that say they do.
@@ -4131,12 +4505,22 @@ function stepFolk(delta) {
      * out together do not go on asking together for ever after.
      */
     if (one.target && (one.target.down > 0 || one.target.dying > 0 || one.target.hp <= 0)) {
+      one.roamZone = one.target.home || one.roamZone;
+      one.roam = distributedRoam(one, one.roamZone);
       one.target = null;
     }
     // Nought when it has never been set, so a new hero asks at once.
     one.seek = (one.seek || 0) - delta;
     if (!one.target && one.seek <= 0) {
       one.target = preyFor(one);
+      // No target means the local supply is empty or fully claimed. Give this
+      // character its own reachable encounter immediately; do not make it
+      // wait for the slower zone-wide population pass.
+      if (!one.target) one.target = reinforcementFor(one, false);
+      if (one.target) one.target.onIt = (one.target.onIt || 0) + 1;
+      if (one.lootGoal && one.lootGoal.claimedBy === one) one.lootGoal.claimedBy = null;
+      one.lootGoal = usefulLootFor(one);
+      if (one.lootGoal) one.lootGoal.claimedBy = one;
       one.seek = 0.3 + Math.random() * 0.4;
     }
 
@@ -4155,12 +4539,20 @@ function stepFolk(delta) {
     const ducked = dodge(one);
     if (ducked) { wx += ducked.x * 1.4; wy += ducked.y * 1.4; }
 
-    if (!one.target) {
-      const dx = one.beacon.x - one.x, dy = one.beacon.y - one.y;
+    if (!one.target && one.lootGoal && one.lootGoal.left > 0) {
+      const dx = one.lootGoal.x - one.x, dy = one.lootGoal.y - one.y;
       const far = Math.hypot(dx, dy) || 1;
-      const want = far > 14 ? 1 : -0.15;
-      wx += (dx / far) * want;
-      wy += (dy / far) * want;
+      wx += dx / far; wy += dy / far;
+    } else if (!one.target) {
+      if (!one.roam || Math.hypot(one.roam.x - one.x, one.roam.y - one.y) < 1.5) {
+        one.roam = distributedRoam(one, one.roamZone);
+      }
+      const destination = zoneOf(one.x, one.y) === one.roamZone
+        ? (one.roam || one.beacon) : one.beacon;
+      const dx = destination.x - one.x, dy = destination.y - one.y;
+      const far = Math.hypot(dx, dy) || 1;
+      wx += dx / far;
+      wy += dy / far;
     } else {
       /*
        * Kept at the edge of their own reach and moving across it rather than
@@ -4214,6 +4606,19 @@ function stepFolk(delta) {
       }
     }
 
+    // Separation applies during travel, loot runs and combat alike. It is
+    // deliberately stronger than target steering at close range so two
+    // characters cannot occupy the same visible tile.
+    for (const other of folk) {
+      if (other === one || other.down > 0) continue;
+      const ox = one.x - other.x, oy = one.y - other.y;
+      const apart = Math.hypot(ox, oy);
+      if (apart > 0.01 && apart < 3.5) {
+        const push = (3.5 - apart) / 3.5 * 1.8;
+        wx += ox / apart * push; wy += oy / apart * push;
+      }
+    }
+
     /*
      * And the steering: the velocity is pulled towards the wanted one over
      * about an eighth of a second, which reads as somebody changing their
@@ -4226,10 +4631,21 @@ function stepFolk(delta) {
     one.vx += (goX * top - one.vx) * grip;
     one.vy += (goY * top - one.vy) * grip;
     const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
+    const oldX = one.x, oldY = one.y;
     if (walkable(nx, ny)) { one.x = nx; one.y = ny; }
     else if (walkable(nx, one.y)) { one.x = nx; one.vy = -one.vy * 0.4; }
     else if (walkable(one.x, ny)) { one.y = ny; one.vx = -one.vx * 0.4; }
     else { one.vx = -one.vx * 0.4; one.vy = -one.vy * 0.4; }
+    if (!one.target && Math.hypot(one.x - oldX, one.y - oldY) < 0.005) {
+      one.roamBlocked = (one.roamBlocked || 0) + delta;
+      if (one.roamBlocked > 0.3) {
+        // This is the visible shake: movement was requested but no progress
+        // was made. Recheck local demand and redirect before it persists.
+        if (!sparePreyNear(one, null)) reinforcementFor(one, false);
+        one.roam = distributedRoam(one, one.roamZone);
+        one.roamBlocked = 0;
+      }
+    } else one.roamBlocked = 0;
 
     if (one.hp <= 0 && one.down <= 0) {
       graveFor(one);
@@ -4465,6 +4881,11 @@ function drawFolk(box) {
       continue;
     }
     const side = Math.max(1.5, view.scale * 0.22 * (s.wide || 1)) * at.k;
+    if (s.outlined) {
+      ctx.strokeStyle = 'rgba(0,0,0,.85)';
+      ctx.lineWidth = Math.max(1, side * 0.22);
+      ctx.strokeRect(at.x - side / 2, at.y - side / 2, side, side);
+    }
     ctx.fillRect(at.x - side / 2, at.y - side / 2, side, side);
   }
   ctx.globalAlpha = 1;
@@ -4612,14 +5033,16 @@ function drawOneLife(one, box) {
   const img = artFor(one.kind.sprite);
   if (!img.complete || !img.naturalWidth) return 0;
   const sprite = one.kind.sprite;
+  const tile = sprite.tile || img.naturalWidth;
+  const height = sprite.height || img.naturalHeight;
   const pose = poseOf(one, sprite);
   const frame = pose.list
     ? pose.list[Math.floor(one.phase * pose.beat) % pose.list.length]
     : (sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0);
   // At the size the client draws it, not all at one size.
   const k = 1.5 * ((sprite.size || 100) / 100);
-  const wide = (sprite.tile / (A.px * SS)) * view.scale * k;
-  const tall = (sprite.height / (A.px * SS)) * view.scale * k;
+  const wide = (tile / (A.px * SS)) * view.scale * k;
+  const tall = (height / (A.px * SS)) * view.scale * k;
   /*
    * The line took a pixel of art under its feet, so it is put back down by
    * that much - one pixel of the drawing, which since the drawings were
@@ -4643,7 +5066,7 @@ function drawOneLife(one, box) {
     ctx.restore();
     return 1;
   }
-  ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
+  ctx.drawImage(img, frame * tile, 0, tile, height,
     at.x - w2 / 2, top, w2, h2);
   return 1;
 }
