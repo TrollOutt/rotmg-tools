@@ -237,6 +237,51 @@ const BASE = window.ATLAS_BASE || (() => {
 const MARK = A.mark ? '?v=' + A.mark : '';
 const asset = name => BASE + name + MARK;
 
+/*
+ * The live-capture combat corpus is deliberately beside atlas.json rather
+ * than inside it.  A reader looking at the whole realm still pays only for
+ * the map; exact projectile definitions and observed salvos arrive on the
+ * first close zoom, when the simulation can actually use them.
+ */
+let combatData = null, combatLoading = null;
+const observedCombat = new Map();
+function installCombat(data) {
+  combatData = data;
+  for (const zone of A.zones) for (const kind of zone.lives || []) {
+    const exact = data.enemies && data.enemies[kind.type];
+    if (exact && exact.attacks && exact.attacks.length) {
+      kind.fallbackShots = kind.shots;
+      kind.shots = exact.attacks;
+    }
+  }
+  for (const kind of A.folk || []) {
+    const exact = data.folk && data.folk[kind.name];
+    if (!exact) continue;
+    if (kind.weapon && exact.weapon && exact.weapon.length) {
+      kind.weapon.projectiles = exact.weapon;
+      kind.weapon.shot = exact.weapon[0];
+    }
+    if (kind.ability && exact.ability && exact.ability.length) {
+      kind.ability.projectiles = exact.ability;
+      kind.ability.shot = exact.ability[0];
+    }
+  }
+  for (const [type, clips] of Object.entries(data.observed || {})) {
+    if (clips && clips.length) observedCombat.set(Number(type), clips);
+  }
+  installAlienReactors();
+}
+function ensureCombat() {
+  if (combatData || combatLoading) return combatLoading;
+  combatLoading = fetch(asset('combat.json')).then(reply => {
+    if (!reply.ok) throw new Error('combat.json ' + reply.status);
+    return reply.json();
+  }).then(installCombat).catch(error => {
+    console.warn('The optional Atlas combat corpus could not be loaded.', error);
+  });
+  return combatLoading;
+}
+
 const canvas = document.getElementById('map');
 let ctx = canvas.getContext('2d', { alpha: false });
 const whereAt = document.getElementById('where');
@@ -2544,14 +2589,27 @@ function drawLit(box, id, alpha) {
 const perZone = area => Math.max(7, Math.min(150, Math.round(area / 700)));
 const alive = [];
 const lifeArt = new Map();
+const projectileArt = new Map();
 
 function artFor(sprite) {
-  let img = lifeArt.get(sprite.file);
+  const key = (sprite.combat ? 'combat/' : 'life/') + sprite.file;
+  let img = lifeArt.get(key);
   if (!img) {
     img = new Image();
     img.decoding = 'async';
-    img.src = asset('life/' + sprite.file);
-    lifeArt.set(sprite.file, img);
+    img.src = asset(key);
+    lifeArt.set(key, img);
+  }
+  return img;
+}
+
+function artForProjectile(visual) {
+  let img = projectileArt.get(visual.file);
+  if (!img) {
+    img = new Image();
+    img.decoding = 'async';
+    img.src = asset('combat/' + visual.file);
+    projectileArt.set(visual.file, img);
   }
   return img;
 }
@@ -2645,6 +2703,81 @@ function populate() {
     }
   }
   standUpLandmarks();
+  if (combatData) installAlienReactors();
+  countAt.textContent = alive.length + ' creatures and ' + landmarks.length
+    + ' set pieces across ' + A.zones.length + ' zones';
+}
+
+const isAlien = kind => /^AI Alien /.test(kind.name || '')
+  && /ALIEN_INVASION_(ADEPT|VETERAN)/.test(kind.labels || '');
+function pointBy(zone, anchor, least, reach) {
+  for (let tries = 0; tries < 240; tries++) {
+    let x, y;
+    if (anchor) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = least + Math.random() * Math.max(0, reach - least);
+      x = anchor.x + Math.cos(angle) * distance;
+      y = anchor.y + Math.sin(angle) * distance;
+    } else {
+      x = zone.box[0] + Math.random() * (zone.box[2] - zone.box[0]);
+      y = zone.box[1] + Math.random() * (zone.box[3] - zone.box[1]);
+    }
+    if (canStand(x, y, zone.id)) return { x, y };
+  }
+  return null;
+}
+function reactorKind(data) {
+  if (!data || !data.sprite) return null;
+  return {
+    type: data.type, name: data.name, hp: data.hp, def: data.def, exp: data.exp,
+    labels: 'ENEMY,CONSTRUCT,QUEST,ALIEN_REACTOR', role: 'reactor',
+    shots: data.attacks,
+    sprite: {
+      file: data.sprite.file, combat: true,
+      tile: data.sprite.width, height: data.sprite.height,
+      frames: data.sprite.frames || 1, size: (data.size || 120) * SS,
+      poses: { '0/0': [0] }
+    }
+  };
+}
+
+/* The alien event is a camp, not wildlife spread over a biome.  One real
+ * client reactor anchors a compact force in each eligible zone.  This is the
+ * same explicit parent/leash model used by the capture laboratory. */
+function installAlienReactors() {
+  if (!combatData || !combatData.reactors || !alive.length) return;
+  for (const zone of A.zones) {
+    if (alive.some(one => one.home === zone.id && one.reactorCore)) continue;
+    const candidates = (zone.lives || []).filter(isAlien);
+    if (!candidates.length) continue;
+    const veteran = candidates.some(kind => /VETERAN/.test(kind.labels || ''));
+    const kind = reactorKind(combatData.reactors[veteran ? 'veteran' : 'adept']);
+    const at = kind && pointBy(zone, null, 0, Infinity);
+    if (!at) continue;
+    for (let i = alive.length - 1; i >= 0; i--) {
+      if (alive[i].home === zone.id && isAlien(alive[i].kind)) alive.splice(i, 1);
+    }
+    const reactor = {
+      kind, home: zone.id, x: at.x, y: at.y,
+      hp: kind.hp, full: kind.hp, down: 0, dying: 0,
+      vx: 0, vy: 0, phase: Math.random() * 100,
+      stationary: true, reactorCore: true, tier: veteran ? 'veteran' : 'adept'
+    };
+    alive.push(reactor);
+    for (const childKind of candidates.slice(0, 5)) for (let copy = 0; copy < 2; copy++) {
+      const pos = pointBy(zone, reactor, 3, 11);
+      if (!pos) continue;
+      const angle = Math.random() * Math.PI * 2;
+      const pace = Math.max(1.6, Math.min(5.2,
+        5.2 - Math.log10(Math.max(10, childKind.hp || 200)) * 0.85));
+      alive.push({
+        kind: childKind, home: zone.id, x: pos.x, y: pos.y,
+        hp: childKind.hp || 200, full: childKind.hp || 200, down: 0,
+        vx: Math.cos(angle) * pace, vy: Math.sin(angle) * pace,
+        phase: Math.random() * 100, reactor, leash: 15
+      });
+    }
+  }
   countAt.textContent = alive.length + ' creatures and ' + landmarks.length
     + ' set pieces across ' + A.zones.length + ' zones';
 }
@@ -2706,6 +2839,77 @@ function canStand(x, y, home) {
   return !(here && here.walled);
 }
 
+function observedSample(points, time) {
+  let lo = 0, hi = points.length - 1;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (points[mid][0] <= time) lo = mid; else hi = mid - 1;
+  }
+  const a = points[lo], b = points[lo + 1];
+  if (!b || b[0] <= a[0]) return { x: a[1], y: a[2] };
+  const f = Math.max(0, Math.min(1, (time - a[0]) / (b[0] - a[0])));
+  return { x: a[1] + (b[1] - a[1]) * f, y: a[2] + (b[2] - a[2]) * f };
+}
+function turnPoint(point, angle) {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return { x: point.x * c - point.y * s, y: point.x * s + point.y * c };
+}
+
+/* Replay captured relative paths only while a real target is nearby.  The
+ * capture supplies order, timing, fan and motion; target choice, rotation and
+ * repetition remain explicit simulator policy.  Recorded HP is never used as
+ * a phase trigger. */
+function stepObserved(one, delta) {
+  const clips = observedCombat.get(one.kind.type);
+  if (!clips || !clips.length) return false;
+  let target = null, nearest = 18 * 18;
+  for (const player of folk) {
+    if (player.down > 0) continue;
+    if (one.reactor && Math.hypot(player.x - one.reactor.x, player.y - one.reactor.y)
+      > one.leash + 5) continue;
+    const dx = player.x - one.x, dy = player.y - one.y, far = dx * dx + dy * dy;
+    if (far < nearest) { nearest = far; target = player; }
+  }
+  if (!target) { one.observed = null; return false; }
+  let state = one.observed;
+  if (!state) {
+    const clip = clips[(one.observedCycle || 0) % clips.length];
+    const first = clip.attacks[0];
+    const centre = first[3] + Math.max(0, first[2] - 1) * first[4] / 2;
+    const rotation = Math.atan2(target.y - one.y, target.x - one.x) - centre;
+    const start = turnPoint({ x: clip.points[0][1], y: clip.points[0][2] }, rotation);
+    state = one.observed = {
+      clip, target, time: 0, next: 0, rotation,
+      originX: one.x - start.x, originY: one.y - start.y,
+      anchorX: one.reactor ? one.reactor.x : one.x,
+      anchorY: one.reactor ? one.reactor.y : one.y, pending: []
+    };
+  }
+  if (state.target.down > 0 || Math.hypot(state.target.x - one.x, state.target.y - one.y) > 24
+    || (one.reactor && (one.reactor.down > 0 || one.reactor.dying > 0))) {
+    one.observed = null;
+    return false;
+  }
+  state.time = Math.min(state.clip.duration, state.time + delta);
+  while (state.next < state.clip.attacks.length
+    && state.clip.attacks[state.next][0] <= state.time + 1e-8) {
+    state.pending.push(state.clip.attacks[state.next++]);
+  }
+  const relative = turnPoint(observedSample(state.clip.points, state.time), state.rotation);
+  const nx = state.originX + relative.x, ny = state.originY + relative.y;
+  const oldX = one.x, oldY = one.y;
+  const leash = one.leash || 28;
+  if (Math.hypot(nx - state.anchorX, ny - state.anchorY) <= leash && canStand(nx, ny, one.home)) {
+    one.x = nx; one.y = ny;
+  } else {
+    state.originX = one.x - relative.x;
+    state.originY = one.y - relative.y;
+  }
+  one.vx = (one.x - oldX) / delta; one.vy = (one.y - oldY) / delta;
+  state.finished = state.time >= state.clip.duration;
+  return true;
+}
+
 function stepLife(delta) {
   for (const one of alive) {
     /*
@@ -2714,24 +2918,39 @@ function stepLife(delta) {
      * afternoon of watching would be a worse map by teatime.
      */
     if (one.dying > 0) {
+      one.observed = null;
       // Going, not gone: it settles and fades before it is taken off the map.
       one.dying -= delta;
       if (one.dying <= 0) { one.dying = 0; one.down = 4 + Math.random() * 6; }
       continue;
     }
     if (one.down > 0) {
+      one.observed = null;
       one.down -= delta;
       if (one.down <= 0) { one.hp = one.full; }
       continue;
     }
     one.phase += delta;
     if (one.swing > 0) one.swing -= delta;
+    if (one.stationary) { one.vx = 0; one.vy = 0; continue; }
+    if (one.reactor && (one.reactor.down > 0 || one.reactor.dying > 0)) {
+      one.observed = null; one.vx = 0; one.vy = 0; continue;
+    }
+    if (stepObserved(one, delta)) continue;
     const turn = (Math.random() - 0.5) * 0.4 * delta;
     const cos = Math.cos(turn), sin = Math.sin(turn);
     const vx = one.vx * cos - one.vy * sin;
     const vy = one.vx * sin + one.vy * cos;
     one.vx = vx; one.vy = vy;
-    const nx = one.x + vx * delta, ny = one.y + vy * delta;
+    if (one.reactor && Math.hypot(one.x - one.reactor.x, one.y - one.reactor.y) > one.leash) {
+      const homeAngle = Math.atan2(one.reactor.y - one.y, one.reactor.x - one.x);
+      const pace = Math.max(1.6, Math.hypot(one.vx, one.vy));
+      one.vx = Math.cos(homeAngle) * pace; one.vy = Math.sin(homeAngle) * pace;
+    }
+    const nx = one.x + one.vx * delta, ny = one.y + one.vy * delta;
+    if (one.reactor && Math.hypot(nx - one.reactor.x, ny - one.reactor.y) > one.leash) {
+      one.vx = -one.vx; one.vy = -one.vy; continue;
+    }
     if (canStand(nx, ny, one.home)) { one.x = nx; one.y = ny; continue; }
     if (canStand(nx, one.y, one.home)) { one.x = nx; one.vy = -one.vy; }
     else if (canStand(one.x, ny, one.home)) { one.y = ny; one.vx = -one.vx; }
@@ -3708,13 +3927,75 @@ function preyFor(one) {
 function fire(from, at, shot, hurt, mine, by, spread) {
   const dx = at.x - from.x, dy = at.y - from.y;
   let angle = Math.atan2(dy, dx) + (spread || 0);
-  const fast = shot.fast || 8;
+  const fast = Number.isFinite(shot.fast) ? shot.fast : 8;
+  const duration = shot.life || (shot.reach || 6) / Math.max(0.001, fast);
   shots.push({
     x: from.x, y: from.y,
     vx: Math.cos(angle) * fast, vy: Math.sin(angle) * fast,
-    left: (shot.reach || 6) / fast,
+    originX: from.x, originY: from.y, angle, age: 0, duration,
+    left: duration, definition: shot, visual: shot.visual,
+    sequence: shots.length & 255,
     hurt, mine, by, through: !!shot.through
   });
+}
+
+function projectileTravel(shot, time) {
+  const motion = shot.motion || {}, speed = Number.isFinite(shot.fast) ? shot.fast : 8;
+  const delay = Math.max(0, motion.accelerationDelay || 0);
+  const acceleration = motion.acceleration || 0;
+  if (!acceleration || time <= delay) return speed * time;
+  const elapsed = time - delay;
+  const clamp = Number.isFinite(motion.speedClamp) ? motion.speedClamp
+    : acceleration < 0 ? 0 : Infinity;
+  const until = Number.isFinite(clamp) ? Math.max(0, (clamp - speed) / acceleration) : Infinity;
+  const moving = Math.min(elapsed, until), end = speed + acceleration * moving;
+  return speed * delay + speed * moving + 0.5 * acceleration * moving * moving
+    + end * (elapsed - moving);
+}
+function projectilePosition(shot) {
+  const def = shot.definition || {}, motion = def.motion || {};
+  const flags = new Set(def.flags || []), life = shot.duration || 1;
+  const time = Math.min(life, Math.max(0, shot.age));
+  const parity = shot.sequence % 2 ? Math.PI : 0;
+  let angle = shot.angle, distance = projectileTravel(def, time), side = 0;
+  if (flags.has('Wavy')) angle += Math.PI / 64 * Math.sin(parity + 6 * Math.PI * time);
+  else if (flags.has('Parametric')) {
+    const cycle = time / life * Math.PI * 2, magnitude = motion.magnitude || 0;
+    distance = Math.sin(cycle) * (shot.sequence % 2 ? 1 : -1) * magnitude;
+    side = Math.sin(2 * cycle) * (shot.sequence % 4 < 2 ? 1 : -1) * magnitude;
+  } else {
+    if (flags.has('Boomerang')) distance = projectileTravel(def, time <= life / 2 ? time : life - time);
+    side = (motion.amplitude || 0) * Math.sin(parity + time / life * (motion.frequency || 0) * Math.PI * 2);
+  }
+  return {
+    x: shot.originX + Math.cos(angle) * distance - Math.sin(angle) * side,
+    y: shot.originY + Math.sin(angle) * distance + Math.cos(angle) * side
+  };
+}
+
+function fireObserved(beast) {
+  const state = beast.observed;
+  if (!state) return false;
+  for (const event of state.pending.splice(0)) {
+    const shot = (beast.kind.shots || []).find(one => Number(one.slot) === event[1]
+      && one.id === event[8]);
+    if (!shot) continue;
+    const relative = turnPoint({ x: event[5], y: event[6] }, state.rotation);
+    const from = { x: state.originX + relative.x, y: state.originY + relative.y };
+    const angle = event[3] + state.rotation;
+    const at = { x: from.x + Math.cos(angle), y: from.y + Math.sin(angle) };
+    const raw = Number.isFinite(event[7]) ? event[7] : shot.hurt;
+    const hurt = shot.pierce ? raw : Math.max(raw * 0.15, raw - state.target.at.def);
+    beast.swing = 0.3;
+    for (let n = 0; n < Math.max(1, event[2]); n++) {
+      fire(from, at, shot, hurt, false, null, n * event[4]);
+    }
+  }
+  if (state.finished) {
+    beast.observedCycle = (beast.observedCycle || 0) + 1;
+    beast.observed = null;
+  }
+  return true;
 }
 
 /* A volley, fanned the way the weapon says it fans. */
@@ -3795,6 +4076,7 @@ let simOwed = 0, simIdle = 0;
 const watched = () => view.scale >= SHOW_LIFE;
 
 function stepWorld(delta) {
+  if (watched()) ensureCombat();
   if (!watched()) {
     simOwed = 0;
     simIdle += delta;
@@ -3975,6 +4257,7 @@ function stepFolk(delta) {
   /* And the creatures shoot back, with what the client gave them. */
   for (const beast of alive) {
     if (beast.down > 0 || beast.dying > 0 || beast.hp <= 0) continue;
+    if (fireObserved(beast)) continue;
     /*
      * Everything it throws, not just the first thing.
      *
@@ -3997,19 +4280,21 @@ function stepFolk(delta) {
     let mark = null, near = reach * reach;
     for (const one of folk) {
       if (one.down > 0) continue;
+      if (beast.reactor && Math.hypot(one.x - beast.reactor.x, one.y - beast.reactor.y)
+        > beast.leash + 5) continue;
       const dx = one.x - beast.x, dy = one.y - beast.y;
       const far = dx * dx + dy * dy;
       if (far < near) { near = far; mark = one; }
     }
     if (mark) {
       beast.swing = Math.min(0.35, beast.cool * 0.7);
-      const many = shot.many ? 3 : 1;
+      const many = Math.max(1, Number(shot.many) || 1);
       const hurt = shot.pierce
         ? shot.hurt : Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def);
       for (let n = 0; n < many; n++) {
-        const off = many === 1 ? 0 : (n - 1) * 10 * Math.PI / 180;
-        fire(beast, mark, { fast: shot.fast || 8, reach, through: shot.through },
-          hurt, false, null, off);
+        const gap = (shot.fan === undefined ? 10 : shot.fan) * Math.PI / 180;
+        const off = many === 1 ? 0 : (n - (many - 1) / 2) * gap;
+        fire(beast, mark, shot, hurt, false, null, off);
       }
     }
   }
@@ -4028,7 +4313,12 @@ function stepFolk(delta) {
 function stepShots(delta) {
   for (let i = shots.length - 1; i >= 0; i--) {
     const s = shots[i];
-    s.x += s.vx * delta; s.y += s.vy * delta; s.left -= delta;
+    s.age += delta;
+    const moved = projectilePosition(s);
+    s.vx = (moved.x - s.x) / delta; s.vy = (moved.y - s.y) / delta;
+    s.x = moved.x; s.y = moved.y; s.left = s.duration - s.age;
+    const floor = atTile(s.x, s.y);
+    if (floor && floor.walled && !s.definition.cover) s.left = 0;
     /*
      * How near counts as hit, which has to be at least as far as the shot
      * just moved.
@@ -4206,6 +4496,26 @@ function drawFolk(box) {
     const tail = place(s.x - s.vx * 0.05, s.y - s.vy * 0.05, box);
     if (!head || !tail) continue;
     if (head.x < -20 || head.y < -20 || head.x > box.w + 20 || head.y > box.h + 20) continue;
+    if (s.visual) {
+      const img = artForProjectile(s.visual);
+      if (img.complete && img.naturalWidth) {
+        const frames = Math.max(1, s.visual.frames || 1);
+        const frame = Math.floor(s.age * 8) % frames;
+        const sw = s.visual.width || img.naturalWidth / frames;
+        const sh = s.visual.height || img.naturalHeight;
+        const visualScale = ((s.definition.motion && s.definition.motion.size) || 100) / 100;
+        const wide = Math.max(3, view.scale * head.k * sw * visualScale / 8);
+        const tall = wide * sh / sw;
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        const spin = s.visual.rotation ? s.age * 1000 / s.visual.rotation : 0;
+        ctx.rotate(Math.atan2(s.vy, s.vx) + (s.visual.angle || 0) * Math.PI / 4 + spin);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall);
+        ctx.restore();
+        continue;
+      }
+    }
     ctx.strokeStyle = s.mine ? 'rgba(255,238,190,.92)' : 'rgba(255,132,96,.92)';
     ctx.lineWidth = Math.max(1, view.scale * 0.22);
     ctx.beginPath();
