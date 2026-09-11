@@ -62,6 +62,18 @@
 #tcWelcomeTitle:focus { outline: none; }
 #tcWelcome p { color: var(--muted); font-size: 14px; margin: 6px 0; }
 .tc-difficulty-icon { width: 23px; height: 23px; flex-shrink: 0; vertical-align: middle; }
+.tc-biome-picker { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 14px; flex: none; }
+.tc-biome-picker h3 { margin: 0 0 2px; font-size: 15px; }
+.tc-biome-picker > div:first-child > span { color: var(--muted); font-size: 11px; }
+.tc-biome-ranks { display: grid; grid-template-columns: repeat(3, minmax(142px, 1fr)); gap: 8px; width: min(590px, 64%); }
+.tc-biome-rank { min-width: 0; min-height: 58px; padding: 6px 9px; display: flex; align-items: center; gap: 9px; text-align: left;
+  color: var(--dim); background: rgba(12, 11, 18, .55); border: 1px solid var(--line-soft); border-radius: 9px; cursor: pointer; font: inherit; }
+.tc-biome-rank .tc-biome-art { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; filter: grayscale(1); opacity: .38; }
+.tc-biome-rank strong, .tc-biome-rank small { display: block; white-space: nowrap; }
+.tc-biome-rank strong { font-size: 13px; }
+.tc-biome-rank small { margin-top: 2px; color: inherit; font-size: 9px; }
+.tc-biome-rank[aria-pressed="true"] { color: var(--text); border-color: var(--accent); background: rgba(22, 140, 199, .1); }
+.tc-biome-rank[aria-pressed="true"] .tc-biome-art { filter: none; opacity: 1; }
 .tc-slider-block { flex: none; }
 .tc-slider-value { display: flex; align-items: baseline; justify-content: center; gap: 7px; color: var(--accent); margin: 0 0 8px; }
 .tc-slider-value svg { align-self: center; margin-right: 3px; }
@@ -127,6 +139,12 @@
   #tcWelcome { width: calc(100vw - 12px); height: calc(100dvh - 12px); padding: 18px 14px; border-radius: 11px; }
   #tcWelcome h2 { font-size: 20px; margin: 6px 0; }
   .tc-welcome-intro { margin-bottom: 8px; }
+  .tc-biome-picker { display: block; margin-bottom: 9px; }
+  .tc-biome-picker > div:first-child > span { display: none; }
+  .tc-biome-ranks { width: 100%; margin-top: 6px; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .tc-biome-rank { min-height: 48px; padding: 4px 6px; gap: 5px; }
+  .tc-biome-rank .tc-biome-art { width: 36px; height: 36px; flex-basis: 36px; }
+  .tc-biome-rank small { display: none; }
   .tc-slider-value { margin-bottom: 4px; }
   .tc-difficulty-ticks span:nth-child(even) { visibility: hidden; }
   .tc-zone-heading { display: block; }
@@ -3708,6 +3726,24 @@ body.ring-near .ring-tag { opacity: 0; }
   .ring-tag .d { font-size: 10.5px; }
   .ring-tag.on .d { max-height: 100px; }
 }
+.ix-loot-tier {
+  display: inline-flex;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ix-art-file {
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.ix-biome-loot .ix-link-row > span {
+  gap: 5px;
+}
 
 </style>
   <meta name="generator" content="rotmg-enchant-calculator standalone build 2026-09-11">
@@ -6915,7 +6951,7 @@ var BuildProgression = (function () {
       if (!pagesById.has(key)) pagesById.set(key, new Set());
       pagesById.get(key).add(page);
     }
-    const zones = new Map(), placesByPage = new Map();
+    const zones = new Map(), placesByPage = new Map(), directBiomeSources = new Map();
     const addPage = (page, zone) => {
       if (!placesByPage.has(page)) placesByPage.set(page, new Set());
       placesByPage.get(page).add(zone);
@@ -6937,7 +6973,15 @@ var BuildProgression = (function () {
     }
     for (const record of index.records) {
       if (record.kind !== 'place') continue;
-      zones.set(record.id, { id: record.id, name: record.name, kind: 'biome' });
+      zones.set(record.id, { id: record.id, name: record.name, kind: 'biome', rank: record.rank,
+        art: record.art, icon: record.icon });
+      // Named biome gear is already resolved by the Index onto exact client
+      // records. Keep both UT and ST pieces: neither is covered by a generic
+      // tier band, and both are opt-in through the biome rank selector.
+      for (const itemId of [...(record.untiered || []), ...(record.setTier || [])]) {
+        if (!directBiomeSources.has(itemId)) directBiomeSources.set(itemId, new Set());
+        directBiomeSources.get(itemId).add(record.id);
+      }
       for (const page of pagesById.get(record.id) || []) addPage(page, record.id);
       for (const [relation, enemy] of record.in || []) {
         if (relation !== 'was seen in') continue;
@@ -6951,13 +6995,20 @@ var BuildProgression = (function () {
     const slugOf = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const biomeIds = new Map(), tierSources = new Map();
     const aliases = { 'abandoned-city': 'place:Ancient City', 'coral-reefs': 'place:Coral Reef' };
+    const biomeArt = {
+      beach: (records.get('enemy:Captured Shores Beacon') || {}).art,
+      'ancient-city': (records.get('enemy:Captured Abandoned Beacon') || {}).art,
+      'deep-sea-abyss': (records.get('enemy:Captured Abyssal Beacon') || {}).art
+    };
     for (const biome of Object.values((realm || {}).biomes || {})) {
       const existing = [...zones.values()].find(z => z.kind === 'biome' && slugOf(z.name) === biome.slug);
       const key = existing ? existing.id : (aliases[biome.slug] || 'biome:' + biome.slug);
       const page = pageBySlug.get(biome.slug);
       const name = (zones.get(key) || {}).name || (wiki.pages[page] || [])[1]
         || biome.slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      zones.set(key, { id: key, name, kind: 'biome', rank: biome.rank });
+      zones.set(key, { id: key, name, kind: 'biome', rank: biome.rank,
+        art: (zones.get(key) || {}).art || biomeArt[biome.slug],
+        icon: (zones.get(key) || {}).icon });
       biomeIds.set(biome.id, key);
       if (page !== undefined) addPage(page, key);
     }
@@ -7008,6 +7059,7 @@ var BuildProgression = (function () {
       for (const page of pagesById.get(id) || []) {
         for (const zone of sourcesByPage.get(page) || []) found.add(zone);
       }
+      for (const zone of directBiomeSources.get(id) || []) found.add(zone);
       sources.set(record.name, found);
     }
     for (const item of items) {
@@ -7035,7 +7087,7 @@ var BuildProgression = (function () {
       ((ranks[a.rank] ?? 4) - (ranks[b.rank] ?? 4)) || a.name.localeCompare(b.name)), sources, starter };
   }
   function normalize(value, cat) {
-    if (!value || ![1, 2].includes(value.version) || !['personal', 'best'].includes(value.mode)
+    if (!value || ![1, 2, 3].includes(value.version) || !['personal', 'best'].includes(value.mode)
       || !Array.isArray(value.zones)) return null;
     const selection = value.version === 1 ? 'manual' : value.selection;
     if (!['manual', 'difficulty'].includes(selection)) return null;
@@ -7051,9 +7103,13 @@ var BuildProgression = (function () {
     const zones = selection === 'difficulty' && cat ? eligible.filter(id => !excludedSet.has(id))
       : [...new Set(value.zones.filter(id => typeof id === 'string' && id.startsWith('dungeon:') && (!known || known.has(id))))];
     if (value.mode === 'personal' && !zones.length) return null;
-    return { version: 2, mode: value.mode, selection,
+    const permittedRanks = new Set(['Rookie', 'Adept', 'Veteran']);
+    const biomeRanks = (value.version >= 3 && Array.isArray(value.biomeRanks) ? value.biomeRanks : ['Rookie'])
+      .filter(rank => permittedRanks.has(rank));
+    return { version: 3, mode: value.mode, selection,
       difficulty: Number.isFinite(difficulty) && Number.isInteger(difficulty * 2)
         && difficulty >= 1 && difficulty <= 10 ? difficulty : null, zones,
+      biomeRanks: [...new Set(biomeRanks)],
       ...(selection === 'difficulty' ? { excluded } : {}) };
   }
   function forDifficulty(cat, difficulty) {
@@ -7065,9 +7121,16 @@ var BuildProgression = (function () {
     if (!profile) return false;
     if (profile.mode === 'best') return true;
     if (!cat) return false;
-    return cat.starter.has(name) || profile.zones.some(id => (cat.sources.get(name) || new Set()).has(id));
+    const sources = cat.sources.get(name) || new Set();
+    return cat.starter.has(name) || selectedZoneIds(cat, profile).some(id => sources.has(id));
   }
-  return { catalogue, normalize, allows, forDifficulty };
+  function selectedZoneIds(cat, profile) {
+    if (!cat || !profile) return [];
+    const ranks = new Set(Array.isArray(profile.biomeRanks) ? profile.biomeRanks : ['Rookie']);
+    return [...new Set([...(profile.zones || []), ...cat.zones
+      .filter(zone => zone.kind === 'biome' && ranks.has(zone.rank)).map(zone => zone.id)])];
+  }
+  return { catalogue, normalize, allows, forDifficulty, selectedZoneIds };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = BuildProgression;
 
@@ -7173,7 +7236,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function sourceSaid(name) {
     if (!profile || profile.mode !== 'personal' || !access || !name) return '';
     const sources = access.sources.get(name) || new Set();
-    const selected = access.zones.filter(z => profile.zones.includes(z.id) && sources.has(z.id));
+    const selectedIds = new Set(BuildProgression.selectedZoneIds(access, profile));
+    const selected = access.zones.filter(z => selectedIds.has(z.id) && sources.has(z.id));
     if (selected.length) return 'Loot: ' + selected.slice(0, 2).map(z => z.name).join(' · ')
       + (selected.length > 2 ? ' · +' + (selected.length - 2) + ' more' : '');
     return access.starter.has(name) ? 'Basic starter gear' : 'Outside your selected loot sources';
@@ -7192,8 +7256,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   function editProfile() {
     profileDraft = profile ? JSON.parse(JSON.stringify(profile))
-      : { version: 2, mode: 'personal', selection: 'difficulty', difficulty: 1,
-        zones: BuildProgression.forDifficulty(access, 1), excluded: [] };
+      : { version: 3, mode: 'personal', selection: 'difficulty', difficulty: 1,
+        zones: BuildProgression.forDifficulty(access, 1), biomeRanks: ['Rookie'], excluded: [] };
     drawWelcome();
     drawProgress();
     el('tcWelcomeTitle').focus();
@@ -7213,6 +7277,22 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '<span class="tc-dungeon-remove" aria-hidden="true">×</span><span class="tc-dungeon-art">'
       + (z.art ? indexIcon(z.art, 48, '') : '') + '</span><span class="tc-dungeon-name">' + esc(z.name)
       + '</span><span class="tc-zone-rating">' + (z.difficulty ? difficultyIcon + ' ' + z.difficulty : 'Unrated') + '</span></button>').join('');
+  }
+
+  const BIOME_RANKS = [
+    ['Rookie', 'Beach'], ['Adept', 'Ancient City'], ['Veteran', 'Deep Sea Abyss']
+  ];
+  function biomeRankCards(draft) {
+    const selected = new Set(draft.biomeRanks || ['Rookie']);
+    return BIOME_RANKS.map(([rank, example]) => {
+      const zone = access && access.zones.find(one => one.kind === 'biome' && one.name === example);
+      const active = selected.has(rank);
+      return '<button type="button" class="tc-biome-rank" data-biome-rank="' + rank
+        + '" aria-pressed="' + active + '">'
+        + '<span class="tc-biome-art">' + (zone && zone.art ? indexIcon(zone.art, 44, '') : '') + '</span>'
+        + '<span><strong>' + rank + '</strong><small>' + (active ? (rank === 'Rookie' ? 'Included by default' : 'Included') : 'Click to include')
+        + '</small></span></button>';
+    }).join('');
   }
 
   function filterDungeonCards(query) {
@@ -7237,6 +7317,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const dungeons = selectedDungeons(draft);
     el('tcWelcome').innerHTML = '<div class="tc-welcome-intro"><span class="tc-eyebrow">BUILD CRAFTER · WELCOME</span>'
       + '<h2 id="tcWelcomeTitle" tabindex="-1">What’s the highest dungeon difficulty you’ve completed?</h2></div>'
+      + '<section class="tc-biome-picker" aria-labelledby="tcBiomeTitle"><div><h3 id="tcBiomeTitle">Realm zones</h3>'
+      + '<span>Include loot found directly in these zones</span></div><div class="tc-biome-ranks">'
+      + biomeRankCards(draft) + '</div></section>'
       + '<div class="tc-slider-block"><div class="tc-slider-value">' + difficultyIcon + '<output id="tcDifficultyValue" for="tcDifficultySlider">'
         + (draft.difficulty || 1) + '</output><span>/ 10</span></div>'
       + '<div class="tc-slider-range"><input id="tcDifficultySlider" class="tc-difficulty-slider" type="range" min="1" max="10" step="0.5" value="'
@@ -7295,7 +7378,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '<button type="button" data-access-mode="personal" aria-pressed="' + personal + '">Personalized</button>'
       + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></div>'
       + '<span>' + (personal ? (profile.selection === 'difficulty' ? 'Difficulty ≤ ' + profile.difficulty + '/10 · ' : 'Manual selection · ')
-        + profile.zones.length + ' dungeons · ' : 'All sources · ') + allowed.toLocaleString('en-US') + ' choices across all classes</span></div>'
+        + profile.zones.length + ' dungeons · ' + (profile.biomeRanks || ['Rookie']).join(' + ') + ' zones · '
+        : 'All sources · ') + allowed.toLocaleString('en-US') + ' choices across all classes</span></div>'
       + (personal ? '<p class="tc-progress-detail">Only equipment linked to your places and starter gear. Unconfirmed sources are excluded.</p>' : '<p class="tc-progress-detail">Full equipment catalogue. Your selected places are saved for personalized mode.</p>')
       + (outside.length ? '<p class="tc-progress-detail">Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.</p>' : '')
       + (!access && personal ? '<p class="tc-progress-detail">Loot sources are unavailable. Edit progression to retry.</p>' : '')
@@ -7325,7 +7409,17 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     el('tcWelcome').addEventListener('click', async event => {
       const target = event.target.closest('button');
       if (!target) return;
-      if (target.dataset.removeZone) {
+      if (target.dataset.biomeRank) {
+        const rank = target.dataset.biomeRank;
+        const selected = new Set(profileDraft.biomeRanks || ['Rookie']);
+        if (selected.has(rank)) selected.delete(rank); else selected.add(rank);
+        profileDraft.biomeRanks = BIOME_RANKS.map(([name]) => name)
+          .filter(name => selected.has(name));
+        profileDraft.mode = 'personal';
+        target.setAttribute('aria-pressed', String(profileDraft.biomeRanks.includes(rank)));
+        target.querySelector('small').textContent = profileDraft.biomeRanks.includes(rank) ? 'Included' : 'Click to include';
+        updateProfilePreview();
+      } else if (target.dataset.removeZone) {
         const id = target.dataset.removeZone;
         profileDraft.mode = 'personal';
         if (profileDraft.selection === 'difficulty') {
@@ -10728,8 +10822,11 @@ const RealmIndex = (function () {
   const zoomed = () => Math.min(1.7, Math.max(1, (window.innerWidth || 1400) / 1400));
 
   function art(one, side) {
-    if (!one || !one.art || !all.sheet) return '';
+    if (!one) return '';
     side = Math.round(side * zoomed());
+    if (one.icon) return '<img class="ix-art ix-art-file" width="' + side + '" height="' + side
+      + '" src="' + esc(one.icon) + '" alt="">';
+    if (!one.art || !all.sheet) return '';
     const [x, y, w, h] = one.art;
     const zoom = side / Math.max(w, h);
     return '<span class="ix-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
@@ -11122,8 +11219,9 @@ const RealmIndex = (function () {
     for (const one of [...all.values()].filter(x => x.kind === 'place')
       .sort((a, b) => a.name.localeCompare(b.name))) {
       const ids = gather(x => x.id === one.id
-        || (x.outLinks || []).some(([how, to]) => how === 'was seen in' && to === one.id));
-      chip(where, one.name, one.name, ids);
+        || (x.outLinks || []).some(([how, to]) => how === 'was seen in' && to === one.id)
+        || (one.untiered || []).includes(x.id));
+      chip(where, one.name, one.name, ids, one.id);
     }
 
     /*
@@ -11772,6 +11870,7 @@ const RealmIndex = (function () {
     if (one.skin) bits.push(['turns you into', one.skin]);
     if (one.came) bits.push(['came with', 'the ' + one.came]);
     if (one.ground) bits.push(['ground', one.ground]);
+    if (one.rank) bits.push(['zone', one.rank]);
     if (one.tiles) bits.push(['how big', one.tiles.toLocaleString('en-US') + ' tiles']);
     if (one.pic) bits.push(['picture', PIC_SAY[one.pic] || one.pic]);
     if (one.stats) {
@@ -11817,6 +11916,30 @@ const RealmIndex = (function () {
     if (!difficulty) return '';
     return '<p class="ix-dungeon-difficulty"><b>☠ Difficulty ' + difficulty
       + ' / 10</b><span>RealmEye dungeon rating</span></p>';
+  }
+
+  function drawBiomeLoot(one) {
+    if (one.kind !== 'place' || !one.loot) return '';
+    const rows = [];
+    const tiers = Object.entries(one.loot.tiers || {}).filter(([, values]) => values.length);
+    if (tiers.length) rows.push('<div class="ix-link-row"><i>tiered loot</i><span>'
+      + tiers.map(([slot, values]) => '<b class="ix-loot-tier">' + esc(slot) + ' '
+        + esc(values.map(value => 'T' + value).join(', ')) + '</b>').join('') + '</span></div>');
+    const named = (ids, label) => {
+      const items = (ids || []).map(id => all.get(id)).filter(Boolean);
+      if (!items.length) return;
+      rows.push('<div class="ix-link-row"><i>' + esc(label) + '</i><span>'
+        + items.map(item => '<button type="button" class="ix-jump" data-open="' + esc(item.id) + '">'
+          + art(item, 18) + esc(item.said || item.name) + '</button>').join('') + '</span></div>');
+    };
+    named(one.untiered, 'untiered gear');
+    named(one.setTier, 'set-tier gear');
+    const dungeons = (one.dungeons || []).map(id => all.get(id)).filter(Boolean);
+    if (dungeons.length) rows.push('<div class="ix-link-row"><i>dungeon entrances</i><span>'
+      + dungeons.map(item => '<button type="button" class="ix-jump" data-open="' + esc(item.id) + '">'
+        + art(item, 18) + esc(item.said || item.name) + '</button>').join('') + '</span></div>');
+    return rows.length ? '<div class="ix-said-block ix-biome-loot"><h4>Loot available in this biome</h4>'
+      + '<div class="ix-links">' + rows.join('') + '</div></div>' : '';
   }
 
   /*
@@ -11916,6 +12039,7 @@ const RealmIndex = (function () {
           '<i>' + esc(x) + '</i>').join('') + '</p>'
         : '')
       + drawTools(one)
+      + drawBiomeLoot(one)
       + drawFolds(one)
       + drawSlots(one)
       + (links.length ? drawLinks(links) : '')

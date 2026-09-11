@@ -88,8 +88,11 @@ const RealmIndex = (function () {
   const zoomed = () => Math.min(1.7, Math.max(1, (window.innerWidth || 1400) / 1400));
 
   function art(one, side) {
-    if (!one || !one.art || !all.sheet) return '';
+    if (!one) return '';
     side = Math.round(side * zoomed());
+    if (one.icon) return '<img class="ix-art ix-art-file" width="' + side + '" height="' + side
+      + '" src="' + esc(one.icon) + '" alt="">';
+    if (!one.art || !all.sheet) return '';
     const [x, y, w, h] = one.art;
     const zoom = side / Math.max(w, h);
     return '<span class="ix-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
@@ -482,8 +485,9 @@ const RealmIndex = (function () {
     for (const one of [...all.values()].filter(x => x.kind === 'place')
       .sort((a, b) => a.name.localeCompare(b.name))) {
       const ids = gather(x => x.id === one.id
-        || (x.outLinks || []).some(([how, to]) => how === 'was seen in' && to === one.id));
-      chip(where, one.name, one.name, ids);
+        || (x.outLinks || []).some(([how, to]) => how === 'was seen in' && to === one.id)
+        || (one.untiered || []).includes(x.id));
+      chip(where, one.name, one.name, ids, one.id);
     }
 
     /*
@@ -1132,6 +1136,7 @@ const RealmIndex = (function () {
     if (one.skin) bits.push(['turns you into', one.skin]);
     if (one.came) bits.push(['came with', 'the ' + one.came]);
     if (one.ground) bits.push(['ground', one.ground]);
+    if (one.rank) bits.push(['zone', one.rank]);
     if (one.tiles) bits.push(['how big', one.tiles.toLocaleString('en-US') + ' tiles']);
     if (one.pic) bits.push(['picture', PIC_SAY[one.pic] || one.pic]);
     if (one.stats) {
@@ -1177,6 +1182,30 @@ const RealmIndex = (function () {
     if (!difficulty) return '';
     return '<p class="ix-dungeon-difficulty"><b>☠ Difficulty ' + difficulty
       + ' / 10</b><span>RealmEye dungeon rating</span></p>';
+  }
+
+  function drawBiomeLoot(one) {
+    if (one.kind !== 'place' || !one.loot) return '';
+    const rows = [];
+    const tiers = Object.entries(one.loot.tiers || {}).filter(([, values]) => values.length);
+    if (tiers.length) rows.push('<div class="ix-link-row"><i>tiered loot</i><span>'
+      + tiers.map(([slot, values]) => '<b class="ix-loot-tier">' + esc(slot) + ' '
+        + esc(values.map(value => 'T' + value).join(', ')) + '</b>').join('') + '</span></div>');
+    const named = (ids, label) => {
+      const items = (ids || []).map(id => all.get(id)).filter(Boolean);
+      if (!items.length) return;
+      rows.push('<div class="ix-link-row"><i>' + esc(label) + '</i><span>'
+        + items.map(item => '<button type="button" class="ix-jump" data-open="' + esc(item.id) + '">'
+          + art(item, 18) + esc(item.said || item.name) + '</button>').join('') + '</span></div>');
+    };
+    named(one.untiered, 'untiered gear');
+    named(one.setTier, 'set-tier gear');
+    const dungeons = (one.dungeons || []).map(id => all.get(id)).filter(Boolean);
+    if (dungeons.length) rows.push('<div class="ix-link-row"><i>dungeon entrances</i><span>'
+      + dungeons.map(item => '<button type="button" class="ix-jump" data-open="' + esc(item.id) + '">'
+        + art(item, 18) + esc(item.said || item.name) + '</button>').join('') + '</span></div>');
+    return rows.length ? '<div class="ix-said-block ix-biome-loot"><h4>Loot available in this biome</h4>'
+      + '<div class="ix-links">' + rows.join('') + '</div></div>' : '';
   }
 
   /*
@@ -1276,6 +1305,7 @@ const RealmIndex = (function () {
           '<i>' + esc(x) + '</i>').join('') + '</p>'
         : '')
       + drawTools(one)
+      + drawBiomeLoot(one)
       + drawFolds(one)
       + drawSlots(one)
       + (links.length ? drawLinks(links) : '')

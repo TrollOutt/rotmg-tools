@@ -98,7 +98,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function sourceSaid(name) {
     if (!profile || profile.mode !== 'personal' || !access || !name) return '';
     const sources = access.sources.get(name) || new Set();
-    const selected = access.zones.filter(z => profile.zones.includes(z.id) && sources.has(z.id));
+    const selectedIds = new Set(BuildProgression.selectedZoneIds(access, profile));
+    const selected = access.zones.filter(z => selectedIds.has(z.id) && sources.has(z.id));
     if (selected.length) return 'Loot: ' + selected.slice(0, 2).map(z => z.name).join(' · ')
       + (selected.length > 2 ? ' · +' + (selected.length - 2) + ' more' : '');
     return access.starter.has(name) ? 'Basic starter gear' : 'Outside your selected loot sources';
@@ -117,8 +118,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   function editProfile() {
     profileDraft = profile ? JSON.parse(JSON.stringify(profile))
-      : { version: 2, mode: 'personal', selection: 'difficulty', difficulty: 1,
-        zones: BuildProgression.forDifficulty(access, 1), excluded: [] };
+      : { version: 3, mode: 'personal', selection: 'difficulty', difficulty: 1,
+        zones: BuildProgression.forDifficulty(access, 1), biomeRanks: ['Rookie'], excluded: [] };
     drawWelcome();
     drawProgress();
     el('tcWelcomeTitle').focus();
@@ -138,6 +139,22 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '<span class="tc-dungeon-remove" aria-hidden="true">×</span><span class="tc-dungeon-art">'
       + (z.art ? indexIcon(z.art, 48, '') : '') + '</span><span class="tc-dungeon-name">' + esc(z.name)
       + '</span><span class="tc-zone-rating">' + (z.difficulty ? difficultyIcon + ' ' + z.difficulty : 'Unrated') + '</span></button>').join('');
+  }
+
+  const BIOME_RANKS = [
+    ['Rookie', 'Beach'], ['Adept', 'Ancient City'], ['Veteran', 'Deep Sea Abyss']
+  ];
+  function biomeRankCards(draft) {
+    const selected = new Set(draft.biomeRanks || ['Rookie']);
+    return BIOME_RANKS.map(([rank, example]) => {
+      const zone = access && access.zones.find(one => one.kind === 'biome' && one.name === example);
+      const active = selected.has(rank);
+      return '<button type="button" class="tc-biome-rank" data-biome-rank="' + rank
+        + '" aria-pressed="' + active + '">'
+        + '<span class="tc-biome-art">' + (zone && zone.art ? indexIcon(zone.art, 44, '') : '') + '</span>'
+        + '<span><strong>' + rank + '</strong><small>' + (active ? (rank === 'Rookie' ? 'Included by default' : 'Included') : 'Click to include')
+        + '</small></span></button>';
+    }).join('');
   }
 
   function filterDungeonCards(query) {
@@ -162,6 +179,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const dungeons = selectedDungeons(draft);
     el('tcWelcome').innerHTML = '<div class="tc-welcome-intro"><span class="tc-eyebrow">BUILD CRAFTER · WELCOME</span>'
       + '<h2 id="tcWelcomeTitle" tabindex="-1">What’s the highest dungeon difficulty you’ve completed?</h2></div>'
+      + '<section class="tc-biome-picker" aria-labelledby="tcBiomeTitle"><div><h3 id="tcBiomeTitle">Realm zones</h3>'
+      + '<span>Include loot found directly in these zones</span></div><div class="tc-biome-ranks">'
+      + biomeRankCards(draft) + '</div></section>'
       + '<div class="tc-slider-block"><div class="tc-slider-value">' + difficultyIcon + '<output id="tcDifficultyValue" for="tcDifficultySlider">'
         + (draft.difficulty || 1) + '</output><span>/ 10</span></div>'
       + '<div class="tc-slider-range"><input id="tcDifficultySlider" class="tc-difficulty-slider" type="range" min="1" max="10" step="0.5" value="'
@@ -220,7 +240,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '<button type="button" data-access-mode="personal" aria-pressed="' + personal + '">Personalized</button>'
       + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></div>'
       + '<span>' + (personal ? (profile.selection === 'difficulty' ? 'Difficulty ≤ ' + profile.difficulty + '/10 · ' : 'Manual selection · ')
-        + profile.zones.length + ' dungeons · ' : 'All sources · ') + allowed.toLocaleString('en-US') + ' choices across all classes</span></div>'
+        + profile.zones.length + ' dungeons · ' + (profile.biomeRanks || ['Rookie']).join(' + ') + ' zones · '
+        : 'All sources · ') + allowed.toLocaleString('en-US') + ' choices across all classes</span></div>'
       + (personal ? '<p class="tc-progress-detail">Only equipment linked to your places and starter gear. Unconfirmed sources are excluded.</p>' : '<p class="tc-progress-detail">Full equipment catalogue. Your selected places are saved for personalized mode.</p>')
       + (outside.length ? '<p class="tc-progress-detail">Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.</p>' : '')
       + (!access && personal ? '<p class="tc-progress-detail">Loot sources are unavailable. Edit progression to retry.</p>' : '')
@@ -250,7 +271,17 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     el('tcWelcome').addEventListener('click', async event => {
       const target = event.target.closest('button');
       if (!target) return;
-      if (target.dataset.removeZone) {
+      if (target.dataset.biomeRank) {
+        const rank = target.dataset.biomeRank;
+        const selected = new Set(profileDraft.biomeRanks || ['Rookie']);
+        if (selected.has(rank)) selected.delete(rank); else selected.add(rank);
+        profileDraft.biomeRanks = BIOME_RANKS.map(([name]) => name)
+          .filter(name => selected.has(name));
+        profileDraft.mode = 'personal';
+        target.setAttribute('aria-pressed', String(profileDraft.biomeRanks.includes(rank)));
+        target.querySelector('small').textContent = profileDraft.biomeRanks.includes(rank) ? 'Included' : 'Click to include';
+        updateProfilePreview();
+      } else if (target.dataset.removeZone) {
         const id = target.dataset.removeZone;
         profileDraft.mode = 'personal';
         if (profileDraft.selection === 'difficulty') {
