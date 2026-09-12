@@ -364,7 +364,9 @@ var EnchantEngine = (function () {
      * pictures and not about the game.
      */
     const awokenArt = new Set(parseAwakenings(sources.awakenText).keys());
-    const awakenings = parseClientItems(sources.clientItemText).awakenings;
+    const clientItems = parseClientItems(sources.clientItemText);
+    const awakenings = clientItems.awakenings;
+    const itemsByName = new Map(clientItems.items.map(item => [item.name, item]));
     return {
       enchants,
       byName,
@@ -376,6 +378,7 @@ var EnchantEngine = (function () {
       })),
       byArtifact: new Map(artifacts.map(artifact => [artifact.name, artifact])),
       awakenings,
+      itemsByName,
       awokenArt,
       // Only labels that appear in at least one "Incompatible Labels" list can
       // ever remove a candidate; every other label is purely descriptive.
@@ -405,6 +408,57 @@ var EnchantEngine = (function () {
     return labels;
   }
 
+  // The item's own family, straight from the same client catalogue used by the
+  // calculator. Consumers must not guess Alien / Neo Alien from the item name.
+  function subtypesForItem(data, itemName) {
+    const item = data && data.itemsByName && data.itemsByName.get(itemName);
+    return new Set(item && item.base ? [item.base] : []);
+  }
+
+  // Item-level game rules, deliberately excluding natural rollability and the
+  // artifact entry rule. eligiblePool() also needs this for artifact-only
+  // entries; calculator pickers add isNaturallyRollable() through
+  // eligibleForItem().
+  function itemAllows(data, cfg, mod) {
+    if (!mod || !cfg || !cfg.type || !mod.itemTags.has(cfg.type)) return false;
+    if (mod.excludes.has('AWAKENED') && !(data.awakenings.get(cfg.item) || []).includes(mod.name)) return false;
+    const subtypes = asSet(cfg.subtypes);
+    for (const requirement of mod.special) if (!subtypes.has(requirement)) return false;
+    return true;
+  }
+
+  function eligibleForItem(data, cfg, mod) {
+    return isNaturallyRollable(mod) && itemAllows(data, cfg, mod);
+  }
+
+  function missingBase(data, cfg, mod) {
+    if (!mod || !cfg || !cfg.type || !mod.itemTags.has(cfg.type)) return null;
+    if (mod.excludes.has('AWAKENED') && !(data.awakenings.get(cfg.item) || []).includes(mod.name)) return null;
+    const subtypes = asSet(cfg.subtypes);
+    const missing = [...mod.special].filter(requirement => !subtypes.has(requirement));
+    return missing.length ? missing : null;
+  }
+
+  // Directional incompatibility: candidate may follow prior iff none of the
+  // candidate's refused labels are carried by prior.
+  function follows(candidate, prior) {
+    for (const label of candidate.excludes) if (prior.tags.has(label)) return false;
+    return true;
+  }
+
+  function conflictWith(data, mod, slot, others) {
+    for (const other of others) {
+      if (other.index === slot.index || !other.name) continue;
+      const otherMod = data.byName.get(other.name);
+      if (!otherMod) continue;
+      if (otherMod.name === mod.name) return { other: otherMod, reason: 'duplicate' };
+      if (other.locked && !follows(mod, otherMod)) return { other: otherMod, reason: 'after-lock' };
+      if (!other.locked && slot.locked && !follows(otherMod, mod)) return { other: otherMod, reason: 'before-wanted' };
+      if (!other.locked && !slot.locked && !follows(mod, otherMod) && !follows(otherMod, mod)) return { other: otherMod, reason: 'mutual' };
+    }
+    return null;
+  }
+
   /* ------------------------------------------------------------------ *
    * Eligible pool                                                       *
    * ------------------------------------------------------------------ */
@@ -425,18 +479,14 @@ var EnchantEngine = (function () {
   function eligiblePool(data, cfg, artifact) {
     const locked = new Set(cfg.locks);
     const labels = lockedLabels(data, cfg);
-    const itemAwakenings = new Set(data.awakenings.get(cfg.item) || []);
-    const subtypes = asSet(cfg.subtypes);
     const entry = artifact && artifact.entry;
     return data.enchants.filter(mod => {
       // A family is a way of asking for one of several, not something the game
       // rolls; it must never sit in a pool competing for a slot.
       if (mod.members) return false;
       if (locked.has(mod.name)) return false;
-      if (!mod.itemTags.has(cfg.type)) return false;
-      if (mod.excludes.has('AWAKENED') && !itemAwakenings.has(mod.name)) return false;
+      if (!itemAllows(data, cfg, mod)) return false;
       for (const label of mod.excludes) if (labels.has(label)) return false;
-      for (const requirement of mod.special) if (!subtypes.has(requirement)) return false;
       // What the artifact's own pool holds. Most say "everything ROLLABLE",
       // but not all: the Valentine engravings take ROLLABLE,VALENTINES, and
       // Night Prince adds one enchantment by name that its labels would not
@@ -1110,7 +1160,8 @@ var EnchantEngine = (function () {
 
   const engine = {
     readBracketGroups, splitSet, parseMods, parseClientMods, parseClientArtifacts, parseClientItems, parseAwakenings, buildDataset,
-    lockCount, rollsRemaining, lockedLabels, eligiblePool, isNaturallyRollable, rollablePool, weightFor, weightedPool,
+    lockCount, rollsRemaining, lockedLabels, subtypesForItem, itemAllows, eligibleForItem, missingBase, follows, conflictWith,
+    eligiblePool, isNaturallyRollable, rollablePool, weightFor, weightedPool,
     goalDistribution, distributionFor, oddsAny, oddsAll, tradeoffFamilies, membersOf, tierMultiplier, tierMass, tierRules,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,
     planGoals, planSimultaneous,

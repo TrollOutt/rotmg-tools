@@ -30,7 +30,8 @@ const path = require('path');
 const zlib = require('zlib');
 
 const root = path.join(__dirname, '..');
-const OUT = path.join(root, 'client-data', 'textures');
+const CLIENT_DATA = process.env.ROTMG_CLIENT_DATA || path.join(root, 'client-data');
+const OUT = path.join(CLIENT_DATA, 'textures');
 
 const DEFAULT_CLIENTS = [
   path.join(process.env.LOCALAPPDATA || '', 'RealmOfTheMadGod', 'Production'),
@@ -242,7 +243,7 @@ for (const object of file.objects) {
   r.at = object.byteStart;
   if (r.string() !== 'spritesheetf') continue;
   const length = r.i32();
-  const out = path.join(root, 'client-data', 'spritesheet.bin');
+  const out = path.join(CLIENT_DATA, 'spritesheet.bin');
   fs.writeFileSync(out, file.buffer.subarray(r.at, r.at + length));
   console.log('    ' + 'spritesheet'.padEnd(20) + (length / 1048576).toFixed(1)
     + ' MB  -> ' + path.relative(root, out));

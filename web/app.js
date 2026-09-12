@@ -274,14 +274,7 @@ function cfg() {
 // that same family, and no artifact stands in for the item. See
 // EnchantEngine.NOTES.alienBase for how this parts company with the Qt source.
 function eligibleForItem(mod, config) {
-  // Only what the game will actually roll. Every pool the client defines asks
-  // for ROLLABLE, including the default one; the handful that are not rollable
-  // exist so an artifact can name one outright, and none can be aimed at.
-  if (!EnchantEngine.isNaturallyRollable(mod)) return false;
-  if (!config.type || !mod.itemTags.has(config.type)) return false;
-  if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return false;
-  for (const requirement of mod.special) if (!config.subtypes.has(requirement)) return false;
-  return true;
+  return EnchantEngine.eligibleForItem(state.data, config, mod);
 }
 
 /*
@@ -295,17 +288,13 @@ function eligibleForItem(mod, config) {
 const BASE_LABEL = { ALIEN: 'Alien', NEO_ALIEN: 'Neo Alien', SUMMONPOWERED: 'summon-powered' };
 
 function missingBase(mod, config) {
-  if (!config.type || !mod.itemTags.has(config.type)) return null;
-  if (mod.excludes.has('AWAKENED') && !(state.data.awakenings.get(config.item) || []).includes(mod.name)) return null;
-  const missing = [...mod.special].filter(requirement => !config.subtypes.has(requirement));
-  return missing.length ? missing : null;
+  return EnchantEngine.missingBase(state.data, config, mod);
 }
 
 // Directional rule: `candidate` survives after `prior` when none of the
 // candidate's Incompatible Labels appears among the prior's Labels.
 function follows(candidate, prior) {
-  for (const label of candidate.excludes) if (prior.tags.has(label)) return false;
-  return true;
+  return EnchantEngine.follows(candidate, prior);
 }
 
 /*
@@ -316,16 +305,7 @@ function follows(candidate, prior) {
  *    build planner then works out.
  */
 function conflictWith(mod, slot, others) {
-  for (const other of others) {
-    if (other.index === slot.index || !other.name) continue;
-    const otherMod = state.data.byName.get(other.name);
-    if (!otherMod) continue;
-    if (otherMod.name === mod.name) return { other: otherMod, reason: 'duplicate' };
-    if (other.locked && !follows(mod, otherMod)) return { other: otherMod, reason: 'after-lock' };
-    if (!other.locked && slot.locked && !follows(otherMod, mod)) return { other: otherMod, reason: 'before-wanted' };
-    if (!other.locked && !slot.locked && !follows(mod, otherMod) && !follows(otherMod, mod)) return { other: otherMod, reason: 'mutual' };
-  }
-  return null;
+  return EnchantEngine.conflictWith(state.data, mod, slot, others);
 }
 
 function candidatesFor(slot, config) {

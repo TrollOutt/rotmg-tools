@@ -11,9 +11,12 @@
     "realm-wiki": "node tools/fetch-realmeye-realm.js --details --assets && node tools/generate-realm.js",
     "wiki-dungeons": "node tools/link-index-dungeons.js",
     "wiki-tiers": "node tools/fetch-realmeye-tier-drops.js",
-    "scrape": "node tools/extract-client.js && node tools/build-index.js && npm run project-data && node tools/read-client.js --snapshot --news",
+    "scrape": "npm run extract-client-data && npm run build-index-db && npm run publish-index-db && npm run project-data && node tools/read-client.js --snapshot --news",
     "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
     "release": "npm test && npm run build",
-    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js"
+    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js",
+    "extract-client-data": "node tools/extract-client.js && node tools/extract-client-textures.js",
+    "build-index-db": "python tools/database/check_client_source.py && python tools/database/build_sqlite.py",
+    "publish-index-db": "python tools/database/publish_index.py --output-root . --allow-production"
   }
 }

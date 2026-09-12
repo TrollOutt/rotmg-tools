@@ -36,7 +36,11 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const XML = path.join(root, 'client-data');
+const sourceAt = process.argv.indexOf('--sqlite-source');
+const sqliteSource = sourceAt >= 0 ? process.argv[sourceAt + 1] : null;
+if (sourceAt >= 0 && !sqliteSource) throw new Error('--sqlite-source requires an output path');
+const sqliteSourceMode = Boolean(sqliteSource);
+const XML = process.env.ROTMG_CLIENT_DATA || path.join(root, 'client-data');
 const OUT = path.join(root, 'data', 'Index');
 /*
  * And a copy where the built site can fetch it. Everything else the site
@@ -57,6 +61,11 @@ const SERVED = path.join(root, 'web', 'assets', 'index');
  * at somebody who has just pulled the project onto a new machine.
  */
 if (!fs.existsSync(XML)) {
+  if (sqliteSourceMode) {
+    console.error('\n  SQLite source build requires client data at ' + XML + '.');
+    console.error('  Set ROTMG_CLIENT_DATA or run node tools/extract-client.js.\n');
+    process.exit(1);
+  }
   console.log('\n  No client-data/ here, so there is nothing to read.');
   console.log('  On a machine with the game installed:  node tools/extract-client.js');
   console.log('  Everything this would write is already committed, so the site');
@@ -64,7 +73,20 @@ if (!fs.existsSync(XML)) {
   process.exit(0);
 }
 
-const meta = require('./provenance').clientStamp(XML, __filename);
+const provenance = require('./provenance');
+const clientProvenance = JSON.parse(fs.readFileSync(path.join(XML, 'provenance.json'), 'utf8'));
+function sqliteSourceBuilt() {
+  // Migration-only legacy `built`: deterministic for a client source identity.
+  // Normal production builds still use their real generation timestamp.
+  const date = clientProvenance.from && clientProvenance.from.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
+    throw new Error('SQLite source requires client provenance from.date (YYYY-MM-DD)');
+  }
+  return date + 'T00:00:00.000Z';
+}
+const meta = sqliteSourceMode
+  ? provenance.stamp(__filename, clientProvenance.from, sqliteSourceBuilt())
+  : provenance.clientStamp(XML, __filename);
 const documents = new Map(fs.readdirSync(XML).filter(name => name.endsWith('.xml')).sort()
   .map(name => [name, fs.readFileSync(path.join(XML, name), 'utf8')]));
 
@@ -1228,7 +1250,7 @@ for (const [id, record] of records) {
 }
 
 /* ---------------- written down ---------------- */
-fs.mkdirSync(OUT, { recursive: true });
+if (!sqliteSourceMode) fs.mkdirSync(OUT, { recursive: true });
 const all = [...records.values()];
 const result = {
   ...meta,
@@ -1245,7 +1267,7 @@ const result = {
   records: all
 };
 const priorFile = path.join(OUT, 'index.json');
-if (process.argv.includes('--sprites')) {
+if (process.argv.includes('--sprites') || sqliteSourceMode) {
   const assets = new Map();
   const readAsset = name => {
     if (!assets.has(name)) {
@@ -1255,9 +1277,10 @@ if (process.argv.includes('--sprites')) {
     return assets.get(name);
   };
   if (!readAsset('spritesheet.bin')) throw new Error('Sprite registry missing; extract client textures first.');
-  require('./index-sprites')({root, documents, readAsset, facts: result});
+  const assetRoot = sqliteSourceMode ? path.join(path.dirname(path.resolve(sqliteSource)), 'assets') : root;
+  require('./index-sprites')({root: assetRoot, documents, readAsset, facts: result});
   const theory = require('./index-model').project(result);
-  require('./theory-sprites')({root, documents, readAsset, facts: theory});
+  require('./theory-sprites')({root: assetRoot, documents, readAsset, facts: theory});
   require('./index-model').artwork(result, theory);
 } else if (fs.existsSync(priorFile)) {
   const prior = JSON.parse(fs.readFileSync(priorFile, 'utf8'));
@@ -1271,6 +1294,25 @@ if (process.argv.includes('--sprites')) {
   if (prior.theorySheet) result.theorySheet = prior.theorySheet;
 }
 require('./biome-art')(result, { root });
+if (sqliteSourceMode) {
+  // Biome decoration is normally appended after link decoration. Keep the
+  // public place-field order stable without consulting a prior Index file.
+  const placeOrder = ['id', 'kind', 'name', 'from', 'tiles', 'patches', 'ground',
+    'in', 'art', 'beacon', 'beaconArt', 'rank', 'wiki', 'loot', 'untiered',
+    'setTier', 'dungeons', 'icon'];
+  for (const record of result.records) {
+    if (record.kind !== 'place' || !record.beacon) continue;
+    const ordered = {};
+    for (const field of placeOrder) if (Object.hasOwn(record, field)) ordered[field] = record[field];
+    for (const field of Object.keys(record)) if (!Object.hasOwn(ordered, field)) ordered[field] = record[field];
+    for (const field of Object.keys(record)) delete record[field];
+    Object.assign(record, ordered);
+  }
+  fs.mkdirSync(path.dirname(path.resolve(sqliteSource)), { recursive: true });
+  fs.writeFileSync(sqliteSource, JSON.stringify(result) + '\n');
+  console.log('  -> ' + sqliteSource + ' (SQLite source; no production Index input)');
+  process.exit(0);
+}
 fs.writeFileSync(priorFile, JSON.stringify(result) + '\n');
 
 fs.mkdirSync(SERVED, { recursive: true });
