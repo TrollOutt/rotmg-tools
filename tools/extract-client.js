@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const OUT = path.join(root, 'client-data');
+const OUT = process.env.ROTMG_CLIENT_DATA || path.join(root, 'client-data');
 
 const DEFAULT_CLIENTS = [
   path.join(process.env.LOCALAPPDATA || '', 'RealmOfTheMadGod', 'Production'),

@@ -193,6 +193,16 @@ check('7 enchantments require a Neo Alien base', NEO_MODS.length === 7, `got ${N
 check('no enchantment requires both families at once',
   data.enchants.every(m => !(m.special.has('ALIEN') && m.special.has('NEO_ALIEN'))));
 
+const acidicSubtypes = engine.subtypesForItem(data, 'Acidic Slasher');
+check('the shared engine reads the Alien family from the client item catalogue',
+  acidicSubtypes.size === 1 && acidicSubtypes.has('ALIEN'));
+check('the shared item rule admits Alien rolls on a real Alien weapon',
+  ALIEN_MODS.every(mod => engine.eligibleForItem(data,
+    baseCfg({ type: 'WEAPON', item: 'Acidic Slasher', subtypes: acidicSubtypes }), mod)));
+const neoWeapon = [...data.itemsByName.values()].find(item => item.type === 'WEAPON' && item.base === 'NEO_ALIEN');
+check('the shared engine reads a Neo Alien family from the client item catalogue',
+  !!neoWeapon && engine.subtypesForItem(data, neoWeapon.name).has('NEO_ALIEN'));
+
 check('ordinary gear cannot take an Alien enchantment',
   ALIEN_MODS.every(m => !inPool(m, [], 'No Artifact')));
 check('ordinary gear cannot take a Neo Alien enchantment',

@@ -36,11 +36,42 @@ for (const place of index.records.filter(one => one.kind === 'place')) {
   assert(visible, place.name + ' must identify a visible beacon or guardian record');
   assert.deepEqual(place.art, visible.art, place.name + ' must reuse its visible beacon artwork');
 }
-assert(records.get('place:Carboniferous').icon?.startsWith('data:image/png;base64,'),
-  'Carboniferous must use the green beacon actually drawn in the Atlas');
-assert.equal(records.get('place:Runic Tundra').beaconArt,
-  'enemy:Legion Principal Portal#Beacon Guardian Runic Tundra Big Portal',
-  'Runic Tundra must use its beacon portal rather than its guardian');
+const realmBiomeDir = path.join(root, 'web', 'assets', 'realm-biomes');
+const realmBiomeManifest = JSON.parse(
+  fs.readFileSync(path.join(realmBiomeDir, 'index.json'), 'utf8')
+);
+
+function realmBiomeIcon(name) {
+  const entry = realmBiomeManifest.beacons[name];
+  assert(entry, name + ' must exist in the RealmEye biome manifest');
+
+  const file = path.join(realmBiomeDir, entry.file);
+  assert(fs.existsSync(file), name + ' RealmEye beacon file must exist');
+
+  const ext = path.extname(file).toLowerCase();
+  const mime = ext === '.gif' ? 'image/gif'
+    : ext === '.webp' ? 'image/webp'
+    : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
+    : 'image/png';
+
+  return 'data:' + mime + ';base64,'
+    + fs.readFileSync(file).toString('base64');
+}
+
+for (const name of ['Carboniferous', 'Runic Tundra']) {
+  const place = records.get('place:' + name);
+
+  assert(place, name + ' place record must exist');
+  assert.equal(
+    place.icon,
+    realmBiomeIcon(name),
+    name + ' must display the locally imported RealmEye beacon'
+  );
+  assert(
+    !place.art,
+    name + ' must not fall back to Atlas sprite coordinates'
+  );
+}
 const documentedBiomes = index.records.filter(one => one.kind === 'place' && one.loot);
 assert.equal(documentedBiomes.length, 14, 'all reference-backed realm biomes must publish their loot');
 for (const place of documentedBiomes) {
@@ -124,5 +155,7 @@ assert(/chip\(where, one\.name, one\.name, ids, one\.id\)/.test(pageSource),
   'biome category choices must reuse the artwork of their place record');
 assert(/drawBiomeLoot\(one\)/.test(pageSource),
   'biome cards must display their normalised loot');
+assert(/const anchorName = asked\[0\][\s\S]{0,700}aIsAnchor[\s\S]{0,700}bIsAnchor/.test(pageSource),
+  'the record named by the first category must be pinned ahead of ordinary sub-category results');
 
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');

@@ -685,8 +685,35 @@ const RealmIndex = (function () {
         return x.localeCompare(y);
       });
     } else {
-      /* Nothing asked for: by name, so the same question gives the same page. */
-      out.sort((a, b) => a[1].localeCompare(b[1]));
+      /*
+       * The first category is the anchor for everything below it. When that
+       * category is also a record in its own right, put that exact record at
+       * the head of the list instead of burying it alphabetically among the
+       * things the category contains.
+       *
+       * Examples:
+       *   Assassin      -> the Assassin class record
+       *   Runic Tundra  -> the Runic Tundra place record
+       *   The Shatters  -> the dungeon/portal record
+       *
+       * Generic categories such as Weapon or Bosses are unaffected unless an
+       * actual surviving record carries exactly that displayed name.
+       *
+       * A typed search keeps its own relevance order above; this only changes
+       * ordinary category browsing.
+       */
+      const anchorName = asked[0] && String(asked[0].say || '').trim().toLowerCase();
+
+      out.sort((a, b) => {
+        if (anchorName) {
+          const aIsAnchor = String(a[1] || '').trim().toLowerCase() === anchorName;
+          const bIsAnchor = String(b[1] || '').trim().toLowerCase() === anchorName;
+
+          if (aIsAnchor !== bIsAnchor) return aIsAnchor ? -1 : 1;
+        }
+
+        return a[1].localeCompare(b[1]);
+      });
     }
     /* The count is of everything that matched, not of the page of it shown. */
     const page = out.slice(0, 300);

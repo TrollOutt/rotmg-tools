@@ -848,6 +848,24 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    */
   const NUMERAL = /\s+(?:[IVX]+|\d+)$/;
   const plainly = name => String(name).replace(NUMERAL, '').trim().toLowerCase();
+
+  /*
+   * Boundary aliases between raw client names carried by TheoryCraft and
+   * the canonical names exposed by the shared EnchantEngine.
+   *
+   * Do not put these corrections into plainly(): plainly() is also used for
+   * identity/parity checks where preserving the source spelling matters.
+   */
+  const ENCHANT_NAME_ALIASES = new Map([
+    ['mana -attacktradeoff', 'mana -attack tradeoff'],
+    ['pirates expertise', "pirate's expertise"],
+    ['vampric lifeforce', 'vampiric lifeforce']
+  ]);
+
+  const enchantKey = name => {
+    const bare = plainly(name);
+    return ENCHANT_NAME_ALIASES.get(bare) || bare;
+  };
   /*
    * How much of an enchantment there is, for choosing between four of the
    * same thing. The client rolls Flat Life Regeneration I through IV under
@@ -880,13 +898,15 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (!enchByName) {
       enchByName = new Map();
       for (const one of data.enchants) {
-        for (const key of [one.name, plainly(one.name)]) {
+        for (const key of [one.name, plainly(one.name), enchantKey(one.name)]) {
           const had = enchByName.get(key);
           if (!had || worth(one) > worth(had)) enchByName.set(key, one);
         }
       }
     }
-    return enchByName.get(name) || enchByName.get(plainly(name));
+    return enchByName.get(name)
+      || enchByName.get(plainly(name))
+      || enchByName.get(enchantKey(name));
   }
 
   /*
@@ -904,14 +924,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (i === at || !id) return;
       const one = data.byEnch[id];
       if (!one) return;
-      const bare = plainly(one.name);
+      const bare = enchantKey(one.name);
       for (const name of [one.name, one.name.replace(NUMERAL, '').trim()]) {
         if (held.byName && held.byName.get(name)) { out.push(name); return; }
       }
-      // Nothing matched by name: hand over whatever the calculator does know
-      // that reads the same, rather than nothing at all.
+      // Nothing matched exactly: cross the raw-client/canonical-name boundary
+      // before deciding that the calculator does not know this enchantment.
       for (const [name] of held.byName || []) {
-        if (plainly(name) === bare) { out.push(name); return; }
+        if (enchantKey(name) === bare) { out.push(name); return; }
       }
     });
     return out;
@@ -928,7 +948,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         type: OF_HAND[item.hand] || 'WEAPON',
         slots: (already || []).length || 4,
         locks,
-        subtypes: new Set()
+        subtypes: EnchantEngine.subtypesForItem(held, itemName)
       };
       const pool = EnchantEngine.rollablePool(held, cfg);
       const out = [];
@@ -952,7 +972,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         const mine = charmNamed(mod.name);
         // How likely it is to come out, kept for the slot that has nothing
         // countable left to put in it.
-        out.push(Object.assign({ roll: mod.weight }, mine || { id: 'n:' + mod.name, name: mod.name }));
+        out.push(Object.assign(
+          { roll: mod.weight },
+          mine || { id: 'n:' + mod.name },
+          { name: mod.name }
+        ));
       }
       return out;
     }
@@ -2792,7 +2816,7 @@ const TINT = {
         type: OF_HAND[item.hand] || 'WEAPON',
         slots: worn.slots,
         locks,
-        subtypes: new Set()
+        subtypes: EnchantEngine.subtypesForItem(held, worn.name)
       });
       const opened = window.openEnchantPicker({
         title: 'Slot ' + (at + 1) + ' · ' + worn.name,
