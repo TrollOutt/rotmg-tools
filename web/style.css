@@ -3099,23 +3099,13 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 .ix-layout {
   transition: grid-template-columns .34s cubic-bezier(.4, 0, .2, 1);
   display: grid;
-  grid-template-columns: minmax(150px, 14vw) minmax(300px, 26vw) minmax(280px, 100%);
+  grid-template-columns: minmax(280px, 14vw) minmax(300px, 26vw) minmax(280px, 100%);
   gap: clamp(10px, 1.2vw, 20px); align-items: stretch;
   height: calc(100vh - 118px); min-height: 420px;
 }
 .ix-layout > .card { min-height: 0; max-height: 100%; }
-@media (max-width: 1180px) { .ix-layout { grid-template-columns: minmax(240px, 340px) 1fr;
-    height: auto; }
-  .ix-layout > .card { max-height: none; }
-  .ix-list { max-height: 60vh; }
-  .ix-card { max-height: none; }
-  .ix-ways { grid-column: 1 / -1; }
-  .ix-facets { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
-  .ix-facets .ix-group { flex: 0 1 auto; min-width: 150px; }
-  .ix-facets .ix-group.is-open { flex-basis: 100%; }
-  .ix-ways { max-height: none; }
-}
-@media (max-width: 860px) { .ix-layout { grid-template-columns: 1fr; } }
+/* Responsive stacking is defined after the state-specific Index layouts
+ * below, so those rules cannot accidentally override it. */
 
 /* ---------------- ways in ---------------- *
  * Every division of the index the data really supports, with what each one
@@ -3301,11 +3291,11 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * and its family at the other with a metre of nothing between them.
  */
 .ix-layout:not(.has-card) {
-  grid-template-columns: minmax(190px, 20vw) minmax(320px, var(--ix-listw, 52ch)) minmax(0px, 0px);
+  grid-template-columns: minmax(280px, 20vw) minmax(320px, var(--ix-listw, 52ch)) minmax(0px, 0px);
   justify-content: start;
 }
 .ix-layout.has-pick:not(.has-card) {
-  grid-template-columns: minmax(150px, 16vw) minmax(320px, var(--ix-listw, 52ch)) minmax(0px, 0px);
+  grid-template-columns: minmax(280px, 16vw) minmax(320px, var(--ix-listw, 52ch)) minmax(0px, 0px);
   justify-content: start;
 }
 /*
@@ -3326,6 +3316,47 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
 }
 .ix-ways > #ixSearch { margin: 0 0 12px; }
+
+/*
+ * Keep the normal Index columns on laptop/tablet widths.
+ *
+ * The old 1180px breakpoint stretched Category across the whole row and
+ * changed its groups into a horizontal strip. The three-column layout still
+ * comfortably fits at those widths, so only stack the panels on genuinely
+ * narrow screens.
+ */
+@media (max-width: 900px) {
+  .ix-layout,
+  .ix-layout:not(.has-card),
+  .ix-layout.has-pick:not(.has-card),
+  .ix-layout:not(.has-list) {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .ix-layout > .card {
+    max-height: none;
+  }
+
+  .ix-ways {
+    grid-column: auto;
+    max-height: none;
+  }
+
+  .ix-facets {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .ix-list {
+    max-height: 60vh;
+  }
+
+  .ix-card {
+    max-height: none;
+  }
+}
 
 /* What the community says, kept visibly apart from what the client declares. */
 .ix-does {
@@ -3735,4 +3766,31 @@ body.ring-near .ring-tag { opacity: 0; }
 
 .ix-biome-loot .ix-link-row > span {
   gap: 5px;
+}
+
+/* INDEX CATEGORY LAPTOP LAYOUT FIX
+ *
+ * Between phone and desktop widths, keep Category as the left-hand
+ * column. The older <=1180px rule makes it span every grid track and
+ * turns its groups into a horizontal strip, which is much harder to use.
+ */
+@media (min-width: 861px) and (max-width: 1180px) {
+  .ix-layout .ix-ways {
+    grid-column: auto;
+    max-height: 100%;
+  }
+
+  .ix-layout .ix-facets {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 3px;
+  }
+
+  .ix-layout .ix-facets .ix-group,
+  .ix-layout .ix-facets .ix-group.is-open {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
 }
