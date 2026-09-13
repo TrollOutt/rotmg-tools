@@ -25,7 +25,7 @@
     "wiki-publish": "python tools/database/export_realmeye_enrichment.py && node tools/fetch-realmeye-index-sprites.js && python tools/database/export_realmeye_enrichment.py",
     "wiki-check": "python tools/database/check_realmeye_integration.py",
     "wiki-sprites:audit": "python tools/audit-realmeye-sprites.py",
-    "wiki-integrate": "npm run wiki-index && npm run build-index-db && npm run publish-index-db && npm run wiki-publish && npm run wiki-check && npm run wiki-sprites:audit && npm run build",
+    "wiki-integrate": "npm run wiki-index && npm run build-index-db && npm run publish-index-db && npm run project-data && npm run wiki-publish && npm run wiki-check && npm run wiki-sprites:audit && npm run build",
     "wiki-refresh": "npm run wiki-monitor && npm run wiki-integrate"
   }
 }
