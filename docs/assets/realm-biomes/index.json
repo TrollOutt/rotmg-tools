@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "source": "https://www.realmeye.com/wiki/the-realm",
+  "beacons": {
+    "Abandoned City": {
+      "file": "abandoned-city.png",
+      "alt": "Abandoned City Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nGPPnfN.png"
+    },
+    "Beach": {
+      "file": "beach.png",
+      "alt": "Beach Beacon (Rookie)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/G722ENe.png"
+    },
+    "Carboniferous": {
+      "file": "carboniferous.png",
+      "alt": "Carboniferous Beacon (Veteran)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cd6bjAZ.png"
+    },
+    "Coral Reefs": {
+      "file": "coral-reefs.png",
+      "alt": "Coral Reefs Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/0CMBQNt.png"
+    },
+    "Dead Church": {
+      "file": "dead-church.png",
+      "alt": "Dead Church Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/zkflIJD.png"
+    },
+    "Deep Sea Abyss": {
+      "file": "deep-sea-abyss.png",
+      "alt": "Deep Sea Abyss Beacon (Veteran)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/TX6jP5A.png"
+    },
+    "Desert": {
+      "file": "desert.png",
+      "alt": "Desert Beacon (Rookie)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/bWbNX0Q.png"
+    },
+    "Eternal Frost": {
+      "file": "eternal-frost.png",
+      "alt": "Eternal Frost Beacon",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/16dOjyu.png"
+    },
+    "Floral Escape": {
+      "file": "floral-escape.png",
+      "alt": "Floral Escape Beacon (Veteran)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/h2tOK5K.png"
+    },
+    "Forest": {
+      "file": "forest.png",
+      "alt": "Forest Beacon (Rookie)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/XY3X65V.png"
+    },
+    "Haunted Hallows": {
+      "file": "haunted-hallows.png",
+      "alt": "Haunted Hallows Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ScGsU35.png"
+    },
+    "Plains": {
+      "file": "plains.png",
+      "alt": "Plains Beacon (Rookie)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AtIf6FB.png"
+    },
+    "Relentless Springs": {
+      "file": "relentless-springs.png",
+      "alt": "Relentless Springs Beacon",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HO0pifL.png"
+    },
+    "Risen Hell": {
+      "file": "risen-hell.png",
+      "alt": "Risen Hell Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6FixUaG.png"
+    },
+    "Runic Tundra": {
+      "file": "runic-tundra.png",
+      "alt": "Runic Tundra Beacon (Veteran)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cc5sxLv.png"
+    },
+    "Sanguine Forest": {
+      "file": "sanguine-forest.png",
+      "alt": "Sanguine Forest Beacon (Veteran)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/RIqAQ8I.png"
+    },
+    "Shipwreck Cove": {
+      "file": "shipwreck-cove.png",
+      "alt": "Shipwreck Cove Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/t4Btj2j.png"
+    },
+    "Sprite Forest": {
+      "file": "sprite-forest.png",
+      "alt": "Sprite Forest Beacon (Adept)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/koyoFXH.png"
+    },
+    "Undead Forest": {
+      "file": "undead-forest.png",
+      "alt": "Undead Forest Beacon (Rookie)",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NutHcLz.png"
+    }
+  }
+}

@@ -3794,3 +3794,89 @@ body.ring-near .ring-tag { opacity: 0; }
     min-width: 0;
   }
 }
+
+
+/* REALMEYE_ARCHIVE_SCOPE */
+.ix-realm-scope {
+  display: inline-block; margin: 0 4px 0 1px; padding: 1px 5px;
+  border: 1px solid rgba(202,122,255,.22); border-radius: 999px;
+  color: var(--muted); font-size: 9px; font-style: normal; white-space: nowrap;
+}
+
+
+/* REALMEYE_UNIFIED_PRESENTATION */
+.ix-knowledge-block {
+  margin-top: 14px; border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px; overflow: hidden; background: rgba(255,255,255,.025);
+}
+.ix-knowledge-section { padding: 11px 14px 12px; }
+.ix-knowledge-section + .ix-knowledge-section { border-top: 1px solid rgba(255,255,255,.08); }
+.ix-knowledge-section > h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
+.ix-data-chip {
+  display: inline-flex; align-items: center; gap: 5px; margin: 2px 4px 2px 0;
+  padding: 4px 8px; border: 1px solid rgba(255,255,255,.08); border-radius: 999px;
+  background: rgba(255,255,255,.035); white-space: nowrap;
+}
+.ix-data-chip b { font-weight: 600; }
+.ix-drop-grid { display: grid; gap: 5px; min-width: min(640px, 100%); }
+.ix-drop-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.ix-drop-row > em { color: var(--muted); font-style: normal; font-size: 11px; }
+.ix-drop-items, .ix-drop-sources { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.ix-knowledge-block .ix-realm-scope { margin-left: -2px; margin-right: 5px; }
+
+
+/* REALMEYE_CANONICAL_PLACE_UI_V7 */
+.ix-place-guardian {
+  display: inline-flex; align-items: center; gap: 5px; min-width: 0;
+  margin-left: 4px;
+}
+.ix-place-guardian > small {
+  color: var(--muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+}
+.ix-place-guardian .ix-jump { margin: 0; padding: 3px 7px; }
+.ix-knowledge-block .ix-link-row > i { min-width: 86px; }
+
+
+/* REALMEYE_PRESENTATION_V8 */
+.ix-card-description {
+  margin: 12px 0 0; border: 1px solid rgba(255,255,255,.08); border-radius: 9px;
+  background: rgba(255,255,255,.025); overflow: hidden;
+}
+.ix-card-description > summary,
+.ix-knowledge-section > summary {
+  cursor: pointer; list-style: none; user-select: none; font-weight: 700;
+  color: var(--text); display: flex; align-items: center; gap: 8px;
+}
+.ix-card-description > summary::-webkit-details-marker,
+.ix-knowledge-section > summary::-webkit-details-marker { display: none; }
+.ix-card-description > summary::after,
+.ix-knowledge-section > summary::after {
+  content: '▾'; margin-left: auto; color: var(--muted); font-size: 11px;
+  transition: transform .15s ease;
+}
+.ix-card-description:not([open]) > summary::after,
+.ix-knowledge-section:not([open]) > summary::after { transform: rotate(-90deg); }
+.ix-card-description > summary { padding: 10px 14px; }
+.ix-card-description > div { padding: 0 14px 12px; color: var(--muted); line-height: 1.55; }
+.ix-card-description p { margin: 0 0 7px; }
+.ix-card-description p:last-child { margin-bottom: 0; }
+.ix-knowledge-section > summary { margin: 0; font-size: 13px; }
+.ix-knowledge-section > summary + .ix-links { margin-top: 8px; }
+
+
+/* REALMEYE_SUBBIOME_MODEL_V11 */
+.ix-section-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 18px; padding: 0 6px; margin-left: 4px;
+  border-radius: 999px; background: rgba(255,255,255,.07); color: var(--muted);
+  font-size: 10px; font-weight: 700;
+}
+.ix-sub-biome > small {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 16px; padding: 0 5px; margin-left: 2px;
+  border-radius: 999px; background: rgba(255,255,255,.07); color: var(--muted);
+  font-size: 9px; font-style: normal;
+}
+.ix-empty-population {
+  padding: 5px 0 2px; color: var(--muted); font-size: 12px; line-height: 1.45;
+}

@@ -131,6 +131,8 @@ const sources = {
    * served one - because it is only ever wanted on the same page.
    */
   wikiText: readText('Index', 'wiki.json'),
+  realmeyeEnrichmentText: fs.existsSync(path.join(dataRoot, 'Index', 'realmeye-enrichment.json'))
+    ? readText('Index', 'realmeye-enrichment.json') : '',
   // Compact, existing Atlas evidence for biome populations and tiered loot.
   realmLootText: JSON.stringify((() => {
     const source = JSON.parse(fs.readFileSync(path.join(root, 'web', 'realmeye-data.json'), 'utf8'));
@@ -491,6 +493,7 @@ const changes = fs.existsSync(changesPath)
 const served = Object.assign({}, sources);
 delete served.indexText;
 delete served.wikiText;
+delete served.realmeyeEnrichmentText;
 // The refreshed bench catalogue is paid for when the bench is opened.
 // The downloadable copy still embeds it, together with its sheet.
 delete served.theoryText;
@@ -636,6 +639,7 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  * one thing on the site that lives beside the page instead of inside it.
  */
 carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
 fs.writeFileSync(path.join(pagesDir, 'assets', 'theory', 'progression.json'), sources.realmLootText + '\n');
 fs.copyFileSync(path.join(root, 'data', 'TheoryCraft', 'theorycraft.json'),

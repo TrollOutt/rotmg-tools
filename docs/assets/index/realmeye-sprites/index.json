@@ -1,0 +1,2436 @@
+{
+  "schema": 1,
+  "source": "RealmEye",
+  "sprites": {
+    "enemy:3 Leaf Shamrock": {
+      "file": "b15eb2d0f7d6c150b37a09fb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6vgugmx.png",
+      "name": "3 Leaf Shamrock"
+    },
+    "enemy:4 Leaf Shamrock": {
+      "file": "aa760e630281575a15491c46.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HANu9ec.png",
+      "name": "4 Leaf Shamrock"
+    },
+    "enemy:Abandoned Switch": {
+      "file": "e729fbaa5e1b1648c1dbaedf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/mu5zvht.png",
+      "name": "Abandoned Switch"
+    },
+    "enemy:Abundant Shield Deux": {
+      "file": "9db191daf1d177f2562d0783.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/yJBAD3G.png",
+      "name": "Abundant Shield Deux"
+    },
+    "enemy:Alchemy Cauldron": {
+      "file": "ffd3dbc2660012a3a538c801.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PE8eWh8.png",
+      "name": "Alchemy Cauldron"
+    },
+    "enemy:Alien Reactor (Adept)": {
+      "file": "28359ed4a00e2ff302f672da.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HGd813D.png",
+      "name": "Alien Reactor (Adept)"
+    },
+    "enemy:Alien Reactor (Veteran)": {
+      "file": "28359ed4a00e2ff302f672da.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HGd813D.png",
+      "name": "Alien Reactor (Veteran)"
+    },
+    "enemy:Ancient Dragon Xil": {
+      "file": "54f5aa7652a7655841d0ee76.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/jbJf785.png",
+      "name": "Ancient Dragon Xil"
+    },
+    "enemy:Arachna Element (Original)": {
+      "file": "fbd0b2f204bc1df41723e6f2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ATtNHwy.png",
+      "name": "Arachna Element (Original)"
+    },
+    "enemy:Arachna the Spider Queen (Original)": {
+      "file": "38a980f0a83fdcb0b957fa4c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Q1sQA3R.png",
+      "name": "Arachna the Spider Queen (Original)"
+    },
+    "enemy:Bard Agent": {
+      "file": "e62791abe7a048e2e2f4c2b3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Q9d4EWE.png",
+      "name": "Bard Agent"
+    },
+    "enemy:Beach Towel": {
+      "file": "3f44653502563ea9dd61573f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HrFctQ3.png",
+      "name": "Beach Towel"
+    },
+    "enemy:Beekeeper Flame": {
+      "file": "1dbdf1aed56c7cd18a0d0c77.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ITCTtlv.png",
+      "name": "Beekeeper Flame"
+    },
+    "enemy:Bella Chest": {
+      "file": "43e86301fd2ddcddea102aac.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SBIvcvQ.png",
+      "name": "Bella Chest"
+    },
+    "enemy:Biff Egg (Basket)": {
+      "file": "2f8f151af4d2e0d34561dfce.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/tWMnv3S.png",
+      "name": "Biff Egg (Basket)"
+    },
+    "enemy:Black Den Spider (Original)": {
+      "file": "293eb377d9d590547d9cc60b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/FTTHpev.png",
+      "name": "Black Den Spider (Original)"
+    },
+    "enemy:Black Spotted Den Spider (Original)": {
+      "file": "a09b1da2f07e156098266092.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/36o2ukg.png",
+      "name": "Black Spotted Den Spider (Original)"
+    },
+    "enemy:Blue Turtle": {
+      "file": "870cc66ce9f92423f652f6b4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/3fkPt2g.png",
+      "name": "Blue Turtle"
+    },
+    "enemy:Bomb Devil": {
+      "file": "2e77d54223f1ea1afe73fb66.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/4VLsxmc.png",
+      "name": "Bomb Devil"
+    },
+    "enemy:Bomb Father": {
+      "file": "ff80ab6b6945f3726e166a18.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9b0gT0j.png",
+      "name": "Bomb Father"
+    },
+    "enemy:Bone Blaster": {
+      "file": "1f8d0c3134444a0819f89040.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Im5oPMr.png",
+      "name": "Bone Blaster"
+    },
+    "enemy:Bone Defender": {
+      "file": "d5545765433bb6521cca041b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/40c679j.png",
+      "name": "Bone Defender"
+    },
+    "enemy:Bone Overseer": {
+      "file": "5e8ea7208b1fd283f01aaccf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BjuMgjv.png",
+      "name": "Bone Overseer"
+    },
+    "enemy:Bone Spike": {
+      "file": "88915d29c9a11a2dab119b7e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/2vlfcf9.png",
+      "name": "Bone Spike"
+    },
+    "enemy:Bradley the Bard": {
+      "file": "8bfe238f4333ca7dc4b1e947.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/mhO4KnU.png",
+      "name": "Bradley the Bard"
+    },
+    "enemy:Breathtaking White Flower (Dungeon)": {
+      "file": "0b6be4f9c933cebdae115a60.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/94MAeEw.png",
+      "name": "Breathtaking White Flower (Dungeon)"
+    },
+    "enemy:Brown Python (Original)": {
+      "file": "acbbff72dcd62075bffb3022.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dstT8fC.png",
+      "name": "Brown Python (Original)"
+    },
+    "enemy:Bunnypede": {
+      "file": "5d0cea42cd2d0d476ed7c75d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/MGeOiUb.png",
+      "name": "Bunnypede"
+    },
+    "enemy:Calcium God": {
+      "file": "6fe77a8755dd800fbbcf550c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/p8YS20f.png",
+      "name": "Calcium God"
+    },
+    "enemy:Captain Nycolas": {
+      "file": "a9536fd3899d874bfd7a8b32.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/RvGpH1q.png",
+      "name": "Captain Nycolas"
+    },
+    "enemy:Cell Switch": {
+      "file": "d1976b37059f44c33f35dbca.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/S4zhaPj.png",
+      "name": "Cell Switch"
+    },
+    "enemy:Confuse Trap": {
+      "file": "ca028296e6dd1c4d89f6a4f2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/CmCOnrA.png",
+      "name": "Confuse Trap"
+    },
+    "enemy:Cool Shrine": {
+      "file": "7f1e2702ccdc461a278988f2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/VSRsIdP.png",
+      "name": "Cool Shrine"
+    },
+    "enemy:Cool Skull": {
+      "file": "2d2dd965cd520fdf51088e0b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/4W9rH8h.png",
+      "name": "Cool Skull"
+    },
+    "enemy:Cooler Skull": {
+      "file": "5d01d129b73a3d4502bbd58f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6BL1Mor.png",
+      "name": "Cooler Skull"
+    },
+    "enemy:Crystal Worm Rudolph": {
+      "file": "6879881f7bcb1bceaa87de00.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/vnyYZdE.png",
+      "name": "Crystal Worm Rudolph"
+    },
+    "enemy:Deadwater Docks Admiral": {
+      "file": "77f2ae88d2f99bf6f5cda154.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Admiral.png",
+      "name": "Deadwater Docks Admiral"
+    },
+    "enemy:Deadwater Docks Brawler": {
+      "file": "d976a24c45d970dbaca4c3e6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Brawler.png",
+      "name": "Deadwater Docks Brawler"
+    },
+    "enemy:Deadwater Docks Captain": {
+      "file": "91f11cf3fd5512103c469e13.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Captain.png",
+      "name": "Deadwater Docks Captain"
+    },
+    "enemy:Deadwater Docks Commander": {
+      "file": "8a04903d294f49139fb0df58.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Commander.png",
+      "name": "Deadwater Docks Commander"
+    },
+    "enemy:Deadwater Docks Lieutenant": {
+      "file": "0c8883ea4f9c40785f5ed431.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Lieutenant.png",
+      "name": "Deadwater Docks Lieutenant"
+    },
+    "enemy:Deadwater Docks Macaw": {
+      "file": "0b068604e0c074de2799f3a7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Macaw.png",
+      "name": "Deadwater Docks Macaw"
+    },
+    "enemy:Deadwater Docks Parrot": {
+      "file": "ae55d754b1c5f32b7181a1b0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Parrot.png",
+      "name": "Deadwater Docks Parrot"
+    },
+    "enemy:Deadwater Docks Veteran": {
+      "file": "7caf5d5088a6fa1a61657a5b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Deadwater%20Docks%20Veteran.png",
+      "name": "Deadwater Docks Veteran"
+    },
+    "enemy:Def Test": {
+      "file": "699cca96781efd7b637f6356.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nb7Z7ir.png",
+      "name": "Def Test"
+    },
+    "enemy:Disco Flames": {
+      "file": "b203a34fa8121048c3f1a984.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/jz5FQ8D.png",
+      "name": "Disco Flames"
+    },
+    "enemy:Dolor the Deranged": {
+      "file": "b3d41af32e32a764c1ad819b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nk9wUR4.png",
+      "name": "Dolor the Deranged"
+    },
+    "enemy:Dreadstump the Pirate King (Original)": {
+      "file": "4e2f283bc44d667723b32023.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/b3lnVGD.png",
+      "name": "Dreadstump the Pirate King (Original)"
+    },
+    "enemy:Duke Poenitet": {
+      "file": "9181c7a08243f0b67d245272.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JyikbnV.png",
+      "name": "Duke Poenitet"
+    },
+    "enemy:Dungeon Leprechaun": {
+      "file": "3b3ef079ea86abad66fdb1d0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/fCboAby.png",
+      "name": "Dungeon Leprechaun"
+    },
+    "enemy:Elder Ent Sapling": {
+      "file": "2b5af52925db8859ece452b2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5du0hCS.png",
+      "name": "Elder Ent Sapling"
+    },
+    "enemy:Enraged Bunny Egg": {
+      "file": "dd35cf5c19971eca9454a36f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JImQRop.png",
+      "name": "Enraged Bunny Egg"
+    },
+    "enemy:Epic Arachna Element": {
+      "file": "77a618f3d8760137ebf39350.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/KB1ZGoq.png",
+      "name": "Epic Arachna Element"
+    },
+    "enemy:Eternal Frost Present": {
+      "file": "a6547c727bb98fd368c88fb2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/xCu6rj8.png",
+      "name": "Eternal Frost Present"
+    },
+    "enemy:Evergreen Ent": {
+      "file": "da9add85074c85ab6c9b1c90.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/j5tE5VU.gif",
+      "name": "Evergreen Ent"
+    },
+    "enemy:Evil Hen": {
+      "file": "e9dcbdcaa80279c0cdd0d53e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/bK2A12M.png",
+      "name": "Evil Hen"
+    },
+    "enemy:F.E.R.A.L. Tentacle": {
+      "file": "3b272f475ee32af3983e8079.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/K9Gdgop.png",
+      "name": "F.E.R.A.L. Tentacle"
+    },
+    "enemy:Feargus Statue": {
+      "file": "e21b73ab89c69a8c104ab724.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/u8oDz1e.png",
+      "name": "Feargus Statue"
+    },
+    "enemy:Fire Blight": {
+      "file": "208e33863c01b53027c31cb0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/C6QGhBL.png",
+      "name": "Fire Blight"
+    },
+    "enemy:Fire Python (Original)": {
+      "file": "33a485b0ca229463c96ad60e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/im9vEqQ.png",
+      "name": "Fire Python (Original)"
+    },
+    "enemy:Flame Trap": {
+      "file": "4d0e6bd21c18c110a0da6df6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ouQS4ha.png",
+      "name": "Flame Trap"
+    },
+    "enemy:Forax Satellite Core": {
+      "file": "edbe61650dd2aa3320fcb8e4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Dt3a99W.png",
+      "name": "Forax Satellite Core"
+    },
+    "enemy:Frostaract": {
+      "file": "9bfdd9f2ae13a08c258efebf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OjxpwZN.png",
+      "name": "Frostaract"
+    },
+    "enemy:Frostaract Eye": {
+      "file": "c93e1b26951b715cbd45f919.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BDBPXbk.png",
+      "name": "Frostaract Eye"
+    },
+    "enemy:Garden Gravestone": {
+      "file": "855f1345b2936184fefa9a3e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BXaWuc6.png",
+      "name": "Garden Gravestone"
+    },
+    "enemy:Ghost Mine": {
+      "file": "95bdc02dc37dee9ff50fb618.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/YSy1Ey4.png",
+      "name": "Ghost Mine"
+    },
+    "enemy:Ghost of Turkeys Past": {
+      "file": "0e30d9e3f373d9d5cf14aefd.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/sdjFZhB.gif",
+      "name": "Ghost of Turkeys Past"
+    },
+    "enemy:Glacial Spirit": {
+      "file": "23ed690436701e0f5380355a.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/QtijR6s.gif",
+      "name": "Glacial Spirit"
+    },
+    "enemy:Glass Golem": {
+      "file": "dfee5bdb249b6d152975b8e5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OkTmumg.png",
+      "name": "Glass Golem"
+    },
+    "enemy:Glover": {
+      "file": "07e8b86ff86ea53e2da15548.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JioAdw4.png",
+      "name": "Glover"
+    },
+    "enemy:Gorgeous Yellow Flower (Dungeon)": {
+      "file": "d087c813ffeaccd546519f22.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/rRaX6aq.png",
+      "name": "Gorgeous Yellow Flower (Dungeon)"
+    },
+    "enemy:Greater Nature Sprite (Christmas)": {
+      "file": "cc505b0ff3e11da37747302a.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7TMPxc9.gif",
+      "name": "Greater Nature Sprite (Christmas)"
+    },
+    "enemy:Greater Pit Snake (Original)": {
+      "file": "38a44df8f54921a9e57b67aa.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/p8BbR8k.png",
+      "name": "Greater Pit Snake (Original)"
+    },
+    "enemy:Greater Pit Viper (Original)": {
+      "file": "0e3dc1a2daba59c1568bf603.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SDn17iI.png",
+      "name": "Greater Pit Viper (Original)"
+    },
+    "enemy:Green Gelatinous Sphere": {
+      "file": "8dc40382144b13b7b0ba074c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7N40Dxn.png",
+      "name": "Green Gelatinous Sphere"
+    },
+    "enemy:Green Larva": {
+      "file": "c259b67c8103c7fc05f93fb7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/f08B5gl.png",
+      "name": "Green Larva"
+    },
+    "enemy:Hand of Shaitan": {
+      "file": "eb4d809576753b1e2dc26fbe.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/X7VFWZs.png",
+      "name": "Hand of Shaitan"
+    },
+    "enemy:Hat Minion": {
+      "file": "8981445e1f7f9c7270e0ea6a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GWouKqf.png",
+      "name": "Hat Minion"
+    },
+    "enemy:Herman the Rodent Hunter": {
+      "file": "be3d1091c83a7682e0a15f16.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/rmWEzmS.png",
+      "name": "Herman the Rodent Hunter"
+    },
+    "enemy:Heroic Lair Boomerang Trap": {
+      "file": "395b88c04ad5e4836c97e1b6.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/O21shwN.gif",
+      "name": "Heroic Lair Boomerang Trap"
+    },
+    "enemy:Heroic Lair Silence Trap": {
+      "file": "d40b3da6814ebe05fb0001bb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ecZx1kd.png",
+      "name": "Heroic Lair Silence Trap"
+    },
+    "enemy:Heroic Living Skeleton": {
+      "file": "b8d843af09785d74a0d6eb16.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/g5bnuXD.png",
+      "name": "Heroic Living Skeleton"
+    },
+    "enemy:Huntress Puppet (Encore)": {
+      "file": "f4234e20b6016c532a0e9a32.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/k60V9qN.png",
+      "name": "Huntress Puppet (Encore)"
+    },
+    "enemy:Ice Cube Defender": {
+      "file": "97a1a94245dcf72a04bb0169.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AQmwIBQ.png",
+      "name": "Ice Cube Defender"
+    },
+    "enemy:Ice Cube God": {
+      "file": "56eb893bbea349629d204779.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/wNPqtqi.png",
+      "name": "Ice Cube God"
+    },
+    "enemy:Ice Cube Overseer": {
+      "file": "6d15da68971823473c20d650.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/a1g0zxX.png",
+      "name": "Ice Cube Overseer"
+    },
+    "enemy:Ice Mine": {
+      "file": "b600b351124bfdda78bd7488.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/k5maaxJ.png",
+      "name": "Ice Mine"
+    },
+    "enemy:Ice Spectre": {
+      "file": "e5579ccdc3d578c0b5389d5e.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/FJ6cOkj.gif",
+      "name": "Ice Spectre"
+    },
+    "enemy:Immaculate Red Flower (Dungeon)": {
+      "file": "7b88c21070722abd5ee53df2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/IJs2M7e.png",
+      "name": "Immaculate Red Flower (Dungeon)"
+    },
+    "enemy:Infernal Blacksmith of the Abyss": {
+      "file": "6da16ba2b891634b6461b2f9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/XYthVQV.png",
+      "name": "Infernal Blacksmith of the Abyss"
+    },
+    "enemy:Infernal Brute of the Abyss": {
+      "file": "fc95b2e2d5fa1fe0db2b210c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/xebAM0s.png",
+      "name": "Infernal Brute of the Abyss"
+    },
+    "enemy:Infernal Brute Warrior of the Abyss": {
+      "file": "bbe2c10530d4a95712fef155.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/j8upKSu.png",
+      "name": "Infernal Brute Warrior of the Abyss"
+    },
+    "enemy:Infernal Demon Mage of the Abyss": {
+      "file": "34c95731fc973e0ddc0e50de.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SUoXoj8.png",
+      "name": "Infernal Demon Mage of the Abyss"
+    },
+    "enemy:Infernal Demon of the Abyss": {
+      "file": "c844c2b9bda214d58db2c3db.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ZKYzC96.png",
+      "name": "Infernal Demon of the Abyss"
+    },
+    "enemy:Infernal Demon Warrior of the Abyss": {
+      "file": "43d63451eeaf19b72a1f38f7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Ooz4tOQ.png",
+      "name": "Infernal Demon Warrior of the Abyss"
+    },
+    "enemy:Infernal Imp of the Abyss": {
+      "file": "4315fcedeebc2f515171689c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/d64R3nK.png",
+      "name": "Infernal Imp of the Abyss"
+    },
+    "enemy:Infernal White Demon of the Abyss": {
+      "file": "0906aadbdbeda3fc5578744e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NqQVAvL.png",
+      "name": "Infernal White Demon of the Abyss"
+    },
+    "enemy:Inspector Stromwell (Adept)": {
+      "file": "4a6e72f56c145987c71225ed.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PGsfiIP.png",
+      "name": "Inspector Stromwell (Adept)"
+    },
+    "enemy:Inspector Stromwell (Expert)": {
+      "file": "4a6e72f56c145987c71225ed.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PGsfiIP.png",
+      "name": "Inspector Stromwell (Expert)"
+    },
+    "enemy:Inspector Stromwell (Veteran)": {
+      "file": "4a6e72f56c145987c71225ed.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PGsfiIP.png",
+      "name": "Inspector Stromwell (Veteran)"
+    },
+    "enemy:Jolly Sphinx": {
+      "file": "f84c4c95337642d2a7cc5ec6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/DdpMUC3.png",
+      "name": "Jolly Sphinx"
+    },
+    "enemy:Katalund Satellite Core": {
+      "file": "df873d8fbbf7624044b40ab2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5i8JU0E.png",
+      "name": "Katalund Satellite Core"
+    },
+    "enemy:Lair Wraith": {
+      "file": "ead36f89bd9b61f429025893.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5Euqovu.png",
+      "name": "Lair Wraith"
+    },
+    "enemy:Legacy Heroic Ghost Mage of Septavius": {
+      "file": "56f452d031877ccb21130456.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GPkad8j.png",
+      "name": "Legacy Heroic Ghost Mage of Septavius"
+    },
+    "enemy:Legacy Heroic Ghost Rogue of Septavius": {
+      "file": "69f3d7bb1f36966fda3248b0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/MIdAEgp.png",
+      "name": "Legacy Heroic Ghost Rogue of Septavius"
+    },
+    "enemy:Legacy Heroic Ghost Warrior of Septavius": {
+      "file": "c79b5a488d9c18ffa782536d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hqHUeJj.png",
+      "name": "Legacy Heroic Ghost Warrior of Septavius"
+    },
+    "enemy:Legacy Heroic Lair Ghost Archer": {
+      "file": "8101daf9b481af57d9fafe3c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/37pWmIQ.png",
+      "name": "Legacy Heroic Lair Ghost Archer"
+    },
+    "enemy:Legacy Heroic Lair Ghost Knight": {
+      "file": "7d48bc7e3adb6d8f24842ca7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ab5F9eR.png",
+      "name": "Legacy Heroic Lair Ghost Knight"
+    },
+    "enemy:Legacy Heroic Lair Ghost Mage": {
+      "file": "e6bbdf913b1f933fef59759b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/4aUDkFX.png",
+      "name": "Legacy Heroic Lair Ghost Mage"
+    },
+    "enemy:Legacy Heroic Lair Ghost Paladin": {
+      "file": "9fe8a2d541cb838ab55eb458.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/IZzXK0n.png",
+      "name": "Legacy Heroic Lair Ghost Paladin"
+    },
+    "enemy:Legacy Heroic Lair Ghost Rogue": {
+      "file": "598ff10974998316db5de482.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9OnAKuk.png",
+      "name": "Legacy Heroic Lair Ghost Rogue"
+    },
+    "enemy:Legacy Heroic Lair Ghost Warrior": {
+      "file": "0e258061cf8ed5d874a12e24.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JrVXFTy.png",
+      "name": "Legacy Heroic Lair Ghost Warrior"
+    },
+    "enemy:Legion Commissioner Decoy": {
+      "file": "80a8c5c96ea26d141e06bbb7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/KUZJjXO.png",
+      "name": "Legion Commissioner Decoy"
+    },
+    "enemy:Legion Forest Guard": {
+      "file": "08ed9a3163faff92c170d7b1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/s5VrTWy.png",
+      "name": "Legion Forest Guard"
+    },
+    "enemy:Limoz Statue": {
+      "file": "2485f7fce183e8f62fc60887.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/fMLixOY.png",
+      "name": "Limoz Statue"
+    },
+    "enemy:Living Tree": {
+      "file": "e2be6d2f69b740890225cb86.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GPgkLv5.png",
+      "name": "Living Tree"
+    },
+    "enemy:Log Trap": {
+      "file": "3d87e0baba651fd846279cdc.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ofWMdfu.png",
+      "name": "Log Trap"
+    },
+    "enemy:Loot Baloon": {
+      "file": "7b5d02c0592af41fb866e597.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dSI2zY0.png",
+      "name": "Loot Baloon"
+    },
+    "enemy:Loot Broom": {
+      "file": "4166a2e38a62846d933cc44d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/H6A7vjr.png",
+      "name": "Loot Broom"
+    },
+    "enemy:Mad Santa": {
+      "file": "c86035970c3959e913c59234.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LoxYva2.png",
+      "name": "Mad Santa"
+    },
+    "enemy:Malogia Satellite Core": {
+      "file": "fb092ae391bfdc94f5fe96d6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EMPIDan.png",
+      "name": "Malogia Satellite Core"
+    },
+    "enemy:Marble Core": {
+      "file": "da87306db9d8368a41231d13.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/fM4bpEh.png",
+      "name": "Marble Core"
+    },
+    "enemy:Massive Parrot": {
+      "file": "b2bbd95c031f3af5a435f56b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Massive%20Parrot.png",
+      "name": "Massive Parrot"
+    },
+    "enemy:Mini Hive": {
+      "file": "59d8a3ea75a3c902934dfcc4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SkPO7hQ.png",
+      "name": "Mini Hive"
+    },
+    "enemy:Molek Flame": {
+      "file": "b3dc382d0dcbc6cc8c7c0ea5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/1N7KQra.png",
+      "name": "Molek Flame"
+    },
+    "enemy:Mysterious Zombie": {
+      "file": "abb4a269b366d0ed41baf4bf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6WZOItw.png",
+      "name": "Mysterious Zombie"
+    },
+    "enemy:Neo Bubblar": {
+      "file": "3a099b2f7eb46221befc4757.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/xE0MIr1.png",
+      "name": "Neo Bubblar"
+    },
+    "enemy:Neo Forax Satellite Core": {
+      "file": "edbe61650dd2aa3320fcb8e4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Dt3a99W.png",
+      "name": "Neo Forax Satellite Core"
+    },
+    "enemy:Neo Iron Titan": {
+      "file": "5c96129074679bc465221935.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SfV54tF.png",
+      "name": "Neo Iron Titan"
+    },
+    "enemy:Neo Katalund Satellite Core": {
+      "file": "df873d8fbbf7624044b40ab2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5i8JU0E.png",
+      "name": "Neo Katalund Satellite Core"
+    },
+    "enemy:Neo Larveye": {
+      "file": "69c65b5a729c5280e56b1f41.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/QG9iPfv.png",
+      "name": "Neo Larveye"
+    },
+    "enemy:Neo Malogia Satellite Core": {
+      "file": "fb092ae391bfdc94f5fe96d6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EMPIDan.png",
+      "name": "Neo Malogia Satellite Core"
+    },
+    "enemy:Neo Silver Walker": {
+      "file": "ccb2f61f105c4c7eff1639a2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LSJJEZs.png",
+      "name": "Neo Silver Walker"
+    },
+    "enemy:Neo Tarul Tentacle": {
+      "file": "0a506b38c9e03877ac9c7faf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/skFC5h9.png",
+      "name": "Neo Tarul Tentacle"
+    },
+    "enemy:Neo Untaris Satellite Core": {
+      "file": "098dbec735464c5b59e76b12.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Mub0oJG.png",
+      "name": "Neo Untaris Satellite Core"
+    },
+    "enemy:Nikao Statue": {
+      "file": "2379c65a90876b2cf9f053b3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OQCztzg.png",
+      "name": "Nikao Statue"
+    },
+    "enemy:Orange Turtle": {
+      "file": "af9f4274ae82fd7860c4d5b6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/mfiSDU3.png",
+      "name": "Orange Turtle"
+    },
+    "enemy:Pentaract Tower (Mad God Mayhem)": {
+      "file": "6ed98e8e802b349d39b190a5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8QLMBwc.png",
+      "name": "Pentaract Tower (Mad God Mayhem)"
+    },
+    "enemy:Pit Snake (Original)": {
+      "file": "20108637995b2e334e1b9a20.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Mob128t.png",
+      "name": "Pit Snake (Original)"
+    },
+    "enemy:Pit Viper (Original)": {
+      "file": "b11f58564ef6968dadf3f775.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/3tmv3iL.png",
+      "name": "Pit Viper (Original)"
+    },
+    "enemy:Poult": {
+      "file": "748ef970a576b55328503eb0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7QhtRh1.png",
+      "name": "Poult"
+    },
+    "enemy:Purple Gelatinous Sphere": {
+      "file": "f87429e96237390e6e6c3d53.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/TspEKn4.png",
+      "name": "Purple Gelatinous Sphere"
+    },
+    "enemy:Purple Turtle": {
+      "file": "ae0058059d09a60429ba79e9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BLDQ7G6.png",
+      "name": "Purple Turtle"
+    },
+    "enemy:Purple-Eyed Soul": {
+      "file": "bbb2a3c319c75f40b497d96e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/VsHIMs8.png",
+      "name": "Purple-Eyed Soul"
+    },
+    "enemy:Pyyr Statue": {
+      "file": "76a1f9c365dd3a3d27b548d6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/CCUubXV.png",
+      "name": "Pyyr Statue"
+    },
+    "enemy:Quiet Wizard": {
+      "file": "1ec1079b72cc3eb69230e35c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/zn5R9Jd.png",
+      "name": "Quiet Wizard"
+    },
+    "enemy:Reanimated Hermit God": {
+      "file": "44a482c8380dce34223407cb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/QKab7BU.png",
+      "name": "Reanimated Hermit God"
+    },
+    "enemy:Reanimated Hermit God Tentacle": {
+      "file": "3844b744944e2642c6d72958.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/p4gUDgO.png",
+      "name": "Reanimated Hermit God Tentacle"
+    },
+    "enemy:Reanimated Hermit Minion": {
+      "file": "e893aca68a4d736efda0be83.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ODuPeZI.png",
+      "name": "Reanimated Hermit Minion"
+    },
+    "enemy:Red Gas Spawner": {
+      "file": "c70a55beebd36b75f7185159.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/4qJTw.png",
+      "name": "Red Gas Spawner"
+    },
+    "enemy:Red Gelatinous Sphere": {
+      "file": "480bc0d32500c623ea7f5de0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SO2gyMh.png",
+      "name": "Red Gelatinous Sphere"
+    },
+    "enemy:Red Turtle": {
+      "file": "03396ab76023727dc563c41a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AZz1bN8.png",
+      "name": "Red Turtle"
+    },
+    "enemy:Red-Eyed Soul": {
+      "file": "9fc47ebf7291a27876768d68.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JFgF1tN.png",
+      "name": "Red-Eyed Soul"
+    },
+    "enemy:Retro Fairy": {
+      "file": "81de1732e09f7d43aa385def.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/YXswSnj.png",
+      "name": "Retro Fairy"
+    },
+    "enemy:Rock Dragon Bat (Christmas)": {
+      "file": "050a0370fabe8e8db1eb1f02.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/mf8kEEX.gif",
+      "name": "Rock Dragon Bat (Christmas)"
+    },
+    "enemy:Rubber Ducky": {
+      "file": "cd47d68497dc948447915e14.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/rkos9wN.png",
+      "name": "Rubber Ducky"
+    },
+    "enemy:Sea Slurp Home": {
+      "file": "ad8402e4da11e632ef48b22b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Enemies/Sea Slurp Home.png",
+      "name": "Sea Slurp Home"
+    },
+    "enemy:Sea Spectre": {
+      "file": "c5c247ce018cc5cf8b3c8d19.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/R4EbW4y.png",
+      "name": "Sea Spectre"
+    },
+    "enemy:Sewer Dummy": {
+      "file": "46411c09cd69edd68c2864a0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7hyqmhN.png",
+      "name": "Sewer Dummy"
+    },
+    "enemy:Shady Vagrant": {
+      "file": "430c4fc415e409d27a76069b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/FJic2jE.png",
+      "name": "Shady Vagrant"
+    },
+    "enemy:Shunned Prophet Gnarus": {
+      "file": "5ba5c7f5c28303a571f6075d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nCorMvS.png",
+      "name": "Shunned Prophet Gnarus"
+    },
+    "enemy:Silent Wizard": {
+      "file": "b0160dbb892c85ebd0b933f8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HJ4xFsi.png",
+      "name": "Silent Wizard"
+    },
+    "enemy:Snake Orbiter": {
+      "file": "0464e78591b5e07fe5ed0aa5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NF9dGKO.png",
+      "name": "Snake Orbiter"
+    },
+    "enemy:Snakepit Dart Thrower (Original)": {
+      "file": "e620d6798f24d0cd190f7045.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/UDfQmBi.png",
+      "name": "Snakepit Dart Thrower (Original)"
+    },
+    "enemy:Snakepit Guard (Original)": {
+      "file": "9b9924d6b9e12720e09ff6c9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/omupeyb.png",
+      "name": "Snakepit Guard (Original)"
+    },
+    "enemy:Snow Shrine": {
+      "file": "13eba3d3a9e13a0d3f5d00e7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/O4zgY3b.png",
+      "name": "Snow Shrine"
+    },
+    "enemy:Soap Mine": {
+      "file": "f20262f19713f51ca0242258.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8zBAjwK.png",
+      "name": "Soap Mine"
+    },
+    "enemy:Soulwarden Murcian (NPC)": {
+      "file": "01285aa118e6ad10dbfe83a5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OairoVM.png",
+      "name": "Soulwarden Murcian (NPC)"
+    },
+    "enemy:Special Golden Rat": {
+      "file": "2b39637d89ce8a81425b2d3a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/o6jVPzM.png",
+      "name": "Special Golden Rat"
+    },
+    "enemy:Special Large Rat": {
+      "file": "09f37b3175ec9ffbfdb3faba.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/07mTOea.png",
+      "name": "Special Large Rat"
+    },
+    "enemy:Special Medium Rat": {
+      "file": "0ac9978df3d812a0dd0b68d3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/2tVNChH.png",
+      "name": "Special Medium Rat"
+    },
+    "enemy:Special Small Rat": {
+      "file": "ec79b7761a3f96d11c36f288.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EvWI6hW.png",
+      "name": "Special Small Rat"
+    },
+    "enemy:Sphere Blaster": {
+      "file": "d878f131cd9a9df2fa0e82d4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/l7O4Ap4.png",
+      "name": "Sphere Blaster"
+    },
+    "enemy:Sphere Defender": {
+      "file": "139d5d78da6289020e7b9227.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/MlUwM2e.png",
+      "name": "Sphere Defender"
+    },
+    "enemy:Sphere God": {
+      "file": "31e4c8c4298ffec4e40ab6c9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/aQBTnAm.png",
+      "name": "Sphere God"
+    },
+    "enemy:Sphere Overseer": {
+      "file": "87186add441dae8dd1417948.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/w4OuXB7.png",
+      "name": "Sphere Overseer"
+    },
+    "enemy:Spreading Fire": {
+      "file": "92dca5b0a76d7cb771923183.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dDpO9IO.png",
+      "name": "Spreading Fire"
+    },
+    "enemy:Stheno Pet (Original)": {
+      "file": "d7b0115a27eb0aba6b29d310.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/namszxh.png",
+      "name": "Stheno Pet (Original)"
+    },
+    "enemy:Stheno Swarm (Original)": {
+      "file": "c0f72200a1322e62938436ac.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/INqkFmK.png",
+      "name": "Stheno Swarm (Original)"
+    },
+    "enemy:Stheno the Snake Queen (Original)": {
+      "file": "987c26862deabfd47f4f4eeb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ihClcQ7.png",
+      "name": "Stheno the Snake Queen (Original)"
+    },
+    "enemy:Sting Spider (Old)": {
+      "file": "f877ea6a54b17776e85cdca3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/YfaKVPI.png",
+      "name": "Sting Spider (Old)"
+    },
+    "enemy:Sting Spider Baby": {
+      "file": "78f93177c382af13631fc6e7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/F9PaDKQ.png",
+      "name": "Sting Spider Baby"
+    },
+    "enemy:Tavern Dancer": {
+      "file": "f09a9556e6dffb6ea2226197.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NcMOVjg.png",
+      "name": "Tavern Dancer"
+    },
+    "enemy:Tavern Drunkard": {
+      "file": "f09a9556e6dffb6ea2226197.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NcMOVjg.png",
+      "name": "Tavern Drunkard"
+    },
+    "enemy:Tavern Entertainer": {
+      "file": "f09a9556e6dffb6ea2226197.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NcMOVjg.png",
+      "name": "Tavern Entertainer"
+    },
+    "enemy:Tempest": {
+      "file": "ca92755e21fdad814e6f095a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/y7MS1Yr.png",
+      "name": "Tempest"
+    },
+    "enemy:Template Turkey": {
+      "file": "00ba3fcccf139626f7ec79ec.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/DsH55Nx.png",
+      "name": "Template Turkey"
+    },
+    "enemy:The Flying Dutchman": {
+      "file": "115f71c51b879ce85bf4b397.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/asq8mhL.png",
+      "name": "The Flying Dutchman"
+    },
+    "enemy:The Heroic Observer": {
+      "file": "b1a679b35a224f335b4f243c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6gBMfw4.png",
+      "name": "The Heroic Observer"
+    },
+    "enemy:The Puppet Master (Encore)": {
+      "file": "de5348a9a4316395b712ce6d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5fANYRn.png",
+      "name": "The Puppet Master (Encore)"
+    },
+    "enemy:The Realm Eye": {
+      "file": "8853bbd495f87686408095da.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/eYkie5z.gif",
+      "name": "The Realm Eye"
+    },
+    "enemy:The Santappetizer": {
+      "file": "109f3ccfbf8ea189010830f6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/eUQHcBd.png",
+      "name": "The Santappetizer"
+    },
+    "enemy:The Servers": {
+      "file": "7c6737f9ddbc8f84b7da8063.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/m32yB3K.png",
+      "name": "The Servers"
+    },
+    "enemy:The Shattered Queen": {
+      "file": "d005cf3915fb3d092f5b14f7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/UbII3yB.png",
+      "name": "The Shattered Queen"
+    },
+    "enemy:The Skeyper": {
+      "file": "f4d7bb8f28ffdc8e3ac92fe0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/d0b2cgw.png",
+      "name": "The Skeyper"
+    },
+    "enemy:The Wanderer (Interregnum)": {
+      "file": "b827b4e2e1762118510359fd.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/utC6paX.png",
+      "name": "The Wanderer (Interregnum)"
+    },
+    "enemy:Treasure Mimic": {
+      "file": "2b5f579f3608caa3c234b8a8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/q6EzFy0.png",
+      "name": "Treasure Mimic"
+    },
+    "enemy:Trickster Puppet (Encore)": {
+      "file": "04ed873088f36ef20e2ae449.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/b3lYuEv.png",
+      "name": "Trickster Puppet (Encore)"
+    },
+    "enemy:Trickster Puppet Decoy": {
+      "file": "443c523202c9403c4edf15a5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nTS7ydJ.png",
+      "name": "Trickster Puppet Decoy"
+    },
+    "enemy:Turkey High": {
+      "file": "1a2f17cc899e553589c53cd5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cHjw1C3.png",
+      "name": "Turkey High"
+    },
+    "enemy:Turkey Low": {
+      "file": "1a2f17cc899e553589c53cd5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cHjw1C3.png",
+      "name": "Turkey Low"
+    },
+    "enemy:Turkey Mid": {
+      "file": "1a2f17cc899e553589c53cd5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cHjw1C3.png",
+      "name": "Turkey Mid"
+    },
+    "enemy:Tutorial Gun": {
+      "file": "780137bfc3ab434982b8b3a8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PjuphLf.png",
+      "name": "Tutorial Gun"
+    },
+    "enemy:Twilight Crystal": {
+      "file": "690e56ffc8183c83a9c1d8cd.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/w0uuNtE.png",
+      "name": "Twilight Crystal"
+    },
+    "enemy:Untaris Satellite Core": {
+      "file": "098dbec735464c5b59e76b12.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Mub0oJG.png",
+      "name": "Untaris Satellite Core"
+    },
+    "enemy:Vagrant Sellsword Ond'ande": {
+      "file": "9d62eb700db2a699b0751bd4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/T10FNhx.png",
+      "name": "Vagrant Sellsword Ond'ande"
+    },
+    "enemy:Vampire Bat": {
+      "file": "39d36a706b8f6c00f434608f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/rJp9CrS.png",
+      "name": "Vampire Bat"
+    },
+    "enemy:Vengeful Shampoo": {
+      "file": "8c96602c4f12128717f091e4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/2ninzYn.png",
+      "name": "Vengeful Shampoo"
+    },
+    "enemy:Village Girl Umi": {
+      "file": "3cc07c24205041c67df87304.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Hn9XqMp.png",
+      "name": "Village Girl Umi"
+    },
+    "enemy:Voided Blooming Flower": {
+      "file": "ed1ce20c67e6e0f234c9a4fc.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/A0E6ZMI.png",
+      "name": "Voided Blooming Flower"
+    },
+    "enemy:Wanderer Sword": {
+      "file": "e312edf420bfe53178a5b1ab.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/B65fyo6.png",
+      "name": "Wanderer Sword"
+    },
+    "enemy:Wanderer Sword Blocker": {
+      "file": "a06f956880695a3af7be2603.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SGraxBl.png",
+      "name": "Wanderer Sword Blocker"
+    },
+    "enemy:Winter Reaper": {
+      "file": "b6b9b5977a1eaf9810a64a61.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/y3x0jDw.png",
+      "name": "Winter Reaper"
+    },
+    "enemy:Withered Sphinx": {
+      "file": "46dfd851f9ebc68a0402e24a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BNIC1ii.png",
+      "name": "Withered Sphinx"
+    },
+    "enemy:Yellow Python (Original)": {
+      "file": "473a156924cd093b798c1e33.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/gE8purR.png",
+      "name": "Yellow Python (Original)"
+    },
+    "enemy:Zhiar": {
+      "file": "c9869a202a9f852692f7a889.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/FS0xybL.png",
+      "name": "Zhiar"
+    },
+    "item:2-Bit Skin Collection Token": {
+      "file": "dca7c29f02b76742a4862b85.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/uPFrye2.png",
+      "name": "2-Bit Skin Collection Token"
+    },
+    "item:Agents of Oryx Shard": {
+      "file": "f7c42df7c631d4803de93ecf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/pTQd4nW.png",
+      "name": "Agents of Oryx Shard"
+    },
+    "item:Alchemist Assassin Set Shard": {
+      "file": "e8480b9ace6567c7e6f34596.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/wDvuAVu.png",
+      "name": "Alchemist Assassin Set Shard"
+    },
+    "item:Amethyst Shard": {
+      "file": "ff52fe6e1924c5405a5d3e3e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8Fbk5my.png",
+      "name": "Amethyst Shard"
+    },
+    "item:Ancient Demon Blade": {
+      "file": "e06033682888e3ca14f49e55.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BiCBbdG.png",
+      "name": "Ancient Demon Blade"
+    },
+    "item:Ancient Doom Bow": {
+      "file": "2f63383b6060c400b91ad358.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/jA2zV8h.png",
+      "name": "Ancient Doom Bow"
+    },
+    "item:Ancient Fossil": {
+      "file": "6d53ee73639733e6370444bf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AVgVwVK.png",
+      "name": "Ancient Fossil"
+    },
+    "item:Ancient Knowledge": {
+      "file": "5ed9c0420663be3c1c8cef7f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/aF1Ld5d.png",
+      "name": "Ancient Knowledge"
+    },
+    "item:Ancient Scarab": {
+      "file": "1b743f8f3fea71a3baa69ce7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/J1psaBy.png",
+      "name": "Ancient Scarab"
+    },
+    "item:Ancient Schematic": {
+      "file": "b6d4018c998766997291883d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/wwQyU1h.png",
+      "name": "Ancient Schematic"
+    },
+    "item:Ancient Spell": {
+      "file": "25b579c49e49aa99ff77d08a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AXBOwtS.png",
+      "name": "Ancient Spell"
+    },
+    "item:Ancient Tablet": {
+      "file": "464fa3040ba68bd418f68548.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/vykkAKS.png",
+      "name": "Ancient Tablet"
+    },
+    "item:Antinomy Mad God Token": {
+      "file": "8b416ce72e95f800fc3ec5e4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dmibDJ3.png",
+      "name": "Antinomy Mad God Token"
+    },
+    "item:Antinomy Stone Token": {
+      "file": "275243aa876134f353333919.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/01f9YaN.png",
+      "name": "Antinomy Stone Token"
+    },
+    "item:Armory Seedling": {
+      "file": "3f1d412a3bd01a485cffc263.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9ECr7To.png",
+      "name": "Armory Seedling"
+    },
+    "item:Astral Arcanist Set Shard": {
+      "file": "738c855706c2369dcfae546f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7MTHRqz.png",
+      "name": "Astral Arcanist Set Shard"
+    },
+    "item:Bat Mask Coin": {
+      "file": "5cf6f32d212b8ddf7a20b7b2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/y0ibolI.png",
+      "name": "Bat Mask Coin"
+    },
+    "item:Bell": {
+      "file": "26c9311649378537c1edd73b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/g2wovmA.png",
+      "name": "Bell"
+    },
+    "item:Black Coin": {
+      "file": "297ee7c4ae81b3d679b75497.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/wtdmuFr.png",
+      "name": "Black Coin"
+    },
+    "item:Black Petunia": {
+      "file": "4ad3c300218a07cb64fe3992.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/al933IS.png",
+      "name": "Black Petunia"
+    },
+    "item:Blood Ritual Shard": {
+      "file": "3c3ffacb0a07b7b6618ab232.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/MJw3VJ6.png",
+      "name": "Blood Ritual Shard"
+    },
+    "item:Blue Beehemoth Armor": {
+      "file": "5a156f8bff0f3a6c38ade04f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cV2muQj.png",
+      "name": "Blue Beehemoth Armor"
+    },
+    "item:Blue Beehemoth Quiver": {
+      "file": "b0bf6588a42ddb002ab7046e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/3yxxbS8.png",
+      "name": "Blue Beehemoth Quiver"
+    },
+    "item:Blue Scarf": {
+      "file": "4bca7d5576e1f0b5f58aa721.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ksdw3Iq.png",
+      "name": "Blue Scarf"
+    },
+    "item:Bone Sigil": {
+      "file": "754fbcf7e7150687f2223a43.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/2rQCL7S.png",
+      "name": "Bone Sigil"
+    },
+    "item:Bone Token": {
+      "file": "2232efb6a99b3f3c7302a767.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/myLeB2I.png",
+      "name": "Bone Token"
+    },
+    "item:Brain": {
+      "file": "b4932f0b799bcaf725e9d8a7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nGtvwb5.png",
+      "name": "Brain"
+    },
+    "item:Broken Egg Shell": {
+      "file": "6dd5b045397ed09afc813a0b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ioi5eXc.png",
+      "name": "Broken Egg Shell"
+    },
+    "item:Broken Ornament": {
+      "file": "1c633ffe3b9a4a570a09580d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PD2tEei.png",
+      "name": "Broken Ornament"
+    },
+    "item:Candle Ornament": {
+      "file": "e032139073d5368999ad4dc5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/3GBC4jk.png",
+      "name": "Candle Ornament"
+    },
+    "item:Candy Cane Token": {
+      "file": "15ad64aaea49969537b08f01.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/lM1cNRY.png",
+      "name": "Candy Cane Token"
+    },
+    "item:Carnival Bells": {
+      "file": "aba287dc6212c6a740c780ff.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/y8mx6OI.png",
+      "name": "Carnival Bells"
+    },
+    "item:Carnival Token": {
+      "file": "ea7736650b6c0483e8254b0c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NyVmB2L.png",
+      "name": "Carnival Token"
+    },
+    "item:Carrot Coin": {
+      "file": "a6be41129549dd34d00a5056.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/o0IAeBu.png",
+      "name": "Carrot Coin"
+    },
+    "item:Catalyst of Air": {
+      "file": "344f050cf96cddd85dc4ef34.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/zClPSpK.png",
+      "name": "Catalyst of Air"
+    },
+    "item:Catalyst of Earth": {
+      "file": "ccbc0abeb1ae16c8d2cdfe7a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Q8W9GY0.png",
+      "name": "Catalyst of Earth"
+    },
+    "item:Catalyst of Fire": {
+      "file": "302e7466cd78c06ba8ece557.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ix65baA.png",
+      "name": "Catalyst of Fire"
+    },
+    "item:Catalyst of Water": {
+      "file": "90143ac437d492df2b5272b7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9udeoZI.png",
+      "name": "Catalyst of Water"
+    },
+    "item:Celestial Stone": {
+      "file": "de51b27abb32c89b4eb61abb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/rlplvma.png",
+      "name": "Celestial Stone"
+    },
+    "item:Cheer Token": {
+      "file": "0936aed55d7798ffec836031.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/1Mzr2r4.png",
+      "name": "Cheer Token"
+    },
+    "item:Cheese": {
+      "file": "a3f4cf691660683fd280fdf4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7a4fSx2.png",
+      "name": "Cheese"
+    },
+    "item:Choco Dream Coin": {
+      "file": "d682cb61b854b520d30af5cc.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5rfw2B5.png",
+      "name": "Choco Dream Coin"
+    },
+    "item:Chocolate Bonbon": {
+      "file": "803656669b578ffabc413fe8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8cgJYsS.png",
+      "name": "Chocolate Bonbon"
+    },
+    "item:Chocolate Bunny Summoner ST Shard": {
+      "file": "74b7dff615b13f184e4325af.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/N78XQHp.png",
+      "name": "Chocolate Bunny Summoner ST Shard"
+    },
+    "item:Circus Ticket": {
+      "file": "a0e6df6a4a0bcccf42931b28.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SMvYpjc.png",
+      "name": "Circus Ticket"
+    },
+    "item:Cocoa Mug": {
+      "file": "7e68933162d81a131a0c2bfb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hy1fh2W.png",
+      "name": "Cocoa Mug"
+    },
+    "item:Colorful Egg": {
+      "file": "48daaa044f25110d4aca5eb6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7QvMZeX.png",
+      "name": "Colorful Egg"
+    },
+    "item:Common Nilshard": {
+      "file": "743894e9bf7249b509cac67b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BIjtwbR.png",
+      "name": "Common Nilshard"
+    },
+    "item:Crimson Coins": {
+      "file": "9b311e1a9add99aef718f71f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/zDwGjpj.png",
+      "name": "Crimson Coins"
+    },
+    "item:Crown of the Control Core": {
+      "file": "ebdc1bef8c9c08849287b955.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9uVNfUQ.png",
+      "name": "Crown of the Control Core"
+    },
+    "item:Crown of the Exalted God": {
+      "file": "62bd9f3273123dfefae1f567.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/tyAcApf.png",
+      "name": "Crown of the Exalted God"
+    },
+    "item:Crown of the Forgotten King": {
+      "file": "0e3e352987cf46435788b35e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/pobOsk9.png",
+      "name": "Crown of the Forgotten King"
+    },
+    "item:Crown of the Marble Colossus": {
+      "file": "476129d68bff65dde2f52b02.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9XLKZWx.png",
+      "name": "Crown of the Marble Colossus"
+    },
+    "item:Crown of the Void": {
+      "file": "2309e2f21de3a3f35483a35a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GQ1zhKT.png",
+      "name": "Crown of the Void"
+    },
+    "item:Crystal Fragment": {
+      "file": "ad160aac0c366f1d7affe7f6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/bTVnwId.png",
+      "name": "Crystal Fragment"
+    },
+    "item:Crystal of Extreme Fortune": {
+      "file": "e96e56ff137b5dade3ebc800.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8W0hEg5.png",
+      "name": "Crystal of Extreme Fortune"
+    },
+    "item:Crystal of Fortune": {
+      "file": "96a4ab95b1b37da9c0beee23.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ih5fRyD.png",
+      "name": "Crystal of Fortune"
+    },
+    "item:Crystallized Heart": {
+      "file": "ea082c92d36e299baaf03e9d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ew69uTK.png",
+      "name": "Crystallized Heart"
+    },
+    "item:Cursed Amulet of Zombification": {
+      "file": "d2dcb89b4b530a598ec39476.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5yhgnPC.png",
+      "name": "Cursed Amulet of Zombification"
+    },
+    "item:Cursed Coin": {
+      "file": "d213aa917e47dd9699823f0c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/T23rLVC.png",
+      "name": "Cursed Coin"
+    },
+    "item:Cursed Illusionary Coin": {
+      "file": "647f1f950cf228ebb65eb2da.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/oap7kfx.png",
+      "name": "Cursed Illusionary Coin"
+    },
+    "item:Cursed Mystery ST Shard": {
+      "file": "2f1a822e6b8e1407efa04b14.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/jIaweT7.png",
+      "name": "Cursed Mystery ST Shard"
+    },
+    "item:Daeva Crystal": {
+      "file": "3e9e64e0376e7d4fe32b0508.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ORM4fhK.png",
+      "name": "Daeva Crystal"
+    },
+    "item:Daeva Fragment": {
+      "file": "cb7e75ca4b623f5bcc879485.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Pp9SQ9m.png",
+      "name": "Daeva Fragment"
+    },
+    "item:Daeva Shard": {
+      "file": "766c9a761ea4e2ef6c598182.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/RivhOOi.png",
+      "name": "Daeva Shard"
+    },
+    "item:Daily Artifact Drop Potion": {
+      "file": "d813f78e30fb9b0ddc247cbd.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LBCFOV2.png",
+      "name": "Daily Artifact Drop Potion"
+    },
+    "item:Destiny's Gaze": {
+      "file": "bcc6d12d60ac2c0e0cfb8b57.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/C1IB16j.png",
+      "name": "Destiny's Gaze"
+    },
+    "item:Diamond": {
+      "file": "f10c62031de1250362ac5b30.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PKYy0H8.png",
+      "name": "Diamond"
+    },
+    "item:Divine Coin": {
+      "file": "1cb5775e820dd9955792b762.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OCU5qge.png",
+      "name": "Divine Coin"
+    },
+    "item:Draconic Scarab": {
+      "file": "45148b2d960290964c939286.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/mjjj7Rg.png",
+      "name": "Draconic Scarab"
+    },
+    "item:Dragon Coin": {
+      "file": "5beee25e24ddba74a4f96cf4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8Q8EM1V.png",
+      "name": "Dragon Coin"
+    },
+    "item:Duality Token": {
+      "file": "b4b3f2d7f5aaa658f6da726d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Efj2iIF.png",
+      "name": "Duality Token"
+    },
+    "item:Easter Mystery ST Shard": {
+      "file": "d022f63a5959f614c5bb0c3c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/taM3Ger.png",
+      "name": "Easter Mystery ST Shard"
+    },
+    "item:Echo of Destiny": {
+      "file": "26fee6c60e4efd5d562d124e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Fx1CLT8.png",
+      "name": "Echo of Destiny"
+    },
+    "item:Echoes of a Mad God": {
+      "file": "21dbc95678cdd1eff168fc71.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/bPFdwcT.png",
+      "name": "Echoes of a Mad God"
+    },
+    "item:Echoes of Antinomy": {
+      "file": "fa5ceb91c733cf3a8033492a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/uq8t4mu.png",
+      "name": "Echoes of Antinomy"
+    },
+    "item:Echoes of Stone": {
+      "file": "61510ed118ac14e36f14745b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/etYjsMo.png",
+      "name": "Echoes of Stone"
+    },
+    "item:Echoes of Vindication": {
+      "file": "dd1e0a6c01cef3095f261f12.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/72oeYZF.png",
+      "name": "Echoes of Vindication"
+    },
+    "item:Emerald": {
+      "file": "39cd6a63724892c2e4f600e1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PZP7XDl.png",
+      "name": "Emerald"
+    },
+    "item:Enchantment Slot Drop Chance Potion": {
+      "file": "e82e7be88da344b359318fcb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/P7LnSfL.png",
+      "name": "Enchantment Slot Drop Chance Potion"
+    },
+    "item:Encrypted Note": {
+      "file": "bde437590ab3058e94df578d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/eA4Xlkl.png",
+      "name": "Encrypted Note"
+    },
+    "item:Enriched Bee Steak": {
+      "file": "dfd65fc5dbb6e12bc6df397c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/oGJEc73.png",
+      "name": "Enriched Bee Steak"
+    },
+    "item:Epic Nilshard": {
+      "file": "cd424889837ec087f6264fa7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PjcJKux.png",
+      "name": "Epic Nilshard"
+    },
+    "item:Exalt Token": {
+      "file": "90c45643242cb148996781fb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LRhRP88.png",
+      "name": "Exalt Token"
+    },
+    "item:Festive Appetizer": {
+      "file": "8f7e7a1bb045a240d4d3338d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/H8urb3r.png",
+      "name": "Festive Appetizer"
+    },
+    "item:Festive Cog": {
+      "file": "2ec257939c3164c9afcd9437.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Wlz190X.png",
+      "name": "Festive Cog"
+    },
+    "item:Fluffy Hood": {
+      "file": "f5f54c25101c029f4446aea8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/uILnBfR.png",
+      "name": "Fluffy Hood"
+    },
+    "item:Food Voucher": {
+      "file": "ed184046cbfc8addfb29379b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/fivSFzE.png",
+      "name": "Food Voucher"
+    },
+    "item:Forax Fragment": {
+      "file": "a92d87485e3b852658f73a21.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ZUtFXXK.png",
+      "name": "Forax Fragment"
+    },
+    "item:Forgotten Relics": {
+      "file": "f7a10f7e647755208f723a66.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SPTnx8i.png",
+      "name": "Forgotten Relics"
+    },
+    "item:FR God Spawner": {
+      "file": "f14f11b3c0bc19d2365e4b6b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/iOxut2C.png",
+      "name": "FR God Spawner"
+    },
+    "item:Frost Advisor Set Shard": {
+      "file": "e8089c99d2e277dfc2c353fb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/K6ha8Iq.png",
+      "name": "Frost Advisor Set Shard"
+    },
+    "item:Frost Harbinger Set Shard": {
+      "file": "62c6c41470aad66d373b56a7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/p1FKwse.png",
+      "name": "Frost Harbinger Set Shard"
+    },
+    "item:Frost Orb": {
+      "file": "a0517c439d6ac24286809037.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NMcbd15.png",
+      "name": "Frost Orb"
+    },
+    "item:Frosty Desert": {
+      "file": "35a5c8838a070c403ebed18d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cQr51si.png",
+      "name": "Frosty Desert"
+    },
+    "item:Frozen Soul": {
+      "file": "2425bcbf9eee20bf49c6dea9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/gPs6jCS.png",
+      "name": "Frozen Soul"
+    },
+    "item:Gaze of the Void Shard": {
+      "file": "824b55a62dc151cbf3307b24.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/jNxc68A.png",
+      "name": "Gaze of the Void Shard"
+    },
+    "item:Gen 3 MySTery ST Chest": {
+      "file": "02fea8e948bd99bcd94fe8d6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EmtSlxJ.png",
+      "name": "Gen 3 MySTery ST Chest"
+    },
+    "item:Glittering Egg": {
+      "file": "77ee0bd96a4da8b19b723e3a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/BxayBbp.png",
+      "name": "Glittering Egg"
+    },
+    "item:Glorious Insight Glyph": {
+      "file": "0f01dd1d1b1a48ec963e6173.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/CWPejvt.png",
+      "name": "Glorious Insight Glyph"
+    },
+    "item:Glory and Insight Collection Chest": {
+      "file": "5030432d5f7415de808ad40f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/gkEDNEj.png",
+      "name": "Glory and Insight Collection Chest"
+    },
+    "item:Glyph of a Champion": {
+      "file": "1738042182738d22ac767cc3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/88M5EwS.png",
+      "name": "Glyph of a Champion"
+    },
+    "item:Glyph of a Hero": {
+      "file": "306b714be6cdd4ccbeb5a04d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/XzYWGLx.png",
+      "name": "Glyph of a Hero"
+    },
+    "item:Gold Dungeon Shard": {
+      "file": "a26c9c8c774f3b1a05af466c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ZtKkrxm.png",
+      "name": "Gold Dungeon Shard"
+    },
+    "item:Golden Basket": {
+      "file": "42989bf9e911f53ca8e13aa8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Q4y9eXL.png",
+      "name": "Golden Basket"
+    },
+    "item:Golden Bell": {
+      "file": "8b1037fec18beefffa8c1a15.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EvLKXxV.png",
+      "name": "Golden Bell"
+    },
+    "item:Golden Coin": {
+      "file": "3ed1c4d7a155fcea7970c804.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/melYTGI.png",
+      "name": "Golden Coin"
+    },
+    "item:Golden Egg": {
+      "file": "dfb529502cf684ab32729780.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/1yKLMof.png",
+      "name": "Golden Egg"
+    },
+    "item:Golden Egg Token": {
+      "file": "5c67b1c2395af787eda9cebb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/bP8iVOx.png",
+      "name": "Golden Egg Token"
+    },
+    "item:Golden Leaf": {
+      "file": "3376db7670c571c7921a0189.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/grXRGOK.png",
+      "name": "Golden Leaf"
+    },
+    "item:Golden Scarab": {
+      "file": "caf7a93aa304a6f9b0bab32f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JgkYX1U.png",
+      "name": "Golden Scarab"
+    },
+    "item:Golden Shroom": {
+      "file": "88d21db849c491b31d6710ce.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/C0UHKG7.png",
+      "name": "Golden Shroom"
+    },
+    "item:Golden Tooth": {
+      "file": "974ff924c8f773efa293ffda.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/sKpDhm1.png",
+      "name": "Golden Tooth"
+    },
+    "item:Greater Alien Tech Fragment": {
+      "file": "640806581c434550212644b3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Br2YcZH.png",
+      "name": "Greater Alien Tech Fragment"
+    },
+    "item:Greater Nexus Fragment": {
+      "file": "5d7bd3460111e4c86f1f92ec.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GU05rKy.png",
+      "name": "Greater Nexus Fragment"
+    },
+    "item:Green Beehemoth Armor": {
+      "file": "d61eea9a5364f61ce1e0eb17.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PClEmpg.png",
+      "name": "Green Beehemoth Armor"
+    },
+    "item:Green Beehemoth Quiver": {
+      "file": "a44f2c19230ad7066829d1be.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hTphc7t.png",
+      "name": "Green Beehemoth Quiver"
+    },
+    "item:Grilled Honey Comb": {
+      "file": "a8acbbcfde9fd68978d25e48.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/MWuKBq9.png",
+      "name": "Grilled Honey Comb"
+    },
+    "item:Halloween Candy Token": {
+      "file": "d047982d26f2887ae82d7646.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/pYppJsS.png",
+      "name": "Halloween Candy Token"
+    },
+    "item:Halloween Mystery ST Shard": {
+      "file": "e2d6eff93c2039625704b5da.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/j95sSZW.png",
+      "name": "Halloween Mystery ST Shard"
+    },
+    "item:Heart": {
+      "file": "d376163cf65ba0ffaad39fd0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dVFq4lx.png",
+      "name": "Heart"
+    },
+    "item:Heart Shard": {
+      "file": "709082318212ce5b0234c4ea.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PqdGNnH.png",
+      "name": "Heart Shard"
+    },
+    "item:Heart-Explosion Entrance Shard": {
+      "file": "33ddbbe1ae5f260f0272a39e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OkHSKRQ.png",
+      "name": "Heart-Explosion Entrance Shard"
+    },
+    "item:Heart-Shaped Cookie": {
+      "file": "461adb1c4f729a5d9bbf1821.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/pVm6Br4.png",
+      "name": "Heart-Shaped Cookie"
+    },
+    "item:Hekate Charm": {
+      "file": "43e1767454f3061e64d6647d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/aYHw6hH.png",
+      "name": "Hekate Charm"
+    },
+    "item:Honeyed Snake Skewer": {
+      "file": "1bbf0d1f5a01f0a623182771.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/0vhJvTQ.png",
+      "name": "Honeyed Snake Skewer"
+    },
+    "item:Hydroflow Ability Token": {
+      "file": "bd845264f37a2a66a6e7fe9a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nzwjDoT.png",
+      "name": "Hydroflow Ability Token"
+    },
+    "item:Ice Missile Shard": {
+      "file": "a83b5877437a85f34f78c6cf.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kce9BAQ.png",
+      "name": "Ice Missile Shard"
+    },
+    "item:Ice Potion": {
+      "file": "7a7a8d827cd97edc889ee1a8.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/vIdESXF.png",
+      "name": "Ice Potion"
+    },
+    "item:Ice Shard": {
+      "file": "40779eb24fb4f679fc2d8c73.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LBTGY9w.png",
+      "name": "Ice Shard"
+    },
+    "item:Ionic Charm": {
+      "file": "d4d13f2a53d256001161bcce.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/L5FeeNr.png",
+      "name": "Ionic Charm"
+    },
+    "item:Iron Chunk": {
+      "file": "35fa8d52a94e718f5ce9f56f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/uRqq7jU.png",
+      "name": "Iron Chunk"
+    },
+    "item:Jester Bells": {
+      "file": "2c1472a9ba66c59d95871324.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/fr8eJsW.png",
+      "name": "Jester Bells"
+    },
+    "item:Katalund Fragment": {
+      "file": "edf82afc221b3617c0c6313c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/WU0As17.png",
+      "name": "Katalund Fragment"
+    },
+    "item:Killbilly Warrior Set Shard": {
+      "file": "3950aba4bb08a26a8fae382c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/DEuXukk.png",
+      "name": "Killbilly Warrior Set Shard"
+    },
+    "item:King's Tablet": {
+      "file": "d9bb67b57fb99da1de045bb5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nid1icJ.png",
+      "name": "King's Tablet"
+    },
+    "item:Kogbold Inventor Archer Set Shard": {
+      "file": "e1fe50e34918ccb19005e145.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NByvIQL.png",
+      "name": "Kogbold Inventor Archer Set Shard"
+    },
+    "item:Kogbold Pyrotechnician Wizard Set Shard": {
+      "file": "1a05304c86e3deb086ed35c0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5sVDNqF.png",
+      "name": "Kogbold Pyrotechnician Wizard Set Shard"
+    },
+    "item:Legendary Nilshard": {
+      "file": "b9cc7f148b499e18cd09d7b1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kPBMqiP.png",
+      "name": "Legendary Nilshard"
+    },
+    "item:Lesser Alien Tech Fragment": {
+      "file": "a45c6edf04adc5d90ed77daa.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/XsC3HlW.png",
+      "name": "Lesser Alien Tech Fragment"
+    },
+    "item:Lesser Nexus Fragment": {
+      "file": "ba7fb2f6c4b69920dbd3b2d1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dSmBVrc.png",
+      "name": "Lesser Nexus Fragment"
+    },
+    "item:Love Letter": {
+      "file": "bd85a4e791d466b91fa65415.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EktlThy.png",
+      "name": "Love Letter"
+    },
+    "item:Love Witch Necromancer ST Shard": {
+      "file": "f49c9ff6c288bbbcf30321bd.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LMGtiRw.png",
+      "name": "Love Witch Necromancer ST Shard"
+    },
+    "item:Mad God Token": {
+      "file": "8f2aab24380d506ad011a653.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/UkLjzJ7.png",
+      "name": "Mad God Token"
+    },
+    "item:Mad Minotaur Set Shard": {
+      "file": "b956e1139ee0297afd8a2e2e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/zIHpp8b.png",
+      "name": "Mad Minotaur Set Shard"
+    },
+    "item:Magic Egg": {
+      "file": "c84b4da15a4c5c36eeddd1d9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/n22hY5x.png",
+      "name": "Magic Egg"
+    },
+    "item:Magic Pumpkin": {
+      "file": "1d8d766802588c06d1e834a3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Kg5T0Od.png",
+      "name": "Magic Pumpkin"
+    },
+    "item:Magic Shroom": {
+      "file": "faf44e2461ea3be06bcc4a04.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8ESxLKT.png",
+      "name": "Magic Shroom"
+    },
+    "item:Magus Token": {
+      "file": "a76c9891eaf93d5f959cce5c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Relu7wV.png",
+      "name": "Magus Token"
+    },
+    "item:Malogia Fragment": {
+      "file": "7042e27af360df10f4a83dd0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/tmmm33Y.png",
+      "name": "Malogia Fragment"
+    },
+    "item:Mastery Token": {
+      "file": "4b0b96833887c8d859b3af71.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/s6ehTvo.png",
+      "name": "Mastery Token"
+    },
+    "item:Mechanical Raptor ST Shard": {
+      "file": "5f0136d19bd23cdb1b179fad.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8CZkMWD.png",
+      "name": "Mechanical Raptor ST Shard"
+    },
+    "item:Metal Scrap": {
+      "file": "0156ae966abe93a3e33ccf23.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nnhcyZm.png",
+      "name": "Metal Scrap"
+    },
+    "item:Missing Texture Cube": {
+      "file": "f6939982c7b7e890ae7f30d6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/H52ycux.png",
+      "name": "Missing Texture Cube"
+    },
+    "item:Missing Texture Sphere": {
+      "file": "77b9fbc2c18c773d17784b8f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HRvTMhm.png",
+      "name": "Missing Texture Sphere"
+    },
+    "item:Mithril Sword": {
+      "file": "af23bd2042ba6663f96bf392.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/WbPY09p.png",
+      "name": "Mithril Sword"
+    },
+    "item:MotMG Legacy Oryx Token": {
+      "file": "1f05eb017debf40865550e52.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/J9ZrTfo.png",
+      "name": "MotMG Legacy Oryx Token"
+    },
+    "item:Music Note": {
+      "file": "de08b779cccca7aad6385a7d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ftwzs9O.png",
+      "name": "Music Note"
+    },
+    "item:Mystery 3ST Shard": {
+      "file": "42079a4fe0d0afd8b618c381.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/yD1w5wI.png",
+      "name": "Mystery 3ST Shard"
+    },
+    "item:Mystery ST Shard": {
+      "file": "7bbe6d55926ae314e6076324.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ymh0moH.png",
+      "name": "Mystery ST Shard"
+    },
+    "item:Mystery ST Skin Shard": {
+      "file": "03111ad463f4d3f0551cd770.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/z66IFDS.png",
+      "name": "Mystery ST Skin Shard"
+    },
+    "item:Mythical ST Shard": {
+      "file": "5ffd44d7de3d48710e455e07.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/nt4PuAC.png",
+      "name": "Mythical ST Shard"
+    },
+    "item:Nail": {
+      "file": "edef18e9cd8df2281b1ed44f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/feYh1nV.png",
+      "name": "Nail"
+    },
+    "item:Nexus Crystal": {
+      "file": "a144e70bdde2ee4374922a06.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/4m9Mx82.png",
+      "name": "Nexus Crystal"
+    },
+    "item:Nightmatter Shard": {
+      "file": "c3ddaae9642564594d6db9b0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/fnYhTsU.png",
+      "name": "Nightmatter Shard"
+    },
+    "item:Numbered Health Potion": {
+      "file": "5826fefd267c7432974dbec7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Qhu3sJb.png",
+      "name": "Numbered Health Potion"
+    },
+    "item:Obsidian Dungeon Shard": {
+      "file": "7e15a703b45447ebdd730c10.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5f0t8a8.png",
+      "name": "Obsidian Dungeon Shard"
+    },
+    "item:Old Brick": {
+      "file": "48011fdc68d93bd015909ac6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5O0xI2n.png",
+      "name": "Old Brick"
+    },
+    "item:Onmyoji Ninja Set Shard": {
+      "file": "a68fe402b6f37daed1f2d412.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7W3UNDp.png",
+      "name": "Onmyoji Ninja Set Shard"
+    },
+    "item:Ornament": {
+      "file": "4c106f6741c6805b9218f74d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/CPQ01vs.png",
+      "name": "Ornament"
+    },
+    "item:Oryx April Shard": {
+      "file": "7e15a703b45447ebdd730c10.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5f0t8a8.png",
+      "name": "Oryx April Shard"
+    },
+    "item:Oryx's Bag": {
+      "file": "ded7bbf482429b022c1c787d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/L483ybR.png",
+      "name": "Oryx's Bag"
+    },
+    "item:Oryxmania Cheer": {
+      "file": "7c89fde25b7287c1c26f8933.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ffeLoJQ.png",
+      "name": "Oryxmania Cheer"
+    },
+    "item:Oryxmas Advent Token": {
+      "file": "3a97154ddb3adcc9121592b9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/EYvP71Q.png",
+      "name": "Oryxmas Advent Token"
+    },
+    "item:Oryxmas Dinner": {
+      "file": "539dca66c8caf3ed2c271d47.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/H2eQGTY.png",
+      "name": "Oryxmas Dinner"
+    },
+    "item:Painted Egg Archer ST Shard": {
+      "file": "8be80097d390fb07bdf1b398.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kOGTdSN.png",
+      "name": "Painted Egg Archer ST Shard"
+    },
+    "item:Patty Token": {
+      "file": "e1c2f594d6edbcfca1714617.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dpL3svH.png",
+      "name": "Patty Token"
+    },
+    "item:Phytomancer Set Shard": {
+      "file": "73dc3f337200ca1c3f8701f5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kRHQM89.png",
+      "name": "Phytomancer Set Shard"
+    },
+    "item:Pirate Hat": {
+      "file": "f957a7fec0a65edfb586de49.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/JC3XXVp.png",
+      "name": "Pirate Hat"
+    },
+    "item:Pixie Dust": {
+      "file": "5cddc75fafc9cc2b3fc79116.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AEA25EL.png",
+      "name": "Pixie Dust"
+    },
+    "item:Plague Doctor Priest Set Shard": {
+      "file": "35d4e9a030b917e2875562f3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/sLJvOcV.png",
+      "name": "Plague Doctor Priest Set Shard"
+    },
+    "item:Plank": {
+      "file": "2dea54fcff51d4c161feca95.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/mAt8AUL.png",
+      "name": "Plank"
+    },
+    "item:Platinum Dungeon Shard": {
+      "file": "37f3a49efd9e86a81c016abe.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/CIoYSJG.png",
+      "name": "Platinum Dungeon Shard"
+    },
+    "item:Primal Ice": {
+      "file": "a7e28584f01a87c1fc60db6a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/NicX8Fa.png",
+      "name": "Primal Ice"
+    },
+    "item:Pumpkin Seed Token": {
+      "file": "feaf12be150aa34b35985915.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/rQqGibv.png",
+      "name": "Pumpkin Seed Token"
+    },
+    "item:Pumpkin Talisman": {
+      "file": "89f08e8052e36d359be5cf77.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/djaNLqC.png",
+      "name": "Pumpkin Talisman"
+    },
+    "item:Quartz Fragment": {
+      "file": "0ebf7a576d585a2804315167.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/a6UMZbI.png",
+      "name": "Quartz Fragment"
+    },
+    "item:Rare Nilshard": {
+      "file": "27d785b33d07dcb799c3f343.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/l1IrIwO.png",
+      "name": "Rare Nilshard"
+    },
+    "item:Rat Coin": {
+      "file": "173cf5f497586cd920b54ceb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6NrZLe7.png",
+      "name": "Rat Coin"
+    },
+    "item:Raven Feather": {
+      "file": "085ecac7b591e77eb2455d63.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PC36tkk.png",
+      "name": "Raven Feather"
+    },
+    "item:Red Beehemoth Armor": {
+      "file": "b2f53a3dcd88ad76430a762a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/InPgMzU.png",
+      "name": "Red Beehemoth Armor"
+    },
+    "item:Red Beehemoth Quiver": {
+      "file": "324dfdf481ca35f562b76c2c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/SFcMSuE.png",
+      "name": "Red Beehemoth Quiver"
+    },
+    "item:Red Hat": {
+      "file": "2d2bc0678d85bd6d1e09f64e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/1b4uhMW.png",
+      "name": "Red Hat"
+    },
+    "item:Red Ribbon": {
+      "file": "510f862c6022ab441fd181fe.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/f2LRN7X.png",
+      "name": "Red Ribbon"
+    },
+    "item:Red Scarf": {
+      "file": "e849f59b96d892a8b117d858.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7ITNVIH.png",
+      "name": "Red Scarf"
+    },
+    "item:Resurrected Huntress Set Shard": {
+      "file": "628c441a15c488b5632dd9bb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/M4uhVTL.png",
+      "name": "Resurrected Huntress Set Shard"
+    },
+    "item:Retrowinds Armor Token": {
+      "file": "e78fd0615f8144f7c2593e5e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/yulKJMU.png",
+      "name": "Retrowinds Armor Token"
+    },
+    "item:Retrowinds Weapon Token": {
+      "file": "6e9dbbc3e732301ef3688dee.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/59qfmBx.png",
+      "name": "Retrowinds Weapon Token"
+    },
+    "item:Rock Cube": {
+      "file": "e434e8492a6694b6cd499c17.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/09aOK2z.png",
+      "name": "Rock Cube"
+    },
+    "item:Rose Keeper Necromancer ST Shard": {
+      "file": "1ad44fca8885b013bfd76576.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GTxLyKT.png",
+      "name": "Rose Keeper Necromancer ST Shard"
+    },
+    "item:Royal Marbled Chocolate": {
+      "file": "7ea7226e8c22ab23d1fef62d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ktxupxu.png",
+      "name": "Royal Marbled Chocolate"
+    },
+    "item:Ruby Dungeon Shard": {
+      "file": "0a449cb04b2fc351d387ca44.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/N3cv83u.png",
+      "name": "Ruby Dungeon Shard"
+    },
+    "item:Ruby Fragment": {
+      "file": "7181ef0de3899961725cd520.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/aDyz9hn.png",
+      "name": "Ruby Fragment"
+    },
+    "item:Sapphire Fragment": {
+      "file": "bcd52ce49ed473a989c371a5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/M19rcCF.png",
+      "name": "Sapphire Fragment"
+    },
+    "item:Sapphire Shard": {
+      "file": "a123f1004dd55319ba48e371.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/qCw5cGK.png",
+      "name": "Sapphire Shard"
+    },
+    "item:Schematic": {
+      "file": "ba146569430142a927bf225f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/pWlWxww.png",
+      "name": "Schematic"
+    },
+    "item:Scorching Tablet": {
+      "file": "03258b0c37599f6d8721282d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/4EkguQc.png",
+      "name": "Scorching Tablet"
+    },
+    "item:Screw": {
+      "file": "88a0fd3ea664b8b0b59275d4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/5Ndehmg.png",
+      "name": "Screw"
+    },
+    "item:Sentient Staff": {
+      "file": "b0928a75d1b6bc966e959dfd.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/iveqFIc.png",
+      "name": "Sentient Staff"
+    },
+    "item:Shaman Necromancer Set Shard": {
+      "file": "d9c75527c018ea7b1043c45b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/0lY3QH9.png",
+      "name": "Shaman Necromancer Set Shard"
+    },
+    "item:Shard of the Doorwarden": {
+      "file": "59f401ef6234c02b9ed2b98d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ccqfP6b.png",
+      "name": "Shard of the Doorwarden"
+    },
+    "item:Shard of the Intern": {
+      "file": "5f76b953cf4310aeb1135205.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/HNowVuY.png",
+      "name": "Shard of the Intern"
+    },
+    "item:Shard of the Mad God": {
+      "file": "328bd695bf1ee8b69abf3ffa.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/t6IyyN9.png",
+      "name": "Shard of the Mad God"
+    },
+    "item:Shard of the Savior": {
+      "file": "7050086383d8a2ce6fe43aff.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/6kdh7gs.png",
+      "name": "Shard of the Savior"
+    },
+    "item:Silver Screw": {
+      "file": "b9689cb1aa77f47727b73476.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dtryJJh.png",
+      "name": "Silver Screw"
+    },
+    "item:Skull Cookie": {
+      "file": "06eeb123a68199201b511ff0.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/xS4uYDl.png",
+      "name": "Skull Cookie"
+    },
+    "item:Sniper Token": {
+      "file": "0efa036dfb4e3494b337c7e9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/GjZLoH7.png",
+      "name": "Sniper Token"
+    },
+    "item:Snowflake Token": {
+      "file": "046f2727573ce64ce8c025b7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/16ZUBjB.png",
+      "name": "Snowflake Token"
+    },
+    "item:Soul Spark": {
+      "file": "b08447f8bd4291f9c46cdac5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/cQOe7oR.png",
+      "name": "Soul Spark"
+    },
+    "item:Spectral Rogue Set Shard": {
+      "file": "5ae5c6f04a092c15d885b784.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/O8D59dj.png",
+      "name": "Spectral Rogue Set Shard"
+    },
+    "item:Spellbound Soulthief Set Shard": {
+      "file": "1b91e636dd050a8ed216a820.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/11MbgxZ.png",
+      "name": "Spellbound Soulthief Set Shard"
+    },
+    "item:St. Paddy's Bag": {
+      "file": "826069d4c1b9d9bbe86c419f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Uzhrn1e.png",
+      "name": "St. Paddy's Bag"
+    },
+    "item:Stalwart Token": {
+      "file": "cbcd081c27ecda05b3b158ec.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/qD8egTK.png",
+      "name": "Stalwart Token"
+    },
+    "item:Stat Potion Drop Potion": {
+      "file": "6ce7cae0b739067f42d2464e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/92URSVl.png",
+      "name": "Stat Potion Drop Potion"
+    },
+    "item:Steamed Zombie Steak": {
+      "file": "b3f03643d3b05472fc960051.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/64q8QNb.png",
+      "name": "Steamed Zombie Steak"
+    },
+    "item:Stone Scarab": {
+      "file": "28f46c15ff3a30517d6a9399.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/2cxu9hJ.png",
+      "name": "Stone Scarab"
+    },
+    "item:Stone Tablet": {
+      "file": "09c5d4154b03cb4db55bc1a2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/7h6Minp.png",
+      "name": "Stone Tablet"
+    },
+    "item:Stone Token": {
+      "file": "22219f5df0452700f8a9289b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/AQDSOsF.png",
+      "name": "Stone Token"
+    },
+    "item:Storm Shaman Set Shard": {
+      "file": "d75e953d5cbc879fc86a21ff.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9AB26So.png",
+      "name": "Storm Shaman Set Shard"
+    },
+    "item:Swiftblade Token": {
+      "file": "e20a52051716021a18cc0595.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hHtZGkD.png",
+      "name": "Swiftblade Token"
+    },
+    "item:Test Dust Charm": {
+      "file": "6f1016b75a543c8a4a951bfe.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/aZ4VIqA.png",
+      "name": "Test Dust Charm"
+    },
+    "item:Thessal's Shell": {
+      "file": "97a91b4bf391c2e6a7c9bbe1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/IchnKYh.png",
+      "name": "Thessal's Shell"
+    },
+    "item:Tidal Horn": {
+      "file": "4b65255a75c3967e78ea9591.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/WhG1gnT.png",
+      "name": "Tidal Horn"
+    },
+    "item:Timekeeper Mystic ST Shard": {
+      "file": "1d2b3a30d0d5afed0bf1da51.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/51d2DHn.png",
+      "name": "Timekeeper Mystic ST Shard"
+    },
+    "item:Token of Strife": {
+      "file": "f3dadb6140ed6e389911a2c4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ZzzSbIv.png",
+      "name": "Token of Strife"
+    },
+    "item:Topaz Fragment": {
+      "file": "ed78d04f8c10e96cddb408e6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/k3cRJEd.png",
+      "name": "Topaz Fragment"
+    },
+    "item:Topaz Shard": {
+      "file": "993632e743cd9252410ca22a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OvT9O9v.png",
+      "name": "Topaz Shard"
+    },
+    "item:Trusted Spatula": {
+      "file": "e8fbf74afd4752a2208149cb.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/FLYuK6t.png",
+      "name": "Trusted Spatula"
+    },
+    "item:Twisted Coin": {
+      "file": "78ba9441c25e4916618c2fdd.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/UJMWe8y.png",
+      "name": "Twisted Coin"
+    },
+    "item:Universal Fragment": {
+      "file": "5552574d6bac3e8b49ada3f6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/XeE7OTt.png",
+      "name": "Universal Fragment"
+    },
+    "item:Untaris Fragment": {
+      "file": "94ea660b51e7b3110d79b499.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/1sttVls.png",
+      "name": "Untaris Fragment"
+    },
+    "item:Uranium Shard": {
+      "file": "af4e2bdbd04a3d5f50b3fbef.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/U0GW7kX.png",
+      "name": "Uranium Shard"
+    },
+    "item:Valentine's Mystery Skin": {
+      "file": "62aefa2c568d1884b3518ba5.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/OdnIE7h.png",
+      "name": "Valentine's Mystery Skin"
+    },
+    "item:Vamp Steak Flambe'": {
+      "file": "201f3cffbfd0f6d74b1664d3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/PPYZVCm.png",
+      "name": "Vamp Steak Flambe'"
+    },
+    "item:Vampire Fangs": {
+      "file": "0810ec65c9286a0710fca7e1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kIZjcrb.png",
+      "name": "Vampire Fangs"
+    },
+    "item:Voice of Destiny": {
+      "file": "823b6746daa17b72d9e0696a.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/bppQ9fM.png",
+      "name": "Voice of Destiny"
+    },
+    "item:Void Catalyst": {
+      "file": "38c699c6a20457758fae64ce.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hbh7G33.png",
+      "name": "Void Catalyst"
+    },
+    "item:Void Crystal": {
+      "file": "0607871d16b1cca71a992c8f.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LHdgIk1.png",
+      "name": "Void Crystal"
+    },
+    "item:Void Remains": {
+      "file": "72fc21e1ff05a5c5b92658dc.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/zPFtX1g.png",
+      "name": "Void Remains"
+    },
+    "item:Void Shard": {
+      "file": "91dfbcefa357edfd0dd73eb4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LWBhfM7.png",
+      "name": "Void Shard"
+    },
+    "item:Void Stone": {
+      "file": "8c3393f61d2af21b12b3d913.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/N7KP71r.png",
+      "name": "Void Stone"
+    },
+    "item:Vortex Sigil": {
+      "file": "cbfaa49fe89b74337728206d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/9EI8ybs.png",
+      "name": "Vortex Sigil"
+    },
+    "item:Weekly Artifact Drop Potion": {
+      "file": "aedbfe408227acf0866c1ff9.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/KoJKh9X.png",
+      "name": "Weekly Artifact Drop Potion"
+    },
+    "item:Whisper of Destiny": {
+      "file": "cdc2abd6b4317e0804dec8f6.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/RSZCgRz.png",
+      "name": "Whisper of Destiny"
+    },
+    "item:Wiki Artifact": {
+      "file": "2d60c6979fb14d25fe79525d.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/MR7RyFd.png",
+      "name": "Wiki Artifact"
+    },
+    "item:Wiki Weapon": {
+      "file": "a19228cbf6d3f64cb6b6b3c2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/niAlQ6s.png",
+      "name": "Wiki Weapon"
+    },
+    "item:Wooden Dragon Tablet": {
+      "file": "675746a945c6a0a2b7c457c7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/ktCNCL6.png",
+      "name": "Wooden Dragon Tablet"
+    },
+    "item:Yellow Beehemoth Armor": {
+      "file": "0361afe6afa0848960912833.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/lZCU4nx.png",
+      "name": "Yellow Beehemoth Armor"
+    },
+    "item:Yellow Beehemoth Quiver": {
+      "file": "2ed6d2df693ee9205c1f6350.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/8KE90ne.png",
+      "name": "Yellow Beehemoth Quiver"
+    },
+    "item:Yellow Scarf": {
+      "file": "34bff05e49b5b33b7581444b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/o9CLeKa.png",
+      "name": "Yellow Scarf"
+    },
+    "item:Zombie Foot": {
+      "file": "55a809a2b64319ab26f4cbf7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kqXvwUI.png",
+      "name": "Zombie Foot"
+    },
+    "item:Zombie Hand": {
+      "file": "fd916bccde059ade79b155e4.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/twiLCsg.png",
+      "name": "Zombie Hand"
+    },
+    "pet:Pet Eggs": {
+      "file": "58183927862856f3c5fc9182.gif",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/kvdtsYY.gif",
+      "name": "Pet Eggs"
+    },
+    "portal:Candy Miner": {
+      "file": "93403952aca62b84a8154905.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/R8OHsJD.png",
+      "name": "Candy Miner"
+    },
+    "portal:Cloth Bazaar": {
+      "file": "0f02de19961ebbc51da4b8a2.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Environment/Portals/Cloth%20Bazaar%20Portal.png",
+      "name": "Cloth Bazaar"
+    },
+    "portal:Diagram Dungeon": {
+      "file": "bcbfe59144381114d29b4b29.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/f7K1wg0.png",
+      "name": "Diagram Dungeon"
+    },
+    "portal:Nexus": {
+      "file": "3c1a9618db5df6cfa6bbf2fa.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Environment/Portals/Portal to Nexus.png",
+      "name": "Nexus"
+    },
+    "portal:Oryx's Kitchen": {
+      "file": "b92b39a9d8a5e2f525626769.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hkpyn52.png",
+      "name": "Oryx's Kitchen"
+    },
+    "portal:Tutorial": {
+      "file": "b92b39a9d8a5e2f525626769.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hkpyn52.png",
+      "name": "Tutorial"
+    },
+    "portal:Vault": {
+      "file": "c874339e424b598b417aba48.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/d/Environment/Portals/Vault Portal.png",
+      "name": "Vault"
+    }
+  }
+}

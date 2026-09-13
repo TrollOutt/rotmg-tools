@@ -59,6 +59,7 @@ const RealmIndex = (function () {
   let showing = null;                // the record on screen
   let kindWanted = '';               // the category chip that is down
   let wiki = null;                   // the community join, when there is one
+  let realmeyeArchive = null;        // REALMEYE_ARCHIVE_UI: complete structured archive overlay
   let dungeonDifficulties = new Map(); // RealmEye's 1–10 dungeon ratings
   let groups = [];                   // the browse rail, built once from the data
   let narrowed = [];                 // one set of allowed ids per group in play
@@ -278,6 +279,63 @@ const RealmIndex = (function () {
       const entry = { hand: wiki.tierDropHands[handAt], tier, alternate: Boolean(alternate), listAt };
       tie(wiki.tierDrop, enemy, entry);
       tie(wiki.tierDropBy, entry.hand + ':' + tier + ':' + entry.alternate, enemy);
+    }
+  }
+
+  /* REALMEYE_ARCHIVE_UI: structured archive data, separate from client facts. */
+  async function loadRealmEyeArchive() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.realmeyeEnrichmentText;
+    if (!raw) {
+      raw = await fetch('assets/index/realmeye-enrichment.json').then(r => (r.ok ? r.text() : ''))
+        .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.text()).catch(() => ''));
+    }
+    if (!raw) return;
+    let said;
+    try { said = JSON.parse(raw); } catch (err) { return; }
+    realmeyeArchive = {
+      home: (said.source && said.source.home) || 'https://www.realmeye.com/wiki/',
+      page: new Map()
+    };
+    for (const [slug, ids] of Object.entries(said.pageIndex || {})) {
+      realmeyeArchive.page.set(slug, (ids || []).filter(id => typeof id === 'string'));
+    }
+    for (const [id, data] of Object.entries(said.records || {})) {
+      let one = all.get(id);
+      if (!one && data.communityOnly) {
+        one = {
+          id,
+          kind: data.kind || String(id).split(':', 1)[0] || 'other',
+          name: data.name || String(id).replace(/^[^:]+:/, ''),
+          communityOnly: true
+        };
+        all.set(id, one);
+        if (!data.scopeOnly) light.push([one.id, one.name, filedAs(one), '', 0, 0, '']);
+      }
+      if (!one) continue;
+      one.realmeyeArchive = data;
+      /* REALMEYE_UNIFIED_PRESENTATION */
+      const presentation = data.presentation || {};
+      if (presentation.summary) one.realmeyeDescription = presentation.summary;
+      if (presentation.rank && !one.rank) one.rank = presentation.rank;
+      if (presentation.recommendedLevel !== undefined && one.recommendedLevel === undefined) {
+        one.recommendedLevel = presentation.recommendedLevel;
+      }
+      if (data.clientZone) {
+        if (data.clientZone.ground && !one.ground) one.ground = data.clientZone.ground;
+        if (data.clientZone.tiles && !one.tiles) one.tiles = data.clientZone.tiles;
+        if (data.clientZone.rank && !one.rank) one.rank = data.clientZone.rank;
+      }
+      if (data.sprite && !one.icon && !one.art) one.icon = data.sprite;
+      if (Array.isArray(data.searchAliases) && data.searchAliases.length) {
+        const row = light.find(entry => entry[0] === one.id);
+        if (row) row[3] = [row[3], ...data.searchAliases].filter(Boolean).join(' ');
+      }
+      for (const page of data.pages || []) {
+        const list = realmeyeArchive.page.get(page.slug) || [];
+        if (!list.includes(one.id)) list.push(one.id);
+        realmeyeArchive.page.set(page.slug, list);
+      }
     }
   }
 
@@ -1164,6 +1222,7 @@ const RealmIndex = (function () {
     if (one.came) bits.push(['came with', 'the ' + one.came]);
     if (one.ground) bits.push(['ground', one.ground]);
     if (one.rank) bits.push(['zone', one.rank]);
+    if (one.recommendedLevel !== undefined) bits.push(['recommended level', one.recommendedLevel + '+']);
     if (one.tiles) bits.push(['how big', one.tiles.toLocaleString('en-US') + ' tiles']);
     if (one.pic) bits.push(['picture', PIC_SAY[one.pic] || one.pic]);
     if (one.stats) {
@@ -1208,7 +1267,7 @@ const RealmIndex = (function () {
     const difficulty = dungeonDifficultyOf(one);
     if (!difficulty) return '';
     return '<p class="ix-dungeon-difficulty"><b>☠ Difficulty ' + difficulty
-      + ' / 10</b><span>RealmEye dungeon rating</span></p>';
+      + ' / 10</b><span>difficulty rating</span></p>';
   }
 
   function drawBiomeLoot(one) {
@@ -1243,7 +1302,37 @@ const RealmIndex = (function () {
    * one of their pieces links to - so those say where they are actually going
    * rather than promising a page about the set.
    */
+  /* REALMEYE_SOURCE_LINKS_V9 */
+  function archiveSourcePage(one) {
+    const data = one && one.realmeyeArchive;
+    if (!data) return null;
+    if (data.sourcePage && data.sourcePage.slug) return data.sourcePage;
+    /* REALMEYE_SUBBIOME_MODEL_V11: aggregate records have no single source page. */
+    if (data.aggregateBiome) return null;
+    const pages = (data.pages || []).filter(page => page && page.slug);
+    if (!pages.length) return null;
+    return pages.slice().sort((a, b) => {
+      const aEnemies = /-enemies$/.test(a.slug || '') ? 1 : 0;
+      const bEnemies = /-enemies$/.test(b.slug || '') ? 1 : 0;
+      const aScoped = a.scope ? 1 : 0, bScoped = b.scope ? 1 : 0;
+      return aScoped - bScoped || aEnemies - bEnemies
+        || String(a.slug).length - String(b.slug).length
+        || String(a.slug).localeCompare(String(b.slug));
+    })[0];
+  }
+
   function awayTo(one) {
+    const archivePage = archiveSourcePage(one);
+    if (archivePage) {
+      const many = Number((one.realmeyeArchive && one.realmeyeArchive.sourcePageCount)
+        || ((one.realmeyeArchive && one.realmeyeArchive.pages) || []).length || 1);
+      const href = archivePage.url || ((realmeyeArchive && realmeyeArchive.home)
+        || 'https://www.realmeye.com/wiki/') + archivePage.slug;
+      return '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
+        + esc(href) + '" title="' + esc(many > 1
+          ? ('RealmEye source page (' + many + ' archived pages are merged into this record)')
+          : 'Its archived RealmEye source page') + '">RealmEye ↗</a>';
+    }
     if (!wiki) return '';
     const mine = wiki.page.get(one.id);
     if (mine !== undefined) {
@@ -1300,6 +1389,7 @@ const RealmIndex = (function () {
     if (one.kind === 'item') heldBy(one).forEach(x => links.push(['may hold', x.id, true]));
 
     const facts = factsOf(one);
+    const cardLinks = one.kind === 'place' ? links.filter(([how]) => how !== 'was seen in') : links;
     const where = one.from
       ? (all.files[one.from[0]] || '?') + (one.from[1] ? ' · ' + one.from[1] : '')
       : 'not declared in the client';
@@ -1309,11 +1399,12 @@ const RealmIndex = (function () {
       + '<span class="ix-kind is-' + esc(filedAs(one).replace(/ /g, '-'))
         + '">' + esc(sayKind(filedAs(one))) + '</span>'
       + '<h3>' + esc(one.said || one.name) + '</h3>'
+      + drawPlaceGuardian(one)
       + (one.alias ? '<code>' + esc(one.alias) + '</code>' : '')
       + awayTo(one)
       + star(one.id)
       + '</header>'
-      + (one.about ? '<p class="ix-about">' + esc(one.about) + '</p>' : '')
+      + drawRecordDescription(one)
       + drawDungeonDifficulty(one)
       + drawDoes(one)
       + (one.hidden
@@ -1332,12 +1423,12 @@ const RealmIndex = (function () {
           '<i>' + esc(x) + '</i>').join('') + '</p>'
         : '')
       + drawTools(one)
-      + drawBiomeLoot(one)
+      + (one.kind === 'place' ? drawPlaceKnowledge(one) : drawRealmEyeArchive(one))
       + drawFolds(one)
       + drawSlots(one)
-      + (links.length ? drawLinks(links) : '')
-      + drawWiki(one)
-      + '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>';
+      + (cardLinks.length ? drawLinks(cardLinks) : '')
+      + (one.kind === 'place' ? '' : drawWiki(one))
+      + (one.communityOnly ? '' : '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>');
   }
 
   /*
@@ -1369,6 +1460,431 @@ const RealmIndex = (function () {
    * of date. Shown, because nothing else in the game's own files answers
    * "where does this come from"; fenced, because it is somebody else's claim.
    */
+  const REALMEYE_RELATION_SAY = {
+    dropped_by: 'dropped by', obtained_through: 'obtained through',
+    reskin_of: 'reskin of', has_reskin: 'reskins', spawns: 'spawns', spawned_by: 'spawned by',
+    set_piece: 'set pieces', class: 'class', dungeon_boss: 'bosses',
+    dungeon_miniboss: 'minibosses', dungeon_enemy: 'enemies', dungeon_minion: 'minions',
+    dungeon_boss_minion: 'boss minions', dungeon_treasure_boss: 'treasure room boss',
+    dungeon_hazard: 'hazards', dungeon_drop_interest: 'drops of interest',
+    biome_regular_enemy: 'regular enemies', biome_minion: 'minions', biome_hero: 'Heroes of Oryx',
+    biome_hero_minion: 'Hero minions', biome_encounter: 'encounters',
+    biome_encounter_minion: 'encounter minions', biome_beacon_guardian: 'beacon guardian',
+    biome_beacon_minion: 'beacon minions', biome_drop_interest: 'drops of interest',
+    contains_biome: 'sub-biomes', part_of_biome: 'part of biome'
+  };
+  const realmFactSay = key => String(key || '').replace(/_/g, ' ')
+    .replace(/\b\w/g, letter => letter.toUpperCase());
+
+  function realmFactRows(value, prefix, rows) {
+    if (prefix === 'table' || prefix.startsWith('table.')) return;
+    if (value === null || value === undefined || value === '') return;
+    if (Array.isArray(value)) {
+      if (value.every(x => x === null || ['string', 'number', 'boolean'].includes(typeof x))) {
+        rows.push([prefix, value.join(', ')]);
+      }
+      return;
+    }
+    if (typeof value === 'object') {
+      for (const [key, child] of Object.entries(value)) {
+        realmFactRows(child, prefix ? prefix + '.' + key : key, rows);
+      }
+      return;
+    }
+    rows.push([prefix, value]);
+  }
+
+  function realmTables(value, out) {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value.headers) && Array.isArray(value.rows)) { out.push(value); return; }
+    for (const child of Object.values(value)) realmTables(child, out);
+  }
+
+  function realmRelationTarget(relation) {
+    if (relation && relation.to && all.has(relation.to)) return all.get(relation.to);
+    if (!relation || !relation.toRealmEye || !realmeyeArchive) return null;
+    const ids = realmeyeArchive.page.get(relation.toRealmEye) || [];
+    for (const id of ids) if (all.has(id)) return all.get(id);
+    return null;
+  }
+
+  function realmRelationGroups(one) {
+    const grouped = new Map();
+    const add = (type, relation) => {
+      if (!type || !relation) return;
+      const target = realmRelationTarget(relation);
+      const key = target ? 'id:' + target.id
+        : relation.toRealmEye ? 'slug:' + relation.toRealmEye
+        : relation.label ? 'label:' + relation.label : '';
+      if (!key) return;
+      if (!grouped.has(type)) grouped.set(type, new Map());
+      const bucket = grouped.get(type);
+      let item = bucket.get(key);
+      if (!item) {
+        item = { relation: { ...relation }, target, scopes: new Set() };
+        bucket.set(key, item);
+      }
+      if (relation.scope) item.scopes.add(relation.scope);
+    };
+
+    for (const relation of (one.realmeyeArchive && one.realmeyeArchive.relations) || []) {
+      add(relation.type || 'related', relation);
+    }
+
+    /* A walked-realm observation and an archive roster answer the same reader
+       question. Keep one row and one target, not one row per source. */
+    if (one.kind === 'place') {
+      for (const [how, id] of one.inLinks || []) {
+        if (how !== 'was seen in') continue;
+        const target = all.get(id);
+        if (target && target.kind === 'enemy') add('biome_regular_enemy', { to: id });
+      }
+
+      /* The legacy compact wiki join may still cover an item the full archive
+         does not resolve. Fold it into notable drops instead of drawing the
+         old "What players have written down" block underneath. */
+      if (wiki) {
+        const mine = wiki.page.get(one.id);
+        for (const at of (mine === undefined ? [] : (wiki.drop.get(mine) || []))) {
+          const candidates = (wiki.about.get(at) || []).map(id => all.get(id)).filter(Boolean);
+          const target = candidates.find(x => !x.twin) || candidates[0];
+          const page = wiki.pages[at] || ['', ''];
+          add('biome_drop_interest', target ? { to: target.id } : { toRealmEye: page[0] });
+        }
+      }
+    }
+    return grouped;
+  }
+
+  function relationItems(groups, type) {
+    return [...(groups.get(type) || new Map()).values()];
+  }
+
+  /* REALMEYE_PRESENTATION_V8 */
+  function relationDisplayName(one) {
+    const name = String(one ? (one.said || one.name || '') : '');
+    return name.replace(/\s*\(New\)\s*$/i, '').trim();
+  }
+
+  function compactTierRange(values) {
+    const nums = [...new Set((values || []).map(Number).filter(Number.isFinite))]
+      .sort((a, b) => a - b);
+    if (!nums.length) return '';
+    const ranges = [];
+    let first = nums[0], last = nums[0];
+    for (let i = 1; i < nums.length; i++) {
+      if (nums[i] === last + 1) { last = nums[i]; continue; }
+      ranges.push([first, last]);
+      first = last = nums[i];
+    }
+    ranges.push([first, last]);
+    return ranges.map(([from, to]) => from === to ? 'T' + from : 'T' + from + '–T' + to).join(', ');
+  }
+
+  function drawRecordDescription(one) {
+    const descriptions = [];
+    const seen = new Set();
+    for (const value of [one && one.about, one && one.realmeyeDescription]) {
+      const text = String(value || '').trim();
+      const key = text.toLowerCase().replace(/\s+/g, ' ');
+      if (!text || seen.has(key)) continue;
+      seen.add(key);
+      descriptions.push(text);
+    }
+    if (!descriptions.length) return '';
+    return '<details class="ix-card-description"><summary>Description</summary>'
+      + '<div>' + descriptions.map(text => '<p>' + esc(text) + '</p>').join('') + '</div></details>';
+  }
+
+  function drawKnowledgeTarget(item) {
+    const target = item.target || realmRelationTarget(item.relation);
+    const scopes = [...(item.scopes || [])].sort();
+    const notes = [...(item.notes || [])].filter(Boolean);
+    const titleBits = [];
+    if (scopes.length) titleBits.push('Area: ' + scopes.join(', '));
+    if (notes.length) titleBits.push(notes.join(' · '));
+    const title = titleBits.length ? ' title="' + esc(titleBits.join(' — ')) + '"' : '';
+    if (target) {
+      return '<button type="button" class="ix-jump" data-open="' + esc(target.id) + '"' + title + '>'
+        + art(target, 14) + esc(relationDisplayName(target)) + '</button>';
+    }
+    if (item.relation && item.relation.toRealmEye) {
+      const slug = item.relation.toRealmEye;
+      return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener" href="'
+        + esc(realmeyeArchive.home + slug) + '"' + title + '>'
+        + esc(slug.replace(/-/g, ' ')) + '</a>';
+    }
+    if (item.relation && item.relation.label) {
+      return '<span class="ix-data-chip"' + title + '>' + esc(item.relation.label) + '</span>';
+    }
+    return '';
+  }
+
+  function drawKnowledgeRow(label, items) {
+    const chips = items.map(drawKnowledgeTarget).filter(Boolean);
+    if (!chips.length) return '';
+    return '<div class="ix-link-row"><i>' + esc(label) + '</i><span>' + chips.join('') + '</span></div>';
+  }
+
+  function resolvedButtons(ids) {
+    return [...new Set(ids || [])].map(id => all.get(id)).filter(Boolean).map(target => ({
+      relation: { to: target.id }, target, scopes: new Set()
+    }));
+  }
+
+  function archiveRefItem(ref, scope) {
+    if (!ref) return null;
+    const relation = {};
+    if (ref.to && all.has(ref.to)) relation.to = ref.to;
+    if (ref.slug) relation.toRealmEye = ref.slug;
+    const target = realmRelationTarget(relation);
+    const item = { relation, target, scopes: new Set() };
+    if (scope) item.scopes.add(scope);
+    return target || relation.toRealmEye ? item : null;
+  }
+
+  function drawDropRows(rows) {
+    const shown = [];
+    for (const row of rows || []) {
+      const items = (row.items || []).map(ref => archiveRefItem(ref, row.scope)).filter(Boolean);
+      const sources = (row.sources || []).map(ref => archiveRefItem(ref, row.scope)).filter(Boolean);
+      const itemChips = items.map(drawKnowledgeTarget).filter(Boolean);
+      const sourceChips = sources.map(drawKnowledgeTarget).filter(Boolean);
+      if (!itemChips.length) continue;
+      shown.push('<div class="ix-drop-row"><span class="ix-drop-items">' + itemChips.join('') + '</span>'
+        + (sourceChips.length ? '<em>from</em><span class="ix-drop-sources">' + sourceChips.join('') + '</span>' : '')
+        + '</div>');
+    }
+    if (!shown.length) return '';
+    return '<div class="ix-link-row ix-drop-interest"><i>notable drops</i><span class="ix-drop-grid">'
+      + shown.join('') + '</span></div>';
+  }
+
+  /* REALMEYE_CANONICAL_PLACE_UI_V7 */
+  function knowledgeItemKey(item) {
+    if (!item) return '';
+    const target = item.target || realmRelationTarget(item.relation);
+    if (target) return 'id:' + target.id;
+    if (item.relation && item.relation.toRealmEye) return 'slug:' + item.relation.toRealmEye;
+    if (item.relation && item.relation.label) return 'label:' + item.relation.label;
+    return '';
+  }
+
+  function mergeKnowledgeItem(into, item, note) {
+    const key = knowledgeItemKey(item);
+    if (!key) return;
+    let kept = into.get(key);
+    if (!kept) {
+      kept = {
+        relation: { ...(item.relation || {}) },
+        target: item.target || realmRelationTarget(item.relation),
+        scopes: new Set(item.scopes || []),
+        notes: new Set(item.notes || [])
+      };
+      into.set(key, kept);
+    } else {
+      for (const scope of item.scopes || []) kept.scopes.add(scope);
+      for (const text of item.notes || []) kept.notes.add(text);
+    }
+    if (note) kept.notes.add(note);
+  }
+
+  function canonicalPlaceRoles(one, groups) {
+    const result = { guardian: [], encounters: [], heroes: [], enemies: [] };
+    const used = new Set();
+    const take = (bucket, types) => {
+      const found = new Map();
+      for (const type of types) {
+        for (const item of relationItems(groups, type)) mergeKnowledgeItem(found, item);
+      }
+      for (const item of found.values()) {
+        const key = knowledgeItemKey(item);
+        if (!key || used.has(key)) continue;
+        used.add(key);
+        result[bucket].push(item);
+      }
+    };
+
+    /* A guardian and an encounter are explicit roles. A hero is next. Every
+       remaining creature, including every flavour of minion, is simply an
+       enemy from the biome reader's point of view. */
+    take('guardian', ['biome_beacon_guardian']);
+    take('encounters', ['biome_encounter']);
+    take('heroes', ['biome_hero']);
+    take('enemies', [
+      'biome_regular_enemy', 'biome_minion', 'biome_hero_minion',
+      'biome_encounter_minion', 'biome_beacon_minion'
+    ]);
+    return result;
+  }
+
+  function dropSourceName(ref, scope) {
+    const item = archiveRefItem(ref, scope);
+    if (!item) return '';
+    const target = item.target || realmRelationTarget(item.relation);
+    if (target) return target.said || target.name || '';
+    return (item.relation && item.relation.toRealmEye)
+      ? item.relation.toRealmEye.replace(/-/g, ' ') : '';
+  }
+
+  function canonicalPlaceLoot(one, groups) {
+    const kept = new Map();
+
+    /* Structured drop rows are the richest observation, so they are admitted
+       first. Drop sources are evidence for the item relationship; they become
+       hover text rather than a second monster chip in the Loot section. */
+    for (const row of (one.realmeyeArchive && one.realmeyeArchive.dropRows) || []) {
+      const sources = [...new Set((row.sources || []).map(ref => dropSourceName(ref, row.scope)).filter(Boolean))];
+      const note = sources.length ? 'Drops from ' + sources.join(', ') : '';
+      for (const ref of row.items || []) {
+        const item = archiveRefItem(ref, row.scope);
+        if (item) mergeKnowledgeItem(kept, item, note);
+      }
+    }
+
+    /* If a page has no structured item/source table, its simple drop relation
+       still belongs here. */
+    for (const item of relationItems(groups, 'biome_drop_interest')) {
+      mergeKnowledgeItem(kept, item);
+    }
+
+    /* Client/Atlas-normalised loot comes next. If the same item already has a
+       notable drop row, this only enriches that one item; it never draws a
+       second copy under another label. */
+    for (const item of resolvedButtons(one.setTier)) mergeKnowledgeItem(kept, item);
+    for (const item of resolvedButtons(one.untiered)) mergeKnowledgeItem(kept, item);
+    return [...kept.values()];
+  }
+
+  function drawPlaceGuardian(one) {
+    if (!one || one.kind !== 'place') return '';
+    const roles = canonicalPlaceRoles(one, realmRelationGroups(one));
+    const chips = roles.guardian.map(drawKnowledgeTarget).filter(Boolean);
+    if (!chips.length) return '';
+    return '<span class="ix-place-guardian"><small>guardian</small>' + chips.join('') + '</span>';
+  }
+
+  /* REALMEYE_SUBBIOME_MODEL_V11 */
+  function placePopulationTotal(one) {
+    const data = one && one.realmeyeArchive;
+    if (data && data.population && Number.isFinite(Number(data.population.total))) {
+      return Number(data.population.total);
+    }
+    const roles = canonicalPlaceRoles(one, realmRelationGroups(one));
+    return roles.enemies.length + roles.heroes.length + roles.encounters.length;
+  }
+
+  function placeGenerationStatus(one) {
+    return one && one.realmeyeArchive && one.realmeyeArchive.generationStatus;
+  }
+
+  function drawSubBiomeTarget(item) {
+    const target = item.target || realmRelationTarget(item.relation);
+    if (!target) return drawKnowledgeTarget(item);
+    const count = placePopulationTotal(target);
+    const status = placeGenerationStatus(target);
+    const titleBits = [];
+    if (status && status.label) titleBits.push(status.label);
+    const title = titleBits.length ? ' title="' + esc(titleBits.join(' — ')) + '"' : '';
+    return '<button type="button" class="ix-jump ix-sub-biome" data-open="' + esc(target.id) + '"' + title + '>'
+      + art(target, 14) + '<span>' + esc(relationDisplayName(target)) + '</span>'
+      + '<small>' + count + '</small></button>';
+  }
+
+  function drawPopulationEmpty(one) {
+    const status = placeGenerationStatus(one);
+    if (status && status.code === 'not-generating') {
+      return '<div class="ix-empty-population">No current generated population — '
+        + esc(status.label) + '.</div>';
+    }
+    if (one && one.realmeyeArchive && one.realmeyeArchive.scopeOnly) {
+      return '<div class="ix-empty-population">No population is currently listed for this sub-biome.</div>';
+    }
+    return '';
+  }
+
+  function drawPlaceKnowledge(one) {
+    if (one.kind !== 'place') return '';
+    const groups = realmRelationGroups(one);
+    const roles = canonicalPlaceRoles(one, groups);
+    const sections = [];
+
+    const population = [];
+    if (roles.enemies.length) population.push(drawKnowledgeRow('enemies', roles.enemies));
+    if (roles.heroes.length) population.push(drawKnowledgeRow('Heroes of Oryx', roles.heroes));
+    if (roles.encounters.length) population.push(drawKnowledgeRow('encounters', roles.encounters));
+    const populationTotal = placePopulationTotal(one);
+    const emptyPopulation = drawPopulationEmpty(one);
+    if (population.length || emptyPopulation) {
+      sections.push('<details class="ix-knowledge-section" open><summary>Population <small class="ix-section-count">'
+        + populationTotal + '</small></summary><div class="ix-links">'
+        + population.join('') + emptyPopulation + '</div></details>');
+    }
+
+    const lootRows = [];
+    const tiers = Object.entries((one.loot && one.loot.tiers) || {})
+      .filter(([, values]) => values && values.length);
+    if (tiers.length) {
+      lootRows.push('<div class="ix-link-row"><i>tiered</i><span>' + tiers.map(([kind, values]) =>
+        '<span class="ix-data-chip"><b>' + esc(kind) + '</b> ' + esc(compactTierRange(values)) + '</span>').join('')
+        + '</span></div>');
+    }
+    const loot = canonicalPlaceLoot(one, groups);
+    if (loot.length) lootRows.push(drawKnowledgeRow('items', loot));
+    const dungeons = resolvedButtons(one.dungeons);
+    if (dungeons.length) lootRows.push(drawKnowledgeRow('dungeon entrances', dungeons));
+    if (lootRows.length) {
+      sections.push('<details class="ix-knowledge-section" open><summary>Loot</summary><div class="ix-links">'
+        + lootRows.join('') + '</div></details>');
+    }
+
+    const sub = relationItems(groups, 'contains_biome');
+    const subNames = ((one.realmeyeArchive && one.realmeyeArchive.subBiomes) || []).slice();
+    if (sub.length || subNames.length) {
+      let row = '';
+      if (sub.length) row = '<div class="ix-link-row"><i>areas</i><span>'
+        + sub.map(drawSubBiomeTarget).filter(Boolean).join('') + '</span></div>';
+      else row = '<div class="ix-link-row"><i>areas</i><span>'
+        + subNames.map(name => '<span class="ix-data-chip">' + esc(name) + '</span>').join('')
+        + '</span></div>';
+      sections.push('<details class="ix-knowledge-section" open><summary>Sub-biomes</summary><div class="ix-links">'
+        + row + '</div></details>');
+    }
+
+    return sections.length ? '<div class="ix-knowledge-block">' + sections.join('') + '</div>' : '';
+  }
+
+  function drawRealmEyeArchive(one) {
+    const data = one.realmeyeArchive;
+    if (!data || one.kind === 'place') return '';
+    const facts = [];
+    realmFactRows(data.facts || {}, '', facts);
+    const shownFacts = facts.slice(0, 40);
+    const groups = realmRelationGroups(one);
+    const relationRows = [...groups].map(([type, values]) =>
+      drawKnowledgeRow(REALMEYE_RELATION_SAY[type] || realmFactSay(type), [...values.values()])
+    ).filter(Boolean).join('');
+    const tables = [];
+    realmTables((data.facts || {}).table, tables);
+    const tableHtml = tables.slice(0, 6).map(table => {
+      const headers = (table.headers || []).slice(0, 8);
+      const rows = (table.rows || []).slice(0, 20);
+      if (!headers.length && !rows.length) return '';
+      return '<div class="ix-realm-table">'
+        + (table.caption ? '<b>' + esc(table.caption) + '</b>' : '')
+        + '<table>'
+        + (headers.length ? '<thead><tr>' + headers.map(x => '<th>' + esc(x) + '</th>').join('') + '</tr></thead>' : '')
+        + '<tbody>' + rows.map(row => '<tr>' + row.slice(0, 8).map(x => '<td>' + esc(x) + '</td>').join('') + '</tr>').join('') + '</tbody>'
+        + '</table></div>';
+    }).join('');
+    if (!shownFacts.length && !relationRows && !tableHtml) return '';
+    return '<div class="ix-knowledge-block"><details class="ix-knowledge-section" open><summary>Details</summary>'
+      + (shownFacts.length ? '<dl class="ix-facts">' + shownFacts.map(([key, value]) =>
+        '<div><dt>' + esc(realmFactSay(key.split('.').pop())) + '</dt><dd>' + esc(value) + '</dd></div>').join('') + '</dl>' : '')
+      + (relationRows ? '<div class="ix-links">' + relationRows + '</div>' : '')
+      + tableHtml + '</details></div>';
+  }
+
   function drawWiki(one) {
     if (!wiki) return '';
     const mine = wiki.page.get(one.id);
@@ -1378,13 +1894,16 @@ const RealmIndex = (function () {
       if (!list || !list.length) return;
       rows.push('<div class="ix-link-row"><i>' + esc(how) + '</i><span>'
         + list.slice(0, 24).map(at => {
+          const [slug, title] = wiki.pages[at] || ['', '?'];
           const here = (wiki.about.get(at) || [])
             .map(id => all.get(id)).filter(Boolean);
-          const pick = here.find(x => !x.twin) || here[0];
-          const [slug, title] = wiki.pages[at] || ['', '?'];
+          const archiveHere = realmeyeArchive
+            ? (realmeyeArchive.page.get(slug) || []).map(id => all.get(id)).filter(Boolean) : [];
+          const candidates = [...here, ...archiveHere];
+          const pick = candidates.find(x => !x.twin) || candidates[0];
           if (pick) {
             return '<button type="button" class="ix-jump" data-open="' + esc(pick.id) + '">'
-              + art(pick, 14) + esc(pick.said || pick.name) + '</button>';
+              + art(pick, 14) + esc(relationDisplayName(pick)) + '</button>';
           }
           return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener"'
             + ' href="' + esc(wiki.home + slug) + '">' + esc(title) + '</a>';
@@ -1423,11 +1942,9 @@ const RealmIndex = (function () {
       ...(wiki.spawnBy.get(mine) || [])])];
     say('spawns, or is spawned by', kin);
     if (!rows.length) return '';
-    return '<div class="ix-said-block"><h4>What players have written down'
-      + '<em>' + esc(wiki.says) + '</em></h4>'
-      + '<p class="ix-group-note">What players have listed, not what the client'
-      + ' declares, and never a drop rate.</p>'
-      + '<div class="ix-links">' + rows.join('') + '</div></div>';
+    /* REALMEYE_NEUTRAL_SOURCE_UI */
+    return '<div class="ix-knowledge-block"><section class="ix-knowledge-section"><h4>Related data</h4>'
+      + '<div class="ix-links">' + rows.join('') + '</div></section></div>';
   }
 
   /* What another page can do with this thing. */
@@ -1489,7 +2006,7 @@ const RealmIndex = (function () {
         + ids.slice(0, 40).map(id => {
           const one = all.get(id);
           return '<button type="button" class="ix-jump" data-open="' + esc(id) + '">'
-            + art(one, 14) + esc(one ? (one.said || one.name) : id) + '</button>';
+            + art(one, 14) + esc(one ? relationDisplayName(one) : id) + '</button>';
         }).join('')
         + (ids.length > 40 ? '<em>and ' + (ids.length - 40) + ' more</em>' : '')
         + '</span></div>';
@@ -1676,7 +2193,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties()]);
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadRealmEyeArchive()]);
     buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special
