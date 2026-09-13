@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from signature import stable_signature
+from realmeye_archive_import import import_realmeye_archive
 
 ROOT = Path(__file__).resolve().parents[2]
 NAMESPACE = uuid.UUID("2a20c00e-0d71-5eb3-85f9-5d66c9a52768")
@@ -306,7 +307,7 @@ def build(output=None):
     con=sqlite3.connect(tmp); con.execute("PRAGMA foreign_keys=ON")
     try:
         con.executescript(SCHEMA.read_text(encoding="utf-8")); imp=Importer(con,report)
-        for row in [("client_data_index_source","index","derived","Deterministic Index source generated from client-data by tools/build-index.js."),("realmeye","realmeye","observation","RealmEye community observation snapshots."),("realm_capture","realm_capture","observation","Captured realm topology."),("manual","manual","manual","Editorial/manual realm files."),("generated_realm_snapshot","generated_realm","derived","Generated realm browser data."),("legacy_atlas_snapshot","atlas","migration","Legacy Atlas migration snapshot; never canonical."),("legacy_combat_snapshot","combat","migration","Legacy combat migration snapshot; never canonical.")]: imp.add_source(*row)
+        for row in [("client_data_index_source","index","derived","Deterministic Index source generated from client-data by tools/build-index.js."),("realmeye","realmeye","observation","RealmEye community observation snapshots."),("realmeye_archive","realmeye_archive","observation","Normalized complete RealmEye HTML archive; historical sections are excluded from Index enrichment."),("realm_capture","realm_capture","observation","Captured realm topology."),("manual","manual","manual","Editorial/manual realm files."),("generated_realm_snapshot","generated_realm","derived","Generated realm browser data."),("legacy_atlas_snapshot","atlas","migration","Legacy Atlas migration snapshot; never canonical."),("legacy_combat_snapshot","combat","migration","Legacy combat migration snapshot; never canonical.")]: imp.add_source(*row)
         with tempfile.TemporaryDirectory(prefix="rotmg-index-source-") as directory:
             source_path=Path(directory)/"index-source.json"
             subprocess.run(["node",str(ROOT/"tools/database/build_index_source.js"),"--output",str(source_path)],cwd=ROOT,check=True)
@@ -342,6 +343,12 @@ def build(output=None):
         if wiki: import_wiki(imp,*wiki)
         realmeye=imp.snapshot("realmeye",ROOT/"web/realmeye-data.json");
         if realmeye: import_realmeye(imp,*realmeye)
+        # REALMEYE_ARCHIVE_INTEGRATION: the local normalized archive is optional.
+        # When present it enriches the authoritative SQLite build without changing
+        # the client-source priority or guessing ambiguous page/entity mappings.
+        archive_path=ROOT/"local/realmeye-monitor/processed/realmeye.sqlite"
+        archive=imp.snapshot("realmeye_archive",archive_path,{"history_excluded":True,"normalized":True})
+        if archive: import_realmeye_archive(imp,archive[0],archive_path)
         for manual in sorted((ROOT/"data/Realm").glob("*.txt")):
             manual_snap=imp.snapshot("manual",manual)
             if manual_snap: import_manual_rules(imp,manual_snap[0],manual)
