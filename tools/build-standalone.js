@@ -368,6 +368,7 @@ const famePageSource = readWeb('fame-page.js');
 const theorySource = readWeb('theorycraft.js');
 const progressionSource = readWeb('progression.js');
 const indexSource = readWeb('index-page.js');
+const routerSource = readWeb('router-contract.js');
 const whatsNewSource = readWeb('whats-new.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
@@ -450,7 +451,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -513,6 +514,7 @@ const dress = (bundleSources) => readWeb('index.html')
     `<script>\n${safe(progressionSource)}\n</script>`,
     `<script>\n${safe(theorySource)}\n</script>`,
     `<script>\n${safe(indexSource)}\n</script>`,
+    `<script>\n${safe(routerSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);
@@ -639,6 +641,13 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  * one thing on the site that lives beside the page instead of inside it.
  */
 carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+
+/*
+ * Skin Viewer stays modular on the served site. Copy both its runtime modules
+ * and the generated client data/textures beside the generated Pages document.
+ */
+carryAcross(path.join(web, 'skins'), path.join(pagesDir, 'skins'));
+carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'skins'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
 fs.writeFileSync(path.join(pagesDir, 'assets', 'theory', 'progression.json'), sources.realmLootText + '\n');
