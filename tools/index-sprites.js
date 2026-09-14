@@ -128,7 +128,8 @@ function rectFor(art) {
 
 const WIDE = 1024;                             // how wide the finished sheet is
 const cut = [];
-const seen = new Map();                        // rectangle key -> the cut it went into
+const seen = new Map();
+const films = new Map();                       // a strip's frames -> where it went                        // rectangle key -> the cut it went into
 let drawn = 0, none = 0, filmed = 0;
 
 /*
@@ -170,8 +171,15 @@ function filmOf(one, art) {
   const wide = Math.max(...shots.map(x => x.rect.w));
   const tall = Math.max(...shots.map(x => x.rect.h));
   if (shots.some(x => x.rect.w !== wide || x.rect.h !== tall)) return;
+  /* And the same strip twice is the same strip: the wormholes share theirs. */
+  const times = shots.map(x => Math.max(20, Math.round(x.seconds * 1000)));
+  const key = shots.map(x => x.rect.sheet + ':' + x.rect.x + ':' + x.rect.y).join(' ')
+    + ' @' + times.join(',');
+  const had = films.get(key);
+  one.filmFor = times;
+  if (had !== undefined) { one.film = had; filmed++; return; }
   one.film = cut.length;
-  one.filmFor = shots.map(x => Math.max(20, Math.round(x.seconds * 1000)));
+  films.set(key, cut.length);
   shots.forEach((shot, at) =>
     cut.push({ rect: shot.rect, from: shot.from, strip: at === 0 ? shots.length : 0 }));
   filmed++;
@@ -202,7 +210,13 @@ for (const one of facts.records) {
    */
   const key = rect.sheet + ':' + rect.x + ':' + rect.y + ':' + rect.w + ':' + rect.h;
   const had = seen.get(key);
-  if (had !== undefined) { one.art = had; drawn++; continue; }
+  /*
+   * A thing whose still picture is somebody else's still picture still has
+   * its own animation. The four Alien wormholes share one rectangle and so
+   * did the Halloween cemetery with the ordinary one, so all five fell out
+   * here and stopped turning over while their neighbours did.
+   */
+  if (had !== undefined) { one.art = had; drawn++; filmOf(one, art); continue; }
   const at = cut.length;
   cut.push({ rect, from });
   seen.set(key, at);

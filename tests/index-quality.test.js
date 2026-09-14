@@ -277,6 +277,22 @@ for (const one of turning) {
   assert(x >= 0 && y >= 0 && x + w * count <= index.sheet.wide && y + h <= index.sheet.tall,
     one.id + ': its strip runs off the sheet');
 }
+/*
+ * And a portal whose still picture belongs to something else as well.
+ *
+ * The sheet carries one copy of a rectangle, so a record whose still picture
+ * was already cut for a neighbour took that copy and moved on - taking its
+ * animation with it. These five share their still picture with something
+ * (the Alien wormholes with their own realms, the Halloween cemetery with
+ * the ordinary one) and stopped turning over while the dungeons beside them
+ * kept going.
+ */
+for (const name of ['Forax', 'Katalund', 'Malogia', 'Untaris', 'Halloween Haunted Cemetery']) {
+  const one = records.get('portal:' + name);
+  assert(one, name + ' must be a portal in the index');
+  assert(one.film, name + ' shares its still picture with something else and must still turn over');
+}
+
 const snakePit = records.get('portal:Snake Pit');
 assert(snakePit && snakePit.film, 'the Snake Pit is one of the animated ones');
 assert(new Set(snakePit.filmFor).size > 1,
