@@ -197,6 +197,13 @@
       <em class="home-card-go">Open →</em>
     </button>
 
+    <button type="button" class="home-card" data-go="skins" style="--i:4">
+      <span class="home-card-art skin-viewer-card-art" aria-hidden="true">✦</span>
+      <span class="home-card-title">Skin Viewer</span>
+      <span class="home-card-line">Client skins, dyes and real animations.</span>
+      <small>Browse every client skin, combine clothing and accessory dyes, save favorites, and inspect them in Studio or on the real Realm Atlas.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
 
   </div>
 
@@ -228,6 +235,18 @@
     by brendanbrubacher ·
     <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOnHome"></span>.
   </footer>
+</div>
+
+<!-- Skin Viewer ------------------------------------------------------ -->
+<div id="pageSkins" class="app page" hidden>
+  <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>Skin Viewer</h1>
+    <div class="masthead-row">
+      <div class="status">Client skins, exact dyes and Realm Atlas sandbox</div>
+    </div>
+  </header>
+  <div id="skinViewerRoot" data-integrated="true"></div>
 </div>
 
 <!-- What's New -------------------------------------------------------- -->
@@ -656,6 +675,8 @@
 <script src="progression.js"></script>
 <script src="theorycraft.js"></script>
 <script src="index-page.js"></script>
+<script src="router-contract.js"></script>
 <script src="app.js"></script>
+<script type="module" src="skins/app.js"></script>
 </body>
 </html>

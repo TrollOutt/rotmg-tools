@@ -2786,7 +2786,7 @@ async function load() {
  * and 'realm' means the way in with that frame opened out.
  */
 const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame',
-  news: 'pageNews', theory: 'pageTheory', index: 'pageIndex' };
+  news: 'pageNews', theory: 'pageTheory', index: 'pageIndex', skins: 'pageSkins' };
 
 /*
  * Pointed at the atlas once, and not before the way in has painted.
@@ -3134,6 +3134,12 @@ function showPage(name) {
    * the other two heavy pages are.
    */
   if (page === 'index' && typeof RealmIndex !== 'undefined') RealmIndex.start();
+  if (page === 'skins' && window.SkinViewer) {
+    window.SkinViewer.mount($('skinViewerRoot'), { integrated: true })
+      .then(viewer => viewer.setActive(true)).catch(error => console.error(error));
+  } else if (window.SkinViewer) {
+    window.SkinViewer.unmount();
+  }
   /*
    * The frame is asked for while the browser is idle, and only on the page
    * that holds it. Anything else that was open is put away.
@@ -3181,9 +3187,33 @@ function routeFromHash() {
    * tool to another rides behind a question mark, and the page is the part
    * in front of it.
    */
-  const said = String(location.hash || '').replace(new RegExp('^#\\/?'), '');
-  showPage(said.split('?')[0]);
+  const route = RealmRoutes.parse(location.hash);
+  showPage(route.page);
+  if (route.page === 'index' && route.open && typeof RealmIndex !== 'undefined') {
+    RealmIndex.open(route.open);
+  }
 }
+
+window.openIndexRecord = async function (id) {
+  if (typeof RealmIndex === 'undefined') return false;
+  const hash = RealmRoutes.indexHash(id);
+  if (!hash) return false;
+  if (location.hash !== '#' + hash) location.hash = hash;
+  showPage('index');
+  return RealmIndex.open(id);
+};
+
+window.openSkinViewerTarget = async function (target) {
+  if (!target || typeof target !== 'object' || !window.SkinViewer) return false;
+  if (location.hash !== '#skins') location.hash = 'skins';
+  showPage('skins');
+  const viewer = await window.SkinViewer.mount(
+    $('skinViewerRoot'),
+    { integrated: true }
+  );
+  viewer.setActive(true);
+  return viewer.select(target);
+};
 
 document.addEventListener('click', event => {
   const go = event.target.closest('[data-go]');

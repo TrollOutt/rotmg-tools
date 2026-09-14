@@ -42,6 +42,7 @@ const RealmIndex = (function () {
    */
   let started = false;
   let starting = false;
+  let startPromise = null;
   /*
    * And the page's own markup, kept before anything is written over it.
    *
@@ -61,6 +62,7 @@ const RealmIndex = (function () {
   let wiki = null;                   // the community join, when there is one
   let realmeyeArchive = null;        // REALMEYE_ARCHIVE_UI: complete structured archive overlay
   let dungeonDifficulties = new Map(); // RealmEye's 1–10 dungeon ratings
+  let skinBridge = null;              // exact local Viewer projection, when available
   let groups = [];                   // the browse rail, built once from the data
   let narrowed = [];                 // one set of allowed ids per group in play
   let kindsLeft = null;              // how many of each family survive the rail
@@ -280,6 +282,15 @@ const RealmIndex = (function () {
       tie(wiki.tierDrop, enemy, entry);
       tie(wiki.tierDropBy, entry.hand + ':' + tier + ':' + entry.alternate, enemy);
     }
+  }
+
+  async function loadSkinBridge() {
+    if (skinBridge) return true;
+    const raw = await fetch('assets/skins/generated/index-links.json')
+      .then(response => response.ok ? response.json() : null).catch(() => null);
+    if (!raw || raw.schema < 3 || !raw.reverse) return false;
+    skinBridge = raw;
+    return true;
   }
 
   /* REALMEYE_ARCHIVE_UI: structured archive data, separate from client facts. */
@@ -1975,10 +1986,21 @@ const RealmIndex = (function () {
     if (one.kind === 'place' || (one.outLinks || []).some(x => x[0] === 'was seen in')) {
       doors.push(['atlas', 'Find it on the map', 'Open the realm atlas']);
     }
-    if (!doors.length) return '';
+    const viewerTargets = (skinBridge && skinBridge.reverse && skinBridge.reverse[one.id]) || [];
+    const viewerDoors = viewerTargets.map((target, index) => {
+      const many = viewerTargets.length > 1;
+      const what = target.kind === 'dye'
+        ? (target.target === 'clothing' ? 'clothing dye' : 'accessory dye')
+        : (target.reason === 'exact-set-skin-family' ? 'set skin' : 'skin');
+      return '<button type="button" class="ix-door" data-skin-target="'
+        + esc(encodeURIComponent(JSON.stringify(target))) + '" title="Open the exact linked '
+        + esc(what) + ' in the local Skin Viewer">Open in Skin Viewer'
+        + (many ? ' · ' + esc(what) : '') + '</button>';
+    });
+    if (!doors.length && !viewerDoors.length) return '';
     return '<p class="ix-doors">' + doors.map(([go, say, why]) =>
       '<button type="button" class="ix-door" data-door="' + go + '" title="' + esc(why) + '">'
-      + esc(say) + '</button>').join('') + '</p>';
+      + esc(say) + '</button>').join('') + viewerDoors.join('') + '</p>';
   }
 
   /* The kinds of gear a class may carry, each with the plainest of its kind. */
@@ -2122,6 +2144,11 @@ const RealmIndex = (function () {
       }
       const door = event.target.closest('[data-door]');
       if (door && showing) walkThrough(door.dataset.door, showing);
+      const skinDoor = event.target.closest('[data-skin-target]');
+      if (skinDoor && typeof window.openSkinViewerTarget === 'function') {
+        try { window.openSkinViewerTarget(JSON.parse(decodeURIComponent(skinDoor.dataset.skinTarget))); }
+        catch (error) { console.error('Invalid Skin Viewer target', error); }
+      }
     });
   }
 
@@ -2171,21 +2198,16 @@ const RealmIndex = (function () {
         + '</button>').join('');
   }
 
-  async function start() {
-    if (started || starting) return;
+  async function runStart() {
     const box = el('ixBody');
-    if (!box) return;
-    starting = true;
+    if (!box) return false;
     readLoved();
     if (!await load()) {
-      starting = false;                // it may be worth asking again
       if (shell === null) shell = box.innerHTML;
       box.innerHTML = '<p class="tc-missing">The index is not built yet. '
         + 'Run <code>node tools/build-index.js</code>.</p>';
-      return;
+      return false;
     }
-    started = true;
-    starting = false;                  // `started` has it from here
     if (shell !== null) { box.innerHTML = shell; shell = null; }
     // The sheet's address, once, for every picture on the page to point at.
     {
@@ -2193,7 +2215,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadRealmEyeArchive()]);
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadRealmEyeArchive(), loadSkinBridge()]);
     buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special
@@ -2240,6 +2262,22 @@ const RealmIndex = (function () {
         }
       });
     }
+    started = true;
+    return true;
+  }
+
+  function start() {
+    if (started) return Promise.resolve(true);
+    if (startPromise) return startPromise;
+    starting = true;
+    startPromise = runStart().catch(error => {
+      console.error(error);
+      return false;
+    }).finally(() => {
+      starting = false;
+      if (!started) startPromise = null;
+    });
+    return startPromise;
   }
 
   /* Somebody else may want to open a record: the atlas, or a search box. */
@@ -2251,7 +2289,21 @@ const RealmIndex = (function () {
     return true;
   }
 
-  return { start, show };
+  function createOpenController(startIndex, hasRecord, showRecord) {
+    return async function openRecord(id) {
+      if (typeof id !== 'string' || !id || id !== id.trim() || !/^[a-z][a-z0-9-]*:.+/i.test(id)) return false;
+      if (!await startIndex()) return false;
+      if (!hasRecord(id)) return false;
+      return Boolean(showRecord(id));
+    };
+  }
+  const open = createOpenController(
+    start,
+    id => Boolean(all && all.has(id)),
+    id => showing && showing.id === id ? true : show(id)
+  );
+
+  return { start, show, open, __test: { createOpenController } };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = RealmIndex;

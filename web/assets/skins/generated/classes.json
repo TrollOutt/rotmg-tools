@@ -1,0 +1,344 @@
+[
+  {
+    "name": "Archer",
+    "type": 775,
+    "texture": {
+      "sheet": "players",
+      "index": 1,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6040,
+        "y": 3920,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Assassin",
+    "type": 800,
+    "texture": {
+      "sheet": "players",
+      "index": 7,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6064,
+        "y": 3278,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Bard",
+    "type": 796,
+    "texture": {
+      "sheet": "players",
+      "index": 15,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5946,
+        "y": 1070,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Druid",
+    "type": 819,
+    "texture": {
+      "sheet": "players",
+      "index": 18,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5982,
+        "y": 1694,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Huntress",
+    "type": 802,
+    "texture": {
+      "sheet": "players",
+      "index": 9,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6064,
+        "y": 3686,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Kensei",
+    "type": 818,
+    "texture": {
+      "sheet": "players",
+      "index": 17,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5982,
+        "y": 1490,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Knight",
+    "type": 798,
+    "texture": {
+      "sheet": "players",
+      "index": 5,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6054,
+        "y": 2870,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Mystic",
+    "type": 803,
+    "texture": {
+      "sheet": "players",
+      "index": 10,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5942,
+        "y": 50,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Necromancer",
+    "type": 801,
+    "texture": {
+      "sheet": "players",
+      "index": 8,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6064,
+        "y": 3482,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Ninja",
+    "type": 806,
+    "texture": {
+      "sheet": "players",
+      "index": 13,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5942,
+        "y": 662,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Paladin",
+    "type": 799,
+    "texture": {
+      "sheet": "players",
+      "index": 6,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6054,
+        "y": 3074,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Priest",
+    "type": 784,
+    "texture": {
+      "sheet": "players",
+      "index": 3,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6052,
+        "y": 3938,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Rogue",
+    "type": 768,
+    "texture": {
+      "sheet": "players",
+      "index": 0,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 6040,
+        "y": 3716,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Samurai",
+    "type": 785,
+    "texture": {
+      "sheet": "players",
+      "index": 14,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5942,
+        "y": 866,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Sorcerer",
+    "type": 805,
+    "texture": {
+      "sheet": "players",
+      "index": 12,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5942,
+        "y": 458,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Summoner",
+    "type": 817,
+    "texture": {
+      "sheet": "players",
+      "index": 16,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5957,
+        "y": 1286,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Trickster",
+    "type": 804,
+    "texture": {
+      "sheet": "players",
+      "index": 11,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5942,
+        "y": 254,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Warrior",
+    "type": 797,
+    "texture": {
+      "sheet": "players",
+      "index": 4,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5986,
+        "y": 1478,
+        "w": 8,
+        "h": 8
+      }
+    }
+  },
+  {
+    "name": "Wizard",
+    "type": 782,
+    "texture": {
+      "sheet": "players",
+      "index": 2,
+      "animated": true
+    },
+    "icon": {
+      "sheet": "characters",
+      "rect": {
+        "x": 5983,
+        "y": 2102,
+        "w": 8,
+        "h": 8
+      }
+    }
+  }
+]
