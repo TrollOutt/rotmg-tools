@@ -1584,10 +1584,9 @@ const RealmIndex = (function () {
       + drawRecordDescription(one)
       + drawDoes(one)
       + drawFacts(one)
-      + (one.kind === 'place' ? drawPlaceKnowledge(one) : drawRealmEyeArchive(one))
+      + drawCommunity(one)
       + drawFolds(one)
       + drawConnections(one, cardLinks)
-      + (one.kind === 'place' ? '' : drawWiki(one))
       + (one.communityOnly ? '' : '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>');
   }
 
@@ -1794,6 +1793,11 @@ const RealmIndex = (function () {
         + esc(realmeyeArchive.home + slug) + '"' + title + '>'
         + esc(slug.replace(/-/g, ' ')) + '</a>';
     }
+    if (item.relation && item.relation.toWiki && wiki) {
+      return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener" href="'
+        + esc(wiki.home + item.relation.toWiki) + '"' + title + '>'
+        + esc(item.relation.said || item.relation.toWiki.replace(/-/g, ' ')) + '</a>';
+    }
     if (item.relation && item.relation.label) {
       return '<span class="ix-data-chip"' + title + '>' + esc(item.relation.label) + '</span>';
     }
@@ -1846,6 +1850,9 @@ const RealmIndex = (function () {
     const target = item.target || realmRelationTarget(item.relation);
     if (target) return 'id:' + target.id;
     if (item.relation && item.relation.toRealmEye) return 'slug:' + item.relation.toRealmEye;
+    if (item.relation && item.relation.toWiki) {
+      return 'wiki:' + item.relation.toWiki + '#' + (item.relation.said || '');
+    }
     if (item.relation && item.relation.label) return 'label:' + item.relation.label;
     return '';
   }
@@ -2034,18 +2041,59 @@ const RealmIndex = (function () {
     return sections.length ? '<div class="ix-block">' + sections.join('') + '</div>' : '';
   }
 
-  function drawRealmEyeArchive(one) {
+  /*
+   * Everything written down about a record that the client's own files do
+   * not say.
+   *
+   * This was two blocks, one for each place the words were copied from, and
+   * a card could carry the same row twice - "dropped by" in one, "dropped
+   * by" in the other, most of the same creatures under both. Which of the
+   * two a name came from is our bookkeeping, not the reader's question. One
+   * block now, one row per question, and a name appears in a row once.
+   */
+  function drawCommunity(one) {
+    if (one.kind === 'place') return drawPlaceKnowledge(one);
+    const rows = new Map();
+    const tails = new Map();
+    /*
+     * Where the two sources ask the same question in different words. They
+     * agree on the rest of them already.
+     */
+    const SAME_QUESTION = { 'enemies found here': 'enemies' };
+    const sink = {
+      say(label, items) {
+        const how = SAME_QUESTION[label] || label;
+        const at = rows.get(how) || rows.set(how, new Map()).get(how);
+        for (const item of items) {
+          const key = knowledgeItemKey(item);
+          if (!key || at.has(key)) continue;
+          const chip = drawKnowledgeTarget(item);
+          if (chip) at.set(key, chip);
+        }
+        return how;
+      },
+      /* "and 12 more", once, on whichever row ended up holding the list. */
+      tail(how, many) { tails.set(how, Math.max(tails.get(how) || 0, many)); },
+      named(label, key) { return (rows.get(label) || new Map()).has(key); }
+    };
+
     const data = one.realmeyeArchive;
-    if (!data || one.kind === 'place') return '';
     const facts = [];
-    realmFactRows(data.facts || {}, '', facts);
+    if (data) realmFactRows(data.facts || {}, '', facts);
     const shownFacts = facts.slice(0, 40);
-    const groups = realmRelationGroups(one);
-    const relationRows = [...groups].map(([type, values]) =>
-      drawKnowledgeRow(REALMEYE_RELATION_SAY[type] || realmFactSay(type), [...values.values()])
-    ).filter(Boolean).join('');
+    for (const [type, values] of realmRelationGroups(one)) {
+      sink.say(REALMEYE_RELATION_SAY[type] || realmFactSay(type), [...values.values()]);
+    }
+    wikiRows(one, sink);
+
+    const relationRows = [...rows].map(([label, chips]) => chips.size
+      ? '<div class="ix-link-row"><i>' + esc(label) + '</i><span>'
+        + [...chips.values()].join('')
+        + (tails.get(label) ? '<em>and ' + tails.get(label) + ' more</em>' : '')
+        + '</span></div>'
+      : '').join('');
     const tables = [];
-    realmTables((data.facts || {}).table, tables);
+    if (data) realmTables((data.facts || {}).table, tables);
     const tableHtml = tables.slice(0, 6).map(table => {
       const headers = (table.headers || []).slice(0, 8);
       const rows = (table.rows || []).slice(0, 20);
@@ -2058,59 +2106,61 @@ const RealmIndex = (function () {
         + '</table></div>';
     }).join('');
     if (!shownFacts.length && !relationRows && !tableHtml) return '';
-    /* Named for whose data it is, the way the wiki's block below is. */
-    return block('RealmEye details',
+    return block('Details',
       (shownFacts.length ? '<dl class="ix-facts">' + shownFacts.map(([key, value]) =>
         '<div><dt>' + esc(realmFactSay(key.split('.').pop())) + '</dt><dd>' + esc(value) + '</dd></div>').join('') + '</dl>' : '')
       + (relationRows ? '<div class="ix-links">' + relationRows + '</div>' : '')
       + tableHtml);
   }
 
-  function drawWiki(one) {
-    if (!wiki) return '';
+  /*
+   * The wiki's lists, made into the same kind of target the rows above are
+   * made of, so they land in those rows rather than in a block of their own.
+   * A page that names something the index holds becomes that thing; a page
+   * that does not stays a link to the page.
+   */
+  function wikiRows(one, sink) {
+    if (!wiki) return;
     const mine = wiki.page.get(one.id);
-    if (mine === undefined) return '';
-    const rows = [];
-    const say = (how, list) => {
-      if (!list || !list.length) return;
-      rows.push('<div class="ix-link-row"><i>' + esc(how) + '</i><span>'
-        + list.slice(0, 24).map(at => {
-          const [slug, title] = wiki.pages[at] || ['', '?'];
-          const here = (wiki.about.get(at) || [])
-            .map(id => all.get(id)).filter(Boolean);
-          const archiveHere = realmeyeArchive
-            ? (realmeyeArchive.page.get(slug) || []).map(id => all.get(id)).filter(Boolean) : [];
-          const candidates = [...here, ...archiveHere];
-          const pick = candidates.find(x => !x.twin) || candidates[0];
-          if (pick) {
-            return '<button type="button" class="ix-jump" data-open="' + esc(pick.id) + '">'
-              + art(pick, 14) + esc(relationDisplayName(pick)) + '</button>';
-          }
-          return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener"'
-            + ' href="' + esc(wiki.home + slug) + '">' + esc(title) + '</a>';
-        }).join('')
-        + (list.length > 24 ? '<em>and ' + (list.length - 24) + ' more</em>' : '')
-        + '</span></div>');
+    if (mine === undefined) return;
+    const pageItem = at => {
+      const [slug, title] = wiki.pages[at] || ['', '?'];
+      const here = (wiki.about.get(at) || []).map(id => all.get(id)).filter(Boolean);
+      const archiveHere = realmeyeArchive
+        ? (realmeyeArchive.page.get(slug) || []).map(id => all.get(id)).filter(Boolean) : [];
+      const candidates = [...here, ...archiveHere];
+      const pick = candidates.find(x => !x.twin) || candidates[0];
+      return pick
+        ? { relation: { to: pick.id }, target: pick, scopes: new Set() }
+        : { relation: { toWiki: slug, said: title }, target: null, scopes: new Set() };
     };
+    const say = (label, list, only) => {
+      const pages = (list || []).filter(at => !only || only(pageItem(at)));
+      if (!pages.length) return;
+      const how = sink.say(label, pages.slice(0, 24).map(pageItem));
+      if (pages.length > 24) sink.tail(how, pages.length - 24);
+    };
+
     say('dropped by', wiki.dropBy.get(mine));
     say('listed as dropping', wiki.drop.get(mine));
     if (one.kind === 'item' && one.hand && one.tier !== undefined) {
       const alternate = one.hand === 'weapon' && (one.labels || []).includes('SUBTYPE');
-      const listed = [...new Set(wiki.tierDropBy.get(one.hand + ':' + one.tier + ':' + alternate) || [])];
-      say('tier drop locations', listed);
+      say('tier drop locations',
+        [...new Set(wiki.tierDropBy.get(one.hand + ':' + one.tier + ':' + alternate) || [])]);
     }
     say('found in', wiki.dungeonBy.get(mine));
     say('enemies found here', wiki.dungeon.get(mine));
     const tiers = wiki.tierDrop.get(mine) || [];
     if (tiers.length) {
-      const labels = { weapon: 'weapons', ability: 'abilities', armor: 'armor', ring: 'rings' };
-      rows.push('<div class="ix-link-row"><i>listed tier drops</i><span>'
-        + tiers.map(entry => {
-          const slug = wiki.tierDropLists[entry.listAt] || '';
-          return '<a class="ix-jump is-away" target="_blank" rel="noreferrer noopener" href="'
-            + esc(wiki.home + slug) + '">T' + entry.tier + (entry.alternate ? ' alternate ' : ' ')
-            + esc(labels[entry.hand] || entry.hand) + '</a>';
-        }).join('') + '</span></div>');
+      const said = { weapon: 'weapons', ability: 'abilities', armor: 'armor', ring: 'rings' };
+      sink.say('listed tier drops', tiers.map(entry => ({
+        relation: {
+          toWiki: wiki.tierDropLists[entry.listAt] || '',
+          said: 'T' + entry.tier + (entry.alternate ? ' alternate ' : ' ')
+            + (said[entry.hand] || entry.hand)
+        },
+        target: null, scopes: new Set()
+      })));
     }
     /*
      * One row for summoning, not two. The wiki writes "Spawns:" and "Spawns
@@ -2118,12 +2168,16 @@ const RealmIndex = (function () {
      * the line - so which way round a pair reads is not in the data. Both
      * directions together say the true thing: these two are named in each
      * other's reproduction.
+     *
+     * Where the archive did know the direction it has already said so above,
+     * and that name is not repeated here under a vaguer heading.
      */
     const kin = [...new Set([...(wiki.spawn.get(mine) || []),
       ...(wiki.spawnBy.get(mine) || [])])];
-    say('spawns, or is spawned by', kin);
-    if (!rows.length) return '';
-    return block('Related data', '<div class="ix-links">' + rows.join('') + '</div>');
+    say('spawns, or is spawned by', kin, item => {
+      const key = knowledgeItemKey(item);
+      return !sink.named('spawns', key) && !sink.named('spawned by', key);
+    });
   }
 
   /* What another page can do with this thing. */
