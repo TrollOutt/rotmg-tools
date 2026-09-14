@@ -118,78 +118,36 @@ function writePng(width, height, rgba) {
   ]);
 }
 
-/* ------------------------------------------------------------------ *
- * The sprite registry                                                 *
- * ------------------------------------------------------------------ */
-class Flat {
-  constructor(b) { this.b = b; }
-  u32(at) { return this.b.readUInt32LE(at); }
-  i32(at) { return this.b.readInt32LE(at); }
-  f32(at) { return this.b.readFloatLE(at); }
-  root() { return this.u32(0); }
-  fields(at) {
-    const table = at - this.i32(at);
-    const size = this.b.readUInt16LE(table);
-    const out = [];
-    for (let i = 4; i < size; i += 2) {
-      const off = this.b.readUInt16LE(table + i);
-      out.push(off ? at + off : 0);
-    }
-    return out;
-  }
-  indirect(at) { return at + this.u32(at); }
-  vector(at) {
-    if (!at) return { at: 0, length: 0 };
-    const start = this.indirect(at);
-    return { at: start + 4, length: this.u32(start) };
-  }
-  string(at) {
-    if (!at) return '';
-    const start = this.indirect(at);
-    return this.b.toString('utf8', start + 4, start + 4 + this.u32(start));
-  }
-}
-
-const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
+/*
+ * Where every picture is, read by the shared reader.
+ *
+ * This held a fifth copy of the FlatBuffers decoder, with the same misreading
+ * as the other four: a sprite rectangle's last two floats are height then
+ * width. Almost invisible here, because a creature is cut into a square cell
+ * the size of its longest side - but "almost" is not a reason to keep a
+ * private copy of a format. See tools/spritesheet.js.
+ */
+const registry = require('./spritesheet');
 
 function loadFrames() {
-  const flat = new Flat(fs.readFileSync(REGISTRY));
-  const fields = flat.fields(flat.root());
+  const blob = registry.read(fs.readFileSync(REGISTRY));
   const moving = new Map();                      // "atlas#index" -> frames
-  const records = flat.vector(fields[1]);
-  for (let i = 0; i < records.length; i++) {
-    const record = flat.fields(flat.indirect(records.at + i * 4));
-    if (!record[0] || !record[5]) continue;
-    const sprite = flat.fields(flat.indirect(record[5]));
-    if (!sprite[0] || !sprite[7]) continue;
-    const key = flat.string(record[0]) + '#' + (record[1] ? flat.i32(record[1]) : 0);
+  for (const one of blob.animated) {
+    const key = one.atlas + '#' + one.index;
     if (!moving.has(key)) moving.set(key, []);
     moving.get(key).push({
-      facing: record[3] ? flat.i32(record[3]) : 0,
-      doing: record[4] ? flat.i32(record[4]) : 0,
-      x: Math.round(flat.f32(sprite[0])), y: Math.round(flat.f32(sprite[0] + 4)),
-      w: Math.round(flat.f32(sprite[0] + 8)), h: Math.round(flat.f32(sprite[0] + 12)),
-      sheet: SHEET_OF[flat.i32(sprite[7])] || null
+      facing: one.direction, doing: one.action,
+      x: one.rect.x, y: one.rect.y, w: one.rect.w, h: one.rect.h, sheet: one.sheet
     });
   }
   const still = new Map();
-  const atlases = flat.vector(fields[0]);
-  for (let i = 0; i < atlases.length; i++) {
-    const atlas = flat.fields(flat.indirect(atlases.at + i * 4));
-    const sprites = flat.vector(atlas[2]);
+  for (const atlas of blob.still) {
     const rects = new Map();
-    for (let s = 0; s < sprites.length; s++) {
-      const sprite = flat.fields(flat.indirect(sprites.at + s * 4));
-      if (!sprite[0] || !sprite[7]) continue;
-      const index = sprite[3] ? flat.i32(sprite[3]) : 0;
-      if (rects.has(index)) continue;
-      rects.set(index, {
-        x: Math.round(flat.f32(sprite[0])), y: Math.round(flat.f32(sprite[0] + 4)),
-        w: Math.round(flat.f32(sprite[0] + 8)), h: Math.round(flat.f32(sprite[0] + 12)),
-        sheet: SHEET_OF[flat.i32(sprite[7])] || null
-      });
+    for (const one of atlas.sprites) {
+      if (rects.has(one.index)) continue;
+      rects.set(one.index, { x: one.rect.x, y: one.rect.y, w: one.rect.w, h: one.rect.h, sheet: one.sheet });
     }
-    still.set(flat.string(atlas[0]), rects);
+    still.set(atlas.name, rects);
   }
   return { moving, still };
 }

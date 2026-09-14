@@ -44,6 +44,14 @@ class Flat {
 /*
  * Which packed sheet a rectangle is on. The blob numbers them; these are the
  * three the extractor writes out beside it.
+ *
+ * The numbering is not written down anywhere and was worked out by sampling:
+ * at a Wizard's own sprite the characters sheet gives eleven colours and the
+ * objects sheet gives four of something else, and at the Grey Missile the
+ * characters sheet gives flat white - which is a mask - while the objects
+ * sheet gives grey, which is the missile. So two is characters and four is
+ * objects, and getting that backwards is why every boss on the bench was once
+ * the wrong picture.
  */
 const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
 const sheetName = id => SHEET_OF[id] || 'mapObjects';
@@ -157,7 +165,58 @@ const DIRECTION = ['side', undefined, 'front', 'back'];
 const sayAction = n => ACTION[n] || 'action ' + n;
 const sayDirection = n => DIRECTION[n] || 'direction ' + n;
 
+/* ---------------- where a swing is anchored ---------------- *
+ *
+ * A character's attack frame is wider than the character.
+ *
+ * Seventeen of the nineteen classes draw an eight-pixel body standing still
+ * and a sixteen-pixel rectangle when they swing - the body still eight wide
+ * at the left of it, and the weapon reaching out to the right. The extra
+ * width is the weapon, not the person.
+ *
+ * So whatever lays those frames out has to decide where the wide one goes,
+ * and the obvious answer is wrong. Centre the rectangle on the character and
+ * the body slides four pixels back every time the swing comes round, which
+ * on screen reads as the character hopping backwards on each shot. Nothing
+ * about the body has moved; the rectangle around it grew forward, and
+ * centring shares that growth out to both sides.
+ *
+ * The rule is: anchor the body and let the weapon extend forward. Vertically
+ * the same argument already applies and is already applied - a frame is
+ * stood on the floor of its cell rather than centred in it, because a
+ * rectangle taller than its drawing would otherwise make the figure leap.
+ *
+ * Two places need it in two different ways. Something drawing a frame at a
+ * position moves the position (see attackAnchorX in web/skins/app.js);
+ * something packing frames into a strip of fixed cells lays them out from
+ * the leading edge instead of the middle (see tools/theory-sprites.js). Both
+ * are the same rule, which is why it is written down here rather than twice.
+ */
+const ATTACK = 2;
+
+/*
+ * How wide the body is: the narrowest frame that is not a swing. A run where
+ * everything is one width has nothing to correct.
+ */
+function bodyWidth(frames) {
+  const still = frames.filter(one => one.doing !== ATTACK && one.action !== ATTACK);
+  const mine = (still.length ? still : frames).map(one => one.w || (one.rect && one.rect.w));
+  return mine.length ? Math.min(...mine.filter(Boolean)) : 0;
+}
+
+/*
+ * Whether a run reaches forward when it swings, and so must be laid out from
+ * its leading edge rather than from its middle.
+ */
+function reachesForward(frames) {
+  const body = bodyWidth(frames);
+  if (!body) return false;
+  return frames.some(one => (one.doing === ATTACK || one.action === ATTACK)
+    && (one.w || (one.rect && one.rect.w)) > body);
+}
+
 module.exports = {
   Flat, read, sheetName, SHEET_OF,
-  ACTION, DIRECTION, sayAction, sayDirection
+  ACTION, DIRECTION, sayAction, sayDirection,
+  ATTACK, bodyWidth, reachesForward
 };

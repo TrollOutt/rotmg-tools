@@ -1,176 +1,44 @@
 'use strict';
 // Artwork decoration called by build-index with its already-read source.
 // It writes the sheet only; catalogue membership belongs to the index.
-const fs=require('fs'),path=require('path'),zlib=require('zlib');
+const fs=require('fs'),path=require('path');
 module.exports=function({ root, documents, readAsset, facts }) {
 const OUT=path.join(root,'web','assets','theory');
-/* ---------------- just enough FlatBuffers ---------------- */
-class Flat {
-  constructor(b) { this.b = b; }
-  u16(a) { return this.b.readUInt16LE(a); }
-  i32(a) { return this.b.readInt32LE(a); }
-  u32(a) { return this.b.readUInt32LE(a); }
-  f32(a) { return this.b.readFloatLE(a); }
-  root() { return this.u32(0); }
-  fields(t) {
-    const v = t - this.i32(t);
-    const size = this.u16(v);
-    const out = [];
-    for (let slot = 0; slot * 2 + 4 < size; slot++) {
-      const off = this.u16(v + 4 + slot * 2);
-      out.push(off ? t + off : 0);
-    }
-    return out;
-  }
-  string(a) { const p = a + this.u32(a); const n = this.u32(p); return this.b.toString('utf8', p + 4, p + 4 + n); }
-  vector(a) { const p = a + this.u32(a); return { at: p + 4, length: this.u32(p) }; }
-  indirect(a) { return a + this.u32(a); }
-}
-
-/* ---------------- just enough PNG ---------------- */
-function readPng(buffer) {
-  const width = buffer.readUInt32BE(16), height = buffer.readUInt32BE(20);
-  const parts = [];
-  let at = 8;
-  while (at < buffer.length) {
-    const length = buffer.readUInt32BE(at);
-    if (buffer.toString('latin1', at + 4, at + 8) === 'IDAT') {
-      parts.push(buffer.subarray(at + 8, at + 8 + length));
-    }
-    at += 12 + length;
-  }
-  const raw = zlib.inflateSync(Buffer.concat(parts));
-  const stride = width * 4;
-  const pixels = Buffer.alloc(height * stride);
-  for (let y = 0; y < height; y++) {
-    const filter = raw[y * (stride + 1)];
-    const line = raw.subarray(y * (stride + 1) + 1, y * (stride + 1) + 1 + stride);
-    for (let x = 0; x < stride; x++) {
-      const a = x >= 4 ? pixels[y * stride + x - 4] : 0;
-      const b = y > 0 ? pixels[(y - 1) * stride + x] : 0;
-      const c = x >= 4 && y > 0 ? pixels[(y - 1) * stride + x - 4] : 0;
-      let value = line[x];
-      if (filter === 1) value += a;
-      else if (filter === 2) value += b;
-      else if (filter === 3) value += (a + b) >> 1;
-      else if (filter === 4) {
-        const p = a + b - c;
-        const pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
-        value += (pa <= pb && pa <= pc) ? a : (pb <= pc ? b : c);
-      }
-      pixels[y * stride + x] = value & 0xff;
-    }
-  }
-  return { width, height, pixels };
-}
-const CRC = (() => {
-  const table = new Int32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    table[n] = c;
-  }
-  return table;
-})();
-function crc32(b) {
-  let c = -1;
-  for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ -1) >>> 0;
-}
-function chunk(kind, body) {
-  const head = Buffer.alloc(8);
-  head.writeUInt32BE(body.length, 0);
-  head.write(kind, 4, 'latin1');
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), body])), 0);
-  return Buffer.concat([head, body, crc]);
-}
-function writePng(width, height, rgba) {
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; ihdr[9] = 6;
-  const stride = width * 4;
-  const raw = Buffer.alloc(height * (stride + 1));
-  for (let y = 0; y < height; y++) {
-    raw[y * (stride + 1)] = 0;
-    rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
-  }
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0))
-  ]);
-}
+const { readPng, writePng } = require('./png');
 
 /* ---------------- the registry ---------------- */
 /*
- * Which packed sheet a rectangle lives on.
+ * Where every picture is, read once by the shared reader.
  *
- * The registry writes a number and the answer was worth proving rather than
- * assuming, because two of the sheets are the same size and both hold
- * something at any given rectangle. Sampled at a Wizard's own sprite, the
- * characters sheet gives eleven colours and the objects sheet gives four of
- * something else; sampled at the Grey Missile, the characters sheet gives
- * flat white, which is the mask, and the objects sheet gives grey, which is
- * the missile. So two is characters and four is objects - and getting that
- * backwards is why every boss in the frame was the wrong picture.
+ * This carried a third copy of the FlatBuffers decoder, with the same
+ * misreading as the other two: a sprite rectangle's last two floats are
+ * height then width, not width then height. Invisible on a square sprite and
+ * wrong on the rest - which on this sheet is every attack frame, because an
+ * attack frame is wider than the body swinging it. See tools/spritesheet.js.
  */
-const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
-const sheetName = field => SHEET_OF[field] || 'mapObjects';
-
-const flat = new Flat(readAsset('spritesheet.bin'));
-const rootFields = flat.fields(flat.root());
+const registry = require('./spritesheet');
+const blob = registry.read(readAsset('spritesheet.bin'));
 
 // Still pictures, by atlas and index.
 const still = new Map();
-{
-  const list = flat.vector(rootFields[0]);
-  for (let i = 0; i < list.length; i++) {
-    const atlas = flat.fields(flat.indirect(list.at + i * 4));
-    const sprites = flat.vector(atlas[2]);
-    const rects = new Map();
-    for (let n = 0; n < sprites.length; n++) {
-      const one = flat.fields(flat.indirect(sprites.at + n * 4));
-      /*
-       * Only the rectangle is required. FlatBuffers leaves a field out when
-       * it holds the default, so a sprite living on the first sheet writes no
-       * sheet at all - and demanding one threw away every projectile in the
-       * game, which is how the frame came to have a line in it instead of a
-       * bolt.
-       */
-      if (!one[0]) continue;
-      const index = one[3] ? flat.i32(one[3]) : 0;
-      if (rects.has(index)) continue;
-      rects.set(index, {
-        x: Math.round(flat.f32(one[0])), y: Math.round(flat.f32(one[0] + 4)),
-        w: Math.round(flat.f32(one[0] + 8)), h: Math.round(flat.f32(one[0] + 12)),
-        sheet: sheetName(one[7] ? flat.i32(one[7]) : 0)
-      });
-    }
-    still.set(flat.string(atlas[0]), rects);
+for (const atlas of blob.still) {
+  const rects = new Map();
+  for (const one of atlas.sprites) {
+    if (rects.has(one.index)) continue;
+    rects.set(one.index, { x: one.rect.x, y: one.rect.y, w: one.rect.w, h: one.rect.h, sheet: one.sheet });
   }
+  still.set(atlas.name, rects);
 }
 
 // And moving ones, filed by which way they face and what they are doing.
 const moving = new Map();
-{
-  const list = flat.vector(rootFields[1]);
-  for (let i = 0; i < list.length; i++) {
-    const one = flat.fields(flat.indirect(list.at + i * 4));
-    if (!one[0] || !one[5]) continue;
-    const sprite = flat.fields(flat.indirect(one[5]));
-    if (!sprite[0]) continue;
-    const key = flat.string(one[0]) + '#' + (one[1] ? flat.i32(one[1]) : 0);
-    if (!moving.has(key)) moving.set(key, []);
-    moving.get(key).push({
-      facing: one[3] ? flat.i32(one[3]) : 0,
-      doing: one[4] ? flat.i32(one[4]) : 0,
-      x: Math.round(flat.f32(sprite[0])), y: Math.round(flat.f32(sprite[0] + 4)),
-      w: Math.round(flat.f32(sprite[0] + 8)), h: Math.round(flat.f32(sprite[0] + 12)),
-      sheet: sheetName(sprite[7] ? flat.i32(sprite[7]) : 0)
-    });
-  }
+for (const one of blob.animated) {
+  const key = one.atlas + '#' + one.index;
+  if (!moving.has(key)) moving.set(key, []);
+  moving.get(key).push({
+    facing: one.direction, doing: one.action,
+    x: one.rect.x, y: one.rect.y, w: one.rect.w, h: one.rect.h, sheet: one.sheet
+  });
 }
 
 const sheets = new Map();
@@ -434,11 +302,28 @@ const tall = y + rowH;
 
 const sheet = Buffer.alloc(WIDE * tall * 4);
 for (const one of cut) {
+  /*
+   * Middled in its cell, unless the run reaches forward when it swings.
+   *
+   * Centring is right for a run whose frames grow in every direction, and
+   * wrong for a character: seventeen of the nineteen classes draw an
+   * eight-pixel body and a sixteen-pixel attack, the body still at the left
+   * of it and the weapon reaching right. Centred, the body sat four pixels
+   * further back on the swing than at rest, and the figure hopped backwards
+   * on every shot.
+   *
+   * Such a run is laid out from its leading edge instead - every frame of
+   * it, not only the wide ones, or the body would move on the frames that
+   * stayed narrow. See tools/spritesheet.js for the rule and
+   * attackAnchorX in web/skins/app.js for the same rule applied by
+   * something that draws rather than packs.
+   */
+  const forward = registry.reachesForward(one.tiles);
   one.tiles.forEach((r, slot) => {
     const from = sheetFor(r.sheet);
-    // Middled in its cell and standing on its floor, so a run whose frames
-    // differ in size does not jitter as it plays.
-    const ox = one.px + slot * one.w + ((one.w - r.w) >> 1);
+    // Standing on its floor, so a rectangle taller than its drawing does not
+    // make the figure leap when that frame comes round.
+    const ox = one.px + slot * one.w + (forward ? 0 : (one.w - r.w) >> 1);
     const oy = one.py + one.h - 1 - one.shape[slot].bottom;
     for (let ry = 0; ry < r.h; ry++) {
       const row = oy + ry;

@@ -3,6 +3,25 @@ import { resolveExactTarget } from './contracts.mjs';
 
 export const FRAME_MS=300;
 export const ATTACK_PERIOD_MS=600;
+/*
+ * Where a swing is anchored.
+ *
+ * A character's attack frame is wider than the character: an eight-pixel body
+ * standing still, a sixteen-pixel rectangle when it swings, the body still
+ * eight wide at the left of it and the weapon reaching out to the front. The
+ * extra width is the weapon, not the person - so centring the rectangle on
+ * where the character is standing slides the body half that width backwards
+ * every time the swing comes round, and it reads as the character hopping.
+ *
+ * Moving the position forward by half the extra puts the body back exactly
+ * where it stands at rest and lets the weapon reach out in front of it. The
+ * vertical anchor is not touched: the feet stay on the ground.
+ *
+ * The same rule is written out in tools/spritesheet.js, and applied there by
+ * the thing that packs these frames into strips for the bench - which lays a
+ * run out from its leading edge rather than from its middle, for exactly this
+ * reason.
+ */
 export function attackAnchorX(worldX,frameWidth,bodyWidth,pixelScale,left=false){const extra=Math.max(0,frameWidth-bodyWidth);return worldX+(left?-1:1)*extra*pixelScale/2}
 export function rankSequence(q){return[(q.set===0?0:1),(q.action==='idle'?0:q.action==='walk'?1:2),q.direction==='front'?0:q.direction==='side'?1:q.direction==='back'?2:3,q.set,q.actionRaw,q.directionRaw]}
 export function initialSequence(sequences){return[...sequences].sort((a,b)=>{const x=rankSequence(a),y=rankSequence(b);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]-y[i];return 0})[0]}
