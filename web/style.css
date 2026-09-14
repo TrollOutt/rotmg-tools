@@ -38,12 +38,27 @@
 }
 
 /* Required difficulty choice and the dungeons that choice makes available. */
+/*
+ * As tall as it needs to be, and no taller.
+ *
+ * It was 920 pixels whatever it held, so twelve dungeons sat in a box with
+ * four hundred pixels of nothing under them - and the list, which is the one
+ * part that should grow, was the part being stretched to fill the emptiness.
+ * The dialog takes its content's height up to what the screen allows, and the
+ * list scrolls only once there is more than fits.
+ */
 #tcWelcome {
   width: min(1180px, calc(100vw - 24px));
-  height: min(920px, calc(100dvh - 24px));
-  max-width: none; max-height: none; margin: auto;
-  padding: clamp(20px, 2.4vw, 30px); color: var(--text); background: var(--panel);
-  border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+  /*
+   * `fit-content`, not `auto`: a modal dialog is laid out against all four
+   * edges by the browser's own stylesheet, so `auto` height stretches it to
+   * the screen and leaves the content sitting in the top third of an empty
+   * panel. This is the line that makes it wrap what it holds.
+   */
+  height: fit-content; max-height: calc(100dvh - 24px);
+  max-width: none; margin: auto;
+  padding: clamp(18px, 2.2vw, 30px); color: var(--text); background: var(--panel);
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
   box-shadow: 0 24px 90px #0009;
 }
 #tcWelcome[open] { display: flex; flex-direction: column; }
@@ -54,13 +69,26 @@
 #tcWelcomeTitle:focus { outline: none; }
 #tcWelcome p { color: var(--muted); font-size: 14px; margin: 6px 0; }
 .tc-difficulty-icon { width: 23px; height: 23px; flex-shrink: 0; vertical-align: middle; }
-.tc-biome-picker { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 14px; flex: none; }
+/*
+ * The three ranks: a row while there is room for one, and a column when there
+ * is not, rather than a fixed share of the width that has to be guessed.
+ */
+.tc-biome-picker {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px 18px; margin: 0 0 14px; flex: none;
+}
 .tc-biome-picker h3 { margin: 0 0 2px; font-size: 15px; }
+.tc-biome-picker > div:first-child { flex: 1 1 200px; min-width: 0; }
 .tc-biome-picker > div:first-child > span { color: var(--muted); font-size: 11px; }
-.tc-biome-ranks { display: grid; grid-template-columns: repeat(3, minmax(142px, 1fr)); gap: 8px; width: min(590px, 64%); }
+.tc-biome-ranks {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(132px, 13vw, 180px), 1fr));
+  gap: 8px; flex: 2 1 min(590px, 100%);
+}
 .tc-biome-rank { min-width: 0; min-height: 58px; padding: 6px 9px; display: flex; align-items: center; gap: 9px; text-align: left;
   color: var(--dim); background: rgba(12, 11, 18, .55); border: 1px solid var(--line-soft); border-radius: 9px; cursor: pointer; font: inherit; }
 .tc-biome-rank .tc-biome-art { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; filter: grayscale(1); opacity: .38; }
+/* Two biomes carry an imported file rather than a rectangle off the sheet. */
+.tc-zone-file { image-rendering: pixelated; object-fit: contain; }
 .tc-biome-rank strong, .tc-biome-rank small { display: block; white-space: nowrap; }
 .tc-biome-rank strong { font-size: 13px; }
 .tc-biome-rank small { margin-top: 2px; color: inherit; font-size: 9px; }
@@ -84,17 +112,24 @@
 .tc-difficulty-ticks { position: relative; height: 13px; margin: -1px 12px 0; color: var(--dim); font: 10px var(--mono); }
 .tc-difficulty-ticks span { position: absolute; top: 0; transform: translateX(-50%); text-align: center; }
 .tc-difficulty-caption { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 8px; }
-#tcZoneEditor { min-height: 150px; flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; }
-.tc-zone-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 10px; flex: none; }
+/* It holds its heading and its list, and is as tall as the two of them. */
+#tcZoneEditor { min-height: 0; flex: 0 1 auto; display: flex; flex-direction: column; overflow: hidden; }
+.tc-zone-heading { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 10px; flex: none; }
 .tc-zone-heading h3 { margin: 0 0 2px; font-size: 16px; }
 .tc-zone-heading > div:first-child > span { color: var(--accent); font-size: 12px; }
-.tc-zone-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: min(540px, 60%); }
+.tc-zone-toolbar { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; flex: 1 1 min(540px, 100%); }
 #tcZoneSearch { width: min(360px, 100%); border: 1px solid var(--line); background: var(--bg-2); border-radius: 8px; color: var(--text); padding: 8px 11px; font: inherit; font-size: 12px; }
+/*
+ * The list is as tall as its dungeons, up to a share of the screen. It used
+ * to take every pixel the dialog had left whether it needed them or not.
+ */
 .tc-zone-list {
-  flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-color: var(--line) transparent;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(106px, 1fr));
+  flex: 0 1 auto; min-height: 0;
+  max-height: clamp(150px, 42vh, 460px);
+  overflow-y: auto; scrollbar-color: var(--line) transparent;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(96px, 9vw, 120px), 1fr));
   align-content: start; gap: 8px; padding: 8px;
-  border: 1px solid var(--line-soft); border-radius: 10px; background: rgba(8, 7, 13, .22);
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm); background: rgba(8, 7, 13, .22);
 }
 .tc-dungeon-card {
   position: relative; min-width: 0; min-height: 100px; padding: 8px 7px 7px;
@@ -128,7 +163,7 @@
 .tc-progress-detail { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
 .tc-welcome button:focus-visible, .tc-progress button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (max-width: 550px) {
-  #tcWelcome { width: calc(100vw - 12px); height: calc(100dvh - 12px); padding: 18px 14px; border-radius: 11px; }
+  #tcWelcome { width: calc(100vw - 12px); max-height: calc(100dvh - 12px); padding: 18px 14px; border-radius: 11px; }
   #tcWelcome h2 { font-size: 20px; margin: 6px 0; }
   .tc-welcome-intro { margin-bottom: 8px; }
   .tc-biome-picker { display: block; margin-bottom: 9px; }

@@ -31,7 +31,13 @@ var BuildProgression = (function () {
       if (['Admin Arena', 'Chess', 'Daily Quest Room', 'Grand Bazaar', 'Court of Oryx'].includes(record.name)) continue;
       const [slug, name] = wiki.pages[page];
       const key = 'dungeon:' + slug;
+      /*
+       * A portal's still picture, and the frames it turns over where the
+       * client declares them - fifty of them do, each frame with its own
+       * duration. A dungeon that shimmers is how it looks in the game.
+       */
       if (!zones.has(key)) zones.set(key, { id: key, name, kind: 'dungeon', art: record.art,
+        film: record.film, filmFor: record.filmFor,
         difficulty: ratings.get(ratingKey(name)) });
       addPage(page, key);
     }
@@ -63,9 +69,19 @@ var BuildProgression = (function () {
     const slugOf = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const biomeIds = new Map(), tierSources = new Map();
     const aliases = { 'abandoned-city': 'place:Ancient City', 'coral-reefs': 'place:Coral Reef' };
+    /*
+     * A biome whose own record carries no picture wears its captured beacon,
+     * which is the thing you actually go and take.
+     *
+     * Keyed by the realm's slug, which is what is looked up below. The Ancient
+     * City's slug is `abandoned-city` - the alias two lines up says so - and
+     * this said `ancient-city`, so the one biome that needed the fallback
+     * never got it and the Adept rank was the one button in the dialog with
+     * an empty square where its beacon should be.
+     */
     const biomeArt = {
       beach: (records.get('enemy:Captured Shores Beacon') || {}).art,
-      'ancient-city': (records.get('enemy:Captured Abandoned Beacon') || {}).art,
+      'abandoned-city': (records.get('enemy:Captured Abandoned Beacon') || {}).art,
       'deep-sea-abyss': (records.get('enemy:Captured Abyssal Beacon') || {}).art
     };
     for (const biome of Object.values((realm || {}).biomes || {})) {

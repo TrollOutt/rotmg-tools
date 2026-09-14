@@ -67,10 +67,34 @@ for (const file of objectFiles) {
       .exec(m[2]);
     if (!art) continue;
     const index = art[3].trim();
+    /*
+     * And the frames it turns over, where it has any.
+     *
+     * A portal shimmers in the game, and the client says how - but not in the
+     * sprite registry, which is where everything else here looks. It is an
+     * <Animation> block on the object itself, holding a <Frame time="..."> for
+     * each picture in turn with its own texture and its own duration. Eighty-
+     * four of the two hundred and twenty-three portals carry one, from two
+     * frames to thirty-two, and nothing in this repository had ever read it.
+     */
+    const film = /<Animation[^>]*>([\s\S]*?)<\/Animation>/.exec(m[2]);
+    const frames = [];
+    if (film) {
+      for (const one of film[1].matchAll(
+        /<Frame\s+time="([^"]+)"\s*>\s*<Texture(?:\s[^>]*)?>\s*<File>([^<]+)<\/File>\s*<Index>([^<]+)<\/Index>/g)) {
+        const at = one[3].trim();
+        frames.push({
+          seconds: Number(one[1]),
+          atlas: one[2].trim(),
+          index: /^0x/i.test(at) ? Number.parseInt(at, 16) : Number(at)
+        });
+      }
+    }
     artOf.set(id[1], {
       atlas: art[2].trim(),
       index: /^0x/i.test(index) ? Number.parseInt(index, 16) : Number(index),
-      moves: Boolean(art[1])
+      moves: Boolean(art[1]),
+      frames: frames.length > 1 ? frames : undefined
     });
   }
 }
@@ -102,9 +126,56 @@ function rectFor(art) {
   return (bag && bag.get(art.index)) || null;
 }
 
+const WIDE = 1024;                             // how wide the finished sheet is
 const cut = [];
 const seen = new Map();                        // rectangle key -> the cut it went into
-let drawn = 0, none = 0;
+let drawn = 0, none = 0, filmed = 0;
+
+/*
+ * A thing that turns over, laid out as one strip beside the still pictures.
+ *
+ * Every frame goes on the sheet in order, so the record carries one rectangle
+ * and a count rather than a list of rectangles - and the times beside it,
+ * because the client does not space them evenly. A portal that rests for a
+ * second and then flickers four times in half of one is a portal, and a strip
+ * played at a constant rate is a strip.
+ */
+function filmOf(one, art) {
+  if (!art || !art.frames) return;
+  /*
+   * Portals only, for now.
+   *
+   * Three hundred and sixty-three things declare an <Animation> - fifty
+   * portals, two hundred and eighty-four creatures and twenty-nine items -
+   * and cutting all of them adds a third of a megabyte to a sheet every
+   * visitor of the index pays for. A portal is the one this site plays: it is
+   * what the progression dialog and the dungeon lists draw, and a dungeon
+   * that shimmers is how it looks in the game. The rest are read and left on
+   * the floor until something wants to play them.
+   */
+  if (one.kind !== 'portal') return;
+  /* A strip has to fit across the sheet to be laid down in one run. */
+  const across = art.frames.length * (rectFor(art) || {}).w;
+  if (!(across > 0) || across > WIDE) return;
+  const shots = [];
+  for (const frame of art.frames) {
+    const bag = still.get(frame.atlas);
+    const rect = bag && bag.get(frame.index);
+    if (!rect || !rect.w || !rect.h) return;
+    const from = sheetFor(rect.sheet);
+    if (!from || rect.x + rect.w > from.width || rect.y + rect.h > from.height) return;
+    shots.push({ rect, from, seconds: frame.seconds });
+  }
+  /* One size for the strip: the client draws every frame of one into one cell. */
+  const wide = Math.max(...shots.map(x => x.rect.w));
+  const tall = Math.max(...shots.map(x => x.rect.h));
+  if (shots.some(x => x.rect.w !== wide || x.rect.h !== tall)) return;
+  one.film = cut.length;
+  one.filmFor = shots.map(x => Math.max(20, Math.round(x.seconds * 1000)));
+  shots.forEach((shot, at) =>
+    cut.push({ rect: shot.rect, from: shot.from, strip: at === 0 ? shots.length : 0 }));
+  filmed++;
+}
 for (const one of facts.records) {
   /*
    * A record is drawn from whatever the client says draws it: an object by its
@@ -137,6 +208,7 @@ for (const one of facts.records) {
   seen.set(key, at);
   one.art = at;
   drawn++;
+  filmOf(one, art);
 }
 
 /* ---------------- one sheet for the lot ---------------- */
@@ -145,16 +217,28 @@ for (const one of facts.records) {
  * the next begins. Nothing here is bigger than a creature, and most of it is
  * eight pixels square.
  */
-const WIDE = 1024;
-const order = cut.map((one, at) => at).sort((a, b) => cut[b].rect.h - cut[a].rect.h);
+/*
+ * Laid out in rows of a fixed height, tallest first - but a strip is laid down
+ * whole, because its frames have to sit beside each other in order for
+ * anything to play them by sliding along one rectangle.
+ */
+const units = [];
+for (let at = 0; at < cut.length; at++) {
+  if (cut[at].strip === 0) continue;           // a later frame of the strip before it
+  const count = cut[at].strip || 1;
+  units.push({ at, count, w: cut[at].rect.w * count, h: cut[at].rect.h });
+}
+units.sort((a, b) => b.h - a.h);
 let x = 0, y = 0, rowH = 0;
 const place = new Array(cut.length);
-for (const at of order) {
-  const { rect } = cut[at];
-  if (x + rect.w > WIDE) { x = 0; y += rowH; rowH = 0; }
-  place[at] = [x, y, rect.w, rect.h];
-  x += rect.w;
-  if (rect.h > rowH) rowH = rect.h;
+for (const unit of units) {
+  if (x + unit.w > WIDE) { x = 0; y += rowH; rowH = 0; }
+  for (let i = 0; i < unit.count; i++) {
+    const { rect } = cut[unit.at + i];
+    place[unit.at + i] = [x + i * rect.w, y, rect.w, rect.h];
+  }
+  x += unit.w;
+  if (unit.h > rowH) rowH = unit.h;
 }
 const tall = y + rowH;
 const sheet = Buffer.alloc(WIDE * tall * 4);
@@ -171,14 +255,19 @@ for (let at = 0; at < cut.length; at++) {
 
 /* The record keeps the rectangle rather than a number into a list nobody has. */
 for (const one of facts.records) {
-  if (one.art === undefined) continue;
-  one.art = place[one.art];
+  if (one.art !== undefined) one.art = place[one.art];
+  /* The strip as one rectangle and how many frames are along it. */
+  if (one.film !== undefined) {
+    const at = place[one.film];
+    one.film = [at[0], at[1], at[2], at[3], one.filmFor.length];
+  }
 }
 facts.sheet = { wide: WIDE, tall };
 
 fs.mkdirSync(OUT, { recursive: true });
 const png = path.join(OUT, 'sheet.png');
 fs.writeFileSync(png, writePng(WIDE, tall, sheet));
+console.log('  ' + filmed + ' things turn over, ' + cut.length.toLocaleString('en-US') + ' rectangles on the sheet');
 
 
 

@@ -133,12 +133,99 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       .sort((a, b) => (a.difficulty || 99) - (b.difficulty || 99) || a.name.localeCompare(b.name)) : [];
   }
 
+  /*
+   * A portal is not a still picture.
+   *
+   * The client says how each one turns over - an <Animation> on the object
+   * with a <Frame time="..."> for every picture in turn - and the index cuts
+   * those frames onto its sheet as one strip. Thirty-seven of the dungeons
+   * this dialog offers have one.
+   *
+   * The times are not even: the Snake Pit rests for a second and a fifth and
+   * then flickers six times in under two, so a strip played at a constant
+   * rate is not the portal. One clock walks the strips on screen and puts
+   * each on the frame its own times have reached.
+   */
+  function indexFilm(zone, side, extra) {
+    const sheet = data.iconSheet;
+    if (!zone || !zone.film || !zone.filmFor || !sheet) return indexIcon(zone && zone.art, side, extra);
+    const [x, y, w, h, count] = zone.film;
+    const zoom = side / Math.max(w, h);
+    return '<span class="sheet-art is-film' + (extra ? ' ' + extra : '') + '"'
+      + ' data-film="' + [x, y, w, count, zoom].join(',') + '"'
+      + ' data-film-at="' + zone.filmFor.join(',') + '"'
+      + ' style="width:' + (w * zoom) + 'px;height:' + (h * zoom) + 'px'
+      + ';background-size:' + (sheet.wide * zoom) + 'px ' + (sheet.tall * zoom) + 'px'
+      + ';background-position:' + (-x * zoom) + 'px ' + (-y * zoom) + 'px'
+      + '"></span>';
+  }
+
+  /*
+   * Nothing moves when the reader has said they want it still - the switch in
+   * the corner that stops the realms drifting stops these too - or when the
+   * machine they are on asks for less motion.
+   */
+  function motionWanted() {
+    try {
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    } catch (error) { /* an old browser answers by not answering */ }
+    const toggle = document.getElementById('ambienceToggle');
+    return !toggle || toggle.getAttribute('aria-pressed') !== 'false';
+  }
+
+  const films = [];
+  let filmClock = 0;
+  function playFilms(now) {
+    filmClock = 0;
+    let anyLeft = false;
+    for (const film of films) {
+      if (!film.node.isConnected) continue;
+      anyLeft = true;
+      const at = now % film.whole;
+      let frame = 0;
+      while (frame < film.ends.length - 1 && at >= film.ends[frame]) frame++;
+      film.node.style.backgroundPositionX = (-(film.x + frame * film.w) * film.zoom) + 'px';
+    }
+    if (anyLeft && motionWanted()) filmClock = requestAnimationFrame(playFilms);
+  }
+  function startFilms(within) {
+    films.length = 0;
+    for (const node of (within || document).querySelectorAll('.is-film[data-film]')) {
+      const [x, y, w, count, zoom] = node.dataset.film.split(',').map(Number);
+      const times = (node.dataset.filmAt || '').split(',').map(Number).filter(one => one > 0);
+      if (!(count > 1) || times.length !== count) continue;
+      let whole = 0;
+      const ends = times.map(one => (whole += one));
+      films.push({ node, x, w, zoom, ends, whole });
+    }
+    if (filmClock) cancelAnimationFrame(filmClock);
+    filmClock = 0;
+    if (films.length && motionWanted()) filmClock = requestAnimationFrame(playFilms);
+  }
+
   function dungeonCards(dungeons) {
     return dungeons.map(z => '<button type="button" class="tc-dungeon-card" data-remove-zone="' + esc(z.id)
       + '" data-zone-name="' + esc(z.name.toLowerCase()) + '" aria-label="Remove ' + esc(z.name) + ' from selected dungeons">'
       + '<span class="tc-dungeon-remove" aria-hidden="true">×</span><span class="tc-dungeon-art">'
-      + (z.art ? indexIcon(z.art, 48, '') : '') + '</span><span class="tc-dungeon-name">' + esc(z.name)
+      + indexFilm(z, 48, '') + '</span><span class="tc-dungeon-name">' + esc(z.name)
       + '</span><span class="tc-zone-rating">' + (z.difficulty ? difficultyIcon + ' ' + z.difficulty : 'Unrated') + '</span></button>').join('');
+  }
+
+  /*
+   * A zone's picture, whichever kind it has.
+   *
+   * Most biomes carry a rectangle cut from the index's sheet. Two of them -
+   * the Ancient City and the Deep Sea Abyss - carry a file instead, imported
+   * from RealmEye because the Atlas has no sprite for them, and this asked
+   * only for the rectangle. So the Adept rank, whose example is the Ancient
+   * City, was the one button in the dialog with an empty square on it.
+   */
+  function zonePicture(zone, side) {
+    if (!zone) return '';
+    if (zone.art) return indexIcon(zone.art, side, '');
+    if (zone.icon) return '<img class="tc-zone-file" width="' + side + '" height="' + side
+      + '" src="' + esc(zone.icon) + '" alt="">';
+    return '';
   }
 
   const BIOME_RANKS = [
@@ -151,7 +238,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const active = selected.has(rank);
       return '<button type="button" class="tc-biome-rank" data-biome-rank="' + rank
         + '" aria-pressed="' + active + '">'
-        + '<span class="tc-biome-art">' + (zone && zone.art ? indexIcon(zone.art, 44, '') : '') + '</span>'
+        + '<span class="tc-biome-art">' + zonePicture(zone, 44) + '</span>'
         + '<span><strong>' + rank + '</strong><small>' + (active ? (rank === 'Rookie' ? 'Included by default' : 'Included') : 'Click to include')
         + '</small></span></button>';
     }).join('');
@@ -171,6 +258,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (!list) return;
     list.innerHTML = dungeonCards(selectedDungeons(profileDraft));
     filterDungeonCards((el('tcZoneSearch').value || '').trim().toLowerCase());
+    startFilms(list);
   }
 
   function drawWelcome() {
@@ -203,6 +291,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + (profile ? '<button type="button" id="tcProfileCancel" class="tc-undo">Cancel</button>' : '')
       + '<button type="button" id="tcProfileSave" class="tc-run">' + (profile ? 'Save progression' : 'Start crafting') + '</button></div></div>';
     updateProfilePreview();
+    startFilms(el('tcWelcome'));
   }
 
   function updateProfilePreview() {
