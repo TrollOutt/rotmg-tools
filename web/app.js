@@ -4077,10 +4077,25 @@ async function openFamePage() {
   }
 }
 
+/*
+ * Not every build has every page.
+ *
+ * The downloadable copy leaves the Skin Viewer out - it reads seventy-five
+ * megabytes of sheets beside the page, which a file opened from disk cannot
+ * do - so the build removes its card and its page from that copy. A hash
+ * kept from the website would then name a page that is not there, and asking
+ * a page that does not exist to hide itself took the whole router down with
+ * it. So a page the build left out simply is not a page, and the address
+ * falls back to the way in.
+ */
 function showPage(name) {
   const wideOpen = name === 'realm';
-  const page = wideOpen ? 'home' : (PAGES[name] ? name : 'home');
-  for (const [key, id] of Object.entries(PAGES)) $(id).hidden = key !== page;
+  const here = key => Boolean(PAGES[key]) && Boolean($(PAGES[key]));
+  const page = wideOpen ? 'home' : (here(name) ? name : 'home');
+  for (const [key, id] of Object.entries(PAGES)) {
+    const node = $(id);
+    if (node) node.hidden = key !== page;
+  }
   document.body.dataset.page = page;
   pinRealm(page);
   usePool(page);

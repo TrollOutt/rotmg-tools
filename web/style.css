@@ -1603,10 +1603,23 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * whole pixels for one, so it keeps the hard edges it was drawn with.
  */
 .home-card-art[data-art="Page Art/Forge.png"] { image-rendering: pixelated; }
-.skin-viewer-card-art {
-  display: grid; place-items: center; color: #9fc2ff;
-  font-size: clamp(38px, 5vw, 68px); text-shadow: 0 0 24px rgba(111, 157, 238, .55);
+/*
+ * Nine characters in nine different costumes, cut from the client's own
+ * character sheet by tools/skins-art.js. It was a CSS diamond in a blue
+ * nothing on this site uses - the only card whose picture was not the game.
+ */
+.home-card-art[data-art="Page Art/Skins.png"] { image-rendering: pixelated; }
+
+/*
+ * Where a tool went. Only the downloadable copy has this: the build puts it
+ * in place of the Skin Viewer's card, which cannot come with the file.
+ */
+.home-elsewhere {
+  max-width: 1100px; margin: 2px auto 0; padding: 0 4px;
+  color: var(--muted); font-size: 12.5px; line-height: 1.6;
 }
+.home-elsewhere b { color: var(--text); font-weight: 650; }
+.home-elsewhere a { color: var(--accent); }
 
 #pageSkins { max-width: none; padding-left: 0; padding-right: 0; padding-bottom: 0; }
 #pageSkins > .masthead { margin-left: clamp(12px, 2vw, 28px); margin-right: clamp(12px, 2vw, 28px); }
@@ -3959,38 +3972,31 @@ body.ring-near .ring-tag { opacity: 0; }
   border-left: 1px solid var(--line);
 }
 
+/*
+ * On or off by filling, the way every other chip on the site says it - the
+ * index's kinds, the bench's goals, the segments beside these. They were
+ * native tick-boxes, which nothing else in the interface is.
+ */
 .tc-search-filter {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
   min-height: 25px;
-  padding: 2px 8px;
+  padding: 3px 10px;
+  font: inherit; font-size: 11px; font-weight: 600;
+  color: var(--dim);
+  background: rgba(255, 255, 255, .04);
   border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--muted);
-  background: transparent;
-  font-size: 11px;
   white-space: nowrap;
   cursor: pointer;
-  user-select: none;
 }
 
-.tc-search-filter:hover {
-  color: var(--text);
-  border-color: var(--muted);
-}
+.tc-search-filter:hover { color: var(--text); }
 
-.tc-search-filter input {
-  width: 13px;
-  height: 13px;
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-.tc-search-filter:has(input:checked) {
-  color: var(--text);
+.tc-search-filter.is-on {
+  color: #10141c;
+  background: var(--accent);
   border-color: var(--accent);
-  background: rgba(121, 197, 232, .09);
 }
 
 #tcKept {

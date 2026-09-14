@@ -198,7 +198,7 @@
     </button>
 
     <button type="button" class="home-card" data-go="skins" style="--i:4">
-      <span class="home-card-art skin-viewer-card-art" aria-hidden="true">✦</span>
+      <img class="home-card-art" data-art="Page Art/Skins.png" alt="">
       <span class="home-card-title">Skin Viewer</span>
       <span class="home-card-line">Client skins, dyes and real animations.</span>
       <small>Browse every client skin, combine clothing and accessory dyes, save favorites, and inspect them in Studio or on the real Realm Atlas.</small>
@@ -673,21 +673,21 @@
                 title="Change the four items and leave every enchantment exactly as it is">Gear only</button>
             </span>
 
+            <!--
+              What the search is allowed to reach for, as two chips rather
+              than two tick-boxes: everything else on this row and on this
+              site says on or off by filling, and a native checkbox was the
+              only one of its kind anywhere in the interface.
+            -->
             <span class="tc-search-pool" role="group"
               aria-label="Gear included in optimization">
-              <label class="tc-search-filter"
-                title="Include equipment that belongs to a set">
-                <input id="tcSearchSets" type="checkbox"
-                  data-search-gear="searchSets" checked>
-                <span>Sets</span>
-              </label>
+              <button type="button" id="tcSearchSets" class="tc-search-filter"
+                data-search-gear="searchSets" aria-pressed="true"
+                title="Include equipment that belongs to a set">Sets</button>
 
-              <label class="tc-search-filter"
-                title="Include non-set equipment without a tier. Tiered gear is always included.">
-                <input id="tcSearchUntiered" type="checkbox"
-                  data-search-gear="searchUntiered" checked>
-                <span>Untiered</span>
-              </label>
+              <button type="button" id="tcSearchUntiered" class="tc-search-filter"
+                data-search-gear="searchUntiered" aria-pressed="true"
+                title="Include non-set equipment without a tier. Tiered gear is always included.">Untiered</button>
             </span>
 
             <span id="tcKept"></span>
