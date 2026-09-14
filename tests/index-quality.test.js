@@ -248,5 +248,40 @@ assert(!/groups\.find\(one => one\.inSub\)/.test(pageSource),
 assert(/groups\.filter\(one => one\.inSub\)/.test(pageSource),
   'the middle column must draw every sub category, not only the first');
 
+
+/*
+ * The portals that turn over.
+ *
+ * A portal shimmers in the game and the client says how - an <Animation> on
+ * the object with a <Frame time="..."> for each picture in turn. Nothing here
+ * read that block until now; the index cuts those frames onto its sheet as
+ * one strip so anything drawing a dungeon can play it.
+ *
+ * The times are not even - the Snake Pit rests for a second and a fifth and
+ * then flickers six times - so the durations are carried beside the strip and
+ * must stay in step with it.
+ */
+const turning = [...records.values()].filter(one => one.film);
+assert(turning.length > 40, 'the client animates fifty portals; the index must hold them');
+for (const one of turning) {
+  assert.equal(one.kind, 'portal',
+    one.id + ': only portals are cut as strips, or the sheet grows for pictures nothing plays');
+  const [x, y, w, h, count] = one.film;
+  assert(count > 1, one.id + ': a strip of one frame is a still picture');
+  assert.equal(one.filmFor.length, count,
+    one.id + ': ' + count + ' frames but ' + one.filmFor.length + ' durations');
+  for (const ms of one.filmFor) {
+    assert(Number.isInteger(ms) && ms >= 20, one.id + ': a frame lasts a readable number of milliseconds');
+  }
+  /* The whole strip has to be on the sheet, or it plays off the edge of it. */
+  assert(x >= 0 && y >= 0 && x + w * count <= index.sheet.wide && y + h <= index.sheet.tall,
+    one.id + ': its strip runs off the sheet');
+}
+const snakePit = records.get('portal:Snake Pit');
+assert(snakePit && snakePit.film, 'the Snake Pit is one of the animated ones');
+assert(new Set(snakePit.filmFor).size > 1,
+  'its frames are not evenly spaced, which is why the durations are kept');
+
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
 console.log(skins.length + ' skins, joined to class, unlocker and set by the client’s own types.');
+console.log(turning.length + ' portals carry the frames they turn over, with the client’s own timings.');

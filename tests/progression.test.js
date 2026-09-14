@@ -158,3 +158,65 @@ for (const [name, value] of [['Spider Den', 1.5], ['Snake Pit', 2.5], ['Haunted 
   assert.equal(difficulties.get(name), value, name + ' difficulty drifted from RealmEye dungeon directory');
 }
 console.log('Progression: exact loot joins, no portal/spawn leakage, setup gate, persistence validation, constrained optimization, sets, owned locks and mode switching verified.');
+
+/*
+ * Everything above runs against a fixture, which is the right way to test a
+ * rule. These two are about the real catalogue, because they are about what
+ * the welcome dialog actually draws.
+ */
+{
+  const fs = require('fs');
+  const path = require('path');
+  const root = path.join(__dirname, '..');
+  /*
+   * From the tracked source the build projects, not from the built copy:
+   * docs/ is a build output and npm test runs before npm run build.
+   */
+  const source = JSON.parse(fs.readFileSync(path.join(root, 'web/realmeye-data.json'), 'utf8'));
+  const realm = {
+    biomes: Object.fromEntries(Object.entries(source.biomes).map(([key, one]) =>
+      [key, { id: one.id, slug: one.slug, rank: one.rank }])),
+    creatures: Object.fromEntries(Object.entries(source.creatures).map(([key, one]) =>
+      [key, { groups: one.groups, detail: { drops: (one.detail || {}).drops || [] } }]))
+  };
+  const dungeonText = fs.readFileSync(path.join(root, 'data/Fame/dungeon-pages.txt'), 'utf8');
+  const real = P.catalogue(index, wiki, raw.items, realm, dungeonText);
+
+  /*
+   * Every rank in the dialog wears a beacon.
+   *
+   * A biome whose own record has no picture falls back to the beacon you take
+   * to claim it, looked up by the realm's slug. The Ancient City's slug is
+   * `abandoned-city`; the table said `ancient-city`, so the one biome that
+   * needed the fallback never got it and Adept was the one rank button in the
+   * dialog with an empty square on it.
+   */
+  for (const name of ['Beach', 'Ancient City', 'Deep Sea Abyss']) {
+    const zone = real.zones.find(one => one.kind === 'biome' && one.name === name);
+    assert(zone, name + ' must be a zone the dialog can offer');
+    assert(zone.art || zone.icon,
+      name + ' must have a picture: it is one of the three rank buttons');
+  }
+  /*
+   * And the dialog must draw whichever kind it is. Asserting only that the
+   * data exists is what let this through the first time: the Ancient City had
+   * an imported file all along, and the button asked only for a rectangle.
+   */
+  const theory = fs.readFileSync(path.join(root, 'web/theorycraft.js'), 'utf8');
+  assert(/function zonePicture\(zone, side\)[\s\S]{0,400}zone\.icon/.test(theory),
+    'a rank button must fall back to an imported picture where there is no sheet rectangle');
+  assert(/tc-biome-art">' \+ zonePicture\(zone/.test(theory),
+    'the rank buttons must go through it');
+
+  /*
+   * And a dungeon carries the frames its portal turns over, where the client
+   * declares them, so the dialog can shimmer the way the game does.
+   */
+  const turning = real.zones.filter(one => one.kind === 'dungeon' && one.film);
+  assert(turning.length > 25, 'the client animates most of the dungeons this dialog offers');
+  for (const one of turning) {
+    assert.equal(one.filmFor.length, one.film[4],
+      one.name + ': its strip and its timings must agree on how many frames there are');
+  }
+  console.log('Progression: three ranks pictured, ' + turning.length + ' dungeons turn over.');
+}
