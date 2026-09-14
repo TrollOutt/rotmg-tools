@@ -1,0 +1,36 @@
+<header class="viewer-head"><b>Realm of the Mad God</b><small>local skin viewer · client data only</small></header>
+<main>
+  <aside class="catalogue">
+    <div class="panel-title"><b>Skins</b><span>Client catalogue</span></div>
+    <input id="search" class="panel-search" placeholder="Search skins">
+    <div class="section-label">Class</div>
+    <div id="classes" class="class-grid"></div>
+    <div class="section-label">Family</div>
+    <div id="families" class="filter-chips"></div>
+    <div class="list-head"><span id="count"></span></div>
+    <div id="skins" class="card-list"></div>
+  </aside>
+  <section class="stage-panel">
+    <div class="stage-wrap">
+      <div class="sandbox-stack">
+        <canvas id="worldBg" width="640" height="420" aria-hidden="true"></canvas>
+        <canvas id="canvas" width="640" height="420" tabindex="0" aria-label="Skin sandbox"></canvas>
+        <canvas id="fxCanvas" width="640" height="420" aria-hidden="true"></canvas>
+      </div>
+      <div id="missing" hidden>missing sprite frame</div>
+      <div class="sandbox-help"><b>WASD</b> move · <b>mouse</b> aim · <b>hold click</b> attack · <b>wheel</b> zoom</div>
+      <div class="sandbox-speed"><label for="attackSpeed">Attack speed</label><input id="attackSpeed" type="range" min="0.25" max="4" step="0.05" value="1"><span id="attackSpeedValue">1.00×</span></div>
+      <div class="sandbox-tools"><div class="world-mode" role="group" aria-label="Sandbox background"><button type="button" data-world-mode="studio">Studio</button><button type="button" data-world-mode="beach">Beach</button></div><span id="worldModeHint">Beach · real Atlas area</span><span id="zoomValue">4.00×</span><button id="resetWorld">Reset</button></div>
+    </div>
+    <div class="skin-heading"><h1 id="name"></h1><p id="meta"></p></div>
+  </section>
+  <aside class="dyes">
+    <div class="panel-title"><b>Dyes</b><span>Client objects</span></div>
+    <div id="dyeSlots" class="dye-slots"></div>
+    <div class="dye-tools"><input id="dyeSearch" placeholder="Search dyes"><button id="clearDye">Clear selected slot</button></div>
+    <div class="section-label">Category</div>
+    <div id="dyeCategories" class="filter-chips"></div>
+    <div class="list-head"><span id="dyeCount"></span></div>
+    <div id="dyeList" class="card-list"></div>
+  </aside>
+</main>

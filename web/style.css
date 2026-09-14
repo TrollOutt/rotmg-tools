@@ -1603,6 +1603,13 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * whole pixels for one, so it keeps the hard edges it was drawn with.
  */
 .home-card-art[data-art="Page Art/Forge.png"] { image-rendering: pixelated; }
+.skin-viewer-card-art {
+  display: grid; place-items: center; color: #9fc2ff;
+  font-size: clamp(38px, 5vw, 68px); text-shadow: 0 0 24px rgba(111, 157, 238, .55);
+}
+
+#pageSkins { max-width: none; padding-left: 0; padding-right: 0; padding-bottom: 0; }
+#pageSkins > .masthead { margin-left: clamp(12px, 2vw, 28px); margin-right: clamp(12px, 2vw, 28px); }
 
 /*
  * It is a still picture of a room where something is being enchanted, so it
