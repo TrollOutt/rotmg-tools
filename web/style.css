@@ -661,17 +661,22 @@ select option { background: var(--panel); color: var(--text); }
  * client calls that copy, why it is a copy, and the file and number it is
  * filed under - which is the whole point of listing them.
  */
-.ix-folds { margin: 12px 0 0; font-size: .92em; }
-.ix-folds > b { display: block; font-size: .88em; letter-spacing: .3px; color: var(--dim); }
-.ix-folds ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.ix-folds { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .92em; }
+/*
+ * A row here is a chip that happens to be the width of the block: the same
+ * fill, the same line and the same corner as every other chip on the card,
+ * rather than a fifth kind of container at three per cent white with a five
+ * pixel corner and no edge at all.
+ */
 .ix-folds li {
   display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-  padding: 3px 8px; border-radius: 5px; background: rgba(255, 255, 255, .03);
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
 }
 .ix-folds li > span { font-weight: 600; }
 .ix-folds li > em { font-style: normal; color: var(--dim); }
-.ix-folds li > small { color: var(--dim); flex-basis: 100%; padding-left: 4px; }
 .ix-folds li > code { margin-left: auto; font-size: .85em; color: var(--dim); }
+.ix-folds li > small { color: var(--dim); flex-basis: 100%; padding-left: 4px; }
 
 .sheet-art {
   display: block; flex: none; image-rendering: pixelated;
@@ -3252,6 +3257,11 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   --ix-foe:   var(--bad);         /* what fights back */
   --ix-where: #e08a3c;            /* where you go */
   --ix-charm: var(--legendary);   /* what goes on the gear */
+  /*
+   * The column a card's row names sit in. One width, so the eye finds the
+   * names in the same place from the top of a record to the bottom of it.
+   */
+  --ix-label: 118px;
 }
 
 .ix-group { border-radius: var(--radius-sm); --ix-hue: var(--accent); }
@@ -3505,7 +3515,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 
 /* What the community says, kept visibly apart from what the client declares. */
 .ix-does {
-  margin: 0 0 10px; padding: 0; list-style: none;
+  margin: 0; padding: 0; list-style: none;
   display: flex; flex-direction: column; gap: 3px;
 }
 .ix-does li {
@@ -3696,24 +3706,43 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   border: 1px solid rgba(240, 194, 116, .25); border-radius: var(--radius-sm);
   padding: 8px 11px; margin: 0 0 12px;
 }
-.ix-facts {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 7px 14px; margin: 0 0 12px;
+/*
+ * A row with a name on it, and the only shape such a row takes on a card.
+ *
+ * There were three of them. The facts put the name above the value in a grid
+ * of a hundred and fifty pixel columns; the links put it to the right of a
+ * column eleven characters wide, which broke "same name as" across two lines;
+ * the community rows put it in eighty-six pixels. Three alignments, three
+ * widths, and nothing lined up with anything below it.
+ *
+ * It is one column now, one width, one alignment, named once at the top of
+ * the page - so a reader's eye goes down the same gutter the whole way.
+ */
+.ix-row, .ix-link-row, .ix-facts > div {
+  display: grid; grid-template-columns: var(--ix-label) minmax(0, 1fr);
+  gap: 3px 12px; align-items: baseline; min-width: 0;
 }
-.ix-facts > div { min-width: 0; }
-.ix-facts dt { font-size: calc(var(--ix-fs) * .8); text-transform: uppercase; letter-spacing: .5px; color: var(--dim); }
+.ix-row > i, .ix-link-row > i, .ix-facts dt {
+  font-style: normal; font-size: calc(var(--ix-fs) * .8); color: var(--dim);
+  text-transform: uppercase; letter-spacing: .4px; text-align: right;
+  line-height: 1.35;
+}
+/*
+ * Two rows abreast where the card is wide enough for two, one where it is
+ * not. The facts are short and there are a dozen of them; a single column of
+ * "slot", "soulbound", "mana" down a thousand-pixel card is a lot of white.
+ */
+.ix-facts {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 5px 26px; margin: 0;
+}
 .ix-facts dd {
-  margin: 1px 0 0; font-size: calc(var(--ix-fs) * 1.02); color: var(--text); font-variant-numeric: tabular-nums;
+  margin: 0; font-size: var(--ix-fs); color: var(--text); font-variant-numeric: tabular-nums;
   /* A run of label names is one long word to a browser; let it break. */
   overflow-wrap: anywhere;
 }
-.ix-labels { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; }
-.ix-labels i {
-  font-style: normal; font-size: calc(var(--ix-fs) * .74); letter-spacing: .4px; color: var(--dim);
-  background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
-  border-radius: 999px; padding: 2px 7px;
-}
-.ix-doors { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 14px; }
+/* The one action row, kept out of the boxes because it is not something read. */
+.ix-doors { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0 0; }
 .ix-door {
   font: inherit; font-size: calc(var(--ix-fs) * .94); font-weight: 650; cursor: pointer;
   color: #10141c; background: var(--accent); border: 1px solid var(--accent);
@@ -3721,13 +3750,9 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 }
 .ix-door:hover { filter: brightness(1.08); }
 
-.ix-links { border-top: 1px solid var(--line); padding-top: 11px; }
-.ix-link-row { display: flex; gap: 10px; margin-bottom: 9px; align-items: baseline; }
-.ix-link-row > i {
-  flex: none; width: 11ch; font-style: normal; font-size: calc(var(--ix-fs) * .8); color: var(--dim);
-  text-transform: uppercase; letter-spacing: .4px; text-align: right;
-}
-.ix-link-row > span { display: flex; flex-wrap: wrap; gap: 4px; }
+/* Every block on a card is framed now, so the rows inside one need no rule. */
+.ix-links { display: grid; gap: 8px; }
+.ix-link-row > span { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 /*
  * One chip, wherever a chip appears.
  *
@@ -3996,28 +4021,45 @@ body.ring-near .ring-tag { opacity: 0; }
 }
 
 
-/* REALMEYE_UNIFIED_PRESENTATION */
-.ix-knowledge-block {
-  margin-top: 14px; border: 1px solid rgba(255,255,255,.08);
-  border-radius: 9px; overflow: hidden; background: rgba(255,255,255,.025);
+/*
+ * One frame, and every block of a record sits in it.
+ *
+ * This box was built for the community data and the rest of the card was left
+ * loose around it: the facts, the labels, the declarations and the links all
+ * floated between framed blocks, so a card read as four boxes with drifts of
+ * unowned text between them. Everything a record says is in one of these now,
+ * under a heading in the same small capitals, and the only things outside are
+ * the title, the warnings, the buttons and the line naming the file.
+ */
+.ix-block {
+  margin-top: 14px; border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm); overflow: hidden; background: rgba(255,255,255,.025);
 }
-.ix-knowledge-section { padding: 11px 14px 12px; }
-.ix-knowledge-section + .ix-knowledge-section { border-top: 1px solid var(--line-soft); }
-.ix-knowledge-section > h4 {
+.ix-part { padding: 11px 14px 12px; }
+.ix-part + .ix-part { border-top: 1px solid var(--line-soft); }
+.ix-part > h4 {
   margin: 0 0 8px; font-size: 11.5px; font-weight: 600;
   letter-spacing: .7px; text-transform: uppercase; color: var(--dim);
 }
+/*
+ * The chip that is only read, beside .ix-jump which is the chip you press.
+ * Same size, same fill, same line - the difference between them is that one
+ * lights up under the pointer, which is the only difference there should be.
+ * The margins are gone: every place one sits is a flex row with a gap, and
+ * the two together spaced them unevenly.
+ */
 .ix-data-chip {
-  display: inline-flex; align-items: center; gap: 5px; margin: 2px 4px 2px 0;
+  display: inline-flex; align-items: center; gap: 5px; margin: 0;
+  font-size: calc(var(--ix-fs) * .9); color: var(--text);
   padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px;
   background: rgba(255, 255, 255, .04); white-space: nowrap;
 }
 .ix-data-chip b { font-weight: 600; }
-.ix-drop-grid { display: grid; gap: 5px; min-width: min(640px, 100%); }
+.ix-drop-grid { display: grid; gap: 5px; min-width: 0; }
 .ix-drop-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .ix-drop-row > em { color: var(--muted); font-style: normal; font-size: 11px; }
 .ix-drop-items, .ix-drop-sources { display: inline-flex; flex-wrap: wrap; gap: 4px; }
-.ix-knowledge-block .ix-realm-scope { margin-left: -2px; margin-right: 5px; }
+.ix-block .ix-realm-scope { margin-left: -2px; margin-right: 5px; }
 
 
 /* ---------------- a place, and what the players wrote about it ---------------- */
@@ -4029,43 +4071,41 @@ body.ring-near .ring-tag { opacity: 0; }
   color: var(--muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
 }
 .ix-place-guardian .ix-jump { margin: 0; padding: 3px 7px; }
-.ix-knowledge-block .ix-link-row > i { min-width: 86px; }
 
 
-/* The blocks of a card, each one able to fold away. */
-.ix-card-description {
-  margin: 12px 0 0; border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, .18); overflow: hidden;
-}
 /*
  * The heading over a block, in the small upright capitals this site puts over
  * a group of anything - the bench's fields, the viewer's panels, the rail's
  * own groups. They were bold sentence case, which read as a title on a card
  * whose title is already at the top of it.
  */
-.ix-card-description > summary,
-.ix-knowledge-section > summary {
+.ix-part > summary {
   cursor: pointer; list-style: none; user-select: none;
   font-size: 11.5px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase;
   color: var(--dim); display: flex; align-items: center; gap: 8px;
 }
-.ix-card-description > summary:hover,
-.ix-knowledge-section > summary:hover { color: var(--muted); }
-.ix-card-description > summary::-webkit-details-marker,
-.ix-knowledge-section > summary::-webkit-details-marker { display: none; }
-.ix-card-description > summary::after,
-.ix-knowledge-section > summary::after {
+.ix-part > summary:hover { color: var(--muted); }
+.ix-part > summary::-webkit-details-marker { display: none; }
+.ix-part > summary::after {
   content: '▾'; margin-left: auto; color: var(--muted); font-size: 11px;
   transition: transform .15s ease;
 }
-.ix-card-description:not([open]) > summary::after,
-.ix-knowledge-section:not([open]) > summary::after { transform: rotate(-90deg); }
-.ix-card-description > summary { padding: 10px 14px; }
-.ix-card-description > div { padding: 0 14px 12px; color: var(--muted); line-height: 1.55; }
-.ix-card-description p { margin: 0 0 7px; }
-.ix-card-description p:last-child { margin-bottom: 0; }
-.ix-knowledge-section > summary { margin: 0; }
-.ix-knowledge-section > summary + .ix-links { margin-top: 8px; }
+.ix-part:not([open]) > summary::after { transform: rotate(-90deg); }
+.ix-part > summary { margin: 0; }
+.ix-part > * + * { margin-top: 8px; }
+.ix-prose { color: var(--muted); line-height: 1.55; }
+.ix-prose p { margin: 0 0 7px; }
+.ix-prose p:last-child { margin-bottom: 0; }
+
+/*
+ * Where a card is narrow there is no room for a gutter and a value beside it,
+ * so the name goes back above what it names - for every row at once, which is
+ * the point: the card stays one grammar at any width.
+ */
+@media (max-width: 720px) {
+  .ix-row, .ix-link-row, .ix-facts > div { grid-template-columns: minmax(0, 1fr); }
+  .ix-row > i, .ix-link-row > i, .ix-facts dt { text-align: left; }
+}
 
 
 /* A biome inside a biome. */
