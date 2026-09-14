@@ -4,85 +4,40 @@
 const fs=require('fs'),path=require('path'),zlib=require('zlib');
 module.exports=function({ root, documents, readAsset, facts }) {
 const OUT=path.join(root,'web','assets','index');
-/* ---------------- just enough FlatBuffers ---------------- */
-class Flat {
-  constructor(b) { this.b = b; }
-  u16(a) { return this.b.readUInt16LE(a); }
-  i32(a) { return this.b.readInt32LE(a); }
-  u32(a) { return this.b.readUInt32LE(a); }
-  f32(a) { return this.b.readFloatLE(a); }
-  root() { return this.u32(0); }
-  fields(t) {
-    const v = t - this.i32(t);
-    const size = this.u16(v);
-    const out = [];
-    for (let slot = 0; slot * 2 + 4 < size; slot++) {
-      const off = this.u16(v + 4 + slot * 2);
-      out.push(off ? t + off : 0);
-    }
-    return out;
-  }
-  string(a) { const p = a + this.u32(a); const n = this.u32(p); return this.b.toString('utf8', p + 4, p + 4 + n); }
-  vector(a) { const p = a + this.u32(a); return { at: p + 4, length: this.u32(p) }; }
-  indirect(a) { return a + this.u32(a); }
-}
-
-/* Just enough PNG, shared with the tools that also cut from a sheet. */
+/*
+ * Where every picture is, read once by the shared reader.
+ *
+ * This used to carry its own copy of the FlatBuffers decoder and its own
+ * understanding of the sprite record. That copy had the rectangle's last two
+ * floats the wrong way round - they are height then width, not width then
+ * height - which is invisible on a square sprite and wrong on the 7,498 that
+ * are not. See tools/spritesheet.js, which now holds the one reader.
+ */
+const registry = require('./spritesheet');
 const { readPng, writePng } = require('./png');
-
-/* ---------------- where every picture lives ---------------- */
-const SHEET_OF = { 1: 'groundTiles', 2: 'characters', 4: 'mapObjects' };
-const sheetName = field => SHEET_OF[field] || 'mapObjects';
-
-// The caller owns source access; both sprite decorators share its asset cache.
-const flat = new Flat(readAsset('spritesheet.bin'));
-const rootFields = flat.fields(flat.root());
+const sheetName = registry.sheetName;
+const blob = registry.read(readAsset('spritesheet.bin'));
 
 const still = new Map();                       // atlas -> index -> rectangle
-{
-  const list = flat.vector(rootFields[0]);
-  for (let i = 0; i < list.length; i++) {
-    const atlas = flat.fields(flat.indirect(list.at + i * 4));
-    const sprites = flat.vector(atlas[2]);
-    const rects = new Map();
-    for (let n = 0; n < sprites.length; n++) {
-      const one = flat.fields(flat.indirect(sprites.at + n * 4));
-      if (!one[0]) continue;
-      const index = one[3] ? flat.i32(one[3]) : 0;
-      if (rects.has(index)) continue;
-      rects.set(index, {
-        x: Math.round(flat.f32(one[0])), y: Math.round(flat.f32(one[0] + 4)),
-        w: Math.round(flat.f32(one[0] + 8)), h: Math.round(flat.f32(one[0] + 12)),
-        sheet: sheetName(one[7] ? flat.i32(one[7]) : 0)
-      });
-    }
-    still.set(flat.string(atlas[0]), rects);
+for (const atlas of blob.still) {
+  const rects = new Map();
+  for (const one of atlas.sprites) {
+    if (rects.has(one.index)) continue;
+    rects.set(one.index, { x: one.rect.x, y: one.rect.y, w: one.rect.w, h: one.rect.h, sheet: one.sheet });
   }
+  still.set(atlas.name, rects);
 }
 
 /* And the moving ones, of which one standing frame is enough here. */
 const moving = new Map();
-{
-  const list = flat.vector(rootFields[1]);
-  for (let i = 0; i < list.length; i++) {
-    const one = flat.fields(flat.indirect(list.at + i * 4));
-    if (!one[0] || !one[5]) continue;
-    const sprite = flat.fields(flat.indirect(one[5]));
-    if (!sprite[0]) continue;
-    const key = flat.string(one[0]) + '#' + (one[1] ? flat.i32(one[1]) : 0);
-    const facing = one[3] ? flat.i32(one[3]) : 0;
-    const doing = one[4] ? flat.i32(one[4]) : 0;
-    // Standing, facing the reader where there is such a frame.
-    const rank = (doing === 0 ? 0 : 4) + (facing === 3 ? 0 : facing === 0 ? 1 : 2);
-    const had = moving.get(key);
-    if (had && had.rank <= rank) continue;
-    moving.set(key, {
-      rank,
-      x: Math.round(flat.f32(sprite[0])), y: Math.round(flat.f32(sprite[0] + 4)),
-      w: Math.round(flat.f32(sprite[0] + 8)), h: Math.round(flat.f32(sprite[0] + 12)),
-      sheet: sheetName(sprite[7] ? flat.i32(sprite[7]) : 0)
-    });
-  }
+for (const one of blob.animated) {
+  const key = one.atlas + '#' + one.index;
+  // Standing, facing the reader where there is such a frame.
+  const rank = (one.action === 0 ? 0 : 4)
+    + (one.direction === 3 ? 0 : one.direction === 0 ? 1 : 2);
+  const had = moving.get(key);
+  if (had && had.rank <= rank) continue;
+  moving.set(key, { rank, x: one.rect.x, y: one.rect.y, w: one.rect.w, h: one.rect.h, sheet: one.sheet });
 }
 
 const sheets = new Map();
