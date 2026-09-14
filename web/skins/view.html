@@ -1,36 +1,99 @@
+<!--
+  Three panels, each a card like every other panel on this site: what there is
+  to wear on the left, what it looks like in the middle, what to dye it with on
+  the right.
+
+  Everything here is written down. Two later passes used to find their own
+  places at runtime - one located the stage by measuring boxes until it found
+  one about the size of the canvas, the other located the heading by comparing
+  every node's text to the skin's name - and then hid the markup they were
+  duplicating by searching for the words "wasd" and "attack speed". That is
+  gone: the controls they built are below, with ids, and the blocks they
+  injected have containers to render into.
+-->
 <header class="viewer-head"><b>Realm of the Mad God</b><small>local skin viewer · client data only</small></header>
 <main>
-  <aside class="catalogue">
-    <div class="panel-title"><b>Skins</b><span>Client catalogue</span></div>
-    <input id="search" class="panel-search" placeholder="Search skins">
-    <div class="section-label">Class</div>
-    <div id="classes" class="class-grid"></div>
-    <div class="section-label">Family</div>
-    <div id="families" class="filter-chips"></div>
-    <div class="list-head"><span id="count"></span></div>
-    <div id="skins" class="card-list"></div>
-  </aside>
-  <section class="stage-panel">
-    <div class="stage-wrap">
+
+  <section class="panel catalogue" aria-label="Skins">
+    <header class="panel-title">
+      <b>Skins</b>
+      <span id="count"></span>
+    </header>
+    <div class="panel-body">
+      <input id="search" class="panel-search" placeholder="Search skins">
+      <div class="section-label">Class</div>
+      <div id="classes" class="class-grid"></div>
+      <div class="section-label">Family</div>
+      <div id="families" class="filter-chips"></div>
+      <div id="skins" class="card-list"></div>
+    </div>
+  </section>
+
+  <section class="panel stage-panel" aria-label="Sandbox">
+    <!--
+      The card says what you are looking at, the way a card on any other page
+      does. This was an h1 under the stage, which is where the space ran out.
+    -->
+    <header class="panel-title stage-title">
+      <span class="stage-named"><b id="name"></b><small id="meta"></small></span>
+      <span class="stage-tools">
+        <span class="world-mode" role="group" aria-label="Sandbox background">
+          <button type="button" data-world-mode="studio">Studio</button>
+          <button type="button" data-world-mode="beach">Beach</button>
+        </span>
+        <span id="worldModeHint"></span>
+        <span id="zoomValue" class="stage-zoom"></span>
+        <button type="button" id="resetWorld">Reset</button>
+      </span>
+    </header>
+
+    <!--
+      The stage takes whatever room is left and the canvases are sized to it,
+      rather than being 640 by 420 whatever the window is. app.js watches this
+      box and resizes all three to match.
+    -->
+    <div class="stage-body" id="stageBody">
       <div class="sandbox-stack">
         <canvas id="worldBg" width="640" height="420" aria-hidden="true"></canvas>
         <canvas id="canvas" width="640" height="420" tabindex="0" aria-label="Skin sandbox"></canvas>
         <canvas id="fxCanvas" width="640" height="420" aria-hidden="true"></canvas>
+        <div id="missing" hidden>missing sprite frame</div>
       </div>
-      <div id="missing" hidden>missing sprite frame</div>
-      <div class="sandbox-help"><b>WASD</b> move · <b>mouse</b> aim · <b>hold click</b> attack · <b>wheel</b> zoom</div>
-      <div class="sandbox-speed"><label for="attackSpeed">Attack speed</label><input id="attackSpeed" type="range" min="0.25" max="4" step="0.05" value="1"><span id="attackSpeedValue">1.00×</span></div>
-      <div class="sandbox-tools"><div class="world-mode" role="group" aria-label="Sandbox background"><button type="button" data-world-mode="studio">Studio</button><button type="button" data-world-mode="beach">Beach</button></div><span id="worldModeHint">Beach · real Atlas area</span><span id="zoomValue">4.00×</span><button id="resetWorld">Reset</button></div>
     </div>
-    <div class="skin-heading"><h1 id="name"></h1><p id="meta"></p></div>
+
+    <div class="sandbox-bar" id="sandboxBar">
+      <p class="sandbox-help"><b>WASD</b> move · <b>mouse</b> aim · <b>hold click</b> attack · <b>wheel</b> zoom</p>
+      <label class="sandbox-speed">
+        <strong>Attack speed</strong>
+        <input id="attackSpeed" type="range" min="0.25" max="4" step="0.05" value="1" aria-label="Attack speed">
+        <output id="attackSpeedValue"></output>
+      </label>
+      <span class="sandbox-modes">
+        <button type="button" data-catalog-mode="skins">Skins</button>
+        <button type="button" data-catalog-mode="favorites">★ Favorites <span id="favoriteCount" class="mode-count">0</span></button>
+        <button type="button" id="saveCombo" class="save-combo">☆ Save combo</button>
+      </span>
+    </div>
+
+    <!-- What the index holds about the three things chosen right now. -->
+    <div id="selectedIndex" class="selected-index" aria-label="Selected objects in the Index"></div>
   </section>
-  <aside class="dyes">
-    <div class="panel-title"><b>Dyes</b><span>Client objects</span></div>
-    <div id="dyeSlots" class="dye-slots"></div>
-    <div class="dye-tools"><input id="dyeSearch" placeholder="Search dyes"><button id="clearDye">Clear selected slot</button></div>
-    <div class="section-label">Category</div>
-    <div id="dyeCategories" class="filter-chips"></div>
-    <div class="list-head"><span id="dyeCount"></span></div>
-    <div id="dyeList" class="card-list"></div>
-  </aside>
+
+  <section class="panel dyes" aria-label="Dyes">
+    <header class="panel-title">
+      <b>Dyes</b>
+      <span id="dyeCount"></span>
+    </header>
+    <div class="panel-body">
+      <div id="dyeSlots" class="dye-slots"></div>
+      <div class="dye-tools">
+        <input id="dyeSearch" placeholder="Search dyes">
+        <button type="button" id="clearDye">Clear selected slot</button>
+      </div>
+      <div class="section-label">Category</div>
+      <div id="dyeCategories" class="filter-chips"></div>
+      <div id="dyeList" class="card-list"></div>
+    </div>
+  </section>
+
 </main>
