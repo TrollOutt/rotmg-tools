@@ -500,7 +500,54 @@ delete served.realmeyeEnrichmentText;
 delete served.theoryText;
 delete served.realmLootText;
 
-const dress = (bundleSources) => readWeb('index.html')
+/*
+ * The one tool that cannot come with you.
+ *
+ * The Skin Viewer is not inlined like everything else: it is a module, and it
+ * reads seventy-five megabytes of the client's own character and object sheets
+ * beside the page. A file opened from disk may not fetch what sits next to it
+ * and may not load a module at all, so in the downloadable copy its card
+ * opened a page that stayed empty and said nothing about why.
+ *
+ * So it is not in the downloadable copy at all, and the front page says where
+ * it went rather than leaving a reader to count four cards and wonder. The
+ * served page is untouched.
+ *
+ * Each removal is checked, because a card silently failing to be removed is
+ * exactly the bug this exists to prevent.
+ */
+const SKIN_VIEWER_PARTS = [
+  ['the card on the front page',
+    /\n\s*<button type="button" class="home-card" data-go="skins"[\s\S]*?<\/button>\n/],
+  ['the page it opens',
+    /\n<!-- Skin Viewer -+ -->\n<div id="pageSkins"[\s\S]*?\n<\/div>\n/],
+  ['the module that draws it',
+    /\n<script type="module" src="skins\/app\.js"><\/script>/]
+];
+
+const SKIN_VIEWER_MOVED = `
+  <!-- Put here by tools/build-standalone.js, in the kept copy only. -->
+  <p class="home-elsewhere">The <b>Skin Viewer</b> is the one tool that is not in
+  this file. It draws out of the client's own character sheets — seventy-five
+  megabytes of them — so it stays on
+  <a href="https://trolloutt.github.io/rotmg-tools/#skins">the website</a>.</p>
+`;
+
+function withoutSkinViewer(html) {
+  for (const [what, pattern] of SKIN_VIEWER_PARTS) {
+    if (!pattern.test(html)) {
+      console.error(`Build failed: could not find ${what} to leave out of the downloadable copy.`);
+      console.error('web/index.html has changed shape; tools/build-standalone.js must be told how.');
+      process.exit(1);
+    }
+    html = html.replace(pattern, what === 'the card on the front page' ? '\n' : '\n');
+  }
+  return html.replace('\n  </div>\n\n  <!--\n    The realm, on this page.',
+    `\n  </div>\n${SKIN_VIEWER_MOVED}\n  <!--\n    The realm, on this page.`);
+}
+
+const dress = (bundleSources, { skins = true } = {}) =>
+  (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(scriptTags, [
@@ -520,7 +567,7 @@ const dress = (bundleSources) => readWeb('index.html')
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);
 
 page = dress(served);
-const kept = dress(sources);
+const kept = dress(sources, { skins: false });
 
 // Refuse before writing, so a failed build never leaves a broken artifact
 // behind for someone to pick up and ship.

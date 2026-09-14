@@ -29,4 +29,26 @@ assert.equal(read('docs/assets/theory/theorycraft.json').trim(), theory.trim());
 assert(offline.data.theorySheet.startsWith('data:image/png;base64,'));
 assert(offline.data.indexSheet.startsWith('data:image/png;base64,'));
 assert(Buffer.byteLength(served.html) <= 5256587, 'Calculator startup exceeds the measured pre-migration size');
+
+/*
+ * The Skin Viewer is served and not downloaded.
+ *
+ * It is the one tool that is not inlined: it is a module, and it reads
+ * seventy-five megabytes of the client's character and object sheets from
+ * beside the page. A file opened from disk can do neither, so the card it
+ * offered in the downloadable copy opened a page that stayed empty. The
+ * downloadable copy leaves it out and says so instead.
+ */
+assert(served.html.includes('<script type="module" src="skins/app.js">'),
+  'The served page must still load the Skin Viewer module');
+assert(served.html.includes('data-go="skins"'),
+  'The served page must still offer the Skin Viewer');
+for (const absent of ['skins/app.js', 'data-go="skins"', 'id="skinViewerRoot"']) {
+  assert(!offline.html.includes(absent),
+    'The downloadable copy must not carry ' + absent + ': it cannot load it from disk');
+}
+assert(offline.html.includes('home-elsewhere'),
+  'The downloadable copy must say where the Skin Viewer went');
+
 console.log('Built scripts compile; download embeds index, theory, wiki and sheets; served startup stays below baseline.');
+console.log('The Skin Viewer is offered by the served page only, and the kept copy says where it went.');

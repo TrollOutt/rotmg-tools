@@ -3292,16 +3292,10 @@ const TINT = {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
 
-    const sets = el('tcSearchSets');
-    const untiered = el('tcSearchUntiered');
-
-    if (sets) {
-      sets.checked = build.searchSets !== false;
-    }
-
-    if (untiered) {
-      untiered.checked =
-        build.searchUntiered !== false;
+    for (const node of el('tcBody').querySelectorAll('[data-search-gear]')) {
+      const on = build[node.dataset.searchGear] !== false;
+      node.classList.toggle('is-on', on);
+      node.setAttribute('aria-pressed', String(on));
     }
 
     const asked = goalsOf(build).map(one => one.id);
@@ -3380,25 +3374,17 @@ const TINT = {
       keep(); paint();
     });
 
-    el('tcBody').addEventListener('change', event => {
-      const filter =
-        event.target.closest('[data-search-gear]');
-
+    el('tcBody').addEventListener('click', event => {
+      const filter = event.target.closest('[data-search-gear]');
       if (!filter) return;
-
       const key = filter.dataset.searchGear;
-
       /*
        * True is the default, represented by no property at all. Besides
        * keeping saved builds compact, this makes builds saved before this
-       * feature naturally behave as though both boxes were checked.
+       * feature naturally behave as though both chips were lit.
        */
-      if (filter.checked) {
-        delete build[key];
-      } else {
-        build[key] = false;
-      }
-
+      if (build[key] === false) delete build[key];
+      else build[key] = false;
       keep();
       paint();
     });
