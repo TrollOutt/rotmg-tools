@@ -21,5 +21,17 @@ local/realmeye-monitor/
 # Generated SQLite workspace
 data/Database/
 
+# The published site. Everything under it is written by `npm run build` out of
+# web/ and data/, and the Pages workflow runs that build on every push before
+# it publishes - so a copy committed here is never what gets served, it is only
+# a second copy of web/ stored beside the first. It was 2,202 files, 1,694 of
+# them the atlas tiles that already sit in web/assets/atlas, and every change to
+# the site was written into the history twice.
+#
+# Build it whenever you want to look at it: `npm run build` writes it back.
+# Nothing is lost if a build fails either - Pages keeps serving the last one
+# that succeeded.
+docs/
+
 # Python bytecode
 **/__pycache__/
