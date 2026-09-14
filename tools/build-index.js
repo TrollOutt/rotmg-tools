@@ -333,7 +333,14 @@ const offered = (() => {
  * anything you can dismantle and says nothing about what the thing is.
  */
 const DOES = new Map([
-  ['UnlockSkin', 'skin'], ['UnlockPetSkin', 'pet skin'],
+  /*
+   * "skin unlocker" rather than "skin", now that the appearance it hands over
+   * is a record too. They are two different things - one is a consumable in
+   * your bag, the other is what your character looks like afterwards - and
+   * calling both of them a skin put 1,367 items and 1,475 appearances behind
+   * one word in the rail.
+   */
+  ['UnlockSkin', 'skin unlocker'], ['UnlockPetSkin', 'pet skin'],
   ['UnlockGravestone', 'gravestone'], ['UnlockTitle', 'title'],
   ['CreatePet', 'pet egg'], ['PermaPet', 'pet egg'],
   ['CreatePortal', 'key'], ['AddDust', 'enchant dust'],
@@ -531,6 +538,72 @@ for (const one of objects) {
   });
 }
 
+/* ---------------- what a character looks like ---------------- */
+/*
+ * A skin is not the thing in your bag.
+ *
+ * The bag holds an unlocker - "Djinja Skin", a consumable you use once - and
+ * the index had 1,367 of those. What it had none of was the 1,475 appearances
+ * themselves, because the pass that fills the index begins by asking for
+ * <Item /> and a skin carries <Skin />. So every one of them fell between the
+ * passes: the index claimed to hold everything the game declares and was
+ * missing a whole class of declaration, and the Skin Viewer had to carry its
+ * own catalogue of them with a name-matched bridge back to here.
+ *
+ * The three joins a reader wants are all written down by the client, exactly,
+ * so none of them is guessed:
+ *
+ *   the unlocker  <Activate skinType="1027">UnlockSkin</Activate>
+ *   the set       <ActivateOnEquipAll skinType="0x4b4b">ChangeSkin</...>
+ *   the class     <PlayerClassType>0x0320</PlayerClassType>
+ *
+ * All 1,367 unlockers resolve, all 84 set skins resolve, and no set names a
+ * skin that is not declared. The 52 left over - the four free starting
+ * appearances, the placeholders, a handful of supporter rewards - genuinely
+ * have nothing pointing at them, and are left saying so rather than being
+ * attached to the nearest similar name.
+ */
+const skinByType = new Map();
+for (const one of objects) {
+  if (text(one.body, 'Class') !== 'Skin') continue;
+  const hidden = [];
+  if (has(one.body, 'AdminOnly')) hidden.push('admin only');
+  if (/placeholder/i.test(one.id)) hidden.push('a placeholder');
+  if (/(^|\s)(test|tester|testing)/i.test(one.id)) hidden.push('a test item');
+  /*
+   * Worn but never offered in the wardrobe: the set skins, which arrive by
+   * wearing all four pieces, and a few the client dresses you in itself.
+   * Kept and marked, not hidden - a reader looking one up wants to be told
+   * it exists and cannot be chosen.
+   */
+  const record = put('skin', nameOf(one), one, {
+    tier: num(one.body, 'ItemTier'),
+    level: num(one.body, 'UnlockLevel'),
+    /* "Set Skin", and the handful of other ways the client says it arrives. */
+    given: text(one.body, 'UnlockSpecial') || undefined,
+    pick: has(one.body, 'NoSkinSelect') ? undefined : 1,
+    labels: labelsOf(one.body),
+    hidden: hidden.length ? hidden : undefined
+  });
+  skinByType.set(one.type, record);
+  /*
+   * Which class wears it. Every appearance names one, and the nineteen the
+   * client declares are the nineteen the index already holds.
+   */
+  const wears = byType.get(Number(text(one.body, 'PlayerClassType')));
+  if (wears && has(wears.body, 'Player')) {
+    tie(record.id, 'worn by', 'class:' + nameOf(wears));
+  }
+}
+
+/* And the thing in the bag that hands it over. */
+for (const one of objects) {
+  const m = /<Activate[^>]*\bskinType="(\d+)"[^>]*>UnlockSkin<\/Activate>/.exec(one.body);
+  if (!m) continue;
+  const skin = skinByType.get(Number(m[1]));
+  if (skin) tie('item:' + nameOf(one), 'unlocks', skin.id);
+}
+
 /* ---------------- the sets ---------------- */
 {
   const file = path.join(XML, 'EquipmentSets.xml');
@@ -603,6 +676,13 @@ for (const one of objects) {
           pic: skin ? 'skin' : (pieces[0] ? 'piece' : undefined),
           drawnAs: emblem ? emblem.id : undefined });
       for (const got of pieces) tie(record.id, 'made of', 'item:' + nameOf(got));
+      /*
+       * And the appearance it dresses you in, which is now a record of its
+       * own rather than only a name copied onto this one.
+       */
+      if (skin && skinByType.has(skin.type)) {
+        tie(record.id, 'dresses you as', skinByType.get(skin.type).id);
+      }
     }
   }
 }

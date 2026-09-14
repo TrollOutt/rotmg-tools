@@ -158,4 +158,56 @@ assert(/drawBiomeLoot\(one\)/.test(pageSource),
 assert(/const anchorName = asked\[0\][\s\S]{0,700}aIsAnchor[\s\S]{0,700}bIsAnchor/.test(pageSource),
   'the record named by the first category must be pinned ahead of ordinary sub-category results');
 
+/*
+ * What a character looks like.
+ *
+ * The index once held the 1,367 consumables that hand a skin over and none of
+ * the appearances themselves, because the pass that fills it asks for <Item />
+ * and a skin carries <Skin />. The Skin Viewer therefore kept a catalogue of
+ * its own and a name-matched bridge back to here.
+ *
+ * The three joins the client states outright are checked here, so a build that
+ * silently stops making one cannot pass. None of them is a name match: the
+ * unlocker and the set each name their skin by type, and the skin names its
+ * class by type.
+ */
+const skins = [...records.values()].filter(one => one.kind === 'skin');
+assert(skins.length > 1400, 'every appearance the client declares belongs in the index');
+
+const linked = (one, how, direction) =>
+  ((direction === 'in' ? one.in : one.out) || []).some(([said]) => said === how);
+
+assert(skins.filter(one => one.art).length > skins.length * 0.95,
+  'a skin is a picture before it is anything else; almost all must carry one');
+assert(skins.filter(one => linked(one, 'worn by', 'out')).length > 1400,
+  'a skin names the class that wears it, by type');
+assert(skins.filter(one => linked(one, 'unlocks', 'in')).length > 1300,
+  'the consumable that hands a skin over names it by type');
+assert(skins.filter(one => linked(one, 'dresses you as', 'in')).length > 80,
+  'an equipment set names the skin it dresses you as, by type');
+
+/* Both halves point at each other, and are told apart rather than merged. */
+const djinja = records.get('skin:Baby Djinja');
+assert(djinja, 'a known skin must be in the index under its own kind');
+assert.deepEqual(djinja.out.find(([how]) => how === 'worn by'), ['worn by', 'class:Ninja']);
+const unlocker = records.get('item:Baby Djinja Skin');
+assert(unlocker && unlocker.family === 'skin unlocker',
+  'the thing in the bag is a skin unlocker, not a skin: one word for two things hid both');
+assert.deepEqual(unlocker.out.find(([how]) => how === 'unlocks'),
+  ['unlocks', 'skin:Baby Djinja']);
+
+/* Nothing is attached to the nearest similar name. */
+for (const one of skins) {
+  for (const [how, to] of one.in || []) {
+    if (how !== 'unlocks' && how !== 'dresses you as') continue;
+    assert(records.has(to), 'a skin may only be joined to something the client declares');
+  }
+}
+
+assert(/group\('Skins', 'client'/.test(pageSource),
+  'the rail must offer skins, or fifteen hundred records have no way in but a name');
+assert(/x\.kind === 'skin'[\s\S]{0,120}how === 'worn by'/.test(pageSource),
+  'a class category must gather the appearances that class wears');
+
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
+console.log(skins.length + ' skins, joined to class, unlocker and set by the client’s own types.');
