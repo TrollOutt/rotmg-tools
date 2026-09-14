@@ -410,6 +410,73 @@
         </fieldset>
       </section>
 
+      <section id="itemOptimizer" class="card enchant-optimizer" hidden>
+        <header>
+          <h2>Optimize build for</h2>
+          <span class="header-aside">this item only</span>
+        </header>
+
+        <div id="itemOptimizeGoals" class="tc-goals">
+          <div class="tc-goal-row">
+            <i>Others</i>
+            <span>
+              <button type="button" class="tc-goal is-on"
+                data-item-goal="dps" style="--tint:#e08a3c">
+                <span class="tc-dot"></span>Damage a second
+              </button>
+            </span>
+          </div>
+
+          <div class="tc-goal-row">
+            <i>Stats</i>
+            <span>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:hp" style="--tint:#58cfda">
+                <span class="tc-dot"></span>Life
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:mp" style="--tint:#f4d24c">
+                <span class="tc-dot"></span>Magic
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:att" style="--tint:#ca46dd">
+                <span class="tc-dot"></span>Attack
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:def" style="--tint:#8b9cb3">
+                <span class="tc-dot"></span>Defence
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:spd" style="--tint:#58da6e">
+                <span class="tc-dot"></span>Speed
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:dex" style="--tint:#ff5f2a">
+                <span class="tc-dot"></span>Dexterity
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:vit" style="--tint:#dd0c32">
+                <span class="tc-dot"></span>Vitality
+              </button>
+              <button type="button" class="tc-goal"
+                data-item-goal="stat:wis" style="--tint:#4b9be7">
+                <span class="tc-dot"></span>Wisdom
+              </button>
+            </span>
+          </div>
+        </div>
+
+        <p id="itemOptimizeHint" class="note off"></p>
+
+        <div class="tc-calc-row">
+          <button type="button" id="itemOptimizeRun" class="tc-run">
+            Optimize
+          </button>
+        </div>
+
+        <div id="itemOptimizeSaid" class="tc-said"></div>
+      </section>
+
     </section>
 
     <!-- ------------------------------------------------------------ -->
@@ -596,7 +663,7 @@
 
       <section class="card">
         <header><h2>Optimize build for</h2>
-          <span class="header-aside">
+          <span class="header-aside tc-opt-toolbar">
             <span class="tc-hands" role="group" aria-label="What it may change">
               <button type="button" data-scope="all"
                 title="Every slot filled - with the best thing the game's rules still allow, even where nothing left helps">Fill it all</button>
@@ -605,9 +672,29 @@
               <button type="button" data-scope="gear"
                 title="Change the four items and leave every enchantment exactly as it is">Gear only</button>
             </span>
+
+            <span class="tc-search-pool" role="group"
+              aria-label="Gear included in optimization">
+              <label class="tc-search-filter"
+                title="Include equipment that belongs to a set">
+                <input id="tcSearchSets" type="checkbox"
+                  data-search-gear="searchSets" checked>
+                <span>Sets</span>
+              </label>
+
+              <label class="tc-search-filter"
+                title="Include non-set equipment without a tier. Tiered gear is always included.">
+                <input id="tcSearchUntiered" type="checkbox"
+                  data-search-gear="searchUntiered" checked>
+                <span>Untiered</span>
+              </label>
+            </span>
+
             <span id="tcKept"></span>
           </span></header>
         <div id="tcGoals" class="tc-goals"></div>
+
+
         <div id="tcMix" class="tc-mix" hidden></div>
         <!--
           Whatever the reader has decided they will never hold. Half the best

@@ -48,6 +48,11 @@ const state = {
   picker: null,
   tabs: [],
   itemArt: null,   // the index's sheet, and where each item sits on it
+  theory: null,
+  itemOptimizeGoal: 'dps',
+  itemOptimizeSaid: '',
+  itemOptimizeBlocked: '',
+  itemOptimizeRunning: false,
   updateMade: null,   // when the update the data covers went out
   activeTab: null,
   loadingTab: false,
@@ -263,6 +268,929 @@ function cfg() {
     desired: wanted[0] || '',
     goals: wanted.slice(1)
   };
+}
+
+
+/* ------------------------------------------------------------------ *
+ * Optimising the enchantments on one item                             *
+ * ------------------------------------------------------------------ */
+
+const ITEM_OPTIMIZER_GOALS = [
+  { id: 'dps', say: 'Damage a second' },
+  { id: 'stat:hp', say: 'Life' },
+  { id: 'stat:mp', say: 'Magic' },
+  { id: 'stat:att', say: 'Attack' },
+  { id: 'stat:def', say: 'Defence' },
+  { id: 'stat:spd', say: 'Speed' },
+  { id: 'stat:dex', say: 'Dexterity' },
+  { id: 'stat:vit', say: 'Vitality' },
+  { id: 'stat:wis', say: 'Wisdom' }
+];
+
+const ITEM_OPTIMIZER_OF_STAT = {
+  HP: 'hp',
+  MAXHP: 'hp',
+  MP: 'mp',
+  MAXMP: 'mp',
+  ATT: 'att',
+  DEF: 'def',
+  SPD: 'spd',
+  DEX: 'dex',
+  VIT: 'vit',
+  WIS: 'wis'
+};
+
+const ITEM_OPTIMIZER_NUMERAL = /\s+(?:[IVX]+|\d+)$/;
+
+const ITEM_OPTIMIZER_ALIASES = new Map([
+  ['mana -attacktradeoff', 'mana -attack tradeoff'],
+  ['pirates expertise', "pirate's expertise"],
+  ['vampric lifeforce', 'vampiric lifeforce']
+]);
+
+function itemOptimizerEnchantKey(name) {
+  let key = String(name || '')
+    .replace(ITEM_OPTIMIZER_NUMERAL, '')
+    .trim()
+    .toLowerCase();
+
+  return ITEM_OPTIMIZER_ALIASES.get(key) || key;
+}
+
+function itemOptimizerWorth(one) {
+  if (!one) return 0;
+
+  let value = Object.values(one.worn || {})
+    .reduce((sum, n) => sum + Math.abs(Number(n) || 0), 0);
+
+  if (one.mul) {
+    value += Object.values(one.mul)
+      .reduce((sum, n) => sum + Math.abs((Number(n) || 1) - 1) * 100, 0);
+  }
+
+  for (const part of one.rel || []) {
+    value += Math.abs(Number(part.pct) || 0) / 2;
+  }
+
+  for (const part of one.sub || []) {
+    const shot = part.shots && part.shots[0];
+    if (shot) value += Math.abs(Number(shot.high || shot.low) || 0) / 4;
+  }
+
+  return value;
+}
+
+async function loadItemOptimizerTheory() {
+  let raw =
+    BUNDLE &&
+    BUNDLE.sources &&
+    BUNDLE.sources.theoryText;
+
+  if (!raw) {
+    for (const url of [
+      'assets/theory/theorycraft.json',
+      '../data/TheoryCraft/theorycraft.json'
+    ]) {
+      raw = await fetch(url)
+        .then(response => response.ok ? response.text() : '')
+        .catch(() => '');
+
+      if (raw) break;
+    }
+  }
+
+  if (!raw) return null;
+
+  try {
+    const out = JSON.parse(raw);
+
+    out.byItem = new Map(
+      (out.items || []).map(one => [one.name, one])
+    );
+
+    out.byCharm = new Map();
+
+    for (const one of out.enchants || []) {
+      const key = itemOptimizerEnchantKey(one.name);
+      const had = out.byCharm.get(key);
+
+      if (!had || itemOptimizerWorth(one) > itemOptimizerWorth(had)) {
+        out.byCharm.set(key, one);
+      }
+    }
+
+    return out;
+  } catch (error) {
+    console.error('Item optimizer mechanics could not be loaded:', error);
+    return null;
+  }
+}
+
+function itemOptimizerCharm(name) {
+  if (!state.theory || !state.theory.byCharm) return null;
+
+  return state.theory.byCharm.get(
+    itemOptimizerEnchantKey(name)
+  ) || null;
+}
+
+function itemOptimizerStats(item, names) {
+  const out = {
+    hp: 0,
+    mp: 0,
+    att: 0,
+    def: 0,
+    spd: 0,
+    dex: 0,
+    vit: 0,
+    wis: 0
+  };
+
+  const addWorn = worn => {
+    for (const tag of Object.keys(worn || {})) {
+      const key = ITEM_OPTIMIZER_OF_STAT[tag];
+      if (!key) continue;
+
+      out[key] += Number(worn[tag]) || 0;
+    }
+  };
+
+  addWorn(item && item.worn);
+
+  const charms = names
+    .map(itemOptimizerCharm)
+    .filter(Boolean);
+
+  for (const charm of charms) {
+    addWorn(charm.worn);
+  }
+
+  /*
+   * Relative enchantments use Bonus Stat. For this page "this item only"
+   * means the bonus supplied by the selected item and its enchantments.
+   */
+  const bonus = Object.assign({}, out);
+
+  const takeRelative = part => {
+    const key = ITEM_OPTIMIZER_OF_STAT[part.stat];
+    const from = ITEM_OPTIMIZER_OF_STAT[part.of];
+
+    if (!key || !from) return;
+
+    out[key] +=
+      (bonus[from] || 0) *
+      (Number(part.pct) || 0) /
+      100;
+  };
+
+  for (const part of (item && item.rel) || []) {
+    takeRelative(part);
+  }
+
+  for (const charm of charms) {
+    for (const part of charm.rel || []) {
+      takeRelative(part);
+    }
+  }
+
+  /*
+   * Item shares are applied after relative bonuses, matching TheoryCraft.
+   */
+  const stood = Object.assign({}, out);
+
+  for (const part of (item && item.share) || []) {
+    const key = ITEM_OPTIMIZER_OF_STAT[part.stat];
+    const from = ITEM_OPTIMIZER_OF_STAT[part.of];
+
+    if (!key || !from) continue;
+
+    out[key] +=
+      (stood[from] || 0) *
+      (Number(part.pct) || 0) /
+      100;
+  }
+
+  return out;
+}
+
+function itemOptimizerScale(names) {
+  const out = {
+    dmg: 1,
+    rate: 1,
+    life: 1,
+    fast: 1
+  };
+
+  for (const name of names) {
+    const charm = itemOptimizerCharm(name);
+
+    if (!charm || !charm.mul) continue;
+
+    for (const key of Object.keys(out)) {
+      if (charm.mul[key] !== undefined) {
+        out[key] *= charm.mul[key];
+      }
+    }
+  }
+
+  return out;
+}
+
+function itemOptimizerSubs(names) {
+  const out = [];
+
+  for (const name of names) {
+    const charm = itemOptimizerCharm(name);
+
+    for (const part of (charm && charm.sub) || []) {
+      out.push(part);
+    }
+  }
+
+  return out;
+}
+
+const ITEM_OPTIMIZER_SHOTS_AT =
+  dex => 1.5 + 6.5 * (dex / 75);
+
+function itemOptimizerLanded(roll, att, def, pierce) {
+  const dealt = roll * (0.5 + att / 50);
+
+  if (pierce) return dealt;
+
+  return Math.max(
+    dealt * 0.15,
+    dealt - def
+  );
+}
+
+function itemOptimizerBurstCycle(burst, rate, dex) {
+  if (!burst || !(burst.many > 1) || !(rate > 0)) {
+    return null;
+  }
+
+  const quick =
+    Math.max(0, Math.min(1, dex / 75));
+
+  const wait =
+    burst.wait +
+    (burst.rush - burst.wait) * quick;
+
+  const run = burst.many / rate;
+
+  return {
+    every: Math.max(run, wait),
+    shots: burst.many
+  };
+}
+
+function itemOptimizerWeaponDps(
+  item,
+  stats,
+  scale,
+  extra
+) {
+  if (!item || !item.shots || !item.shots.length) {
+    return 0;
+  }
+
+  const by =
+    scale || {
+      dmg: 1,
+      rate: 1,
+      life: 1,
+      fast: 1
+    };
+
+  const swaps =
+    (extra || []).filter(one => one.how === 'set');
+
+  const channels = !swaps.length
+    ? item.shots.filter(one => one.subattack)
+    : [];
+
+  if (channels.length) {
+    let dps = 0;
+    let firstCycle = null;
+
+    for (const shot of channels) {
+      const roll =
+        (
+          shot.low +
+          (
+            shot.high === undefined
+              ? shot.low
+              : shot.high
+          )
+        ) / 2 * by.dmg;
+
+      const each =
+        itemOptimizerLanded(
+          roll,
+          stats.att,
+          0,
+          shot.pierce
+        );
+
+      const ownRate =
+        shot.rate === undefined
+          ? (
+              item.rate === undefined
+                ? 1
+                : item.rate
+            )
+          : shot.rate;
+
+      const rate =
+        ITEM_OPTIMIZER_SHOTS_AT(stats.dex) *
+        ownRate *
+        by.rate;
+
+      const many =
+        shot.many ||
+        item.many ||
+        1;
+
+      const cycle =
+        itemOptimizerBurstCycle(
+          shot.burst || item.burst,
+          rate,
+          stats.dex
+        );
+
+      if (!firstCycle && cycle) {
+        firstCycle = cycle;
+      }
+
+      dps += cycle
+        ? each * many * cycle.shots / cycle.every
+        : each * many * rate;
+    }
+
+    let along = 0;
+
+    for (const one of extra || []) {
+      if (one.how !== 'add') continue;
+
+      const shot = one.shots && one.shots[0];
+      if (!shot) continue;
+
+      const roll =
+        (
+          shot.low +
+          (
+            shot.high === undefined
+              ? shot.low
+              : shot.high
+          )
+        ) / 2 * by.dmg;
+
+      along +=
+        itemOptimizerLanded(
+          roll,
+          stats.att,
+          0,
+          shot.pierce
+        ) *
+        (one.many || 1);
+    }
+
+    if (along) {
+      const first = channels[0];
+
+      const ownRate =
+        first.rate === undefined
+          ? (
+              item.rate === undefined
+                ? 1
+                : item.rate
+            )
+          : first.rate;
+
+      const rate =
+        ITEM_OPTIMIZER_SHOTS_AT(stats.dex) *
+        ownRate *
+        by.rate;
+
+      dps += firstCycle
+        ? along * firstCycle.shots / firstCycle.every
+        : along * rate;
+    }
+
+    return dps;
+  }
+
+  const shot =
+    swaps.length
+      ? swaps[swaps.length - 1].shots[0]
+      : item.shots[0];
+
+  const roll =
+    (
+      shot.low +
+      (
+        shot.high === undefined
+          ? shot.low
+          : shot.high
+      )
+    ) / 2 * by.dmg;
+
+  const each =
+    itemOptimizerLanded(
+      roll,
+      stats.att,
+      0,
+      shot.pierce
+    );
+
+  const rate =
+    ITEM_OPTIMIZER_SHOTS_AT(stats.dex) *
+    (
+      item.rate === undefined
+        ? 1
+        : item.rate
+    ) *
+    by.rate;
+
+  const many =
+    (
+      swaps.length
+        ? swaps[swaps.length - 1].many
+        : item.many
+    ) || 1;
+
+  const cycle =
+    itemOptimizerBurstCycle(
+      item.burst,
+      rate,
+      stats.dex
+    );
+
+  let along = 0;
+
+  for (const one of extra || []) {
+    if (one.how !== 'add') continue;
+
+    const added =
+      one.shots && one.shots[0];
+
+    if (!added) continue;
+
+    const middle =
+      (
+        added.low +
+        (
+          added.high === undefined
+            ? added.low
+            : added.high
+        )
+      ) / 2 * by.dmg;
+
+    along +=
+      itemOptimizerLanded(
+        middle,
+        stats.att,
+        0,
+        added.pierce
+      ) *
+      (one.many || 1);
+  }
+
+  const perShot =
+    each * many + along;
+
+  return cycle
+    ? perShot * cycle.shots / cycle.every
+    : perShot * rate;
+}
+
+const ITEM_OPTIMIZER_REFERENCE_WEAPON = {
+  hand: 'weapon',
+  rate: 1,
+  many: 1,
+  shots: [{
+    low: 100,
+    high: 100,
+    fast: 8,
+    reach: 7
+  }]
+};
+
+function itemOptimizerScore(goalId, item, names) {
+  const stats =
+    itemOptimizerStats(item, names);
+
+  if (goalId.startsWith('stat:')) {
+    return stats[goalId.slice(5)] || 0;
+  }
+
+  const weapon =
+    item &&
+    item.hand === 'weapon' &&
+    item.shots &&
+    item.shots.length
+      ? item
+      : ITEM_OPTIMIZER_REFERENCE_WEAPON;
+
+  return itemOptimizerWeaponDps(
+    weapon,
+    {
+      att: 75 + (stats.att || 0),
+      dex: 75 + (stats.dex || 0)
+    },
+    itemOptimizerScale(names),
+    itemOptimizerSubs(names)
+  );
+}
+
+function itemOptimizerFits(
+  mod,
+  lockedNames,
+  pickedNames
+) {
+  const others = [];
+  let index = 1;
+
+  for (const name of lockedNames) {
+    others.push({
+      index: index++,
+      name,
+      locked: true
+    });
+  }
+
+  for (const name of pickedNames) {
+    others.push({
+      index: index++,
+      name,
+      locked: false
+    });
+  }
+
+  const slot = {
+    index,
+    name: mod.name,
+    locked: false
+  };
+
+  return !conflictWith(
+    mod,
+    slot,
+    others
+  );
+}
+
+function renderItemOptimizer(config) {
+  const card = $('itemOptimizer');
+  if (!card) return;
+
+  card.hidden = !config.item;
+
+  if (!config.item) return;
+
+  for (const button of
+    $('itemOptimizeGoals')
+      .querySelectorAll('[data-item-goal]')) {
+    button.classList.toggle(
+      'is-on',
+      button.dataset.itemGoal ===
+        state.itemOptimizeGoal
+    );
+  }
+
+  const run = $('itemOptimizeRun');
+  const hint = $('itemOptimizeHint');
+
+  const visible =
+    state.slots.slice(
+      0,
+      Number(config.slots) || 0
+    );
+
+  const openCount =
+    visible.filter(slot => !slot.locked).length;
+
+  const lockedCount =
+    visible.length - openCount;
+
+  const impossible =
+    !state.theory ||
+    !config.slots ||
+    !config.type ||
+    !openCount;
+
+  run.disabled =
+    impossible ||
+    state.itemOptimizeRunning ||
+    Boolean(state.itemOptimizeBlocked);
+
+  run.textContent =
+    state.itemOptimizeRunning
+      ? 'Optimizing...'
+      : state.itemOptimizeBlocked
+        ? 'No improvement'
+        : 'Optimize';
+
+  hint.classList.remove('warn');
+
+  if (!state.theory) {
+    hint.textContent =
+      'Build mechanics could not be loaded.';
+    hint.classList.add('warn');
+
+  } else if (!config.slots) {
+    hint.textContent =
+      'Choose the rarity first so the optimizer knows how many slots it may fill.';
+
+  } else if (!config.type) {
+    hint.textContent =
+      'The item type is needed before its enchantments can be optimized.';
+
+  } else if (!openCount) {
+    hint.textContent =
+      'All ' +
+      visible.length +
+      ' enchantment slots are marked On item. Unlock at least one slot before optimizing another stat.';
+    hint.classList.add('warn');
+
+  } else if (state.itemOptimizeBlocked) {
+    hint.textContent =
+      state.itemOptimizeBlocked;
+    hint.classList.add('warn');
+
+  } else if (state.itemOptimizeGoal === 'dps') {
+    hint.textContent =
+      'Weapon DPS uses the real weapon. On other gear, DPS measures this item against a neutral 75 ATT / 75 DEX weapon at 0 DEF.';
+
+  } else {
+    hint.textContent =
+      lockedCount
+        ? lockedCount +
+          (lockedCount === 1
+            ? ' enchantment is'
+            : ' enchantments are') +
+          ' kept On item. The optimizer may use the other ' +
+          openCount +
+          (openCount === 1 ? ' slot.' : ' slots.')
+        : 'Only this item is optimized. All available slots may be replaced.';
+  }
+
+  $('itemOptimizeSaid').textContent =
+    state.itemOptimizeSaid || '';
+}
+
+function itemOptimizerGoal() {
+  return ITEM_OPTIMIZER_GOALS.find(
+    one => one.id === state.itemOptimizeGoal
+  ) || ITEM_OPTIMIZER_GOALS[0];
+}
+
+async function optimizeCurrentItem() {
+  const config = cfg();
+  const run = $('itemOptimizeRun');
+
+  if (
+    !state.theory ||
+    !config.item ||
+    !config.slots ||
+    !config.type
+  ) {
+    renderItemOptimizer(config);
+    return;
+  }
+
+  const goal = itemOptimizerGoal();
+  const item =
+    state.theory.byItem.get(config.item) ||
+    null;
+
+  const visible =
+    state.slots.slice(0, config.slots);
+
+  const lockedSlots =
+    visible.filter(
+      slot => slot.name && slot.locked
+    );
+
+  const openSlots =
+    visible.filter(
+      slot => !slot.locked
+    );
+
+  const lockedNames =
+    lockedSlots.map(slot => slot.name);
+
+  if (!openSlots.length) {
+    state.itemOptimizeSaid =
+      'Every slot is already marked On item.';
+    renderItemOptimizer(config);
+    return;
+  }
+
+  const poolConfig = {
+    item: config.item,
+    type: config.type,
+    slots: config.slots,
+    locks: lockedNames,
+    subtypes: config.subtypes
+  };
+
+  const candidates =
+    EnchantEngine
+      .rollablePool(
+        state.data,
+        poolConfig
+      )
+      .filter(mod =>
+        itemOptimizerCharm(mod.name)
+      )
+      .sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+
+  if (!candidates.length) {
+    state.itemOptimizeSaid = '';
+    state.itemOptimizeBlocked =
+      'No rollable enchantment is compatible with the enchantments marked On item. Unlock one of them, or choose another goal.';
+
+    refresh();
+    return;
+  }
+
+  state.itemOptimizeBlocked = '';
+  state.itemOptimizeRunning = true;
+  state.itemOptimizeSaid =
+    'Trying enchantment combinations...';
+  renderItemOptimizer(config);
+
+  await yieldToUi();
+
+  const score = picked =>
+    itemOptimizerScore(
+      goal.id,
+      item,
+      lockedNames.concat(picked)
+    );
+
+  const baseScore = score([]);
+
+  let best = {
+    picked: [],
+    score: baseScore,
+    next: 0
+  };
+
+  let beam = [best];
+  let looked = 1;
+
+  const LIMIT = 1200;
+  const EPSILON = 1e-9;
+
+  for (
+    let depth = 0;
+    depth < openSlots.length;
+    depth++
+  ) {
+    const expanded = [];
+
+    for (const branch of beam) {
+      for (
+        let at = branch.next;
+        at < candidates.length;
+        at++
+      ) {
+        const mod = candidates[at];
+
+        if (
+          !itemOptimizerFits(
+            mod,
+            lockedNames,
+            branch.picked
+          )
+        ) {
+          continue;
+        }
+
+        const picked =
+          branch.picked.concat(mod.name);
+
+        const value = score(picked);
+        looked++;
+
+        const next = {
+          picked,
+          score: Number.isFinite(value)
+            ? value
+            : -Infinity,
+          next: at + 1
+        };
+
+        expanded.push(next);
+
+        if (
+          next.score >
+          best.score + EPSILON
+        ) {
+          best = next;
+        }
+      }
+    }
+
+    if (!expanded.length) break;
+
+    expanded.sort((a, b) =>
+      b.score - a.score ||
+      a.picked.length - b.picked.length ||
+      a.picked.join('\0')
+        .localeCompare(
+          b.picked.join('\0')
+        )
+    );
+
+    beam =
+      expanded.slice(0, LIMIT);
+
+    await yieldToUi();
+  }
+
+  /*
+   * Put the most important result first. The calculator treats the first
+   * wanted slot as the headline target for its artifact table and tier picker.
+   */
+  const ordered =
+    best.picked
+      .map(name => {
+        const without =
+          best.picked.filter(
+            other => other !== name
+          );
+
+        return {
+          name,
+          loss:
+            best.score -
+            score(without)
+        };
+      })
+      .sort((a, b) =>
+        b.loss - a.loss ||
+        a.name.localeCompare(b.name)
+      )
+      .map(one => one.name);
+
+  for (const slot of openSlots) {
+    slot.name = '';
+    slot.locked = false;
+  }
+
+  ordered.forEach((name, index) => {
+    if (openSlots[index]) {
+      openSlots[index].name = name;
+    }
+  });
+
+  state.itemOptimizeRunning = false;
+
+  if (ordered.length) {
+    state.itemOptimizeBlocked = '';
+    state.itemOptimizeSaid =
+      'Selected ' +
+      plural(
+        ordered.length,
+        'enchantment'
+      ) +
+      ' for ' +
+      goal.say +
+      ' · ' +
+      looked.toLocaleString('en-US') +
+      ' combinations tried.';
+  } else {
+    state.itemOptimizeSaid = '';
+
+    const remaining =
+      openSlots.length;
+
+    const fixed =
+      lockedNames.length;
+
+    state.itemOptimizeBlocked =
+      'No compatible rollable enchantment improves ' +
+      goal.say.toLowerCase() +
+      ' in the ' +
+      remaining +
+      (remaining === 1
+        ? ' remaining slot.'
+        : ' remaining slots.') +
+      (fixed
+        ? ' The ' +
+          fixed +
+          (fixed === 1
+            ? ' enchantment marked On item stays fixed; unlock it if you want the optimizer to replace it.'
+            : ' enchantments marked On item stay fixed; unlock one if you want the optimizer to replace it.')
+        : '');
+  }
+
+  refresh();
 }
 
 /* ------------------------------------------------------------------ *
@@ -557,6 +1485,7 @@ function refresh() {
   config = cfg();
   renderHeaderIcons(config);
   renderSlots();
+  renderItemOptimizer(config);
   if (dropped.length) {
     const hint = $('slotHint');
     hint.hidden = false;
@@ -1545,13 +2474,38 @@ function bind() {
   });
   $('tiers').addEventListener('change', () => { if (state.lastResults) runCalculation(); });
 
+  $('itemOptimizeGoals').addEventListener('click', event => {
+    const goal = event.target.closest('[data-item-goal]');
+    if (!goal) return;
+
+    state.itemOptimizeGoal = goal.dataset.itemGoal;
+    state.itemOptimizeSaid = '';
+    state.itemOptimizeBlocked = '';
+    saveSetup();
+    renderItemOptimizer(cfg());
+  });
+
+  $('itemOptimizeRun').addEventListener('click', () => {
+    optimizeCurrentItem();
+  });
+
   $('slotList').addEventListener('click', event => {
     const pick = event.target.closest('[data-pick]');
     if (pick) { openPicker(Number(pick.dataset.pick)); return; }
     const remove = event.target.closest('[data-remove]');
-    if (remove) { const slot = state.slots[Number(remove.dataset.remove) - 1]; slot.name = ''; slot.locked = false; refresh(); return; }
+    if (remove) {
+      state.itemOptimizeSaid = '';
+      state.itemOptimizeBlocked = '';
+      const slot = state.slots[Number(remove.dataset.remove) - 1];
+      slot.name = '';
+      slot.locked = false;
+      refresh();
+      return;
+    }
     const mode = event.target.closest('[data-mode]');
     if (mode) {
+      state.itemOptimizeSaid = '';
+      state.itemOptimizeBlocked = '';
       const slot = state.slots[Number(mode.dataset.slot) - 1];
       const wantLocked = mode.dataset.mode === 'locked';
       if (slot.locked === wantLocked) return;
@@ -1597,6 +2551,8 @@ function bind() {
       return;
     }
     const slot = state.slots[state.picker.index - 1];
+    state.itemOptimizeSaid = '';
+    state.itemOptimizeBlocked = '';
     slot.name = row.dataset.name;
     closePicker();
     refresh();
@@ -2063,6 +3019,7 @@ function captureSetup() {
     item: $('awakenedItem').value,
     subtypes: [...document.querySelectorAll('#subtypePanel input:checked')].map(box => box.value),
     tiers: [...document.querySelectorAll('#tiers input:checked')].map(box => box.value),
+    optimizeGoal: state.itemOptimizeGoal,
     slots: state.slots.map(slot => ({ name: slot.name, locked: slot.locked }))
   };
 }
@@ -2097,6 +3054,13 @@ function applySetup(saved) {
     });
   }
   state.lastCardItem = saved.item || '';
+  state.itemOptimizeGoal =
+    ITEM_OPTIMIZER_GOALS.some(
+      one => one.id === saved.optimizeGoal
+    )
+      ? saved.optimizeGoal
+      : 'dps';
+  state.itemOptimizeSaid = '';
   // refresh() drops anything the restored combination no longer allows.
 }
 
@@ -2250,6 +3214,8 @@ function closeTab(id) {
 }
 
 function clearItem() {
+  state.itemOptimizeSaid = '';
+  state.itemOptimizeBlocked = '';
   $('awakenedItem').value = '';
   $('rarity').value = '';
   $('itemType').value = '';
@@ -2294,6 +3260,8 @@ function resetSetup() {
 }
 
 function onFieldChange(element) {
+  state.itemOptimizeSaid = '';
+  state.itemOptimizeBlocked = '';
   // Naming the item settles its slot, its dust and its alien base. Whatever
   // could not be worked out is left exactly as the user had it.
   if (element.id === 'awakenedItem') {
@@ -2749,6 +3717,7 @@ async function load() {
     const sources = await readSources();
     state.data = EnchantEngine.buildDataset(sources);
     EnchantItems.loadClient(sources.clientItemText);
+    state.theory = await loadItemOptimizerTheory();
     state.itemArt = await loadItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${knownItemNames().length.toLocaleString('en-US')} items — the slot, dust and base come with it`;
