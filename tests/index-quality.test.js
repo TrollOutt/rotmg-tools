@@ -298,6 +298,52 @@ assert(snakePit && snakePit.film, 'the Snake Pit is one of the animated ones');
 assert(new Set(snakePit.filmFor).size > 1,
   'its frames are not evenly spaced, which is why the durations are kept');
 
+
+/*
+ * Every family the index can file something under has a colour.
+ *
+ * The badge on a row is coloured by the family it belongs to, and eight of
+ * the twenty-eight labels had a rule while the other twenty fell through to
+ * grey - so a list read as three deliberate colours among a crowd of
+ * mistakes. Nobody chose that; it happened because a family was added to the
+ * data and nothing said the stylesheet had to hear about it. This is what
+ * says so.
+ */
+{
+  const filedAs = one => one.family || (one.use ? 'use' : one.kind);
+  const families = new Set();
+  for (const one of index.records) {
+    if (one.folded) continue;
+    families.add(String(filedAs(one)).replace(/ /g, '-'));
+  }
+  assert(families.size > 20, 'the index files things under a good many families');
+  const coloured = new Set();
+  for (const rule of styleSource.matchAll(/\.ix-kind[^{]*\{[^}]*\}/g)) {
+    for (const one of rule[0].matchAll(/\.is-([a-z0-9-]+)/g)) coloured.add(one[1]);
+  }
+  const grey = [...families].filter(one => one !== 'other' && !coloured.has(one));
+  assert.equal(grey.length, 0, grey.length
+    + ' famil(y/ies) would show a grey badge because the stylesheet has no colour for them: '
+    + grey.join(', '));
+}
+
+/*
+ * And the rail's colours are the site's, not new ones invented for it.
+ *
+ * Eight of the ten group hues used to be literals that appear nowhere else -
+ * a teal, a periwinkle, a pink, a muted red. They are named now and drawn
+ * from the palette at the top of the stylesheet.
+ */
+{
+  const hues = [...styleSource.matchAll(/\[data-key="[a-z-]+"\]\s*\{\s*--ix-hue:\s*([^;]+);/g)]
+    .map(one => one[1].trim());
+  assert(hues.length >= 8, 'every group in the rail must name its colour');
+  for (const hue of hues) {
+    assert(/^var\(--[a-z-]+\)$/.test(hue),
+      'a group colour must be one the site already declares, not a literal: ' + hue);
+  }
+}
+
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
 console.log(skins.length + ' skins, joined to class, unlocker and set by the client’s own types.');
 console.log(turning.length + ' portals carry the frames they turn over, with the client’s own timings.');

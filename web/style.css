@@ -3230,16 +3230,47 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * colours are the ones the site already uses - the rarity frames and the
  * family badges - so nothing new was invented for them.
  */
+/*
+ * Eight colours, and every one of them already on this site.
+ *
+ * The comment above used to claim as much and it was not true: of the ten
+ * hues here, eight were invented for this rail - a teal, a periwinkle, a
+ * pink, a muted red and so on - none of which appears anywhere else. They
+ * are the rarity frames and the stat tints now, which is what the rest of
+ * the site is coloured with.
+ *
+ * And a colour means one thing wherever it appears. The badge on a row in
+ * the list is the same colour as the group in the rail that would find it,
+ * so the eye learns the scheme once.
+ */
+#pageIndex {
+  --ix-kept:  var(--locked);      /* what is yours, and what a set is worth */
+  --ix-who:   var(--accent);      /* who you are */
+  --ix-look:  #ca46dd;            /* what you look like */
+  --ix-worn:  var(--uncommon);    /* what you hold */
+  --ix-bag:   #58cfda;            /* what is in the bag and gets used up */
+  --ix-foe:   var(--bad);         /* what fights back */
+  --ix-where: #e08a3c;            /* where you go */
+  --ix-charm: var(--legendary);   /* what goes on the gear */
+}
+
 .ix-group { border-radius: var(--radius-sm); --ix-hue: var(--accent); }
-:is(.ix-group, .ix-chosen)[data-key="favourites"] { --ix-hue: #ffd026; }
-:is(.ix-group, .ix-chosen)[data-key="class"]      { --ix-hue: #79c5e8; }
-:is(.ix-group, .ix-chosen)[data-key="gears"]      { --ix-hue: #7fc45a; }
-:is(.ix-group, .ix-chosen)[data-key="tier"]       { --ix-hue: #e0975a; }
-:is(.ix-group, .ix-chosen)[data-key="marks"]      { --ix-hue: #9aa7ff; }
-:is(.ix-group, .ix-chosen)[data-key="season"]     { --ix-hue: #f28ea8; }
-:is(.ix-group, .ix-chosen)[data-key="biome"]      { --ix-hue: #58bfa6; }
-:is(.ix-group, .ix-chosen)[data-key="dungeon"]    { --ix-hue: #d4685f; }
-:is(.ix-group, .ix-chosen)[data-key="kind-of-gear"] { --ix-hue: #7fc45a; }
+:is(.ix-group, .ix-chosen)[data-key="favourites"]   { --ix-hue: var(--ix-kept); }
+:is(.ix-group, .ix-chosen)[data-key="class"]        { --ix-hue: var(--ix-who); }
+:is(.ix-group, .ix-chosen)[data-key="skins"]        { --ix-hue: var(--ix-look); }
+:is(.ix-group, .ix-chosen)[data-key="gears"]        { --ix-hue: var(--ix-worn); }
+:is(.ix-group, .ix-chosen)[data-key="kind-of-gear"] { --ix-hue: var(--ix-worn); }
+:is(.ix-group, .ix-chosen)[data-key="enemies"]      { --ix-hue: var(--ix-foe); }
+:is(.ix-group, .ix-chosen)[data-key="biome"]        { --ix-hue: var(--ix-where); }
+:is(.ix-group, .ix-chosen)[data-key="dungeon"]      { --ix-hue: var(--ix-where); }
+/*
+ * Three of them are not families but axes - a number, a label, a month - so
+ * they take the reading colour rather than one of their own. Ten coloured
+ * headings was a rail nobody could read a scheme out of.
+ */
+:is(.ix-group, .ix-chosen)[data-key="tier"]         { --ix-hue: var(--muted); }
+:is(.ix-group, .ix-chosen)[data-key="marks"]        { --ix-hue: var(--muted); }
+:is(.ix-group, .ix-chosen)[data-key="season"]       { --ix-hue: var(--muted); }
 .ix-group-head {
   display: flex; align-items: center; gap: 7px; width: 100%; text-align: left;
   font: inherit; font-size: calc(var(--ix-fs) * .9); font-weight: 650; letter-spacing: .3px;
@@ -3273,12 +3304,18 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   border-radius: var(--radius-sm);
 }
 .ix-group.is-primary > .ix-group-head b { letter-spacing: .5px; font-weight: 750; }
+/*
+ * What it is, not a banner shouting it. A solid bar of colour across the top
+ * of the rail is the loudest thing on the page, for a note that only needs to
+ * be read once.
+ */
 .ix-first {
   flex: 0 0 100%; order: -1; margin: 0 0 5px;
-  font-style: normal; font-size: calc(var(--ix-fs) * .64); font-weight: 800;
+  font-style: normal; font-size: calc(var(--ix-fs) * .64); font-weight: 700;
   text-transform: uppercase; letter-spacing: .9px;
-  color: #10141c; background: var(--ix-hue);
-  border-radius: 4px; padding: 2px 7px; text-align: center;
+  color: var(--ix-hue); background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--ix-hue) 35%, transparent);
+  border-radius: 0; padding: 0 2px 3px; text-align: left;
 }
 /* A choice, but not the one holding the others up. */
 .ix-group.is-chosen { border-left: 3px solid var(--ix-hue); border-radius: var(--radius-sm); }
@@ -3589,20 +3626,51 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   border: 1px solid rgba(121, 197, 232, .28); border-radius: 999px; padding: 3px 6px;
 }
 
-/* Each family in its own colour, so a list of mixed things still sorts itself. */
+/*
+ * Each family in its own colour, so a list of mixed things still sorts
+ * itself - and every family has one.
+ *
+ * Eight of the twenty-eight labels the index files things under were
+ * coloured and the other twenty fell through to grey, so a list read as
+ * three deliberate colours among a crowd of mistakes. They are grouped by
+ * what a thing is rather than given twenty-eight hues, which would be a
+ * rainbow and no easier to read than the grey was.
+ */
 .ix-kind {
   flex: none; font-style: normal; font-size: calc(var(--ix-fs) * .74); font-weight: 700;
   text-transform: uppercase; letter-spacing: .5px; color: var(--dim);
 }
-.ix-kind.is-item { color: #7fc45a; }
-.ix-kind.is-use { color: #58bfa6; }
-.ix-chip.is-use.is-on { background: #58bfa6; border-color: #58bfa6; }
-.ix-kind.is-class { color: #79c5e8; }
-.ix-kind.is-enemy { color: #d4685f; }
-.ix-kind.is-place { color: #d9c23c; }
-.ix-kind.is-set { color: #e8c877; }
-.ix-kind.is-enchant { color: #ca46dd; }
-.ix-kind.is-pool { color: #9b7fd9; }
+/* What you hold. */
+.ix-kind:is(.is-item, .is-kind-of-gear) { color: var(--ix-worn); }
+/* What is in the bag and gets used up or spent. */
+.ix-kind:is(.is-use, .is-consumable, .is-enchant-dust, .is-key, .is-shard,
+  .is-material, .is-token) { color: var(--ix-bag); }
+/* Who you are. */
+.ix-kind.is-class { color: var(--ix-who); }
+/* What you look like. */
+.ix-kind:is(.is-skin, .is-skin-unlocker, .is-pet-skin, .is-pet-egg, .is-dye,
+  .is-emote, .is-title, .is-gravestone) { color: var(--ix-look); }
+/* What fights back. */
+.ix-kind.is-enemy { color: var(--ix-foe); }
+/* Where you go. */
+.ix-kind:is(.is-portal, .is-place, .is-entrance) { color: var(--ix-where); }
+/* What goes on the gear. */
+.ix-kind:is(.is-enchant, .is-pool, .is-artifact) { color: var(--ix-charm); }
+/* What is kept, and what a set is worth. */
+.ix-kind:is(.is-set, .is-mark, .is-supporter-reward) { color: var(--ix-kept); }
+/* And the leftovers, which really are unfiled. */
+.ix-kind.is-other { color: var(--dim); }
+
+/* A chosen chip fills with the same colour its badge is written in. */
+.ix-chip.is-on:is(.is-use, .is-consumable, .is-enchant-dust, .is-key, .is-shard,
+  .is-material, .is-token) { background: var(--ix-bag); border-color: var(--ix-bag); }
+.ix-chip.is-on:is(.is-skin, .is-skin-unlocker, .is-pet-skin, .is-pet-egg, .is-dye,
+  .is-emote, .is-title, .is-gravestone) { background: var(--ix-look); border-color: var(--ix-look); }
+.ix-chip.is-on:is(.is-item, .is-kind-of-gear) { background: var(--ix-worn); border-color: var(--ix-worn); }
+.ix-chip.is-on.is-enemy { background: var(--ix-foe); border-color: var(--ix-foe); }
+.ix-chip.is-on:is(.is-portal, .is-place, .is-entrance) { background: var(--ix-where); border-color: var(--ix-where); }
+.ix-chip.is-on:is(.is-enchant, .is-pool, .is-artifact) { background: var(--ix-charm); border-color: var(--ix-charm); }
+.ix-chip.is-on:is(.is-set, .is-mark, .is-supporter-reward) { background: var(--ix-kept); border-color: var(--ix-kept); }
 .ix-hidden {
   flex: none; text-decoration: none; font-size: 9.5px; text-transform: uppercase;
   letter-spacing: .5px; color: #d4685f; border: 1px solid rgba(212, 104, 95, .4);
@@ -3612,7 +3680,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 
 .ix-card { max-height: 78vh; overflow-y: auto; }
 .ix-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-.ix-card-head h3 { margin: 0; font-size: calc(var(--ix-fs) * 1.45); color: #f6ecd2; }
+.ix-card-head h3 { margin: 0; font-size: calc(var(--ix-fs) * 1.45); font-weight: 650; color: var(--text); }
 .ix-card-head code { font-size: 11px; color: var(--dim); }
 .ix-about { color: var(--muted); font-size: var(--ix-fs); font-style: italic; margin: 0 0 12px; }
 .ix-dungeon-difficulty {
@@ -3660,10 +3728,19 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   text-transform: uppercase; letter-spacing: .4px; text-align: right;
 }
 .ix-link-row > span { display: flex; flex-wrap: wrap; gap: 4px; }
+/*
+ * One chip, wherever a chip appears.
+ *
+ * There were three of these - the kinds at the top of the list, the links on
+ * a card, and the facts inside one - at .04, .05 and .035 white on three
+ * different borders, which is the sort of difference nobody can name and
+ * everybody feels. They are the same chip now, and it is the index's own
+ * from further up the file.
+ */
 .ix-jump {
   font: inherit; font-size: calc(var(--ix-fs) * .9); cursor: pointer; color: var(--text);
-  background: rgba(255, 255, 255, .05); border: 1px solid var(--line);
-  border-radius: 999px; padding: 3px 9px;
+  background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
+  border-radius: 999px; padding: 3px 10px;
 }
 .ix-jump:hover { border-color: var(--accent); color: var(--accent); }
 .ix-link-row em { font-style: normal; font-size: calc(var(--ix-fs) * .86); color: var(--dim); align-self: center; }
@@ -3925,12 +4002,15 @@ body.ring-near .ring-tag { opacity: 0; }
   border-radius: 9px; overflow: hidden; background: rgba(255,255,255,.025);
 }
 .ix-knowledge-section { padding: 11px 14px 12px; }
-.ix-knowledge-section + .ix-knowledge-section { border-top: 1px solid rgba(255,255,255,.08); }
-.ix-knowledge-section > h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
+.ix-knowledge-section + .ix-knowledge-section { border-top: 1px solid var(--line-soft); }
+.ix-knowledge-section > h4 {
+  margin: 0 0 8px; font-size: 11.5px; font-weight: 600;
+  letter-spacing: .7px; text-transform: uppercase; color: var(--dim);
+}
 .ix-data-chip {
   display: inline-flex; align-items: center; gap: 5px; margin: 2px 4px 2px 0;
-  padding: 4px 8px; border: 1px solid rgba(255,255,255,.08); border-radius: 999px;
-  background: rgba(255,255,255,.035); white-space: nowrap;
+  padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: rgba(255, 255, 255, .04); white-space: nowrap;
 }
 .ix-data-chip b { font-weight: 600; }
 .ix-drop-grid { display: grid; gap: 5px; min-width: min(640px, 100%); }
@@ -3940,7 +4020,7 @@ body.ring-near .ring-tag { opacity: 0; }
 .ix-knowledge-block .ix-realm-scope { margin-left: -2px; margin-right: 5px; }
 
 
-/* REALMEYE_CANONICAL_PLACE_UI_V7 */
+/* ---------------- a place, and what the players wrote about it ---------------- */
 .ix-place-guardian {
   display: inline-flex; align-items: center; gap: 5px; min-width: 0;
   margin-left: 4px;
@@ -3952,16 +4032,25 @@ body.ring-near .ring-tag { opacity: 0; }
 .ix-knowledge-block .ix-link-row > i { min-width: 86px; }
 
 
-/* REALMEYE_PRESENTATION_V8 */
+/* The blocks of a card, each one able to fold away. */
 .ix-card-description {
-  margin: 12px 0 0; border: 1px solid rgba(255,255,255,.08); border-radius: 9px;
-  background: rgba(255,255,255,.025); overflow: hidden;
+  margin: 12px 0 0; border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, .18); overflow: hidden;
 }
+/*
+ * The heading over a block, in the small upright capitals this site puts over
+ * a group of anything - the bench's fields, the viewer's panels, the rail's
+ * own groups. They were bold sentence case, which read as a title on a card
+ * whose title is already at the top of it.
+ */
 .ix-card-description > summary,
 .ix-knowledge-section > summary {
-  cursor: pointer; list-style: none; user-select: none; font-weight: 700;
-  color: var(--text); display: flex; align-items: center; gap: 8px;
+  cursor: pointer; list-style: none; user-select: none;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase;
+  color: var(--dim); display: flex; align-items: center; gap: 8px;
 }
+.ix-card-description > summary:hover,
+.ix-knowledge-section > summary:hover { color: var(--muted); }
 .ix-card-description > summary::-webkit-details-marker,
 .ix-knowledge-section > summary::-webkit-details-marker { display: none; }
 .ix-card-description > summary::after,
@@ -3975,16 +4064,17 @@ body.ring-near .ring-tag { opacity: 0; }
 .ix-card-description > div { padding: 0 14px 12px; color: var(--muted); line-height: 1.55; }
 .ix-card-description p { margin: 0 0 7px; }
 .ix-card-description p:last-child { margin-bottom: 0; }
-.ix-knowledge-section > summary { margin: 0; font-size: 13px; }
+.ix-knowledge-section > summary { margin: 0; }
 .ix-knowledge-section > summary + .ix-links { margin-top: 8px; }
 
 
-/* REALMEYE_SUBBIOME_MODEL_V11 */
+/* A biome inside a biome. */
 .ix-section-count {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 20px; height: 18px; padding: 0 6px; margin-left: 4px;
-  border-radius: 999px; background: rgba(255,255,255,.07); color: var(--muted);
-  font-size: 10px; font-weight: 700;
+  border-radius: 999px; background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line); color: var(--muted);
+  font-size: 10px; font-weight: 600;
 }
 .ix-sub-biome > small {
   display: inline-flex; align-items: center; justify-content: center;
