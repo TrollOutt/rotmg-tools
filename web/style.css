@@ -3521,6 +3521,13 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   padding-top: 8px; margin-top: -3px;
   border-top: 1px solid var(--line-soft);
 }
+/* Only drawn when there are two sub categories to tell apart. */
+.ix-types-say {
+  flex-basis: 100%; margin: 2px 0 -1px;
+  color: var(--dim); font-size: 11.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .7px;
+}
+.ix-types-say:not(:first-child) { margin-top: 7px; }
 .ix-list { flex: 1; overflow-y: auto; min-height: 0;
   display: flex; flex-direction: column; gap: 2px; }
 .ix-row {

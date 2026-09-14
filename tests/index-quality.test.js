@@ -209,5 +209,44 @@ assert(/group\('Skins', 'client'/.test(pageSource),
 assert(/x\.kind === 'skin'[\s\S]{0,120}how === 'worn by'/.test(pageSource),
   'a class category must gather the appearances that class wears');
 
+/*
+ * The costume, which is the one thing about a skin the client does not say.
+ *
+ * It is read off the name, so it is `look` and never `family`: a reader must
+ * be able to tell a declaration from a deduction at a glance, and the card
+ * says where it came from. The rule only keeps a stem two or more skins
+ * arrive at, so a one-off like "Bandit Rogue" stays a one-off rather than
+ * being filed under an invented "Bandit".
+ */
+const costumed = skins.filter(one => one.look);
+assert(costumed.length > 380 && costumed.length < skins.length * 0.4,
+  'a name-derived costume describes about a third of the skins, and claiming more is a guess');
+const perCostume = new Map();
+for (const one of costumed) perCostume.set(one.look, (perCostume.get(one.look) || 0) + 1);
+for (const [said, many] of perCostume) {
+  assert(many >= 2, 'a costume of one is not a costume: ' + said);
+}
+assert.equal(records.get('skin:Cozy Archer').look, 'Cozy');
+assert.equal(records.get('skin:Bandit Rogue').look, undefined,
+  'a skin no other skin shares a stem with keeps no costume');
+for (const one of skins) {
+  assert(one.family === undefined,
+    'a skin carries `look`, never `family`: one is deduced and the other declared');
+}
+assert(/costume[\s\S]{0,80}read off the name/.test(pageSource),
+  'the card must say the costume was read off the name rather than declared');
+
+/*
+ * There is more than one sub category now.
+ *
+ * drawTypes() asked for `groups.find(one => one.inSub)` - the first one - so
+ * adding Costume beside Kind of gear built, counted and narrowed it correctly
+ * and never drew it.
+ */
+assert(!/groups\.find\(one => one\.inSub\)/.test(pageSource),
+  'the middle column must draw every sub category, not only the first');
+assert(/groups\.filter\(one => one\.inSub\)/.test(pageSource),
+  'the middle column must draw every sub category, not only the first');
+
 console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
 console.log(skins.length + ' skins, joined to class, unlocker and set by the client’s own types.');

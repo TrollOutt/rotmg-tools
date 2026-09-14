@@ -480,6 +480,26 @@ const RealmIndex = (function () {
       chip(bySkin, key, say, ids, shown && shown.id);
     }
 
+    /*
+     * And the costume, in the middle column rather than the rail - it is the
+     * one axis here the client does not declare, so it is offered once the
+     * reader has already said they are looking at skins, the same way the
+     * kinds of gear are offered under Gears.
+     */
+    const byLook = group('Costume', 'client', 'read off the name, not declared', true);
+    const looks = new Map();
+    for (const one of all.values()) {
+      if (one.kind !== 'skin' || !one.look) continue;
+      if (!looks.has(one.look)) looks.set(one.look, []);
+      looks.get(one.look).push(one);
+    }
+    for (const said of [...looks.keys()].sort()) {
+      const mine = looks.get(said);
+      const shown = mine.find(one => one.art && !one.hidden);
+      chip(byLook, said, said, gather(x => x.kind === 'skin' && x.look === said),
+        shown && shown.id);
+    }
+
     const byHand = group('Gears', 'client');
     for (const [hand, say] of [['weapon', 'Weapon'], ['ability', 'Ability'],
       ['armor', 'Armour'], ['ring', 'Ring']]) {
@@ -1067,20 +1087,41 @@ const RealmIndex = (function () {
    * said they are looking at gear. Shown when a family, a hand or a class has
    * been chosen and gear survives it - never as a wall of twenty-nine.
    */
+  /*
+   * There is more than one of these now.
+   *
+   * This was written when the only sub category was the kinds of gear, so it
+   * looked up the first group marked `inSub` and drew that. Adding Costume
+   * beside it meant the second was built, counted and narrowed correctly and
+   * simply never drawn. Each is drawn on its own terms now, and its heading
+   * only appears when there are two to tell apart.
+   */
+  const SUB_ASKED_BY = {
+    'Kind of gear': () => kindWanted === 'item'
+      || groups.some(one => (one.title === 'Gears' || one.title === 'Class')
+        && one.chips.some(chip => chip.on)),
+    Costume: () => kindWanted === 'skin'
+      || groups.some(one => one.title === 'Skins' && one.chips.some(chip => chip.on))
+  };
+
   function drawTypes() {
     const box = el('ixTypes');
     if (!box) return;
-    const set = groups.find(one => one.inSub);
-    const asked = kindWanted === 'item'
-      || (set && set.chips.some(chip => chip.on))
-      || groups.some(one => (one.title === 'Gears' || one.title === 'Class')
-        && one.chips.some(chip => chip.on));
-    const chips = set ? set.chips.filter(x => x.on || x.here > 0) : [];
-    if (!set || !asked || !chips.length) { box.innerHTML = ''; box.hidden = true; return; }
+    const shown = [];
+    for (const set of groups.filter(one => one.inSub)) {
+      const wanted = SUB_ASKED_BY[set.title];
+      const asked = set.chips.some(chip => chip.on) || (wanted ? wanted() : false);
+      const chips = set.chips.filter(x => x.on || x.here > 0);
+      if (!asked || !chips.length) continue;
+      shown.push({ set, chips });
+    }
+    if (!shown.length) { box.innerHTML = ''; box.hidden = true; return; }
     box.hidden = false;
-    box.innerHTML = chips.map(x => '<button type="button" class="ix-chip is-item'
-      + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
-      + esc(x.say) + '<i>' + x.here.toLocaleString('en-US') + '</i></button>').join('');
+    box.innerHTML = shown.map(({ set, chips }) =>
+      (shown.length > 1 ? '<b class="ix-types-say">' + esc(set.title) + '</b>' : '')
+      + chips.map(x => '<button type="button" class="ix-chip is-item'
+        + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
+        + esc(x.say) + '<i>' + x.here.toLocaleString('en-US') + '</i></button>').join('')).join('');
   }
 
   /*
@@ -1231,6 +1272,14 @@ const RealmIndex = (function () {
     if (one.hand) bits.push(['slot', one.hand + ' (' + one.slot + ')']);
     /* What it is, when it is not gear: a mark, a key, a pet skin. */
     if (one.family) bits.push(['kind', one.family]);
+    /*
+     * The one fact on a skin the client does not state. Everything else here
+     * is a declaration; this is read off the name, so it says so rather than
+     * sitting in the list looking like the rest.
+     */
+    if (one.look) bits.push(['costume', one.look + ' — read off the name']);
+    if (one.level) bits.push(['unlocks at level', one.level]);
+    if (one.given) bits.push(['comes from', one.given]);
     if (one.tier !== undefined) bits.push(['tier', 'T' + one.tier]);
     if (one.sb) bits.push(['soulbound', 'yes']);
     if (one.mp) bits.push(['mana', one.mp]);

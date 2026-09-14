@@ -564,6 +564,7 @@ for (const one of objects) {
  * attached to the nearest similar name.
  */
 const skinByType = new Map();
+const skinClass = new Map();        // record -> the class that wears it
 for (const one of objects) {
   if (text(one.body, 'Class') !== 'Skin') continue;
   const hidden = [];
@@ -593,6 +594,7 @@ for (const one of objects) {
   const wears = byType.get(Number(text(one.body, 'PlayerClassType')));
   if (wears && has(wears.body, 'Player')) {
     tie(record.id, 'worn by', 'class:' + nameOf(wears));
+    skinClass.set(record, nameOf(wears));
   }
 }
 
@@ -602,6 +604,48 @@ for (const one of objects) {
   if (!m) continue;
   const skin = skinByType.get(Number(m[1]));
   if (skin) tie('item:' + nameOf(one), 'unlocks', skin.id);
+}
+
+/*
+ * The costume a skin belongs to - and the one thing here the client does not
+ * say.
+ *
+ * Every other fact on a skin is a declaration. This one is not: the client
+ * has no tag for it at all, and the only evidence is the name. "Cozy Archer",
+ * "Cozy Wizard", "Cozy Paladin" are plainly one costume in nineteen sizes,
+ * and a reader wants them together, so it is worked out here rather than
+ * pretended not to exist - but it is `look`, not `family`, and the card says
+ * where it came from.
+ *
+ * The rule is deliberately mean: strip the class the skin is worn by off the
+ * end, and keep what is left only if at least one other skin arrives at the
+ * same stem. That places 419 of the 1,475. The rest really are one-offs -
+ * "Bandit Rogue" is a Rogue skin, not a member of the Bandit costume, because
+ * there is no Bandit anything-else - and calling them "Other" the way a
+ * guessier rule does says less than saying nothing.
+ */
+{
+  const classNames = classes.map(x => x.record.name);
+  const tail = /\s+(Set)?\s*(Skin|Transformation)$/i;
+  const stemOf = record => {
+    const said = record.name.trim().replace(tail, '').trim();
+    for (const word of [skinClass.get(record), ...classNames].filter(Boolean)) {
+      const cut = new RegExp('\\s+' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+      if (cut.test(said)) return said.replace(cut, '').trim();
+    }
+    return '';
+  };
+  const stems = new Map();
+  for (const record of skinByType.values()) {
+    const said = stemOf(record);
+    if (!said) continue;
+    if (!stems.has(said)) stems.set(said, []);
+    stems.get(said).push(record);
+  }
+  for (const [said, mine] of stems) {
+    if (mine.length < 2) continue;
+    for (const record of mine) record.look = said;
+  }
 }
 
 /* ---------------- the sets ---------------- */
