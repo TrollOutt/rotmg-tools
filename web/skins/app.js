@@ -115,7 +115,20 @@ function framesOf(geometry){
   return{sequences,frames:flat};
 }
 
-const skins=skinCatalogue.skins.map(one=>{
+/*
+ * Only what there is a picture of.
+ *
+ * The client declares nineteen skins - every 2-Bit class - whose
+ * <AnimatedTexture> its own sprite registry has no entry for, so there is
+ * nothing to draw. They belong in the index, which records what the game
+ * declares; they do not belong in a list of things to look at, where they
+ * were nineteen blank rows that opened onto "missing sprite frame".
+ *
+ * They are left out here rather than greyed out: a viewer offering something
+ * it cannot show is worse than a viewer that is one line shorter.
+ */
+const undrawn=skinCatalogue.skins.filter(one=>!looks.skins[one.type]);
+const skins=skinCatalogue.skins.filter(one=>looks.skins[one.type]).map(one=>{
   const drawn=framesOf(looks.skins[one.type]);
   return{
     id:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
@@ -185,7 +198,7 @@ for(const one of skins){
 }
 const canvas=$('canvas'),worldBg=$('worldBg'),fxCanvas=$('fxCanvas'),renderer=new Renderer(canvas),bg=worldBg.getContext('2d'),fx=fxCanvas.getContext('2d'),CLASS_ORDER=['Wizard','Priest','Archer','Rogue','Warrior','Knight','Paladin','Assassin','Necromancer','Huntress','Mystic','Trickster','Sorcerer','Ninja','Samurai','Bard','Summoner','Kensei'];
 classes.sort((a,b)=>{const ai=CLASS_ORDER.indexOf(a.name),bi=CLASS_ORDER.indexOf(b.name);return(ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name)});
-const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',dyeTarget:'clothing',dyeCategory:'all'};
+const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',dyeTarget:'clothing',dyeCategory:'all',classOpen:true};
 S.attackSpeed=Math.max(.25,Math.min(4,Number(localStorage.getItem('skinViewerAttackSpeed'))||1));
 /* V312_COMBO_FAVORITES: exact local skin + dye combinations, user-named. */
 const COMBO_FAVORITES_KEY='skinViewerComboFavoritesV1';
@@ -647,7 +660,59 @@ function spawnProjectile(){const aim=projectileDirection(),base=Math.atan2(aim.y
 function updateProjectiles(dt,now){if(S.shooting&&now>=S.nextShotAt){spawnProjectile();S.nextShotAt=now+attackPeriod()}for(const p of S.projectiles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.age+=dt;p.life-=dt}S.projectiles=S.projectiles.filter(p=>p.life>0&&insidePlayArea(p.x,p.y,.75))}
 function renderProjectiles(){fx.clearRect(0,0,fxCanvas.width,fxCanvas.height);fx.imageSmoothingEnabled=false;for(const p of S.projectiles){const at=realmToScreen(p.x,p.y);if(at.x<-30||at.y<-30||at.x>fxCanvas.width+30||at.y>fxCanvas.height+30)continue;const v=p.visual,img=projectileArt(v);if(v&&img?.complete&&img.naturalWidth){const frames=Math.max(1,v.frames||1),frame=Math.floor(p.age*8)%frames,sw=v.width||img.naturalWidth/frames,sh=v.height||img.naturalHeight,visualScale=((p.definition?.motion?.size)||100)/100,wide=Math.max(3,S.camera.scale*sw*visualScale/8),tall=wide*sh/sw;fx.save();fx.translate(at.x,at.y);const spin=v.rotation?p.age*1000/v.rotation:0;fx.rotate(Math.atan2(p.vy,p.vx)+(v.angle||0)*Math.PI/4+spin);fx.drawImage(img,frame*sw,0,sw,sh,-wide/2,-tall/2,wide,tall);fx.restore()}else{const tail=realmToScreen(p.x-p.vx*.045,p.y-p.vy*.045);fx.strokeStyle='#ffe078';fx.lineWidth=Math.max(2,S.camera.scale/12);fx.beginPath();fx.moveTo(tail.x,tail.y);fx.lineTo(at.x,at.y);fx.stroke()}}}
 
-function renderClassPicker(){const box=$('classes'),frag=document.createDocumentFragment();const all=document.createElement('button');all.className='class-pick all-pick'+(!S.className?' chosen':'');all.innerHTML='<span class="all-glyph">✦</span><span>All</span>';all.onclick=()=>{S.className='';renderLibraryControls();renderClassPicker();renderFamilies();ensureVisibleSelection()};frag.append(all);for(const c of classes){const b=document.createElement('button');b.className='class-pick'+(S.className===c.name?' chosen':'');b.title=c.name;b.append(makeClassThumb(c));const name=document.createElement('span');name.textContent=c.name;b.append(name);b.onclick=()=>{S.className=c.name;if(S.family&&!familyAvailableInClass(S.family,c.name))S.family='';renderClassPicker();renderFamilies();ensureVisibleSelection()};frag.append(b)}box.replaceChildren(frag)}
+/*
+ * The classes fold away once one has been picked.
+ *
+ * Nineteen buttons and a row of families take most of the panel, and past the
+ * first choice nobody is reading them - they are reading the list of skins
+ * underneath, which had a fifth of the height left for it. So the grid folds
+ * to the choice itself, with a way to take it back, the way the index's rail
+ * folds past its first category.
+ *
+ * Choosing "All" folds it too: it is a choice like any other, and the reader
+ * who wants the whole catalogue wants the room for it most of all.
+ */
+function renderClassPicker(){
+  const box=$('classes');
+  box.classList.toggle('is-folded',!S.classOpen);
+  if(!S.classOpen){
+    const mine=classes.find(c=>c.name===S.className);
+    const b=document.createElement('button');
+    b.className='class-pick class-folded';
+    b.title='Choose a different class';
+    if(mine)b.append(makeClassThumb(mine));
+    else{const g=document.createElement('span');g.className='all-glyph';g.textContent='✦';b.append(g)}
+    const name=document.createElement('span');name.textContent=S.className||'All classes';
+    const back=document.createElement('em');back.textContent='change';
+    b.append(name,back);
+    b.onclick=()=>{S.classOpen=true;renderClassPicker()};
+    box.replaceChildren(b);
+    return;
+  }
+  const frag=document.createDocumentFragment();
+  const pick=name=>{
+    S.className=name;
+    if(name&&S.family&&!familyAvailableInClass(S.family,name))S.family='';
+    S.classOpen=false;
+    renderLibraryControls();renderClassPicker();renderFamilies();ensureVisibleSelection();
+  };
+  const all=document.createElement('button');
+  all.className='class-pick all-pick'+(!S.className?' chosen':'');
+  all.innerHTML='<span class="all-glyph">✦</span><span>All</span>';
+  all.onclick=()=>pick('');
+  frag.append(all);
+  for(const c of classes){
+    const b=document.createElement('button');
+    b.className='class-pick'+(S.className===c.name?' chosen':'');
+    b.title=c.name;
+    b.append(makeClassThumb(c));
+    const name=document.createElement('span');name.textContent=c.name;
+    b.append(name);
+    b.onclick=()=>pick(c.name);
+    frag.append(b);
+  }
+  box.replaceChildren(frag);
+}
 /* V310_GLOBAL_FAMILIES: family is a first-class filter even when Class = All. */
 /* V311B_GLOBAL_FAMILIES */
 const GLOBAL_FAMILY_ORDER=['2-Bit','Antinomy','Classic','Construction','Cozy','Exalted','Insight','Kogbold','Legion','Mystery','Oryxmas','Stone','Syndicate Henchman','Set skins'];

@@ -175,7 +175,42 @@ assert(/y<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
   assert(back.length > 300, 'and one facing away');
 }
 
+
+/*
+ * The viewer is not offered what it cannot draw.
+ *
+ * Nineteen skins - every 2-Bit class - are declared with an <AnimatedTexture>
+ * the client's own sprite registry has no entry for. They belong in the index,
+ * which records what the game declares; they were nineteen blank rows in the
+ * viewer that opened onto "missing sprite frame".
+ *
+ * The index's `art` is the same nineteen, so the projection carries it as
+ * `drawn` and both the list and the door into it go by that.
+ */
+{
+  const drawable = catalogue.skins.filter(one => one.drawn);
+  const undrawable = catalogue.skins.filter(one => !one.drawn);
+  assert.equal(drawable.length + undrawable.length, catalogue.skins.length);
+  assert(undrawable.length > 0 && undrawable.length < 40,
+    'a handful of skins have no picture, not none and not most');
+  for (const one of drawable) {
+    assert(looks.skins[one.type], one.id + ' is offered but has no frames');
+  }
+  for (const one of undrawable) {
+    assert(!looks.skins[one.type], one.id + ' has frames but is marked undrawable');
+    assert(!records.get(one.id).art, one.id + ': the index and the projection disagree');
+  }
+  const pageSource = fs.readFileSync(path.join(root, 'web/index-page.js'), 'utf8');
+  assert(/if \(!one\.drawn\) continue;/.test(pageSource),
+    'the index must not offer a door into a skin the viewer does not list');
+  const viewer = fs.readFileSync(path.join(root, 'web/skins/app.js'), 'utf8');
+  assert(/skinCatalogue\.skins\.filter\(one=>looks\.skins\[one\.type\]\)/.test(viewer),
+    'the viewer must list only what it has frames for');
+}
+
 console.log('Skin Viewer: ' + catalogue.skins.length + ' skins and '
-  + dyeCatalogue.dyes.length + ' dyes projected from the index, '
+  + dyeCatalogue.dyes.length + ' dyes projected from the index, of which '
+  + catalogue.skins.filter(one => one.drawn).length
+  + ' the client holds a picture of; '
   + frames.toLocaleString('en-US') + ' frames on one '
   + sheet.wide + '×' + sheet.tall + ' sheet, no guessed links.');
