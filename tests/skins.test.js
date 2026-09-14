@@ -124,6 +124,57 @@ assert.equal(looks.from.build, index.from.build,
 assert.equal(catalogue.from.build, index.from.build,
   'the catalogue and the index must come from one client build');
 
+
+/*
+ * Which way is the front.
+ *
+ * The client numbers a character's facings 0 side, 2 away and 3 towards you,
+ * and the catalogue this replaced had the last two the wrong way round. That
+ * one mistake opened every skin showing its back and made walking up and down
+ * the screen turn the character the wrong way out.
+ *
+ * Two things settle it and they must keep agreeing. Drawn large, direction 2
+ * has no eyes on it and direction 3 has two. And tools/index-sprites.js has
+ * been picking "standing, facing the reader" out of the same registry since
+ * long before any of this, by asking for direction 3 - so if that ever ranks a
+ * different facing best, or this table renames one, they have drifted apart
+ * and somebody is about to ship a page full of backs.
+ */
+const registry = require(path.join(root, 'tools/spritesheet.js'));
+assert.equal(registry.DIRECTION[registry.FRONT], 'front');
+assert.equal(registry.DIRECTION[registry.BACK], 'back');
+assert.equal(registry.FRONT, 3, 'three is the face');
+assert.equal(registry.BACK, 2, 'two is the back');
+/* JSON has no `undefined`, so the unused slot arrives as null. */
+assert.deepEqual(looks.directions.map(one => one || undefined), registry.DIRECTION,
+  'the published geometry must carry the same table the reader uses');
+
+const spriteSource = fs.readFileSync(path.join(root, 'tools/index-sprites.js'), 'utf8');
+assert(/one\.direction === 3 \? 0/.test(spriteSource),
+  'index-sprites must still rank direction 3 as the one facing the reader');
+
+const viewerSource = fs.readFileSync(path.join(root, 'web/skins/app.js'), 'utf8');
+assert(/FACE_AWAY=2,FACE_YOU=3/.test(viewerSource),
+  'the viewer must name the facings the way the client numbers them');
+assert(/dy<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
+  'aiming up must show the back: up the screen is away from you');
+assert(/y<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
+  'walking up must show the back: up the screen is away from you');
+
+/* And a skin opens on its face, which is what the ranking is for. */
+{
+  const front = [], back = [];
+  for (const one of catalogue.skins.slice(0, 400)) {
+    const drawn = looks.skins[one.type];
+    if (!drawn) continue;
+    const idle = d => drawn.frames.find(row => row[1] === 0 && row[2] === d);
+    if (idle(registry.FRONT)) front.push(one.name);
+    if (idle(registry.BACK)) back.push(one.name);
+  }
+  assert(front.length > 300, 'a skin standing still must have a frame facing the reader');
+  assert(back.length > 300, 'and one facing away');
+}
+
 console.log('Skin Viewer: ' + catalogue.skins.length + ' skins and '
   + dyeCatalogue.dyes.length + ' dyes projected from the index, '
   + frames.toLocaleString('en-US') + ' frames on one '

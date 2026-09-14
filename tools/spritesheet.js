@@ -158,10 +158,21 @@ function read(buffer) {
  * unidentified, and a reader who sees "special" does not.
  *
  * Direction 1 is never used either. The client counts side, then a slot it
- * does not fill, then front and back.
+ * does not fill, then back and front - in that order, which is worth being
+ * sure about rather than assuming.
+ *
+ * Two is the back and three is the face. Drawn large, direction two has no
+ * eyes on it at all and direction three has two; and tools/index-sprites.js,
+ * which was picking "standing, facing the reader" correctly long before any
+ * of this, asks for direction three. Taking it the other way round - which is
+ * what the catalogue this replaced said - opened every skin showing its back
+ * and turned walking up and down the wrong way out.
  */
 const ACTION = ['idle', 'walk', 'attack', undefined, undefined];
-const DIRECTION = ['side', undefined, 'front', 'back'];
+const DIRECTION = ['side', undefined, 'back', 'front'];
+const FRONT = 3;
+const BACK = 2;
+const SIDE = 0;
 const sayAction = n => ACTION[n] || 'action ' + n;
 const sayDirection = n => DIRECTION[n] || 'direction ' + n;
 
@@ -218,5 +229,5 @@ function reachesForward(frames) {
 module.exports = {
   Flat, read, sheetName, SHEET_OF,
   ACTION, DIRECTION, sayAction, sayDirection,
-  ATTACK, bodyWidth, reachesForward
+  ATTACK, FRONT, BACK, SIDE, bodyWidth, reachesForward
 };
