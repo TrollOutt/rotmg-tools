@@ -1249,10 +1249,76 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * win a search is still a thing somebody may want to put on and look at,
    * and hiding it would be answering a question nobody asked.
    */
+  /*
+   * Which broad gear families the optimiser may consider.
+   *
+   * Missing flags mean true so old saved builds and old shared links keep
+   * exactly the catalogue they had before these controls existed.
+   *
+   * A set piece belongs to the Sets switch even when it has no tier. That
+   * keeps Sets and Untiered independent: turning UTs off does not silently
+   * turn set pieces off as well.
+   */
+  function searchAllowsItem(one, state) {
+    if (!one) return false;
+
+    if (one.set) {
+      return !state || state.searchSets !== false;
+    }
+
+    if (one.tier === undefined) {
+      return !state || state.searchUntiered !== false;
+    }
+
+    return true;
+  }
+
   const searchItems = (hand, klass, state) =>
     itemsFor(hand, klass, state).filter(one =>
+      searchAllowsItem(one, state)
       // A stronger item outside this profile must never prune an accessible one.
-      (profile && profile.mode === 'personal') || !beatenOnes().gear.has(one.name));
+      && ((profile && profile.mode === 'personal')
+        || !beatenOnes().gear.has(one.name)));
+
+  /*
+   * A candidate being excluded also means an unlocked copy already worn
+   * cannot survive merely because the search started from the current build.
+   * Padlocked gear is deliberately left alone: "keep this" outranks a search
+   * catalogue preference.
+   */
+  function prepareSearchable(state) {
+    const out = prepareAccessible(state);
+
+    for (const [hand] of HANDS) {
+      const worn = out.gear[hand];
+
+      if (!worn || !worn.name || out.locked[hand]) {
+        continue;
+      }
+
+      const item = data.byItem[worn.name];
+
+      if (!item || searchAllowsItem(item, out)) {
+        continue;
+      }
+
+      const first =
+        searchItems(hand, out.klass, out)[0];
+
+      out.gear[hand] = {
+        name: first ? first.name : null,
+        slots: worn.slots === undefined
+          ? 4
+          : worn.slots,
+        ench: Array.isArray(worn.ench)
+          ? worn.ench.slice()
+          : [null, null, null, null]
+      };
+    }
+
+    return out;
+  }
+
   const searchEnchants = (name, already, at) =>
     enchantsFor(name, already, at).filter(one => !beatenOnes().ench.has(one.id));
 
@@ -1597,7 +1663,7 @@ const TINT = {
 
   function optimise(state, goal, report) {
     if (!profile || (profile.mode === 'personal' && !access)) throw new Error('Set up your progression before crafting.');
-    const work = prepareAccessible(state);
+    const work = prepareSearchable(state);
     /*
      * Each padlock holds the one thing it is on.
      *
@@ -2112,6 +2178,9 @@ const TINT = {
         + (worn.name ? '<button type="button" class="tc-take" data-take="' + hand
           + '" title="Take this item and what is on it to the enchant calculator">'
           + 'enchant</button>' : '')
+        + (worn.name ? '<button type="button" class="tc-ban tc-slot-ban" data-ban-held="' + hand
+          + '" title="Blacklist this item - the search will not offer it"'
+          + ' aria-label="Blacklist ' + esc(worn.name) + '">⊘</button>' : '')
         + '<button type="button" class="tc-hold tc-lock" data-hold="' + hand
         + '" aria-pressed="' + (locked ? 'true' : 'false')
         + '" title="' + lockSays(locked) + ' while the calculator works"'
@@ -3222,6 +3291,19 @@ const TINT = {
     for (const node of el('tcBody').querySelectorAll('[data-scope]')) {
       node.classList.toggle('is-on', node.dataset.scope === (build.scope || 'all'));
     }
+
+    const sets = el('tcSearchSets');
+    const untiered = el('tcSearchUntiered');
+
+    if (sets) {
+      sets.checked = build.searchSets !== false;
+    }
+
+    if (untiered) {
+      untiered.checked =
+        build.searchUntiered !== false;
+    }
+
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
@@ -3296,6 +3378,29 @@ const TINT = {
       if (!scope) return;
       build.scope = scope.dataset.scope;
       keep(); paint();
+    });
+
+    el('tcBody').addEventListener('change', event => {
+      const filter =
+        event.target.closest('[data-search-gear]');
+
+      if (!filter) return;
+
+      const key = filter.dataset.searchGear;
+
+      /*
+       * True is the default, represented by no property at all. Besides
+       * keeping saved builds compact, this makes builds saved before this
+       * feature naturally behave as though both boxes were checked.
+       */
+      if (filter.checked) {
+        delete build[key];
+      } else {
+        build[key] = false;
+      }
+
+      keep();
+      paint();
     });
     /*
      * The other tool, with this item in it.
@@ -3426,6 +3531,52 @@ const TINT = {
     });
 
     el('tcGear').addEventListener('click', event => {
+      const ban = event.target.closest('[data-ban-held]');
+      if (ban) {
+        const hand = ban.dataset.banHeld;
+        const worn = build.gear[hand];
+
+        if (!worn || !worn.name) return;
+
+        build.banned = build.banned || {};
+        build.banned[worn.name] = true;
+
+        /*
+         * The blacklisted item cannot remain equipped: otherwise the current
+         * build would still use something that its own search is forbidden
+         * to offer.
+         */
+        worn.name = null;
+        worn.ench = (worn.ench || []).map(() => null);
+
+        /*
+         * A removed item cannot remain locked, nor can enchantment locks from
+         * that old item prevent the optimiser from filling the empty slot.
+         */
+        build.locked = build.locked || {};
+        delete build.locked[hand];
+
+        for (const key of Object.keys(build.locked)) {
+          if (key.indexOf(hand + ':') === 0) {
+            delete build.locked[key];
+          }
+        }
+
+        keep();
+        paint();
+
+        /*
+         * Blacklisting something from the equipped card means "give me the
+         * next best answer without this item". Reuse the exact same search
+         * path as the Search button so goals, scope, progression, locks and
+         * every other blacklist keep their normal meaning.
+         */
+        const run = el('tcRun');
+        if (run && !run.disabled) run.click();
+
+        return;
+      }
+
       const item = event.target.closest('[data-item]');
       if (item) { openItems(item.dataset.item); return; }
       const ench = event.target.closest('[data-ench]');

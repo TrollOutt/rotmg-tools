@@ -250,3 +250,138 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     'four 100-damage shots every 0.8 s must equal 500 DPS'
   );
 }
+
+
+/*
+ * Theory search gear-family filters must stay independent.
+ *
+ * Sets are their own search family even when the individual piece is
+ * untiered. Untiered means non-set gear without a tier. Missing flags are
+ * the backwards-compatible default: both families included.
+ */
+{
+  const hands = [
+    'weapon',
+    'ability',
+    'armor',
+    'ring'
+  ];
+
+  function findCase(predicate) {
+    for (const klass of raw.classes) {
+      const state = ruled.fresh(klass.name);
+
+      for (const hand of hands) {
+        const list =
+          ruled.searchItems(
+            hand,
+            klass.name,
+            state
+          );
+
+        const item =
+          list.find(predicate);
+
+        if (item) {
+          return {
+            state,
+            klass: klass.name,
+            hand,
+            item
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  const setCase =
+    findCase(one => !!one.set);
+
+  assert(
+    setCase,
+    'TheoryCraft needs at least one searchable set item for the filter regression'
+  );
+
+  setCase.state.searchSets = false;
+
+  assert(
+    !ruled.searchItems(
+      setCase.hand,
+      setCase.klass,
+      setCase.state
+    ).some(one => one.set),
+    'disabling Sets must remove every set item from optimizer candidates'
+  );
+
+  setCase.state.searchSets = true;
+  setCase.state.searchUntiered = false;
+
+  assert(
+    ruled.searchItems(
+      setCase.hand,
+      setCase.klass,
+      setCase.state
+    ).some(one => one.name === setCase.item.name),
+    'Sets must remain available when only Untiered is disabled'
+  );
+
+
+  const untieredCase =
+    findCase(one =>
+      !one.set &&
+      one.tier === undefined
+    );
+
+  assert(
+    untieredCase,
+    'TheoryCraft needs at least one searchable non-set untiered item for the filter regression'
+  );
+
+  untieredCase.state.searchUntiered = false;
+
+  assert(
+    !ruled.searchItems(
+      untieredCase.hand,
+      untieredCase.klass,
+      untieredCase.state
+    ).some(one =>
+      !one.set &&
+      one.tier === undefined
+    ),
+    'disabling Untiered must remove non-set untiered optimizer candidates'
+  );
+
+  untieredCase.state.searchUntiered = true;
+  untieredCase.state.searchSets = false;
+
+  assert(
+    ruled.searchItems(
+      untieredCase.hand,
+      untieredCase.klass,
+      untieredCase.state
+    ).some(one =>
+      one.name === untieredCase.item.name
+    ),
+    'Untiered must remain available when only Sets is disabled'
+  );
+
+
+  const legacy =
+    ruled.fresh(untieredCase.klass);
+
+  delete legacy.searchSets;
+  delete legacy.searchUntiered;
+
+  assert(
+    ruled.searchItems(
+      untieredCase.hand,
+      untieredCase.klass,
+      legacy
+    ).some(one =>
+      one.name === untieredCase.item.name
+    ),
+    'missing search filter flags must mean included for old saved builds'
+  );
+}

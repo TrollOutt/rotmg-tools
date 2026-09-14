@@ -2438,6 +2438,11 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   border: 1px solid transparent; border-radius: var(--radius-sm);
 }
 .tc-ban:hover { color: #d4685f; border-color: rgba(212, 104, 95, .4); background: rgba(212, 104, 95, .08); }
+.tc-slot-ban {
+  align-self: center;
+  height: 30px;
+  padding: 0;
+}
 
 /* And what has been set aside, where the search is asked for. */
 .tc-aside {
@@ -2632,7 +2637,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * picture so it still reads as belonging to it.
  */
 .tc-slot-head {
-  display: grid; grid-template-columns: 1fr auto auto;
+  display: grid; grid-template-columns: 1fr auto auto auto;
   align-items: center; gap: 3px 11px; padding: 9px 11px 7px;
   /* The picture, and the gap beside it - what the writing is indented past. */
   --tc-indent: 63px;
@@ -2953,6 +2958,54 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   background: color-mix(in srgb, var(--tint) 16%, transparent);
 }
 .tc-goal.is-on .tc-dot { opacity: 1; }
+
+.enchant-optimizer .tc-goals {
+  margin-bottom: 10px;
+}
+.enchant-optimizer #itemOptimizeHint {
+  margin: 0 0 12px;
+}
+.enchant-optimizer .tc-calc-row {
+  margin-top: 2px;
+}
+.enchant-optimizer .tc-said {
+  width: 100%;
+}
+
+/*
+ * The enchant optimizer adds a third full card to the calculator's left
+ * column. The old desk layout assumed that only Item + Slots lived here:
+ * it hid overflow on the whole column and made the slot list absorb every
+ * remaining pixel. With the optimizer underneath, that remaining space can
+ * collapse to almost nothing even though the enchantments are still present.
+ *
+ * Let the left column scroll like the right one instead. Each card keeps its
+ * natural height, and the slot list no longer becomes the sacrificial
+ * scrollbar for the whole column.
+ */
+@media (min-width: 1041px) and (min-height: 700px) {
+  #pageEnchant .column.config {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  #pageEnchant .column.config > .card {
+    flex: none;
+  }
+
+  #pageEnchant .column.config > .card.step[data-step="2"] {
+    flex: none;
+    min-height: auto;
+    display: block;
+  }
+
+  #pageEnchant .column.config #slotList {
+    flex: none;
+    min-height: auto;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
 .tc-calc-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .tc-now { margin-left: auto; }
 .tc-now .figure { flex-direction: column; align-items: flex-end; gap: 1px; }
@@ -3886,4 +3939,60 @@ body.ring-near .ring-tag { opacity: 0; }
 }
 .ix-empty-population {
   padding: 5px 0 2px; color: var(--muted); font-size: 12px; line-height: 1.45;
+}
+
+
+/* Gear families offered to TheoryCraft's optimiser. */
+.tc-opt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+}
+
+.tc-search-pool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}
+
+.tc-search-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 25px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tc-search-filter:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.tc-search-filter input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.tc-search-filter:has(input:checked) {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(121, 197, 232, .09);
+}
+
+#tcKept {
+  white-space: nowrap;
 }
