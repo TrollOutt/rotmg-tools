@@ -411,6 +411,21 @@ for (const one of objects) {
    */
   const drunk = labels.includes('CONSUMABLE');
   if (!hand && !drunk && (!family || family === 'other')) hidden.push('a slot no class uses');
+  const directBody = one.body.replace(
+    /<Subattack\b[^>]*>[\s\S]*?<\/Subattack>/g,
+    ''
+  );
+
+  const effectiveFires = shotOf(one.body) || [];
+  const attackChannels = effectiveFires.filter(shot => shot.subattack);
+
+  const effectiveShotCount = attackChannels.length
+    ? attackChannels.reduce(
+        (sum, shot) => sum + (shot.many || 1),
+        0
+      )
+    : num(directBody, 'NumProjectiles');
+
   const record = put('item', nameOf(one), one, {
     slot, hand,
     tier: num(one.body, 'Tier'),
@@ -418,11 +433,11 @@ for (const one of objects) {
     about: text(one.body, 'Description'),
     sb: has(one.body, 'Soulbound') || undefined,
     mp: num(one.body, 'MpCost'),
-    rate: num(one.body, 'RateOfFire'),
-    shots: num(one.body, 'NumProjectiles'),
+    rate: num(directBody, 'RateOfFire'),
+    shots: effectiveShotCount,
     use: drunk ? 1 : undefined,
     family,
-    fires: shotOf(one.body),
+    fires: effectiveFires.length ? effectiveFires : undefined,
     worn: wornOf(one.body),
     does: tipsOf(one.body),
     /*
