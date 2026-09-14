@@ -1393,6 +1393,27 @@ const RealmIndex = (function () {
   }
 
   /*
+   * What the client declares about this thing, and the words it files it
+   * under.
+   *
+   * The labels were a loose line of pills below the facts, in a smaller type
+   * and a paler grey than any other chip on the page. They are a named row
+   * inside the same block now, in the same chip as everything else: they are
+   * one more thing the client says about the record, not a separate class of
+   * object that happens to be printed nearby.
+   */
+  function drawFacts(one) {
+    const rows = factsOf(one).map(([key, value]) =>
+      '<div><dt>' + esc(key) + '</dt><dd>' + esc(value) + '</dd></div>').join('');
+    const labels = (one.labels || []).length
+      ? '<div class="ix-links"><div class="ix-link-row"><i>labels</i><span>'
+        + one.labels.map(x => '<span class="ix-data-chip">' + esc(x) + '</span>').join('')
+        + '</span></div></div>'
+      : '';
+    return block('Facts', (rows ? '<dl class="ix-facts">' + rows + '</dl>' : '') + labels);
+  }
+
+  /*
    * What the client says a thing does where no number can say it. The Alien
    * Cores carry no damage and no bonus and read as though they did nothing;
    * the client writes their effect out in the tooltip block instead, and so
@@ -1400,9 +1421,9 @@ const RealmIndex = (function () {
    */
   function drawDoes(one) {
     if (!one.does || !one.does.length) return '';
-    return '<ul class="ix-does">' + one.does.map(said => '<li>'
+    return block('What it does', '<ul class="ix-does">' + one.does.map(said => '<li>'
       + (said.length > 1 ? '<b>' + esc(said[0]) + '</b> ' + esc(said[1]) : esc(said[0]))
-      + '</li>').join('') + '</ul>';
+      + '</li>').join('') + '</ul>');
   }
 
   function drawDungeonDifficulty(one) {
@@ -1530,7 +1551,6 @@ const RealmIndex = (function () {
      */
     if (one.kind === 'item') heldBy(one).forEach(x => links.push(['may hold', x.id, true]));
 
-    const facts = factsOf(one);
     const cardLinks = one.kind === 'place' ? links.filter(([how]) => how !== 'was seen in') : links;
     const where = one.from
       ? (all.files[one.from[0]] || '?') + (one.from[1] ? ' · ' + one.from[1] : '')
@@ -1546,9 +1566,13 @@ const RealmIndex = (function () {
       + awayTo(one)
       + star(one.id)
       + '</header>'
-      + drawRecordDescription(one)
+      /*
+       * Title, then what is wrong with it, then what you can do with it, then
+       * the blocks. The buttons used to sit halfway down, below the facts and
+       * the labels, which put the one thing on the card you can press behind
+       * two screens of reading.
+       */
       + drawDungeonDifficulty(one)
-      + drawDoes(one)
       + (one.hidden
         ? '<p class="ix-warn"><b>The other tools do not offer this</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
         : '')
@@ -1556,19 +1580,13 @@ const RealmIndex = (function () {
       + (one.twin
         ? '<p class="ix-warn">The game has more than one thing by this name. The words in brackets are how they differ.</p>'
         : '')
-      + (facts.length
-        ? '<dl class="ix-facts">' + facts.map(([k, v]) =>
-          '<div><dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd></div>').join('') + '</dl>'
-        : '')
-      + (one.labels && one.labels.length
-        ? '<p class="ix-labels">' + one.labels.map(x =>
-          '<i>' + esc(x) + '</i>').join('') + '</p>'
-        : '')
       + drawTools(one)
+      + drawRecordDescription(one)
+      + drawDoes(one)
+      + drawFacts(one)
       + (one.kind === 'place' ? drawPlaceKnowledge(one) : drawRealmEyeArchive(one))
       + drawFolds(one)
-      + drawSlots(one)
-      + (cardLinks.length ? drawLinks(cardLinks) : '')
+      + drawConnections(one, cardLinks)
       + (one.kind === 'place' ? '' : drawWiki(one))
       + (one.communityOnly ? '' : '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>');
   }
@@ -1584,15 +1602,18 @@ const RealmIndex = (function () {
    */
   function drawFolds(one) {
     if (!one.folds || one.folds.length < 2) return '';
-    return '<div class="ix-folds"><b>This common entry represents '
-      + one.folds.length + ' client declarations</b>'
-      + '<ul>' + one.folds.map(x =>
+    return block('Client declarations', '<ul class="ix-folds">' + one.folds.map(x =>
+        /*
+         * The file goes on the end of the first line, not below the wrapped
+         * one: what differs is a sentence and takes a line of its own, and
+         * with it written first the address was pushed onto a third.
+         */
         '<li><span>' + esc(x.as) + '</span>'
         + (x.why ? '<em>' + esc(x.why) + '</em>' : '')
-        + (x.diff ? '<small>' + esc(x.diff) + '</small>' : '')
         + '<code>' + esc((all.files[x.from && x.from[0]] || '?')
-          + (x.from && x.from[1] ? ' · ' + x.from[1] : '')) + '</code></li>').join('')
-      + '</ul></div>';
+          + (x.from && x.from[1] ? ' · ' + x.from[1] : '')) + '</code>'
+        + (x.diff ? '<small>' + esc(x.diff) + '</small>' : '') + '</li>').join('')
+      + '</ul>', one.folds.length);
   }
 
   /*
@@ -1723,6 +1744,23 @@ const RealmIndex = (function () {
     return ranges.map(([from, to]) => from === to ? 'T' + from : 'T' + from + '–T' + to).join(', ');
   }
 
+  /*
+   * One frame for every block of a record.
+   *
+   * The card used to be a mix: the description in a box of its own, the facts
+   * and the labels and the declarations and the links loose between boxes,
+   * and the community data in a third kind of box again. A reader could not
+   * tell from the shape of a block whether it was the client talking or the
+   * wiki, because the shape did not mean anything. Everything goes through
+   * here now, so a block of a card looks like a block of a card.
+   */
+  function block(title, body, count) {
+    if (!body) return '';
+    return '<div class="ix-block"><details class="ix-part" open><summary>' + esc(title)
+      + (count ? '<small class="ix-section-count">' + count + '</small>' : '')
+      + '</summary>' + body + '</details></div>';
+  }
+
   function drawRecordDescription(one) {
     const descriptions = [];
     const seen = new Set();
@@ -1734,8 +1772,8 @@ const RealmIndex = (function () {
       descriptions.push(text);
     }
     if (!descriptions.length) return '';
-    return '<details class="ix-card-description"><summary>Description</summary>'
-      + '<div>' + descriptions.map(text => '<p>' + esc(text) + '</p>').join('') + '</div></details>';
+    return block('Description', '<div class="ix-prose">'
+      + descriptions.map(text => '<p>' + esc(text) + '</p>').join('') + '</div>');
   }
 
   function drawKnowledgeTarget(item) {
@@ -1958,7 +1996,7 @@ const RealmIndex = (function () {
     const populationTotal = placePopulationTotal(one);
     const emptyPopulation = drawPopulationEmpty(one);
     if (population.length || emptyPopulation) {
-      sections.push('<details class="ix-knowledge-section" open><summary>Population <small class="ix-section-count">'
+      sections.push('<details class="ix-part" open><summary>Population <small class="ix-section-count">'
         + populationTotal + '</small></summary><div class="ix-links">'
         + population.join('') + emptyPopulation + '</div></details>');
     }
@@ -1976,7 +2014,7 @@ const RealmIndex = (function () {
     const dungeons = resolvedButtons(one.dungeons);
     if (dungeons.length) lootRows.push(drawKnowledgeRow('dungeon entrances', dungeons));
     if (lootRows.length) {
-      sections.push('<details class="ix-knowledge-section" open><summary>Loot</summary><div class="ix-links">'
+      sections.push('<details class="ix-part" open><summary>Loot</summary><div class="ix-links">'
         + lootRows.join('') + '</div></details>');
     }
 
@@ -1989,11 +2027,11 @@ const RealmIndex = (function () {
       else row = '<div class="ix-link-row"><i>areas</i><span>'
         + subNames.map(name => '<span class="ix-data-chip">' + esc(name) + '</span>').join('')
         + '</span></div>';
-      sections.push('<details class="ix-knowledge-section" open><summary>Sub-biomes</summary><div class="ix-links">'
+      sections.push('<details class="ix-part" open><summary>Sub-biomes</summary><div class="ix-links">'
         + row + '</div></details>');
     }
 
-    return sections.length ? '<div class="ix-knowledge-block">' + sections.join('') + '</div>' : '';
+    return sections.length ? '<div class="ix-block">' + sections.join('') + '</div>' : '';
   }
 
   function drawRealmEyeArchive(one) {
@@ -2020,11 +2058,12 @@ const RealmIndex = (function () {
         + '</table></div>';
     }).join('');
     if (!shownFacts.length && !relationRows && !tableHtml) return '';
-    return '<div class="ix-knowledge-block"><details class="ix-knowledge-section" open><summary>Details</summary>'
-      + (shownFacts.length ? '<dl class="ix-facts">' + shownFacts.map(([key, value]) =>
+    /* Named for whose data it is, the way the wiki's block below is. */
+    return block('RealmEye details',
+      (shownFacts.length ? '<dl class="ix-facts">' + shownFacts.map(([key, value]) =>
         '<div><dt>' + esc(realmFactSay(key.split('.').pop())) + '</dt><dd>' + esc(value) + '</dd></div>').join('') + '</dl>' : '')
       + (relationRows ? '<div class="ix-links">' + relationRows + '</div>' : '')
-      + tableHtml + '</details></div>';
+      + tableHtml);
   }
 
   function drawWiki(one) {
@@ -2084,9 +2123,7 @@ const RealmIndex = (function () {
       ...(wiki.spawnBy.get(mine) || [])])];
     say('spawns, or is spawned by', kin);
     if (!rows.length) return '';
-    /* REALMEYE_NEUTRAL_SOURCE_UI */
-    return '<div class="ix-knowledge-block"><section class="ix-knowledge-section"><h4>Related data</h4>'
-      + '<div class="ix-links">' + rows.join('') + '</div></section></div>';
+    return block('Related data', '<div class="ix-links">' + rows.join('') + '</div>');
   }
 
   /* What another page can do with this thing. */
@@ -2135,25 +2172,35 @@ const RealmIndex = (function () {
   }
 
   /* The kinds of gear a class may carry, each with the plainest of its kind. */
-  function drawSlots(one) {
+  function slotRow(one) {
     if (one.kind !== 'class' || !one.slots || !all.slots) return '';
     const said = one.slots.map(slot => all.slots[slot]).filter(Boolean);
     if (!said.length) return '';
-    return '<div class="ix-links"><div class="ix-link-row"><i>may hold</i><span>'
+    return '<div class="ix-link-row"><i>may hold</i><span>'
       + said.map(([say, plainest]) =>
         '<button type="button" class="ix-jump" data-slot="' + esc(say) + '"'
         + ' title="Show every ' + esc(say.toLowerCase()) + '">'
         + art(all.get(plainest), 14) + esc(say) + '</button>').join('')
-      + '</span></div></div>';
+      + '</span></div>';
   }
 
-  function drawLinks(links) {
+  /*
+   * What this record is tied to. The kinds of gear a class may carry were a
+   * block of their own directly above this one, with the same row in it - two
+   * boxes saying the same sort of thing, one after the other.
+   */
+  function drawConnections(one, links) {
+    const rows = slotRow(one) + linkRows(links);
+    return block('Links', rows ? '<div class="ix-links">' + rows + '</div>' : '');
+  }
+
+  function linkRows(links) {
     const byHow = new Map();
     for (const [how, id, backwards] of links) {
       const key = (backwards ? '← ' : '') + how;
       (byHow.get(key) || byHow.set(key, []).get(key)).push(id);
     }
-    let out = '<div class="ix-links">';
+    let out = '';
     for (const [how, ids] of byHow) {
       out += '<div class="ix-link-row"><i>' + esc(how) + '</i><span>'
         + ids.slice(0, 40).map(id => {
@@ -2164,7 +2211,7 @@ const RealmIndex = (function () {
         + (ids.length > 40 ? '<em>and ' + (ids.length - 40) + ' more</em>' : '')
         + '</span></div>';
     }
-    return out + '</div>';
+    return out;
   }
 
   /* ---------------- wiring ---------------- */
