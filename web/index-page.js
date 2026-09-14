@@ -116,12 +116,18 @@ const RealmIndex = (function () {
     .replace(/\s+/g, ' ').trim();
 
   /*
-   * The seven families, in the order somebody looks for them rather than
-   * alphabetically: what you hold, who you are, what you fight, where you go,
-   * and the three that decide what goes on your gear.
+   * The families, in the order somebody looks for them rather than
+   * alphabetically: what you hold, who you are and what you look like, what
+   * you fight, where you go, and the three that decide what goes on your gear.
+   *
+   * Skins sit beside Classes because that is the question they answer. The
+   * thing in your bag that hands one over is a consumable and stays under
+   * Consumables, filed as a skin unlocker - two different things, and the
+   * card of each points at the other.
    */
   const KINDS = [
-    ['item', 'Gear'], ['use', 'Consumables'], ['class', 'Classes'], ['enemy', 'Enemies'],
+    ['item', 'Gear'], ['use', 'Consumables'], ['class', 'Classes'], ['skin', 'Skins'],
+    ['enemy', 'Enemies'],
     ['portal', 'Dungeons'], ['place', 'Biomes'], ['set', 'Sets'],
     ['enchant', 'Enchantments'], ['pool', 'Pools']
   ];
@@ -430,9 +436,48 @@ const RealmIndex = (function () {
     const byClass = group('Class', 'client');
     for (const one of [...all.values()].filter(x => x.kind === 'class')) {
       const wants = new Set(one.slots || []);
+      /*
+       * What the class may hold, and what it may look like. A skin names the
+       * class that wears it, so an Archer's chip answers both halves of
+       * "show me the Archer" rather than only the half kept in a bag.
+       */
       const ids = gather(x => x.id === one.id
-        || (x.kind === 'item' && wants.has(x.slot)));
+        || (x.kind === 'item' && wants.has(x.slot))
+        || (x.kind === 'skin'
+          && (x.out || []).some(([how, to]) => how === 'worn by' && to === one.id)));
       chip(byClass, one.name, one.name, ids, one.id);
+    }
+
+    /*
+     * What a character looks like, told apart by how you come by one.
+     *
+     * These were not in the index at all until the build stopped asking for
+     * <Item />: fifteen hundred appearances the client declares, of which the
+     * index held only the consumables that hand them over. A reader after
+     * "which skins does the Shatters set give me" had nothing to ask.
+     *
+     * The three ways are the client's own, not a guess - the unlocker names
+     * its skin by type, the set names its skin by type, and what neither names
+     * is what you start with or what the game dresses you in itself.
+     */
+    const bySkin = group('Skins', 'client', 'how you come by one');
+    const cameBy = how => gather(x => x.kind === 'skin'
+      && (x.in || []).some(([said]) => said === how));
+    const fromItem = cameBy('unlocks');
+    const fromSet = cameBy('dresses you as');
+    for (const [key, say, ids] of [
+      ['unlocked', 'From an unlocker', fromItem],
+      ['set', 'From a set', fromSet],
+      ['given', 'Given to you', gather(x => x.kind === 'skin'
+        && !fromItem.has(x.id) && !fromSet.has(x.id))]
+    ]) {
+      /* Pictured by one of its own that has a picture worth showing. */
+      let shown = null;
+      for (const id of ids) {
+        const one = all.get(id);
+        if (one && one.art && !one.hidden) { shown = one; break; }
+      }
+      chip(bySkin, key, say, ids, shown && shown.id);
     }
 
     const byHand = group('Gears', 'client');
