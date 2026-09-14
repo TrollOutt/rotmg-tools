@@ -217,8 +217,13 @@ for (const one of objects) {
   const texture = textureOf(one.body, 'AnimatedTexture');
   const mine = texture ? frames.get(texture.file + '#' + texture.index) : null;
   if (!mine || !mine.length) continue;
-  /* Standing still, facing the reader, for a button the size of a thumbnail. */
-  const still = mine.find(f => f.action === 0 && f.direction === 2) || mine[0];
+  /*
+   * Standing still and looking at the reader, for a button the size of a
+   * thumbnail. Direction three is the face: two is the back of the head, and
+   * a row of nineteen hoods tells nobody which class is which.
+   */
+  const still = mine.find(f => f.action === 0 && f.direction === registry.FRONT)
+    || mine.find(f => f.action === 0) || mine[0];
   classes[hex(one.type)] = { on: still.sheet, rect: still.rect };
 }
 

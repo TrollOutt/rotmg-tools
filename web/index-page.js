@@ -314,6 +314,13 @@ const RealmIndex = (function () {
       (reverse[id] || (reverse[id] = [])).push(target);
     };
     for (const one of skins.skins) {
+      /*
+       * Only what the viewer can draw. Nineteen skins are declared with a
+       * texture the client's own sprite registry has no entry for, so the
+       * viewer does not list them and a door onto one would open on nothing.
+       * They stay in the index, which records what the game declares.
+       */
+      if (!one.drawn) continue;
       const target = { kind: 'skin', id: one.name, type: Number.parseInt(one.type, 16) };
       at(one.id, target);
       /* And from the thing in your bag, or the set, to what it turns you into. */

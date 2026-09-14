@@ -72,6 +72,14 @@ for (const one of index.records) {
     pick: one.pick ? 1 : undefined,
     unlockers: links.unlockers.length ? links.unlockers : undefined,
     sets: links.sets.length ? links.sets : undefined,
+    /*
+     * Whether the client holds a picture of it at all. Nineteen skins are
+     * declared with an <AnimatedTexture> the client's own sprite registry has
+     * no entry for - every 2-Bit class - so there is nothing to draw and
+     * nothing to offer. The index says so by having no art for them, which is
+     * the same nineteen.
+     */
+    drawn: one.art ? 1 : undefined,
     hidden: one.hidden ? one.hidden.join('; ') : undefined
   });
 }
