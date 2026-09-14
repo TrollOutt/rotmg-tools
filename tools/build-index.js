@@ -444,6 +444,15 @@ for (const one of objects) {
     shots: effectiveShotCount,
     use: drunk ? 1 : undefined,
     family,
+    /*
+     * What a dye colours, which the client says in the name of the tag rather
+     * than in its value: <Tex1> is what goes on your clothes and <Tex2> is
+     * what goes on your accessory. Eight hundred dyes in the index and no way
+     * to tell one from the other, when the client states it outright.
+     */
+    dyes: family === 'dye'
+      ? (/<Tex1>/.test(one.body) ? 'clothing' : /<Tex2>/.test(one.body) ? 'accessory' : undefined)
+      : undefined,
     fires: effectiveFires.length ? effectiveFires : undefined,
     worn: wornOf(one.body),
     does: tipsOf(one.body),

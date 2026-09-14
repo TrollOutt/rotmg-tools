@@ -290,12 +290,42 @@ const RealmIndex = (function () {
     }
   }
 
+  /*
+   * The way through to the Skin Viewer, built from what the index already
+   * knows rather than from a file of name matches.
+   *
+   * There used to be a generated bridge here - 864 skins matched to records
+   * by name, with a `reason` saying how confident the match was. The index
+   * states the joins outright now: a skin record names the class that wears
+   * it, the consumable that hands it over and the set that dresses you as it,
+   * all by the client's own types. So the door is simply the reverse of that,
+   * turned round here from the same catalogue the viewer reads.
+   */
   async function loadSkinBridge() {
     if (skinBridge) return true;
-    const raw = await fetch('assets/skins/generated/index-links.json')
-      .then(response => response.ok ? response.json() : null).catch(() => null);
-    if (!raw || raw.schema < 3 || !raw.reverse) return false;
-    skinBridge = raw;
+    const [skins, dyes] = await Promise.all([
+      fetch('assets/skins/generated/skins.json'),
+      fetch('assets/skins/generated/dyes.json')
+    ].map(p => p.then(r => r.ok ? r.json() : null).catch(() => null)));
+    if (!skins || !Array.isArray(skins.skins)) return false;
+    const reverse = Object.create(null);
+    const at = (id, target) => {
+      if (!id) return;
+      (reverse[id] || (reverse[id] = [])).push(target);
+    };
+    for (const one of skins.skins) {
+      const target = { kind: 'skin', id: one.name, type: Number.parseInt(one.type, 16) };
+      at(one.id, target);
+      /* And from the thing in your bag, or the set, to what it turns you into. */
+      for (const from of one.unlockers || []) at(from, target);
+      for (const from of one.sets || []) at(from, { ...target, via: 'set' });
+    }
+    for (const one of (dyes && dyes.dyes) || []) {
+      if (!one.on) continue;
+      at(one.id, { kind: 'dye', id: one.name, target: one.on,
+        type: Number.parseInt(one.type, 16) });
+    }
+    skinBridge = { reverse };
     return true;
   }
 
@@ -2085,7 +2115,7 @@ const RealmIndex = (function () {
       const many = viewerTargets.length > 1;
       const what = target.kind === 'dye'
         ? (target.target === 'clothing' ? 'clothing dye' : 'accessory dye')
-        : (target.reason === 'exact-set-skin-family' ? 'set skin' : 'skin');
+        : (target.via === 'set' ? 'set skin' : 'skin');
       return '<button type="button" class="ix-door" data-skin-target="'
         + esc(encodeURIComponent(JSON.stringify(target))) + '" title="Open the exact linked '
         + esc(what) + ' in the local Skin Viewer">Open in Skin Viewer'

@@ -4,17 +4,17 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx --yes serve . -l 5173",
-    "test": "node tests/engine.test.js && node tools/check-artifacts.js && node tools/check-index.js && node tests/projections.test.js && node tests/theory.test.js && node tests/progression.test.js && node tests/rules-corpus.js && node tests/index-quality.test.js && node tests/atlas-combat.test.js",
+    "test": "node tests/engine.test.js && node tools/check-artifacts.js && node tools/check-index.js && node tests/projections.test.js && node tests/theory.test.js && node tests/progression.test.js && node tests/rules-corpus.js && node tests/index-quality.test.js && node tests/atlas-combat.test.js && node tests/skins.test.js",
     "build": "node tools/build-standalone.js && node tests/standalone.test.js",
     "sprites": "node tools/fetch-sprites.js",
     "realm-sprites": "node tools/generate-realm.js && node tools/fetch-realm-sprites.js && node tools/generate-realm.js",
     "realm-wiki": "node tools/fetch-realmeye-realm.js --details --assets && node tools/generate-realm.js",
     "wiki-dungeons": "node tools/link-index-dungeons.js",
     "wiki-tiers": "node tools/fetch-realmeye-tier-drops.js",
-    "scrape": "npm run extract-client-data && npm run build-index-db && npm run publish-index-db && npm run wiki-publish && npm run project-data && node tools/read-client.js --snapshot --news",
+    "scrape": "npm run extract-client-data && npm run build-index-db && npm run publish-index-db && npm run wiki-publish && npm run skin-looks && npm run project-data && node tools/read-client.js --snapshot --news",
     "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
     "release": "npm test && npm run build",
-    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js",
+    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js && node tools/generate-skins.js",
     "extract-client-data": "node tools/extract-client.js && node tools/extract-client-textures.js",
     "build-index-db": "python tools/database/check_client_source.py && python tools/database/build_sqlite.py",
     "publish-index-db": "python tools/database/publish_index.py --output-root . --allow-production",
@@ -26,6 +26,7 @@
     "wiki-check": "python tools/database/check_realmeye_integration.py",
     "wiki-sprites:audit": "python tools/audit-realmeye-sprites.py",
     "wiki-integrate": "npm run wiki-index && npm run build-index-db && npm run publish-index-db && npm run project-data && npm run wiki-publish && npm run wiki-check && npm run wiki-sprites:audit && npm run build",
-    "wiki-refresh": "npm run wiki-monitor && npm run wiki-integrate"
+    "wiki-refresh": "npm run wiki-monitor && npm run wiki-integrate",
+    "skin-looks": "node tools/build-skin-looks.js"
   }
 }

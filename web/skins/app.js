@@ -32,15 +32,128 @@ host.dataset.integrated=String(Boolean(options.integrated??host.dataset.integrat
 root.innerHTML=`<link rel="stylesheet" href="${new URL('./style.css',import.meta.url).href}">${markup}`;
 let active=true;
 const $=x=>root.getElementById(x);
-const [skins,dyes,classes,realmAtlas]=await Promise.all(['assets/skins/generated/skins.json','assets/skins/generated/dyes.json','assets/skins/generated/classes.json','assets/atlas/atlas.json'].map(x=>fetch(x).then(r=>{if(!r.ok)throw Error(`${x}: ${r.status}`);return r.json()})));
+/*
+ * Two files, joined on the client's own type.
+ *
+ * What a skin is called, whose class it belongs to, which costume it is part
+ * of and what unlocks it are facts about a thing, and they live on its index
+ * record like every other fact on this site. Where each of its frames sits on
+ * the client's packed sheet is geometry, which the index has no use for, and
+ * lives beside it.
+ *
+ * This viewer used to carry both in one eighteen-megabyte catalogue that
+ * nothing in the repository could rebuild, with a bridge back to the index
+ * that matched records up by name. Both halves are generated now -
+ * tools/generate-skins.js projects the first out of the index and
+ * tools/build-skin-looks.js reads the second out of the client - and the
+ * bridge is gone, because the index states the joins outright.
+ *
+ * Everything below this point still sees the shape it always saw.
+ */
+const [skinCatalogue,dyeCatalogue,classCatalogue,looks,realmAtlas]=await Promise.all([
+  'assets/skins/generated/skins.json','assets/skins/generated/dyes.json',
+  'assets/skins/generated/classes.json','assets/skins/generated/looks.json',
+  'assets/atlas/atlas.json'
+].map(x=>fetch(x).then(r=>{if(!r.ok)throw Error(`${x}: ${r.status}`);return r.json()})));
+
+/* A frame row is [set, action, direction, x, y, w, h, maskX, maskY, padding]. */
+const SAY_ACTION=looks.actions||[],SAY_DIRECTION=looks.directions||[];
+function framesOf(geometry){
+  if(!geometry)return{sequences:[],frames:[]};
+  const sequences=[],byKey=new Map(),flat=[];
+  for(const row of geometry.frames){
+    const[set,action,direction,x,y,w,h,maskX,maskY]=row;
+    const frame={
+      set,actionRaw:action,directionRaw:direction,
+      action:SAY_ACTION[action]||('action '+action),
+      direction:SAY_DIRECTION[direction]||('direction '+direction),
+      atlas:'looks',rect:{x,y,w,h},
+      maskRect:maskX<0?null:{x:maskX,y:maskY,w,h},
+      spriteAvailable:true,maskAvailable:maskX>=0
+    };
+    flat.push(frame);
+    /* One sequence per animation, in the order the client wrote them. */
+    const key=set+'|'+action+'|'+direction;
+    let sequence=byKey.get(key);
+    if(!sequence){
+      sequence={set,actionRaw:action,directionRaw:direction,
+        action:frame.action,direction:frame.direction,frames:[]};
+      byKey.set(key,sequence);sequences.push(sequence);
+    }
+    frame.frame=sequence.frames.length;
+    sequence.frames.push(frame);
+  }
+  return{sequences,frames:flat};
+}
+
+const skins=skinCatalogue.skins.map(one=>{
+  const drawn=framesOf(looks.skins[one.type]);
+  return{
+    id:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
+    className:one.wears||null,
+    /* The costume, which the index marks as read off the name rather than
+       declared. Anything no second skin shares a stem with is its own. */
+    family:one.look||'Other',
+    tier:one.tier,level:one.level,given:one.given,pick:one.pick,
+    unlockers:one.unlockers||[],sets:one.sets||[],hidden:one.hidden,
+    sequences:drawn.sequences,frames:drawn.frames
+  };
+});
+
+const dyes=[];
+for(const one of dyeCatalogue.dyes){
+  const made=looks.dyes[one.type];
+  if(!made)continue;
+  dyes.push({
+    id:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
+    target:made.on,
+    kind:made.kind==='cloth'?'textile':made.kind,
+    color:made.color||null,
+    textile:made.cloth?{atlas:made.cloth.atlas,index:made.cloth.index,
+      sheet:'looks',rect:made.cloth.rect}:null,
+    animation:made.moves?{type:made.moves.how,speed:made.moves.speed,
+      pivotX:made.moves.pivotX,pivotY:made.moves.pivotY}:null,
+    icon:made.icon?{sheet:'looks',rect:made.icon.rect}:null
+  });
+}
+
+const classes=classCatalogue.classes.map(one=>{
+  const drawn=looks.classes[one.type];
+  return{name:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
+    icon:drawn?{sheet:'looks',rect:drawn.rect}:null};
+});
 const [realmCombat,realmThingIndex,realmThingBuffer]=await Promise.all([
   fetch('assets/atlas/combat.json').then(r=>r.ok?r.json():null).catch(()=>null),
   fetch('assets/atlas/things.json').then(r=>r.ok?r.json():null).catch(()=>null),
   fetch('assets/atlas/things.bin').then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)
 ]);
 const realmThings=realmThingIndex&&realmThingBuffer?{index:realmThingIndex,at:new Uint16Array(realmThingBuffer)}:null;
-/* V313_INDEX_BRIDGE: lightweight exact links into the existing Index/wiki projection. */
-const indexBridge=await fetch('assets/skins/generated/index-links.json').then(r=>r.ok?r.json():null).catch(()=>null);
+/*
+ * The way through to the index, carried on the record rather than guessed.
+ *
+ * There was a file of 864 name matches here. The index states 1,431 of the
+ * same joins outright - the unlocker names its skin by type, the set names
+ * its skin by type - so each skin and each dye simply knows its own index id
+ * and the ids of what it is joined to.
+ */
+const indexBridge={
+  skins:Object.fromEntries(skins.map(one=>[one.id,{
+    target:{kind:'index',id:one.indexId},
+    match:{kind:'index',id:one.indexId},
+    unlockers:one.unlockers,sets:one.sets,reason:'declared by the client'
+  }])),
+  dyes:Object.fromEntries(dyes.map(one=>[one.id,{
+    target:{kind:'index',id:one.indexId},
+    match:{kind:'index',id:one.indexId},reason:'declared by the client'
+  }])),
+  reverse:{}
+};
+for(const one of skins){
+  for(const to of [one.indexId,...one.unlockers,...one.sets].filter(Boolean)){
+    (indexBridge.reverse[to]||(indexBridge.reverse[to]=[]))
+      .push({kind:'skin',id:one.id,type:one.type,reason:'declared by the client'});
+  }
+}
 const canvas=$('canvas'),worldBg=$('worldBg'),fxCanvas=$('fxCanvas'),renderer=new Renderer(canvas),bg=worldBg.getContext('2d'),fx=fxCanvas.getContext('2d'),CLASS_ORDER=['Wizard','Priest','Archer','Rogue','Warrior','Knight','Paladin','Assassin','Necromancer','Huntress','Mystic','Trickster','Sorcerer','Ninja','Samurai','Bard','Summoner','Kensei'];
 classes.sort((a,b)=>{const ai=CLASS_ORDER.indexOf(a.name),bi=CLASS_ORDER.indexOf(b.name);return(ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name)});
 const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:2,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',dyeTarget:'clothing',dyeCategory:'all'};
