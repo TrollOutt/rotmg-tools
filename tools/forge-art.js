@@ -141,7 +141,8 @@ const still = new Map();                     // atlas -> index -> rectangle
       if (rects.has(index)) continue;
       rects.set(index, {
         x: Math.round(flat.f32(one[0])), y: Math.round(flat.f32(one[0] + 4)),
-        w: Math.round(flat.f32(one[0] + 8)), h: Math.round(flat.f32(one[0] + 12)),
+        /* Height then width - see tools/spritesheet.js, which holds the reader. */
+        h: Math.round(flat.f32(one[0] + 8)), w: Math.round(flat.f32(one[0] + 12)),
         sheet: sheetName(one[7] ? flat.i32(one[7]) : 0)
       });
     }

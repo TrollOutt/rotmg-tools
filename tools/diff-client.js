@@ -173,7 +173,8 @@ function loadSprites() {
       if (rects.has(index)) continue;
       rects.set(index, {
         x: Math.round(flat.f32(sprite[0])), y: Math.round(flat.f32(sprite[0] + 4)),
-        w: Math.round(flat.f32(sprite[0] + 8)), h: Math.round(flat.f32(sprite[0] + 12)),
+        /* Height then width - see tools/spritesheet.js, which holds the reader. */
+      h: Math.round(flat.f32(sprite[0] + 8)), w: Math.round(flat.f32(sprite[0] + 12)),
         sheet: SHEET_OF[flat.i32(sprite[7])] || null
       });
     }
@@ -204,7 +205,7 @@ function loadSprites() {
     moving.get(key).push({
       facing, doing,
       x: Math.round(flat.f32(sprite[0])), y: Math.round(flat.f32(sprite[0] + 4)),
-      w: Math.round(flat.f32(sprite[0] + 8)), h: Math.round(flat.f32(sprite[0] + 12)),
+      h: Math.round(flat.f32(sprite[0] + 8)), w: Math.round(flat.f32(sprite[0] + 12)),
       sheet: SHEET_OF[flat.i32(sprite[7])] || null
     });
   }
