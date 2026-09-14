@@ -60,22 +60,54 @@
 
 /* ---------------- the three panels ---------------- */
 
+/*
+ * Three cards, side by side, each one taking the height it is given and
+ * scrolling inside itself. They were three flat panels butted together with a
+ * hairline between them, which is not how any other panel on this site is
+ * drawn. The middle one is the only one that must not scroll: the stage
+ * inside it is sized to whatever is left.
+ */
 main {
   display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(360px, 1fr) minmax(260px, 320px);
+  grid-template-columns:
+    minmax(210px, clamp(230px, 20vw, 330px))
+    minmax(320px, 1fr)
+    minmax(230px, clamp(240px, 21vw, 340px));
+  gap: clamp(8px, .9vw, 16px);
+  padding: clamp(8px, .9vw, 16px);
   height: calc(100vh - 48px); min-width: 0;
 }
-aside { padding: 12px; overflow: auto; background: var(--sk-panel); min-width: 0; }
-.catalogue { border-right: 1px solid var(--sk-line); }
-.dyes { border-left: 1px solid var(--sk-line); }
+
+.panel {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  background: linear-gradient(180deg, rgba(26, 24, 36, .76) 0%, rgba(19, 18, 27, .84) 100%);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid var(--sk-line); border-radius: var(--sk-radius);
+  box-shadow: inset 0 1px 0 rgba(236, 231, 220, .06), 0 2px 18px rgba(0, 0, 0, .4);
+}
+/* Where a browser cannot blur behind a panel, make it opaque rather than
+   unreadable - the same fallback the rest of the site takes. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel { background: linear-gradient(180deg, rgba(26, 24, 36, .95) 0%, rgba(19, 18, 27, .97) 100%); }
+}
+
+/* Only the two lists scroll; the stage is sized, not scrolled. */
+.panel-body {
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+  padding: 0 12px 12px;
+  display: flex; flex-direction: column;
+  scrollbar-color: var(--sk-line) transparent;
+}
 
 .panel-title {
-  position: sticky; top: -12px; z-index: 5;
-  margin: -12px -12px 10px; padding: 12px;
-  background: var(--sk-panel); border-bottom: 1px solid var(--sk-line-soft);
-  display: flex; align-items: baseline; justify-content: space-between;
+  flex: none;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--sk-line-soft);
 }
-.panel-title b { font-size: 17px; }
+.panel-title b { font-size: 16px; font-weight: 650; letter-spacing: .3px; }
 .panel-title span, .muted { color: var(--sk-muted); font-size: 11px; }
 
 /* The heading over a group of choices, in the same small upright capitals
@@ -101,6 +133,14 @@ input, button {
 button { cursor: pointer; }
 input:focus, button:focus-visible { outline: none; border-color: var(--sk-accent); }
 .panel-search, .dye-tools input { width: 100%; margin: 0; }
+
+/*
+ * In a column that scrolls, everything above the list keeps its own size and
+ * the list takes the rest. Without this the chips were squeezed to a sliver
+ * because they are the one part willing to shrink.
+ */
+.panel-body > * { flex: none; }
+.panel-body > .card-list { flex: 1 1 auto; min-height: 0; }
 
 .filter-chips { display: flex; flex-wrap: wrap; gap: 5px; min-height: 27px; }
 .filter-chip {
@@ -190,17 +230,42 @@ input:focus, button:focus-visible { outline: none; border-color: var(--sk-accent
  * the character is ground out of the game, not interface.
  */
 
-.stage-panel { padding: 16px; overflow: auto; text-align: center; min-width: 0; }
-.stage-wrap { position: relative; max-width: 820px; margin: 0 auto; }
+/* ---------------- the stage ---------------- */
+
+.stage-panel { overflow: hidden; }
+.stage-title { align-items: center; flex-wrap: wrap; }
+.stage-named { min-width: 0; display: flex; align-items: baseline; gap: 9px; flex: 1 1 auto; }
+.stage-named b {
+  font-size: clamp(15px, 1.2vw, 19px); font-weight: 650;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stage-named small { color: var(--sk-muted); font-size: 11px; white-space: nowrap; }
+.stage-tools { display: flex; align-items: center; gap: 6px; flex: none; }
+.stage-tools #worldModeHint { font-size: 10px; color: var(--sk-dim); white-space: nowrap; }
+.stage-zoom { font: 11px var(--sk-mono); color: var(--sk-muted); min-width: 44px; text-align: right; }
+.stage-tools button { padding: 3px 10px; font-size: 11px; white-space: nowrap; }
+
+/*
+ * The stage is whatever is left after the header, the bar and the index
+ * block - and the canvases are resized to match it rather than being 640 by
+ * 420 for ever. `min-height: 0` is what lets a flex child actually shrink.
+ */
+/*
+ * The stage is the reason for the card, so it gets the room first and the
+ * blocks under it are capped at a share of the window rather than taking
+ * whatever they want. On a short screen that is what keeps the character
+ * visible instead of squeezed between two lists.
+ */
+.stage-body { flex: 1 1 auto; min-height: clamp(150px, 30vh, 460px); padding: 12px 14px 0; }
 
 .sandbox-stack {
-  position: relative; width: 100%; aspect-ratio: 640/420; overflow: hidden;
+  position: relative; width: 100%; height: 100%; overflow: hidden;
   border: 1px solid var(--sk-line); border-radius: var(--sk-radius-sm);
   background: #10151a;
 }
-.stage-wrap .sandbox-stack canvas {
+.sandbox-stack canvas {
   position: absolute; inset: 0; display: block; width: 100%; height: 100%;
-  aspect-ratio: auto; border: 0; border-radius: 0; outline: none;
+  border: 0; border-radius: 0; outline: none;
   background: none; image-rendering: pixelated;
 }
 #worldBg { z-index: 1; pointer-events: none; background: #10151a; }
@@ -211,44 +276,58 @@ input:focus, button:focus-visible { outline: none; border-color: var(--sk-accent
   color: var(--sk-bad); font-size: 18px; pointer-events: none;
 }
 
-/* The three things laid over the stage: what the keys do, how fast it
-   shoots, and where it is standing. Dark glass so the ground reads through. */
-.sandbox-help, .sandbox-tools, .sandbox-speed {
-  z-index: 6; position: absolute;
+/*
+ * The one thing still laid over the stage: what it is drawing, when it
+ * cannot. Everything else that floated in a corner - the keys, the attack
+ * speed, the background switch - now has a place: the switch is in the card's
+ * header and the rest is on one bar below.
+ */
+#missing {
+  position: absolute; left: 0; right: 0; top: 46%; z-index: 5;
+  color: var(--sk-bad); font-size: 16px; text-align: center; pointer-events: none;
+}
+
+.sandbox-bar {
+  flex: none;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 7px 14px;
+  margin: 10px 14px 0; padding: 8px 11px;
   border: 1px solid var(--sk-line-soft); border-radius: var(--sk-radius-sm);
-  background: rgba(13, 12, 19, .86); color: var(--sk-muted);
+  background: rgba(0, 0, 0, .22); color: var(--sk-muted); font-size: 11px;
 }
-.sandbox-help {
-  left: 10px; bottom: 8px; padding: 5px 8px; font-size: 11px; pointer-events: none;
-}
-.sandbox-help b { color: var(--sk-text); }
-.sandbox-tools {
-  right: 9px; top: 9px; max-width: 52%;
-  display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end;
-  gap: 5px; padding: 3px 4px 3px 8px;
-}
-.sandbox-tools button { padding: 4px 7px; margin: 0; white-space: nowrap; font-size: 11px; }
-.sandbox-tools span { min-width: 22px; font-size: 11px; }
-.sandbox-speed {
-  left: 9px; top: 9px; display: flex; align-items: center;
-  gap: 6px; padding: 5px 7px; font-size: 11px;
-}
-.sandbox-speed label { font-weight: 650; white-space: nowrap; color: var(--sk-text); }
+.sandbox-help { flex: 1 1 230px; min-width: 180px; margin: 0; }
+.sandbox-help b { color: var(--sk-text); font-weight: 650; }
+.sandbox-speed { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.sandbox-speed strong { color: var(--sk-text); font-weight: 650; }
 .sandbox-speed input {
-  width: 112px; padding: 0; margin: 0; border: 0; background: transparent;
-  accent-color: var(--sk-accent);
+  width: clamp(72px, 8vw, 118px); padding: 0; margin: 0; border: 0;
+  background: transparent; accent-color: var(--sk-accent);
 }
-.sandbox-speed span {
-  min-width: 78px; text-align: right;
+.sandbox-speed output {
+  min-width: 78px; color: var(--sk-muted);
   font-family: var(--sk-mono); font-variant-numeric: tabular-nums;
 }
-/* Where in the realm the pocket of ground was taken from. Gold, because on
-   this site gold is what has been kept from the game itself. */
+.sandbox-modes { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.sandbox-modes button {
+  min-height: 26px; padding: 0 10px;
+  border: 1px solid var(--sk-line); border-radius: 999px;
+  background: rgba(255, 255, 255, .04); color: var(--sk-dim);
+  font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+}
+.sandbox-modes button:hover { color: var(--sk-text); border-color: var(--sk-accent); }
+.sandbox-modes button.is-on {
+  border-color: var(--sk-accent); background: var(--sk-accent); color: var(--sk-on-accent);
+}
+.mode-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px;
+  background: rgba(0, 0, 0, .35); color: var(--sk-muted); font-size: 10px;
+}
+.sandbox-modes .save-combo { color: var(--sk-gold); }
+.sandbox-modes .save-combo:hover { border-color: var(--sk-gold); background: rgba(255, 208, 38, .11); }
+
+/* Where in the realm the pocket of ground was taken from. */
 .sandbox-place { font-size: 11px; color: var(--sk-gold); letter-spacing: .04em; }
 
-.skin-heading h1 { margin: 14px 0 2px; font-size: 23px; }
-.skin-heading p { margin: 4px 0; color: var(--sk-muted); }
-.play-note { max-width: 650px; margin: 8px auto; color: var(--sk-dim); font-size: 12px; }
 
 /* Segmented switches: Studio/Beach, the studio's two lights, skins or
    favourites. All three are the site's one segmented control. */
@@ -376,149 +455,144 @@ input:focus, button:focus-visible { outline: none; border-color: var(--sk-accent
 :host(.favorites-mode) #classes,
 :host(.favorites-mode) #families { opacity: .35; pointer-events: none; filter: saturate(.5); }
 
-#families { max-height: 126px; overflow: auto; align-content: flex-start; scrollbar-width: thin; }
+#families { max-height: clamp(58px, 14vh, 150px); overflow: auto; align-content: flex-start; scrollbar-width: thin; }
 
-/* ---------------- what the Index knows about it ---------------- *
- * The community/Index block keeps its own frame on this site, the way the
- * index card frames what the players wrote rather than what the client says.
+/*
+ * What the index holds about the three things chosen right now, in a row that
+ * reflows rather than three fixed columns: this panel is as wide as the window
+ * lets it be.
  */
-
-.index-bridge {
-  width: min(560px, 94%); margin: 10px auto 0; padding: 8px 9px;
-  border: 1px solid var(--sk-line); border-radius: var(--sk-radius-sm);
-  background: rgba(0, 0, 0, .22); text-align: left;
+.selected-index {
+  flex: none; margin: 10px 14px 14px; padding-top: 0;
+  max-height: clamp(96px, 24vh, 320px); overflow: auto;
+  scrollbar-color: var(--sk-line) transparent;
 }
-.index-bridge-title {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; margin-bottom: 5px;
+.chosen-head {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 8px;
+  color: var(--sk-dim); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .7px; text-transform: uppercase;
 }
-.index-bridge-title > b { font-size: 12px; }
-.index-bridge-title > small { font-size: 9px; color: var(--sk-dim); }
-
-.index-thing { padding: 6px 0; border-top: 1px solid var(--sk-line-soft); }
-.index-thing:first-of-type { border-top: 0; }
-.index-thing-head { display: flex; gap: 8px; align-items: baseline; }
-.index-thing-head > b {
-  width: 64px; flex: none; font-size: 10px; color: var(--sk-dim);
-  text-transform: uppercase; letter-spacing: .05em;
+.chosen-head:after { content: ""; height: 1px; flex: 1; background: var(--sk-line-soft); }
+.chosen-grid {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
-.index-thing-head > span { font-size: 11px; font-weight: 650; }
-.index-thing-head .is-linked { color: var(--sk-text); }
-.index-thing-head .is-muted { color: var(--sk-dim); font-weight: 400; }
-.index-thing-head .is-warning { color: var(--sk-gold); }
-.index-thing > small { display: block; margin: 2px 0 0 72px; font-size: 9px; color: var(--sk-dim); }
-
-.index-knowledge-row {
-  display: grid; grid-template-columns: 64px 1fr; gap: 8px; margin-top: 5px; align-items: start;
-}
-.index-knowledge-row > b {
-  font-size: 9px; text-transform: uppercase; color: var(--sk-dim); padding-top: 3px;
-}
-.index-knowledge-row > span { display: flex; gap: 4px; flex-wrap: wrap; }
-.index-chip {
-  display: inline-flex; align-items: center; min-height: 20px; padding: 2px 7px;
-  border: 1px solid var(--sk-line); border-radius: 999px;
-  background: rgba(255, 255, 255, .04); color: var(--sk-muted); font-size: 9px;
-}
-.index-no-source { color: var(--sk-dim) !important; }
-
-/* The three things chosen right now — skin, clothing, accessory — each with
-   the way through to its record in the Index. */
-.selected-index-bridge {
-  box-sizing: border-box; width: calc(100% - 24px); max-width: none;
-  margin: 8px 12px 6px; padding: 7px 8px;
+.chosen-card {
+  min-width: 0; padding: 9px;
   border: 1px solid var(--sk-line); border-radius: var(--sk-radius-sm);
   background: rgba(0, 0, 0, .22);
 }
-.selected-index-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;
+.chosen-top { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 9px; align-items: center; }
+.chosen-art {
+  width: 44px; height: 44px; display: grid; place-items: center; overflow: hidden;
+  border: 1px solid var(--sk-line-soft); border-radius: 6px; background: var(--sk-bg);
 }
-.selected-index-head > b {
-  font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--sk-muted);
+.chosen-art .thumb, .chosen-art canvas { max-width: 42px; max-height: 42px; }
+.chosen-empty-art { font-size: 22px; color: var(--sk-dim); }
+.chosen-kind {
+  font-size: 10px; color: var(--sk-dim);
+  text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
 }
-.selected-index-head > small { font-size: 9px; color: var(--sk-dim); }
-
-.selected-index-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.selected-index-card {
-  min-width: 0; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto;
-  align-items: center; gap: 7px; text-align: left; padding: 5px 6px;
-  border: 1px solid var(--sk-line); border-radius: var(--sk-radius-sm);
-  background: transparent; color: var(--sk-text); cursor: pointer;
+.chosen-name {
+  margin-top: 2px; color: var(--sk-text); font-size: 12.5px; font-weight: 650;
+  line-height: 1.15; overflow-wrap: anywhere;
 }
-.selected-index-card:hover { border-color: var(--sk-accent); background: rgba(255, 255, 255, .05); }
-.selected-index-card.is-open { border-color: var(--sk-accent); background: rgba(121, 197, 232, .12); }
-.selected-index-card.is-unlinked { opacity: .58; cursor: default; }
-.selected-index-card > .thumb, .selected-index-card > .dye-preview { justify-self: center; }
-.selected-index-card > span { min-width: 0; display: flex; flex-direction: column; }
-.selected-index-card > span > b {
-  font-size: 10px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.chosen-sub { margin-top: 3px; color: var(--sk-muted); font-size: 10px; line-height: 1.25; }
+.chosen-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.chosen-open {
+  display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px;
+  border: 1px solid var(--sk-accent); border-radius: 999px;
+  background: var(--sk-accent); color: var(--sk-on-accent);
+  text-decoration: none; font-size: 11px; font-weight: 650;
 }
-.selected-index-card > span > small {
-  margin-top: 2px; font-size: 8px; color: var(--sk-muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.chosen-open:hover { filter: brightness(1.12); }
+.chosen-missing { font-size: 10px; color: var(--sk-dim); line-height: 1.25; }
+.chosen-row {
+  display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 6px;
+  margin-top: 8px; padding-top: 7px;
+  border-top: 1px solid var(--sk-line-soft); font-size: 10px;
 }
-.selected-index-card > em { font-style: normal; font-size: 9px; color: var(--sk-accent); white-space: nowrap; }
-.selected-index-card.is-unlinked > em { color: var(--sk-dim); }
-
-.selected-index-detail {
-  margin-top: 6px; padding: 7px 8px;
-  border-top: 1px solid var(--sk-line-soft); background: rgba(0, 0, 0, .3);
-  border-radius: 0 0 var(--sk-radius-sm) var(--sk-radius-sm);
-}
-.selected-index-detail > div {
-  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
-}
-.selected-index-detail > div > b { font-size: 11px; }
-.selected-index-detail > div > small { font-size: 8px; color: var(--sk-dim); }
-.selected-index-detail > p {
-  display: grid; grid-template-columns: 42px 1fr; gap: 6px; margin: 5px 0 0; font-size: 9px;
-}
-.selected-index-detail > p > strong { color: var(--sk-dim); text-transform: uppercase; font-size: 8px; }
-.selected-index-detail > p > span { display: flex; flex-wrap: wrap; gap: 4px; }
-.selected-index-detail > p i {
-  font-style: normal; padding: 2px 6px;
+.chosen-row > span:first-child { color: var(--sk-dim); font-weight: 600; }
+.chosen-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.chosen-chip {
+  display: inline-flex; max-width: 100%; padding: 2px 7px;
   border: 1px solid var(--sk-line); border-radius: 999px;
   background: rgba(255, 255, 255, .04); color: var(--sk-muted);
+  text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.selected-index-detail > .is-muted { display: block; color: var(--sk-dim); }
+a.chosen-chip:hover { border-color: var(--sk-accent); color: var(--sk-text); }
 
-/* ---------------- narrower windows ---------------- */
-
-@media (max-width: 1180px) {
-  main { grid-template-columns: 250px minmax(360px, 1fr) 270px; }
-  .stage-panel { padding: 12px; }
-  .slot-copy small { max-width: 94px; }
+/* ---------------- saving a combination ---------------- */
+.combo-dialog-backdrop {
+  position: fixed; inset: 0; z-index: 10000;
+  display: grid; place-items: center; padding: 20px; box-sizing: border-box;
+  background: rgba(8, 7, 13, .8); backdrop-filter: blur(5px);
 }
+.combo-dialog {
+  width: min(92vw, 390px); padding: 18px; box-sizing: border-box;
+  border: 1px solid var(--sk-line); border-radius: var(--sk-radius);
+  background: var(--sk-panel); color: var(--sk-text);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .6);
+}
+.combo-dialog h2 { margin: 0 0 14px; font-size: 18px; }
+.combo-dialog label {
+  display: grid; gap: 6px; color: var(--sk-dim);
+  font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px;
+}
+.combo-dialog input {
+  box-sizing: border-box; width: 100%; height: 38px; padding: 0 11px;
+  border: 1px solid var(--sk-line); border-radius: var(--sk-radius-sm); outline: none;
+  background: rgba(0, 0, 0, .3); color: var(--sk-text);
+  font: inherit; text-transform: none; letter-spacing: normal;
+}
+.combo-dialog input:focus { border-color: var(--sk-accent); box-shadow: 0 0 0 3px rgba(121, 197, 232, .14); }
+.combo-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.combo-dialog-actions button {
+  min-height: 32px; padding: 0 14px;
+  border: 1px solid var(--sk-line); border-radius: var(--sk-radius-sm);
+  background: transparent; color: var(--sk-muted); font: inherit; font-size: 13px; cursor: pointer;
+}
+.combo-dialog-actions button:hover { color: var(--sk-text); border-color: var(--sk-accent); }
+.combo-dialog-actions .combo-dialog-save {
+  border-color: var(--sk-accent); background: var(--sk-accent);
+  color: var(--sk-on-accent); font-weight: 650;
+}
+
+/* ---------------- narrower windows ---------------- *
+ *
+ * Everything above is already elastic - the columns are clamped shares of the
+ * window, the stage is whatever is left of its card, the chips and the cards
+ * of the index block reflow on their own. These are the two points where
+ * elastic stops being enough and the shape has to change.
+ */
 
 @media (max-width: 1040px) {
   #worldModeHint { display: none; }
-  .world-mode button { padding: 3px 8px; }
+  .stage-tools button { padding: 3px 8px; }
+  .sandbox-speed output { min-width: 62px; font-size: 10px; }
 }
 
 @media (max-width: 960px) {
   .viewer-head { padding-left: 12px; padding-right: 12px; }
   .viewer-head small { display: none; }
-  main { grid-template-columns: 235px minmax(340px, 1fr) 250px; }
-  .catalogue, .dyes { padding: 10px; }
-  .panel-title { top: -10px; margin: -10px -10px 8px; padding: 10px; }
   .class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .class-pick { height: 54px; }
-  .stage-panel { padding: 10px; }
   .dye-slots, .dye-tools { grid-template-columns: 1fr; }
   .dye-tools button { width: 100%; }
-  .sandbox-speed { max-width: 220px; }
-  .sandbox-speed input { width: 82px; }
-  .sandbox-speed span { min-width: 62px; font-size: 10px; }
 }
 
-@media (max-width: 900px) {
-  .selected-index-rail { grid-template-columns: 1fr; }
-}
-
+/*
+ * Below this the three columns cannot each hold a list, so they stack and the
+ * page scrolls. The stage keeps a height of its own rather than collapsing to
+ * nothing between two lists.
+ */
 @media (max-width: 820px) {
   :host { overflow: auto; }
-  main, :host([data-integrated="true"]) main { display: block; height: auto; min-height: 0; }
-  .catalogue, .dyes { max-height: none; border: 0; }
-  .stage-panel { min-height: 520px; }
+  main, :host([data-integrated="true"]) main {
+    display: flex; flex-direction: column; height: auto; min-height: 0;
+  }
+  .panel { min-height: 0; }
+  .catalogue .panel-body, .dyes .panel-body { max-height: 60vh; }
+  .stage-panel { min-height: 62vh; }
   .class-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
