@@ -46,6 +46,76 @@ for (const [label, item] of samples) {
     `${label} TheoryCraft rule identities diverge from EnchantEngine for ${item.name}`);
 }
 
+
+/*
+ * A build that cannot deal damage must never beat a build that can kill.
+ * Kill scores are negative elapsed seconds, so zero DPS must be -Infinity,
+ * not zero.
+ */
+{
+  const zero = ruled.fresh('Archer');
+  zero.gear.weapon = {
+    name: null,
+    slots: 4,
+    ench: [null, null, null, null]
+  };
+
+  const kill = ruled.GOALS.find(one => one.id === 'kill');
+  assert(kill, 'Kill it fast goal is missing');
+
+  assert.equal(
+    ruled.scoreOf(zero, kill),
+    -Infinity,
+    'zero DPS must be the worst possible Kill it fast score'
+  );
+}
+
+
+/*
+ * Frangible Longbow is built from Subattack channels. Projectile 0 is
+ * invisible zero-damage machinery; the three real channels all use
+ * projectile 1 and must remain separate because their rates differ.
+ */
+{
+  const frangible = raw.items.find(one => one.name === 'Frangible Longbow');
+
+  assert(frangible, 'Frangible Longbow is missing from TheoryCraft');
+
+  assert.equal(
+    frangible.shots.length,
+    3,
+    'Frangible Longbow must expose its three offensive Subattack channels'
+  );
+
+  for (const shot of frangible.shots) {
+    assert.equal(shot.low, 105);
+    assert.equal(shot.high, 125);
+    assert.equal(shot.projectile, '1');
+    assert.equal(shot.subattack, true);
+  }
+
+  assert.deepStrictEqual(
+    frangible.shots.map(one => one.rate).sort(),
+    [0.92, 0.96, 1],
+    'Frangible Longbow must preserve the three Subattack rates'
+  );
+}
+
+
+/*
+ * A multi-channel Subattack weapon cannot be judged by shots[0] alone.
+ * It must stay available to the real optimiser rather than being removed by
+ * the simple dominated-gear prefilter.
+ */
+{
+  const beaten = ruled.beatenOnes();
+
+  assert(
+    !beaten.gear.has('Frangible Longbow'),
+    'Frangible Longbow must not be pruned as dominated gear'
+  );
+}
+
 console.log('All class pickers include the three Venerable rings; shared enchant pools match TheoryCraft for ordinary, Awakened, Alien and Neo Alien items; missing rules fail explicitly.');
 
 /*
@@ -99,5 +169,84 @@ console.log('All class pickers include the three Venerable rings; shared enchant
   assert(
     !String(vamp.id).startsWith('n:'),
     'Vampiric Lifeforce must never fall back to a synthetic TheoryCraft ID'
+  );
+}
+
+
+/*
+ * Regression: BurstDelay/BurstMinDelay is the burst start-to-start cooldown,
+ * not an extra pause added after consuming the burst shots.
+ *
+ * Frangible has three offensive channels of four shots. At 75 DEX their
+ * firing runs finish before the 0.8 s minimum burst cooldown, so the whole
+ * burst repeats every 0.8 s.
+ */
+{
+  const frangible = raw.items.find(
+    one => one.name === 'Frangible Longbow'
+  );
+
+  assert(
+    frangible,
+    'Frangible Longbow is missing from TheoryCraft'
+  );
+
+  const result = ruled.weaponRate(
+    frangible,
+    { att: 75, dex: 75 },
+    75,
+    { dmg: 1, rate: 1, life: 1, fast: 1 },
+    []
+  );
+
+  assert(
+    Math.abs(result.burst.every - 0.8) < 1e-9,
+    'Frangible burst cadence must use the cooldown from burst start'
+  );
+
+  assert(
+    Math.abs(result.dps - 2325) < 1e-9,
+    'Frangible must deal 2325 DPS at 75 ATT / 75 DEX / 75 DEF'
+  );
+}
+
+/*
+ * Synthetic guard for the burst formula itself.
+ *
+ * 100 damage, 75 DEX => 8 attacks/s. Four attacks take 0.5 s, while the
+ * minimum burst cooldown is 0.8 s. The next burst therefore starts at 0.8 s,
+ * not 1.3 s.
+ */
+{
+  const item = {
+    rate: 1,
+    many: 1,
+    burst: {
+      many: 4,
+      wait: 1.8,
+      rush: 0.8
+    },
+    shots: [{
+      low: 100,
+      high: 100
+    }]
+  };
+
+  const result = ruled.weaponRate(
+    item,
+    { att: 25, dex: 75 },
+    0,
+    { dmg: 1, rate: 1, life: 1, fast: 1 },
+    []
+  );
+
+  assert(
+    Math.abs(result.burst.every - 0.8) < 1e-9,
+    'burst cycle must be max(firing run, cooldown)'
+  );
+
+  assert(
+    Math.abs(result.dps - 500) < 1e-9,
+    'four 100-damage shots every 0.8 s must equal 500 DPS'
   );
 }

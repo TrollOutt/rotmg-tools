@@ -38,52 +38,164 @@ const text = (body, tag) => {
  * the range is the two multiplied - which is how a Short Sword comes out at
  * three and a half tiles and an Energy Staff at eight and a half.
  */
+function burstOf(body) {
+  const many = num(body, 'BurstCount');
+  if (!many || many < 2) return undefined;
+
+  const most = num(body, 'BurstDelay');
+  const least = num(body, 'BurstMinDelay');
+
+  if (most === undefined && least === undefined) return undefined;
+
+  return {
+    many,
+    wait: most === undefined ? least : most,
+    rush: least === undefined ? most : least
+  };
+}
+
+/*
+ * Tags such as RateOfFire and NumProjectiles may live inside Subattack.
+ * Remove those blocks when asking what belongs directly to the item.
+ */
+function withoutSubattacks(body) {
+  return body.replace(/<Subattack\b[^>]*>[\s\S]*?<\/Subattack>/g, '');
+}
+
+/*
+ * Read projectiles and preserve the relation between every Subattack and
+ * the projectileId it actually fires.
+ */
 function shotOf(body) {
-  const out = [];
-  for (const m of body.matchAll(/<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/g)) {
-    const inner = m[1];
-    const low = num(inner, 'MinDamage'), high = num(inner, 'MaxDamage');
+  const direct = withoutSubattacks(body);
+  const baseRate = num(direct, 'RateOfFire');
+  const baseMany = num(direct, 'NumProjectiles');
+  const baseBurst = burstOf(direct);
+
+  const projectiles = new Map();
+  let unnamed = 0;
+
+  for (const m of body.matchAll(
+    /<Projectile\b([^>]*)>([\s\S]*?)<\/Projectile>/g
+  )) {
+    const attrs = m[1];
+    const inner = m[2];
+
+    const idMatch = /\bid="([^"]+)"/.exec(attrs);
+    const id = idMatch ? idMatch[1] : String(unnamed++);
+
+    const low = num(inner, 'MinDamage');
+    const high = num(inner, 'MaxDamage');
     const flat = num(inner, 'Damage');
-    const fast = num(inner, 'Speed'), lives = num(inner, 'LifetimeMS');
-    if (low === undefined && high === undefined && flat === undefined) continue;
-    out.push({
-      low: low === undefined ? (high === undefined ? flat : high) : low,
-      high: high === undefined ? (low === undefined ? flat : low) : high,
-      fast: fast === undefined ? undefined : fast / 10,
-      reach: (fast !== undefined && lives !== undefined)
-        ? Math.round(fast * lives / 1000) / 10 : undefined,
+    const fast = num(inner, 'Speed');
+    const lives = num(inner, 'LifetimeMS');
+
+    if (
+      low === undefined &&
+      high === undefined &&
+      flat === undefined
+    ) continue;
+
+    projectiles.set(id, {
+      low: low === undefined
+        ? (high === undefined ? flat : high)
+        : low,
+
+      high: high === undefined
+        ? (low === undefined ? flat : low)
+        : high,
+
+      fast: fast === undefined
+        ? undefined
+        : fast / 10,
+
+      reach: fast !== undefined && lives !== undefined
+        ? Math.round(fast * lives / 1000) / 10
+        : undefined,
+
       pierce: /<ArmorPiercing\s*\/>/.test(inner) || undefined,
       through: /<MultiHit\s*\/>/.test(inner) || undefined,
-      /*
-       * How the thing actually travels, in the client's own words.
-       *
-       * Most shots go straight. Two hundred and forty-one weave - the client
-       * gives an amplitude and a frequency - two hundred and forty-four speed
-       * up or slow down, fifty-four come back, and twenty-three follow a
-       * parametric path. The client states the parameters of those and not
-       * the algorithm, so this is carried in order to be able to say that a
-       * straight line is not what the shot does, rather than to pretend the
-       * line is right.
-       */
-      /*
-       * How wide it weaves and how often, where it does. A staff's two
-       * missiles are given half a tile of amplitude at two cycles, in
-       * opposite phase, and that helix is the whole look of a staff.
-       */
+
       amp: num(inner, 'Amplitude'),
       freq: num(inner, 'Frequency'),
+
       moves: (() => {
         const how = [];
-        if (/<Parametric\s*\/>/.test(inner)) how.push('parametric');
-        if (/<Boomerang\s*\/>/.test(inner)) how.push('boomerang');
-        if (/<Wavy\s*\/>/.test(inner)) how.push('wavy');
-        if (/<Amplitude>/.test(inner) && /<Frequency>/.test(inner)) how.push('weaving');
-        if (/<Acceleration>/.test(inner)) how.push('speeding up');
-        return how.length ? how.join(', ') : undefined;
+
+        if (/<Parametric\s*\/>/.test(inner)) {
+          how.push('parametric');
+        }
+
+        if (/<Boomerang\s*\/>/.test(inner)) {
+          how.push('boomerang');
+        }
+
+        if (/<Wavy\s*\/>/.test(inner)) {
+          how.push('wavy');
+        }
+
+        if (
+          /<Amplitude>/.test(inner) &&
+          /<Frequency>/.test(inner)
+        ) {
+          how.push('weaving');
+        }
+
+        if (/<Acceleration>/.test(inner)) {
+          how.push('speeding up');
+        }
+
+        return how.length
+          ? how.join(', ')
+          : undefined;
       })()
     });
   }
-  return out.length ? out : undefined;
+
+  const subattacks = [];
+
+  for (const m of body.matchAll(
+    /<Subattack\b([^>]*)>([\s\S]*?)<\/Subattack>/g
+  )) {
+    const attrs = m[1];
+    const inner = m[2];
+
+    const ref = /\bprojectileId="([^"]+)"/.exec(attrs);
+    if (!ref) continue;
+
+    const projectile = projectiles.get(ref[1]);
+    if (!projectile) continue;
+
+    subattacks.push({
+      ...projectile,
+      subattack: true,
+      projectile: ref[1],
+      many: num(inner, 'NumProjectiles') ?? baseMany ?? 1,
+      rate: num(inner, 'RateOfFire') ?? baseRate,
+      burst: burstOf(inner) || baseBurst
+    });
+  }
+
+  if (subattacks.length) {
+    /*
+     * Zero-damage projectiles are sometimes invisible machinery attached
+     * to the real attack. If real damaging channels exist, combat data uses
+     * those rather than presenting the machinery as an attack.
+     */
+    const damaging = subattacks.filter(one =>
+      Number(one.low || 0) !== 0 ||
+      Number(one.high || 0) !== 0
+    );
+
+    return damaging.length
+      ? damaging
+      : subattacks;
+  }
+
+  const out = [...projectiles.values()];
+  return out.length
+    ? out
+    : undefined;
 }
 
 /*
@@ -213,6 +325,7 @@ for (const one of classes) {
 }
 
 function itemOf(one, hand, slot, labels) {
+  const direct = withoutSubattacks(one.body);
   return {
     name: nameOf(one),
     // The client's own name for it, which is what its picture is filed under.
@@ -233,9 +346,9 @@ function itemOf(one, hand, slot, labels) {
     tier: num(one.body, 'Tier'),
     bag: num(one.body, 'BagType'),
     mp: num(one.body, 'MpCost'),
-    rate: num(one.body, 'RateOfFire'),
-    many: num(one.body, 'NumProjectiles'),
-    fan: num(one.body, 'ArcGap'),
+    rate: num(direct, 'RateOfFire'),
+    many: num(direct, 'NumProjectiles'),
+    fan: num(direct, 'ArcGap'),
     worn: wornOf(one.body),
     share: shareOf(one.body),
     rel: bonusOf(one.body),
@@ -249,18 +362,7 @@ function itemOf(one, hand, slot, labels) {
      * that reads none of it has the weapon firing without pause, which both
      * looks wrong and counts the damage of about two weapons.
      */
-    burst: (() => {
-      const many = num(one.body, 'BurstCount');
-      if (!many || many < 2) return undefined;
-      const most = num(one.body, 'BurstDelay');
-      const least = num(one.body, 'BurstMinDelay');
-      if (most === undefined && least === undefined) return undefined;
-      return {
-        many,
-        wait: most === undefined ? least : most,
-        rush: least === undefined ? most : least
-      };
-    })(),
+    burst: burstOf(direct),
     shots: shotOf(one.body),
     // What the ability actually does, when it is not simply a projectile.
     does: text(one.body, 'Activate'),
