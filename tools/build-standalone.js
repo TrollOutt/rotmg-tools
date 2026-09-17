@@ -203,6 +203,10 @@ const counts = {
  */
 const homeArt = [...fs.readFileSync(path.join(web, 'index.html'), 'utf8')
   .matchAll(/data-art="([^"/]+)\/([^"]+)"/g)]
+  /* Except the ones under assets/, which are the site's own pictures rather
+     than the client's: they are carried beside the page or in the bundle, and
+     there is no GUI Files folder for them to be missing from. */
+  .filter(([, folder]) => folder !== 'assets')
   .map(([, folder, file]) => { embed(folder, file); return `GUI Files/${folder}/${file}`; });
 
 /* ---------------------------------------------------------------- *
@@ -314,6 +318,22 @@ if (fs.existsSync(newsIndex)) {
         }
       }
     }
+  }
+}
+
+/*
+ * And the front page's own signwriting, which is neither a client sprite nor a
+ * What's New frame: one picture, carried beside them because they are already
+ * the road by which a picture asked for as `assets/...` reaches the page, and
+ * because a name at the top of the front page is the last thing that should
+ * depend on there being a disk to read it from.
+ */
+const ringDir = path.join(web, 'assets', 'ring');
+if (fs.existsSync(ringDir)) {
+  for (const file of fs.readdirSync(ringDir).sort()) {
+    if (!file.endsWith('.png')) continue;
+    whatsNew.art[file] = 'data:image/png;base64,'
+      + fs.readFileSync(path.join(ringDir, file)).toString('base64');
   }
 }
 
