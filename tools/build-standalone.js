@@ -390,6 +390,8 @@ const progressionSource = readWeb('progression.js');
 const indexSource = readWeb('index-page.js');
 const routerSource = readWeb('router-contract.js');
 const whatsNewSource = readWeb('whats-new.js');
+const localesSource = readWeb('locales.js');
+const i18nSource = readWeb('i18n.js');
 const engine = require(path.join(web, 'engine.js'));
 const dataset = engine.buildDataset(sources);
 
@@ -471,7 +473,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
@@ -570,9 +572,11 @@ const dress = (bundleSources, { skins = true } = {}) =>
   (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
-  .replace(scriptTags, [
+  .replace(scriptTags, () => [
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
       theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '' })};</script>`,
+    `<script>\n${safe(localesSource)}\n</script>`,
+    `<script>\n${safe(i18nSource)}\n</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,
@@ -715,6 +719,8 @@ carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'in
  */
 carryAcross(path.join(web, 'skins'), path.join(pagesDir, 'skins'));
 carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'skins'));
+fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));
+fs.copyFileSync(path.join(web, 'i18n.js'), path.join(pagesDir, 'i18n.js'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
 fs.writeFileSync(path.join(pagesDir, 'assets', 'theory', 'progression.json'), sources.realmLootText + '\n');

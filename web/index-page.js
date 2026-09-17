@@ -801,7 +801,7 @@ const RealmIndex = (function () {
    * reader typing "3ArcherST3" is holding the XML and wants that exact thing.
    */
   function look(words) {
-    const term = words.trim().toLowerCase();
+    const term = RealmI18n.canonicalSearch(words);
     /*
      * What a tool hides is in the index on purpose, and asking after it by
      * name is half the reason this page exists - so a search always finds it.
@@ -1057,7 +1057,7 @@ const RealmIndex = (function () {
     const box = el('ixList');
     if (!box) return;
     const rows = look(el('ixSearch').value || '');
-    const many = rows.total.toLocaleString('en-US');
+    const many = RealmI18n.number(rows.total);
     el('ixCount').textContent = rows.total > rows.length
       ? 'first ' + rows.length + ' of ' + many
       : many + (rows.total === 1 ? ' thing' : ' things');
@@ -1158,7 +1158,7 @@ const RealmIndex = (function () {
       (shown.length > 1 ? '<b class="ix-types-say">' + esc(set.title) + '</b>' : '')
       + chips.map(x => '<button type="button" class="ix-chip is-item'
         + (x.on ? ' is-on' : '') + '" data-facet="' + esc(x.key) + '">'
-        + esc(x.say) + '<i>' + x.here.toLocaleString('en-US') + '</i></button>').join('')).join('');
+        + esc(x.say) + '<i>' + RealmI18n.number(x.here) + '</i></button>').join('')).join('');
   }
 
   /*
@@ -1353,9 +1353,9 @@ const RealmIndex = (function () {
         + (WORN_SAY[stat] || stat.toLowerCase())).join(', ')]);
       }
     }
-    if (one.hp) bits.push(['life', one.hp.toLocaleString('en-US')]);
+    if (one.hp) bits.push(['life', RealmI18n.number(one.hp)]);
     if (one.def) bits.push(['armour', one.def]);
-    if (one.weight !== undefined) bits.push(['how often it rolls', one.weight.toLocaleString('en-US')]);
+    if (one.weight !== undefined) bits.push(['how often it rolls', RealmI18n.number(one.weight)]);
     if (one.fits) bits.push(['goes on', one.fits]);
     if (one.refuses) bits.push(['never on', one.refuses]);
     if (one.beside) bits.push(['not beside', one.beside]);
@@ -1365,7 +1365,7 @@ const RealmIndex = (function () {
     if (one.ground) bits.push(['ground', one.ground]);
     if (one.rank) bits.push(['zone', one.rank]);
     if (one.recommendedLevel !== undefined) bits.push(['recommended level', one.recommendedLevel + '+']);
-    if (one.tiles) bits.push(['how big', one.tiles.toLocaleString('en-US') + ' tiles']);
+    if (one.tiles) bits.push(['how big', RealmI18n.number(one.tiles) + ' tiles']);
     if (one.pic) bits.push(['picture', PIC_SAY[one.pic] || one.pic]);
     if (one.stats) {
       for (const key of Object.keys(STAT_SAY)) {
@@ -2426,7 +2426,7 @@ const RealmIndex = (function () {
         + (kind === kindWanted ? ' is-on' : '') + '" data-kind="' + esc(kind) + '">'
         + esc(sayKind(kind))
         + (kindsLeft && kindsLeft.get(kind)
-          ? '<i>' + kindsLeft.get(kind).toLocaleString('en-US') + '</i>' : '')
+          ? '<i>' + RealmI18n.number(kindsLeft.get(kind)) + '</i>' : '')
         + '</button>').join('');
   }
 
@@ -2463,9 +2463,9 @@ const RealmIndex = (function () {
      */
     requestAnimationFrame(fitGroups);
     /* What you can browse: the copies folded into another thing are its rows. */
-    el('ixBuilt').textContent = light.filter(one => !one[6]).length.toLocaleString('en-US')
+    el('ixBuilt').textContent = RealmI18n.number(light.filter(one => !one[6]).length)
       + ' things, read from the client of ' + all.built
-      + (wiki ? ', ' + wiki.page.size.toLocaleString('en-US') + ' with a wiki page' : '');
+      + (wiki ? ', ' + RealmI18n.number(wiki.page.size) + ' with a wiki page' : '');
     drawCard('');
     /*
      * The sprites are sized against the window, so a window that changes shape

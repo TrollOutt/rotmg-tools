@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx --yes serve . -l 5173",
-    "test": "node tests/engine.test.js && node tools/check-artifacts.js && node tools/check-index.js && node tests/projections.test.js && node tests/theory.test.js && node tests/progression.test.js && node tests/rules-corpus.js && node tests/index-quality.test.js && node tests/atlas-combat.test.js && node tests/skins.test.js",
-    "build": "node tools/build-standalone.js && node tests/standalone.test.js",
+    "lint": "node tools/lint.js && node tools/check-i18n.js",
+    "i18n:compile": "node tools/build-i18n.js",
+    "i18n:check": "node tools/check-i18n.js",
+    "test": "npm run i18n:check && npm run i18n:compile && node tests/i18n.test.js && node tests/engine.test.js && node tools/check-artifacts.js && node tools/check-index.js && node tests/projections.test.js && node tests/theory.test.js && node tests/progression.test.js && node tests/rules-corpus.js && node tests/index-quality.test.js && node tests/atlas-combat.test.js && node tests/skins.test.js",
+    "build": "npm run i18n:check && npm run i18n:compile && node tools/build-standalone.js && node tests/standalone.test.js",
     "sprites": "node tools/fetch-sprites.js",
     "realm-sprites": "node tools/generate-realm.js && node tools/fetch-realm-sprites.js && node tools/generate-realm.js",
     "realm-wiki": "node tools/fetch-realmeye-realm.js --details --assets && node tools/generate-realm.js",

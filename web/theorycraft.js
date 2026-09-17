@@ -330,7 +330,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></div>'
       + '<span>' + (personal ? (profile.selection === 'difficulty' ? 'Difficulty ≤ ' + profile.difficulty + '/10 · ' : 'Manual selection · ')
         + profile.zones.length + ' dungeons · ' + (profile.biomeRanks || ['Rookie']).join(' + ') + ' zones · '
-        : 'All sources · ') + allowed.toLocaleString('en-US') + ' choices across all classes</span></div>'
+        : 'All sources · ') + RealmI18n.number(allowed) + ' choices across all classes</span></div>'
       + (personal ? '<p class="tc-progress-detail">Only equipment linked to your places and starter gear. Unconfirmed sources are excluded.</p>' : '<p class="tc-progress-detail">Full equipment catalogue. Your selected places are saved for personalized mode.</p>')
       + (outside.length ? '<p class="tc-progress-detail">Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.</p>' : '')
       + (!access && personal ? '<p class="tc-progress-detail">Loot sources are unavailable. Edit progression to retry.</p>' : '')
@@ -2358,7 +2358,7 @@ const TINT = {
     return one.length > 44 ? one.slice(0, 43) + '…' : one;
   };
   const round = n => Math.round(n * 10) / 10;
-  const commas = n => Math.round(n).toLocaleString('en-US');
+  const commas = n => RealmI18n.number(Math.round(n));
 
   /*
    * What the search is being asked for, and what it is starting from.
@@ -3718,7 +3718,7 @@ const TINT = {
     });
     el('tcSearch').addEventListener('input', event => {
       const rows = JSON.parse(el('tcPicker').dataset.rows || '[]');
-      const want = event.target.value.trim().toLowerCase();
+      const want = RealmI18n.canonicalSearch(event.target.value);
       paintPicker(want
         ? rows.filter(one => (one.name + ' ' + (one.says || '')).toLowerCase().includes(want))
         : rows);
@@ -3808,7 +3808,7 @@ const TINT = {
             + (moved ? ' · ' + (moved > 0 ? '+' : '') + moved + '%' : '')
             + '</small></span>';
         }).join('')
-          + '<span class="figure"><b>' + got.looked.toLocaleString('en-US')
+          + '<span class="figure"><b>' + RealmI18n.number(got.looked)
           + '</b><small>builds tried</small></span>';
       }, 20);
     });

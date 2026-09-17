@@ -80,12 +80,12 @@ const state = {
 
 function count(value) {
   if (!Number.isFinite(value)) return '∞';
-  return Math.round(value).toLocaleString('en-US');
+  return RealmI18n.number(Math.round(value));
 }
 function percent(value) {
   if (!(value > 0)) return '0%';
-  if (value < 0.0001) return '<0.0001%';
-  return `${value.toPrecision(4)}%`;
+  if (value < 0.0001) return `<${RealmI18n.number(0.0001, { maximumFractionDigits: 4 })}%`;
+  return `${RealmI18n.number(value, { maximumSignificantDigits: 4 })}%`;
 }
 function plural(value, word) { return `${value} ${word}${value === 1 ? '' : 's'}`; }
 
@@ -1162,7 +1162,7 @@ async function optimizeCurrentItem() {
       ' for ' +
       goal.say +
       ' · ' +
-      looked.toLocaleString('en-US') +
+      RealmI18n.number(looked) +
       ' combinations tried.';
   } else {
     state.itemOptimizeSaid = '';
@@ -1621,7 +1621,7 @@ function togglePickerKind(kind) {
 }
 
 function renderPickerList(query) {
-  const term = query.trim().toLowerCase();
+  const term = RealmI18n.canonicalSearch(query);
   const kinds = state.picker.kinds;
   const wanted = entry => !kinds.size || [...kinds].some(kind => entry.tags.has(kind));
   const matches = entry => wanted(entry) && (!term
@@ -1788,7 +1788,7 @@ function openItemPicker() {
 }
 
 function renderItemPickerList(query) {
-  const term = query.trim().toLowerCase();
+  const term = RealmI18n.canonicalSearch(query);
   const matches = entry => {
     if (!term) return true;
     const resolved = entry.resolved;
@@ -2164,9 +2164,9 @@ function showAudit() {
         <p>Each candidate keeps its base weight unless the artifact multiplies it. An artifact states several rules and every one that matches applies in turn, so two matching rules compound rather than compete. The result is truncated to an integer, as the game does.</p>
         <dl>
           <dt>Total weight of the pool</dt><dd><b>${count(pool.total)}</b></dd>
-          <dt>${html(config.desired)}</dt><dd><b>${count(targetWeight)}</b>${targetWeight !== target.weight ? ` <span class="muted">(base ${count(target.weight)} × ${(targetWeight / target.weight).toFixed(2)})</span>` : ''}</dd>
+          <dt>${html(config.desired)}</dt><dd><b>${count(targetWeight)}</b>${targetWeight !== target.weight ? ` <span class="muted">(base ${count(target.weight)} × ${RealmI18n.number(targetWeight / target.weight, { maximumFractionDigits: 2 })})</span>` : ''}</dd>
         </dl>
-        <details><summary>Heaviest candidates in the pool</summary><table class="mini"><tbody>${heaviest.map(mod => `<tr><td>${html(mod.name)}</td><td class="num">${count(pool.weights.get(mod.id))}</td><td class="num muted">${(pool.weights.get(mod.id) / pool.total * 100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></details>
+        <details><summary>Heaviest candidates in the pool</summary><table class="mini"><tbody>${heaviest.map(mod => `<tr><td>${html(mod.name)}</td><td class="num">${count(pool.weights.get(mod.id))}</td><td class="num muted">${RealmI18n.number(pool.weights.get(mod.id) / pool.total * 100, { maximumFractionDigits: 2 })}%</td></tr>`).join('')}</tbody></table></details>
       </li>
 
       <li>
@@ -2188,7 +2188,7 @@ function showAudit() {
         <h3>Turn it into dust</h3>
         <p class="formula">
           one reroll = ${count(EnchantEngine.BASE_COSTS[config.slots])} base × 2<sup>${config.locks.length}</sup> = <b>${count(cost.perReroll)}</b> ${html(config.dust)}<br>
-          mean rerolls = 100 ÷ ${exact.odds.toPrecision(4)} = <b>${count(cost.rerolls)}</b><br>
+          mean rerolls = 100 ÷ ${RealmI18n.number(exact.odds, { maximumSignificantDigits: 4 })} = <b>${count(cost.rerolls)}</b><br>
           expected total = ${count(cost.perReroll)} × ${count(cost.rerolls)}${artifact.cost.dust === config.dust ? ` + ${count(artifact.cost.value * Math.pow(2, config.locks.length))} × ${count(cost.rerolls)}` : ''} = <b>${count(cost.dust)}</b> ${html(config.dust)}
         </p>
         <p class="note">Half of all players finish within ${count(cost.medianRerolls)} rerolls; the mean is higher than the median because the tail is long.${artifact.cost.dust !== 'na' && artifact.cost.dust !== config.dust ? ` This artifact also costs about ${count(cost.artifactDust)} ${html(artifact.cost.dust)} dust, billed separately.` : ''}</p>
@@ -3720,7 +3720,7 @@ async function load() {
     state.theory = await loadItemOptimizerTheory();
     state.itemArt = await loadItemArt();
     renderModifiedDate();
-    $('itemEmptyCount').textContent = `Search ${knownItemNames().length.toLocaleString('en-US')} items — the slot, dust and base come with it`;
+    $('itemEmptyCount').textContent = `Search ${RealmI18n.number(knownItemNames().length)} items — the slot, dust and base come with it`;
     initAmbience();
     renderOfflineOffer();
     state.ready = true;
@@ -3794,7 +3794,12 @@ function pointAtAtlas() {
         tellAtlas({ rotmg: 'settle', frames: 12 });
         dressAtlas(true);              // it has only just arrived; no glide
       });
-      frame.src = base + 'index.html';
+      /* In the language the page around it is in. The frame reads the same
+         stored preference and would nearly always agree on its own; the one
+         case it cannot is a page being shown in a language by its address,
+         which the frame's own address knows nothing about. */
+      frame.src = base + 'index.html'
+        + (window.RealmI18n ? '?lang=' + encodeURIComponent(RealmI18n.locale) : '');
     })
     .catch(() => {
       frame.hidden = true;
@@ -4531,7 +4536,7 @@ load();
   const ABACUS = 'https://abacus.jasoncameron.dev/rotmg-realm-atlas/';
   const put = (into, n) => {
     const cell = document.getElementById(into);
-    if (cell) cell.textContent = n.toLocaleString();
+    if (cell) cell.textContent = RealmI18n.number(n);
     const box = document.getElementById('seen');
     if (box) box.hidden = false;
   };

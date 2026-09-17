@@ -59,6 +59,7 @@ const [markup]=await Promise.all([
 ]);
 host.dataset.integrated=String(Boolean(options.integrated??host.dataset.integrated==='true'));
 root.innerHTML=`<link rel="stylesheet" href="${new URL('./style.css',import.meta.url).href}">${markup}`;
+window.RealmI18n?.observe(root);
 let active=true;
 const $=x=>root.getElementById(x);
 /*
@@ -373,8 +374,8 @@ function openSaveComboDialog(){
 function attackSpeedLabel(){
   const speed=Math.max(.25,Math.min(4,Number(S.attackSpeed)||1));
   let rate='';
-  try{if(typeof baseAttackRate==='function')rate=' · '+(speed*baseAttackRate()).toFixed(2)+'/s'}catch{}
-  return speed.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'×'+rate;
+  try{if(typeof baseAttackRate==='function')rate=' · '+RealmI18n.number(speed*baseAttackRate(),{maximumFractionDigits:2})+'/s'}catch{}
+  return RealmI18n.number(speed,{maximumFractionDigits:2})+'×'+rate;
 }
 function renderSandboxBar(){
   const slider=$('attackSpeed'),out=$('attackSpeedValue');
@@ -769,14 +770,14 @@ function fitStage(){
 }
 function renderZoom(){
   const out=$('zoomValue');
-  if(out)out.textContent=`${(S.camera.scale/realmAtlas.px).toFixed(2)}×`;
+  if(out)out.textContent=`${RealmI18n.number(S.camera.scale/realmAtlas.px,{maximumFractionDigits:2})}×`;
 }
 if(typeof ResizeObserver==='function'){
   new ResizeObserver(()=>fitStage()).observe($('stageBody'));
 }else window.addEventListener('resize',fitStage);
 
 renderClassPicker();renderFamilies();loadBeachArea();select(skins.find(s=>s.frames.some(f=>f.spriteAvailable))||skins[0]);renderDyePanel();renderSandboxBar();root.querySelectorAll('[data-world-mode]').forEach(button=>button.onclick=()=>setWorldMode(button.dataset.worldMode));setWorldMode(S.worldMode,true);fitStage();
-const attackSpeed=$('attackSpeed'),attackSpeedValue=$('attackSpeedValue');function renderAttackSpeed(){const period=attackPeriod();attackSpeed.value=String(S.attackSpeed);attackSpeedValue.textContent=`${S.attackSpeed.toFixed(2)}× · ${(1000/period).toFixed(2)}/s`}renderAttackSpeed();attackSpeed.oninput=()=>{S.attackSpeed=Math.max(.25,Math.min(4,Number(attackSpeed.value)||1));localStorage.setItem('skinViewerAttackSpeed',String(S.attackSpeed));const now=performance.now();if(S.shooting){S.attackStart=now;S.nextShotAt=now}renderAttackSpeed()};
+const attackSpeed=$('attackSpeed'),attackSpeedValue=$('attackSpeedValue');function renderAttackSpeed(){const period=attackPeriod();attackSpeed.value=String(S.attackSpeed);attackSpeedValue.textContent=`${RealmI18n.number(S.attackSpeed,{minimumFractionDigits:2,maximumFractionDigits:2})}× · ${RealmI18n.number(1000/period,{minimumFractionDigits:2,maximumFractionDigits:2})}/s`}renderAttackSpeed();attackSpeed.oninput=()=>{S.attackSpeed=Math.max(.25,Math.min(4,Number(attackSpeed.value)||1));localStorage.setItem('skinViewerAttackSpeed',String(S.attackSpeed));const now=performance.now();if(S.shooting){S.attackStart=now;S.nextShotAt=now}renderAttackSpeed()};
 $('search').oninput=()=>{renderCatalogueUI()};$('dyeSearch').oninput=renderDyePanel;$('clearDye').onclick=()=>{S.dyes[S.dyeTarget]=null;renderDyePanel();scheduleSelectedIndexPanel();};$('resetWorld').onclick=()=>{resetWorldMode();renderZoom()};
 canvas.addEventListener('pointermove',e=>{const p=point(e);if(S.shooting)aimAttackPoint(p);else S.pointer=p});canvas.addEventListener('pointerdown',e=>{canvas.focus();attack(e)});canvas.addEventListener('pointerup',releaseAttack);canvas.addEventListener('pointercancel',releaseAttack);canvas.addEventListener('wheel',zoomWheel,{passive:false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>setKey(e,true));window.addEventListener('keyup',e=>setKey(e,false));window.addEventListener('blur',()=>{S.keys.clear();S.shooting=false;S.attackUntil=0;applyMovementFacing();syncActivity(performance.now(),true)});

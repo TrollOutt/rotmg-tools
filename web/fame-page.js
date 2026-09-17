@@ -17,7 +17,7 @@ var FamePage = (function () {
   const $ = id => document.getElementById(id);
   const html = value => String(value).replace(/[&<>"']/g, ch =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
-  const count = value => Math.round(Number(value) || 0).toLocaleString('en-US');
+  const count = value => RealmI18n.number(Math.round(Number(value) || 0));
 
   /*
    * Put markup in a panel, and let its contents rise into place only when they
