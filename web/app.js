@@ -3977,7 +3977,23 @@ function dressAtlas(snap, over) {
  * was ever opened.
  */
 window.addEventListener('message', event => {
-  if (!event.data || event.data.rotmg !== 'sky') return;
+  const said = event.data;
+  if (!said) return;
+  /*
+   * It has just started and does not yet know how big the world is meant to
+   * be. It is told here rather than on the frame's load event, which is the
+   * difference between a world that is the right size on its first frame and
+   * one drawn at the size of the whole frame and then shrunk into place:
+   * `load` waits for every tile of ground, and the atlas paints long before
+   * that.
+   */
+  if (said.rotmg === 'hello') {
+    atlasPace = '';                      // a fresh document knows nothing yet
+    paceAtlas();
+    dressAtlas(true);                    // and no glide: it has only just arrived
+    return;
+  }
+  if (said.rotmg !== 'sky') return;
   if (globeWide()) setGlobe(false);
 });
 

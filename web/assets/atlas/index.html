@@ -20,6 +20,12 @@
    * knob is a button they cannot reach through the frame. The page asks for
    * the chrome to come off, and the writing goes with it.
    */
+  /* Nothing at all until the framing page says how big the world is. Switched
+     on rather than faded in: a fade is a thing that has to be run, and this is
+     hidden from the first frame of a document that may be in a background tab
+     for the next ten minutes. What is switched on is already the right size,
+     so there is nothing anybody would have wanted to ease. */
+  body.unheard #map { opacity: 0; }
   body.bare #chat, body.bare #chatKnob, body.bare #panel,
   body.bare #bench { display: none !important; }
   /*
@@ -6566,6 +6572,7 @@ window.addEventListener('message', event => {
     bareOf = Number.isFinite(of) && of > 0 ? Math.max(0.05, Math.min(1.8, of)) : null;
   }
   document.body.classList.toggle('bare', bare);
+  document.body.classList.remove('unheard');   // it has spoken; this is the size
   fit();
   /* Taken as a journey of a given length rather than as somewhere to drift
      towards. Read after `fit`, so it starts from where the view is now and
@@ -6962,6 +6969,27 @@ fit();
 /* Bare from the first frame when it is framed, so nothing is ever painted
    and then faded away on arrival. */
 document.body.classList.toggle('bare', bare);
+/*
+ * And blind until the page that framed it has said how big the world is.
+ *
+ * Framed, the world is the middle of a ring drawn over it, and how much of
+ * the frame it fills is the framing page's business. This cannot know it
+ * before being told, and what it would otherwise draw in the meantime is the
+ * world at the size of the whole frame - which is what everybody saw on every
+ * reload: an enormous planet that then shrank into its place.
+ *
+ * So it draws nothing until it hears, and asks the moment it can rather than
+ * waiting to be spoken to. Asking here rather than being told on the frame's
+ * load event is the whole of the difference: `load` waits for every last tile
+ * of ground, and the atlas has been painting for a second by then.
+ */
+document.body.classList.toggle('unheard', bare);
+if (bare) {
+  try { window.parent.postMessage({ rotmg: 'hello' }, '*'); } catch (error) { }
+  /* Unless nobody answers, in which case whoever framed this does not speak
+     and a map they can see beats a black hole where one should be. */
+  setTimeout(() => document.body.classList.remove('unheard'), 2000);
+}
 view.scale = want.scale; view.x = want.x; view.y = want.y;
 requestAnimationFrame(frame);
 </script>
