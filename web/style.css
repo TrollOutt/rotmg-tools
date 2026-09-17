@@ -3793,33 +3793,130 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 
 /* ---------------- the ring home ---------------- *
  *
- * The other front page, thrown by the switch in the corner. Four modules laid
- * round the realm instead of four cards under it: the atlas stops being a
- * panel on the page and becomes the page, its sky fills the window, and the
- * world turns in the middle of the ring at whatever size the ring needs.
+ * The other front page, thrown by the switch in the corner. The modules laid
+ * round the realm instead of under it: the atlas stops being a panel on the
+ * page and becomes the page, its sky fills the window, and the world turns in
+ * the middle of an arrangement of horizontal bands, three down each side,
+ * each one cut short by an arc that keeps its distance from the world.
  *
- * All of it hangs off one attribute on the body, so nothing here can reach
- * the ordinary home by accident, and the ordinary home is still what an
- * arrival gets.
+ * There are two arrangements and the script decides between them, because the
+ * test is whether the machine can hover at all and no stylesheet can be asked
+ * that. It says which one won on the body: `data-ring="wheel"` is the bands
+ * round the world, `data-ring="list"` the same modules as a plain column with
+ * no world behind them. `data-home="ring"` says only that the switch is
+ * thrown, and is what everything common to both hangs off - so nothing here
+ * can reach the ordinary front page by accident, and the ordinary front page
+ * is still what an arrival gets.
  */
 
-/* Only offered on the page it changes. */
-body:not([data-page="home"]) .ring-way { display: none; }
+/*
+ * The switch, which has nothing left to switch between.
+ *
+ * The ring is the front page now rather than an alternative to one, so the
+ * button is put away instead of being taken out: it is still what would offer
+ * the cards back, and the cards are still what a copy with no ground beside
+ * it falls back on. Nothing on the served page reaches either.
+ */
+.ring-way { display: none; }
 .ring-way[aria-pressed="true"] { color: var(--locked); border-color: var(--locked); }
 
-body[data-home="ring"] .corner {
-  left: 50%; right: auto; transform: translateX(-50%);
-  justify-content: center;
-}
-
-body[data-home="ring"] .home-head,
+/* In the wide arrangement the corner row is moved to the middle, because the
+   corners are where the writing is. In the column the corners are free again
+   and it goes back to the one it shares with every other page. */
 body[data-home="ring"] .home-cards,
-body[data-home="ring"] .news-bell,
 body[data-home="ring"] .app-foot { display: none; }
 
+/*
+ * The page's own furniture, over the world rather than above a column of
+ * cards: who this is and how many are here, top left; the two switches that
+ * belong to every page, top right; and the bell for what is new standing over
+ * the world itself, which is the one thing on the page it is about.
+ *
+ * All of it is fixed, because the thing it is laid over is fixed - and all of
+ * it carries its own shadow, because what it is laid over is a sky.
+ */
+/* Where the bell stands, which is also what the name above it is measured
+   from: one length, written once, so the two cannot drift apart. */
+body[data-home="ring"] #pageHome {
+  /* How tall the name stands, which is the one thing above the world whose
+     size is not the world's business - and so the one thing the sky has to be
+     measured against. Against the width and the height both: a wide short
+     window has plenty of room beside the world and almost none above it. */
+  --mark-h: clamp(56px, min(10vw, 14vh), 140px);
+  /* The name, the count under it and the air around them, or the world's own
+     shoulder - whichever leaves the sky standing. */
+  --bell-top: max(calc(var(--mark-h) + 86px), calc(50% - var(--core, 282px) / 2 - 62px));
+}
+body[data-home="ring"] #pageHome .home-head {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 40;
+  /* Pinned by its foot rather than its head, so it sits on the bell however
+     many lines it runs to and whatever the window has done to the world. */
+  bottom: calc(100% - var(--bell-top) + 24px);
+  margin: 0; padding: 0; max-width: 46vw;
+  /* The name sits over the count rather than beside its left edge: the count
+     is three times as long, so ranged left the two read as a heading with
+     something else starting under it. */
+  text-align: center;
+  transition: opacity .34s ease;
+}
+body[data-home="ring"] #pageHome .home-head h1 {
+  /* An id in the selector, because the ordinary home's own heading rule
+     carries one and would otherwise win however specific this got. */
+  margin: 0; line-height: 0; font-size: clamp(28px, min(4.4vw, 7.2vh), 58px);
+  letter-spacing: .03em;
+  text-shadow: 0 2px 10px #000, 0 0 22px rgba(0, 0, 0, .9);
+}
+/*
+ * The name itself.
+ *
+ * Sized by its height rather than its width, because height is what it is
+ * spending: the sky over the world is short and the name shares it with the
+ * count and the bell. The width follows from the picture, so nothing here has
+ * to know its shape.
+ *
+ * Gold on nothing takes a glow rather than a shadow - a drop-shadow follows
+ * the letters' own edge, where a text-shadow would only follow a box - and it
+ * drifts on the same breath as the bands, so the whole front page is one
+ * thing floating rather than a still name over moving furniture.
+ */
+body[data-home="ring"] #pageHome .home-head .home-mark img,
+body[data-home="ring"] #pageHome .home-head h1.home-mark img {
+  display: block; height: var(--mark-h); width: auto; margin: 0 auto;
+  filter: drop-shadow(0 0 26px rgba(255, 199, 104, .32))
+          drop-shadow(0 3px 12px rgba(0, 0, 0, .85));
+}
+body[data-home="ring"] #pageHome .home-head .seen {
+  margin: 7px 0 0; justify-content: center; font-size: 14px;
+  text-shadow: 0 1px 8px #000, 0 0 18px rgba(0, 0, 0, .95);
+}
+
+body[data-home="ring"] #pageHome .news-bell {
+  position: fixed; left: 50%; z-index: 40;
+  /* Just clear of the world's own edge, so it moves with the world when the
+     world comes forward - and never up into the name above it. */
+  top: var(--bell-top);
+  transform: translateX(-50%);
+  margin: 0; transition: opacity .34s ease, top .45s cubic-bezier(.22, .7, .3, 1);
+}
+
+/* None of it in the column, which has its own heading at the top of itself
+   and no world to stand anything over. Fixed furniture laid across a list is
+   furniture laid across what you are reading. */
+body[data-ring="list"] .home-head,
+body[data-ring="list"] .news-bell { display: none; }
+
+/* And all of it goes when the map takes the window, on the same breath as the
+   modules rather than being switched off. */
+body.ring-away .home-head,
+body.ring-away .news-bell,
+body.ring-away .corner {
+  opacity: 0; pointer-events: none;
+}
+body.ring-away .corner { display: flex; }
+
 /* The atlas, promoted from a panel to the ground. Its own furniture goes with
-   the promotion: there is nothing to click through the ring, and the name it
-   carries is said by the ring instead. */
+   the promotion: there is nothing to click through the bands, and the name it
+   carries is said by the world's own patch instead. */
 body[data-home="ring"] { overflow: hidden; }
 body[data-home="ring"] .app { height: 100%; padding: 0; }
 body[data-home="ring"] .globe-stage {
@@ -3836,53 +3933,306 @@ body[data-home="ring"] .globe-name,
 body[data-home="ring"] .globe-shut { display: none; }
 body[data-home="ring"] #realmFrame { border-radius: 0; }
 
-/* The stage is the window, so its middle is the window's middle - which is
-   where the atlas puts the world. Nothing has to be nudged to agree. */
+/*
+ * And no atlas at all in the column.
+ *
+ * This is the arrangement a phone gets, and a whole world - ground, clouds,
+ * weather and everything walking about - is not scenery a phone can afford
+ * behind a list of five links. Taken out of the layout rather than faded:
+ * that is also what tells the page it cannot be seen, which is what puts the
+ * frame's own clock down to nothing.
+ */
+body[data-ring="list"] .globe-stage { display: none; }
+
+/*
+ * And the atlas opened out from here.
+ *
+ * The ring's framing stays on the body while that lasts, because the world is
+ * already over the whole window and has only to change what it is showing -
+ * so what has to come back is the furniture the ring had put away for it: the
+ * map takes the pointer again, and there is a way to shut it. These rules sit
+ * after the ring's own because they undo them, and they are keyed on the
+ * arrangement rather than on `globe-wide`, which the other front page uses
+ * too and which wants none of this.
+ */
+/* It stays exactly where it was - no pinning, no inset, no shadow of a panel
+   round it - because it was already the window and only its contents change. */
+body.ring-away .globe-box {
+  position: absolute; inset: 0; z-index: 0;
+  border: 0; border-radius: 0; box-shadow: none;
+  pointer-events: auto; cursor: default;
+}
+body.ring-away #realmFrame { pointer-events: auto; }
+/*
+ * The way out, sat in the corner rather than jammed into it.
+ *
+ * Pinned hard against the top right it is as far from everything that is
+ * moving as a point on the page can be, and small with it - which is two
+ * reasons not to notice the only control there is. It is bigger now and
+ * stands off both edges by about its own width, so it reads as belonging to
+ * the corner rather than as having been pushed out of the page.
+ */
+body.ring-away .globe-shut {
+  display: grid; place-items: center; position: absolute;
+  /* It cannot fade in from `display: none`, so it is given the same arrival
+     the shade over the opened-out panel has. */
+  animation: globe-dim .45s ease both;
+  top: 30px; right: 30px; z-index: 2; width: 46px; height: 46px;
+  font: inherit; font-size: 20px; cursor: pointer;
+  color: var(--text); background: rgba(12, 11, 18, .8);
+  border: 1px solid var(--line); border-radius: 999px;
+  transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+body.ring-away .globe-shut:hover { border-color: var(--accent); color: #fff; }
+
+/* ---- the stage ---- */
+
 .ring-stage {
   position: fixed; inset: 0; z-index: 1;
-  display: grid; place-items: center;
-  --wheel: 640px;
-  --card: 250px;
-  --k: 64px;                       /* the step past the wheel a block sits at */
-  --dx: calc(.3465 * var(--wheel) + var(--k));
-  /* How wide the world is drawn, as a length rather than a share: the stage
-     is the whole window and the wheel is a box inside it, so a percentage
-     here would be a percentage of the wrong thing - and was, which made the
-     world's own patch half the window and it swallowed clicks meant for the
-     quarters. */
-  --core: 282px;
-  --ink: 214, 26%, 82%;            /* the one ink the quarters are drawn in */
+  --ink: 214, 26%, 82%;            /* the one ink the bands are drawn in */
   --ring-lit: #eaf1ff;             /* and what one turns under the cursor */
-}
-.ring-wheel {
-  width: var(--wheel); height: var(--wheel);
-  overflow: visible;               /* an open quarter reaches past the box */
+  /* How big a module is drawn, written by app.js. Everything about a module
+     is a length at its natural size multiplied by this, because a module
+     follows the world and the world follows the window - so there is one
+     number between the two and no second opinion about it in here. The
+     column below ignores it: there is no world there to follow. */
+  --k: 1;
+  --ring-art: clamp(76px, 6.5vw, 104px);
 }
 
-/* A quarter, in pieces on the same outline, because they do not all do the
-   same thing when it opens. The face is the body, lit from the world
-   outwards; the ends are the two straight edges, which are what brightens;
-   the inner arc holds the line against the world; the outer arc is the one
-   that goes. */
-.ring-seg { cursor: pointer; }
+/* The drawing is the window, so its middle is the window's middle - which is
+   where the atlas puts the world. Nothing has to be nudged to agree. */
+.ring-wheel { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/*
+ * A band, in pieces on the same outline, because they do not all do the same
+ * thing when it opens. The face is the body, lit from the world outwards; the
+ * two long edges are what brightens; the arc holds the line against the
+ * world; the outer end is the one that goes, since an open band runs off the
+ * side of the window.
+ */
+/*
+ * The float.
+ *
+ * Not a movement anybody is meant to notice - four pixels over seven seconds,
+ * each band on its own clock so they never breathe together. It is what stops
+ * six rectangles round a turning world reading as six rectangles glued to the
+ * glass in front of it.
+ */
+.ring-drift, .ring-float {
+  animation: ring-drift 7.4s ease-in-out infinite;
+}
+@keyframes ring-drift {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/*
+ * A band moves sideways three times and never any other way: a neighbour
+ * steps back from the one being read, all of them stand off the world when it
+ * wakes, and all of them leave the window to the map. Same movement, three
+ * lengths - so one transition, and the lengths are worked out from the world
+ * by app.js and left here to be eased.
+ *
+ * Longer going than coming: leaving is a thing you watch happen and arriving
+ * is a thing you find already done, so the way out eases in and the way back
+ * eases out.
+ */
+.ring-seg {
+  /* No cursor of its own: the band takes no pointer events, so what the
+     cursor is over when it is over a module is the writing. */
+  transition: opacity .3s ease, transform .42s cubic-bezier(.22, .7, .3, 1);
+}
+/*
+ * The light a band floats in: its own outline, blurred, under everything else
+ * it is made of. It is what stops the edges reading as cut rather than laid -
+ * a hard line against a sky is a hole in the sky, and a hard line with a soft
+ * one under it is an edge with air behind it.
+ */
+.ring-seg .lift {
+  fill: none; stroke: hsla(var(--ink), .3); stroke-width: 3;
+  transition: stroke .3s ease;
+}
+.ring-seg.on .lift { stroke: hsla(var(--ink), .55); }
 .ring-seg .back { fill: rgba(4, 6, 12, .62); transition: fill .22s ease; }
 .ring-seg .face { fill: url(#ringGlow); opacity: .85; transition: opacity .22s ease; }
-.ring-seg .end  { fill: none; stroke: hsla(var(--ink), .34); stroke-width: .4;
+/* Softer than they were, and round where they meet: the line is there to say
+   where the band ends, not to cut it out of the page. */
+.ring-seg .end  { fill: none; stroke: hsla(var(--ink), .22); stroke-width: .9;
   stroke-linecap: round; transition: stroke .22s ease, stroke-width .22s ease; }
-.ring-seg .lip  { fill: none; stroke: hsla(var(--ink), .42); stroke-width: .5;
-  transition: stroke .22s ease; }
-.ring-seg .cap  { fill: none; stroke: hsla(var(--ink), .20); stroke-width: .4; }
-.ring-seg image { image-rendering: pixelated; opacity: .8; transition: opacity .22s ease; }
-.ring-seg.on .back  { fill: rgba(4, 6, 12, .72); }
-.ring-seg.on .face  { opacity: 1.6; }
-.ring-seg.on .end   { stroke: var(--ring-lit); stroke-width: .7; }
-.ring-seg.on .lip   { stroke: hsla(var(--ink), .62); }
-.ring-seg.on image  { opacity: 1; }
+.ring-seg .lip  { fill: none; stroke: hsla(var(--ink), .3); stroke-width: 1;
+  stroke-linecap: round; transition: stroke .22s ease; }
+/* The outer end closes the shape now that a band stops where its writing
+   does, so it is a line like the others rather than a hint - until the band
+   opens and runs out to the margin, where it goes. */
+.ring-seg .cap  { fill: none; stroke: hsla(var(--ink), .2); stroke-width: .9;
+  stroke-linecap: round; }
+.ring-seg.on .back { fill: rgba(4, 6, 12, .8); }
+.ring-seg.on .face { opacity: 1.6; }
+.ring-seg.on .end  { stroke: var(--ring-lit); stroke-width: 1.7; }
+.ring-seg.on .lip  { stroke: hsla(var(--ink), .62); }
+
+/*
+ * One band forward, everything else back.
+ *
+ * The bands that are not the one being read step off towards their own edge -
+ * the script moves them, because it is a distance in the drawing and not a
+ * style - and they lose most of their light here, which is what stops the
+ * page reading as five things of equal weight with one of them slightly
+ * brighter. The world goes back with them: a patch of dark laid over it, and
+ * the band crossing it is drawn in front of that.
+ */
+.ring-shade {
+  fill: rgba(4, 6, 12, 0); pointer-events: none;
+  transition: fill .3s ease;
+}
+body.ring-open .ring-shade { fill: rgba(4, 6, 12, .52); }
+body.ring-open .ring-seg:not(.on) { opacity: .45; }
+body.ring-open .ring-seg.left:not(.on)  { transform: translateX(calc(-1 * var(--aside))); }
+body.ring-open .ring-seg.right:not(.on) { transform: translateX(var(--aside)); }
+
+/* The world awake, and all of them standing off it. */
+body.ring-near .ring-seg.left  { transform: translateX(calc(-1 * var(--push))); }
+body.ring-near .ring-seg.right { transform: translateX(var(--push)); }
+
+/*
+ * And the map taking the window, which is the same movement carried through:
+ * they do not stop being there, they go, each to its own side and off the
+ * edge. Slower and on a curve that gathers pace, so it reads as leaving
+ * rather than as being switched off.
+ */
+/* Leaving and coming back are the world's journey, so they are the world's
+   length and the world's curve. Nothing is delayed and nothing is quicker:
+   they set off together and they arrive together. */
+body.ring-away .ring-seg,
+body.ring-coming .ring-seg {
+  transition: opacity var(--trip, 3000ms) ease,
+              transform var(--trip, 3000ms) cubic-bezier(.4, 0, .6, 1);
+}
+body.ring-away .ring-seg.left  { transform: translateX(calc(-1 * var(--flee))); }
+body.ring-away .ring-seg.right { transform: translateX(var(--flee)); }
+/* And coming back over a map that is still putting itself away: later, and
+   longer, so the two are one movement after another rather than two at once. */
+body.ring-away[data-ring="wheel"] .ring-item,
+body.ring-coming[data-ring="wheel"] .ring-item {
+  transition: opacity var(--trip, 3000ms) ease,
+              transform var(--trip, 3000ms) cubic-bezier(.4, 0, .6, 1);
+}
+/* The name and what is under it are not part of that journey: they are what
+   the page says once it is somewhere, so they wait for the world to arrive.
+
+   With the id in the selector, because the rule that places them carries one
+   and would otherwise keep its own timing however specific this got - which
+   is exactly how the name came back before the world had left. */
+body.ring-coming #pageHome .home-head,
+body.ring-coming #pageHome .news-bell,
+body.ring-coming .corner {
+  transition: opacity .55s ease var(--trip, 3000ms);
+}
+body.ring-away .ring-shade { fill: rgba(4, 6, 12, 0); }
+/* Nothing in the arrangement answers the cursor while the map has it. */
+body.ring-away .ring-stage { pointer-events: none; }
+body.ring-away .ring-core { opacity: 0; }
+
+/* And the world stops answering the cursor while a band is standing over it,
+   or moving along that band towards the middle would wake the world and shut
+   the band under your hand. It comes back the moment the band is left. */
+body.ring-open .ring-core { pointer-events: none; }
+
+/*
+ * The place that is taken by something not built yet.
+ *
+ * It keeps the shape, the writing and the picture - it is a module, it simply
+ * is not one you can reach - and loses its light and its cursor. Nothing here
+ * has to remember that: the band has no listeners on it and the block is a
+ * disabled button, so a cursor crossing it finds nothing to do, and a keyboard
+ * walks past it. What is left for the stylesheet is saying so.
+ */
+.ring-seg.is-soon { cursor: default; pointer-events: none; opacity: .42; }
+.ring-item.is-soon { opacity: .45; }
+.ring-copy .t i {
+  font-style: normal; font-weight: 500; font-size: .66em; letter-spacing: .16em;
+  text-transform: uppercase; opacity: .7; margin-left: .7em;
+  vertical-align: .12em;
+}
+/* It never comes forward, so it never steps back either: with nothing to
+   compare it to, dimming it twice only makes it vanish. */
+body.ring-open .ring-seg.is-soon { opacity: .42; }
+body.ring-open[data-ring="wheel"] .ring-item.is-soon { opacity: .45; }
+
+/*
+ * And the rings that leave the world when the cursor arrives at it.
+ *
+ * Three of them, a beat apart, going out from the edge and thinning to
+ * nothing - a drop falling on water rather than a light being turned up. They
+ * are stopped rather than hidden when nobody is pointing at the world, so a
+ * page nobody is touching has nothing running on it.
+ */
+.ring-ripple { pointer-events: none; opacity: 0; transition: opacity .45s ease; }
+body.ring-near .ring-ripple { opacity: 1; }
+/*
+ * It does not travel. A ring going out across a pond is a signal; what a ball
+ * of water does when it is touched is shiver in place, so the light sits on
+ * the world's own edge and breathes there, a couple of per cent in and out,
+ * two of them out of step so the edge never settles.
+ *
+ * Filled with a gradient rather than stroked and blurred. A stroke has to be
+ * put through a filter to be soft, and on the first hover of a page the
+ * browser has been seen to paint one frame of the hard white line before the
+ * filter is ready - which is a flash of exactly the thing this is trying not
+ * to be.
+ */
+.ring-wave {
+  fill: url(#ringSwell); stroke: none;
+  transform-box: fill-box; transform-origin: center;
+  animation: ring-wave 3.6s ease-in-out infinite;
+  animation-play-state: paused;
+}
+body.ring-near .ring-wave { animation-play-state: running; }
+@keyframes ring-wave {
+  0%, 100% { transform: scale(1);     opacity: .4; }
+  50%      { transform: scale(1.014); opacity: 1; }
+}
+
+/*
+ * The cover: the module that was pressed, on its way to being the window.
+ *
+ * In front of everything, and that is the whole of why it exists separately.
+ * A band is one shape inside the arrangement with the writing of all six laid
+ * over it, so a band growing could never hide its neighbours' names however
+ * far it grew - they are in front of it. What covers a page has to be in
+ * front of the page, and of the corner it keeps its switches in.
+ *
+ * It is cut from the band's own outline at the moment of the press and is
+ * see-through at the start, because at the start it is lying exactly on that
+ * band: a second copy of a module drawn over the module is a thing nobody
+ * should be able to notice. The line round it is what makes the growth
+ * legible - a dark shape spreading over a dark page otherwise reads as the
+ * lights going out - and it goes as the fill comes up.
+ */
+.ring-sheet {
+  position: fixed; inset: 0; z-index: 70;
+  /* It catches what is aimed at it. The sheet is over a page that is still
+     being built, or over an arrangement that is not the one on the screen, and
+     a click that goes through to either of those lands on something the person
+     cannot see. It is only ever up for the length of a journey. */
+  pointer-events: auto;
+  width: 100%; height: 100%;
+}
+.ring-sheet path {
+  fill: var(--bg);
+  stroke: hsla(214, 26%, 82%, .9); stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
 
 /* The world's own patch: a circle the size of the world, and nothing else. */
 .ring-core {
   position: absolute; left: 50%; top: 50%; z-index: 3;
-  width: var(--core); height: var(--core);
+  /* How wide the world is drawn, as a length rather than a share: the stage
+     is the whole window and the world is a patch inside it, so a percentage
+     here would be a percentage of the wrong thing. Written by app.js onto the
+     body, since the bell above the world is placed by it too. */
+  width: var(--core, 282px); height: var(--core, 282px);
   transform: translate(-50%, -50%);
   padding: 0; border: 0; background: none; border-radius: 50%;
   cursor: pointer; color: inherit; font: inherit;
@@ -3897,75 +4247,280 @@ body[data-home="ring"] #realmFrame { border-radius: 0; }
 }
 body.ring-near .ring-core b { opacity: 1; }
 
-/* The writing. No frame: it is set against the outer edge of its quarter and
-   reads outwards, so the left two are left-aligned and the right two
-   right-aligned, and each block hangs off its corner of the window.
+/* ---- what a module says, in either arrangement ---- */
 
-   The block is anchored by its title - pinned to the top of its box in the
-   two upper corners and to the bottom in the two lower ones - so the
-   description always opens towards the wheel and the title never moves,
-   neither when the description arrives nor when the quarter opens out under
-   it. The quarter comes to the writing; the writing stays where it was. */
-.ring-tag {
-  position: absolute; z-index: 4; width: var(--card); height: 56px;
-  transform: translate(-50%, -50%); pointer-events: none;
-  transition: opacity .3s ease;
+/*
+ * One block per module and one set of words, whether it is standing in a band
+ * or is a card in a column. What changes between the two is where it sits and
+ * whether it wears a frame - not what it says, and not what it is: it is a
+ * button either way, so a keyboard has one thing to reach for each module and
+ * `data-go` has one place to be read from.
+ */
+.ring-item {
+  display: block;
+  padding: 0; margin: 0; border: 0; background: none;
+  font: inherit; color: var(--text); text-align: left;
 }
-body.ring-near .ring-tag { opacity: 0; }
-.ring-tag .ring-card { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; }
-.ring-tag.tl .ring-card, .ring-tag.tr .ring-card { top: 0; }
-.ring-tag.bl .ring-card, .ring-tag.br .ring-card { bottom: 0; }
-.ring-tag.tl, .ring-tag.bl { text-align: left; }
-.ring-tag.tr, .ring-tag.br { text-align: right; }
-.ring-tag .t {
-  font-size: 17px; font-weight: 600; line-height: 1.25; white-space: nowrap;
-  text-shadow: 0 2px 10px #000, 0 0 22px rgba(0, 0, 0, .9);
+/* The row itself is the wrapper that drifts, so the picture and the writing
+   keep step with the band behind them rather than with the page. */
+.ring-float { display: flex; align-items: center; gap: 16px; }
+.ring-art {
+  flex: none; display: grid; place-items: center;
+  width: var(--ring-art); height: var(--ring-art);
+  transition: width .36s cubic-bezier(.22, .7, .3, 1),
+              height .36s cubic-bezier(.22, .7, .3, 1);
+}
+.ring-art-pic {
+  width: 100%; height: 100%;
+  object-fit: contain; image-rendering: pixelated;
+  animation: enchanting 4.4s ease-in-out infinite;
+}
+/* The same three exceptions the cards make, for the same reasons: the
+   enchanter's room has been resampled and only looks worse sharpened, while
+   the forge and the nine characters are cut whole out of the client. */
+.ring-art-pic[data-art="Page Art/Enchanting.png"] { image-rendering: auto; }
+.ring-art-pic[data-art="Page Art/Forge.png"] { image-rendering: pixelated; }
+.ring-art-pic[data-art="Page Art/Skins.png"] { image-rendering: pixelated; }
+/* The index's book is twenty frames on one strip rather than one drawing, so
+   its box wears the strip as a background and walks along it. How many frames
+   there are, and how fast, is measured off the picture in app.js. */
+.ring-art-pic.is-film {
+  display: block;
+  background-repeat: no-repeat;
+  background-size: 2000% 100%;
+  background-position: 0% 50%;
+  image-rendering: auto;
+}
+/* The parade is eight-pixel people out of the client's own sheet, so it wants
+   its pixels left alone - unlike the book beside it, which is a drawing. */
+.ring-art-pic.is-walk { image-rendering: pixelated; }
+
+.ring-copy { display: flex; flex-direction: column; min-width: 0; }
+.ring-copy .t {
+  font-size: 17px; font-weight: 600; line-height: 1.25;
   transition: color .22s ease;
 }
-.ring-tag .s {
-  font-size: 12.5px; color: var(--dim);
-  text-shadow: 0 1px 8px #000, 0 0 18px rgba(0, 0, 0, .9);
+.ring-copy .s {
+  margin-top: 3px; font-size: 12.5px; line-height: 1.35; color: var(--dim);
   transition: color .22s ease;
 }
-.ring-tag.on .t { color: var(--ring-lit); }
-.ring-tag.on .s { color: var(--muted); }
-/* Not display:none, so its height is something that can be transitioned. */
-.ring-tag .d {
+.ring-copy .d {
   font-size: 12px; line-height: 1.5; color: var(--muted);
-  text-shadow: 0 1px 8px #000, 0 0 18px rgba(0, 0, 0, .95);
+}
+
+/* ---- the bands round the world ---- */
+
+body[data-ring="wheel"] .ring-list-head { display: none; }
+
+/*
+ * The writing is set against the outer end of its band and reads inwards, so
+ * the left three are ranged left and the right two right. Where each one
+ * stands, and how wide it may be, is worked out from the same numbers the
+ * band is drawn from and handed over as three properties - which is why it is
+ * measured nowhere in here.
+ *
+ * It takes no clicks: the band behind it is what is hovered and what is
+ * pressed, and a block in the way of its own band would mean the band shutting
+ * every time the cursor crossed a word. A keyboard still reaches it, which is
+ * the whole reason it is a button.
+ */
+body[data-ring="wheel"] .ring-float { gap: calc(12px * var(--k)); }
+body[data-ring="wheel"] .ring-item {
+  position: absolute; z-index: 4;
+  top: var(--y); width: var(--w);
+  --ring-art: calc(60px * var(--k));
+  transform: translateY(-50%);
+  /* And it travels with its band, on the same curve, whenever the band
+     moves - which is what keeps the writing inside the shape it belongs to
+     instead of being left standing where the shape used to be. */
+  transition: opacity .3s ease, width .34s cubic-bezier(.22, .7, .3, 1),
+              transform .42s cubic-bezier(.22, .7, .3, 1);
+}
+/* The band is a drawing and takes no cursor; the writing on it does - and
+   says so, since a thing you can press should look like one before you press
+   it. Not the one that is not built: it has nothing to say yes to. */
+body[data-ring="wheel"] .ring-seg { pointer-events: none; }
+body[data-ring="wheel"] .ring-item { cursor: pointer; }
+body[data-ring="wheel"] .ring-item.is-soon { pointer-events: none; cursor: default; }
+body[data-ring="wheel"] .ring-copy .t { font-size: calc(17px * var(--k)); }
+body[data-ring="wheel"] .ring-copy .s { font-size: calc(12.5px * var(--k)); }
+body[data-ring="wheel"] .ring-copy .d { font-size: calc(12px * var(--k)); }
+/* An open band has most of the window to itself, so its writing takes the
+   room rather than staying a narrow column in the middle of it. The width the
+   script hands over stops short of the haze at the leading end. */
+/* `is-sizing` is a copy of a block, stood off the side of the page in its
+   open state for as long as it takes app.js to read how tall it came out. It
+   is laid out and never drawn, which is what `visibility` buys over `display`
+   - a block that is not displayed has no height to read. */
+body[data-ring="wheel"] .ring-item.on,
+body[data-ring="wheel"] .ring-item.is-sizing { width: var(--w2); }
+/* An open band has room it did not have, and the picture is what it is for
+   as much as the description is: it takes a share of it rather than sitting
+   at its shut size in the middle of a wider box. */
+body[data-ring="wheel"] .ring-item.on,
+body[data-ring="wheel"] .ring-item.is-sizing { --ring-art: calc(86px * var(--k)); }
+body[data-ring="wheel"] .ring-item.on { z-index: 5; }
+body[data-ring="wheel"] .ring-item.is-sizing {
+  left: auto; right: auto; top: 0; transform: none;
+  visibility: hidden; transition: none; pointer-events: none;
+}
+body.ring-open[data-ring="wheel"] .ring-item:not(.on) { opacity: .4; }
+body[data-ring="wheel"] .ring-item.left { left: var(--x); }
+body[data-ring="wheel"] .ring-item.right { right: var(--x); text-align: right; }
+/* On the row, not on the block: the block stopped being the row when the
+   writing was given a wrapper of its own to drift in, and this stayed behind
+   on an element that no longer lays anything out - which quietly put every
+   picture on the right-hand side back on the wrong end of its module. */
+body[data-ring="wheel"] .ring-item.right .ring-float { flex-direction: row-reverse; }
+body[data-ring="wheel"] .ring-item.right .ring-copy { align-items: flex-end; }
+
+/* Everything the writing stands on is a turning world, so all of it carries
+   its own shadow rather than a panel behind it. */
+body[data-ring="wheel"] .ring-copy .t { text-shadow: 0 2px 10px #000, 0 0 22px rgba(0, 0, 0, .9); }
+body[data-ring="wheel"] .ring-copy .s,
+body[data-ring="wheel"] .ring-copy .d { text-shadow: 0 1px 8px #000, 0 0 18px rgba(0, 0, 0, .95); }
+body[data-ring="wheel"] .ring-art-pic { filter: drop-shadow(0 2px 10px #000); }
+
+body[data-ring="wheel"] .ring-item.on .t { color: var(--ring-lit); }
+body[data-ring="wheel"] .ring-item.on .s { color: var(--muted); }
+/* Not display:none, so its height is something that can be transitioned. */
+body[data-ring="wheel"] .ring-copy .d {
   max-height: 0; opacity: 0; overflow: hidden;
   transition: max-height .32s ease, opacity .26s ease, margin .32s ease;
 }
-.ring-tag.on .d { max-height: 130px; opacity: 1; }
-.ring-tag.tl.on .d, .ring-tag.tr.on .d { margin-top: 8px; }
-/* The lower corners read the same way down the page, but their description
-   has to open upwards or it would walk off the bottom of the window. */
-.ring-tag.bl .d, .ring-tag.br .d { order: -1; }
-.ring-tag.bl.on .d, .ring-tag.br.on .d { margin-bottom: 8px; }
-
-.ring-tag.tl { left: calc(50% - var(--dx)); top: calc(50% - var(--dx)); }
-.ring-tag.tr { left: calc(50% + var(--dx)); top: calc(50% - var(--dx)); }
-.ring-tag.br { left: calc(50% + var(--dx)); top: calc(50% + var(--dx)); }
-.ring-tag.bl { left: calc(50% - var(--dx)); top: calc(50% + var(--dx)); }
-
-/* The writing is what stops the wheel growing, so it is what gives way when
-   there is less room - first a size down, then, on a phone, the line each
-   module leads with goes altogether and only the name is left. */
-@media (max-width: 1150px), (max-height: 760px) {
-  .ring-stage { --card: 200px; --k: 50px; }
-  .ring-tag { height: 50px; }
-  .ring-tag .t { font-size: 15px; }
-  .ring-tag .s { font-size: 11.5px; }
-  .ring-tag .d { font-size: 11.5px; }
+body[data-ring="wheel"] .ring-item.on .d,
+body[data-ring="wheel"] .ring-item.is-sizing .d {
+  /* The cap has to be a length for the height to be something that can be
+     transitioned, and it has to be past anything a description will ever
+     reach or the band would be measured against a clipped one. */
+  max-height: calc(240px * var(--k)); opacity: 1; margin-top: calc(8px * var(--k));
+  /* Bigger where there is room for it: the description is the thing the open
+     band was made wide for, and it was set under the line above it. */
+  font-size: calc(13px * var(--k));
 }
-@media (max-width: 620px) {
-  .ring-stage { --card: 148px; --k: 30px; }
-  .ring-tag { height: 38px; }
-  .ring-tag .t { font-size: 12.5px; }
-  .ring-tag .s { display: none; }
-  .ring-tag .d { font-size: 10.5px; }
-  .ring-tag.on .d { max-height: 100px; }
+body[data-ring="wheel"] .ring-item.is-sizing .d { transition: none; }
+
+/*
+ * The world takes the page when the cursor comes to it, and the writing steps
+ * out of the way rather than being drawn over the top of it - greyed down to
+ * where it is still there and no longer being read, not switched off. What
+ * was there before went to nothing, which is a thing appearing to be deleted
+ * rather than a thing standing back.
+ */
+body.ring-near[data-ring="wheel"] .ring-item { opacity: .2; }
+body.ring-near[data-ring="wheel"] .ring-item.left {
+  transform: translate(calc(-1 * var(--push)), -50%);
 }
+body.ring-near[data-ring="wheel"] .ring-item.right {
+  transform: translate(var(--push), -50%);
+}
+/*
+ * And narrower by what the arc gained.
+ *
+ * Stepping aside is not enough on its own: the outer end of a band moves by
+ * the step, its inner end by the step and the world's own growth, so the band
+ * is shorter than it was. Writing that only stepped aside kept its old width
+ * against a shorter band and put its first letter outside the curve - which
+ * is why it showed on the right, where the line begins at that end, and hid
+ * on the left, where that end is the slack after a full stop.
+ */
+body.ring-near[data-ring="wheel"] .ring-item {
+  width: calc(var(--w) - var(--swell, 0px));
+}
+body.ring-open[data-ring="wheel"] .ring-item.left:not(.on) {
+  transform: translate(calc(-1 * var(--aside)), -50%);
+}
+body.ring-open[data-ring="wheel"] .ring-item.right:not(.on) {
+  transform: translate(var(--aside), -50%);
+}
+
+/*
+ * And the writing leaves with the band it belongs to.
+ *
+ * It is html laid over a drawing, so it was never going to be carried by the
+ * drawing's own movement - it has to be told the same thing separately, and
+ * then the two travel as one. How long it takes is not said here: it is said
+ * once, next to the band's, because the whole point is that they are the same
+ * number. Saying it twice is how they stopped being the same - this block
+ * kept a timing of its own from before there was a shared one, and being
+ * later in the file it quietly won.
+ */
+/* And it does not fade on the way, because the band it is written on does
+   not: a box that keeps its ink until it is off the edge and writing that
+   goes pale halfway is the box leaving empty. They go whole, together. */
+body.ring-away[data-ring="wheel"] .ring-item { opacity: 1; }
+body.ring-away[data-ring="wheel"] .ring-item.left {
+  transform: translate(calc(-1 * var(--flee)), -50%);
+}
+body.ring-away[data-ring="wheel"] .ring-item.right {
+  transform: translate(var(--flee), -50%);
+}
+
+body[data-ring="wheel"] .ring-item:focus-visible {
+  outline: 2px solid var(--ring-lit); outline-offset: 10px; border-radius: 4px;
+}
+
+/* ---- the same modules, in a column ---- */
+
+/*
+ * What a narrow window, a short one or a machine that cannot hover gets: no
+ * world, no arcs, and the five modules as a plain stack of cards. It is the
+ * arrangement that did not fit, so nothing is dropped from what each one
+ * says - the description that the wide arrangement opens on a hover is simply
+ * always there, because there is no hover to open it with.
+ */
+body[data-ring="list"] .ring-stage {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px;
+  padding: 62px max(14px, 4vw) 36px;
+  overflow: hidden auto;
+  -webkit-overflow-scrolling: touch;
+}
+body[data-ring="list"] .ring-wheel,
+body[data-ring="list"] .ring-core { display: none; }
+
+.ring-list-head {
+  width: min(100%, 760px); margin: 0 0 6px;
+  font-size: clamp(20px, 5vw, 28px); font-weight: 600; letter-spacing: .06em;
+  color: var(--text);
+}
+
+body[data-ring="list"] .ring-float { gap: 18px; }
+body[data-ring="list"] .ring-item {
+  width: min(100%, 760px);
+  padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: rgba(26, 24, 36, .92);
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease;
+  --ring-art: clamp(64px, 20vw, 116px);
+}
+body[data-ring="list"] .ring-item:hover,
+body[data-ring="list"] .ring-item:focus-visible {
+  border-color: var(--accent); background: rgba(38, 34, 51, .95); outline: none;
+}
+body[data-ring="list"] .ring-copy .d { margin-top: 6px; }
+
+@media (max-width: 560px) {
+  body[data-ring="list"] .ring-stage { gap: 10px; padding-top: 58px; }
+  body[data-ring="list"] .ring-float { gap: 12px; }
+  body[data-ring="list"] .ring-item { padding: 11px 12px; }
+  .ring-copy .t { font-size: 15px; }
+  .ring-copy .s { font-size: 11.5px; }
+  .ring-copy .d { font-size: 11.5px; }
+}
+
+/* The movement is the point of the wide arrangement, so what is turned off
+   here is the easing and not the arrangement: a band still opens under the
+   cursor, it simply does it at once. */
+@media (prefers-reduced-motion: reduce) {
+  .ring-wave, .ring-drift, .ring-float { animation: none; }
+  .ring-seg, .ring-seg .back, .ring-seg .face, .ring-seg .end, .ring-seg .lip,
+  .ring-shade, .ring-core, .ring-core b, .ring-item, .ring-copy .t,
+  .ring-copy .s, body[data-ring="wheel"] .ring-copy .d { transition: none; }
+  .ring-art-pic { animation: none; }
+}
+
 .ix-loot-tier {
   display: inline-flex;
   padding: 4px 7px;

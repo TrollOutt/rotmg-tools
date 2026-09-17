@@ -1723,6 +1723,18 @@ const ORYX_FROM = 1.85;                  // in floors, the distance he starts at
  * read up here as well, which is why it is declared this far up.
  */
 let bare = window.parent !== window;
+/*
+ * A move on a clock.
+ *
+ * The ordinary ease has no duration - it closes a fraction of the distance
+ * every second and arrives when it arrives - which is right for a view being
+ * nudged and wrong for one that has to keep step with something else. The
+ * page outside puts writing and drawings through the same journey on the same
+ * curve, and "the same" means starting together and landing together, so a
+ * move can be given a length in milliseconds and it is then run off the clock
+ * rather than off the distance left.
+ */
+let tripFrom = 0, tripFor = 0, tripAt = null;
 
 /*
  * And how much of the frame the world is to fill while it is - as a fraction
@@ -1759,6 +1771,21 @@ function oryxShows(box) {
    * somebody is trying to read four module names around.
    */
   if (bare) return 0;
+  /*
+   * And not during a move on a clock.
+   *
+   * He is the reward for pulling back and looking, not something to be
+   * carried past. A journey that starts at the size the world is scenery at
+   * begins inside his range, so easing out of it drew him at full strength on
+   * the first frame and faded him off over the next second - an arrival
+   * nobody asked for, in the middle of something else. The frame he belongs
+   * to is a frame somebody chose to stay on.
+   *
+   * The floor in `settleInto` used to do this by shoving the view past him,
+   * which a timed move cannot afford: it owns its own curve. So it is said
+   * here instead, where it costs the movement nothing.
+   */
+  if (tripFor > 0) return 0;
   if (!roundWorld(box)) return 0;
   const least = floorZoom(box), from = least * ORYX_FROM;
   /*
@@ -6286,8 +6313,15 @@ function settleInto(box) {
    * A bare frame is either scenery or a panel on its way out to the window.
    * Neither wants him, and neither wants the jump: the ordinary ease against
    * a growing box gets there on its own, from exactly where it started.
+   *
    */
   if (bare) return;
+  /*
+   * And a move on a clock owns the view for the whole of its length. Flooring
+   * it here takes it off its own curve and drops it back on the next frame,
+   * which is a journey that arrives, jumps home and sets off again.
+   */
+  if (tripFor > 0) return;
   const least = floorZoom(box);
   const past = least * ORYX_FROM * 1.06;
   if (want.scale < past) want.scale = past;
@@ -6395,6 +6429,21 @@ function frame(now) {
    * a hundred is ten, not fifty, and easing the zoom straight spends most of
    * the movement almost stationary at the far end.
    */
+  if (tripFor > 0) {
+    /*
+     * A move on a clock: eased at both ends and over when its time is up,
+     * whatever distance was left. The zoom is walked by ratio like everywhere
+     * else - halfway between one tile to the pixel and a hundred is ten, not
+     * fifty - and the rest is walked straight.
+     */
+    const t = Math.min(1, (now - tripFrom) / tripFor);
+    const e = t * t * (3 - 2 * t);
+    view.x = tripAt.x + (want.x - tripAt.x) * e;
+    view.y = tripAt.y + (want.y - tripAt.y) * e;
+    view.scale = (tripAt.scale > 0 && want.scale > 0)
+      ? tripAt.scale * Math.pow(want.scale / tripAt.scale, e) : want.scale;
+    if (t >= 1) tripFor = 0;
+  } else {
   const ease = Math.min(1, delta * 5.5);
   view.x += (want.x - view.x) * ease;
   view.y += (want.y - view.y) * ease;
@@ -6402,6 +6451,7 @@ function frame(now) {
     const apart = want.scale / view.scale;
     view.scale *= Math.abs(apart - 1) < 1e-4 ? 1 : Math.pow(apart, ease);
   } else view.scale = want.scale;
+  }
   // Whatever else happens, the world has a positive size.
   if (!(view.scale > 0.001)) view.scale = 0.02;
   if (!(want.scale > 0.001)) want.scale = 0.02;
@@ -6517,6 +6567,13 @@ window.addEventListener('message', event => {
   }
   document.body.classList.toggle('bare', bare);
   fit();
+  /* Taken as a journey of a given length rather than as somewhere to drift
+     towards. Read after `fit`, so it starts from where the view is now and
+     aims at where that has just decided. */
+  if (said.over > 0) {
+    tripFor = Number(said.over); tripFrom = performance.now();
+    tripAt = { x: view.x, y: view.y, scale: view.scale };
+  } else tripFor = 0;
   /*
    * Snapped the first time, eased after that. Landing in a frame is not a
    * movement anybody watched begin, so it should simply be there; being asked
@@ -6775,6 +6832,23 @@ function letGo(event, lifted) {
   if (!lifted || moved > TAP_SLOP) return;
   // A click, not a drag: open what is under it, or close what is open.
   const box = size();
+  /*
+   * And a tap on the sky, which is not a miss.
+   *
+   * Past the edge of the world there is nothing to open. On a page that
+   * opened this frame out over a front page there is only one thing that can
+   * mean - put it back - but the frame has no idea it is standing on
+   * anything, so it says where the tap landed and lets the page decide. A
+   * frame nobody opened out hears nothing back and carries on as before.
+   */
+  if (window.parent !== window && roundWorld(box)) {
+    const R = globe();
+    const dx = event.offsetX - box.w / 2, dy = event.offsetY - box.h / 2;
+    if (dx * dx + dy * dy > R * R) {
+      try { window.parent.postMessage({ rotmg: 'sky' }, '*'); } catch (error) { /* another origin */ }
+      return;
+    }
+  }
   const t = toTile(event.offsetX, event.offsetY, box);
   // A beacon is a smaller target than the ground under it, so it is tried
   // first, and with a margin that does not shrink to nothing when zoomed out.

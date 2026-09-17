@@ -93,16 +93,17 @@
   </button>
 
   <!--
-    The other front page.
+    The switch between the two front pages, kept and hidden.
 
-    Four modules laid round the realm instead of four cards under it: the
-    atlas becomes the whole background, its sky is the page's sky, and each
-    quarter opens under the cursor. It is prettier and it is harder to read,
-    which is why it is a switch and not a replacement - the cards are still
-    what a first-time arrival gets. Only shown on the page it changes.
+    The modules laid round the realm are the front page now rather than an
+    alternative to one - two arrangements meant two atlases fighting over the
+    same window, and that was not a thing worth keeping either of them for.
+    The cards below are still in this file because a copy with no ground
+    beside it falls back on them, and this is what would offer them back, so
+    it stays; the stylesheet puts it away.
   -->
   <button id="ringWay" type="button" class="corner-button ring-way" aria-pressed="false"
-    title="Try the ring home: the four modules laid round the realm. Experimental.">
+    title="Try the ring home: the modules laid round the realm. Experimental.">
     <span class="corner-glyph ring-way-glyph" aria-hidden="true">◍</span>
     <span class="corner-text ring-way-text">Experimental UI</span>
   </button>
@@ -111,7 +112,11 @@
 <!-- The way in ------------------------------------------------------- -->
 <div id="pageHome" class="app page">
   <header class="masthead home-head">
-    <h1>Realm Tools</h1>
+    <!-- The name is signwriting rather than type: gold cut in the game's own
+         hand, carried as a picture because no font here can say it. The words
+         stay as the picture's alt, which is what a reader hears and what
+         shows if the file is ever missing. -->
+    <h1 class="home-mark"><img class="ring-drift" data-art="assets/ring/realm-tools.png" alt="Realm Tools"></h1>
     <p id="seen" class="seen" hidden>
       <span><b id="seenAll">&ndash;</b> visitors total</span>
       <span><b id="seenToday">&ndash;</b> today</span>
@@ -126,32 +131,46 @@
   </button>
 
   <!--
-    The ring, which is the same four ways in as the cards below and the same
-    atlas behind them, arranged round it rather than under it. Empty until
-    the switch in the corner is thrown: nothing here costs anything while the
-    cards are the front page.
+    The ring, which is the same ways in as the cards below and the same atlas
+    behind them, arranged round it rather than under it. Empty until the
+    switch in the corner is thrown: nothing here costs anything while the
+    cards are the front page, and everything inside it - the bands, their
+    pictures and their writing - is built by app.js the first time it is.
+
+    The heading is for the narrow arrangement only, where there is no world
+    in the middle to say where you are and the page's own masthead is put
+    away with the cards.
   -->
   <div id="ringStage" class="ring-stage" hidden>
-    <svg class="ring-wheel" id="ringWheel" viewBox="0 0 100 100" aria-hidden="true">
+    <h2 class="ring-list-head">Realm Tools</h2>
+    <svg class="ring-wheel" id="ringWheel" aria-hidden="true" preserveAspectRatio="none">
       <defs>
-        <!-- One light, in the middle, for all four: the world is what they
-             are lit by, so each is brightest against its inner edge. -->
-        <radialGradient id="ringGlow" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="58">
-          <stop offset="0.38" stop-color="#dce6f7" stop-opacity="0.17"/>
-          <stop offset="0.74" stop-color="#c8d6ee" stop-opacity="0.085"/>
-          <stop offset="1"    stop-color="#b9c9e6" stop-opacity="0.035"/>
+        <!-- One light, in the middle, for all of them: the world is what they
+             are lit by, so each band is brightest along its inner edge. Where
+             that middle is, and how far the light carries, is the window's
+             business and is written from app.js. -->
+        <radialGradient id="ringGlow" gradientUnits="userSpaceOnUse">
+          <stop offset="0"    stop-color="#dce6f7" stop-opacity="0.20"/>
+          <stop offset="0.55" stop-color="#c8d6ee" stop-opacity="0.085"/>
+          <stop offset="1"    stop-color="#b9c9e6" stop-opacity="0.03"/>
         </radialGradient>
-        <!-- The corners come off every picture the same way, so it is one
-             mask in the picture's own box rather than four gradients rewritten
-             in pixels on every frame. Nothing in here ever changes. -->
-        <radialGradient id="ringSoftFade" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0.34" stop-color="#fff"/>
-          <stop offset="0.72" stop-color="#fff" stop-opacity="0.6"/>
-          <stop offset="1"    stop-color="#fff" stop-opacity="0"/>
+        <!-- The blur that lifts a band off the sky. One filter for all of
+             them, and hung on the soft outline alone rather than on a band,
+             so what the browser has to hold offscreen is a line and not a
+             module with a picture in it. -->
+        <!-- The light that sits on the world's own edge while the cursor is
+             on it. A gradient rather than a stroke, so there is no line that
+             can be caught unblurred on the frame a filter is first built. -->
+        <radialGradient id="ringSwell" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0.86" stop-color="#cfe0ff" stop-opacity="0"/>
+          <stop offset="0.945" stop-color="#dfebff" stop-opacity="0.1"/>
+          <stop offset="0.985" stop-color="#eaf1ff" stop-opacity="0.045"/>
+          <stop offset="1"     stop-color="#eaf1ff" stop-opacity="0"/>
         </radialGradient>
-        <mask id="ringSoft" maskContentUnits="objectBoundingBox">
-          <rect x="0" y="0" width="1" height="1" fill="url(#ringSoftFade)"/>
-        </mask>
+        <filter id="ringBlur" x="-8%" y="-70%" width="116%" height="240%"
+                color-interpolation-filters="sRGB">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
       </defs>
     </svg>
     <button type="button" class="ring-core" id="ringCore"
