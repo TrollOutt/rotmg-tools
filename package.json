@@ -14,7 +14,7 @@
     "scrape": "npm run extract-client-data && npm run build-index-db && npm run publish-index-db && npm run wiki-publish && npm run skin-looks && npm run project-data && node tools/read-client.js --snapshot --news",
     "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
     "release": "npm test && npm run build",
-    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js && node tools/generate-skins.js",
+    "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js && node tools/generate-skins.js && node tools/build-ring-walk.js",
     "extract-client-data": "node tools/extract-client.js && node tools/extract-client-textures.js",
     "build-index-db": "python tools/database/check_client_source.py && python tools/database/build_sqlite.py",
     "publish-index-db": "python tools/database/publish_index.py --output-root . --allow-production",
