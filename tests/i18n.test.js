@@ -40,7 +40,8 @@ function runtime({ saved = null, languages = ['en-US'], href = 'https://example.
   vm.runInNewContext(localeSource, context, { filename: 'locales.js' });
   if (beforeEngine) beforeEngine(context.REALM_TOOLS_LOCALES);
   vm.runInNewContext(engineSource, context, { filename: 'i18n.js' });
-  return { api: context.RealmI18n, document, kept, reloaded: () => reloaded };
+  return { api: context.RealmI18n, catalogues: context.REALM_TOOLS_LOCALES,
+    document, kept, reloaded: () => reloaded };
 }
 
 /* ------------------------------------------------------------------ *
@@ -239,6 +240,27 @@ assert(indexTool.includes('translateAll(target, indexRows, locale)'),
   'Index locale generation must retain each locale as its own offline fallback');
 assert(!indexTool.includes("target === 'pt' ? 'pt-PT' : target"),
   'Portuguese offline fallback must not route Brazilian Portuguese through pt-PT');
+
+const canonicalIndexTaxonomy = {
+  'index.group.tier': 'Tier',
+  'index.chip.untiered': 'Untiered',
+  'index.chip.setTier': 'Set tier',
+  'index.chip.soulbound': 'Soulbound',
+  'index.chip.shiny': 'Shiny',
+  'index.fact.tier': 'Tier',
+  'index.loot.tieredLoot': 'Tiered loot',
+  'index.loot.untieredGear': 'Untiered gear',
+  'index.loot.setTierGear': 'Set-tier gear',
+  'index.loot.tiered': 'Tiered',
+  'index.relation.setPieces': 'Set pieces',
+  'index.relation.tierDropLocations': 'Tier drop locations',
+  'index.relation.listedTierDrops': 'Listed Tier drops'
+};
+for (const [locale, messages] of Object.entries(first.catalogues)) {
+  for (const [key, term] of Object.entries(canonicalIndexTaxonomy)) {
+    assert.equal(messages[key], term, `${locale} must retain the canonical Index taxonomy ${term}`);
+  }
+}
 
 console.log('i18n detection, automatic mode, preference order, selector contents, persistence, '
   + 'locale numbers, search aliases and canonical ROTMG values pass.');
