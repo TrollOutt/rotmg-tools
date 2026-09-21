@@ -247,20 +247,30 @@ const canonicalIndexTaxonomy = {
   'index.chip.setTier': 'Set tier',
   'index.chip.soulbound': 'Soulbound',
   'index.chip.shiny': 'Shiny',
-  'index.fact.tier': 'Tier',
-  'index.loot.tieredLoot': 'Tiered loot',
-  'index.loot.untieredGear': 'Untiered gear',
-  'index.loot.setTierGear': 'Set-tier gear',
-  'index.loot.tiered': 'Tiered',
-  'index.relation.setPieces': 'Set pieces',
-  'index.relation.tierDropLocations': 'Tier drop locations',
-  'index.relation.listedTierDrops': 'Listed Tier drops'
+  'index.fact.tier': 'Tier', 'index.loot.tiered': 'Tiered'
 };
 for (const [locale, messages] of Object.entries(first.catalogues)) {
   for (const [key, term] of Object.entries(canonicalIndexTaxonomy)) {
     assert.equal(messages[key], term, `${locale} must retain the canonical Index taxonomy ${term}`);
   }
 }
+const taxonomyCompounds = {
+  'index.loot.tieredLoot': 'Tier', 'index.loot.untieredGear': 'Untier',
+  'index.loot.setTierGear': 'Set', 'index.relation.setPieces': 'Set',
+  'index.relation.tierDropLocations': 'Tier', 'index.relation.listedTierDrops': 'Tier'
+};
+for (const [locale, messages] of Object.entries(first.catalogues)) {
+  if (locale === 'en') continue;
+  for (const [key, token] of Object.entries(taxonomyCompounds)) {
+    assert(messages[key].includes(token), `${locale} must retain ${token} in ${key}`);
+    assert.notEqual(messages[key], first.catalogues.en[key],
+      `${locale} must translate the surrounding words in ${key}`);
+  }
+}
+assert.equal(first.catalogues.fr['index.results.firstOf'], '{total} premier {affiché} sur {shown}',
+  'French first-of wording and placeholder order must retain the approved pre-taxonomy value');
+assert.equal(first.catalogues.tr['index.results.firstOf'], '{total} {shown} içinden ilk {gösterilen}',
+  'Turkish first-of wording and placeholder order must retain the approved pre-taxonomy value');
 
 console.log('i18n detection, automatic mode, preference order, selector contents, persistence, '
   + 'locale numbers, search aliases and canonical ROTMG values pass.');
