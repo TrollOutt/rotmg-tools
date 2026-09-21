@@ -14,6 +14,33 @@ def root():
     return Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
 
 
+def canonical_root():
+    """Return the orchestration baseline worktree from Git metadata."""
+    here = root()
+    output = subprocess.check_output(
+        ["git", "worktree", "list", "--porcelain"],
+        cwd=here,
+        text=True,
+    )
+    entries, current = [], {}
+    for line in output.splitlines():
+        if not line:
+            if current:
+                entries.append(current)
+                current = {}
+            continue
+        key, _, value = line.partition(" ")
+        current[key] = value
+    if current:
+        entries.append(current)
+    for entry in entries:
+        if entry.get("branch") == "refs/heads/orchestrator/baseline":
+            return Path(entry["worktree"]).resolve()
+    if entries:
+        return Path(entries[0]["worktree"]).resolve()
+    raise RuntimeError("Git reported no worktrees")
+
+
 def listeners():
     output = subprocess.check_output(["netstat", "-ano", "-p", "tcp"], text=True, errors="replace")
     return sorted({int(m.group(1)) for line in output.splitlines()
@@ -26,8 +53,8 @@ def main():
     p.add_argument("worktree")
     p.add_argument("command", nargs=argparse.REMAINDER)
     args = p.parse_args()
-    canonical = root()
-    if not (canonical / ".git").is_dir():
+    canonical = root().resolve()
+    if canonical != canonical_root():
         raise SystemExit("ERROR: preview must run from the canonical orchestrator checkout")
     wt = Path(args.worktree).resolve()
     if not (wt / "web").is_dir():
