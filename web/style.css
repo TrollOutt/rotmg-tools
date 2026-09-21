@@ -1626,6 +1626,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   align-content: center;
 }
 .home-card:hover { border-color: var(--accent); background: rgba(38, 34, 51, .9); }
+.home-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* The picture keeps its column whether or not it arrives, so a missing
    one cannot collapse the row. */
 .home-card-art {
