@@ -1,10 +1,14 @@
 import subprocess
 import sys
 import json
+import importlib.util
+import os
 import shutil
 import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 TASKCTL = ROOT / ".ai/bin/taskctl.py"
@@ -68,6 +72,50 @@ class OrchestrationTests(unittest.TestCase):
         result = self.command([sys.executable, str(PREVIEW), str(ROOT)])
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("canonical orchestrator checkout", result.stderr)
+
+    def test_preview_linked_canonical_records_pid_log_and_replaces_listener(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            primary = Path(tmp) / "primary"
+            primary.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=primary, check=True)
+            subprocess.run(["git", "config", "user.name", "t"], cwd=primary, check=True)
+            subprocess.run(["git", "config", "user.email", "t@t"], cwd=primary, check=True)
+            (primary / ".ai/bin").mkdir(parents=True)
+            (primary / "web").mkdir()
+            (primary / "web/index.html").write_text("ok")
+            shutil.copy2(PREVIEW, primary / ".ai/bin/preview.py")
+            subprocess.run(["git", "add", "."], cwd=primary, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=primary, check=True)
+            canonical = Path(tmp) / "canonical"
+            subprocess.run(["git", "worktree", "add", "-q", "-b", "orchestrator/baseline", str(canonical)], cwd=primary, check=True)
+            spec = importlib.util.spec_from_file_location("preview_fixture", canonical / ".ai/bin/preview.py")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            proc = mock.Mock(pid=4242)
+            proc.poll.return_value = None
+            response = mock.MagicMock()
+            response.__enter__.return_value.status = 200
+            kill = mock.Mock()
+            process_api = types.SimpleNamespace(
+                check_output=subprocess.check_output,
+                run=kill,
+                Popen=mock.Mock(return_value=proc),
+                DEVNULL=subprocess.DEVNULL,
+                STDOUT=subprocess.STDOUT,
+            )
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(canonical)
+                with mock.patch.object(module, "listeners", return_value=[1234]), \
+                     mock.patch.object(module, "subprocess", process_api), \
+                     mock.patch.object(module.urllib.request, "urlopen", return_value=response), \
+                     mock.patch.object(sys, "argv", ["preview.py", str(canonical)]):
+                    module.main()
+            finally:
+                os.chdir(old_cwd)
+            self.assertTrue((canonical / ".ai/ui-preview.log").is_file())
+            self.assertEqual((canonical / ".ai/ui-preview.pid").read_text(), "4242\n")
+            kill.assert_called_once_with(["taskkill", "/PID", "1234", "/T", "/F"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def test_checkpoint_force_stages_declared_ignored_scope(self):
         with tempfile.TemporaryDirectory() as tmp:
