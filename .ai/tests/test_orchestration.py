@@ -43,6 +43,24 @@ class OrchestrationTests(unittest.TestCase):
             self.assertIn("DOCTOR_OK", result.stdout)
             self.assertFalse((root / ".ai-doctor-probe").exists())
 
+    def test_doctor_accepts_canonical_git_file_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            primary = Path(tmp) / "primary"
+            primary.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=primary, check=True)
+            subprocess.run(["git", "config", "user.name", "t"], cwd=primary, check=True)
+            subprocess.run(["git", "config", "user.email", "t@t"], cwd=primary, check=True)
+            (primary / ".ai/bin").mkdir(parents=True)
+            shutil.copy2(TASKCTL, primary / ".ai/bin/taskctl.py")
+            subprocess.run(["git", "add", "."], cwd=primary, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=primary, check=True)
+            canonical = Path(tmp) / "canonical"
+            subprocess.run(["git", "worktree", "add", "-q", "-b", "orchestrator/baseline", str(canonical)], cwd=primary, check=True)
+            self.assertTrue((canonical / ".git").is_file())
+            result = subprocess.run([sys.executable, str(canonical / ".ai/bin/taskctl.py"), "doctor", "missing"], cwd=canonical, text=True, capture_output=True)
+            self.assertNotIn("canonical orchestrator checkout", result.stderr)
+            self.assertIn("unknown task: missing", result.stderr)
+
     def test_preview_is_canonical_root_only(self):
         result = self.command([sys.executable, str(PREVIEW), str(ROOT)])
         self.assertNotEqual(result.returncode, 0)

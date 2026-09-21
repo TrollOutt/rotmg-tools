@@ -559,16 +559,40 @@ def cmd_test(args):
 
 
 def canonical_root():
-    # Git worktrees use a .git *file*; the canonical checkout owns the
-    # orchestration registry and helpers and has a .git directory.
-    return ROOT / ".git"
+    """Return the baseline worktree as reported by Git, not by `.git` shape."""
+    output = subprocess.check_output(
+        ["git", "worktree", "list", "--porcelain"],
+        cwd=ROOT,
+        text=True,
+    )
+    entries = []
+    current = {}
+    for line in output.splitlines():
+        if not line:
+            if current:
+                entries.append(current)
+                current = {}
+            continue
+        key, _, value = line.partition(" ")
+        current[key] = value
+    if current:
+        entries.append(current)
+
+    # The orchestration baseline is the canonical checkout even when that
+    # checkout itself is a linked worktree with a `.git` file.
+    for entry in entries:
+        if entry.get("branch") == "refs/heads/orchestrator/baseline":
+            return Path(entry["worktree"]).resolve()
+    if entries:
+        return Path(entries[0]["worktree"]).resolve()
+    raise RuntimeError("Git reported no worktrees")
 
 
 def cmd_doctor(args):
-    if not canonical_root().is_dir():
+    if ROOT.resolve() != canonical_root():
         raise RuntimeError(
             "doctor must run from the canonical orchestrator checkout "
-            "(not a task worktree); .git is not a directory"
+            "(not a task worktree)"
         )
     data = require(args.task_id)
     wt = worktree_for(data)
