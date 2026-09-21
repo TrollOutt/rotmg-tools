@@ -267,6 +267,23 @@ for (const [locale, messages] of Object.entries(first.catalogues)) {
       `${locale} must translate the surrounding words in ${key}`);
   }
 }
+assert.deepEqual(Object.fromEntries(Object.entries(first.catalogues).map(([locale, messages]) =>
+  [locale, [messages['index.group.class'], messages['index.group.skins']]])), {
+  en: ['Class', 'Skins'], fr: ['Classe', 'Peaux'], 'pt-BR': ['Classe', 'Peles'],
+  'pt-PT': ['Classe', 'Peles'], es: ['clase', 'Pieles'], ru: ['Класс', 'Скины'],
+  pl: ['Klasa', 'Skórki'], de: ['Klasse', 'Skins'], tr: ['Sınıf', 'Kaplamalar'],
+  fi: ['Luokka', 'Skinit'], it: ['Classe', 'Pelli'], sv: ['Klass', 'Skinn'],
+  'zh-CN': ['班级', '皮肤'], da: ['klasse', 'Skind']
+}, 'unrelated class and skins labels must exactly retain their c83c576 locale values');
+assert.deepEqual(Object.fromEntries(Object.entries(first.catalogues.en)
+  .filter(([key]) => key === 'index.loot.tieredLoot' || key === 'index.loot.untieredGear'
+    || key === 'index.loot.setTierGear' || key === 'index.relation.setPieces'
+    || key === 'index.relation.tierDropLocations' || key === 'index.relation.listedTierDrops')), {
+  'index.loot.tieredLoot': 'Tiered loot', 'index.loot.untieredGear': 'Untiered gear',
+  'index.loot.setTierGear': 'Set-tier gear', 'index.relation.setPieces': 'Set pieces',
+  'index.relation.tierDropLocations': 'Tier drop locations',
+  'index.relation.listedTierDrops': 'Listed Tier drops'
+}, 'English compound taxonomy labels must retain their approved wording and casing');
 assert.equal(first.catalogues.fr['index.results.firstOf'], '{total} premier {affiché} sur {shown}',
   'French first-of wording and placeholder order must retain the approved pre-taxonomy value');
 assert.equal(first.catalogues.tr['index.results.firstOf'], '{total} {shown} içinden ilk {gösterilen}',
