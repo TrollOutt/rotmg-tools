@@ -4807,8 +4807,7 @@ const MODULES = [
     art: "Dungeon Icons/Oryx's Sanctuary.gif" },
   { side: 1, row: 0, go: 'index', name: 'Index',
     line: 'Everything the game has, in one place.',
-    detail: 'Every item, class, creature, dungeon, set and enchantment the '
-          + 'game declares, with its picture and what it is joined to.',
+    detail: RealmI18n.t('home.index.detail'),
     art: 'Page Art/Index.png', film: true },
   { side: 1, row: 1, go: 'skins', name: 'Skin Viewer',
     line: 'Client skins, dyes and real animations.',

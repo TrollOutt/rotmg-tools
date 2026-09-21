@@ -76,6 +76,11 @@ const RealmIndex = (function () {
   let loved = new Set();
 
   const el = id => document.getElementById(id);
+  // This page creates its copy after the document localization pass. Use
+  // explicit keys for dynamic or parameterized interface text.
+  const t = (key, params) => RealmI18n.t(key, params);
+  const fact = key => t('index.fact.' + key);
+  const relation = key => key.startsWith('index.') ? t(key) : key;
 
   /*
    * A window onto the one sheet, at whatever size is asked for, with the
@@ -178,7 +183,7 @@ const RealmIndex = (function () {
   /* The star, wherever it is drawn. */
   const star = id => '<span class="ix-love' + (loved.has(id) ? ' is-on' : '')
     + '" data-love="' + esc(id) + '" role="button" tabindex="-1"'
-    + ' title="' + (loved.has(id) ? 'Take it off your list' : 'Keep it on your list')
+    + ' title="' + (loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
     + '">\u2605</span>';
 
   /* ---------------- reading it in ---------------- */
@@ -439,13 +444,13 @@ const RealmIndex = (function () {
      * rail: the same machinery counts and narrows it, it is simply drawn where
      * the reader has already said what family they are after.
      */
-    const group = (title, from, note, inSub) => {
-      const made = { title, from, note, inSub, chips: [], open: false };
+    const group = (title, from, note, inSub, id) => {
+      const made = { title, from, note, inSub, id: id || title, chips: [], open: false };
       groups.push(made);
       return made;
     };
     const chip = (into, key, say, ids, pic) => {
-      if (ids.size) into.chips.push({ key: into.title + '/' + key, say, ids, pic });
+      if (ids.size) into.chips.push({ key: into.id + '/' + key, say, ids, pic });
     };
     /*
      * A chip counts what the list will show, which is not every record: the
@@ -465,12 +470,12 @@ const RealmIndex = (function () {
      */
     if (loved.size) {
       const mine = new Set([...loved].filter(id => all.has(id)));
-      if (mine.size) chip(group('Favourites', 'client'), 'loved', 'Starred', mine);
+      if (mine.size) chip(group(t('index.group.favourites'), 'client'), 'loved', t('index.chip.starred'), mine);
     }
 
     /* Which class may hold it - the slot the class declares against the slot
        the item declares, the same comparison the card makes. */
-    const byClass = group('Class', 'client');
+    const byClass = group(t('index.group.class'), 'client', undefined, undefined, 'Class');
     for (const one of [...all.values()].filter(x => x.kind === 'class')) {
       const wants = new Set(one.slots || []);
       /*
@@ -497,15 +502,15 @@ const RealmIndex = (function () {
      * its skin by type, the set names its skin by type, and what neither names
      * is what you start with or what the game dresses you in itself.
      */
-    const bySkin = group('Skins', 'client', 'how you come by one');
+    const bySkin = group(t('index.group.skins'), 'client', t('index.note.skinSource'), undefined, 'Skins');
     const cameBy = how => gather(x => x.kind === 'skin'
       && (x.in || []).some(([said]) => said === how));
     const fromItem = cameBy('unlocks');
     const fromSet = cameBy('dresses you as');
     for (const [key, say, ids] of [
-      ['unlocked', 'From an unlocker', fromItem],
-      ['set', 'From a set', fromSet],
-      ['given', 'Given to you', gather(x => x.kind === 'skin'
+      ['unlocked', t('index.chip.fromUnlocker'), fromItem],
+      ['set', t('index.chip.fromSet'), fromSet],
+      ['given', t('index.chip.givenToYou'), gather(x => x.kind === 'skin'
         && !fromItem.has(x.id) && !fromSet.has(x.id))]
     ]) {
       /* Pictured by one of its own that has a picture worth showing. */
@@ -523,7 +528,7 @@ const RealmIndex = (function () {
      * reader has already said they are looking at skins, the same way the
      * kinds of gear are offered under Gears.
      */
-    const byLook = group('Costume', 'client', 'read off the name, not declared', true);
+    const byLook = group(t('index.group.costume'), 'client', t('index.note.readOffName'), true, 'Costume');
     const looks = new Map();
     for (const one of all.values()) {
       if (one.kind !== 'skin' || !one.look) continue;
@@ -537,7 +542,7 @@ const RealmIndex = (function () {
         shown && shown.id);
     }
 
-    const byHand = group('Gears', 'client');
+    const byHand = group(t('index.group.gears'), 'client', undefined, undefined, 'Gears');
     for (const [hand, say] of [['weapon', 'Weapon'], ['ability', 'Ability'],
       ['armor', 'Armour'], ['ring', 'Ring']]) {
       /* Pictured by the plainest of its kind, the way the finer ones are. */
@@ -562,7 +567,7 @@ const RealmIndex = (function () {
      * a wall of twenty. They get their own way in, named the way the client
      * names them.
      */
-    const byBag = group('Kind of thing', 'client', 'what the client puts in a bag');
+    const byBag = group(t('index.group.kindOfThing'), 'client', t('index.note.clientBag'));
     const families = new Map();
     for (const one of all.values()) {
       if (one.kind !== 'item' || !one.family) continue;
@@ -582,7 +587,7 @@ const RealmIndex = (function () {
      * biggest hole left in the rail: a reader after the gods, or after what
      * Oryx sends at a realm, had to know one by name to find any of them.
      */
-    const byFoe = group('Enemies', 'client');
+    const byFoe = group(t('index.group.enemies'), 'client');
     const marked = label => gather(x => x.kind === 'enemy' && (x.labels || []).includes(label));
     const foes = [
       ['god', 'Gods', gather(x => Boolean(x.god))],
@@ -617,24 +622,24 @@ const RealmIndex = (function () {
      * in the rail is a wall to read before choosing anything; four slots and
      * then the kinds that slot holds is one question after another.
      */
-    const byType = group('Kind of gear', 'client', undefined, true);
+    const byType = group(t('index.group.kindOfGear'), 'client', undefined, true, 'Kind of gear');
     for (const slot of Object.keys(all.slots)) {
       chip(byType, 'slot' + slot, all.slots[slot][0],
         gather(x => x.kind === 'item' && String(x.slot) === slot));
     }
 
-    const byTier = group('Tier', 'client');
-    chip(byTier, 'ut', 'Untiered', gather(x => (x.labels || []).includes('UT')));
-    chip(byTier, 'st', 'Set tier', gather(x => (x.labels || []).includes('ST')));
+    const byTier = group(t('index.group.tier'), 'client');
+    chip(byTier, 'ut', t('index.chip.untiered'), gather(x => (x.labels || []).includes('UT')));
+    chip(byTier, 'st', t('index.chip.setTier'), gather(x => (x.labels || []).includes('ST')));
     for (let t = 0; t <= 14; t++) {
       chip(byTier, 't' + t, 'T' + t, gather(x => x.tier === t));
     }
 
-    const marks = group('Marks', 'client');
-    chip(marks, 'sb', 'Soulbound', gather(x => Boolean(x.sb)));
-    chip(marks, 'shiny', 'Shiny', gather(x => (x.labels || []).includes('SHINY')));
-    chip(marks, 'reskin', 'Reskin', gather(x => (x.labels || []).includes('RESKIN')));
-    chip(marks, 'hidden', 'No Category', gather(x => Boolean(x.hidden)));
+    const marks = group(t('index.group.marks'), 'client');
+    chip(marks, 'sb', t('index.chip.soulbound'), gather(x => Boolean(x.sb)));
+    chip(marks, 'shiny', t('index.chip.shiny'), gather(x => (x.labels || []).includes('SHINY')));
+    chip(marks, 'reskin', t('index.chip.reskin'), gather(x => (x.labels || []).includes('RESKIN')));
+    chip(marks, 'hidden', t('index.chip.noCategory'), gather(x => Boolean(x.hidden)));
 
     /*
      * The seasons, as far as the client names them. It labels a couple of
@@ -642,7 +647,7 @@ const RealmIndex = (function () {
      * year; it names no year at all for everything else, so there is no year
      * axis here rather than a hollow one.
      */
-    const when = group('Season', 'client', 'only where the client names one');
+    const when = group(t('index.group.season'), 'client', t('index.note.clientSeason'));
     const SEASON = [
       ['Oryxmas', /^ORYXMAS|^ORG_ORYXMAS/], ['Halloween', /^HALLOWEEN|^HAUNTEDHALLOWS/],
       ['Easter', /^EASTER/], ["Valentine's", /^VALENTINE/],
@@ -652,7 +657,7 @@ const RealmIndex = (function () {
       chip(when, say, say, gather(x => (x.labels || []).some(l => test.test(l))));
     }
 
-    const where = group('Biome', 'client');
+    const where = group(t('index.group.biome'), 'client');
     for (const one of [...all.values()].filter(x => x.kind === 'place')
       .sort((a, b) => a.name.localeCompare(b.name))) {
       const ids = gather(x => x.id === one.id
@@ -688,7 +693,7 @@ const RealmIndex = (function () {
         if (gives.size > 3) fromThere.set(one, gives);
       }
       if (fromThere.size) {
-        const out = group('Dungeon', 'wiki', 'what players list it as dropping');
+        const out = group(t('index.group.dungeon'), 'wiki', t('index.note.communityDrops'));
         for (const [one, gives] of fromThere) {
           chip(out, one.name, one.said || one.name, gives, one.id);
         }
@@ -990,7 +995,7 @@ const RealmIndex = (function () {
        * division of, whether or not it would still match anything on its own.
        */
       const mine = groups.find(one => one.chips.includes(chip));
-      if (mine && mine.title === 'Gears') {
+      if (mine && mine.id === 'Gears') {
         for (const one of groups) {
           if (!one.inSub) continue;
           for (const under of one.chips) under.on = false;
@@ -1059,20 +1064,20 @@ const RealmIndex = (function () {
     const rows = look(el('ixSearch').value || '');
     const many = RealmI18n.number(rows.total);
     el('ixCount').textContent = rows.total > rows.length
-      ? 'first ' + rows.length + ' of ' + many
-      : many + (rows.total === 1 ? ' thing' : ' things');
+      ? t('index.results.firstOf', { shown: rows.length, total: many })
+      : t(rows.total === 1 ? 'index.results.oneThing' : 'index.results.manyThings', { count: many });
     box.innerHTML = rows.map(one => {
       const difficulty = dungeonDifficultyOf(all.get(one[0]));
       return '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
         + '" data-open="' + esc(one[0]) + '">'
         + artCell(all.get(one[0]), 20)
         + '<b>' + esc(one[1]) + '</b>'
-        + (difficulty ? '<small class="ix-difficulty" title="RealmEye difficulty rating">☠ ' + difficulty + '/10</small>' : '')
+        + (difficulty ? '<small class="ix-difficulty" title="' + esc(t('index.difficulty.ratingTitle')) + '">☠ ' + difficulty + '/10</small>' : '')
         + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
-        + (one[4] ? '<u class="ix-hidden" title="Some tools do not offer this">hidden</u>' : '')
+        + (one[4] ? '<u class="ix-hidden" title="' + esc(t('index.hidden.title')) + '">' + esc(t('index.hidden.label')) + '</u>' : '')
         + star(one[0])
         + '</button>';
-    }).join('') || '<p class="ix-none">Nothing by that name.</p>';
+    }).join('') || '<p class="ix-none">' + esc(t('index.results.none')) + '</p>';
     fitList(box);
   }
 
@@ -1135,10 +1140,10 @@ const RealmIndex = (function () {
    */
   const SUB_ASKED_BY = {
     'Kind of gear': () => kindWanted === 'item'
-      || groups.some(one => (one.title === 'Gears' || one.title === 'Class')
+      || groups.some(one => (one.id === 'Gears' || one.id === 'Class')
         && one.chips.some(chip => chip.on)),
     Costume: () => kindWanted === 'skin'
-      || groups.some(one => one.title === 'Skins' && one.chips.some(chip => chip.on))
+      || groups.some(one => one.id === 'Skins' && one.chips.some(chip => chip.on))
   };
 
   function drawTypes() {
@@ -1146,7 +1151,7 @@ const RealmIndex = (function () {
     if (!box) return;
     const shown = [];
     for (const set of groups.filter(one => one.inSub)) {
-      const wanted = SUB_ASKED_BY[set.title];
+      const wanted = SUB_ASKED_BY[set.id];
       const asked = set.chips.some(chip => chip.on) || (wanted ? wanted() : false);
       const chips = set.chips.filter(x => x.on || x.here > 0);
       if (!asked || !chips.length) continue;
@@ -1192,8 +1197,8 @@ const RealmIndex = (function () {
       + ' data-key="' + esc(x.key.slice(0, x.key.indexOf('/')).toLowerCase()
         .replace(/[^a-z]+/g, '-')) + '"'
       + ' title="' + (x === asked[0]
-        ? 'The first choice — taking it off clears the rest'
-        : 'Take this one off') + '">'
+        ? t('index.choice.firstTitle')
+        : t('index.choice.removeTitle')) + '">'
       + (x.pic ? art(all.get(x.pic), 13) : '') + esc(x.say) + '<u>&times;</u></button>').join('');
   }
 
@@ -1243,11 +1248,11 @@ const RealmIndex = (function () {
       + ' data-key="' + esc(one.title.toLowerCase().replace(/[^a-z]+/g, '-')) + '"'
       + (shown.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
       + '<button type="button" class="ix-group-head" data-fold="' + at + '"'
-      + (isFirst ? ' title="The first choice. Taking it off clears the rest."' : '') + '>'
+      + (isFirst ? ' title="' + esc(t('index.choice.firstTitle')) + '"' : '') + '>'
       /* On its own line above the name, so it cannot be read as part of it. */
-      + (isFirst ? '<em class="ix-first">first choice — clears the rest</em>' : '')
+      + (isFirst ? '<em class="ix-first">' + esc(t('index.choice.firstLabel')) + '</em>' : '')
       + '<b>' + esc(one.title) + '</b>'
-      + (one.from === 'wiki' ? '<em class="ix-said">community</em>' : '')
+      + (one.from === 'wiki' ? '<em class="ix-said">' + esc(t('index.community.label')) + '</em>' : '')
       + '<span class="ix-group-on">'
       + (chosen.length || '') + '</span></button>'
       + '<div class="ix-group-body"><div class="ix-group-inner">'
@@ -1299,29 +1304,29 @@ const RealmIndex = (function () {
     spd: 'Speed', dex: 'Dexterity', vit: 'Vitality', wis: 'Wisdom' };
   /* The client's own stat names, in the words the game's own tooltips use. */
   /* Where a picture came from, said the way a reader would ask it. */
-  const PIC_SAY = { client: "the game's own art",
-    skin: 'the skin it gives you', piece: 'one of its pieces' };
+  const PIC_SAY = { client: 'clientArt', skin: 'givenSkin', piece: 'piece' };
   const WORN_SAY = { MAXHP: 'life', MAXMP: 'magic', ATT: 'attack', DEF: 'defence',
     SPD: 'speed', DEX: 'dexterity', VIT: 'vitality', WIS: 'wisdom' };
+  const wornSay = stat => t('index.worn.' + (WORN_SAY[stat] || stat.toLowerCase()));
 
   function factsOf(one) {
     const bits = [];
-    if (one.hand) bits.push(['slot', one.hand + ' (' + one.slot + ')']);
+    if (one.hand) bits.push([fact('slot'), one.hand + ' (' + one.slot + ')']);
     /* What it is, when it is not gear: a mark, a key, a pet skin. */
-    if (one.family) bits.push(['kind', one.family]);
+    if (one.family) bits.push([fact('kind'), one.family]);
     /*
      * The one fact on a skin the client does not state. Everything else here
      * is a declaration; this is read off the name, so it says so rather than
      * sitting in the list looking like the rest.
      */
-    if (one.look) bits.push(['costume', one.look + ' — read off the name']);
-    if (one.level) bits.push(['unlocks at level', one.level]);
-    if (one.given) bits.push(['comes from', one.given]);
-    if (one.tier !== undefined) bits.push(['tier', 'T' + one.tier]);
-    if (one.sb) bits.push(['soulbound', 'yes']);
-    if (one.mp) bits.push(['mana', one.mp]);
-    if (one.rate !== undefined) bits.push(['rate of fire', Math.round(one.rate * 100) + '%']);
-    if (one.shots > 1) bits.push(['shots', one.shots]);
+    if (one.look) bits.push([fact('costume'), one.look + ' — ' + t('index.note.readOffName')]);
+    if (one.level) bits.push([fact('unlocksAtLevel'), one.level]);
+    if (one.given) bits.push([fact('comesFrom'), one.given]);
+    if (one.tier !== undefined) bits.push([fact('tier'), 'T' + one.tier]);
+    if (one.sb) bits.push([fact('soulbound'), t('index.answer.yes')]);
+    if (one.mp) bits.push([fact('mana'), one.mp]);
+    if (one.rate !== undefined) bits.push([fact('rateOfFire'), Math.round(one.rate * 100) + '%']);
+    if (one.shots > 1) bits.push([fact('shots'), one.shots]);
     /*
      * What the thing actually does when you swing it. A card that says only
      * "ability (29), soulbound, 100 mana" has told the reader nothing they
@@ -1329,56 +1334,56 @@ const RealmIndex = (function () {
      * whole question.
      */
     for (const shot of one.fires || []) {
-      const many = (one.fires.length > 1 ? 'shot ' + (one.fires.indexOf(shot) + 1) : 'damage');
+      const many = one.fires.length > 1 ? t('index.fact.shot', { count: one.fires.indexOf(shot) + 1 }) : fact('damage');
       bits.push([many, shot.low === shot.high ? shot.low
         : shot.low + '–' + shot.high]);
-      if (shot.reach !== undefined) bits.push(['range', shot.reach + ' tiles']);
-      const notes = [shot.pierce ? 'ignores armour' : '', shot.through ? 'goes through' : '']
+      if (shot.reach !== undefined) bits.push([fact('range'), t('index.fact.tiles', { count: shot.reach })]);
+      const notes = [shot.pierce ? fact('ignoresArmour') : '', shot.through ? fact('goesThrough') : '']
         .filter(Boolean);
-      if (notes.length) bits.push(['the shot', notes.join(', ')]);
+      if (notes.length) bits.push([fact('theShot'), notes.join(', ')]);
     }
     if (one.worn) {
       if (one.kind === 'set') {
-        bits.push(['the four pieces give', Object.keys(one.worn).map(stat =>
+        bits.push([fact('fourPiecesGive'), Object.keys(one.worn).map(stat =>
           (one.worn[stat] > 0 ? '+' : '') + one.worn[stat] + ' '
-          + (WORN_SAY[stat] || stat.toLowerCase())).join(', ')]);
+          + wornSay(stat)).join(', ')]);
       } else {
       /*
        * One row, not one per statistic: a creature's own life and armour are
        * already facts on this card, and "life +80" beside them reads as what
        * the thing has rather than as what it gives.
        */
-      bits.push(['wearing it', Object.keys(one.worn).map(stat =>
+      bits.push([fact('wearingIt'), Object.keys(one.worn).map(stat =>
         (one.worn[stat] > 0 ? '+' : '') + one.worn[stat] + ' '
-        + (WORN_SAY[stat] || stat.toLowerCase())).join(', ')]);
+        + wornSay(stat)).join(', ')]);
       }
     }
-    if (one.hp) bits.push(['life', RealmI18n.number(one.hp)]);
-    if (one.def) bits.push(['armour', one.def]);
-    if (one.weight !== undefined) bits.push(['how often it rolls', RealmI18n.number(one.weight)]);
-    if (one.fits) bits.push(['goes on', one.fits]);
-    if (one.refuses) bits.push(['never on', one.refuses]);
-    if (one.beside) bits.push(['not beside', one.beside]);
-    if (one.takes) bits.push(['it can give', one.takes]);
-    if (one.skin) bits.push(['turns you into', one.skin]);
-    if (one.came) bits.push(['came with', 'the ' + one.came]);
-    if (one.ground) bits.push(['ground', one.ground]);
-    if (one.rank) bits.push(['zone', one.rank]);
-    if (one.recommendedLevel !== undefined) bits.push(['recommended level', one.recommendedLevel + '+']);
-    if (one.tiles) bits.push(['how big', RealmI18n.number(one.tiles) + ' tiles']);
-    if (one.pic) bits.push(['picture', PIC_SAY[one.pic] || one.pic]);
+    if (one.hp) bits.push([fact('life'), RealmI18n.number(one.hp)]);
+    if (one.def) bits.push([fact('armour'), one.def]);
+    if (one.weight !== undefined) bits.push([fact('howOftenItRolls'), RealmI18n.number(one.weight)]);
+    if (one.fits) bits.push([fact('goesOn'), one.fits]);
+    if (one.refuses) bits.push([fact('neverOn'), one.refuses]);
+    if (one.beside) bits.push([fact('notBeside'), one.beside]);
+    if (one.takes) bits.push([fact('itCanGive'), one.takes]);
+    if (one.skin) bits.push([fact('turnsYouInto'), one.skin]);
+    if (one.came) bits.push([fact('cameWith'), t('index.fact.theName', { name: one.came })]);
+    if (one.ground) bits.push([fact('ground'), one.ground]);
+    if (one.rank) bits.push([fact('zone'), one.rank]);
+    if (one.recommendedLevel !== undefined) bits.push([fact('recommendedLevel'), one.recommendedLevel + '+']);
+    if (one.tiles) bits.push([fact('howBig'), t('index.fact.tiles', { count: RealmI18n.number(one.tiles) })]);
+    if (one.pic) bits.push([fact('picture'), PIC_SAY[one.pic] ? t('index.picture.' + PIC_SAY[one.pic]) : one.pic]);
     if (one.stats) {
       for (const key of Object.keys(STAT_SAY)) {
         if (one.stats[key] === undefined) continue;
-        bits.push([STAT_SAY[key].toLowerCase(), one.stats[key]
+        bits.push([fact(key), one.stats[key]
           + (one.stats[key + 'Top'] !== undefined ? ' … ' + one.stats[key + 'Top'] : '')]);
       }
     }
     if (one.steps) {
       for (const many of Object.keys(one.steps)) {
-        bits.push([many + ' pieces', Object.keys(one.steps[many])
+        bits.push([t('index.fact.pieces', { count: many }), Object.keys(one.steps[many])
           .map(k => (one.steps[many][k] > 0 ? '+' : '') + one.steps[many][k] + ' '
-            + (WORN_SAY[k] || k)).join(', ')]);
+            + wornSay(k)).join(', ')]);
       }
       /*
        * And what the pieces are worth on their own. Eight of the older sets
@@ -1386,7 +1391,7 @@ const RealmIndex = (function () {
        * - and a card that showed nothing read as though the set did nothing.
        */
       if (one.kind === 'set' && !Object.keys(one.steps).length) {
-        bits.push(['for wearing all four', 'nothing but the look']);
+        bits.push([fact('forWearingAllFour'), fact('nothingButTheLook')]);
       }
     }
     return bits;
@@ -1406,11 +1411,11 @@ const RealmIndex = (function () {
     const rows = factsOf(one).map(([key, value]) =>
       '<div><dt>' + esc(key) + '</dt><dd>' + esc(value) + '</dd></div>').join('');
     const labels = (one.labels || []).length
-      ? '<div class="ix-links"><div class="ix-link-row"><i>labels</i><span>'
+      ? '<div class="ix-links"><div class="ix-link-row"><i>' + esc(fact('labels')) + '</i><span>'
         + one.labels.map(x => '<span class="ix-data-chip">' + esc(x) + '</span>').join('')
         + '</span></div></div>'
       : '';
-    return block('Facts', (rows ? '<dl class="ix-facts">' + rows + '</dl>' : '') + labels);
+    return block(t('index.section.facts'), (rows ? '<dl class="ix-facts">' + rows + '</dl>' : '') + labels);
   }
 
   /*
@@ -1421,7 +1426,7 @@ const RealmIndex = (function () {
    */
   function drawDoes(one) {
     if (!one.does || !one.does.length) return '';
-    return block('What it does', '<ul class="ix-does">' + one.does.map(said => '<li>'
+    return block(t('index.section.whatItDoes'), '<ul class="ix-does">' + one.does.map(said => '<li>'
       + (said.length > 1 ? '<b>' + esc(said[0]) + '</b> ' + esc(said[1]) : esc(said[0]))
       + '</li>').join('') + '</ul>');
   }
@@ -1429,15 +1434,15 @@ const RealmIndex = (function () {
   function drawDungeonDifficulty(one) {
     const difficulty = dungeonDifficultyOf(one);
     if (!difficulty) return '';
-    return '<p class="ix-dungeon-difficulty"><b>☠ Difficulty ' + difficulty
-      + ' / 10</b><span>difficulty rating</span></p>';
+    return '<p class="ix-dungeon-difficulty"><b>☠ ' + esc(t('index.difficulty.score', { score: difficulty }))
+      + '</b><span>' + esc(t('index.difficulty.rating')) + '</span></p>';
   }
 
   function drawBiomeLoot(one) {
     if (one.kind !== 'place' || !one.loot) return '';
     const rows = [];
     const tiers = Object.entries(one.loot.tiers || {}).filter(([, values]) => values.length);
-    if (tiers.length) rows.push('<div class="ix-link-row"><i>tiered loot</i><span>'
+    if (tiers.length) rows.push('<div class="ix-link-row"><i>' + esc(t('index.loot.tieredLoot')) + '</i><span>'
       + tiers.map(([slot, values]) => '<b class="ix-loot-tier">' + esc(slot) + ' '
         + esc(values.map(value => 'T' + value).join(', ')) + '</b>').join('') + '</span></div>');
     const named = (ids, label) => {
@@ -1447,13 +1452,13 @@ const RealmIndex = (function () {
         + items.map(item => '<button type="button" class="ix-jump" data-open="' + esc(item.id) + '">'
           + art(item, 18) + esc(item.said || item.name) + '</button>').join('') + '</span></div>');
     };
-    named(one.untiered, 'untiered gear');
-    named(one.setTier, 'set-tier gear');
+    named(one.untiered, t('index.loot.untieredGear'));
+    named(one.setTier, t('index.loot.setTierGear'));
     const dungeons = (one.dungeons || []).map(id => all.get(id)).filter(Boolean);
-    if (dungeons.length) rows.push('<div class="ix-link-row"><i>dungeon entrances</i><span>'
+    if (dungeons.length) rows.push('<div class="ix-link-row"><i>' + esc(t('index.loot.dungeonEntrances')) + '</i><span>'
       + dungeons.map(item => '<button type="button" class="ix-jump" data-open="' + esc(item.id) + '">'
         + art(item, 18) + esc(item.said || item.name) + '</button>').join('') + '</span></div>');
-    return rows.length ? '<div class="ix-said-block ix-biome-loot"><h4>Loot available in this biome</h4>'
+    return rows.length ? '<div class="ix-said-block ix-biome-loot"><h4>' + esc(t('index.biome.lootAvailable')) + '</h4>'
       + '<div class="ix-links">' + rows.join('') + '</div></div>' : '';
   }
 
@@ -1493,22 +1498,22 @@ const RealmIndex = (function () {
         || 'https://www.realmeye.com/wiki/') + archivePage.slug;
       return '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
         + esc(href) + '" title="' + esc(many > 1
-          ? ('RealmEye source page (' + many + ' archived pages are merged into this record)')
-          : 'Its archived RealmEye source page') + '">RealmEye ↗</a>';
+          ? t('index.source.archiveMerged', { count: many })
+          : t('index.source.archivePage')) + '">RealmEye ↗</a>';
     }
     if (!wiki) return '';
     const mine = wiki.page.get(one.id);
     if (mine !== undefined) {
       return '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
         + esc(wiki.home + (wiki.pages[mine] || [''])[0])
-        + '" title="Its page on the community wiki">RealmEye \u2197</a>';
+        + '" title="' + esc(t('index.source.communityPage')) + '">RealmEye \u2197</a>';
     }
     const family = wiki.near.get(one.id);
     if (family === undefined) return '';
     const [slug, title] = wiki.pages[family] || ['', '?'];
     return '<a class="ix-away" target="_blank" rel="noreferrer noopener" href="'
-      + esc(wiki.home + slug) + '" title="The community wiki files this one under '
-      + esc(title) + ' rather than giving it a page">' + esc(title) + ' \u2197</a>';
+      + esc(wiki.home + slug) + '" title="' + esc(t('index.source.communityFilesUnder', { title }))
+      + '">' + esc(title) + ' \u2197</a>';
   }
 
   function drawCard(id) {
@@ -1554,7 +1559,7 @@ const RealmIndex = (function () {
     const cardLinks = one.kind === 'place' ? links.filter(([how]) => how !== 'was seen in') : links;
     const where = one.from
       ? (all.files[one.from[0]] || '?') + (one.from[1] ? ' · ' + one.from[1] : '')
-      : 'not declared in the client';
+      : t('index.source.notDeclared');
 
     box.innerHTML = '<header class="ix-card-head">'
       + artCell(one, 44)
@@ -1574,11 +1579,11 @@ const RealmIndex = (function () {
        */
       + drawDungeonDifficulty(one)
       + (one.hidden
-        ? '<p class="ix-warn"><b>The other tools do not offer this</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
+        ? '<p class="ix-warn"><b>' + esc(t('index.hidden.toolsWarning')) + '</b> — ' + esc(one.hidden.join('; ')) + '.</p>'
         : '')
-      + (one.benchWhy ? '<p class="ix-warn"><b>Not offered on the bench</b> — ' + esc(one.benchWhy) + '.</p>' : '')
+      + (one.benchWhy ? '<p class="ix-warn"><b>' + esc(t('index.bench.unavailable')) + '</b> — ' + esc(one.benchWhy) + '.</p>' : '')
       + (one.twin
-        ? '<p class="ix-warn">The game has more than one thing by this name. The words in brackets are how they differ.</p>'
+        ? '<p class="ix-warn">' + esc(t('index.duplicate.warning')) + '</p>'
         : '')
       + drawTools(one)
       + drawRecordDescription(one)
@@ -1587,7 +1592,7 @@ const RealmIndex = (function () {
       + drawCommunity(one)
       + drawFolds(one)
       + drawConnections(one, cardLinks)
-      + (one.communityOnly ? '' : '<p class="ix-from">Read from <code>' + esc(where) + '</code> in the game’s own files</p>');
+      + (one.communityOnly ? '' : '<p class="ix-from">' + esc(t('index.source.readFrom', { source: where })) + '</p>');
   }
 
   /*
@@ -1601,7 +1606,7 @@ const RealmIndex = (function () {
    */
   function drawFolds(one) {
     if (!one.folds || one.folds.length < 2) return '';
-    return block('Client declarations', '<ul class="ix-folds">' + one.folds.map(x =>
+    return block(t('index.section.clientDeclarations'), '<ul class="ix-folds">' + one.folds.map(x =>
         /*
          * The file goes on the end of the first line, not below the wrapped
          * one: what differs is a sentence and takes a line of its own, and
@@ -1623,17 +1628,17 @@ const RealmIndex = (function () {
    * "where does this come from"; fenced, because it is somebody else's claim.
    */
   const REALMEYE_RELATION_SAY = {
-    dropped_by: 'dropped by', obtained_through: 'obtained through',
-    reskin_of: 'reskin of', has_reskin: 'reskins', spawns: 'spawns', spawned_by: 'spawned by',
-    set_piece: 'set pieces', class: 'class', dungeon_boss: 'bosses',
+    dropped_by: 'droppedBy', obtained_through: 'obtainedThrough',
+    reskin_of: 'reskinOf', has_reskin: 'reskins', spawns: 'spawns', spawned_by: 'spawnedBy',
+    set_piece: 'setPieces', class: 'class', dungeon_boss: 'bosses',
     dungeon_miniboss: 'minibosses', dungeon_enemy: 'enemies', dungeon_minion: 'minions',
-    dungeon_boss_minion: 'boss minions', dungeon_treasure_boss: 'treasure room boss',
-    dungeon_hazard: 'hazards', dungeon_drop_interest: 'drops of interest',
-    biome_regular_enemy: 'regular enemies', biome_minion: 'minions', biome_hero: 'Heroes of Oryx',
-    biome_hero_minion: 'Hero minions', biome_encounter: 'encounters',
-    biome_encounter_minion: 'encounter minions', biome_beacon_guardian: 'beacon guardian',
-    biome_beacon_minion: 'beacon minions', biome_drop_interest: 'drops of interest',
-    contains_biome: 'sub-biomes', part_of_biome: 'part of biome'
+    dungeon_boss_minion: 'bossMinions', dungeon_treasure_boss: 'treasureRoomBoss',
+    dungeon_hazard: 'hazards', dungeon_drop_interest: 'dropsOfInterest',
+    biome_regular_enemy: 'regularEnemies', biome_minion: 'minions', biome_hero: 'heroesOfOryx',
+    biome_hero_minion: 'heroMinions', biome_encounter: 'encounters',
+    biome_encounter_minion: 'encounterMinions', biome_beacon_guardian: 'beaconGuardian',
+    biome_beacon_minion: 'beaconMinions', biome_drop_interest: 'dropsOfInterest',
+    contains_biome: 'subBiomes', part_of_biome: 'partOfBiome'
   };
   const realmFactSay = key => String(key || '').replace(/_/g, ' ')
     .replace(/\b\w/g, letter => letter.toUpperCase());
@@ -1771,7 +1776,7 @@ const RealmIndex = (function () {
       descriptions.push(text);
     }
     if (!descriptions.length) return '';
-    return block('Description', '<div class="ix-prose">'
+    return block(t('index.section.description'), '<div class="ix-prose">'
       + descriptions.map(text => '<p>' + esc(text) + '</p>').join('') + '</div>');
   }
 
@@ -1780,7 +1785,7 @@ const RealmIndex = (function () {
     const scopes = [...(item.scopes || [])].sort();
     const notes = [...(item.notes || [])].filter(Boolean);
     const titleBits = [];
-    if (scopes.length) titleBits.push('Area: ' + scopes.join(', '));
+    if (scopes.length) titleBits.push(t('index.tooltip.area', { areas: scopes.join(', ') }));
     if (notes.length) titleBits.push(notes.join(' · '));
     const title = titleBits.length ? ' title="' + esc(titleBits.join(' — ')) + '"' : '';
     if (target) {
@@ -1807,7 +1812,7 @@ const RealmIndex = (function () {
   function drawKnowledgeRow(label, items) {
     const chips = items.map(drawKnowledgeTarget).filter(Boolean);
     if (!chips.length) return '';
-    return '<div class="ix-link-row"><i>' + esc(label) + '</i><span>' + chips.join('') + '</span></div>';
+    return '<div class="ix-link-row"><i>' + esc(t('index.relation.' + label)) + '</i><span>' + chips.join('') + '</span></div>';
   }
 
   function resolvedButtons(ids) {
@@ -1836,11 +1841,11 @@ const RealmIndex = (function () {
       const sourceChips = sources.map(drawKnowledgeTarget).filter(Boolean);
       if (!itemChips.length) continue;
       shown.push('<div class="ix-drop-row"><span class="ix-drop-items">' + itemChips.join('') + '</span>'
-        + (sourceChips.length ? '<em>from</em><span class="ix-drop-sources">' + sourceChips.join('') + '</span>' : '')
+        + (sourceChips.length ? '<em>' + esc(t('index.relation.from')) + '</em><span class="ix-drop-sources">' + sourceChips.join('') + '</span>' : '')
         + '</div>');
     }
     if (!shown.length) return '';
-    return '<div class="ix-link-row ix-drop-interest"><i>notable drops</i><span class="ix-drop-grid">'
+    return '<div class="ix-link-row ix-drop-interest"><i>' + esc(t('index.relation.notableDrops')) + '</i><span class="ix-drop-grid">'
       + shown.join('') + '</span></div>';
   }
 
@@ -1922,7 +1927,7 @@ const RealmIndex = (function () {
        hover text rather than a second monster chip in the Loot section. */
     for (const row of (one.realmeyeArchive && one.realmeyeArchive.dropRows) || []) {
       const sources = [...new Set((row.sources || []).map(ref => dropSourceName(ref, row.scope)).filter(Boolean))];
-      const note = sources.length ? 'Drops from ' + sources.join(', ') : '';
+      const note = sources.length ? t('index.tooltip.dropsFrom', { sources: sources.join(', ') }) : '';
       for (const ref of row.items || []) {
         const item = archiveRefItem(ref, row.scope);
         if (item) mergeKnowledgeItem(kept, item, note);
@@ -1948,7 +1953,7 @@ const RealmIndex = (function () {
     const roles = canonicalPlaceRoles(one, realmRelationGroups(one));
     const chips = roles.guardian.map(drawKnowledgeTarget).filter(Boolean);
     if (!chips.length) return '';
-    return '<span class="ix-place-guardian"><small>guardian</small>' + chips.join('') + '</span>';
+    return '<span class="ix-place-guardian"><small>' + esc(t('index.relation.guardian')) + '</small>' + chips.join('') + '</span>';
   }
 
   /* REALMEYE_SUBBIOME_MODEL_V11 */
@@ -1981,11 +1986,10 @@ const RealmIndex = (function () {
   function drawPopulationEmpty(one) {
     const status = placeGenerationStatus(one);
     if (status && status.code === 'not-generating') {
-      return '<div class="ix-empty-population">No current generated population — '
-        + esc(status.label) + '.</div>';
+      return '<div class="ix-empty-population">' + esc(t('index.population.notGenerating', { status: status.label })) + '</div>';
     }
     if (one && one.realmeyeArchive && one.realmeyeArchive.scopeOnly) {
-      return '<div class="ix-empty-population">No population is currently listed for this sub-biome.</div>';
+      return '<div class="ix-empty-population">' + esc(t('index.population.noneForSubBiome')) + '</div>';
     }
     return '';
   }
@@ -1998,12 +2002,12 @@ const RealmIndex = (function () {
 
     const population = [];
     if (roles.enemies.length) population.push(drawKnowledgeRow('enemies', roles.enemies));
-    if (roles.heroes.length) population.push(drawKnowledgeRow('Heroes of Oryx', roles.heroes));
+    if (roles.heroes.length) population.push(drawKnowledgeRow('heroesOfOryx', roles.heroes));
     if (roles.encounters.length) population.push(drawKnowledgeRow('encounters', roles.encounters));
     const populationTotal = placePopulationTotal(one);
     const emptyPopulation = drawPopulationEmpty(one);
     if (population.length || emptyPopulation) {
-      sections.push('<details class="ix-part" open><summary>Population <small class="ix-section-count">'
+      sections.push('<details class="ix-part" open><summary>' + esc(t('index.section.population')) + ' <small class="ix-section-count">'
         + populationTotal + '</small></summary><div class="ix-links">'
         + population.join('') + emptyPopulation + '</div></details>');
     }
@@ -2012,16 +2016,16 @@ const RealmIndex = (function () {
     const tiers = Object.entries((one.loot && one.loot.tiers) || {})
       .filter(([, values]) => values && values.length);
     if (tiers.length) {
-      lootRows.push('<div class="ix-link-row"><i>tiered</i><span>' + tiers.map(([kind, values]) =>
+      lootRows.push('<div class="ix-link-row"><i>' + esc(t('index.loot.tiered')) + '</i><span>' + tiers.map(([kind, values]) =>
         '<span class="ix-data-chip"><b>' + esc(kind) + '</b> ' + esc(compactTierRange(values)) + '</span>').join('')
         + '</span></div>');
     }
     const loot = canonicalPlaceLoot(one, groups);
     if (loot.length) lootRows.push(drawKnowledgeRow('items', loot));
     const dungeons = resolvedButtons(one.dungeons);
-    if (dungeons.length) lootRows.push(drawKnowledgeRow('dungeon entrances', dungeons));
+    if (dungeons.length) lootRows.push(drawKnowledgeRow('dungeonEntrances', dungeons));
     if (lootRows.length) {
-      sections.push('<details class="ix-part" open><summary>Loot</summary><div class="ix-links">'
+      sections.push('<details class="ix-part" open><summary>' + esc(t('index.section.loot')) + '</summary><div class="ix-links">'
         + lootRows.join('') + '</div></details>');
     }
 
@@ -2029,12 +2033,12 @@ const RealmIndex = (function () {
     const subNames = ((one.realmeyeArchive && one.realmeyeArchive.subBiomes) || []).slice();
     if (sub.length || subNames.length) {
       let row = '';
-      if (sub.length) row = '<div class="ix-link-row"><i>areas</i><span>'
+      if (sub.length) row = '<div class="ix-link-row"><i>' + esc(t('index.relation.areas')) + '</i><span>'
         + sub.map(drawSubBiomeTarget).filter(Boolean).join('') + '</span></div>';
-      else row = '<div class="ix-link-row"><i>areas</i><span>'
+      else row = '<div class="ix-link-row"><i>' + esc(t('index.relation.areas')) + '</i><span>'
         + subNames.map(name => '<span class="ix-data-chip">' + esc(name) + '</span>').join('')
         + '</span></div>';
-      sections.push('<details class="ix-part" open><summary>Sub-biomes</summary><div class="ix-links">'
+      sections.push('<details class="ix-part" open><summary>' + esc(t('index.section.subBiomes')) + '</summary><div class="ix-links">'
         + row + '</div></details>');
     }
 
@@ -2059,7 +2063,7 @@ const RealmIndex = (function () {
      * Where the two sources ask the same question in different words. They
      * agree on the rest of them already.
      */
-    const SAME_QUESTION = { 'enemies found here': 'enemies' };
+    const SAME_QUESTION = { enemiesFoundHere: 'enemies' };
     const sink = {
       say(label, items) {
         const how = SAME_QUESTION[label] || label;
@@ -2082,14 +2086,15 @@ const RealmIndex = (function () {
     if (data) realmFactRows(data.facts || {}, '', facts);
     const shownFacts = facts.slice(0, 40);
     for (const [type, values] of realmRelationGroups(one)) {
-      sink.say(REALMEYE_RELATION_SAY[type] || realmFactSay(type), [...values.values()]);
+      sink.say(REALMEYE_RELATION_SAY[type]
+        ? 'index.relation.' + REALMEYE_RELATION_SAY[type] : realmFactSay(type), [...values.values()]);
     }
     wikiRows(one, sink);
 
     const relationRows = [...rows].map(([label, chips]) => chips.size
-      ? '<div class="ix-link-row"><i>' + esc(label) + '</i><span>'
+      ? '<div class="ix-link-row"><i>' + esc(relation(label)) + '</i><span>'
         + [...chips.values()].join('')
-        + (tails.get(label) ? '<em>and ' + tails.get(label) + ' more</em>' : '')
+        + (tails.get(label) ? '<em>' + esc(t('index.relation.andMore', { count: tails.get(label) })) + '</em>' : '')
         + '</span></div>'
       : '').join('');
     const tables = [];
@@ -2106,7 +2111,7 @@ const RealmIndex = (function () {
         + '</table></div>';
     }).join('');
     if (!shownFacts.length && !relationRows && !tableHtml) return '';
-    return block('Details',
+    return block(t('index.section.details'),
       (shownFacts.length ? '<dl class="ix-facts">' + shownFacts.map(([key, value]) =>
         '<div><dt>' + esc(realmFactSay(key.split('.').pop())) + '</dt><dd>' + esc(value) + '</dd></div>').join('') + '</dl>' : '')
       + (relationRows ? '<div class="ix-links">' + relationRows + '</div>' : '')
@@ -2141,19 +2146,19 @@ const RealmIndex = (function () {
       if (pages.length > 24) sink.tail(how, pages.length - 24);
     };
 
-    say('dropped by', wiki.dropBy.get(mine));
-    say('listed as dropping', wiki.drop.get(mine));
+    say('index.relation.droppedBy', wiki.dropBy.get(mine));
+    say('index.relation.listedAsDropping', wiki.drop.get(mine));
     if (one.kind === 'item' && one.hand && one.tier !== undefined) {
       const alternate = one.hand === 'weapon' && (one.labels || []).includes('SUBTYPE');
-      say('tier drop locations',
+      say('index.relation.tierDropLocations',
         [...new Set(wiki.tierDropBy.get(one.hand + ':' + one.tier + ':' + alternate) || [])]);
     }
-    say('found in', wiki.dungeonBy.get(mine));
-    say('enemies found here', wiki.dungeon.get(mine));
+    say('index.relation.foundIn', wiki.dungeonBy.get(mine));
+    say('index.relation.enemiesFoundHere', wiki.dungeon.get(mine));
     const tiers = wiki.tierDrop.get(mine) || [];
     if (tiers.length) {
       const said = { weapon: 'weapons', ability: 'abilities', armor: 'armor', ring: 'rings' };
-      sink.say('listed tier drops', tiers.map(entry => ({
+      sink.say('index.relation.listedTierDrops', tiers.map(entry => ({
         relation: {
           toWiki: wiki.tierDropLists[entry.listAt] || '',
           said: 'T' + entry.tier + (entry.alternate ? ' alternate ' : ' ')
@@ -2174,9 +2179,9 @@ const RealmIndex = (function () {
      */
     const kin = [...new Set([...(wiki.spawn.get(mine) || []),
       ...(wiki.spawnBy.get(mine) || [])])];
-    say('spawns, or is spawned by', kin, item => {
+    say('index.relation.spawnsOrSpawnedBy', kin, item => {
       const key = knowledgeItemKey(item);
-      return !sink.named('spawns', key) && !sink.named('spawned by', key);
+      return !sink.named('index.relation.spawns', key) && !sink.named('index.relation.spawnedBy', key);
     });
   }
 
@@ -2199,14 +2204,14 @@ const RealmIndex = (function () {
   function drawTools(one) {
     const doors = [];
     if (one.kind === 'item' && one.ench) {
-      doors.push(['enchant', 'Price its enchantments', 'Open the calculator on this item']);
+      doors.push(['enchant', t('index.door.priceEnchantments'), t('index.door.priceEnchantmentsTitle')]);
     }
-    if (one.kind === 'class') doors.push(['bench', 'Build this class', 'Open the bench on it']);
+    if (one.kind === 'class') doors.push(['bench', t('index.door.buildClass'), t('index.door.buildClassTitle')]);
     if (one.kind === 'enemy' && one.fight) {
-      doors.push(['bench', 'Fight it', 'Use it as the target on the bench']);
+      doors.push(['bench', t('index.door.fight'), t('index.door.fightTitle')]);
     }
     if (one.kind === 'place' || (one.outLinks || []).some(x => x[0] === 'was seen in')) {
-      doors.push(['atlas', 'Find it on the map', 'Open the realm atlas']);
+      doors.push(['atlas', t('index.door.findOnMap'), t('index.door.findOnMapTitle')]);
     }
     const viewerTargets = (skinBridge && skinBridge.reverse && skinBridge.reverse[one.id]) || [];
     const viewerDoors = viewerTargets.map((target, index) => {
@@ -2214,10 +2219,13 @@ const RealmIndex = (function () {
       const what = target.kind === 'dye'
         ? (target.target === 'clothing' ? 'clothing dye' : 'accessory dye')
         : (target.via === 'set' ? 'set skin' : 'skin');
+      const kind = target.kind === 'dye'
+        ? (target.target === 'clothing' ? t('index.skin.clothingDye') : t('index.skin.accessoryDye'))
+        : (target.via === 'set' ? t('index.skin.setSkin') : t('index.skin.skin'));
       return '<button type="button" class="ix-door" data-skin-target="'
-        + esc(encodeURIComponent(JSON.stringify(target))) + '" title="Open the exact linked '
-        + esc(what) + ' in the local Skin Viewer">Open in Skin Viewer'
-        + (many ? ' · ' + esc(what) : '') + '</button>';
+        + esc(encodeURIComponent(JSON.stringify(target))) + '" title="'
+        + esc(t('index.door.skinViewerTitle', { kind })) + '">' + esc(t('index.door.skinViewer'))
+        + (many ? ' · ' + esc(kind) : '') + '</button>';
     });
     if (!doors.length && !viewerDoors.length) return '';
     return '<p class="ix-doors">' + doors.map(([go, say, why]) =>
@@ -2230,10 +2238,10 @@ const RealmIndex = (function () {
     if (one.kind !== 'class' || !one.slots || !all.slots) return '';
     const said = one.slots.map(slot => all.slots[slot]).filter(Boolean);
     if (!said.length) return '';
-    return '<div class="ix-link-row"><i>may hold</i><span>'
+    return '<div class="ix-link-row"><i>' + esc(t('index.relation.mayHold')) + '</i><span>'
       + said.map(([say, plainest]) =>
         '<button type="button" class="ix-jump" data-slot="' + esc(say) + '"'
-        + ' title="Show every ' + esc(say.toLowerCase()) + '">'
+        + ' title="' + esc(t('index.tooltip.showEvery', { kind: say.toLowerCase() })) + '">'
         + art(all.get(plainest), 14) + esc(say) + '</button>').join('')
       + '</span></div>';
   }
@@ -2245,7 +2253,7 @@ const RealmIndex = (function () {
    */
   function drawConnections(one, links) {
     const rows = slotRow(one) + linkRows(links);
-    return block('Links', rows ? '<div class="ix-links">' + rows + '</div>' : '');
+    return block(t('index.section.links'), rows ? '<div class="ix-links">' + rows + '</div>' : '');
   }
 
   function linkRows(links) {
@@ -2262,7 +2270,7 @@ const RealmIndex = (function () {
           return '<button type="button" class="ix-jump" data-open="' + esc(id) + '">'
             + art(one, 14) + esc(one ? relationDisplayName(one) : id) + '</button>';
         }).join('')
-        + (ids.length > 40 ? '<em>and ' + (ids.length - 40) + ' more</em>' : '')
+        + (ids.length > 40 ? '<em>' + esc(t('index.relation.andMore', { count: ids.length - 40 })) + '</em>' : '')
         + '</span></div>';
     }
     return out;
@@ -2355,12 +2363,12 @@ const RealmIndex = (function () {
       if (want) {
         for (const set of groups) {
           for (const chip of set.chips) {
-            if (set.title === 'Kind of gear') {
+            if (set.id === 'Kind of gear') {
               const wants = chip.say === want.dataset.slot;
               if (wants !== chip.on) turn(chip);
             }
           }
-          if (set.title === 'Kind of gear') set.open = true;
+          if (set.id === 'Kind of gear') set.open = true;
         }
         repaint();
         return;
@@ -2436,8 +2444,7 @@ const RealmIndex = (function () {
     readLoved();
     if (!await load()) {
       if (shell === null) shell = box.innerHTML;
-      box.innerHTML = '<p class="tc-missing">The index is not built yet. '
-        + 'Run <code>node tools/build-index.js</code>.</p>';
+      box.innerHTML = '<p class="tc-missing">' + esc(t('index.missingData')) + '</p>';
       return false;
     }
     if (shell !== null) { box.innerHTML = shell; shell = null; }
@@ -2463,9 +2470,11 @@ const RealmIndex = (function () {
      */
     requestAnimationFrame(fitGroups);
     /* What you can browse: the copies folded into another thing are its rows. */
-    el('ixBuilt').textContent = RealmI18n.number(light.filter(one => !one[6]).length)
-      + ' things, read from the client of ' + all.built
-      + (wiki ? ', ' + RealmI18n.number(wiki.page.size) + ' with a wiki page' : '');
+    el('ixBuilt').textContent = t('index.built.summary', {
+      count: RealmI18n.number(light.filter(one => !one[6]).length),
+      client: all.built,
+      wiki: wiki ? t('index.built.wiki', { count: RealmI18n.number(wiki.page.size) }) : ''
+    });
     drawCard('');
     /*
      * The sprites are sized against the window, so a window that changes shape
