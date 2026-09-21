@@ -352,6 +352,12 @@ assert(new Set(snakePit.filmFor).size > 1,
   }
 }
 
-console.log('Index common-entry, taxonomy, dungeon-link, and atlas-place checks passed.');
+const i18nSource = fs.readFileSync(path.join(root, 'web', 'i18n.js'), 'utf8');
+assert(/const LOCALES = \['en'\]/.test(i18nSource),
+  'the Index must run against the English-only locale catalogue');
+assert(!/mountSelector|data-locale/.test(i18nSource),
+  'the Index must not regain a language selector through the shared runtime');
+
+console.log('Index common-entry, taxonomy, dungeon-link, atlas-place, and English-only checks passed.');
 console.log(skins.length + ' skins, joined to class, unlocker and set by the client’s own types.');
 console.log(turning.length + ' portals carry the frames they turn over, with the client’s own timings.');
