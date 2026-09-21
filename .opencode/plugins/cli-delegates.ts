@@ -640,7 +640,7 @@ async function buildReviewPrompt(
 
   // Source changes are never truncated. Generated material is deliberately
   // omitted when enormous, with an explicit review notice instead.
-  const generated = /^(web\/assets\/|client-data\/|local\/|backups\/)/m
+  const generated = /^(?:diff --git a\/|\+\+\+ b\/)(?:web\/assets\/|client-data\/|local\/|backups\/)/m
   let reviewDiff = diff
   if (diff.length > 200000 && generated.test(diff)) {
     const sourceDiff = await runRaw(
@@ -1139,6 +1139,9 @@ async function reviewCodex(
     "-c",
     "approval_policy=never",
   ]
+
+  // No positional prompt is appended: `runReview` streams the complete
+  // review prompt through stdin, avoiding Windows argv limits.
 
   const stdout = await runReview(
     cmd,

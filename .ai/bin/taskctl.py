@@ -56,7 +56,12 @@ def normalize_scope(raw):
     if any(part in ("", ".", "..") for part in path.parts):
         raise ValueError(f"invalid scope: {raw!r}")
 
-    return "/".join(path.parts)
+    normalized = "/".join(path.parts)
+    if normalized in {".ai", ".opencode"}:
+        raise ValueError(
+            "unsafe broad orchestration scope; declare a specific file or subdirectory"
+        )
+    return normalized
 
 
 def scopes_overlap(a, b):
@@ -384,14 +389,26 @@ def cmd_checkpoint(args):
     assert_task_scope(data)
 
     scopes = data.get("write_scope", [])
+    stage_scopes = []
+    for scope in scopes:
+        normalize_scope(scope)
+        # `git add path` rejects a never-created declared path, but must keep
+        # a tracked deleted path so its deletion is recorded.
+        tracked = subprocess.run(
+            ["git", "-C", str(wt), "ls-files", "--error-unmatch", "--", scope],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode == 0
+        if (wt / scope).exists() or tracked:
+            stage_scopes.append(scope)
 
-    subprocess.run(
-        # Orchestration metadata/plugins are deliberately ignored in task
-        # worktrees.  The task registry has already bounded `scopes`, so
-        # force-add only those paths rather than broadening what can stage.
-        ["git", "-C", str(wt), "add", "-f", "-A", "--", *scopes],
-        check=True,
-    )
+    if stage_scopes:
+        subprocess.run(
+            # Orchestration metadata/plugins are deliberately ignored in task
+            # worktrees.  The task registry has already bounded these paths.
+            ["git", "-C", str(wt), "add", "-f", "-A", "--", *stage_scopes],
+            check=True,
+        )
 
     staged = subprocess.run(
         ["git", "-C", str(wt), "diff", "--cached", "--quiet"]
@@ -622,8 +639,8 @@ def cmd_doctor(args):
         shutil.rmtree(probe_dir, ignore_errors=True)
     if not (ROOT / ".ai/bin/preview.py").is_file():
         raise RuntimeError("required helper missing: .ai/bin/preview.py")
-    package = ROOT / "package.json"
-    if not package.is_file() or not (ROOT / "tests/standalone.test.js").is_file():
+    package = wt / "package.json"
+    if not package.is_file() or not (wt / "tests/standalone.test.js").is_file():
         raise RuntimeError("standalone test prerequisite missing (package.json or tests/standalone.test.js)")
     print("DOCTOR_OK")
     print(f"task={data['id']}")
@@ -1100,16 +1117,9 @@ def cmd_archive(args):
             "cleanup refused"
         )
 
-    # Remove only orchestration context injected by worktree-create.
-    for name in ["AGENTS.md", "CLAUDE.md"]:
-        q = wt / name
-        if q.exists():
-            q.unlink()
-
-    ai = wt / ".ai"
-    if ai.exists():
-        shutil.rmtree(ai)
-
+    # The worktree is clean and may contain tracked repo-local orchestration
+    # files.  Let non-force Git removal delete the whole clean worktree; do
+    # not pre-delete files and risk leaving it half-destroyed on failure.
     subprocess.run(
         ["git", "worktree", "remove", str(wt)],
         cwd=ROOT,

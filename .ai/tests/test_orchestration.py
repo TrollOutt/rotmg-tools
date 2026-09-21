@@ -142,20 +142,50 @@ class OrchestrationTests(unittest.TestCase):
             names = subprocess.check_output(["git", "show", "--format=", "--name-only", "HEAD"], cwd=worker, text=True)
             self.assertIn(".ai/result.txt", names.splitlines())
 
+    def test_archive_clean_tracked_orchestration_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "t"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "t@t"], cwd=root, check=True)
+            (root / ".ai/bin").mkdir(parents=True)
+            (root / ".ai/tasks").mkdir(parents=True)
+            shutil.copy2(TASKCTL, root / ".ai/bin/taskctl.py")
+            (root / ".ai/RULES.md").write_text("rules")
+            (root / "AGENTS.md").write_text("agents")
+            (root / "CLAUDE.md").write_text("claude")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            worker = root / "worker"
+            subprocess.run(["git", "worktree", "add", "-q", "-b", "worker", str(worker)], cwd=root, check=True)
+            task = {"id":"T", "status":"done", "worktree":str(worker), "branch":"worker", "base":{"commit":head}, "integration":{"status":"pending"}}
+            (root / ".ai/tasks/T.json").write_text(json.dumps(task))
+            result = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "archive", "T"], cwd=root, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("TASK_ARCHIVED", result.stdout)
+            self.assertFalse(worker.exists())
+            self.assertFalse((root / ".ai/tasks/T.json").exists())
+            self.assertTrue((root / ".ai/history/tasks/T.json").is_file())
+
     def test_standalone_prerequisite_is_deterministic(self):
         source = TASKCTL.read_text(encoding="utf-8")
         self.assertIn('command == ["node", "tests/standalone.test.js"]', source)
         self.assertIn('["npm", "run", "build"]', source)
+        self.assertIn('package = wt / "package.json"', source)
 
     def test_review_transport_uses_stdin_not_argv(self):
         source = DELEGATES.read_text(encoding="utf-8")
         self.assertIn("async function runReview", source)
         self.assertIn("runReview(\n    cmd,\n    cwd,\n    prompt,", source)
         self.assertNotIn('"--",\n    prompt,', source)
+        self.assertIn("No positional prompt is appended", source)
+        self.assertIn("diff --git a\\/", source)
 
     def test_preview_has_single_listener_convention(self):
         source = PREVIEW.read_text(encoding="utf-8")
         self.assertIn("127.0.0.1:8001", source)
+        self.assertIn("0\\.0\\.0\\.0", source)
         self.assertIn("taskkill", source)
         self.assertIn("/web/", source)
 
