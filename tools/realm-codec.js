@@ -73,7 +73,7 @@ function readCompressedInt(body, start) {
     used++;
   }
   if (used > 1 && (byte & 127) === 0) throw new RangeError('compressed integer is overlong');
-  if (value > 0x7fffffff) throw new RangeError('compressed integer is outside int32');
+  if (value > (negative ? 0x80000000 : 0x7fffffff)) throw new RangeError('compressed integer is outside int32');
   return { value: negative ? -value : value, next: at };
 }
 

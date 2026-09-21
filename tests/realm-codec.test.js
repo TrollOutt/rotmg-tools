@@ -1,7 +1,25 @@
 'use strict';
 
 const assert = require('assert');
-const { RC4, decodeServerStream, mergeTiles } = require('../tools/realm-codec.js');
+const { RC4, readCompressedInt, decodeServerStream, mergeTiles } = require('../tools/realm-codec.js');
+
+const compressedIntCases = [
+  [[0x00], 0, 1],
+  [[0x3f], 63, 1],
+  [[0x80, 0x01], 64, 2],
+  [[0xff, 0x01], -127, 2],
+  [[0xbf, 0xff, 0xff, 0xff, 0x0f], 0x7fffffff, 5],
+  [[0xc0, 0x80, 0x80, 0x80, 0x10], -0x80000000, 5]
+];
+for (const [bytes, value, next] of compressedIntCases) {
+  assert.deepEqual(readCompressedInt(Buffer.from(bytes), 0), { value, next });
+}
+assert.deepEqual(readCompressedInt(Buffer.from([0x00, 0xbf, 0x01]), 1), { value: 127, next: 3 });
+assert.throws(() => readCompressedInt(Buffer.alloc(0), 0), /truncated/);
+assert.throws(() => readCompressedInt(Buffer.from([0x80]), 0), /truncated/);
+assert.throws(() => readCompressedInt(Buffer.from([0x80, 0x00]), 0), /overlong/);
+assert.throws(() => readCompressedInt(Buffer.from([0x80, 0x80, 0x80, 0x80, 0x80]), 0), /oversized/);
+assert.throws(() => readCompressedInt(Buffer.from([0xbf, 0xff, 0xff, 0xff, 0x10]), 0), /outside int32/);
 
 const key = Buffer.from('00112233445566778899aabbccddeeff', 'hex');
 const body = Buffer.alloc(9 + 1 + 3 * 6);
