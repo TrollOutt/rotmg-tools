@@ -36,12 +36,15 @@ class OrchestrationTests(unittest.TestCase):
             subprocess.run(["git", "add", "."], cwd=root, check=True)
             subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], cwd=root, check=True)
             head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-            task = {"id":"T", "worktree":str(root), "branch":"master", "base":{"commit":head}, "write_scope":[".ai"]}
+            subprocess.run(["git", "worktree", "add", "-q", "-b", "worker", str(root / "worker")], cwd=root, check=True)
+            worker = root / "worker"
+            self.assertTrue((worker / ".git").is_file())
+            task = {"id":"T", "worktree":str(worker), "branch":"worker", "base":{"commit":head}, "write_scope":[".ai/RULES.md"]}
             (root / ".ai/tasks/T.json").write_text(json.dumps(task))
             result = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "doctor", "T"], cwd=root, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("DOCTOR_OK", result.stdout)
-            self.assertFalse((root / ".ai-doctor-probe").exists())
+            self.assertFalse(any(worker.glob(".ai-doctor-probe-*")))
 
     def test_doctor_accepts_canonical_git_file_worktree(self):
         with tempfile.TemporaryDirectory() as tmp:
