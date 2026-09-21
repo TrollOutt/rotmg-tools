@@ -4,6 +4,7 @@ import argparse
 import json
 import shutil
 import os
+import tempfile
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -606,18 +607,19 @@ def cmd_doctor(args):
     for relative in (".ai/bin/taskctl.py", ".ai/bin/context-sync.sh"):
         if not (ROOT / relative).is_file():
             raise RuntimeError(f"required helper missing: {relative}")
-    # Verify only a task-owned directory, and always remove the probe.
-    probe_dir = wt / ".ai-doctor-probe"
-    if not any(scopes_overlap(".ai-doctor-probe", scope) for scope in data.get("write_scope", [])):
-        probe_dir = wt / ".git" / "doctor-probe"
+    # Scope has already been validated above.  Use a short-lived untracked
+    # worktree directory rather than a declared file path: many valid scopes
+    # name a single file, and linked worktrees expose `.git` as a file.
+    # Never probe inside Git metadata or a tracked product path.
+    probe_dir = Path(tempfile.mkdtemp(prefix=".ai-doctor-probe-", dir=wt))
     try:
-        probe_dir.mkdir(parents=True, exist_ok=True)
         probe = probe_dir / "write-delete-probe"
         probe.write_text("ok", encoding="utf-8")
         probe.unlink()
-        if probe_dir.name == ".ai-doctor-probe": probe_dir.rmdir()
     except OSError as exc:
         raise RuntimeError(f"scoped write/delete probe failed: {exc}")
+    finally:
+        shutil.rmtree(probe_dir, ignore_errors=True)
     if not (ROOT / ".ai/bin/preview.py").is_file():
         raise RuntimeError("required helper missing: .ai/bin/preview.py")
     package = ROOT / "package.json"
