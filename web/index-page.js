@@ -444,13 +444,13 @@ const RealmIndex = (function () {
      * rail: the same machinery counts and narrows it, it is simply drawn where
      * the reader has already said what family they are after.
      */
-    const group = (title, from, note, inSub, id) => {
-      const made = { title, from, note, inSub, id: id || title, chips: [], open: false };
+    const group = (id, title, from, note, inSub) => {
+      const made = { id, title, from, note, inSub, chips: [], open: false };
       groups.push(made);
       return made;
     };
     const chip = (into, key, say, ids, pic) => {
-      if (ids.size) into.chips.push({ key: into.id + '/' + key, say, ids, pic });
+      if (ids.size) into.chips.push({ key: into.id + '/' + key, groupId: into.id, say, ids, pic });
     };
     /*
      * A chip counts what the list will show, which is not every record: the
@@ -470,12 +470,12 @@ const RealmIndex = (function () {
      */
     if (loved.size) {
       const mine = new Set([...loved].filter(id => all.has(id)));
-      if (mine.size) chip(group(t('index.group.favourites'), 'client'), 'loved', t('index.chip.starred'), mine);
+      if (mine.size) chip(group('Favourites', t('index.group.favourites'), 'client'), 'loved', t('index.chip.starred'), mine);
     }
 
     /* Which class may hold it - the slot the class declares against the slot
        the item declares, the same comparison the card makes. */
-    const byClass = group(t('index.group.class'), 'client', undefined, undefined, 'Class');
+    const byClass = group('Class', t('index.group.class'), 'client');
     for (const one of [...all.values()].filter(x => x.kind === 'class')) {
       const wants = new Set(one.slots || []);
       /*
@@ -502,7 +502,7 @@ const RealmIndex = (function () {
      * its skin by type, the set names its skin by type, and what neither names
      * is what you start with or what the game dresses you in itself.
      */
-    const bySkin = group(t('index.group.skins'), 'client', t('index.note.skinSource'), undefined, 'Skins');
+    const bySkin = group('Skins', t('index.group.skins'), 'client', t('index.note.skinSource'));
     const cameBy = how => gather(x => x.kind === 'skin'
       && (x.in || []).some(([said]) => said === how));
     const fromItem = cameBy('unlocks');
@@ -528,7 +528,7 @@ const RealmIndex = (function () {
      * reader has already said they are looking at skins, the same way the
      * kinds of gear are offered under Gears.
      */
-    const byLook = group(t('index.group.costume'), 'client', t('index.note.readOffName'), true, 'Costume');
+    const byLook = group('Costume', t('index.group.costume'), 'client', t('index.note.readOffName'), true);
     const looks = new Map();
     for (const one of all.values()) {
       if (one.kind !== 'skin' || !one.look) continue;
@@ -542,7 +542,7 @@ const RealmIndex = (function () {
         shown && shown.id);
     }
 
-    const byHand = group(t('index.group.gears'), 'client', undefined, undefined, 'Gears');
+    const byHand = group('Gears', t('index.group.gears'), 'client');
     for (const [hand, say] of [['weapon', 'Weapon'], ['ability', 'Ability'],
       ['armor', 'Armour'], ['ring', 'Ring']]) {
       /* Pictured by the plainest of its kind, the way the finer ones are. */
@@ -567,7 +567,7 @@ const RealmIndex = (function () {
      * a wall of twenty. They get their own way in, named the way the client
      * names them.
      */
-    const byBag = group(t('index.group.kindOfThing'), 'client', t('index.note.clientBag'));
+    const byBag = group('Kind of thing', t('index.group.kindOfThing'), 'client', t('index.note.clientBag'));
     const families = new Map();
     for (const one of all.values()) {
       if (one.kind !== 'item' || !one.family) continue;
@@ -587,7 +587,7 @@ const RealmIndex = (function () {
      * biggest hole left in the rail: a reader after the gods, or after what
      * Oryx sends at a realm, had to know one by name to find any of them.
      */
-    const byFoe = group(t('index.group.enemies'), 'client');
+    const byFoe = group('Enemies', t('index.group.enemies'), 'client');
     const marked = label => gather(x => x.kind === 'enemy' && (x.labels || []).includes(label));
     const foes = [
       ['god', 'Gods', gather(x => Boolean(x.god))],
@@ -622,20 +622,20 @@ const RealmIndex = (function () {
      * in the rail is a wall to read before choosing anything; four slots and
      * then the kinds that slot holds is one question after another.
      */
-    const byType = group(t('index.group.kindOfGear'), 'client', undefined, true, 'Kind of gear');
+    const byType = group('Kind of gear', t('index.group.kindOfGear'), 'client', undefined, true);
     for (const slot of Object.keys(all.slots)) {
       chip(byType, 'slot' + slot, all.slots[slot][0],
         gather(x => x.kind === 'item' && String(x.slot) === slot));
     }
 
-    const byTier = group(t('index.group.tier'), 'client');
+    const byTier = group('Tier', t('index.group.tier'), 'client');
     chip(byTier, 'ut', t('index.chip.untiered'), gather(x => (x.labels || []).includes('UT')));
     chip(byTier, 'st', t('index.chip.setTier'), gather(x => (x.labels || []).includes('ST')));
     for (let t = 0; t <= 14; t++) {
       chip(byTier, 't' + t, 'T' + t, gather(x => x.tier === t));
     }
 
-    const marks = group(t('index.group.marks'), 'client');
+    const marks = group('Marks', t('index.group.marks'), 'client');
     chip(marks, 'sb', t('index.chip.soulbound'), gather(x => Boolean(x.sb)));
     chip(marks, 'shiny', t('index.chip.shiny'), gather(x => (x.labels || []).includes('SHINY')));
     chip(marks, 'reskin', t('index.chip.reskin'), gather(x => (x.labels || []).includes('RESKIN')));
@@ -647,7 +647,7 @@ const RealmIndex = (function () {
      * year; it names no year at all for everything else, so there is no year
      * axis here rather than a hollow one.
      */
-    const when = group(t('index.group.season'), 'client', t('index.note.clientSeason'));
+    const when = group('Season', t('index.group.season'), 'client', t('index.note.clientSeason'));
     const SEASON = [
       ['Oryxmas', /^ORYXMAS|^ORG_ORYXMAS/], ['Halloween', /^HALLOWEEN|^HAUNTEDHALLOWS/],
       ['Easter', /^EASTER/], ["Valentine's", /^VALENTINE/],
@@ -657,7 +657,7 @@ const RealmIndex = (function () {
       chip(when, say, say, gather(x => (x.labels || []).some(l => test.test(l))));
     }
 
-    const where = group(t('index.group.biome'), 'client');
+    const where = group('Biome', t('index.group.biome'), 'client');
     for (const one of [...all.values()].filter(x => x.kind === 'place')
       .sort((a, b) => a.name.localeCompare(b.name))) {
       const ids = gather(x => x.id === one.id
@@ -693,7 +693,7 @@ const RealmIndex = (function () {
         if (gives.size > 3) fromThere.set(one, gives);
       }
       if (fromThere.size) {
-        const out = group(t('index.group.dungeon'), 'wiki', t('index.note.communityDrops'));
+        const out = group('Dungeon', t('index.group.dungeon'), 'wiki', t('index.note.communityDrops'));
         for (const [one, gives] of fromThere) {
           chip(out, one.name, one.said || one.name, gives, one.id);
         }
@@ -1194,7 +1194,7 @@ const RealmIndex = (function () {
        recognisable without its heading beside it. */
     box.innerHTML = on.map(x => '<button type="button" class="ix-chosen'
       + (x === asked[0] ? ' is-first' : '') + '" data-facet="' + esc(x.key) + '"'
-      + ' data-key="' + esc(x.key.slice(0, x.key.indexOf('/')).toLowerCase()
+      + ' data-key="' + esc(x.groupId.toLowerCase()
         .replace(/[^a-z]+/g, '-')) + '"'
       + ' title="' + (x === asked[0]
         ? t('index.choice.firstTitle')
@@ -1245,7 +1245,7 @@ const RealmIndex = (function () {
       + (isFirst ? ' is-primary' : (chosen.length ? ' is-chosen' : ''))
       + '" data-group="' + at + '"'
       /* Its own colour, so a chip is recognisable away from its heading. */
-      + ' data-key="' + esc(one.title.toLowerCase().replace(/[^a-z]+/g, '-')) + '"'
+      + ' data-key="' + esc(one.id.toLowerCase().replace(/[^a-z]+/g, '-')) + '"'
       + (shown.some(x => x.say.length > 18) ? ' data-wide' : '') + '>'
       + '<button type="button" class="ix-group-head" data-fold="' + at + '"'
       + (isFirst ? ' title="' + esc(t('index.choice.firstTitle')) + '"' : '') + '>'
@@ -2063,7 +2063,7 @@ const RealmIndex = (function () {
      * Where the two sources ask the same question in different words. They
      * agree on the rest of them already.
      */
-    const SAME_QUESTION = { enemiesFoundHere: 'enemies' };
+    const SAME_QUESTION = { 'index.relation.enemiesFoundHere': 'index.relation.enemies' };
     const sink = {
       say(label, items) {
         const how = SAME_QUESTION[label] || label;

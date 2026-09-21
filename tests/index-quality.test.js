@@ -204,8 +204,16 @@ for (const one of skins) {
   }
 }
 
-assert(/group\(t\('index\.group\.skins'\), 'client'[\s\S]{0,90}'Skins'\)/.test(pageSource),
+assert(/group\('Skins', t\('index\.group\.skins'\), 'client'/.test(pageSource),
   'the rail must offer skins, or fifteen hundred records have no way in but a name');
+assert(pageSource.includes('groupId: into.id'),
+  'every facet chip must retain its group’s stable canonical identifier');
+assert(pageSource.includes("data-key=\"' + esc(x.groupId.toLowerCase()"),
+  'chosen facet styling must derive its key from the stable group identifier');
+assert(pageSource.includes("data-key=\"' + esc(one.id.toLowerCase()"),
+  'facet group styling must derive its key from the stable group identifier');
+assert(pageSource.includes("'index.relation.enemiesFoundHere': 'index.relation.enemies'"),
+  'community enemy labels from both sources must share one localized relation row');
 assert(/x\.kind === 'skin'[\s\S]{0,120}how === 'worn by'/.test(pageSource),
   'a class category must gather the appearances that class wears');
 
