@@ -153,22 +153,31 @@ const indexUi = {
   'index.skin.skin': 'skin', 'index.door.skinViewer': 'Open in Skin Viewer',
   'index.door.skinViewerTitle': 'Open the exact linked {kind} in the local Skin Viewer'
 };
-// These are ROTMG taxonomy terms, not prose. Keep their familiar English
-// spelling wherever the Index presents a category, chip, facet, or relation.
+// These are ROTMG taxonomy tokens, not prose. Keep the tokens in English,
+// while the surrounding words in compound labels stay in each locale.
 const canonicalIndexTaxonomy = {
   'index.group.tier': 'Tier',
   'index.chip.untiered': 'Untiered',
   'index.chip.setTier': 'Set tier',
   'index.chip.soulbound': 'Soulbound',
-  'index.chip.shiny': 'Shiny',
-  'index.fact.tier': 'Tier',
-  'index.loot.tieredLoot': 'Tiered loot',
-  'index.loot.untieredGear': 'Untiered gear',
-  'index.loot.setTierGear': 'Set-tier gear',
-  'index.loot.tiered': 'Tiered',
-  'index.relation.setPieces': 'Set pieces',
-  'index.relation.tierDropLocations': 'Tier drop locations',
-  'index.relation.listedTierDrops': 'Listed Tier drops'
+  'index.chip.shiny': 'Shiny', 'index.fact.tier': 'Tier',
+  'index.loot.tiered': 'Tiered'
+};
+const localizedIndexTaxonomy = {
+  da: { 'index.loot.tieredLoot': 'Tiered bytte', 'index.loot.untieredGear': 'Untiered udstyr', 'index.loot.setTierGear': 'Set-tier udstyr', 'index.relation.setPieces': 'Set-dele', 'index.relation.tierDropLocations': 'Tier drop placeringer', 'index.relation.listedTierDrops': 'listede Tier drops' },
+  de: { 'index.loot.tieredLoot': 'Tiered Beute', 'index.loot.untieredGear': 'Untiered Ausrüstung', 'index.loot.setTierGear': 'Set-Tier-Ausrüstung', 'index.relation.setPieces': 'Set-Teile', 'index.relation.tierDropLocations': 'Tier-Drop-Standorte', 'index.relation.listedTierDrops': 'aufgeführte Tier-Drops' },
+  en: { 'index.loot.tieredLoot': 'tiered loot', 'index.loot.untieredGear': 'untiered gear', 'index.loot.setTierGear': 'set-tier gear', 'index.relation.setPieces': 'set pieces', 'index.relation.tierDropLocations': 'tier drop locations', 'index.relation.listedTierDrops': 'listed tier drops' },
+  es: { 'index.loot.tieredLoot': 'botín Tiered', 'index.loot.untieredGear': 'equipo Untiered', 'index.loot.setTierGear': 'equipo Set-Tier', 'index.relation.setPieces': 'piezas Set', 'index.relation.tierDropLocations': 'ubicaciones de drop Tier', 'index.relation.listedTierDrops': 'drops Tier listados' },
+  fi: { 'index.loot.tieredLoot': 'Tiered saalis', 'index.loot.untieredGear': 'Untiered varuste', 'index.loot.setTierGear': 'Set-Tier varusteet', 'index.relation.setPieces': 'Set-osat', 'index.relation.tierDropLocations': 'Tier drop -sijainnit', 'index.relation.listedTierDrops': 'luetellut Tier dropit' },
+  fr: { 'index.loot.tieredLoot': 'butin Tiered', 'index.loot.untieredGear': 'équipement Untiered', 'index.loot.setTierGear': 'équipement Set-Tier', 'index.relation.setPieces': 'pièces Set', 'index.relation.tierDropLocations': 'emplacements de drop Tier', 'index.relation.listedTierDrops': 'drops Tier répertoriés' },
+  it: { 'index.loot.tieredLoot': 'bottino Tiered', 'index.loot.untieredGear': 'attrezzatura Untiered', 'index.loot.setTierGear': 'equipaggiamento Set-Tier', 'index.relation.setPieces': 'pezzi Set', 'index.relation.tierDropLocations': 'posizioni di drop Tier', 'index.relation.listedTierDrops': 'drop Tier elencati' },
+  pl: { 'index.loot.tieredLoot': 'Tiered łup', 'index.loot.untieredGear': 'sprzęt Untiered', 'index.loot.setTierGear': 'sprzęt Set-Tier', 'index.relation.setPieces': 'części Set', 'index.relation.tierDropLocations': 'lokalizacje dropów Tier', 'index.relation.listedTierDrops': 'wymienione dropy Tier' },
+  'pt-BR': { 'index.loot.tieredLoot': 'saque Tiered', 'index.loot.untieredGear': 'equipamento Untiered', 'index.loot.setTierGear': 'equipamento Set-Tier', 'index.relation.setPieces': 'peças Set', 'index.relation.tierDropLocations': 'locais de drop Tier', 'index.relation.listedTierDrops': 'drops Tier listados' },
+  'pt-PT': { 'index.loot.tieredLoot': 'saque Tiered', 'index.loot.untieredGear': 'equipamento Untiered', 'index.loot.setTierGear': 'equipamento Set-Tier', 'index.relation.setPieces': 'peças Set', 'index.relation.tierDropLocations': 'locais de drop Tier', 'index.relation.listedTierDrops': 'drops Tier listados' },
+  ru: { 'index.loot.tieredLoot': 'Tiered добыча', 'index.loot.untieredGear': 'Untiered снаряжение', 'index.loot.setTierGear': 'снаряжение Set-Tier', 'index.relation.setPieces': 'части Set', 'index.relation.tierDropLocations': 'места выпадения Tier', 'index.relation.listedTierDrops': 'перечисленные выпадения Tier' },
+  sv: { 'index.loot.tieredLoot': 'Tiered byte', 'index.loot.untieredGear': 'Untiered utrustning', 'index.loot.setTierGear': 'Set-Tier utrustning', 'index.relation.setPieces': 'Set-delar', 'index.relation.tierDropLocations': 'Tier drop-platser', 'index.relation.listedTierDrops': 'listade Tier drops' },
+  tr: { 'index.loot.tieredLoot': 'Tiered ganimet', 'index.loot.untieredGear': 'Untiered dişli', 'index.loot.setTierGear': 'Set-Tier dişli', 'index.relation.setPieces': 'Set parçaları', 'index.relation.tierDropLocations': 'Tier drop konumları', 'index.relation.listedTierDrops': "listelenen Tier drop'ları" },
+  'zh-CN': { 'index.loot.tieredLoot': 'Tiered 战利品', 'index.loot.untieredGear': 'Untiered 齿轮', 'index.loot.setTierGear': 'Set-Tier 齿轮', 'index.relation.setPieces': 'Set 部件', 'index.relation.tierDropLocations': 'Tier 掉落地点', 'index.relation.listedTierDrops': '列出的 Tier 掉落' }
 };
 
 function strings() {
@@ -196,10 +205,11 @@ function translate(target, text) {
   if(call.status!==0)throw new Error(call.stderr||`curl exited ${call.status}`);
   const parsed=JSON.parse(call.stdout); return parsed[0].map(part=>part[0]).join('');
 }
-function translatedExisting(catalogue, source) {
+function translatedExisting(catalogue, source, key) {
+  if (catalogue[key]) return catalogue[key];
   const english = catalogues.en;
-  const key = Object.keys(english).find(name => english[name] === source);
-  return key && catalogue[key];
+  const sourceKey = Object.keys(english).find(name => english[name] === source);
+  return sourceKey && catalogue[sourceKey];
 }
 function translateAll(target, rows, fallbackLocale) {
   const output=[];
@@ -212,7 +222,7 @@ function translateAll(target, rows, fallbackLocale) {
       // existing strings retain their reviewed translations; genuinely new
       // copy falls back to English until the translation service is reachable.
       console.warn(`${target}: ${error.message.trim()} (using available catalogue values)`);
-      lines=chunk.map(row => translatedExisting(catalogues[fallbackLocale], row.source) || row.source);
+      lines=chunk.map(row => translatedExisting(catalogues[fallbackLocale], row.source, row.key) || row.source);
     }
     if(lines.length!==chunk.length)throw new Error(`${target}: expected ${chunk.length} translated lines, got ${lines.length}`);
     lines.forEach((line,i)=>output.push(restore(line,chunk[i].terms)));
@@ -222,10 +232,12 @@ const catalogues={}; for(const locale of ['en',...Object.keys(targets)])catalogu
 const indexRows = Object.entries(indexUi).map(([key, source]) => ({ key, source, ...mask(source) }));
 for (const row of indexRows) catalogues.en[row.key] = row.source;
 for (const [key, value] of Object.entries(canonicalIndexTaxonomy)) catalogues.en[key] = value;
+for (const [key, value] of Object.entries(localizedIndexTaxonomy.en)) catalogues.en[key] = value;
 for (const [locale, target] of Object.entries(targets)) {
   const translated = translateAll(target, indexRows, locale);
   indexRows.forEach((row, index) => {
-    catalogues[locale][row.key] = canonicalIndexTaxonomy[row.key] || translated[index];
+    catalogues[locale][row.key] = canonicalIndexTaxonomy[row.key]
+      || (localizedIndexTaxonomy[locale] || {})[row.key] || translated[index];
   });
   console.log(`${locale}: ${indexRows.length} Index UI keys`);
 }
@@ -237,6 +249,10 @@ for(const [locale,target] of Object.entries(targets)){const translated=translate
 // Translation engines sometimes translate placeholder names or elide a leading
 // placeholder in highly inflected languages. Restore their identity and count.
 for(const locale of Object.keys(targets))for(const [key,source] of Object.entries(catalogues.en)){
+  // This count sentence has approved locale-specific word and placeholder
+  // ordering. Its placeholders are already named, so never normalize it by
+  // position after translation.
+  if (key === 'index.results.firstOf') continue;
   const wanted=[...source.matchAll(/\{(\w+)\}/g)].map(match=>match[1]); if(!wanted.length)continue;
   let value=catalogues[locale][key], at=0;
   value=value.replace(/\{\w+\}/g,()=>`{${wanted[Math.min(at++,wanted.length-1)]}}`);
