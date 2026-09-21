@@ -153,6 +153,23 @@ const indexUi = {
   'index.skin.skin': 'skin', 'index.door.skinViewer': 'Open in Skin Viewer',
   'index.door.skinViewerTitle': 'Open the exact linked {kind} in the local Skin Viewer'
 };
+// These are ROTMG taxonomy terms, not prose. Keep their familiar English
+// spelling wherever the Index presents a category, chip, facet, or relation.
+const canonicalIndexTaxonomy = {
+  'index.group.tier': 'Tier',
+  'index.chip.untiered': 'Untiered',
+  'index.chip.setTier': 'Set tier',
+  'index.chip.soulbound': 'Soulbound',
+  'index.chip.shiny': 'Shiny',
+  'index.fact.tier': 'Tier',
+  'index.loot.tieredLoot': 'Tiered loot',
+  'index.loot.untieredGear': 'Untiered gear',
+  'index.loot.setTierGear': 'Set-tier gear',
+  'index.loot.tiered': 'Tiered',
+  'index.relation.setPieces': 'Set pieces',
+  'index.relation.tierDropLocations': 'Tier drop locations',
+  'index.relation.listedTierDrops': 'Listed Tier drops'
+};
 
 function strings() {
   const out = new Set(), add = raw => {
@@ -204,9 +221,12 @@ function translateAll(target, rows, fallbackLocale) {
 const catalogues={}; for(const locale of ['en',...Object.keys(targets)])catalogues[locale]=JSON.parse(fs.readFileSync(path.join(localeRoot,locale,'common.json'),'utf8'));
 const indexRows = Object.entries(indexUi).map(([key, source]) => ({ key, source, ...mask(source) }));
 for (const row of indexRows) catalogues.en[row.key] = row.source;
+for (const [key, value] of Object.entries(canonicalIndexTaxonomy)) catalogues.en[key] = value;
 for (const [locale, target] of Object.entries(targets)) {
   const translated = translateAll(target, indexRows, locale);
-  indexRows.forEach((row, index) => { catalogues[locale][row.key] = translated[index]; });
+  indexRows.forEach((row, index) => {
+    catalogues[locale][row.key] = canonicalIndexTaxonomy[row.key] || translated[index];
+  });
   console.log(`${locale}: ${indexRows.length} Index UI keys`);
 }
 const known=new Set(Object.values(catalogues.en)), used=new Map();
