@@ -223,5 +223,16 @@ assert.match(brazilian.api.label('12 things'), /^12 /, 'and keeps the number it 
 const fallback = runtime({ saved: 'fr', beforeEngine: catalogues => { delete catalogues.fr['common.search']; } });
 assert.equal(fallback.api.t('common.search'), 'Search');
 
+/* Index cards are rendered after the initial DOM localization pass, so their
+   variable copy must use catalogued semantic keys rather than raw English. */
+const indexSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'utf8');
+for (const key of ['index.results.firstOf', 'index.built.summary', 'index.source.readFrom']) {
+  assert(indexSource.includes(`t('${key}'`), `Index runtime copy must use ${key}`);
+  assert.equal(typeof french.api.t(key), 'string', `${key} must resolve for every locale`);
+  assert.notEqual(french.api.t(key), key, `${key} must not leak as an i18n key`);
+}
+assert(indexSource.includes('esc(text)'), 'record descriptions must stay rendered as source data');
+assert(!indexSource.includes("RealmI18n.label(text)"), 'record descriptions must not be localized as UI copy');
+
 console.log('i18n detection, automatic mode, preference order, selector contents, persistence, '
   + 'locale numbers, search aliases and canonical ROTMG values pass.');

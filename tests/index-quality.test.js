@@ -204,7 +204,7 @@ for (const one of skins) {
   }
 }
 
-assert(/group\('Skins', 'client'/.test(pageSource),
+assert(/group\(t\('index\.group\.skins'\), 'client'[\s\S]{0,90}'Skins'\)/.test(pageSource),
   'the rail must offer skins, or fifteen hundred records have no way in but a name');
 assert(/x\.kind === 'skin'[\s\S]{0,120}how === 'worn by'/.test(pageSource),
   'a class category must gather the appearances that class wears');
@@ -233,7 +233,7 @@ for (const one of skins) {
   assert(one.family === undefined,
     'a skin carries `look`, never `family`: one is deduced and the other declared');
 }
-assert(/costume[\s\S]{0,80}read off the name/.test(pageSource),
+assert(/fact\('costume'\)[\s\S]{0,120}index\.note\.readOffName/.test(pageSource),
   'the card must say the costume was read off the name rather than declared');
 
 /*
