@@ -211,7 +211,7 @@ assert.equal(french.api.label('Potion of Dexterity'), 'Potion of Dexterity');
  * in the same word is not a count, and is left exactly as it was.
  */
 const brazilian = runtime({ saved: 'pt-BR' });
-assert.equal(brazilian.api.label('Kind of thing'), 'Kind of thing',
+assert.equal(brazilian.api.label('Uncatalogued sentinel thing'), 'Uncatalogued sentinel thing',
   'a phrase ending in a catalogued word must not be half-translated');
 assert.equal(brazilian.api.label('Pet skin'), 'Pet skin');
 assert.equal(brazilian.api.label('Weapon items'), 'Weapon items');
