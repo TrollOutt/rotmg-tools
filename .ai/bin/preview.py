@@ -44,7 +44,7 @@ def canonical_root():
 def listeners():
     output = subprocess.check_output(["netstat", "-ano", "-p", "tcp"], text=True, errors="replace")
     return sorted({int(m.group(1)) for line in output.splitlines()
-                   if "127.0.0.1:8001" in line and "LISTENING" in line
+                   if re.search(r"(?:127\.0\.0\.1|0\.0\.0\.0):8001", line) and "LISTENING" in line
                    for m in [re.search(r"\s(\d+)\s*$", line)] if m})
 
 
