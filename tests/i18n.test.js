@@ -234,5 +234,11 @@ for (const key of ['index.results.firstOf', 'index.built.summary', 'index.source
 assert(indexSource.includes('esc(text)'), 'record descriptions must stay rendered as source data');
 assert(!indexSource.includes("RealmI18n.label(text)"), 'record descriptions must not be localized as UI copy');
 
+const indexTool = fs.readFileSync(path.join(root, 'tools', 'translate-static-i18n.js'), 'utf8');
+assert(indexTool.includes('translateAll(target, indexRows, locale)'),
+  'Index locale generation must retain each locale as its own offline fallback');
+assert(!indexTool.includes("target === 'pt' ? 'pt-PT' : target"),
+  'Portuguese offline fallback must not route Brazilian Portuguese through pt-PT');
+
 console.log('i18n detection, automatic mode, preference order, selector contents, persistence, '
   + 'locale numbers, search aliases and canonical ROTMG values pass.');

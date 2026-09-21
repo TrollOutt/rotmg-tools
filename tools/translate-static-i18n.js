@@ -184,7 +184,7 @@ function translatedExisting(catalogue, source) {
   const key = Object.keys(english).find(name => english[name] === source);
   return key && catalogue[key];
 }
-function translateAll(target, rows) {
+function translateAll(target, rows, fallbackLocale) {
   const output=[];
   for(let at=0;at<rows.length;){const chunk=[];let size=0;while(at<rows.length&&size+rows[at].value.length<650){chunk.push(rows[at++]);size+=chunk.at(-1).value.length+1}
     let lines;
@@ -195,7 +195,7 @@ function translateAll(target, rows) {
       // existing strings retain their reviewed translations; genuinely new
       // copy falls back to English until the translation service is reachable.
       console.warn(`${target}: ${error.message.trim()} (using available catalogue values)`);
-      lines=chunk.map(row => translatedExisting(catalogues[target === 'pt' ? 'pt-PT' : target], row.source) || row.source);
+      lines=chunk.map(row => translatedExisting(catalogues[fallbackLocale], row.source) || row.source);
     }
     if(lines.length!==chunk.length)throw new Error(`${target}: expected ${chunk.length} translated lines, got ${lines.length}`);
     lines.forEach((line,i)=>output.push(restore(line,chunk[i].terms)));
@@ -205,7 +205,7 @@ const catalogues={}; for(const locale of ['en',...Object.keys(targets)])catalogu
 const indexRows = Object.entries(indexUi).map(([key, source]) => ({ key, source, ...mask(source) }));
 for (const row of indexRows) catalogues.en[row.key] = row.source;
 for (const [locale, target] of Object.entries(targets)) {
-  const translated = translateAll(target, indexRows);
+  const translated = translateAll(target, indexRows, locale);
   indexRows.forEach((row, index) => { catalogues[locale][row.key] = translated[index]; });
   console.log(`${locale}: ${indexRows.length} Index UI keys`);
 }
@@ -213,7 +213,7 @@ const known=new Set(Object.values(catalogues.en)), used=new Map();
 for(const [key,value] of Object.entries(catalogues.en))used.set(key,value);
 const rows=strings().filter(value=>!known.has(value)).map(source=>{let slug=source.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).slice(0,7).join('.')||'label';let key='static.'+slug;if(used.has(key)&&used.get(key)!==source)key+='.'+crypto.createHash('sha1').update(source).digest('hex').slice(0,7);used.set(key,source);return{key,source,...mask(source)}});
 rows.forEach(row=>catalogues.en[row.key]=row.source);
-for(const [locale,target] of Object.entries(targets)){const translated=translateAll(target,rows);rows.forEach((row,i)=>catalogues[locale][row.key]=translated[i]);console.log(`${locale}: ${rows.length}`)}
+for(const [locale,target] of Object.entries(targets)){const translated=translateAll(target,rows,locale);rows.forEach((row,i)=>catalogues[locale][row.key]=translated[i]);console.log(`${locale}: ${rows.length}`)}
 // Translation engines sometimes translate placeholder names or elide a leading
 // placeholder in highly inflected languages. Restore their identity and count.
 for(const locale of Object.keys(targets))for(const [key,source] of Object.entries(catalogues.en)){
