@@ -1558,7 +1558,69 @@ function renderCalculateState(config) {
  * Enchantment picker                                                  *
  * ------------------------------------------------------------------ */
 
+// Whoever had focus just before the picker opened, so closing it can hand
+// focus back instead of dropping it to the document body. A selection
+// (unlike Escape/backdrop/close) is usually followed by a synchronous
+// rerender that throws the original node away, so alongside the node itself
+// we keep a selector built from its id or data-* attributes — stable
+// identity a rerender reconstructs — to find its replacement.
+let pickerOpener = null;
+
+function cssEscape(value) {
+  return (window.CSS && CSS.escape) ? CSS.escape(value) : String(value).replace(/["\\]/g, '\\$&');
+}
+
+function pickerOpenerLocator(el) {
+  if (el.id) return `#${cssEscape(el.id)}`;
+  const dataAttrs = [...el.attributes].filter(attr => attr.name.startsWith('data-'));
+  if (!dataAttrs.length) return null;
+  return el.tagName.toLowerCase() + dataAttrs.map(attr => `[${attr.name}="${cssEscape(attr.value)}"]`).join('');
+}
+
+function isFocusable(el) {
+  return !!el && document.contains(el) && typeof el.focus === 'function' && !el.disabled && el.offsetParent !== null;
+}
+
+function rememberPickerOpener() {
+  const el = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  pickerOpener = el ? { el, locator: pickerOpenerLocator(el) } : null;
+}
+
+// Deferred to a microtask: closePicker() is always followed, in the same
+// synchronous handler, by whatever the selection does next (refresh(),
+// onFieldChange(), a borrowed picker's onPick callback) — those already run
+// and settle the DOM before a microtask gets a turn, so this sees the
+// rerendered tree rather than racing it.
+function restorePickerFocus(saved) {
+  if (!saved) return;
+  if (isFocusable(saved.el)) { saved.el.focus(); return; }
+  if (!saved.locator) return;
+  const again = document.querySelector(saved.locator);
+  if (isFocusable(again)) again.focus();
+}
+
+function pickerFocusable() {
+  const root = $('pickerBackdrop').querySelector('.picker');
+  if (!root) return [];
+  return [...root.querySelectorAll('button, input, [tabindex]')]
+    .filter(el => !el.disabled && el.tabIndex !== -1 && el.offsetParent !== null);
+}
+
+function trapPickerTab(event) {
+  const focusable = pickerFocusable();
+  if (!focusable.length) { event.preventDefault(); return; }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = document.activeElement;
+  if (event.shiftKey) {
+    if (active === first || !focusable.includes(active)) { event.preventDefault(); last.focus(); }
+  } else if (active === last || !focusable.includes(active)) {
+    event.preventDefault(); first.focus();
+  }
+}
+
 function openPicker(index) {
+  rememberPickerOpener();
   const slot = state.slots[index - 1];
   const config = cfg();
   const candidates = candidatesFor(slot, config);
@@ -1675,7 +1737,13 @@ function renderPickerList(query) {
   $('pickerFooter').textContent = `${shown.length} selectable`;
 }
 
-function closePicker() { $('pickerBackdrop').hidden = true; state.picker = null; }
+function closePicker() {
+  $('pickerBackdrop').hidden = true;
+  state.picker = null;
+  const saved = pickerOpener;
+  pickerOpener = null;
+  queueMicrotask(() => restorePickerFocus(saved));
+}
 
 /*
  * The same dialogue, lent out.
@@ -1687,6 +1755,7 @@ function closePicker() { $('pickerBackdrop').hidden = true; state.picker = null;
  */
 window.openEnchantPicker = function (options) {
   if (!state.data) return false;
+  rememberPickerOpener();
   state.picker = {
     index: 0,
     candidates: options.candidates || [],
@@ -1773,6 +1842,7 @@ function itemArtHtml(resolved, name) {
 }
 
 function openItemPicker() {
+  rememberPickerOpener();
   const entries = knownItemNames().map(name => ({ name, resolved: resolveItem(name) }));
   state.picker = { kind: 'item', entries };
   // The dialog is shared with the enchantment picker; its two toggles mean
@@ -2557,7 +2627,11 @@ function bind() {
     closePicker();
     refresh();
   });
-  document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('pickerBackdrop').hidden) closePicker(); });
+  document.addEventListener('keydown', event => {
+    if ($('pickerBackdrop').hidden) return;
+    if (event.key === 'Escape') { closePicker(); return; }
+    if (event.key === 'Tab') trapPickerTab(event);
+  });
 
   window.addEventListener('resize', handleAmbienceResize);
   $('itemEmpty').addEventListener('click', openItemPicker);
