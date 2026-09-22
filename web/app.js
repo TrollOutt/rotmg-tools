@@ -2729,16 +2729,18 @@ const PAGE_REALM = { home: 'The Nexus', fame: 'Haunted Cemetery' };
 /*
  * Every page scatters the same mixed cast now - dungeon portals and
  * enchantment icons together - rather than swapping one subject for the
- * other at the door. Loaded once and kept; later calls are a no-op.
+ * other at the door. Routing can call this before the enchant data is read,
+ * which only gets the portals (see spritePool); that early, partial result
+ * must never be allowed to land after, and so overwrite, the complete one -
+ * completeness decides which result wins, not arrival order.
  */
 async function usePool() {
-  if (!ambience.enabled || ambience.poolLoaded) return;
-  ambience.poolLoaded = true;
+  if (!ambience.enabled || ambience.poolComplete) return;
   const loaded = await spritePool();
-  if (loaded.length) {
-    ambience.sprites = loaded;
-    if (ambience.dom) repaintScatter(ambience.index);
-  }
+  if (!loaded.complete && ambience.poolComplete) return;   // a complete pool already landed
+  if (!loaded.sprites.length) return;
+  ambience.sprites = loaded.sprites;
+  if (ambience.dom) repaintScatter(ambience.index);
 }
 
 function pinRealm(page) {
@@ -2761,7 +2763,7 @@ const SCATTER_INTERVAL = 100 * 1000;
 
 const ambience = {
   sprites: [], blobs: [],
-  timer: null, scatterTimer: null, poolLoaded: false,
+  timer: null, scatterTimer: null, poolComplete: false, poolPromise: null,
   index: 0, enabled: true, started: false, resizeTimer: null, labelTimer: null
 };
 
@@ -2840,12 +2842,25 @@ function ambienceSprites() {
   }))).then(images => images.filter(Boolean));
 }
 
-// The unified scatter pool: portals and enchantment icons loaded together,
-// so every page - the way in included - reads as one shared cast instead of
-// two separate ones swapped in and out by page.
-async function spritePool() {
-  const [dungeon, enchant] = await Promise.all([dungeonSprites(), ambienceSprites()]);
-  return dungeon.concat(enchant);
+/*
+ * The unified scatter pool: portals and enchantment icons loaded together,
+ * so every page - the way in included - reads as one shared cast instead of
+ * two separate ones swapped in and out by page.
+ *
+ * Portals need no game data and so can be asked for before the enchant data
+ * is read; that early call only ever gets the portals, because ambienceSprites
+ * reads state.data synchronously and there is none yet. Memoized once the
+ * data is ready - completeness of the request, not when it happens to be
+ * asked, decides whether its result is reused or replaced. Concurrent
+ * complete requests share the one promise instead of loading every sprite
+ * twice.
+ */
+function spritePool() {
+  const complete = Boolean(state.data);
+  if (ambience.poolPromise && (ambience.poolComplete || !complete)) return ambience.poolPromise;
+  if (complete) ambience.poolComplete = true;
+  return ambience.poolPromise = Promise.all([dungeonSprites(), ambienceSprites()])
+    .then(([dungeon, enchant]) => ({ sprites: dungeon.concat(enchant), complete }));
 }
 
 // One drifting blob per realm colour. They never stop moving; only their
@@ -3034,11 +3049,11 @@ async function initAmbience() {
   ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
     ? ambience.pinned
     : Math.floor(Math.random() * REALMS.length);
-  // Routing may have already asked for the pool with the enchant data not
-  // yet read, which loads only the portals - so this runs again here,
-  // unconditionally, to pick up the full mixed cast once the data is ready.
-  ambience.sprites = await spritePool();
-  ambience.poolLoaded = true;
+  // The enchant data is already read by the time this runs, so this call is
+  // always the complete one - it always wins, whatever partial result
+  // routing may have asked for earlier and whenever that settles.
+  const loaded = await spritePool();
+  if (loaded.sprites.length) ambience.sprites = loaded.sprites;
   buildStarLanguage(document.querySelector('.starfield'));
   startAmbience();
 }

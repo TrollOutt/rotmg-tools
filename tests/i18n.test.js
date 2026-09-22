@@ -157,12 +157,24 @@ assert(styleSource.includes('filter: blur(2px) saturate(1.1);'),
  * mixed pool now, loaded together and shared by every page, without raising
  * the on-screen scatter count above the ~44 it already was.
  */
-assert(/async function spritePool\s*\(\s*\)\s*\{[\s\S]{0,200}?Promise\.all\(\[dungeonSprites\(\),\s*ambienceSprites\(\)\]\)/.test(appSource),
+assert(/function spritePool\s*\(\s*\)\s*\{[\s\S]{0,300}?Promise\.all\(\[dungeonSprites\(\),\s*ambienceSprites\(\)\]\)/.test(appSource),
   'web/app.js must load dungeon portals and enchantment icons together into one shared pool');
 assert(!/wanted === 'dungeon' \? await dungeonSprites\(\) : await ambienceSprites\(\)/.test(appSource),
   'web/app.js must not keep the retired per-page dungeon/enchant pool switch');
 assert(!/\(page === 'fame' \|\| page === 'home'\) \? 'dungeon' : 'enchant'/.test(appSource),
   'web/app.js must not keep the retired per-page pool selector');
+/*
+ * Codex-flagged: a pre-data (portal-only) fetch resolving after a post-data
+ * (complete) one must not be allowed to overwrite it - completeness, not
+ * arrival order, must gate what gets applied. The behavioural proof is the
+ * async ordering test further down; these are the wiring it depends on.
+ */
+assert(/const complete = Boolean\(state\.data\);/.test(appSource),
+  'web/app.js\'s spritePool must know at call time whether this fetch can be the complete one');
+assert(/ambience\.poolPromise/.test(appSource) && /ambience\.poolComplete/.test(appSource),
+  'web/app.js must memoize the sprite pool and track whether a complete fetch has already landed');
+assert(!/ambience\.poolLoaded/.test(appSource),
+  'web/app.js must not keep the retired poolLoaded flag that could not tell a partial fetch from a complete one');
 
 /*
  * The module sky adopts the atlas' own star language - varied size, varied
@@ -221,6 +233,81 @@ const ratio = moduleHz / atlasHz;
 assert(ratio > 1.5 && ratio < 2.5,
   `module shooting stars must fire at roughly 2x the atlas' own pace on the way in (measured ${ratio.toFixed(2)}x)`);
 
-console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
-  + 'animations-toggle removal, shared-starfield wiring, module colour-wash/aurora removal, unified '
-  + 'sprite pool, and module star-language checks pass.');
+/*
+ * A real race, not just a source pattern: routing can ask for the sprite
+ * pool before the enchant data is read (spritePool only gets the portals
+ * then), and the data load finishing asks for it again once it is (the
+ * complete, mixed pool). Nothing orders the two underlying fetches - a slow
+ * portal image can settle after the fast complete one - so a naive "last
+ * write wins" lets the early, partial result land second and clobber the
+ * complete one. This drives the actual spritePool/usePool source from
+ * web/app.js, sliced out and run for real with fully-controlled promises,
+ * to prove completeness decides the winner rather than arrival order.
+ */
+(async () => {
+  function extractBlock(name, startMarker) {
+    const start = appSource.indexOf(startMarker);
+    assert(start !== -1, `sprite-pool ordering test: could not find "${startMarker}" (${name}) in web/app.js`);
+    const end = appSource.indexOf('\n}', start + startMarker.length);
+    assert(end !== -1, `sprite-pool ordering test: could not find the end of "${startMarker}" (${name}) in web/app.js`);
+    const block = appSource.slice(start, end + 2);
+    let depth = 0;
+    for (const ch of block) { if (ch === '{') depth++; else if (ch === '}') depth--; }
+    assert.equal(depth, 0,
+      `sprite-pool ordering test: "${name}" extraction is unbalanced - its markers in web/app.js may be stale`);
+    return block;
+  }
+  const sliceScript = extractBlock('ambience state', 'const ambience = {') + ';\n\n'
+    + extractBlock('spritePool', 'function spritePool() {') + '\n\n'
+    + extractBlock('usePool', 'async function usePool() {') + '\n\n'
+    + 'this.__probe = { ambience, spritePool, usePool };\n';
+
+  function deferred() {
+    let resolve;
+    const promise = new Promise(r => { resolve = r; });
+    return { promise, resolve };
+  }
+  const calls = { dungeon: [], enchant: [] };
+  const context = {
+    state: { data: null },
+    dungeonSprites: () => { const d = deferred(); calls.dungeon.push(d); return d.promise; },
+    ambienceSprites: () => { const d = deferred(); calls.enchant.push(d); return d.promise; }
+  };
+  vm.runInNewContext(sliceScript, context, { filename: 'app.js (sprite-pool slice)' });
+  const { usePool, ambience: sliceAmbience } = context.__probe;
+
+  // Call A: routing asks for the pool before the enchant data is read.
+  context.state.data = null;
+  const callA = usePool();
+  assert.equal(calls.dungeon.length, 1, 'the pre-data call must fetch the portals');
+  assert.equal(calls.enchant.length, 1, 'the pre-data call must still ask for the enchant pool');
+
+  // Call B: the data finishes loading and the app asks again - the complete
+  // request, exactly what initAmbience does once state.data is set.
+  context.state.data = { enchants: [] };
+  const callB = usePool();
+  assert.equal(calls.dungeon.length, 2,
+    'the post-data call must fetch its own portals rather than reusing the stale in-flight partial one');
+
+  // Call B's fetch settles first...
+  calls.dungeon[1].resolve([{ src: 'portalB' }]);
+  calls.enchant[1].resolve([{ src: 'enchantB' }]);
+  await callB;
+  assert.deepEqual(sliceAmbience.sprites.map(sprite => sprite.src), ['portalB', 'enchantB'],
+    'the complete pool must apply once it lands');
+
+  // ...and Call A's slower, portal-only fetch settles after it. It must not
+  // win: this is the exact ordering Codex flagged.
+  calls.dungeon[0].resolve([{ src: 'portalA' }]);
+  calls.enchant[0].resolve([]);
+  await callA;
+  assert.deepEqual(sliceAmbience.sprites.map(sprite => sprite.src), ['portalB', 'enchantB'],
+    'a pre-data partial fetch resolving after the complete one must not overwrite it');
+
+  console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
+    + 'animations-toggle removal, shared-starfield wiring, module colour-wash/aurora removal, unified '
+    + 'sprite pool, module star-language, and sprite-pool ordering checks pass.');
+})().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
