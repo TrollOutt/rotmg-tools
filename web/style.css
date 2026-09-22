@@ -316,14 +316,6 @@ img { image-rendering: pixelated; }
 .status.bad { color: var(--bad); border-color: rgba(255, 69, 66, .45); }
 
 /*
- * The animation switch, in the same corner of every page.
- *
- * Fixed rather than in a masthead, because there are five mastheads and it
- * belongs to all of them; top right, because every page puts its own
- * heading and its way back on the left; and above the atlas, which fills
- * its whole page with a frame of its own.
- */
-/*
  * The corner row: the only thing up there with a position of its own.
  *
  * It is pinned to the top right and lays the buttons out from that edge
@@ -435,14 +427,10 @@ img { image-rendering: pixelated; }
 .say-note {
   margin: 4px 4px 2px; color: var(--dim); font-size: 10.5px; line-height: 1.45;
 }
-.ambience-toggle-glyph { font-size: 16px; line-height: 1; }
-.ambience-toggle[aria-pressed="false"] { color: var(--dim); }
-.ambience-toggle[aria-pressed="false"] .ambience-toggle-glyph { opacity: .45; }
-
 /*
  * The words go before the row does.
  *
- * Three labels beside a masthead is more than a narrow window has room for,
+ * Two labels beside a masthead is more than a narrow window has room for,
  * so under 760px each button keeps its glyph and gives up its word - the
  * titles still say which is which - and the row stays one row.
  */
@@ -1117,14 +1105,25 @@ table.mini td { padding: 3px 8px; border: 0; }
      125 px of masthead becomes about 40, and nothing is dropped. */
   /* The way in is not a working screen: it keeps its full heading. */
   #pageHome .masthead { display: block; }
-  .masthead { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+  /*
+   * Just above 1041px there is not always room for the back button, the
+   * title and a busy masthead-row (Fame Sweep's base fame field, its three
+   * chips and Clear) side by side once the corner's own width is taken out
+   * of it. Without somewhere to give, the back button was the one flex item
+   * still allowed to shrink, and it gave by breaking "All tools" over two
+   * lines. flex-wrap lets the row drop to a line of its own instead - the
+   * back button and heading keep their size, and the two never ride over
+   * the corner's buttons.
+   */
+  .masthead { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 10px; }
+  .masthead .back { flex: none; }
   .masthead h1 { font-size: 21px; flex: none; }
   #pageHome .masthead h1 { font-size: clamp(28px, 5vw, 52px); }
   .masthead p {
     margin: 0; flex: 1; min-width: 0; max-width: none; font-size: 12.5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .masthead-row { flex: none; }
+  .masthead-row { flex: 0 1 auto; min-width: 0; }
 
   .tab-bar { margin-bottom: 10px; }
 
@@ -2044,7 +2043,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;
   font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none;
   background: rgba(38, 34, 51, .95); border: 1px solid var(--line);
-  border-radius: 999px; padding: 9px 18px;
+  border-radius: 999px; padding: 9px 18px; white-space: nowrap;
   box-shadow: 0 3px 12px rgba(0, 0, 0, .35);
 }
 .masthead .back:hover {

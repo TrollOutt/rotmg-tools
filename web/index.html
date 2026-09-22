@@ -12,9 +12,8 @@
 
 <!-- The controls that belong to every page --------------------------- -->
 <!--
-  Three things that belong to no single tool: a way through to the index, a
-  way to say something back, and the switch that stops the realms drifting
-  behind everything.
+  Two things that belong to no single tool: a way through to the index, and
+  a way to say something back.
 
   They were two strays pinned to the corner by hand - one at right: 14px and
   the other at right: 186px, which is the first one's width written out as a
@@ -24,7 +23,7 @@
   out inside it rather than measured into place. It reports its own width to
   the mastheads, which stop short by that much instead of by 172px, and it
   gives up its words for its glyphs when the window stops having room for
-  them. Adding a fourth costs nothing.
+  them. Adding a third costs nothing.
 -->
 <div id="corner" class="corner">
 
@@ -77,20 +76,6 @@
     <span><b>Sent</b><small>thank you — it goes straight to one mailbox</small></span>
   </div>
 </div>
-
-  <!--
-    It used to sit in the Enchant Calculator's masthead, in twelve-point
-    grey, saying "Realm" - so on four of the five pages there was no way to
-    stop the movement at all, and on the fifth you had to know that the word
-    meant the background. It is one switch for the whole site now, always in
-    the same corner, big enough to find, and it says which way it is set
-    rather than leaving you to read it off the opacity.
-  -->
-  <button id="ambienceToggle" type="button" class="corner-button ambience-toggle" aria-pressed="true"
-    title="Stop or start the drifting realms behind the interface">
-    <span class="corner-glyph ambience-toggle-glyph" aria-hidden="true">◐</span>
-    <span class="corner-text ambience-toggle-text">Animations on</span>
-  </button>
 
   <!--
     The switch between the two front pages, kept and hidden.

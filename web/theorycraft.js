@@ -161,16 +161,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /*
-   * Nothing moves when the reader has said they want it still - the switch in
-   * the corner that stops the realms drifting stops these too - or when the
-   * machine they are on asks for less motion.
+   * Nothing moves when the machine the reader is on asks for less motion.
    */
   function motionWanted() {
     try {
       if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
     } catch (error) { /* an old browser answers by not answering */ }
-    const toggle = document.getElementById('ambienceToggle');
-    return !toggle || toggle.getAttribute('aria-pressed') !== 'false';
+    return true;
   }
 
   const films = [];
