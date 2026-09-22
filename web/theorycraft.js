@@ -1996,15 +1996,49 @@ const TINT = {
    * it: that is why several of them appeared to be standing next to a copy of
    * themselves.
    */
+  /*
+   * What a piece actually draws, and how that fits a room.
+   *
+   * A target's rectangle carries the reach of its swing as well as the thing
+   * swinging, so fitting the rectangle to a room drew a small creature in the
+   * corner of a large empty box. The generator measures the pixels once and
+   * writes the window beside the rectangle (see tools/theory-sprites.js), and
+   * everything drawn - the picker's picture and the one on the bench - fits
+   * that window instead. One window for the whole run, so a target keeps its
+   * size and its footing as it animates; the frames themselves still step by
+   * the full declared width.
+   *
+   * A piece with no measured window keeps the rectangle it always had, which
+   * is every charm, every item and every class.
+   */
+  function targetBounds(piece) {
+    if (!piece) return null;
+    const seen = piece.visible;
+    if (seen && seen.w > 0 && seen.h > 0) {
+      return { x: seen.x, y: seen.y, w: seen.w, h: seen.h };
+    }
+    return { x: 0, y: 0, w: piece.w, h: piece.h };
+  }
+
+  function targetFit(piece, room) {
+    const bounds = targetBounds(piece);
+    if (!bounds) return null;
+    const longest = Math.max(1, Math.max(bounds.w, bounds.h));
+    const scale = room / longest;
+    return { bounds, scale, width: bounds.w * scale, height: bounds.h * scale };
+  }
+
   function sheetIcon(key, side, extra) {
     const piece = data.sheet && data.sheet.pics[key];
     if (!piece) return '';
-    const zoom = side / Math.max(piece.w, piece.h);
+    const fit = targetFit(piece, side);
+    const zoom = fit.scale;
     return '<span class="tc-charm' + (extra ? ' ' + extra : '') + '"'
-      + ' style="width:' + (piece.w * zoom) + 'px;height:' + (piece.h * zoom) + 'px'
+      + ' style="width:' + fit.width + 'px;height:' + fit.height + 'px'
       + ';background-size:' + (data.sheet.wide * zoom) + 'px '
       + (data.sheet.tall * zoom) + 'px'
-      + ';background-position:' + (-piece.x * zoom) + 'px ' + (-piece.y * zoom) + 'px'
+      + ';background-position:' + (-(piece.x + fit.bounds.x) * zoom) + 'px '
+      + (-(piece.y + fit.bounds.y) * zoom) + 'px'
       + '"></span>';
   }
 
@@ -2661,9 +2695,25 @@ const TINT = {
     return list[Math.floor(clock * (doing === 1 ? 6 : 3)) % list.length];
   }
 
-  function drawPiece(pen, piece, frame, x, y, tall) {
+  /*
+   * One frame of a piece, stood on the floor at x.
+   *
+   * `tall` is the height it is drawn at - unless `fit` is set, when it is the
+   * room the longest side of what the piece actually draws may fill. Targets
+   * are drawn that way: their rectangle includes the swing, so filling the
+   * rectangle leaves a small creature in a large empty box. The frame still
+   * steps by the rectangle's own width, because that is how the frames are
+   * packed.
+   */
+  function drawPiece(pen, piece, frame, x, y, tall, fit) {
     const img = theSheet();
     if (!piece || !img.complete || !img.naturalWidth) return false;
+    if (fit) {
+      const box = targetFit(piece, tall);
+      pen.drawImage(img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
+        box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height);
+      return true;
+    }
     const wide = tall * (piece.w / piece.h);
     pen.drawImage(img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
       x, y - tall, wide, tall);
@@ -2875,9 +2925,12 @@ const TINT = {
     const PX_TILE = 30;
     const piece = pieceOf(boss && boss.pic);
     const room = Math.min(88, tall * 0.64);
-    const longest = piece ? Math.max(piece.w, piece.h) : 1;
-    const big = piece ? room * (piece.h / longest) : room;
-    const across = piece ? room * (piece.w / longest) : room;
+    // The room goes to what the target draws, not to the rectangle that
+    // carries its swing - see targetFit. A piece with no measured window
+    // measures as its rectangle, which is what it always was.
+    const fit = piece ? targetFit(piece, room) : null;
+    const big = fit ? fit.height : room;
+    const across = fit ? fit.width : room;
     const me = pieceOf((kind && kind.pic) || '');
     const side = Math.min(52, tall * 0.4);
     const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
@@ -2920,17 +2973,17 @@ const TINT = {
      */
     const struck = duel.hp > 0 && duel.shots.some(s => s.age > s.lasts * 0.86);
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
-    const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
+    const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, room, true);
     if (drew && struck) {
       pen.globalAlpha = 0.35;
       pen.fillStyle = '#fff';
       pen.globalCompositeOperation = 'lighter';
-      drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
+      drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, room, true);
       pen.globalCompositeOperation = 'source-over';
     }
     if (!drew) {
       pen.fillStyle = duel.hp > 0 ? '#8a5a5a' : 'rgba(138,90,90,.25)';
-      pen.fillRect(bossX, floor - big, big, big);
+      pen.fillRect(bossX, floor - big, across, big);
     }
     pen.globalAlpha = 1;
 

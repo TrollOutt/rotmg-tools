@@ -2,6 +2,55 @@
 // Artwork decoration called by build-index with its already-read source.
 // It writes the sheet only; catalogue membership belongs to the index.
 const fs=require('fs'),path=require('path');
+
+/*
+ * Where the drawing actually is inside one packed cell.
+ *
+ * A cell is not the drawing. A boss is often declared in a rectangle far wider
+ * than the thing in it - the reach of its swing is in the rectangle, not the
+ * picture - and a renderer that fits the rectangle to a room draws a small
+ * creature in the corner of a large empty box. Measuring the pixels instead
+ * leaves the packing alone and only says which part of the cell to show.
+ *
+ * The union across a run, not each frame on its own: a target that measured
+ * every frame separately would breathe in and out as it animated. One window
+ * for the whole run keeps its scale and its feet still. The cell stays the
+ * cell - this is a view window inside it, and the stride is still the full
+ * declared width.
+ */
+function cellAlphaBounds(pixels, stride, cell) {
+  let left = -1, right = -1, top = -1, bottom = -1;
+  for (let y = 0; y < cell.h; y++) {
+    const row = cell.y + y;
+    for (let x = 0; x < cell.w; x++) {
+      const column = cell.x + x;
+      if (pixels[(row * stride + column) * 4 + 3] <= 8) continue;
+      if (left < 0 || x < left) left = x;
+      if (x > right) right = x;
+      if (top < 0 || y < top) top = y;
+      if (y > bottom) bottom = y;
+    }
+  }
+  if (right < 0) return null;
+  return { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
+}
+
+function visibleBounds(pixels, stride, cells) {
+  let out = null;
+  for (const cell of cells) {
+    const one = cellAlphaBounds(pixels, stride, cell);
+    if (!one) continue;
+    if (!out) { out = { ...one }; continue; }
+    const right = Math.max(out.x + out.w, one.x + one.w);
+    const bottom = Math.max(out.y + out.h, one.y + one.h);
+    out.x = Math.min(out.x, one.x);
+    out.y = Math.min(out.y, one.y);
+    out.w = right - out.x;
+    out.h = bottom - out.y;
+  }
+  return out;
+}
+
 module.exports=function({ root, documents, readAsset, facts }) {
 const OUT=path.join(root,'web','assets','theory');
 const { readPng, writePng } = require('./png');
@@ -337,6 +386,28 @@ for (const one of cut) {
 }
 
 
+/*
+ * Which part of a target's cell is the creature.
+ *
+ * Targets only: a charm or an item is cut to its own picture already, and the
+ * class runs are packed to their leading edge on purpose. A target's
+ * rectangle carries the reach of its swing, so this is measured from the
+ * packed pixels - the same cells the sheet was just written from - and stored
+ * beside the rectangle rather than replacing it. Nothing moves: the stride,
+ * the frames and the poses stay exactly what the packer above decided.
+ */
+for (const one of cut) {
+  if (!one.key.startsWith('t:')) continue;
+  const cells = [];
+  for (let slot = 0; slot < one.frames && slot < one.tiles.length; slot++) {
+    cells.push({ x: one.px + slot * one.w, y: one.py, w: one.w, h: one.h });
+  }
+  const visible = visibleBounds(sheet, WIDE, cells);
+  if (visible && (visible.x || visible.y || visible.w !== one.w || visible.h !== one.h)) {
+    one.visible = visible;
+  }
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 const png = path.join(OUT, 'sheet.png');
 fs.writeFileSync(png, writePng(WIDE, tall, sheet));
@@ -348,13 +419,16 @@ facts.sheet = {
     frames: one.frames, size: one.size,
     ...(one.tilt ? { tilt: one.tilt } : {}),
     ...(one.spin ? { spin: one.spin } : {}),
-    ...(one.poses ? { poses: one.poses } : {})
+    ...(one.poses ? { poses: one.poses } : {}),
+    ...(one.visible ? { visible: one.visible } : {})
   }]))
 };
 
 
 return facts;
 };
+module.exports.visibleBounds = visibleBounds;
+module.exports.cellAlphaBounds = cellAlphaBounds;
 if (require.main === module) {
   console.error('Run node tools/build-index.js --sprites, then npm run project-data.');
   process.exitCode = 1;
