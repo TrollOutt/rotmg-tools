@@ -499,7 +499,7 @@ console.log('All class pickers include the three Venerable rings; shared enchant
 
     const html = iconHelpers.itemIcon(name);
     const inner = iconHelpers.indexIcon(icon, 34, '');
-    const [w, h] = icon;
+    const [, , w, h] = icon;
     const zoom = 34 / Math.max(w, h);
 
     assert.equal(
