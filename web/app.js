@@ -2865,7 +2865,7 @@ function paintRealm(canvas, realm, seed) {
   ctx.globalCompositeOperation = 'source-over';
 
   if (ambience.sprites.length) {
-    if (ambience.canBlur) ctx.filter = 'blur(5px)';
+    if (ambience.canBlur) ctx.filter = 'blur(3.5px)';
     ctx.globalAlpha = 0.5;
     const count = 34;
     for (let i = 0; i < count; i++) {
@@ -2876,7 +2876,7 @@ function paintRealm(canvas, realm, seed) {
       ctx.save();
       ctx.translate(x + size / 2, y + size / 2);
       ctx.rotate((random() - 0.5) * 0.7);
-      ctx.globalAlpha = 0.34 + random() * 0.5;
+      ctx.globalAlpha = 0.3 + random() * 0.4;
       ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
       ctx.restore();
     }
