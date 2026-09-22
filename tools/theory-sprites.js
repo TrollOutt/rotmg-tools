@@ -2,6 +2,17 @@
 // Artwork decoration called by build-index with its already-read source.
 // It writes the sheet only; catalogue membership belongs to the index.
 const fs=require('fs'),path=require('path');
+/* The actual drawing, not the transparent cell around it. */
+function alphaBounds(from, r) {
+  let left = r.w, right = -1, top = r.h, bottom = -1;
+  for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
+    if (from.pixels[((r.y + y) * from.width + r.x + x) * 4 + 3] <= 8) continue;
+    left = Math.min(left, x); right = Math.max(right, x);
+    top = Math.min(top, y); bottom = Math.max(bottom, y);
+  }
+  if (right < left) return { left: 0, right: r.w - 1, top: 0, bottom: r.h - 1, wide: r.w, high: r.h };
+  return { left, right, top, bottom, wide: right - left + 1, high: bottom - top + 1 };
+}
 module.exports=function({ root, documents, readAsset, facts }) {
 const OUT=path.join(root,'web','assets','theory');
 const { readPng, writePng } = require('./png');
@@ -268,22 +279,9 @@ let charms = 0;
  * with empty rows in it is drawn at the size of the emptiness, which is what
  * made one class half the height of the next.
  */
-function bounds(from, r) {
-  let top = -1, bottom = -1;
-  for (let y = 0; y < r.h; y++) {
-    for (let x = 0; x < r.w; x++) {
-      if (from.pixels[((r.y + y) * from.width + r.x + x) * 4 + 3] > 8) {
-        if (top < 0) top = y;
-        bottom = y;
-        break;
-      }
-    }
-  }
-  return top < 0 ? { top: 0, bottom: r.h - 1, high: r.h } : { top, bottom, high: bottom - top + 1 };
-}
-
 for (const one of cut) {
-  one.shape = one.tiles.map(r => bounds(sheetFor(r.sheet), r));
+  one.shape = one.tiles.map(r => alphaBounds(sheetFor(r.sheet), r));
+  one.w = Math.max(1, ...one.shape.map(b => b.wide));
   one.h = Math.max(1, ...one.shape.map(b => b.high));
 }
 
@@ -323,14 +321,14 @@ for (const one of cut) {
     const from = sheetFor(r.sheet);
     // Standing on its floor, so a rectangle taller than its drawing does not
     // make the figure leap when that frame comes round.
-    const ox = one.px + slot * one.w + (forward ? 0 : (one.w - r.w) >> 1);
-    const oy = one.py + one.h - 1 - one.shape[slot].bottom;
-    for (let ry = 0; ry < r.h; ry++) {
-      const row = oy + ry;
-      if (row < one.py || row >= one.py + one.h) continue;
-      for (let rx = 0; rx < r.w; rx++) {
+    const shape = one.shape[slot];
+    const ox = one.px + slot * one.w + (forward ? 0 : (one.w - shape.wide) >> 1);
+    const oy = one.py + one.h - shape.high;
+    for (let ry = shape.top; ry <= shape.bottom; ry++) {
+      const row = oy + ry - shape.top;
+      for (let rx = shape.left; rx <= shape.right; rx++) {
         const at = ((r.y + ry) * from.width + r.x + rx) * 4;
-        from.pixels.copy(sheet, (row * WIDE + ox + rx) * 4, at, at + 4);
+        from.pixels.copy(sheet, (row * WIDE + ox + rx - shape.left) * 4, at, at + 4);
       }
     }
   });
@@ -355,6 +353,7 @@ facts.sheet = {
 
 return facts;
 };
+module.exports.alphaBounds=alphaBounds;
 if (require.main === module) {
   console.error('Run node tools/build-index.js --sprites, then npm run project-data.');
   process.exitCode = 1;
