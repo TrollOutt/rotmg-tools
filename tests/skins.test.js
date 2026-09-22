@@ -45,13 +45,21 @@ const typeOf = one => (one.from && one.from[1]) || '';
     const rect={x:19,y:23,w:3,h:2};
     for(const [local,expected] of [[{x:0,y:0},{x:19,y:23}],[{x:2.99,y:1.99},{x:21,y:24}]]){const got=frameTexel(rect,local);if(got.x!==expected.x||got.y!==expected.y)throw Error('frame texel escaped its source rectangle');}
     if(frameTexel(rect,{x:-.01,y:0})||frameTexel(rect,{x:3,y:0})||frameTexel(rect,{x:0,y:2}))throw Error('a frame sampled its packed neighbour');
-    const alphaAt=local=>frameTexel(rect,local)?1:0,outlineAt=local=>isOutlinePixel(alphaAt(local),alphaAt({x:local.x-1,y:local.y}),alphaAt({x:local.x+1,y:local.y}),alphaAt({x:local.x,y:local.y-1}),alphaAt({x:local.x,y:local.y+1}));
+    const outlineFor=(rows,x,y)=>{const h=rows.length,w=rows[0].length,alphaAt=(px,py)=>px>=0&&py>=0&&px<w&&py<h&&rows[Math.floor(py)][Math.floor(px)]==='1'?1:0;return isOutlinePixel(alphaAt(x,y),alphaAt(x-.5,y),alphaAt(x+.5,y),alphaAt(x,y-.5),alphaAt(x,y+.5));};
+    const expectOutline=(rows,yes,no,label)=>{if(!yes.every(([x,y])=>outlineFor(rows,x,y)))throw Error(label+' missed a cardinal outline');if(!no.every(([x,y])=>!outlineFor(rows,x,y)))throw Error(label+' drew a non-cardinal outline');};
+    expectOutline(['000','010','000'],[[.75,1.25],[2.25,1.25],[1.25,.75],[1.25,2.25]],[[1.25,1.25],[.75,.75]],'isolated pixel');
+    expectOutline(['000','010','010','000'],[[.75,1.25],[.75,2.25],[2.25,1.25],[2.25,2.25],[1.25,.75],[1.25,3.25]],[[1.25,1.25],[1.25,2.25],[.75,.75]],'vertical run');
+    expectOutline(['0000','0110','0000'],[[.75,1.25],[3.25,1.25],[1.25,.75],[2.25,.75],[1.25,2.25],[2.25,2.25]],[[1.25,1.25],[2.25,1.25],[.75,.75]],'horizontal run');
+    expectOutline(['0000','0100','0010','0000'],[[1.25,.75],[.75,1.25]],[[.75,.75],[1.25,1.25],[2.25,2.25]],'diagonal pair');
+    expectOutline(['111','101','111'],[[1.25,1.25]],[[.25,.25],[1.25,.75],[.75,.75]],'hole');
+    expectOutline(['11','11'],[[ -.25,.25],[2.25,.25],[.25,-.25],[.25,2.25]],[[ -.75,.25],[.25,-.75],[-.25,-.25]],'frame boundary');
+    const alphaAt=local=>frameTexel(rect,local)?1:0,outlineAt=local=>isOutlinePixel(alphaAt(local),alphaAt({x:local.x-.5,y:local.y}),alphaAt({x:local.x+.5,y:local.y}),alphaAt({x:local.x,y:local.y-.5}),alphaAt({x:local.x,y:local.y+.5}));
     if(outlineAt({x:1.25,y:.75}))throw Error('an opaque frame centre cannot become outline');
     if(![{x:-.25,y:.75},{x:3.25,y:.75},{x:1.25,y:-.25},{x:1.25,y:2.25}].every(outlineAt))throw Error('each half-texel frame edge must receive its cardinal outline');
     if(outlineAt({x:-.25,y:-.25}))throw Error('a diagonal outside a frame cannot become outline');`;
   execFileSync(process.execPath, ['--input-type=module', '--eval', check], { stdio: 'pipe' });
-  assert(rendererSource.includes('local+vec2(-1.,0.)') && rendererSource.includes('local+vec2(1.,0.)')
-    && rendererSource.includes('local+vec2(0.,-1.)') && rendererSource.includes('local+vec2(0.,1.)'),
+  assert(rendererSource.includes('local+vec2(-.5,0.)') && rendererSource.includes('local+vec2(.5,0.)')
+    && rendererSource.includes('local+vec2(0.,-.5)') && rendererSource.includes('local+vec2(0.,.5)'),
   'the shader must use cardinal neighbours, not diagonal or rectangular borders');
   assert(rendererSource.includes('if(any(lessThan(local,vec2(0.)))||any(greaterThanEqual(local,r.zw)))return vec4(0.);'),
     'out-of-frame samples must be transparent so packed frames cannot bleed');
