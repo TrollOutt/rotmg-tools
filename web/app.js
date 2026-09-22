@@ -2646,8 +2646,6 @@ function bind() {
     const tab = event.target.closest('[data-tab]');
     if (tab) switchTab(tab.dataset.tab);
   });
-  $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
-
   /*
    * The atlas frame. Shut, it swallows nothing: the map inside it takes no
    * pointer at all, so a click anywhere on it opens it out rather than
@@ -2754,7 +2752,6 @@ function pinRealm(page) {
 // repainted far less often, because that one is a real change of picture.
 const REALM_INTERVAL = 32 * 1000;
 const SCATTER_INTERVAL = 100 * 1000;
-const AMBIENCE_KEY = 'rotmg-enchant-calculator/ambience';
 
 const ambience = {
   layers: [], front: 0, sprites: [], blobs: [],
@@ -3035,34 +3032,18 @@ function handleAmbienceResize() {
 }
 
 /*
- * The drifting realms behind the interface, on or off.
+ * The drifting realms behind the interface, always on.
  *
- * This and nothing else. It reached into the atlas for a while and froze
- * the clock its weather reads, which worked, and is not what the switch is
- * for: the atlas is a map you are looking at rather than decoration behind
- * something you are reading, and its weather is part of the map. So the
- * switch governs the background of the interface, on every page, and the
- * atlas keeps its own weather running whatever it is set to.
+ * It reached into the atlas for a while and froze the clock its weather
+ * reads, which worked, and is not what this is for: the atlas is a map you
+ * are looking at rather than decoration behind something you are reading,
+ * and its weather is part of the map. So this governs the background of
+ * the interface, on every page, and the atlas keeps its own weather running
+ * regardless.
  */
-function setAmbience(enabled) {
-  ambience.enabled = enabled;
-  $('ambience').hidden = !enabled;
-  $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
-  const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
-  if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
-  try { localStorage.setItem(AMBIENCE_KEY, enabled ? 'on' : 'off'); } catch (error) { /* not essential */ }
-  if (enabled && !ambience.started) startAmbience();
-}
-
 async function initAmbience() {
-  let enabled = true;
-  try { enabled = localStorage.getItem(AMBIENCE_KEY) !== 'off'; } catch (error) { /* default on */ }
-  $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
-  const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
-  if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
-  ambience.enabled = enabled;
-  $('ambience').hidden = !enabled;
-  if (!enabled) return;
+  ambience.enabled = true;
+  $('ambience').hidden = false;
   // Start on a random realm so two visitors do not see the same one.
   ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
     ? ambience.pinned

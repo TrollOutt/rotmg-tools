@@ -75,4 +75,25 @@ const indexSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'ut
 assert(indexSource.includes('esc(text)'), 'record descriptions must stay rendered as source data');
 assert(!indexSource.includes('RealmI18n.label(text)'), 'record descriptions must not be localized as UI copy');
 assert.equal(first.api.canonicalSearch('Potion of Dexterity'), 'potion of dexterity');
-console.log('English-only locale gate, catalogue retention, canonical search, and static-control checks pass.');
+
+/*
+ * The corner used to carry a visible "Animations on/off" switch. It is gone
+ * now - the drifting background stays capable of animating and still
+ * defers to prefers-reduced-motion, just with no user-facing control left
+ * behind to rot: no button, no click wiring, no storage key, and nothing
+ * in Theory Crafting still reaching for the element that used to hold it.
+ */
+const homeSource = fs.readFileSync(path.join(root, 'web', 'index.html'), 'utf8');
+assert(!/ambienceToggle|ambience-toggle/.test(homeSource),
+  'web/index.html must not contain the removed animations-toggle markup');
+const appSource = fs.readFileSync(path.join(root, 'web', 'app.js'), 'utf8');
+assert(!/ambienceToggle|AMBIENCE_KEY/.test(appSource),
+  'web/app.js must not wire up or persist the removed animations toggle');
+const theorySource = fs.readFileSync(path.join(root, 'web', 'theorycraft.js'), 'utf8');
+assert(!/ambienceToggle/.test(theorySource),
+  'web/theorycraft.js must not query the removed animations-toggle element');
+assert(/prefers-reduced-motion/.test(theorySource),
+  'web/theorycraft.js must still defer to prefers-reduced-motion');
+
+console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
+  + 'and animations-toggle removal checks pass.');
