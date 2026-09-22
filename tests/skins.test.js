@@ -35,19 +35,24 @@ const typeOf = one => (one.from && one.from[1]) || '';
      renderer's shader applies to alpha, without requiring WebGL in CI. */
   const rendererSource = fs.readFileSync(path.join(root, 'web/skins/renderer.js'), 'utf8');
   const renderer = 'data:text/javascript;base64,' + Buffer.from(rendererSource).toString('base64');
-  const check = `import { OUTLINE_PIXELS, isOutlinePixel, quadAt } from ${JSON.stringify(renderer)};
+  const check = `import { OUTLINE_PIXELS, isOutlinePixel, quadAt, frameTexel } from ${JSON.stringify(renderer)};
     if(OUTLINE_PIXELS!==1)throw Error('outline must stay one source pixel wide');
     if([isOutlinePixel(0,1,0,0,0),isOutlinePixel(0,0,1,0,0),isOutlinePixel(0,0,0,1,0),isOutlinePixel(0,0,0,0,1)].some(value=>!value))throw Error('each cardinal neighbour outlines');
     if(isOutlinePixel(0,0,0,0,0)||isOutlinePixel(1,1,1,1,1))throw Error('clear-only rule');
     const plain=quadAt({w:8,h:8},100,100,50,60,4),outlined=quadAt({w:8,h:8},100,100,50,60,4,OUTLINE_PIXELS);
     const originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+.08,outlined[2]-.08,outlined[5]-.08,outlined[1]+.08];
-    if(!outlinedEdges.every((value,index)=>Math.abs(value-originalEdges[index])<1e-9))throw Error('outline quad keeps source position anchored');`;
+    if(!outlinedEdges.every((value,index)=>Math.abs(value-originalEdges[index])<1e-9))throw Error('outline quad keeps source position anchored');
+    const rect={x:19,y:23,w:3,h:2};
+    for(const [local,expected] of [[{x:0,y:0},{x:19,y:23}],[{x:2.99,y:1.99},{x:21,y:24}]]){const got=frameTexel(rect,local);if(got.x!==expected.x||got.y!==expected.y)throw Error('frame texel escaped its source rectangle');}
+    if(frameTexel(rect,{x:-.01,y:0})||frameTexel(rect,{x:3,y:0})||frameTexel(rect,{x:0,y:2}))throw Error('a frame sampled its packed neighbour');`;
   execFileSync(process.execPath, ['--input-type=module', '--eval', check], { stdio: 'pipe' });
   assert(rendererSource.includes('local+vec2(-1.,0.)') && rendererSource.includes('local+vec2(1.,0.)')
     && rendererSource.includes('local+vec2(0.,-1.)') && rendererSource.includes('local+vec2(0.,1.)'),
   'the shader must use cardinal neighbours, not diagonal or rectangular borders');
   assert(rendererSource.includes('if(any(lessThan(local,vec2(0.)))||any(greaterThanEqual(local,r.zw)))return vec4(0.);'),
     'out-of-frame samples must be transparent so packed frames cannot bleed');
+  assert(rendererSource.includes('floor(local)+vec2(.5)'),
+    'WebGL must sample the centre of an integer source texel');
 }
 
 /* ---------------- the guessed bridge is gone ---------------- */
@@ -107,7 +112,9 @@ for (const one of catalogue.skins) {
     assert.equal(row.length, looks.row.length, one.id + ': a frame row of the wrong width');
     const [set, action, direction, x, y, w, h, maskX, maskY] = row;
     assert(Number.isInteger(set) && set >= 0, one.id + ': an animation set must be a number');
-    assert(Number.isInteger(action) && Number.isInteger(direction));
+    assert(Number.isInteger(action) && Number.isInteger(direction)
+      && Number.isInteger(x) && Number.isInteger(y) && Number.isInteger(w) && Number.isInteger(h),
+    one.id + ': source rectangles must be integer texel coordinates');
     assert(w > 0 && h > 0, one.id + ': a frame with no size');
     assert(x >= 0 && y >= 0 && x + w <= sheet.wide && y + h <= sheet.tall,
       one.id + ': a frame that falls off the packed sheet');
@@ -176,6 +183,8 @@ assert(/one\.direction === 3 \? 0/.test(spriteSource),
   'index-sprites must still rank direction 3 as the one facing the reader');
 
 const viewerSource = fs.readFileSync(path.join(root, 'web/skins/app.js'), 'utf8');
+assert(viewerSource.includes('ctx.drawImage(img,rect.x,rect.y,rect.w,rect.h,'),
+  'list thumbnails must continue to use their exact source rectangle');
 assert(/FACE_AWAY=2,FACE_YOU=3/.test(viewerSource),
   'the viewer must name the facings the way the client numbers them');
 assert(/dy<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
