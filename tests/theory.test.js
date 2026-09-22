@@ -15,6 +15,16 @@ const portraitHelpers = (() => {
   vm.runInNewContext(script, context, { filename: file });
   return context.module.exports;
 })();
+const iconHelpers = (() => {
+  const file = path.join(root, 'web/theorycraft.js');
+  const marker = 'return { start, share, open, put };';
+  const script = fs.readFileSync(file, 'utf8').replace(marker,
+    'return { itemIcon, indexIcon, gradeOf, setIconTestData: v => { data = v; } };');
+  const context = { window: {}, module: { exports: {} }, console,
+    BuildProgression: require('../web/progression') };
+  vm.runInNewContext(script, context, { filename: file });
+  return context.module.exports;
+})();
 
 /*
  * Static class portraits show the leading square of the standing frame.
@@ -448,5 +458,80 @@ console.log('All class pickers include the three Venerable rings; shared enchant
       one.name === untieredCase.item.name
     ),
     'missing search filter flags must mean included for old saved builds'
+  );
+}
+
+
+/*
+ * Regression: the gear frame (`.tc-icon-big`, fixed size, border, grade
+ * class) must stay a separate outer element from the index-sheet sprite it
+ * holds. They used to be the same span - itemIcon's inline width/height/
+ * background-position sat directly on `.tc-icon-big` - so a sprite narrower
+ * or taller than its bounding box shrank the frame itself instead of just
+ * being a smaller picture inside a frame that stayed put.
+ *
+ * Every item icon actually cut from the index in this fixture is an 8x8 or
+ * 16x16 square (the client draws one inventory tile per item), so there is
+ * no naturally occurring non-square item to source narrow/wide/tall cases
+ * from. The shape cases below reuse a real sheet anchor position from an
+ * actual item icon and vary only width/height, to prove the frame/sprite
+ * split - and the shared coordinate math - holds for any aspect ratio.
+ */
+{
+  const anchorItem = raw.items.find(one => one.icon);
+  assert(anchorItem, 'TheoryCraft fixture needs at least one item with an index icon');
+  const [ax, ay] = anchorItem.icon;
+
+  const byItem = {};
+  for (const one of raw.items) byItem[one.name] = one;
+
+  const shapes = {
+    square: anchorItem.icon,
+    wide: [ax, ay, 34, 10],
+    tall: [ax, ay, 10, 34],
+    narrow: [ax, ay, 6, 34]
+  };
+
+  for (const [shape, icon] of Object.entries(shapes)) {
+    const name = 'Gear Fit Test — ' + shape;
+    byItem[name] = { name, icon };
+    iconHelpers.setIconTestData({ byItem, iconSheet: raw.iconSheet });
+
+    const html = iconHelpers.itemIcon(name);
+    const inner = iconHelpers.indexIcon(icon, 34, '');
+    const [w, h] = icon;
+    const zoom = 34 / Math.max(w, h);
+
+    assert.equal(
+      html,
+      '<span class="tc-icon-big ">' + inner + '</span>',
+      `${shape} icon must be a fixed outer frame wrapping the sized sprite, nothing more`
+    );
+
+    const openTag = html.match(/^<span[^>]*>/)[0];
+    assert(
+      !openTag.includes('style='),
+      `${shape} icon frame must own no inline coordinates - only the inner sprite is positioned`
+    );
+
+    assert(
+      inner.includes('width:' + (w * zoom) + 'px;height:' + (h * zoom) + 'px'),
+      `${shape} icon sprite must keep the source aspect ratio when fit to the 34px side`
+    );
+    assert(
+      inner.includes('background-position:' + (-ax * zoom) + 'px ' + (-ay * zoom) + 'px'),
+      `${shape} icon sprite must keep its sheet coordinates unchanged`
+    );
+  }
+
+  // The real production path: an actual item's icon, end to end.
+  iconHelpers.setIconTestData({ byItem, iconSheet: raw.iconSheet });
+  const grade = iconHelpers.gradeOf(anchorItem.name);
+  const html = iconHelpers.itemIcon(anchorItem.name);
+  assert.equal(
+    html,
+    '<span class="tc-icon-big ' + grade + '">'
+      + iconHelpers.indexIcon(anchorItem.icon, 34, '') + '</span>',
+    'a real item must render as the fixed grade-bordered frame wrapping its sheet sprite'
   );
 }
