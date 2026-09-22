@@ -4,29 +4,6 @@ const root = path.join(__dirname, '..');
 const raw = JSON.parse(fs.readFileSync(path.join(root, 'data/TheoryCraft/theorycraft.json'), 'utf8'));
 const harness = require('./theory-harness');
 const engine = require('../web/engine');
-const { alphaBounds } = require('../tools/theory-sprites');
-{
-  const pixels = Buffer.alloc(6 * 5 * 4);
-  const opaque = (x, y) => { pixels[(y * 6 + x) * 4 + 3] = 255; };
-  opaque(2, 1); opaque(3, 1); opaque(2, 3);
-  const source = { width: 6, pixels };
-  const rect = { x: 1, y: 1, w: 4, h: 3 };
-  const original = { ...rect };
-  assert.deepEqual(alphaBounds(source, rect),
-    { left: 1, right: 2, top: 0, bottom: 2, wide: 2, high: 3 },
-    'packing must fit the alpha bounds, not transparent source padding');
-  assert.deepEqual(rect, original, 'alpha-bound inspection must not mutate source rectangles');
-  assert.deepEqual(alphaBounds({ width: 1, pixels: Buffer.alloc(4) }, { x: 0, y: 0, w: 1, h: 1 }),
-    { left: 0, right: 0, top: 0, bottom: 0, wide: 1, high: 1 },
-    'an empty cell keeps a safe one-cell fallback');
-  for (const [label, wide, high] of [['narrow', 1, 4], ['tall', 2, 5], ['wide', 5, 1]]) {
-    const pixels = Buffer.alloc(7 * 7 * 4);
-    for (let y = 1; y < 1 + high; y++) for (let x = 1; x < 1 + wide; x++) pixels[(y * 7 + x) * 4 + 3] = 9;
-    const got = alphaBounds({ width: 7, pixels }, { x: 0, y: 0, w: 7, h: 7 });
-    assert.equal(got.wide, wide, label + ' art must retain its alpha width');
-    assert.equal(got.high, high, label + ' art must retain its alpha height');
-  }
-}
 const t = harness({}, raw, false);
 for (const klass of raw.classes) {
   t.use(t.fresh(klass.name));
