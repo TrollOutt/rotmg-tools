@@ -36,15 +36,19 @@ const typeOf = one => (one.from && one.from[1]) || '';
   const rendererSource = fs.readFileSync(path.join(root, 'web/skins/renderer.js'), 'utf8');
   const renderer = 'data:text/javascript;base64,' + Buffer.from(rendererSource).toString('base64');
   const check = `import { OUTLINE_PIXELS, isOutlinePixel, quadAt, frameTexel } from ${JSON.stringify(renderer)};
-    if(OUTLINE_PIXELS!==1)throw Error('outline must stay one source pixel wide');
+    if(OUTLINE_PIXELS!==.5)throw Error('Atlas SS=2 outline must stay half a source pixel wide');
     if([isOutlinePixel(0,1,0,0,0),isOutlinePixel(0,0,1,0,0),isOutlinePixel(0,0,0,1,0),isOutlinePixel(0,0,0,0,1)].some(value=>!value))throw Error('each cardinal neighbour outlines');
     if(isOutlinePixel(0,0,0,0,0)||isOutlinePixel(1,1,1,1,1))throw Error('clear-only rule');
     const plain=quadAt({w:8,h:8},100,100,50,60,4),outlined=quadAt({w:8,h:8},100,100,50,60,4,OUTLINE_PIXELS);
-    const originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+.08,outlined[2]-.08,outlined[5]-.08,outlined[1]+.08];
+    const band=OUTLINE_PIXELS*4/100*2,originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+band,outlined[2]-band,outlined[5]-band,outlined[1]+band];
     if(!outlinedEdges.every((value,index)=>Math.abs(value-originalEdges[index])<1e-9))throw Error('outline quad keeps source position anchored');
     const rect={x:19,y:23,w:3,h:2};
     for(const [local,expected] of [[{x:0,y:0},{x:19,y:23}],[{x:2.99,y:1.99},{x:21,y:24}]]){const got=frameTexel(rect,local);if(got.x!==expected.x||got.y!==expected.y)throw Error('frame texel escaped its source rectangle');}
-    if(frameTexel(rect,{x:-.01,y:0})||frameTexel(rect,{x:3,y:0})||frameTexel(rect,{x:0,y:2}))throw Error('a frame sampled its packed neighbour');`;
+    if(frameTexel(rect,{x:-.01,y:0})||frameTexel(rect,{x:3,y:0})||frameTexel(rect,{x:0,y:2}))throw Error('a frame sampled its packed neighbour');
+    const alphaAt=local=>frameTexel(rect,local)?1:0,outlineAt=local=>isOutlinePixel(alphaAt(local),alphaAt({x:local.x-1,y:local.y}),alphaAt({x:local.x+1,y:local.y}),alphaAt({x:local.x,y:local.y-1}),alphaAt({x:local.x,y:local.y+1}));
+    if(outlineAt({x:1.25,y:.75}))throw Error('an opaque frame centre cannot become outline');
+    if(![{x:-.25,y:.75},{x:3.25,y:.75},{x:1.25,y:-.25},{x:1.25,y:2.25}].every(outlineAt))throw Error('each half-texel frame edge must receive its cardinal outline');
+    if(outlineAt({x:-.25,y:-.25}))throw Error('a diagonal outside a frame cannot become outline');`;
   execFileSync(process.execPath, ['--input-type=module', '--eval', check], { stdio: 'pipe' });
   assert(rendererSource.includes('local+vec2(-1.,0.)') && rendererSource.includes('local+vec2(1.,0.)')
     && rendererSource.includes('local+vec2(0.,-1.)') && rendererSource.includes('local+vec2(0.,1.)'),
@@ -53,6 +57,8 @@ const typeOf = one => (one.from && one.from[1]) || '';
     'out-of-frame samples must be transparent so packed frames cannot bleed');
   assert(rendererSource.includes('floor(local)+vec2(.5)'),
     'WebGL must sample the centre of an integer source texel');
+  assert(rendererSource.includes('baseRect.zw+vec2(1.))-vec2(.5)'),
+    'the UV mapping must expose only Atlas\' half-source-texel outline band');
 }
 
 /* ---------------- the guessed bridge is gone ---------------- */
