@@ -1,6 +1,7 @@
 # Stable orchestration invariants
 
 - Run canonical-root `taskctl`; task worktrees intentionally lack `.ai/bin`.
+- Context sync must never copy mutable canonical `.ai/STATE.md` into task worktrees. Workers read that state canonically; ignored files still participate in task-scope checks.
 - Never push, reset, or clean automatically. A blocked task reserves no scope.
 - Use the sole preview at `http://127.0.0.1:8001/web/`; `preview.py` replaces its listener.
 - Run deterministic tests before fresh, read-only review. The same writer repairs findings; recover a failed provider once, then use the other capable writer.

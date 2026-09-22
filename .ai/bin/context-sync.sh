@@ -59,7 +59,9 @@ mkdir -p "$worktree/.ai/tasks"
 
 cp "$root/AGENTS.md" "$worktree/AGENTS.md"
 cp "$root/CLAUDE.md" "$worktree/CLAUDE.md"
-cp "$root/.ai/STATE.md" "$worktree/.ai/STATE.md"
+# STATE.md is mutable canonical orchestration state. Copying it into a task
+# worktree changes a tracked file outside most task scopes, so workers read it
+# from the canonical checkout instead of receiving a local snapshot.
 cp "$taskfile" "$worktree/.ai/tasks/$task.json"
 
 echo "CONTEXT_SYNCED"
