@@ -118,8 +118,8 @@ for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
 }
 assert(!/\[data-page="home"\]\s*\.starfield|\.starfield[^{]*:not\(\[data-page="home"\]\)/.test(styleSource),
   'the starfield must not be enabled for the home page, by name or by a not() default-on selector');
-assert(styleSource.includes('.starfield { transition: none; }') && styleSource.includes('.starfield::before { animation: none; }'),
-  'the starfield must stop drifting under prefers-reduced-motion like the rest of the ambience');
+assert(styleSource.includes('.starfield { transition: none; }') && !/star-drift/.test(styleSource),
+  'the static starfield must not retain a drifting normal-star layer');
 const globeMarkup = homeSource.match(/id="globeBox"/g) || [];
 assert.equal(globeMarkup.length, 1, 'the atlas planet embed must appear exactly once');
 const pageHomeSpan = homeSource.slice(homeSource.indexOf('id="pageHome"'), homeSource.indexOf('id="pageSkins"'));
@@ -177,32 +177,34 @@ assert(!/ambience\.poolLoaded/.test(appSource),
   'web/app.js must not keep the retired poolLoaded flag that could not tell a partial fetch from a complete one');
 
 /*
- * The module sky adopts the atlas' own star language - varied size, varied
- * warmth, a live twinkle, and occasional shooting stars - at CSS cost rather
- * than a second canvas engine. These checks guard the wiring: that the
- * pieces exist, that they are scoped under .starfield so the same opacity
- * rules that keep the field off on the way in keep this off there too, and
- * that no new canvas was reintroduced to draw any of it.
+ * The module sky keeps the Atlas' normal field static: its actual fixed-seed
+ * 460-star distribution is painted to one DPR-aware canvas on initialisation
+ * and resize only. Meteors remain the sole animated pieces.
  */
-assert(/const TWINKLE_STARS = \d+;/.test(appSource) && /const SHOOTING_STARS = \d+;/.test(appSource)
+assert(/const MODULE_STARS = 460;/.test(appSource) && /const SHOOTING_STARS = \d+;/.test(appSource)
   && /const SHOOTING_CYCLE = \d+;/.test(appSource),
   'web/app.js must define the module star-language star and shooting-star counts');
 assert(/function buildStarLanguage\(/.test(appSource),
   'web/app.js must build the module star language into the shared starfield host');
-assert(/^\.starfield \.star-twinkle \{/m.test(styleSource) && /^\.starfield \.shooting-star \{/m.test(styleSource),
-  'web/style.css must scope the twinkle stars and shooting stars under .starfield, not as a standalone layer');
-assert(!/^\.star-twinkle \{/m.test(styleSource) && !/^\.shooting-star \{/m.test(styleSource),
-  'the twinkle stars and shooting stars must not be styled unscoped, or they would show outside the starfield gate');
-assert(/@keyframes star-twinkle/.test(styleSource) && /@keyframes shooting-star/.test(styleSource),
-  'web/style.css must animate the twinkle and the shooting-star streak');
-assert(styleSource.includes('.starfield .star-twinkle, .starfield .shooting-star')
-  || (/\.starfield \.star-twinkle[^}]*\{[^}]*animation: none/.test(styleSource)
-    && /\.starfield \.shooting-star[^}]*\{[^}]*animation: none/.test(styleSource)),
-  'the twinkle stars and shooting stars must stop animating under prefers-reduced-motion like the rest of the starfield');
-assert(!/getContext\(['"]2d['"]\)/.test(appSource),
-  'web/app.js must not reintroduce a canvas engine to draw the star language');
-assert(!/\.starfield canvas|\.ambience canvas/.test(styleSource),
-  'web/style.css must not paint any part of the star language on a canvas');
+const moduleStarSource = appSource.slice(appSource.indexOf('function buildStarLanguage('),
+  appSource.indexOf('/*\n * The drifting realms'));
+assert(/className = 'module-star-canvas'/.test(appSource) && /^\.starfield \.module-star-canvas \{/m.test(styleSource),
+  'the module field must be one canvas scoped inside the shared starfield host');
+assert(/Math\.imul\(value, 1664525\) \+ 1013904223/.test(appSource)
+  && /Math\.pow\(random\(\), 4\)/.test(appSource)
+  && /0\.16 \+ lit \* 0\.84/.test(appSource)
+  && /0\.5 \+ lit \* 1\.5/.test(appSource),
+  'the module canvas must retain the Atlas seed, fourth-power brightness, and star sizing math');
+assert(/window\.devicePixelRatio/.test(appSource) && /ctx\.setTransform\(dpr, 0, 0, dpr, 0, 0\)/.test(appSource),
+  'the module canvas must scale its backing store and drawing coordinates for device pixel ratio');
+assert(/window\.addEventListener\('resize', paintStars\)/.test(appSource),
+  'the module canvas must repaint when its viewport size changes');
+assert(!/requestAnimationFrame|star-twinkle|TWINKLE_STARS/.test(moduleStarSource),
+  'the module normal-star field must not use a frame loop or DOM twinkles');
+assert(/^\.starfield \.shooting-star \{/m.test(styleSource) && /@keyframes shooting-star/.test(styleSource),
+  'web/style.css must keep shooting stars scoped under the starfield');
+assert(/linear-gradient\(90deg, rgba\(236, 244, 255, 0\), rgba\(236, 244, 255, \.9\)\)/.test(styleSource),
+  'shooting stars must fade from their transparent -X tail to their bright +X head');
 
 /*
  * The way in keeps showing the atlas' own star language through its planet
