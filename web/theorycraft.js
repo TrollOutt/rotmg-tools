@@ -2059,8 +2059,8 @@ const TINT = {
   function itemIcon(name) {
     const grade = gradeOf(name);
     const item = data.byItem[name];
-    const cut = item && item.icon && indexIcon(item.icon, 34, 'tc-icon-big ' + grade);
-    return cut || '<span class="tc-icon-big ' + grade + '"></span>';
+    const cut = item && item.icon && indexIcon(item.icon, 34, '');
+    return '<span class="tc-icon-big ' + grade + '">' + (cut || '') + '</span>';
   }
 
   /*
