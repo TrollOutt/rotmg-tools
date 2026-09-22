@@ -25,6 +25,16 @@ const iconHelpers = (() => {
   vm.runInNewContext(script, context, { filename: file });
   return context.module.exports;
 })();
+const targetHelpers = (() => {
+  const file = path.join(root, 'web/theorycraft.js');
+  const marker = 'return { start, share, open, put };';
+  const script = fs.readFileSync(file, 'utf8').replace(marker,
+    'return { targetBounds, targetFit, sheetIcon, setTargetTestData: v => { data = v; } };');
+  const context = { window: {}, module: { exports: {} }, console,
+    BuildProgression: require('../web/progression') };
+  vm.runInNewContext(script, context, { filename: file });
+  return context.module.exports;
+})();
 
 /*
  * Static class portraits show the leading square of the standing frame.
@@ -535,3 +545,177 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     'a real item must render as the fixed grade-bordered frame wrapping its sheet sprite'
   );
 }
+
+/*
+ * What a target draws, and how that fits the room it is given.
+ *
+ * A target's rectangle carries the reach of its swing, so a wide, mostly
+ * empty cell used to shrink the creature inside it. The generator measures
+ * the pixels once and writes the window beside the rectangle; nothing about
+ * the packing moves, and the frames still step by the full declared width.
+ */
+{
+  const { visibleBounds, cellAlphaBounds } = require('../tools/theory-sprites');
+
+  // A filled rectangle of alpha, painted straight into a synthetic buffer.
+  const paint = (width, height, rects) => {
+    const buf = Buffer.alloc(width * height * 4);
+    for (const r of rects) {
+      for (let y = r.y; y < r.y + r.h; y++) {
+        for (let x = r.x; x < r.x + r.w; x++) buf[(y * width + x) * 4 + 3] = 255;
+      }
+    }
+    return buf;
+  };
+
+  // 1. A fully filled cell measures as the whole cell.
+  {
+    const buf = paint(16, 16, [{ x: 0, y: 0, w: 16, h: 16 }]);
+    assert.deepEqual(cellAlphaBounds(buf, 16, { x: 0, y: 0, w: 16, h: 16 }),
+      { x: 0, y: 0, w: 16, h: 16 }, 'a full cell must measure as its own rectangle');
+  }
+
+  // 2 and 3. A small drawing inside a wide, mostly transparent cell measures
+  // as the drawing, and keeps where it sits in the cell.
+  {
+    const buf = paint(64, 14, [{ x: 25, y: 0, w: 14, h: 14 }]);
+    assert.deepEqual(cellAlphaBounds(buf, 64, { x: 0, y: 0, w: 64, h: 14 }),
+      { x: 25, y: 0, w: 14, h: 14 }, 'a padded cell must measure its drawing, not its padding');
+    const off = paint(64, 14, [{ x: 2, y: 3, w: 8, h: 6 }]);
+    assert.deepEqual(cellAlphaBounds(off, 64, { x: 0, y: 0, w: 64, h: 14 }),
+      { x: 2, y: 3, w: 8, h: 6 }, 'an off-centre drawing must keep its place in the cell');
+  }
+
+  // 4, 5. The run is measured as one union: every frame counts, and a blank
+  // frame in the middle of a run must not throw the union away.
+  {
+    const stride = 32;
+    const wide = stride * 3;
+    const buf = paint(wide, 32, [
+      { x: 4, y: 4, w: 10, h: 10 },
+      { x: stride + 8, y: 2, w: 6, h: 6 },
+      { x: stride * 2 + 1, y: 20, w: 5, h: 5 }
+    ]);
+    const cells = [0, 1, 2].map(i => ({ x: i * stride, y: 0, w: stride, h: 32 }));
+    assert.deepEqual(visibleBounds(buf, wide, cells),
+      { x: 1, y: 2, w: 13, h: 23 },
+      'the union must span every frame of the run, in cell-relative coordinates');
+    const holed = [0, 1, 2].map(i => ({ x: i * stride, y: 0, w: stride, h: 32 }));
+    const withBlank = paint(wide, 32, [
+      { x: 4, y: 4, w: 10, h: 10 },
+      { x: stride * 2 + 6, y: 6, w: 4, h: 4 }
+    ]);
+    assert.deepEqual(visibleBounds(withBlank, wide, holed),
+      { x: 4, y: 4, w: 10, h: 10 },
+      'a blank frame must not destroy the union of the frames that do draw');
+  }
+
+  // 6. A piece that draws nothing falls back to its cell, and must not throw.
+  {
+    const empty = Buffer.alloc(64 * 14 * 4);
+    assert.equal(cellAlphaBounds(empty, 64, { x: 0, y: 0, w: 64, h: 14 }), null,
+      'a transparent cell has no drawing to measure');
+    assert.equal(visibleBounds(empty, 64, [{ x: 0, y: 0, w: 64, h: 14 }]), null,
+      'a transparent run must report nothing rather than a broken rectangle');
+  }
+
+  // Fitting: the room goes to the longest side of what is drawn.
+  const { targetBounds, targetFit, sheetIcon } = targetHelpers;
+  {
+    const cell = { x: 0, y: 0, w: 64, h: 14 };
+    const target = Object.assign({}, cell, { visible: { x: 27, y: 0, w: 14, h: 14 } });
+    const fit = targetFit(target, 34);
+    assert.equal(fit.width, 34, 'a square drawing must fill the room across');
+    assert.equal(fit.height, 34, 'a square drawing must fill the room down');
+    const seen = targetBounds(target);
+    assert.ok(seen.x === 27 && seen.y === 0 && seen.w === 14 && seen.h === 14,
+      'fitting must use the measured window');
+
+    const wide = Object.assign({}, cell, { visible: { x: 0, y: 0, w: 64, h: 14 } });
+    const wideFit = targetFit(wide, 34);
+    assert.equal(wideFit.width, 34, 'a wide drawing fills the room across');
+    assert.ok(wideFit.height < 34 && wideFit.height > 0, 'and keeps its own proportions');
+    assert.equal(wideFit.width / wideFit.height, 64 / 14, 'and its own aspect ratio');
+
+    // A piece with no measured window is its own rectangle, exactly as before.
+    const plain = { x: 0, y: 0, w: 16, h: 16 };
+    const plainSeen = targetBounds(plain);
+    assert.ok(plainSeen.x === 0 && plainSeen.y === 0 && plainSeen.w === 16 && plainSeen.h === 16,
+      'a piece with no window must keep its rectangle');
+    assert.equal(targetFit(plain, 34).width, 34, 'and fit that rectangle as it always did');
+  }
+
+  // The picker's window must sit on the drawing inside the cell.
+  {
+    targetHelpers.setTargetTestData({
+      sheet: { wide: 1024, tall: 689, pics: {
+        't:padded': { x: 100, y: 50, w: 64, h: 14, frames: 2,
+          visible: { x: 27, y: 0, w: 14, h: 14 } }
+      } }
+    });
+    const html = sheetIcon('t:padded', 34);
+    const zoom = 34 / 14;
+    assert.ok(html.includes('width:34px;height:34px'),
+      'a padded target must fill the picker room with the creature, not the cell');
+    assert.ok(html.includes('background-position:' + (-(100 + 27) * zoom) + 'px '
+      + (-(50 + 0) * zoom) + 'px'),
+      'the window must be moved onto the drawing inside the cell');
+  }
+}
+
+/*
+ * The real targets, measured from the shipped sheet metadata.
+ */
+{
+  const pics = raw.sheet.pics;
+  const targets = [
+    't:SpecPen Soulwarden Murcian',
+    't:NMR Boss Veteran',
+    't:KSW Factory Control Core',
+    't:New Grand Sphinx'
+  ];
+  let trimmed = 0;
+  for (const key of targets) {
+    const piece = pics[key];
+    assert.ok(piece, key + ' must exist on the theory sheet');
+    if (!piece.visible) continue;
+    trimmed++;
+    const v = piece.visible;
+    assert.ok(v.x >= 0 && v.y >= 0 && v.w > 0 && v.h > 0, key + ' must measure a real window');
+    assert.ok(v.x + v.w <= piece.w, key + ' must measure inside its own cell across');
+    assert.ok(v.y + v.h <= piece.h, key + ' must measure inside its own cell down');
+    assert.ok(v.w < piece.w || v.h < piece.h, key + ' must actually trim something');
+  }
+  assert.ok(trimmed >= 3,
+    'the padded targets must carry a measured window rather than the whole cell');
+
+  // The worst offender: a sixty-four wide cell holding a fourteen wide thing.
+  const core = pics['t:KSW Factory Control Core'].visible;
+  assert.equal(core.w, 14, 'the factory core draws fourteen pixels across, not sixty-four');
+  assert.ok(core.x > 0, 'and it sits well inside its cell, which is why it looked tiny');
+
+  // Every window stays inside its cell, on every target on the sheet.
+  for (const [key, piece] of Object.entries(pics)) {
+    if (!piece.visible) continue;
+    const v = piece.visible;
+    assert.ok(v.x >= 0 && v.y >= 0 && v.w > 0 && v.h > 0
+      && v.x + v.w <= piece.w && v.y + v.h <= piece.h,
+    key + ' must have a sane measured window');
+  }
+}
+
+/*
+ * The renderer's own wiring: the frames still step by the declared width, and
+ * a target is drawn through its measured window.
+ */
+{
+  const source = fs.readFileSync(path.join(root, 'web/theorycraft.js'), 'utf8');
+  assert.ok(/piece\.x \+ frame \* piece\.w \+ box\.bounds\.x/.test(source),
+    'the source window must step by the declared cell width and then move onto the drawing');
+  assert.ok(!/frame \* box\.bounds\.w|frame \* fit\.bounds\.w/.test(source),
+    'the stride must never be the visible width');
+  assert.ok(/drawPiece\(pen, piece, frameOf\(piece, 0, duel\.at\), bossX, floor, room, true\)/.test(source),
+    'the bench must draw its target through the measured window');
+}
+
+console.log('TheoryCraft: target windows, fitting, frame stride and real targets check out.');
