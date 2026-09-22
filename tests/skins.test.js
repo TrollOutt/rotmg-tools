@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert/strict');
+const { execFileSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const read = where => JSON.parse(fs.readFileSync(path.join(root, where), 'utf8'));
@@ -27,6 +28,27 @@ const looks = read(generated + 'looks.json');
 
 const records = new Map(index.records.map(one => [one.id, one]));
 const typeOf = one => (one.from && one.from[1]) || '';
+
+/* ---------------- the live silhouette outline ---------------- */
+{
+  /* This is deliberately pure: it is the same cardinal-neighbour rule the
+     renderer's shader applies to alpha, without requiring WebGL in CI. */
+  const rendererSource = fs.readFileSync(path.join(root, 'web/skins/renderer.js'), 'utf8');
+  const renderer = 'data:text/javascript;base64,' + Buffer.from(rendererSource).toString('base64');
+  const check = `import { OUTLINE_PIXELS, isOutlinePixel, quadAt } from ${JSON.stringify(renderer)};
+    if(OUTLINE_PIXELS!==1)throw Error('outline must stay one source pixel wide');
+    if([isOutlinePixel(0,1,0,0,0),isOutlinePixel(0,0,1,0,0),isOutlinePixel(0,0,0,1,0),isOutlinePixel(0,0,0,0,1)].some(value=>!value))throw Error('each cardinal neighbour outlines');
+    if(isOutlinePixel(0,0,0,0,0)||isOutlinePixel(1,1,1,1,1))throw Error('clear-only rule');
+    const plain=quadAt({w:8,h:8},100,100,50,60,4),outlined=quadAt({w:8,h:8},100,100,50,60,4,OUTLINE_PIXELS);
+    const originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+.08,outlined[2]-.08,outlined[5]-.08,outlined[1]+.08];
+    if(!outlinedEdges.every((value,index)=>Math.abs(value-originalEdges[index])<1e-9))throw Error('outline quad keeps source position anchored');`;
+  execFileSync(process.execPath, ['--input-type=module', '--eval', check], { stdio: 'pipe' });
+  assert(rendererSource.includes('local+vec2(-1.,0.)') && rendererSource.includes('local+vec2(1.,0.)')
+    && rendererSource.includes('local+vec2(0.,-1.)') && rendererSource.includes('local+vec2(0.,1.)'),
+  'the shader must use cardinal neighbours, not diagonal or rectangular borders');
+  assert(rendererSource.includes('if(any(lessThan(local,vec2(0.)))||any(greaterThanEqual(local,r.zw)))return vec4(0.);'),
+    'out-of-frame samples must be transparent so packed frames cannot bleed');
+}
 
 /* ---------------- the guessed bridge is gone ---------------- */
 assert(!fs.existsSync(path.join(root, generated, 'index-links.json')),
