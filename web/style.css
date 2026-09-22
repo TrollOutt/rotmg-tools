@@ -3204,7 +3204,13 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   cursor: pointer; padding: 5px 8px; border-radius: var(--radius-sm);
 }
 .tc-row:hover { background: rgba(255, 255, 255, .06); }
-.tc-row .tc-icon-big { width: 32px; height: 32px; padding: 2px; }
+/*
+ * The inner sprite is always cut to fit a 34px side (itemIcon hardcodes it),
+ * so the row's frame - border included - has to hold at least that much or
+ * the sprite clips against the frame's own edge. 40px at this padding and
+ * border is the smallest box that clears it exactly.
+ */
+.tc-row .tc-icon-big { width: 40px; height: 40px; padding: 2px; }
 .tc-row b { font-weight: 500; min-width: 0; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; }
 .tc-row u {
