@@ -198,36 +198,15 @@ body {
 img { image-rendering: pixelated; }
 
 /* ---------------- ambience ---------------- *
- * Two stacked canvases behind everything. Each holds one painted "realm":
- * a colour wash plus a scatter of the game's own sprites, blurred as it is
- * drawn so the browser never has to filter it again. Changing realm is a slow
- * cross-fade of their opacity, which the compositor handles on its own.
+ * A host behind everything, holding two kinds of decoration: the aurora
+ * (home's own richer identity, see the per-page overrides below .aurora
+ * span) and the DOM sprite scatter (.ambience-dom, every page). Both are
+ * ordinary elements the stylesheet animates - no canvas, no painted colour
+ * wash, so a module or tool page behind them reads as the shared starfield.
  */
 .ambience {
   position: fixed; inset: 0; z-index: 0;
   overflow: hidden; pointer-events: none;
-}
-.ambience canvas {
-  position: absolute; inset: -8%;
-  width: 116%; height: 116%;
-  /* Without this the bitmap is stretched to the box and skews whenever the
-     window changes shape; cover crops instead, which a blurred backdrop can
-     afford. app.js repaints at the new size once the drag settles. */
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 4s ease-in-out;
-  will-change: opacity, transform;
-}
-/* Only the tool pages paint a realm onto canvas at all (the way in and Fame
-   Sweep drift real portal images instead, see .ambience-dom), so easing this
-   back is felt only there - and it is what lets the shared starfield under it
-   read as sky rather than a sliver at the edges. */
-.ambience canvas.on { opacity: .68; }
-/* A slow drift keeps the sprite layer alive without drawing attention. */
-.ambience canvas.drift { animation: drift 46s ease-in-out infinite alternate; }
-@keyframes drift {
-  from { transform: scale(1.04) translate3d(3%, 2%, 0) rotate(-1deg); }
-  to   { transform: scale(1.18) translate3d(-5%, -4%, 0) rotate(1deg); }
 }
 
 /*
@@ -247,6 +226,23 @@ img { image-rendering: pixelated; }
   transition: opacity 5s ease-in-out;
   will-change: transform, opacity;
 }
+/* The aurora is the way in's own richer identity, not something every page
+   inherits: a module or tool page shows the plain starfield instead, so the
+   blobs never tint or animate there. Named rather than :not([data-page="home"])
+   for the same reason the starfield rules below are - the default, before
+   script has set the attribute at all, should stay how home looks. */
+body[data-page="enchant"] .aurora,
+body[data-page="fame"] .aurora,
+body[data-page="theory"] .aurora,
+body[data-page="index"] .aurora,
+body[data-page="skins"] .aurora,
+body[data-page="news"] .aurora { opacity: 0; }
+body[data-page="enchant"] .aurora span,
+body[data-page="fame"] .aurora span,
+body[data-page="theory"] .aurora span,
+body[data-page="index"] .aurora span,
+body[data-page="skins"] .aurora span,
+body[data-page="news"] .aurora span { animation: none !important; }
 /* Three-point orbits rather than a there-and-back, so no blob ever retraces
    the same line and the field keeps reshuffling. */
 @keyframes float-a {
@@ -273,11 +269,8 @@ img { image-rendering: pixelated; }
   66%  { transform: translate3d(-30%, 2%, 0) scale(1.35); }
   100% { transform: translate3d(-12%, 22%, 0) scale(1.25); }
 }
-/* Fallback when a browser cannot blur while drawing to a canvas. */
-.ambience.css-blur canvas { filter: blur(26px); }
-
 /* Keeps the middle of the screen calm enough to read over, without smothering
-   the realm: the canvas is already dark, so this only has to take the edges. */
+   the realm: the background is already dark, so this only has to take the edges. */
 .ambience::after {
   content: ''; position: absolute; inset: 0;
   background:
@@ -293,8 +286,8 @@ img { image-rendering: pixelated; }
  * is a tiled radial-gradient rather than a second canvas: no script, one
  * image the browser paints once and then only ever slides.
  *
- * It sits behind .ambience in the document, so the realm wash and the
- * drifting portals lie over it rather than needing a z-index to say so.
+ * It sits behind .ambience in the document, so the aurora and the drifting
+ * sprite scatter lie over it rather than needing a z-index to say so.
  */
 .starfield {
   position: fixed; inset: 0; z-index: 0;
@@ -348,7 +341,7 @@ body[data-page="news"] .starfield { opacity: .85; }
 .realm-name.show { opacity: .75; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ambience canvas, .aurora span { transition: none; animation: none !important; }
+  .aurora span { transition: none; animation: none !important; }
   .realm-name { transition: none; }
   .starfield { transition: none; }
   .starfield::before { animation: none; }
@@ -1629,7 +1622,6 @@ body.globe-wide .ambience {
  * are behind a full-page map and invisible, so there is nothing to fade -
  * and they are costing the map the frames they animate in.
  */
-body.globe-wide .ambience canvas,
 body.globe-wide .ambience-dom img,
 body.globe-wide .aurora span,
 body.globe-wide .news-bell-glyph,
@@ -2155,16 +2147,18 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 .base-fame input::placeholder { color: var(--dim); font-weight: 400; }
 
 /*
- * The drifting portals behind the way in and Fame Sweep.
- *
- * Real elements rather than a canvas, because a canvas paints the first frame
- * of an animated portal and then stops. Blurred hard, so it reads as a place
- * rather than a set of icons.
+ * The drifting sprite scatter behind every page: dungeon portals on the way
+ * in and Fame Sweep, enchantment icons everywhere else - the page's own
+ * subject, out of focus. Real elements rather than a canvas, because a
+ * canvas paints the first frame of an animated portal and then stops.
+ * Small and dense rather than few and large, so it reads as texture behind
+ * the shared starfield instead of a set of icons; blurred just enough to
+ * stay soft at that size.
  */
 .ambience-dom { position: absolute; inset: 0; overflow: hidden; }
 .ambience-dom img {
   position: absolute; image-rendering: pixelated;
-  filter: blur(3px) saturate(1.1);
+  filter: blur(2px) saturate(1.1);
   animation-name: ambience-drift;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;

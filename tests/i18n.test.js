@@ -102,15 +102,15 @@ assert(!/ambienceToggle/.test(benchSource),
 /*
  * The starfield: one shared sky for the tool pages, and the planet kept out
  * of it. These are static checks rather than a rendered page, so what they
- * guard is the wiring - that the sky is named once, sits behind the realm
- * wash instead of on top of it, and is never turned on for the way in - not
- * how the gradient actually looks.
+ * guard is the wiring - that the sky is named once, sits behind the aurora
+ * and sprite scatter instead of on top of them, and is never turned on for
+ * the way in - not how the gradient actually looks.
  */
 const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
 assert.equal((homeSource.match(/class="starfield"/g) || []).length, 1,
   'web/index.html must define exactly one shared starfield layer');
 assert(homeSource.indexOf('class="starfield"') < homeSource.indexOf('id="ambience"'),
-  'the starfield must sit before .ambience in the document so the realm wash paints over it');
+  'the starfield must sit before .ambience in the document so the aurora and sprite scatter paint over it');
 assert(/^\.starfield \{/m.test(styleSource), 'web/style.css must style the shared starfield layer');
 for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
   assert(styleSource.includes(`body[data-page="${page}"] .starfield`),
@@ -126,5 +126,30 @@ const pageHomeSpan = homeSource.slice(homeSource.indexOf('id="pageHome"'), homeS
 assert(pageHomeSpan.includes('id="globeBox"'),
   'the planet embed must live inside #pageHome, not a tool page');
 
+/*
+ * The painted colour wash and the aurora used to tint every tool page from a
+ * shared "realm". The wash is gone outright - no page paints it any more -
+ * and the aurora is now the way in's own richer identity, so a module or
+ * tool page shows the starfield through nothing but a small, dense sprite
+ * scatter. These guard the wiring against regressing back, not the exact
+ * look of the scatter.
+ */
+assert(!/\.ambience canvas/.test(styleSource),
+  'web/style.css must not paint the retired colour-wash canvas on any page');
+assert(!/@keyframes drift\b/.test(styleSource),
+  'web/style.css must not keep the retired colour-wash drift animation');
+assert(!/\bpaintRealm\b/.test(appSource),
+  'web/app.js must not keep the retired canvas colour-wash painter');
+for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
+  assert(styleSource.includes(`body[data-page="${page}"] .aurora`),
+    `web/style.css must turn the aurora off on the ${page} tool page`);
+}
+assert(!/\[data-page="home"\]\s*\.aurora/.test(styleSource),
+  'the aurora must stay on for the home page, by name or by a not() default-on selector');
+assert(/for \(let i = 0; i < 44; i\+\+\)/.test(appSource) && /const size = 3\.5 \+ random\(\) \* 8;/.test(appSource),
+  'web/app.js must keep the DOM sprite scatter smaller and denser than the old colour-wash-era params');
+assert(styleSource.includes('filter: blur(2px) saturate(1.1);'),
+  'web/style.css must keep the DOM sprite scatter blur subtle for its smaller size');
+
 console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
-  + 'animations-toggle removal, and shared-starfield wiring checks pass.');
+  + 'animations-toggle removal, shared-starfield wiring, and module colour-wash/aurora removal checks pass.');
