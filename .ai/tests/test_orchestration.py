@@ -20,8 +20,11 @@ class OrchestrationTests(unittest.TestCase):
     def command(self, args):
         return subprocess.run(args, cwd=ROOT, text=True, capture_output=True)
 
+    def task_worktree(self):
+        return Path(json.loads((ROOT / ".ai/tasks/ORCHESTRATION-HARDENING.json").read_text())["worktree"])
+
     def test_doctor_is_canonical_root_only_and_clear(self):
-        result = self.command([sys.executable, str(TASKCTL), "doctor", "ORCHESTRATION-HARDENING"])
+        result = subprocess.run([sys.executable, str(TASKCTL), "doctor", "ORCHESTRATION-HARDENING"], cwd=self.task_worktree(), text=True, capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("canonical orchestrator checkout", result.stderr)
 
@@ -69,7 +72,7 @@ class OrchestrationTests(unittest.TestCase):
             self.assertIn("unknown task: missing", result.stderr)
 
     def test_preview_is_canonical_root_only(self):
-        result = self.command([sys.executable, str(PREVIEW), str(ROOT)])
+        result = subprocess.run([sys.executable, str(PREVIEW), str(self.task_worktree())], cwd=self.task_worktree(), text=True, capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("canonical orchestrator checkout", result.stderr)
 
@@ -167,6 +170,21 @@ class OrchestrationTests(unittest.TestCase):
             self.assertFalse(worker.exists())
             self.assertFalse((root / ".ai/tasks/T.json").exists())
             self.assertTrue((root / ".ai/history/tasks/T.json").is_file())
+
+    def test_provider_health_failure_and_recovery(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / ".ai/bin").mkdir(parents=True)
+            shutil.copy2(TASKCTL, root / ".ai/bin/taskctl.py")
+            failed = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "provider-health", "codex", "--failure", "rate limit 429"], cwd=root, text=True, capture_output=True)
+            self.assertEqual(failed.returncode, 0, failed.stderr)
+            entry = json.loads((root / ".ai/provider-health.json").read_text())["providers"]["codex"]
+            self.assertEqual(entry["status"], "temporarily_unavailable")
+            self.assertIn("rate:", entry["reason"])
+            recovered = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "provider-health", "codex", "--success"], cwd=root, text=True, capture_output=True)
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual(json.loads(recovered.stdout)["status"], "healthy")
 
     def test_standalone_prerequisite_is_deterministic(self):
         source = TASKCTL.read_text(encoding="utf-8")
