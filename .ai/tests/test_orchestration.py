@@ -28,6 +28,22 @@ class OrchestrationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("canonical orchestrator checkout", result.stderr)
 
+    def test_real_repository_context_sync_exists(self):
+        # This is intentionally not a synthetic helper: integration must ship
+        # the real canonical helper required by doctor and CLI delegates.
+        helper = ROOT / ".ai/bin/context-sync.sh"
+        self.assertTrue(helper.is_file())
+        self.assertIn("CONTEXT_SYNCED", helper.read_text(encoding="utf-8"))
+
+    def test_real_canonical_doctor_with_context_sync(self):
+        listing = subprocess.check_output(["git", "worktree", "list", "--porcelain"], cwd=ROOT, text=True)
+        canonical = next((line[9:] for line in listing.splitlines() if line.startswith("worktree ")), None)
+        if canonical is None or Path(canonical).resolve() != ROOT.resolve():
+            self.skipTest("requires the canonical checkout runtime")
+        result = self.command([sys.executable, str(TASKCTL), "doctor", "ORCHESTRATION-HARDENING"])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("DOCTOR_OK", result.stdout)
+
     def test_doctor_healthy_and_write_probe_cleans_up(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -140,10 +156,17 @@ class OrchestrationTests(unittest.TestCase):
             (root / ".ai/tasks/T.json").write_text(json.dumps(task))
             (worker / ".ai").mkdir(exist_ok=True)
             (worker / ".ai/result.txt").write_text("ignored but declared")
+            (worker / ".ai/__pycache__").mkdir()
+            (worker / ".ai/__pycache__/taskctl.pyc").write_bytes(b"cache")
+            (worker / ".ai/ui-preview.log").write_text("runtime")
             result = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "checkpoint", "T"], cwd=root, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             names = subprocess.check_output(["git", "show", "--format=", "--name-only", "HEAD"], cwd=worker, text=True)
             self.assertIn(".ai/result.txt", names.splitlines())
+            (worker / ".ai/outside-ignored.txt").write_text("must be caught")
+            rejected = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "checkpoint", "T"], cwd=root, text=True, capture_output=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn(".ai/outside-ignored.txt", rejected.stderr)
 
     def test_archive_clean_tracked_orchestration_worktree(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -182,6 +205,7 @@ class OrchestrationTests(unittest.TestCase):
             entry = json.loads((root / ".ai/provider-health.json").read_text())["providers"]["codex"]
             self.assertEqual(entry["status"], "temporarily_unavailable")
             self.assertIn("rate:", entry["reason"])
+            self.assertIn("retry_after", entry)
             recovered = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "provider-health", "codex", "--success"], cwd=root, text=True, capture_output=True)
             self.assertEqual(recovered.returncode, 0, recovered.stderr)
             self.assertEqual(json.loads(recovered.stdout)["status"], "healthy")
@@ -204,6 +228,7 @@ class OrchestrationTests(unittest.TestCase):
         source = PREVIEW.read_text(encoding="utf-8")
         self.assertIn("127.0.0.1:8001", source)
         self.assertIn("0\\.0\\.0\\.0", source)
+        self.assertIn("\\[::\\]", source)
         self.assertIn("taskkill", source)
         self.assertIn("/web/", source)
 
