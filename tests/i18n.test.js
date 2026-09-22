@@ -151,5 +151,76 @@ assert(/for \(let i = 0; i < 44; i\+\+\)/.test(appSource) && /const size = 3\.5 
 assert(styleSource.includes('filter: blur(2px) saturate(1.1);'),
   'web/style.css must keep the DOM sprite scatter blur subtle for its smaller size');
 
+/*
+ * The scatter used to swap between two separate pools by page - portals on
+ * the way in and Fame Sweep, enchantment icons everywhere else. It is one
+ * mixed pool now, loaded together and shared by every page, without raising
+ * the on-screen scatter count above the ~44 it already was.
+ */
+assert(/async function spritePool\s*\(\s*\)\s*\{[\s\S]{0,200}?Promise\.all\(\[dungeonSprites\(\),\s*ambienceSprites\(\)\]\)/.test(appSource),
+  'web/app.js must load dungeon portals and enchantment icons together into one shared pool');
+assert(!/wanted === 'dungeon' \? await dungeonSprites\(\) : await ambienceSprites\(\)/.test(appSource),
+  'web/app.js must not keep the retired per-page dungeon/enchant pool switch');
+assert(!/\(page === 'fame' \|\| page === 'home'\) \? 'dungeon' : 'enchant'/.test(appSource),
+  'web/app.js must not keep the retired per-page pool selector');
+
+/*
+ * The module sky adopts the atlas' own star language - varied size, varied
+ * warmth, a live twinkle, and occasional shooting stars - at CSS cost rather
+ * than a second canvas engine. These checks guard the wiring: that the
+ * pieces exist, that they are scoped under .starfield so the same opacity
+ * rules that keep the field off on the way in keep this off there too, and
+ * that no new canvas was reintroduced to draw any of it.
+ */
+assert(/const TWINKLE_STARS = \d+;/.test(appSource) && /const SHOOTING_STARS = \d+;/.test(appSource)
+  && /const SHOOTING_CYCLE = \d+;/.test(appSource),
+  'web/app.js must define the module star-language star and shooting-star counts');
+assert(/function buildStarLanguage\(/.test(appSource),
+  'web/app.js must build the module star language into the shared starfield host');
+assert(/^\.starfield \.star-twinkle \{/m.test(styleSource) && /^\.starfield \.shooting-star \{/m.test(styleSource),
+  'web/style.css must scope the twinkle stars and shooting stars under .starfield, not as a standalone layer');
+assert(!/^\.star-twinkle \{/m.test(styleSource) && !/^\.shooting-star \{/m.test(styleSource),
+  'the twinkle stars and shooting stars must not be styled unscoped, or they would show outside the starfield gate');
+assert(/@keyframes star-twinkle/.test(styleSource) && /@keyframes shooting-star/.test(styleSource),
+  'web/style.css must animate the twinkle and the shooting-star streak');
+assert(styleSource.includes('.starfield .star-twinkle, .starfield .shooting-star')
+  || (/\.starfield \.star-twinkle[^}]*\{[^}]*animation: none/.test(styleSource)
+    && /\.starfield \.shooting-star[^}]*\{[^}]*animation: none/.test(styleSource)),
+  'the twinkle stars and shooting stars must stop animating under prefers-reduced-motion like the rest of the starfield');
+assert(!/getContext\(['"]2d['"]\)/.test(appSource),
+  'web/app.js must not reintroduce a canvas engine to draw the star language');
+assert(!/\.starfield canvas|\.ambience canvas/.test(styleSource),
+  'web/style.css must not paint any part of the star language on a canvas');
+
+/*
+ * The way in keeps showing the atlas' own star language through its planet
+ * embed rather than a duplicate full-page field - these are untouched by
+ * the module star-language work, so the planet and its single embed must
+ * still be exactly what they were.
+ */
+assert(!/\[data-page="home"\]\s*\.starfield/.test(styleSource),
+  'the module star language must not be turned on for the home page');
+
+/*
+ * Roughly double the atlas' own meteor pace: the atlas fires METEORS slots
+ * every (base + roll() * range) seconds on average, and the module streaks
+ * fire SHOOTING_STARS times every SHOOTING_CYCLE seconds. Read straight from
+ * both sources rather than hard-coded, so either one drifting out of the
+ * ~2x relationship the task called for fails here instead of silently.
+ */
+const atlasSource = fs.readFileSync(path.join(root, 'web', 'assets', 'atlas', 'index.html'), 'utf8');
+const meteorCount = Number((atlasSource.match(/const METEORS = (\d+);/) || [])[1]);
+const meteorEvery = atlasSource.match(/every:\s*(\d+)\s*\+\s*roll\(\)\s*\*\s*(\d+)/);
+assert(meteorCount && meteorEvery, 'could not read the atlas meteor cadence to compare against');
+const atlasHz = meteorCount / (Number(meteorEvery[1]) + Number(meteorEvery[2]) / 2);
+const moduleStars = Number((appSource.match(/const SHOOTING_STARS = (\d+);/) || [])[1]);
+const moduleCycle = Number((appSource.match(/const SHOOTING_CYCLE = (\d+);/) || [])[1]);
+assert(moduleStars && moduleCycle, 'could not read the module shooting-star cadence');
+const moduleHz = moduleStars / moduleCycle;
+const ratio = moduleHz / atlasHz;
+assert(ratio > 1.5 && ratio < 2.5,
+  `module shooting stars must fire at roughly 2x the atlas' own pace on the way in (measured ${ratio.toFixed(2)}x)`);
+
 console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
-  + 'animations-toggle removal, shared-starfield wiring, and module colour-wash/aurora removal checks pass.');
+  + 'animations-toggle removal, shared-starfield wiring, module colour-wash/aurora removal, unified '
+  + 'sprite pool, and module star-language checks pass.');
