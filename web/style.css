@@ -310,18 +310,22 @@ body[data-page="fame"] .starfield,
 body[data-page="theory"] .starfield,
 body[data-page="index"] .starfield,
 body[data-page="skins"] .starfield,
-body[data-page="news"] .starfield { opacity: .6; }
+body[data-page="news"] .starfield { opacity: .85; }
 .starfield::before {
   content: ''; position: absolute; inset: -20%;
   background-image:
-    radial-gradient(1.6px 1.6px at 8% 14%, #fff, transparent 60%),
-    radial-gradient(1.3px 1.3px at 32% 64%, #cfe6ff, transparent 60%),
-    radial-gradient(1.8px 1.8px at 58% 22%, #ffe9c2, transparent 60%),
-    radial-gradient(1.2px 1.2px at 74% 78%, #fff, transparent 60%),
-    radial-gradient(1.5px 1.5px at 91% 38%, #cfe6ff, transparent 60%),
-    radial-gradient(1.1px 1.1px at 20% 88%, #fff, transparent 60%),
-    radial-gradient(1.4px 1.4px at 46% 6%, #ffe9c2, transparent 60%),
-    radial-gradient(1.2px 1.2px at 66% 52%, #fff, transparent 60%);
+    radial-gradient(2.2px 2.2px at 8% 14%, #fff, transparent 60%),
+    radial-gradient(1.9px 1.9px at 32% 64%, #cfe6ff, transparent 60%),
+    radial-gradient(2.4px 2.4px at 58% 22%, #ffe9c2, transparent 60%),
+    radial-gradient(1.8px 1.8px at 74% 78%, #fff, transparent 60%),
+    radial-gradient(2.1px 2.1px at 91% 38%, #cfe6ff, transparent 60%),
+    radial-gradient(1.7px 1.7px at 20% 88%, #fff, transparent 60%),
+    radial-gradient(2px 2px at 46% 6%, #ffe9c2, transparent 60%),
+    radial-gradient(1.8px 1.8px at 66% 52%, #fff, transparent 60%),
+    radial-gradient(1.6px 1.6px at 12% 46%, #fff, transparent 60%),
+    radial-gradient(1.5px 1.5px at 40% 92%, #cfe6ff, transparent 60%),
+    radial-gradient(1.9px 1.9px at 82% 8%, #ffe9c2, transparent 60%),
+    radial-gradient(1.6px 1.6px at 96% 64%, #fff, transparent 60%);
   background-repeat: repeat;
   background-size: 340px 300px;
   animation: star-drift 240s ease-in-out infinite alternate;
