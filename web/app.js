@@ -2695,11 +2695,14 @@ function bind() {
 
 /*
  * Each realm lends its glow to the aurora and its name to the label; the
- * moving picture underneath is a scatter of the calculator's own sprites,
- * drifting as real DOM elements so a portal keeps its own animation instead
- * of freezing on a canvas's first frame. The aurora is the way in's own
- * richer identity - module and tool pages show the shared starfield instead,
- * plain but for that sprite scatter (see the per-page rules on .aurora).
+ * moving picture underneath is a scatter of the calculator's own sprites -
+ * portals and enchantment icons mixed together now, the same cast on every
+ * page - drifting as real DOM elements so a portal keeps its own animation
+ * instead of freezing on a canvas's first frame. The aurora is the way in's
+ * own richer identity - module and tool pages show the shared starfield
+ * instead, carrying its own twinkling stars and occasional shooting stars
+ * (see buildStarLanguage) behind that same sprite scatter, per-page rules on
+ * .aurora and .starfield both.
  *
  * No new artwork is bundled: it is built from the sprites already embedded.
  */
@@ -2723,13 +2726,15 @@ const REALMS = [
  */
 const PAGE_REALM = { home: 'The Nexus', fame: 'Haunted Cemetery' };
 
-async function usePool(page) {
-  // The Nexus is the room every portal opens into, so the way in gets them
-  // too — under its own colours rather than the cemetery's.
-  const wanted = (page === 'fame' || page === 'home') ? 'dungeon' : 'enchant';
-  if (!ambience.enabled || ambience.pool === wanted) return;
-  ambience.pool = wanted;
-  const loaded = wanted === 'dungeon' ? await dungeonSprites() : await ambienceSprites();
+/*
+ * Every page scatters the same mixed cast now - dungeon portals and
+ * enchantment icons together - rather than swapping one subject for the
+ * other at the door. Loaded once and kept; later calls are a no-op.
+ */
+async function usePool() {
+  if (!ambience.enabled || ambience.poolLoaded) return;
+  ambience.poolLoaded = true;
+  const loaded = await spritePool();
   if (loaded.length) {
     ambience.sprites = loaded;
     if (ambience.dom) repaintScatter(ambience.index);
@@ -2756,15 +2761,14 @@ const SCATTER_INTERVAL = 100 * 1000;
 
 const ambience = {
   sprites: [], blobs: [],
-  timer: null, scatterTimer: null,
+  timer: null, scatterTimer: null, poolLoaded: false,
   index: 0, enabled: true, started: false, resizeTimer: null, labelTimer: null
 };
 
-// The scatter uses the enchantment icons: they are the most varied and the
-// most recognisable of the sprites already in memory.
 /*
- * What drifts in the background. Enchantment icons on the calculator, dungeon
- * portals on Fame Sweep — the page's own subject, out of focus.
+ * What drifts in the background: dungeon portals and enchantment icons
+ * together, the same mixed cast on every page rather than swapping one
+ * subject for the other at the door.
  */
 function loadSprites(sources) {
   return Promise.all(sources.map(src => new Promise(resolve => {
@@ -2834,6 +2838,14 @@ function ambienceSprites() {
     image.onerror = () => resolve(null);
     image.src = src;
   }))).then(images => images.filter(Boolean));
+}
+
+// The unified scatter pool: portals and enchantment icons loaded together,
+// so every page - the way in included - reads as one shared cast instead of
+// two separate ones swapped in and out by page.
+async function spritePool() {
+  const [dungeon, enchant] = await Promise.all([dungeonSprites(), ambienceSprites()]);
+  return dungeon.concat(enchant);
 }
 
 // One drifting blob per realm colour. They never stop moving; only their
@@ -2950,6 +2962,61 @@ function handleAmbienceResize() {
   }, 250);
 }
 
+// A handful of stars that visibly breathe, sized and lit on the same
+// fourth-power curve the atlas draws its own field from - mostly faint, a
+// few bright enough to carry the sky.
+const TWINKLE_STARS = 16;
+// Six streaks on an eighteen-second round trip average one crossing every
+// three seconds - roughly double the atlas' own meteors on the way in, four
+// of them firing every eleven to thirty-seven seconds for about one every
+// six. See web/assets/atlas/index.html's STARS/METEORS block for that math;
+// it is not reread here, only matched.
+const SHOOTING_STARS = 6;
+const SHOOTING_CYCLE = 18;
+
+/*
+ * The module sky's own rich-star language, built once into the otherwise
+ * empty .starfield host so the opacity rules that gate that host - off for
+ * the way in, on for every tool page - gate this exactly the same way with
+ * no extra wiring. Real elements on fixed, seeded positions rather than a
+ * second canvas: the atlas can afford to repaint four hundred and sixty
+ * points of light every frame because it is the one thing on its page; a
+ * tool page cannot spend that budget on decoration behind the thing it is
+ * for.
+ */
+function buildStarLanguage(host) {
+  if (!host || host.dataset.stars) return;
+  host.dataset.stars = '1';
+  let value = 802241;
+  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
+  const pieces = [];
+  for (let i = 0; i < TWINKLE_STARS; i++) {
+    const lit = Math.pow(random(), 4);
+    const warm = random();
+    // Cold blue-white through to a dull orange, the way the atlas colours
+    // its own stars - never saturated enough to read as a pixel fault.
+    const color = warm < 0.62 ? '198,214,255' : warm < 0.86 ? '255,248,232' : '255,214,178';
+    pieces.push('<i class="star-twinkle" style="'
+      + `left:${(random() * 100).toFixed(2)}%;top:${(random() * 100).toFixed(2)}%;`
+      + `width:${(1.4 + lit * 2.2).toFixed(2)}px;height:${(1.4 + lit * 2.2).toFixed(2)}px;`
+      + `background:rgba(${color},${(0.35 + lit * 0.65).toFixed(2)});`
+      + `animation-duration:${(3.5 + random() * 4.5).toFixed(2)}s;`
+      + `animation-delay:-${(random() * 8).toFixed(2)}s"></i>`);
+  }
+  // Evenly spaced round-robin rather than independently random starts, so
+  // six streaks on one cycle length land one every CYCLE/6 seconds instead
+  // of clumping and leaving gaps.
+  for (let i = 0; i < SHOOTING_STARS; i++) {
+    const angle = 18 + random() * 20;
+    pieces.push('<i class="shooting-star" style="'
+      + `left:${(random() * 90).toFixed(2)}%;top:${(random() * 45).toFixed(2)}%;`
+      + `--a:${angle.toFixed(1)}deg;`
+      + `animation-duration:${SHOOTING_CYCLE}s;`
+      + `animation-delay:-${(i * (SHOOTING_CYCLE / SHOOTING_STARS)).toFixed(2)}s"></i>`);
+  }
+  host.insertAdjacentHTML('beforeend', pieces.join(''));
+}
+
 /*
  * The drifting realms behind the interface, always on.
  *
@@ -2967,12 +3034,12 @@ async function initAmbience() {
   ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
     ? ambience.pinned
     : Math.floor(Math.random() * REALMS.length);
-  // Whichever set the page already asked for. Routing happens before the data
-  // is read, so this runs second and must not undo the choice it made.
-  if (!ambience.pool) ambience.pool = 'enchant';
-  ambience.sprites = ambience.pool === 'dungeon'
-    ? await dungeonSprites()
-    : await ambienceSprites();
+  // Routing may have already asked for the pool with the enchant data not
+  // yet read, which loads only the portals - so this runs again here,
+  // unconditionally, to pick up the full mixed cast once the data is ready.
+  ambience.sprites = await spritePool();
+  ambience.poolLoaded = true;
+  buildStarLanguage(document.querySelector('.starfield'));
   startAmbience();
 }
 
@@ -4224,7 +4291,7 @@ async function openFamePage() {
     // Kept so the background can scatter the same portals the page shows.
     ambience.fameText = text;
     FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides);
-    usePool('fame');
+    usePool();
   } catch (error) {
     console.error(error);
     famePageReady = false;
@@ -4257,7 +4324,7 @@ function showPage(name) {
   }
   document.body.dataset.page = page;
   pinRealm(page);
-  usePool(page);
+  usePool();
   if (page === 'fame') openFamePage();
   // What's New reads its own index the first time it is opened, the same way
   // Fame Sweep does: it is a megabyte of pictures and nobody who came for the
