@@ -181,10 +181,11 @@ const RealmIndex = (function () {
   }
 
   /* The star, wherever it is drawn. */
-  const star = id => '<span class="ix-love' + (loved.has(id) ? ' is-on' : '')
-    + '" data-love="' + esc(id) + '" role="button" tabindex="-1"'
-    + ' title="' + (loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
-    + '">\u2605</span>';
+  const star = id => '<button type="button" class="ix-love' + (loved.has(id) ? ' is-on' : '')
+    + '" data-love="' + esc(id) + '" aria-label="' + esc(loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
+    + '" title="' + esc(loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
+    + '" aria-pressed="' + (loved.has(id) ? 'true' : 'false')
+    + '" tabindex="0">\u2605</button>';
 
   /* ---------------- reading it in ---------------- */
   async function load() {
@@ -1068,15 +1069,17 @@ const RealmIndex = (function () {
       : t(rows.total === 1 ? 'index.results.oneThing' : 'index.results.manyThings', { count: many });
     box.innerHTML = rows.map(one => {
       const difficulty = dungeonDifficultyOf(all.get(one[0]));
-      return '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
+      return '<div class="ix-row-item">'
+        + '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
         + '" data-open="' + esc(one[0]) + '">'
         + artCell(all.get(one[0]), 20)
         + '<b>' + esc(one[1]) + '</b>'
         + (difficulty ? '<small class="ix-difficulty" title="' + esc(t('index.difficulty.ratingTitle')) + '">☠ ' + difficulty + '/10</small>' : '')
         + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
         + (one[4] ? '<u class="ix-hidden" title="' + esc(t('index.hidden.title')) + '">' + esc(t('index.hidden.label')) + '</u>' : '')
+        + '</button>'
         + star(one[0])
-        + '</button>';
+        + '</div>';
     }).join('') || '<p class="ix-none">' + esc(t('index.results.none')) + '</p>';
     fitList(box);
   }
@@ -2327,6 +2330,7 @@ const RealmIndex = (function () {
        */
       const loves = event.target.closest('[data-love]');
       if (loves) {
+        event.stopPropagation();
         const id = loves.dataset.love;
         if (loved.has(id)) loved.delete(id); else loved.add(id);
         writeLoved();

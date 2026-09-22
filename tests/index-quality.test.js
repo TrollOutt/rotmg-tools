@@ -352,6 +352,53 @@ assert(new Set(snakePit.filmFor).size > 1,
   }
 }
 
+/*
+ * The favorite star.
+ *
+ * It was a span nested inside the row button once, with the hit area left to
+ * the glyph's own metrics and no toggle semantics. It is a real button again,
+ * a sibling of the row rather than a thing inside it, so a click on it can
+ * never also open the row.
+ */
+{
+  const pageSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'utf8');
+  const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
+
+  const starFn = pageSource.match(/const star = id =>[\s\S]{0,600}?<\/button>';/);
+  assert(starFn, 'the favorite star must be drawn by a star() helper');
+  assert(/<button type="button" class="ix-love/.test(starFn[0]),
+    'the favorite star must be a button element, not a span');
+  assert(/aria-label="/.test(starFn[0]) && /index\.favourite\./.test(starFn[0]),
+    'the favorite star must carry a localized aria-label');
+  assert(/title="/.test(starFn[0]),
+    'the favorite star must keep its native tooltip');
+  assert(/aria-pressed="/.test(starFn[0]),
+    'the favorite star must expose aria-pressed toggle semantics');
+  assert(/tabindex="0"/.test(starFn[0]),
+    'the favorite star must be reachable by keyboard');
+  assert(!/role="button"/.test(starFn[0]),
+    'the favorite star must not fake button semantics on a span');
+
+  assert(/<div class="ix-row-item">'[\s\S]{0,400}?<button type="button" class="ix-row[\s\S]{0,700}?<\/button>'\s*\+\s*star\(/.test(pageSource),
+    'the row button and the favorite button must be siblings inside .ix-row-item, never nested');
+
+  const loveHandler = pageSource.match(/closest\('\[data-love\]'\)[\s\S]{0,300}?writeLoved\(\);/);
+  assert(loveHandler, 'the favorite click handler must still toggle and persist');
+  assert(/event\.stopPropagation\(\);/.test(loveHandler[0]),
+    'a favorite click must not also open the row it sits beside');
+  assert(/if \(loved\.has\(id\)\) loved\.delete\(id\); else loved\.add\(id\);/.test(loveHandler[0]),
+    'the stored favorite set must keep its existing toggle semantics');
+
+  assert(/\.ix-love \{[^}]*width: 28px;[^}]*height: 28px;/.test(styleSource),
+    'the favorite star must own a fixed 28px hitbox, not the glyph metrics');
+  assert(/\.ix-row-item \{[^}]*display: flex;/.test(styleSource),
+    'the favorite star needs the .ix-row-item wrapper beside the row');
+  assert(/\.ix-love:focus-visible \{/.test(styleSource),
+    'the favorite star must show a visible focus indicator');
+  assert(/\.ix-card-head \.ix-love \{[^}]*width: 32px;[^}]*height: 32px;/.test(styleSource),
+    'the card header star keeps its larger 32px hitbox');
+}
+
 const i18nSource = fs.readFileSync(path.join(root, 'web', 'i18n.js'), 'utf8');
 assert(/const LOCALES = \['en'\]/.test(i18nSource),
   'the Index must run against the English-only locale catalogue');
