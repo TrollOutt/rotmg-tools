@@ -39,10 +39,63 @@ def git(*args):
 ROOT = Path(git("rev-parse", "--show-toplevel"))
 TASKS = ROOT / ".ai" / "tasks"
 TASKS.mkdir(parents=True, exist_ok=True)
+PROVIDER_HEALTH = ROOT / ".ai" / "provider-health.json"
+HEALTH_STATUSES = {"healthy", "temporarily_unavailable", "unknown"}
 
 
 def task_path(task_id):
     return TASKS / f"{task_id}.json"
+
+
+def load_provider_health():
+    if not PROVIDER_HEALTH.exists():
+        return {"providers": {}}
+    return load(PROVIDER_HEALTH)
+
+
+def save_provider_health(data):
+    with PROVIDER_HEALTH.open("w", encoding="utf-8", newline="\n") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+
+def classify_provider_failure(message):
+    text = message.lower()
+    for kind, terms in {
+        "usage": ("usage", "quota", "credit"),
+        "session": ("session", "authentication", "auth"),
+        "rate": ("rate", "429", "too many requests"),
+        "transport": ("transport", "timeout", "connection", "wsa"),
+    }.items():
+        if any(term in text for term in terms):
+            return kind
+    return "unknown"
+
+
+def cmd_provider_health(args):
+    data = load_provider_health()
+    providers = data.setdefault("providers", {})
+    if args.status or args.failure or args.success:
+        if not args.provider:
+            raise RuntimeError("provider-health updates require a provider")
+        if args.success:
+            status, reason = "healthy", "success"
+        elif args.failure:
+            kind = classify_provider_failure(args.failure)
+            status = "temporarily_unavailable" if kind != "unknown" else "unknown"
+            reason = f"{kind}: {args.failure}"
+        else:
+            status, reason = args.status, args.reason or "manual update"
+        providers[args.provider] = {
+            "status": status,
+            "reason": reason,
+            "timestamp": now(),
+        }
+        save_provider_health(data)
+    if args.provider:
+        print(json.dumps(providers.get(args.provider, {"status": "unknown", "reason": "unrecorded", "timestamp": None}), indent=2))
+    else:
+        print(json.dumps(data, indent=2))
 
 
 def normalize_scope(raw):
@@ -1200,6 +1253,14 @@ p.set_defaults(func=cmd_create)
 
 p = sub.add_parser("list")
 p.set_defaults(func=cmd_list)
+
+p = sub.add_parser("provider-health")
+p.add_argument("provider", nargs="?")
+p.add_argument("--status", choices=sorted(HEALTH_STATUSES))
+p.add_argument("--reason")
+p.add_argument("--failure")
+p.add_argument("--success", action="store_true")
+p.set_defaults(func=cmd_provider_health)
 
 p = sub.add_parser("show")
 p.add_argument("task_id")
