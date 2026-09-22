@@ -14,6 +14,8 @@ export function phase(d,time){return(d?.animation?.speed||0)*time/1000}
 export function composition(sprite,mask,dye,mode){if(mode===MODE.NONE||mask<=0)return sprite;return dye*mask}
 /* The exact packed texel for a frame-local point; null is transparent space. */
 export function frameTexel(rect,local){if(!rect||local.x<0||local.y<0||local.x>=rect.w||local.y>=rect.h)return null;return{x:rect.x+Math.floor(local.x),y:rect.y+Math.floor(local.y)}}
+/* Keep this in lockstep with the +vec2(2.) UV band below: it is source-pixel
+   padding, not a visual crop or a substitute for frame bounds. */
 export const OUTLINE_PIXELS=1;
 /* The Atlas outline is a clear pixel touching the silhouette by a side only. */
 export function isOutlinePixel(centre,left,right,above,below){return !centre&&Boolean(left||right||above||below)}
