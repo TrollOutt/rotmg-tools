@@ -2694,11 +2694,12 @@ function bind() {
  * ------------------------------------------------------------------ */
 
 /*
- * Each realm is one painting: a colour wash taken from the game's palette,
- * a scatter of the very sprites the calculator already carries, and a vignette.
- * Everything is blurred while it is drawn, so the browser stores a finished
- * bitmap and never has to filter anything again — changing realm is nothing
- * more than two opacities crossing, which the compositor does on the GPU.
+ * Each realm lends its glow to the aurora and its name to the label; the
+ * moving picture underneath is a scatter of the calculator's own sprites,
+ * drifting as real DOM elements so a portal keeps its own animation instead
+ * of freezing on a canvas's first frame. The aurora is the way in's own
+ * richer identity - module and tool pages show the shared starfield instead,
+ * plain but for that sprite scatter (see the per-page rules on .aurora).
  *
  * No new artwork is bundled: it is built from the sprites already embedded.
  */
@@ -2731,7 +2732,7 @@ async function usePool(page) {
   const loaded = wanted === 'dungeon' ? await dungeonSprites() : await ambienceSprites();
   if (loaded.length) {
     ambience.sprites = loaded;
-    if (ambience.layers && ambience.layers.length) repaintScatter(ambience.index);
+    if (ambience.dom) repaintScatter(ambience.index);
   }
 }
 
@@ -2739,7 +2740,7 @@ function pinRealm(page) {
   const wanted = PAGE_REALM[page];
   const index = wanted ? REALMS.findIndex(realm => realm.name === wanted) : -1;
   ambience.pinned = index >= 0 ? index : null;
-  if (!ambience.layers || !ambience.layers.length) return;
+  if (!ambience.dom) return;
   if (ambience.pinned !== null && ambience.index !== ambience.pinned) {
     ambience.index = ambience.pinned;
     weightAurora(ambience.index);
@@ -2754,9 +2755,9 @@ const REALM_INTERVAL = 32 * 1000;
 const SCATTER_INTERVAL = 100 * 1000;
 
 const ambience = {
-  layers: [], front: 0, sprites: [], blobs: [],
+  sprites: [], blobs: [],
   timer: null, scatterTimer: null,
-  index: 0, enabled: true, canBlur: true, started: false, resizeTimer: null, labelTimer: null
+  index: 0, enabled: true, started: false, resizeTimer: null, labelTimer: null
 };
 
 // The scatter uses the enchantment icons: they are the most varied and the
@@ -2835,63 +2836,6 @@ function ambienceSprites() {
   }))).then(images => images.filter(Boolean));
 }
 
-function paintRealm(canvas, realm, seed) {
-  const width = canvas.width, height = canvas.height;
-  const ctx = canvas.getContext('2d');
-  // A fixed seed per realm keeps a given realm looking like itself between
-  // repaints, instead of reshuffling on every resize.
-  let value = seed >>> 0;
-  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
-
-  ctx.clearRect(0, 0, width, height);
-  const sky = ctx.createLinearGradient(0, 0, width * 0.3, height);
-  sky.addColorStop(0, realm.sky[0]);
-  sky.addColorStop(1, realm.sky[1]);
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, width, height);
-
-  // A couple of broad light pools, so the wash is not flat.
-  ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 3; i++) {
-    const x = width * (0.15 + random() * 0.7);
-    const y = height * (0.1 + random() * 0.6);
-    const r = Math.min(width, height) * (0.3 + random() * 0.35);
-    const pool = ctx.createRadialGradient(x, y, 0, x, y, r);
-    pool.addColorStop(0, `${realm.glow}7a`);
-    pool.addColorStop(1, `${realm.glow}00`);
-    ctx.fillStyle = pool;
-    ctx.fillRect(0, 0, width, height);
-  }
-  ctx.globalCompositeOperation = 'source-over';
-
-  if (ambience.sprites.length) {
-    if (ambience.canBlur) ctx.filter = 'blur(3.5px)';
-    ctx.globalAlpha = 0.5;
-    const count = 34;
-    for (let i = 0; i < count; i++) {
-      const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
-      const size = Math.min(width, height) * (0.07 + random() * 0.16);
-      const x = random() * width - size / 2;
-      const y = random() * height - size / 2;
-      ctx.save();
-      ctx.translate(x + size / 2, y + size / 2);
-      ctx.rotate((random() - 0.5) * 0.7);
-      ctx.globalAlpha = 0.3 + random() * 0.4;
-      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
-      ctx.restore();
-    }
-    ctx.filter = 'none';
-    ctx.globalAlpha = 1;
-  }
-
-  // Darken the edges so the panels always sit on something quiet.
-  const vignette = ctx.createRadialGradient(width / 2, height * 0.35, 0, width / 2, height * 0.5, Math.max(width, height) * 0.75);
-  vignette.addColorStop(0, 'rgba(13,12,19,0)');
-  vignette.addColorStop(1, 'rgba(13,12,19,0.42)');
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, width, height);
-}
-
 // One drifting blob per realm colour. They never stop moving; only their
 // weights change, so the colour field is always somewhere between two realms
 // rather than sitting on one.
@@ -2937,14 +2881,16 @@ function showRealm(index, announce) {
 }
 
 // The sprite scatter is a genuine change of picture, so it cross-fades.
+// Small and dense rather than few and large - it reads as texture over the
+// shared starfield instead of a set of icons.
 function scatterDom(seed) {
   let value = seed >>> 0;
   const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
   const pieces = [];
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 44; i++) {
     const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
     if (!sprite || !sprite.src) continue;
-    const size = 7 + random() * 16;
+    const size = 3.5 + random() * 8;
     pieces.push(`<img src="${sprite.src}" alt="" style="`
       + `left:${(random() * 104 - 2).toFixed(2)}%;top:${(random() * 104 - 2).toFixed(2)}%;`
       + `width:${size.toFixed(2)}vmin;opacity:${(0.3 + random() * 0.45).toFixed(2)};`
@@ -2956,50 +2902,24 @@ function scatterDom(seed) {
 }
 
 function repaintScatter(index) {
-  if (ambience.pool === 'dungeon' && ambience.dom) {
-    ambience.dom.hidden = false;
-    for (const canvas of ambience.layers) canvas.classList.remove('on');
-    scatterDom((index + 1) * 2654435761);
-    return;
-  }
-  if (ambience.dom) { ambience.dom.hidden = true; ambience.dom.innerHTML = ''; }
-  const back = ambience.layers[1 - ambience.front];
-  paintRealm(back, REALMS[index % REALMS.length], (index + 1) * 2654435761);
-  back.classList.add('on', 'drift');
-  ambience.layers[ambience.front].classList.remove('on');
-  ambience.front = 1 - ambience.front;
+  if (!ambience.dom) return;
+  scatterDom((index + 1) * 2654435761);
 }
 
 function startAmbience() {
   const host = $('ambience');
-  // Half resolution: the whole thing is blurred, so nobody can tell, and it
-  // keeps the paint cheap on a laptop.
-  const width = Math.min(1280, Math.round(window.innerWidth * 0.6)) || 960;
-  const height = Math.min(800, Math.round(window.innerHeight * 0.6)) || 600;
   host.replaceChildren();
-  ambience.layers = [0, 1].map(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    host.append(canvas);
-    return canvas;
-  });
-  const probe = ambience.layers[0].getContext('2d');
-  ambience.canBlur = typeof probe.filter === 'string';
-  host.classList.toggle('css-blur', !ambience.canBlur);
   /*
-   * A layer of real elements beside the canvases.
-   *
-   * A canvas draws the first frame of an animated portal and nothing after, so
-   * the moving ones would sit still. These are ordinary images, blurred and
-   * drifting by stylesheet, and they animate because the browser animates them.
+   * Real elements rather than a canvas: a canvas draws the first frame of an
+   * animated portal and nothing after, so the moving ones would sit still.
+   * These are ordinary images, blurred and drifting by stylesheet, and they
+   * animate because the browser animates them.
    */
   ambience.dom = document.createElement('div');
   ambience.dom.className = 'ambience-dom';
   host.append(ambience.dom);
   buildAurora(host);
 
-  ambience.front = 1;
   repaintScatter(ambience.index);
   weightAurora(ambience.index % REALMS.length);
   showRealm(ambience.index, false);
@@ -3020,9 +2940,8 @@ function startAmbience() {
   }, SCATTER_INTERVAL);
 }
 
-// A canvas stretched by CSS distorts when the window changes shape.
-// object-fit keeps it honest while dragging; this repaints at the new size
-// once the dragging stops, so the resolution matches again.
+// The scatter and aurora reshuffle at the new size once the window settles,
+// rather than rebuilding on every intermediate frame of a drag.
 function handleAmbienceResize() {
   clearTimeout(ambience.resizeTimer);
   ambience.resizeTimer = setTimeout(() => {
@@ -4082,12 +4001,11 @@ function placeGlobe(box, at) {
 /*
  * The drifting realms are put on hold while the atlas has the page.
  *
- * Nothing of them can be seen behind a full-page map, and they are two
- * canvases being repainted and a row of sprites being animated - which is
- * work taken straight out of the frame budget of the thing you are actually
- * looking at. This is a hold rather than a setting: the switch's own state is
- * not touched, so putting the frame back brings them back exactly as they
- * were left.
+ * Nothing of them can be seen behind a full-page map, and they are a row of
+ * sprites and an aurora being animated - which is work taken straight out of
+ * the frame budget of the thing you are actually looking at. This is a hold
+ * rather than a setting: the switch's own state is not touched, so putting
+ * the frame back brings them back exactly as they were left.
  */
 let ambienceGoing = 0;
 function holdAmbience(hold) {
