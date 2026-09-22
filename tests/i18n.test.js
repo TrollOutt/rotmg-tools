@@ -80,8 +80,9 @@ assert.equal(first.api.canonicalSearch('Potion of Dexterity'), 'potion of dexter
  * The corner used to carry a visible "Animations on/off" switch. It is gone
  * now - the drifting background stays capable of animating and still
  * defers to prefers-reduced-motion, just with no user-facing control left
- * behind to rot: no button, no click wiring, no storage key, and nothing
- * in Theory Crafting still reaching for the element that used to hold it.
+ * behind to rot: no button, no click wiring, no storage key, nothing in
+ * Theory Crafting still reaching for the element that used to hold it, and
+ * nothing in the site benchmark still clicking it for an on/off comparison.
  */
 const homeSource = fs.readFileSync(path.join(root, 'web', 'index.html'), 'utf8');
 assert(!/ambienceToggle|ambience-toggle/.test(homeSource),
@@ -94,6 +95,9 @@ assert(!/ambienceToggle/.test(theorySource),
   'web/theorycraft.js must not query the removed animations-toggle element');
 assert(/prefers-reduced-motion/.test(theorySource),
   'web/theorycraft.js must still defer to prefers-reduced-motion');
+const benchSource = fs.readFileSync(path.join(root, 'tools', 'bench.js'), 'utf8');
+assert(!/ambienceToggle/.test(benchSource),
+  'tools/bench.js must not query or click the removed animations-toggle element');
 
 console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
   + 'and animations-toggle removal checks pass.');
