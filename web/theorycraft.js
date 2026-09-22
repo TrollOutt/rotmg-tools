@@ -3334,6 +3334,37 @@ const TINT = {
 
   /* ---------------- putting it on the screen ---------------- */
 
+  /*
+   * A class frame may be wider than its body.  The static portrait is a
+   * square window at that frame's leading edge, not a centred crop: the
+   * sheet's frame stride still includes the whole source-frame width.
+   */
+  function facePortrait(kind, sheet) {
+    const piece = kind && sheet && sheet.pics[kind.pic];
+    if (!piece) return null;
+    const stand = (piece.poses
+      && (piece.poses['3/0'] || piece.poses['0/0']) || [0])[0];
+    return {
+      x: piece.x + stand * piece.w,
+      y: piece.y,
+      bodyW: Math.min(piece.w, piece.h),
+      h: piece.h,
+      zoom: 42 / piece.h,
+      pad: 0
+    };
+  }
+
+  function faceStyle(portrait, sheet) {
+    if (!portrait || !sheet) return null;
+    const { x, y, bodyW, h, zoom, pad } = portrait;
+    return {
+      width: (bodyW * zoom) + 'px',
+      height: (h * zoom) + 'px',
+      backgroundSize: (sheet.wide * zoom) + 'px ' + (sheet.tall * zoom) + 'px',
+      backgroundPosition: (-(x + pad) * zoom) + 'px ' + (-y * zoom) + 'px'
+    };
+  }
+
   function paint() {
     const kind = el('tcClass');
     if (kind && kind.value !== build.klass) kind.value = build.klass;
@@ -3355,18 +3386,10 @@ const TINT = {
        * with no figure at all. It is on the one sheet now, cut to the shape
        * of the drawing rather than to the shape of the rectangle around it.
        */
-      const piece = kind && data.sheet && data.sheet.pics[kind.pic];
-      if (piece) {
-        const stand = (piece.poses
-          && (piece.poses['3/0'] || piece.poses['0/0']) || [0])[0];
-        const zoom = 42 / Math.max(piece.w, piece.h);
-        face.style.width = (piece.w * zoom) + 'px';
-        face.style.height = (piece.h * zoom) + 'px';
-        face.style.backgroundSize = (data.sheet.wide * zoom) + 'px '
-          + (data.sheet.tall * zoom) + 'px';
-        face.style.backgroundPosition =
-          (-(piece.x + stand * piece.w) * zoom) + 'px '
-          + (-piece.y * zoom) + 'px';
+      const portrait = facePortrait(kind, data.sheet);
+      const style = faceStyle(portrait, data.sheet);
+      if (style) {
+        Object.assign(face.style, style);
         face.hidden = false;
       } else { face.hidden = true; }
     }

@@ -1,10 +1,75 @@
 'use strict';
-const fs = require('fs'), path = require('path'), assert = require('assert/strict');
+const fs = require('fs'), path = require('path'), assert = require('assert/strict'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const raw = JSON.parse(fs.readFileSync(path.join(root, 'data/TheoryCraft/theorycraft.json'), 'utf8'));
 const harness = require('./theory-harness');
 const engine = require('../web/engine');
 const t = harness({}, raw, false);
+const portraitHelpers = (() => {
+  const file = path.join(root, 'web/theorycraft.js');
+  const marker = 'return { start, share, open, put };';
+  const script = fs.readFileSync(file, 'utf8').replace(marker,
+    'return { facePortrait, faceStyle };');
+  const context = { window: {}, module: { exports: {} }, console,
+    BuildProgression: require('../web/progression') };
+  vm.runInNewContext(script, context, { filename: file });
+  return context.module.exports;
+})();
+
+/*
+ * Static class portraits show the leading square of the standing frame.
+ * Wide source frames must retain their source stride while exposing only the
+ * body-width window; centring the crop would select different pixels.
+ */
+{
+  const checks = {
+    Archer: {
+      backgroundPosition: '-4410px -3260.25px',
+      backgroundSize: '5376px 3617.25px'
+    },
+    Assassin: {
+      backgroundPosition: '-1008px -3302.25px',
+      backgroundSize: '5376px 3617.25px'
+    },
+    Bard: {
+      backgroundPosition: '-2016px -3302.25px',
+      backgroundSize: '5376px 3617.25px'
+    }
+  };
+
+  for (const [name, expected] of Object.entries(checks)) {
+    const kind = raw.classes.find(one => one.name === name);
+    const portrait = portraitHelpers.facePortrait(kind, raw.sheet);
+    const style = portraitHelpers.faceStyle(portrait, raw.sheet);
+    assert(portrait, `${name} needs a static class portrait`);
+    assert.equal(style.width, '42px');
+    assert.equal(style.height, '42px');
+    assert.equal(style.backgroundPosition, expected.backgroundPosition);
+    assert.equal(style.backgroundSize, expected.backgroundSize);
+  }
+
+  for (const kind of raw.classes) {
+    const piece = raw.sheet.pics[kind.pic];
+    const portrait = portraitHelpers.facePortrait(kind, raw.sheet);
+    const style = portraitHelpers.faceStyle(portrait, raw.sheet);
+    const stand = (piece.poses['3/0'] || piece.poses['0/0'] || [0])[0];
+
+    assert(portrait, `${kind.name} needs a static class portrait`);
+    assert.equal(portrait.bodyW, Math.min(piece.w, piece.h),
+      `${kind.name} portrait window must be square`);
+    assert.equal(portrait.zoom, 42 / piece.h,
+      `${kind.name} portrait zoom must use source height`);
+    assert.equal(portrait.pad, 0,
+      `${kind.name} portrait must begin at the frame leading edge`);
+    assert.equal(portrait.x, piece.x + stand * piece.w,
+      `${kind.name} portrait must use the full frame stride`);
+    assert.equal(style.backgroundPosition,
+      (-(piece.x + stand * piece.w) * (42 / piece.h)) + 'px '
+      + (-piece.y * (42 / piece.h)) + 'px',
+      `${kind.name} portrait must not apply a centred horizontal offset`);
+  }
+}
+
 for (const klass of raw.classes) {
   t.use(t.fresh(klass.name));
   const names = new Set(t.itemsFor('ring', klass.name).map(r => r.name));
