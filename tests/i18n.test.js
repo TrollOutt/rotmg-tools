@@ -99,5 +99,32 @@ const benchSource = fs.readFileSync(path.join(root, 'tools', 'bench.js'), 'utf8'
 assert(!/ambienceToggle/.test(benchSource),
   'tools/bench.js must not query or click the removed animations-toggle element');
 
+/*
+ * The starfield: one shared sky for the tool pages, and the planet kept out
+ * of it. These are static checks rather than a rendered page, so what they
+ * guard is the wiring - that the sky is named once, sits behind the realm
+ * wash instead of on top of it, and is never turned on for the way in - not
+ * how the gradient actually looks.
+ */
+const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
+assert.equal((homeSource.match(/class="starfield"/g) || []).length, 1,
+  'web/index.html must define exactly one shared starfield layer');
+assert(homeSource.indexOf('class="starfield"') < homeSource.indexOf('id="ambience"'),
+  'the starfield must sit before .ambience in the document so the realm wash paints over it');
+assert(/^\.starfield \{/m.test(styleSource), 'web/style.css must style the shared starfield layer');
+for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
+  assert(styleSource.includes(`body[data-page="${page}"] .starfield`),
+    `web/style.css must show the starfield on the ${page} tool page`);
+}
+assert(!/\[data-page="home"\]\s*\.starfield|\.starfield[^{]*:not\(\[data-page="home"\]\)/.test(styleSource),
+  'the starfield must not be enabled for the home page, by name or by a not() default-on selector');
+assert(styleSource.includes('.starfield { transition: none; }') && styleSource.includes('.starfield::before { animation: none; }'),
+  'the starfield must stop drifting under prefers-reduced-motion like the rest of the ambience');
+const globeMarkup = homeSource.match(/id="globeBox"/g) || [];
+assert.equal(globeMarkup.length, 1, 'the atlas planet embed must appear exactly once');
+const pageHomeSpan = homeSource.slice(homeSource.indexOf('id="pageHome"'), homeSource.indexOf('id="pageSkins"'));
+assert(pageHomeSpan.includes('id="globeBox"'),
+  'the planet embed must live inside #pageHome, not a tool page');
+
 console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
-  + 'and animations-toggle removal checks pass.');
+  + 'animations-toggle removal, and shared-starfield wiring checks pass.');

@@ -218,7 +218,11 @@ img { image-rendering: pixelated; }
   transition: opacity 4s ease-in-out;
   will-change: opacity, transform;
 }
-.ambience canvas.on { opacity: 1; }
+/* Only the tool pages paint a realm onto canvas at all (the way in and Fame
+   Sweep drift real portal images instead, see .ambience-dom), so easing this
+   back is felt only there - and it is what lets the shared starfield under it
+   read as sky rather than a sliver at the edges. */
+.ambience canvas.on { opacity: .68; }
 /* A slow drift keeps the sprite layer alive without drawing attention. */
 .ambience canvas.drift { animation: drift 46s ease-in-out infinite alternate; }
 @keyframes drift {
@@ -281,6 +285,55 @@ img { image-rendering: pixelated; }
     linear-gradient(180deg, rgba(13, 12, 19, 0) 0%, rgba(13, 12, 19, .3) 100%);
 }
 
+/*
+ * The starfield: one shared sky for every tool page.
+ *
+ * The atlas paints its stars on a canvas because it is a real place a camera
+ * moves through. A tool page never moves through anything, so the same look
+ * is a tiled radial-gradient rather than a second canvas: no script, one
+ * image the browser paints once and then only ever slides.
+ *
+ * It sits behind .ambience in the document, so the realm wash and the
+ * drifting portals lie over it rather than needing a z-index to say so.
+ */
+.starfield {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden; opacity: 0; pointer-events: none;
+  transition: opacity 1.2s ease-in-out;
+}
+/* The way in keeps its own realm and its own planet; a second sky behind
+   them would be a second place, not one, so this only shows once you have
+   left it for a tool. Named rather than :not([data-page="home"]) so the
+   default - before script has set the attribute at all - stays off. */
+body[data-page="enchant"] .starfield,
+body[data-page="fame"] .starfield,
+body[data-page="theory"] .starfield,
+body[data-page="index"] .starfield,
+body[data-page="skins"] .starfield,
+body[data-page="news"] .starfield { opacity: .6; }
+.starfield::before {
+  content: ''; position: absolute; inset: -20%;
+  background-image:
+    radial-gradient(1.6px 1.6px at 8% 14%, #fff, transparent 60%),
+    radial-gradient(1.3px 1.3px at 32% 64%, #cfe6ff, transparent 60%),
+    radial-gradient(1.8px 1.8px at 58% 22%, #ffe9c2, transparent 60%),
+    radial-gradient(1.2px 1.2px at 74% 78%, #fff, transparent 60%),
+    radial-gradient(1.5px 1.5px at 91% 38%, #cfe6ff, transparent 60%),
+    radial-gradient(1.1px 1.1px at 20% 88%, #fff, transparent 60%),
+    radial-gradient(1.4px 1.4px at 46% 6%, #ffe9c2, transparent 60%),
+    radial-gradient(1.2px 1.2px at 66% 52%, #fff, transparent 60%);
+  background-repeat: repeat;
+  background-size: 340px 300px;
+  animation: star-drift 240s ease-in-out infinite alternate;
+  will-change: transform;
+}
+/* A translate rather than a repaint: the same tile, nudged, so the sky is
+   never quite still without ever asking the browser to redraw it. */
+@keyframes star-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-3%, 2%, 0); }
+}
+
 .realm-name {
   position: fixed; right: 16px; bottom: 12px; z-index: 1;
   font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase;
@@ -293,6 +346,8 @@ img { image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) {
   .ambience canvas, .aurora span { transition: none; animation: none !important; }
   .realm-name { transition: none; }
+  .starfield { transition: none; }
+  .starfield::before { animation: none; }
 }
 
 .app { position: relative; z-index: 1; max-width: 1520px; margin: 0 auto; padding: 24px clamp(12px, 2vw, 28px) 60px; }
@@ -2105,7 +2160,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 .ambience-dom { position: absolute; inset: 0; overflow: hidden; }
 .ambience-dom img {
   position: absolute; image-rendering: pixelated;
-  filter: blur(4px) saturate(1.15);
+  filter: blur(3px) saturate(1.1);
   animation-name: ambience-drift;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
