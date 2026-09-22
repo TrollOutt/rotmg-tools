@@ -2977,10 +2977,11 @@ function handleAmbienceResize() {
   }, 250);
 }
 
-// A handful of stars that visibly breathe, sized and lit on the same
-// fourth-power curve the atlas draws its own field from - mostly faint, a
-// few bright enough to carry the sky.
-const TWINKLE_STARS = 16;
+// The Atlas paints 460 fixed stars: its fourth-power brightness curve leaves
+// most of them close to the threshold and lets the occasional bright point
+// carry the field.  Keep the same number and seed here, but paint them once
+// into the module host rather than spending a frame loop on page decoration.
+const MODULE_STARS = 460;
 // Six streaks on an eighteen-second round trip average one crossing every
 // three seconds - roughly double the atlas' own meteors on the way in, four
 // of them firing every eleven to thirty-seven seconds for about one every
@@ -2993,31 +2994,55 @@ const SHOOTING_CYCLE = 18;
  * The module sky's own rich-star language, built once into the otherwise
  * empty .starfield host so the opacity rules that gate that host - off for
  * the way in, on for every tool page - gate this exactly the same way with
- * no extra wiring. Real elements on fixed, seeded positions rather than a
- * second canvas: the atlas can afford to repaint four hundred and sixty
- * points of light every frame because it is the one thing on its page; a
- * tool page cannot spend that budget on decoration behind the thing it is
- * for.
+ * no extra wiring. The normal field is a single static, DPR-aware canvas;
+ * only the existing occasional meteors still animate as DOM elements.
  */
 function buildStarLanguage(host) {
   if (!host || host.dataset.stars) return;
   host.dataset.stars = '1';
-  let value = 802241;
-  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
-  const pieces = [];
-  for (let i = 0; i < TWINKLE_STARS; i++) {
+  let value = 987654321;
+  const random = () => ((value = (Math.imul(value, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const stars = [];
+  for (let i = 0; i < MODULE_STARS; i++) {
     const lit = Math.pow(random(), 4);
-    const warm = random();
-    // Cold blue-white through to a dull orange, the way the atlas colours
-    // its own stars - never saturated enough to read as a pixel fault.
-    const color = warm < 0.62 ? '198,214,255' : warm < 0.86 ? '255,248,232' : '255,214,178';
-    pieces.push('<i class="star-twinkle" style="'
-      + `left:${(random() * 100).toFixed(2)}%;top:${(random() * 100).toFixed(2)}%;`
-      + `width:${(1.4 + lit * 2.2).toFixed(2)}px;height:${(1.4 + lit * 2.2).toFixed(2)}px;`
-      + `background:rgba(${color},${(0.35 + lit * 0.65).toFixed(2)});`
-      + `animation-duration:${(3.5 + random() * 4.5).toFixed(2)}s;`
-      + `animation-delay:-${(random() * 8).toFixed(2)}s"></i>`);
+    stars.push({
+      x: random(), y: random(),
+      lit: 0.16 + lit * 0.84,
+      size: 0.5 + lit * 1.5,
+      warm: random()
+    });
+    // Advance through the Atlas' live-twinkle fields too, so every later
+    // point keeps the same fixed-seed position and colour as its sky.
+    random();
+    random();
   }
+  const canvas = document.createElement('canvas');
+  canvas.className = 'module-star-canvas';
+  host.appendChild(canvas);
+  const paintStars = () => {
+    const box = canvas.getBoundingClientRect();
+    const width = Math.round(box.width), height = Math.round(box.height);
+    if (!width || !height) return;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    for (const star of stars) {
+      const ink = star.warm < 0.62 ? '198, 214, 255'
+        : star.warm < 0.86 ? '255, 248, 232' : '255, 214, 178';
+      ctx.fillStyle = 'rgba(' + ink + ',' + star.lit.toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(star.x * width, star.y * height, star.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+  paintStars();
+  // Resize is the only reason the normal field is painted again; this also
+  // catches display-DPR changes that browsers report with a resize.
+  window.addEventListener('resize', paintStars);
+  const pieces = [];
   // Evenly spaced round-robin rather than independently random starts, so
   // six streaks on one cycle length land one every CYCLE/6 seconds instead
   // of clumping and leaving gaps.
