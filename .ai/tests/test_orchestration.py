@@ -35,6 +35,52 @@ class OrchestrationTests(unittest.TestCase):
         self.assertTrue(helper.is_file())
         self.assertIn("CONTEXT_SYNCED", helper.read_text(encoding="utf-8"))
 
+    def test_context_sync_keeps_narrow_scope_clean_and_doctor_catches_ignored_write(self):
+        """Canonical mutable state must not become a worker's scope violation."""
+        git_executable = Path(shutil.which("git")).resolve()
+        git_bash = git_executable.parents[1] / "usr/bin/bash.exe"
+        shell = str(git_bash) if git_bash.is_file() else shutil.which("bash")
+        if not shell:
+            self.skipTest("context-sync requires bash")
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "branch", "-M", "orchestrator/baseline"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "t"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "t@t"], cwd=root, check=True)
+            (root / ".ai/bin").mkdir(parents=True)
+            (root / ".ai/tasks").mkdir(parents=True)
+            shutil.copy2(TASKCTL, root / ".ai/bin/taskctl.py")
+            shutil.copy2(ROOT / ".ai/bin/context-sync.sh", root / ".ai/bin/context-sync.sh")
+            shutil.copy2(PREVIEW, root / ".ai/bin/preview.py")
+            (root / ".ai/STATE.md").write_text("canonical state\n")
+            (root / "AGENTS.md").write_text("agents\n")
+            (root / "CLAUDE.md").write_text("claude\n")
+            (root / "package.json").write_text("{}")
+            (root / "tests").mkdir()
+            (root / "tests/standalone.test.js").write_text("")
+            (root / ".gitignore").write_text("/.ai/tasks/\n/ignored-outside.txt\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            worker = root / "worker"
+            subprocess.run(["git", "worktree", "add", "-q", "-b", "worker", str(worker)], cwd=root, check=True)
+            task = {"id": "T", "mode": "write", "status": "ready", "worktree": "worker", "branch": "worker", "base": {"commit": head}, "write_scope": ["product.txt"]}
+            (root / ".ai/tasks/T.json").write_text(json.dumps(task))
+            # This is deliberately newer than the worker's tracked STATE.md.
+            (root / ".ai/STATE.md").write_text("new canonical state\n")
+
+            synced = subprocess.run([shell, str(root / ".ai/bin/context-sync.sh"), "T"], cwd=root, text=True, capture_output=True)
+            self.assertEqual(synced.returncode, 0, synced.stdout + synced.stderr)
+            self.assertEqual(subprocess.check_output(["git", "status", "--porcelain"], cwd=worker, text=True), "")
+            healthy = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "doctor", "T"], cwd=root, text=True, capture_output=True)
+            self.assertEqual(healthy.returncode, 0, healthy.stderr)
+
+            (worker / "ignored-outside.txt").write_text("must still be caught\n")
+            rejected = subprocess.run([sys.executable, str(root / ".ai/bin/taskctl.py"), "doctor", "T"], cwd=root, text=True, capture_output=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("ignored-outside.txt", rejected.stderr)
+
     def test_real_canonical_doctor_with_context_sync(self):
         listing = subprocess.check_output(["git", "worktree", "list", "--porcelain"], cwd=ROOT, text=True)
         canonical = next((line[9:] for line in listing.splitlines() if line.startswith("worktree ")), None)
