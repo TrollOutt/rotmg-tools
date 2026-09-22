@@ -7,7 +7,7 @@ import os
 import tempfile
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path, PurePosixPath
 
 STATUSES = {
@@ -86,11 +86,16 @@ def cmd_provider_health(args):
             reason = f"{kind}: {args.failure}"
         else:
             status, reason = args.status, args.reason or "manual update"
-        providers[args.provider] = {
+        entry = {
             "status": status,
             "reason": reason,
             "timestamp": now(),
         }
+        if status == "temporarily_unavailable":
+            entry["retry_after"] = (
+                datetime.now(timezone.utc) + timedelta(minutes=5)
+            ).isoformat(timespec="seconds")
+        providers[args.provider] = entry
         save_provider_health(data)
     if args.provider:
         print(json.dumps(providers.get(args.provider, {"status": "unknown", "reason": "unrecorded", "timestamp": None}), indent=2))
@@ -366,10 +371,17 @@ def worktree_for(data):
     if not wt.exists():
         raise RuntimeError(f"worktree does not exist: {worktree}")
 
-    actual = subprocess.check_output(
+    branch_proc = subprocess.run(
         ["git", "-C", str(wt), "symbolic-ref", "--short", "-q", "HEAD"],
         text=True,
-    ).strip()
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+
+    if branch_proc.returncode:
+        raise RuntimeError("worktree is detached; attach a task branch first")
+
+    actual = branch_proc.stdout.strip()
 
     if actual != branch:
         raise RuntimeError(
@@ -402,11 +414,30 @@ def changed_paths(data):
         ]
     ).decode("utf-8").split("\0")
 
-    return sorted({
+    ignored = subprocess.check_output(
+        [
+            "git", "-C", str(wt),
+            "ls-files", "--others", "--ignored", "--exclude-standard", "-z",
+        ]
+    ).decode("utf-8").split("\0")
+
+    paths = {
         x.replace("\\", "/")
-        for x in tracked + untracked
+        for x in tracked + untracked + ignored
         if x
-    })
+    }
+    return sorted(x for x in paths if not orchestration_runtime_path(x))
+
+
+def orchestration_runtime_path(path):
+    """Ignore only ephemeral orchestrator state, never arbitrary ignored files."""
+    if path.startswith(".ai/tasks/") or path.startswith(".ai/reviews/"):
+        return True
+    if "/__pycache__/" in f"/{path}" and path.endswith(".pyc"):
+        return True
+    if path.startswith(".ai/cache/"):
+        return True
+    return path in {".ai/ui-preview.pid", ".ai/ui-preview.log"}
 
 
 def assert_task_scope(data):
