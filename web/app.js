@@ -1546,8 +1546,14 @@ function scheduleCalculation() {
 }
 
 function renderTiers(config) {
-  const target = state.data.byName.get(config.desired);
-  const tiered = Boolean(target && target.tags.has('TIERED'));
+  // One tier selection applies to every tiered enchantment still wanted.
+  // Looking only at the first target hid this constraint whenever a later
+  // wanted enchantment was tiered.
+  const goals = [config.desired, ...config.goals].filter(Boolean);
+  const tiered = goals.some(name => {
+    const target = state.data.byName.get(name);
+    return Boolean(target && target.tags.has('TIERED'));
+  });
   $('tiers').hidden = !tiered;
   $('tiers').disabled = !tiered;
 }
@@ -2056,10 +2062,16 @@ function enableKind(kind) {
   applyFilterChange();
 }
 
+function blacklistedArtifacts() {
+  if (!state.artifactBlacklist) state.artifactBlacklist = new Set();
+  return state.artifactBlacklist;
+}
+
 function allowedArtifacts() {
+  const blocked = blacklistedArtifacts();
   return state.data.artifacts.filter(artifact => {
     const kind = artifactKind(artifact);
-    return kind === 'none' || state.filters[kind];
+    return kind === 'none' || (state.filters[kind] && !blocked.has(artifact.name));
   });
 }
 
@@ -2071,11 +2083,19 @@ function artifactFilterHtml() {
     const kind = artifactKind(artifact);
     if (kind !== 'none') counts[kind]++;
   }
+  const blocked = [...blacklistedArtifacts()].sort((a, b) => a.localeCompare(b));
+
   return `<div class="filter-chips" role="group" aria-label="Which artifacts you are willing to use">
     <span class="filter-caption">Artifacts</span>
     ${Object.keys(KIND_LABEL).map(kind => `
       <button type="button" class="filter-chip${state.filters[kind] ? ' on' : ''}" data-kind="${kind}"
         aria-pressed="${state.filters[kind]}">${KIND_LABEL[kind]} <b>${counts[kind]}</b></button>`).join('')}
+    ${blocked.length ? `
+      <span class="filter-caption">Unavailable</span>
+      ${blocked.map(name => `
+        <button type="button" class="filter-chip" data-artifact-restore="${html(name)}"
+          title="Make this artifact available again">↺ ${html(name)}</button>`).join('')}
+    ` : ''}
   </div>`;
 }
 
@@ -2162,7 +2182,7 @@ function renderSummary(rows, config) {
   if (multi) {
     figures = [
       figure(rolls, `random slot${rolls === 1 ? '' : 's'} per reroll`, `${config.slots} total, ${config.locks.length} locked`),
-      figure(goals.length, 'wanted, locked as they land'),
+      figure(goals.length, 'wanted, lock or reroll by outcome'),
       figure(`×${Math.pow(2, config.locks.length)}`, 'dust per reroll', 'Doubles with every lock')
     ].join('');
   } else {
@@ -2336,62 +2356,127 @@ async function renderBuildPlan(config) {
     return;
   }
 
-  const together = EnchantEngine.planSimultaneous(state.data, config, goals, { artifacts });
   const dust = amount => `${dustIcon(config.dust)}${count(amount)}`;
 
   const steps = plan.path.map((step, index) => {
-    const last = index === plan.path.length - 1;
     const icon = artifactIcon(step.artifact.name);
+    const hasDirectHunt = step.hunt && step.hunt.length;
+    const huntNames = hasDirectHunt ? step.hunt : (step.likelyGain || []);
 
-    // What to do when the reroll lands something. Phrased as the instruction it
-    // is, rather than as a probability the reader has to interpret.
-    const outcome = step.likelyGain && step.likelyGain.length
-      ? `<p class="plan-then"><b>When ${step.likelyGain.map(name => html(name)).join(' + ')} turns up</b> — the most likely useful result, ${percent(step.likelyChance)} of rerolls — lock it${last ? ' and you are done.' : ` and move to step ${index + 2}.`}</p>`
-      : '';
+    const tieredHunt = huntNames.some(name => {
+      const members = EnchantEngine.membersOf(state.data, name);
+      return members.some(member => {
+        const mod = state.data.byName.get(member);
+        return Boolean(mod && mod.tags.has('TIERED'));
+      });
+    });
 
-    const decline = step.declined.length
-      ? `<p class="plan-then warn"><b>Do not lock ${step.declined.map(entry => html(entry.name)).join(' or ')}</b> if it comes up alone here (${step.declined.map(entry => percent(entry.chance)).join(', ')} of rerolls). Locking it would double every reroll of the harder hunt for less than it saves. Throw it back and reroll.</p>`
-      : '';
+    const tierLabel = [...config.tiers]
+      .sort((a, b) => a - b)
+      .map(tier => ['I', 'II', 'III', 'IV'][tier - 1])
+      .join(', ');
 
-    const partial = step.throwsBack
-      ? '<p class="plan-then">Some combined results are worth locking only in part — keep what the step is hunting, throw the rest back.</p>'
-      : '';
+    const tierHint = tieredHunt ? `<small>accepted tier${config.tiers.size === 1 ? '' : 's'} ${tierLabel}</small>` : '';
+
+    const sameDustArtifact = step.artifactCharge > 0
+      && step.artifactDustType === config.dust;
+    const primaryAttempt = step.perReroll
+      + (sameDustArtifact ? step.artifactCharge : 0);
+
+    // Every attempt at this step costs the same and leaves it with the same
+    // chance, so the time spent here is geometric: what this step alone is
+    // expected to cost, before the next one starts.
+    const stepRerolls = 100 / step.progressChance;
+    const stepDust = primaryAttempt * stepRerolls;
+
+    // The figure is always the primary dust. An artifact paid in the same dust
+    // is folded into it; one paid in another dust is shown beside it, and
+    // plainly not counted.
+    let artifactCost = '';
+    if (step.artifactCharge > 0) {
+      artifactCost = sameDustArtifact
+        ? `<span class="plan-side">(${count(step.perReroll)} reroll + ${count(step.artifactCharge)} artifact)</span>`
+        : `<span class="plan-side">+ ${dustIcon(step.artifactDustType)}${count(step.artifactCharge)} ${html(step.artifactDustType)} artifact, not counted</span>`;
+    }
+
+    // Combined wanted-enchantment outcomes are handled by the planner but not
+    // listed here: the useful player instruction is what to do when one wanted
+    // enchantment appears by itself.
+    const simpleDecisions = (step.decisions || [])
+      .filter(decision => decision.rolled.length === 1);
+
+    // What you keep carries its sprite, so it is recognised on the item the
+    // moment it lands; what you throw back stays plain text.
+    const decisionRow = (decision, reroll) => {
+      const name = decision.rolled[0];
+      const mod = !reroll && state.data.byName.get(name);
+      return `
+        <div class="plan-action-row">
+          <span class="plan-action-name">${mod ? enchantIconHtml(mod, 'inline-icon') : ''}${html(name)}${reroll ? '<i> alone</i>' : ''}</span>
+          <span class="plan-action-chance">${percent(decision.chance)}</span>
+        </div>`;
+    };
+
+    const lockDecisions = simpleDecisions.filter(decision => decision.action === 'lock');
+    const rerollDecisions = simpleDecisions.filter(decision => decision.action === 'reroll');
+    const lockFinishes = step.locked.length + 1 >= goals.length;
+
+    const policy = `
+      <div class="plan-policy">
+        <section class="plan-policy-group lock">
+          <h4><span aria-hidden="true">✓</span> ${lockFinishes ? 'Lock &amp; finish' : 'Lock &amp; continue'}${tierHint}</h4>
+          ${lockDecisions.length
+            ? lockDecisions.map(decision => decisionRow(decision, false)).join('')
+            : '<div class="plan-action-empty">No single enchantment to lock here</div>'}
+        </section>
+
+        <section class="plan-policy-group reroll">
+          <h4><span aria-hidden="true">↻</span> Reroll</h4>
+          ${rerollDecisions.map(decision => decisionRow(decision, true)).join('')}
+          <div class="plan-action-row fallback">
+            <span class="plan-action-name">Anything else</span>
+          </div>
+        </section>
+      </div>`;
 
     return `
       <li>
+        <span class="plan-step">${index + 1}</span>
+
         <div class="plan-head">
-          <span class="plan-step">${index + 1}</span>
           <div class="plan-goal">
-            <b>Roll for ${step.pending.map(name => html(name)).join(' or ')}</b>
-            <small>${step.locked.length ? `${step.locked.map(name => html(name)).join(' + ')} locked by now` : 'nothing locked yet'}</small>
+            <small>Roll with</small>
+            <div class="plan-target">
+              <img src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+              <span>${html(step.artifact.name)}</span>
+              ${artifactKind(step.artifact) !== 'none'
+                ? `<button type="button" class="plan-dismiss" data-blacklist-artifact="${html(step.artifact.name)}">I don't have this</button>`
+                : ''}
+            </div>
+          </div>
+          <div class="plan-finish">
+            <b>${dust(stepDust)}</b>
+            <small>expected ${html(config.dust)} for this step · ~${count(stepRerolls)} reroll${Math.round(stepRerolls) === 1 ? '' : 's'}</small>
+            <small class="plan-left">${count(step.expectedDustFromHere)} left until the end</small>
           </div>
         </div>
-        <div class="plan-use">
-          <img src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
-          <span>Use <b>${html(step.artifact.name)}</b></span>
+
+        <div class="plan-meta">
+          <span><b>${percent(step.progressChance)}</b> chance of useful progress</span>
+          <span><b>${dust(primaryAttempt)}</b> fixed per reroll ${artifactCost}</span>
         </div>
-        <dl class="plan-figures">
-          <div><dt>Useful reroll</dt><dd>${percent(step.progressChance)}</dd></div>
-          <div><dt>Each reroll</dt><dd>${dust(step.perReroll)}</dd></div>
-          <div><dt>Left to finish</dt><dd>${dust(step.expectedDustFromHere)}</dd></div>
-        </dl>
-        ${outcome}${decline}${partial}
+
+        ${policy}
       </li>`;
   }).join('');
 
-  // Two honest ways to read the comparison: one at a time, or hold out for the
-  // lot in a single reroll. The second is almost always worse, and saying by
-  // how much is more useful than not mentioning it.
-  const comparison = together
-    ? `<p class="plan-compare">Holding out for all ${goals.length} in a single reroll instead: <b>${dust(together.dust)}</b> at ${percent(together.odds)} per reroll — ${together.dust > plan.dust ? `${count(together.dust - plan.dust)} more` : `${count(plan.dust - together.dust)} less`}.</p>`
-    : '';
 
   output.innerHTML = `
     <div class="plan-total">
       <span class="figure strong"><b>${dust(plan.dust)}</b><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></span>
       <span class="figure"><b>${count(plan.rerolls)}</b><small>rerolls in total</small></span>
     </div>
-    ${comparison}
+
     <ol class="plan-steps">${steps}</ol>`;
 }
 
@@ -2714,7 +2799,25 @@ function bind() {
     const row = event.target.closest('tr.off-group');
     if (row) enableKind(row.dataset.kind);
   });
+  $('buildPlan').addEventListener('click', event => {
+    const button = event.target.closest('[data-blacklist-artifact]');
+    if (!button) return;
+
+    const name = button.dataset.blacklistArtifact;
+    if (!name) return;
+
+    blacklistedArtifacts().add(name);
+    refresh();
+  });
+
   $('summary').addEventListener('click', event => {
+    const restore = event.target.closest('[data-artifact-restore]');
+    if (restore) {
+      blacklistedArtifacts().delete(restore.dataset.artifactRestore);
+      refresh();
+      return;
+    }
+
     const chip = event.target.closest('[data-kind]');
     if (!chip) return;
     toggleKind(chip.dataset.kind);
@@ -3123,6 +3226,7 @@ function captureSetup() {
     item: $('awakenedItem').value,
     subtypes: [...document.querySelectorAll('#subtypePanel input:checked')].map(box => box.value),
     tiers: [...document.querySelectorAll('#tiers input:checked')].map(box => box.value),
+    artifactBlacklist: [...blacklistedArtifacts()],
     optimizeGoal: state.itemOptimizeGoal,
     slots: state.slots.map(slot => ({ name: slot.name, locked: slot.locked }))
   };
@@ -3149,6 +3253,7 @@ function applySetup(saved) {
   renderSubtypes();
   for (const box of document.querySelectorAll('#subtypePanel input')) box.checked = (saved.subtypes || []).includes(box.value);
   for (const box of document.querySelectorAll('#tiers input')) box.checked = !saved.tiers || saved.tiers.includes(box.value);
+  state.artifactBlacklist = new Set(Array.isArray(saved.artifactBlacklist) ? saved.artifactBlacklist : []);
   state.slots.forEach(slot => { slot.name = ''; slot.locked = false; });
   if (Array.isArray(saved.slots)) {
     saved.slots.slice(0, 4).forEach((entry, index) => {

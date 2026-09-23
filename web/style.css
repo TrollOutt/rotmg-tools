@@ -1004,47 +1004,123 @@ table.mini td { padding: 3px 8px; border: 0; }
 .plan-compare { margin: 0 0 11px; font-size: 12px; color: var(--muted); }
 .plan-compare b { color: var(--text); }
 
-.plan-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+/* The steps read as one route down a line: a numbered stop, what to hunt
+ * there, and what to do with each outcome. No card around each stop - the
+ * only boxes are the two answers, keep it or throw it back. */
+.plan-steps { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; }
 .plan-steps > li {
-  background: var(--bg); border: 1px solid var(--line-soft);
-  border-left: 3px solid var(--accent-deep);
-  border-radius: var(--radius-sm); padding: 9px 12px;
+  position: relative; padding: 12px 0 16px 36px;
+  background: none; border: 0; border-radius: 0;
 }
-.plan-head { display: flex; align-items: flex-start; gap: 9px; }
+.plan-steps > li + li { border-top: 1px solid var(--line-soft); }
+.plan-steps > li:not(:last-child)::before {
+  content: ''; position: absolute; left: 11px; top: 38px; bottom: -13px; width: 2px;
+  background: linear-gradient(var(--accent-deep), rgba(22, 140, 199, .15));
+  border-radius: 2px;
+}
 .plan-step {
-  width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--panel-2); color: var(--accent); font-size: 11px; font-weight: 700; flex: none;
-  margin-top: 1px;
+  position: absolute; left: 0; top: 12px;
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(22, 140, 199, .16); border: 1px solid rgba(121, 197, 232, .45);
+  color: var(--accent); font-size: 11.5px; font-weight: 750;
 }
-.plan-goal { min-width: 0; }
-.plan-goal b { display: block; font-size: 13.5px; line-height: 1.3; }
-.plan-goal small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--dim); }
 
-/* The one thing you physically do at this step, so it gets its own line. */
-.plan-use {
-  display: flex; align-items: center; gap: 8px;
-  margin: 7px 0 0 29px; padding: 5px 10px;
-  background: rgba(121, 197, 232, .07);
-  border: 1px solid rgba(121, 197, 232, .2);
-  border-radius: var(--radius-sm);
-  font-size: 12.5px; color: var(--muted);
+.plan-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px 18px; flex-wrap: wrap; }
+.plan-goal { min-width: 0; flex: 1 1 260px; }
+.plan-goal small {
+  display: block; font-size: 10px; line-height: 1.4; color: var(--dim);
+  text-transform: uppercase; letter-spacing: .8px;
 }
-.plan-use img { width: 20px; height: 20px; object-fit: contain; flex: none; }
-.plan-use b { color: var(--text); font-weight: 650; }
 
-.plan-figures { display: flex; flex-wrap: wrap; gap: 5px 20px; margin: 7px 0 0 29px; }
-.plan-figures > div { min-width: 0; }
-.plan-figures dt { font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: var(--dim); }
-.plan-figures dd {
-  margin: 1px 0 0; font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums;
-  display: flex; align-items: center; gap: 4px;
+/* The artifact is the headline of the step: it is the one thing you put in
+ * with your own hands. What it is for is read in the Lock box below. */
+.plan-target {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  margin-top: 3px; font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--text);
 }
+.plan-target img {
+  width: 32px; height: 32px; object-fit: contain; flex: none; image-rendering: pixelated;
+}
+
+/* The number the plan is minimising, where the eye lands after the name. */
+.plan-finish { display: flex; flex-direction: column; align-items: flex-end; flex: none; text-align: right; }
+.plan-finish b {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 15px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.plan-finish small { font-size: 10.5px; color: var(--dim); }
+.plan-finish .plan-left { margin-top: 1px; font-size: 10px; opacity: .75; font-variant-numeric: tabular-nums; }
+
+.plan-dismiss {
+  appearance: none; -webkit-appearance: none;
+  font: inherit; font-size: 10.5px; line-height: 1; letter-spacing: .2px;
+  padding: 4px 8px; margin-left: 2px; cursor: pointer; border-radius: 999px;
+  background: transparent; border: 1px solid var(--line-soft); color: var(--dim);
+  transition: color .12s, border-color .12s;
+}
+.plan-dismiss:hover, .plan-dismiss:focus-visible { color: var(--text); border-color: var(--line); outline: none; }
+
+.plan-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px 18px;
+  margin-top: 5px; font-size: 11.5px; color: var(--dim);
+}
+.plan-meta > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 5px; }
+.plan-meta b {
+  display: inline-flex; align-items: center; gap: 3px;
+  color: var(--muted); font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.plan-side { display: inline-flex; align-items: center; gap: 3px; opacity: .85; }
 
 .plan-then { margin: 6px 0 0 29px; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .plan-then b { color: var(--text); }
 .plan-then.warn {
   color: var(--text); background: rgba(240, 180, 41, .09);
   border-left: 2px solid var(--locked); border-radius: 0 6px 6px 0; padding: 7px 10px;
+}
+
+/* The answer to the player's real question: keep it, or throw it back?
+ * The verb carries the colour; the odds sit quietly at the far edge. */
+.plan-policy {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px; margin-top: 11px; padding: 0; border: 0;
+}
+.plan-policy-group {
+  min-width: 0; padding: 8px 11px 9px; border-radius: 7px;
+  background: rgba(255, 255, 255, .025); border: 1px solid var(--line-soft);
+}
+.plan-policy-group.lock { background: rgba(90, 196, 90, .07); border-color: rgba(90, 196, 90, .24); }
+
+.plan-policy-group h4 {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 5px; font-size: 10.5px; font-weight: 750; line-height: 1.3;
+  letter-spacing: .9px; text-transform: uppercase; color: var(--muted);
+}
+.plan-policy-group.lock h4 { color: var(--good); }
+.plan-policy-group h4 > span { font-size: 12.5px; width: 13px; text-align: center; }
+.plan-policy-group h4 > small {
+  margin-left: auto; font-size: 9.5px; font-weight: 500; letter-spacing: .6px; color: var(--dim);
+}
+
+.plan-action-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 2px 0; font-size: 12.5px; line-height: 1.3;
+}
+.plan-action-name { min-width: 0; overflow-wrap: anywhere; display: inline-flex; align-items: center; gap: 0 6px; }
+.plan-action-name .inline-icon { width: 18px; height: 18px; flex: none; image-rendering: pixelated; }
+.plan-policy-group.lock .plan-action-name { color: var(--text); font-weight: 600; }
+.plan-policy-group.reroll .plan-action-name { color: var(--muted); }
+.plan-action-name i { font-style: normal; color: var(--dim); }
+.plan-action-chance { flex: none; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--dim); }
+.plan-action-row.fallback .plan-action-name { color: var(--dim); font-style: italic; }
+.plan-action-empty { padding: 2px 0; font-size: 11.5px; color: var(--dim); }
+
+@media (max-width: 760px) {
+  .plan-policy { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .plan-steps > li { padding-left: 32px; }
+  .plan-target { font-size: 14px; }
+  .plan-finish { align-items: flex-start; text-align: left; }
 }
 
 /* The filter now sits in the summary, where both modes can reach it. */
