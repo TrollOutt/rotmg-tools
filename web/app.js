@@ -4392,6 +4392,39 @@ async function openFamePage() {
    told apart from arriving at it. */
 let shownPage = null;
 
+let theoryScriptLoading = null;
+function ensureTheoryPage() {
+  if (typeof TheoryCraft !== 'undefined') {
+    if (document.body.dataset.page === 'theory') TheoryCraft.start();
+    return Promise.resolve();
+  }
+
+  if (!theoryScriptLoading) {
+    const placeholder = document.querySelector('script[data-lazy-src="theorycraft.js"]');
+    if (!placeholder) {
+      return Promise.reject(new Error('Theory Crafting script placeholder is missing.'));
+    }
+
+    theoryScriptLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = placeholder.dataset.lazySrc;
+      script.onload = resolve;
+      script.onerror = () => {
+        script.remove();
+        theoryScriptLoading = null;
+        reject(new Error('Could not load Theory Crafting.'));
+      };
+      placeholder.before(script);
+    });
+  }
+
+  return theoryScriptLoading.then(() => {
+    if (document.body.dataset.page === 'theory' && typeof TheoryCraft !== 'undefined') {
+      TheoryCraft.start();
+    }
+  });
+}
+
 function showPage(name) {
   const wideOpen = name === 'realm';
   const here = key => Boolean(PAGES[key]) && Boolean($(PAGES[key]));
@@ -4420,7 +4453,7 @@ function showPage(name) {
    * enchantments and things to hit. It reads it once, the first time it is
    * asked for, and nobody who came for the enchanter pays for it.
    */
-  if (page === 'theory' && typeof TheoryCraft !== 'undefined') TheoryCraft.start();
+  if (page === 'theory') ensureTheoryPage().catch(error => console.error(error));
   /*
    * And the index, which is three and a half megabytes of records: it is read
    * the first time somebody asks for it and not a moment before, the same way
