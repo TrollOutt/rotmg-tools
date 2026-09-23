@@ -4425,6 +4425,39 @@ function ensureTheoryPage() {
   });
 }
 
+let indexScriptLoading = null;
+function ensureIndexPage(open) {
+  const run = () => {
+    if (typeof RealmIndex === 'undefined') return false;
+    if (document.body.dataset.page === 'index') RealmIndex.start();
+    if (open && document.body.dataset.page === 'index') return RealmIndex.open(open);
+    return true;
+  };
+
+  if (typeof RealmIndex !== 'undefined') return Promise.resolve(run());
+
+  if (!indexScriptLoading) {
+    const placeholder = document.querySelector('script[data-lazy-src="index-page.js"]');
+    if (!placeholder) {
+      return Promise.reject(new Error('Index script placeholder is missing.'));
+    }
+
+    indexScriptLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = placeholder.dataset.lazySrc;
+      script.onload = resolve;
+      script.onerror = () => {
+        script.remove();
+        indexScriptLoading = null;
+        reject(new Error('Could not load Index.'));
+      };
+      placeholder.before(script);
+    });
+  }
+
+  return indexScriptLoading.then(run);
+}
+
 function showPage(name) {
   const wideOpen = name === 'realm';
   const here = key => Boolean(PAGES[key]) && Boolean($(PAGES[key]));
@@ -4459,7 +4492,7 @@ function showPage(name) {
    * the first time somebody asks for it and not a moment before, the same way
    * the other two heavy pages are.
    */
-  if (page === 'index' && typeof RealmIndex !== 'undefined') RealmIndex.start();
+  if (page === 'index') ensureIndexPage().catch(error => console.error(error));
   if (page === 'skins' && window.SkinViewer) {
     window.SkinViewer.mount($('skinViewerRoot'), { integrated: true })
       .then(viewer => viewer.setActive(true)).catch(error => console.error(error));
@@ -4543,17 +4576,18 @@ function routeFromHash() {
    */
   const route = RealmRoutes.parse(location.hash);
   showPage(route.page);
-  if (route.page === 'index' && route.open && typeof RealmIndex !== 'undefined') {
-    RealmIndex.open(route.open);
+  if (route.page === 'index' && route.open) {
+    ensureIndexPage(route.open).catch(error => console.error(error));
   }
 }
 
 window.openIndexRecord = async function (id) {
-  if (typeof RealmIndex === 'undefined') return false;
   const hash = RealmRoutes.indexHash(id);
   if (!hash) return false;
   if (location.hash !== '#' + hash) location.hash = hash;
   showPage('index');
+  await ensureIndexPage();
+  if (typeof RealmIndex === 'undefined') return false;
   return RealmIndex.open(id);
 };
 
