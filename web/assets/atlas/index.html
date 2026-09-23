@@ -6455,7 +6455,7 @@ window.addEventListener('message', event => {
    * one that matters, and it is the one that was always doing the work: a
    * globe scrolled off the page stops dead.
    */
-  pace = said.pace === 'still' ? Infinity : 0;
+  pace = said.pace === 'still' ? Infinity : (said.pace === 'slow' ? 12 : 0);
 });
 
 function frame(now) {
