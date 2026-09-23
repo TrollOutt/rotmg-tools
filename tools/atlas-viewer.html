@@ -909,6 +909,10 @@ function warmAhead(box) {
   if (!moving) return;
   const going = levelFor(want.scale);
   warm(going, want.x, want.y, want.scale, box);
+  // An embedded bare atlas is scenery, not an interactive map: load only
+  // the level it is actually heading for. Neighbour levels are for wheel
+  // zooming and otherwise add several megabytes to the Home cold start.
+  if (bare) return;
   if (going > 0) warm(going - 1, want.x, want.y, want.scale * 2, box);
   if (going < COARSEST) warm(going + 1, want.x, want.y, want.scale / 2, box);
 }
