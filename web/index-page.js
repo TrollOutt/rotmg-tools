@@ -2496,7 +2496,26 @@ const RealmIndex = (function () {
 
     realmeyeQueued = true;
 
-    const begin = () => {
+    const schedule = () => {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(begin, { timeout: 1500 });
+      } else {
+        setTimeout(begin, 250);
+      }
+    };
+
+    function begin() {
+      /*
+       * The Index can finish its first render while the black cover is still
+       * opening. RealmEye is deliberately background work, so never let its
+       * thirteen-megabyte parse take frames from that reveal. Stay queued
+       * until shed() removes the cover, then ask for idle again.
+       */
+      if (document.querySelector('.ring-sheet')) {
+        window.addEventListener('rotmgtransitionend', schedule, { once: true });
+        return;
+      }
+
       realmeyeQueued = false;
 
       /*
@@ -2515,13 +2534,9 @@ const RealmIndex = (function () {
         .finally(() => {
           realmeyeLoading = false;
         });
-    };
-
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(begin, { timeout: 1500 });
-    } else {
-      setTimeout(begin, 250);
     }
+
+    schedule();
   }
 
   async function runStart() {
