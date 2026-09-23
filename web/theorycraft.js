@@ -1269,6 +1269,24 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
   }
 
+  let itemsByFit = null;
+
+  function ensureItemSearchIndex() {
+    if (itemsByFit) return;
+
+    itemsByFit = new Map();
+    for (const one of data.items) {
+      const broad = one.hand + '/*';
+      const exact = one.hand + '/' + one.slot;
+
+      if (!itemsByFit.has(broad)) itemsByFit.set(broad, []);
+      itemsByFit.get(broad).push(one);
+
+      if (!itemsByFit.has(exact)) itemsByFit.set(exact, []);
+      itemsByFit.get(exact).push(one);
+    }
+  }
+
   function itemsFor(hand, klass, state = build) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
@@ -1279,9 +1297,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * an answer built out of those is not an answer to their question.
      */
     const out = (state && state.banned) || {};
-    return data.items.filter(one => one.hand === hand
-      && (slot === undefined || one.slot === slot)
-      && !out[one.name] && accessible(one.name));
+
+    ensureItemSearchIndex();
+    const key = hand + '/' + (slot === undefined ? '*' : slot);
+    const candidates = itemsByFit.get(key) || [];
+
+    return candidates.filter(one => !out[one.name] && accessible(one.name));
   }
 
   /* ---------------- what the search need not try ---------------- *
