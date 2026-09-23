@@ -1179,7 +1179,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   };
 
   let enchByName = null;
+  const charmByQuery = new Map();
   function charmNamed(name) {
+    if (charmByQuery.has(name)) return charmByQuery.get(name);
     if (!enchByName) {
       enchByName = new Map();
       for (const one of data.enchants) {
@@ -1189,9 +1191,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         }
       }
     }
-    return enchByName.get(name)
+    const found = enchByName.get(name)
       || enchByName.get(plainly(name))
       || enchByName.get(enchantKey(name));
+    charmByQuery.set(name, found);
+    return found;
   }
 
   /*
