@@ -1823,6 +1823,16 @@ const TINT = {
   function optimise(state, goal, report) {
     if (!profile || (profile.mode === 'personal' && !access)) throw new Error('Set up your progression before crafting.');
     const work = prepareSearchable(state);
+    // Cache compatibility only for this search, including the full slot state.
+    const enchantFitCache = new Map();
+    const enchantFits = (itemName, already, at) => {
+      const key = JSON.stringify([itemName, already, at]);
+      if (!enchantFitCache.has(key)) {
+        enchantFitCache.set(key,
+          enchantsFor(itemName, already, at).some(one => one.id === already[at]));
+      }
+      return enchantFitCache.get(key);
+    };
     // Eligibility stays fixed during this search; rebuild on the next call.
     const candidatesByHand = new Map();
     const candidatesForHand = hand => {
@@ -1888,7 +1898,7 @@ const TINT = {
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
           work.gear[hand].ench = kept.map((id, i) =>
-            (id && enchantsFor(one.name, kept, i).some(e => e.id === id)) ? id : null);
+            (id && enchantFits(one.name, kept, i)) ? id : null);
           const now = scoreOf(work, goal);
           looked++;
           /*
@@ -1943,7 +1953,7 @@ const TINT = {
           // An enchantment that no longer fits the item cannot be counted.
           const kept = trial.gear[hand].ench.slice();
           trial.gear[hand].ench = kept.map((id, i) =>
-            (id && enchantsFor(best, kept, i).some(e => e.id === id)) ? id : null);
+            (id && enchantFits(best, kept, i)) ? id : null);
           put++;
         }
         if (put < 2) continue;
