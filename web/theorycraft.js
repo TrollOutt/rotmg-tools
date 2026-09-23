@@ -1226,7 +1226,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return out;
   }
 
-  function enchantsFor(itemName, already, at) {
+  function rollableEnchantsFor(itemName, already, at) {
     const item = data.byItem[itemName];
     if (!item) return [];
     const held = rulesFor();
@@ -1239,38 +1239,50 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         locks,
         subtypes: EnchantEngine.subtypesForItem(held, itemName)
       };
-      const pool = EnchantEngine.rollablePool(held, cfg);
-      const out = [];
-      const seen = new Set();
-      for (const mod of pool) {
-        /*
-         * Only what an enchanting will actually put on an item.
-         *
-         * The calculator's list is the whole list, and the whole list is
-         * wider than what a player can roll. The retired ones - Kogbold
-         * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
-         * item already carrying one still reads, and are given a weight of
-         * nought to say they can never come out again. The seasonal ones -
-         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
-         * at the time, not out of enchanting, and the client marks the
-         * difference with a ROLLABLE label. This page has no artifact in it,
-         * so it plans with what a plain enchanting can roll and nothing else.
-         */
-        if (seen.has(mod.name)) continue;
-        seen.add(mod.name);
-        const mine = charmNamed(mod.name);
-        // How likely it is to come out, kept for the slot that has nothing
-        // countable left to put in it.
-        out.push(Object.assign(
-          { roll: mod.weight },
-          mine || { id: 'n:' + mod.name },
-          { name: mod.name }
-        ));
-      }
-      return out;
+      return EnchantEngine.rollablePool(held, cfg);
     }
 
     throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
+  }
+
+  function enchantsFor(itemName, already, at) {
+    const pool = rollableEnchantsFor(itemName, already, at);
+    const out = [];
+    const seen = new Set();
+    for (const mod of pool) {
+      /*
+       * Only what an enchanting will actually put on an item.
+       *
+       * The calculator's list is the whole list, and the whole list is
+       * wider than what a player can roll. The retired ones - Kogbold
+       * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
+       * item already carrying one still reads, and are given a weight of
+       * nought to say they can never come out again. The seasonal ones -
+       * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
+       * at the time, not out of enchanting, and the client marks the
+       * difference with a ROLLABLE label. This page has no artifact in it,
+       * so it plans with what a plain enchanting can roll and nothing else.
+       */
+      if (seen.has(mod.name)) continue;
+      seen.add(mod.name);
+      const mine = charmNamed(mod.name);
+      // How likely it is to come out, kept for the slot that has nothing
+      // countable left to put in it.
+      out.push(Object.assign(
+        { roll: mod.weight },
+        mine || { id: 'n:' + mod.name },
+        { name: mod.name }
+      ));
+    }
+    return out;
+  }
+
+  function enchantFitsItem(itemName, already, at) {
+    const wanted = already[at];
+    return rollableEnchantsFor(itemName, already, at).some(mod => {
+      const mine = charmNamed(mod.name);
+      return (mine ? mine.id : 'n:' + mod.name) === wanted;
+    });
   }
 
   let itemsByFit = null;
@@ -1829,7 +1841,7 @@ const TINT = {
       const key = JSON.stringify([itemName, already, at]);
       if (!enchantFitCache.has(key)) {
         enchantFitCache.set(key,
-          enchantsFor(itemName, already, at).some(one => one.id === already[at]));
+          enchantFitsItem(itemName, already, at));
       }
       return enchantFitCache.get(key);
     };
