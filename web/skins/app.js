@@ -815,5 +815,5 @@ return api;
 if(typeof window!=='undefined'){
   window.SkinViewer={mount,unmount,select:selectTarget,getState};
   const autoHost=document.getElementById('skinViewerRoot');
-  if(autoHost)mount(autoHost,{integrated:autoHost.dataset.integrated==='true'}).catch(error=>console.error('Skin Viewer failed to mount',error));
+  if(autoHost&&!autoHost.closest('[hidden]'))mount(autoHost,{integrated:autoHost.dataset.integrated==='true'}).catch(error=>console.error('Skin Viewer failed to mount',error));
 }
