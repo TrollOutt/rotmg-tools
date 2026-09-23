@@ -4391,6 +4391,7 @@ async function openFamePage() {
 /* Which page is already on screen, so that being asked for it again can be
    told apart from arriving at it. */
 let shownPage = null;
+let pageLoading = Promise.resolve();
 
 let theoryScriptLoading = null;
 function ensureTheoryPage() {
@@ -4429,9 +4430,12 @@ let indexScriptLoading = null;
 function ensureIndexPage(open) {
   const run = () => {
     if (typeof RealmIndex === 'undefined') return false;
-    if (document.body.dataset.page === 'index') RealmIndex.start();
-    if (open && document.body.dataset.page === 'index') return RealmIndex.open(open);
-    return true;
+    if (document.body.dataset.page !== 'index') return true;
+    // Both APIs expose the whole first-start promise. Keep that promise
+    // attached to the navigation so the black cover stays down through
+    // parsing, facet construction and the first Index render.
+    if (open) return RealmIndex.open(open);
+    return RealmIndex.start();
   };
 
   if (typeof RealmIndex !== 'undefined') return Promise.resolve(run());
@@ -4469,6 +4473,10 @@ function showPage(name) {
   document.body.dataset.page = page;
   pinRealm(page);
   usePool();
+  // Navigation normally relies on settled() watching fetches and images.
+  // A dynamically inserted script is invisible to that watcher until it has
+  // finished downloading, so expose its own promise to the black cover.
+  pageLoading = Promise.resolve();
   if (page === 'enchant' && state.ready && !state.itemArt) {
     ensureItemArt().then(() => {
       if (document.body.dataset.page === 'enchant') refresh();
@@ -4486,13 +4494,23 @@ function showPage(name) {
    * enchantments and things to hit. It reads it once, the first time it is
    * asked for, and nobody who came for the enchanter pays for it.
    */
-  if (page === 'theory') ensureTheoryPage().catch(error => console.error(error));
+  if (page === 'theory') {
+    pageLoading = ensureTheoryPage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
   /*
    * And the index, which is three and a half megabytes of records: it is read
    * the first time somebody asks for it and not a moment before, the same way
    * the other two heavy pages are.
    */
-  if (page === 'index') ensureIndexPage().catch(error => console.error(error));
+  if (page === 'index') {
+    pageLoading = ensureIndexPage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
   if (page === 'skins' && window.SkinViewer) {
     window.SkinViewer.mount($('skinViewerRoot'), { integrated: true })
       .then(viewer => viewer.setActive(true)).catch(error => console.error(error));
@@ -4577,8 +4595,12 @@ function routeFromHash() {
   const route = RealmRoutes.parse(location.hash);
   showPage(route.page);
   if (route.page === 'index' && route.open) {
-    ensureIndexPage(route.open).catch(error => console.error(error));
+    pageLoading = ensureIndexPage(route.open).catch(error => {
+      console.error(error);
+      return false;
+    });
   }
+  return pageLoading;
 }
 
 window.openIndexRecord = async function (id) {
@@ -5767,8 +5789,13 @@ function chose(go) {
        cover stays down until that page is actually there - however long that
        takes - before opening again out of the module it grew from. */
     location.hash = go;
-    routeFromHash();
-    settled(() => veil(go, 1, 0, shed));
+    const ready = routeFromHash();
+    // Keep the cover fully shut while a lazy page script itself is arriving.
+    // Once it has run, settled() takes over and waits for the fetches/images
+    // that page started before the cover opens again.
+    Promise.resolve(ready).finally(() => {
+      settled(() => veil(go, 1, 0, shed));
+    });
   });
 }
 
@@ -5794,6 +5821,8 @@ function shed() {
   if (!cover) return;
   cover.remove();
   cover = null; coverPath = null; shutFade = null; shutRect = null;
+  // Deferred page work can now run without stealing frames from the reveal.
+  window.dispatchEvent(new Event('rotmgtransitionend'));
 }
 
 /*
