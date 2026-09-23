@@ -995,6 +995,10 @@ function drawGround(box) {
 /* ---------------- the mask, read once ---------------- */
 let mask = null;
 const maskImage = new Image();
+function ensureMask() {
+  if (mask || maskImage.src) return;
+  maskImage.src = asset('mask.png');
+}
 maskImage.onload = () => {
   const off = document.createElement('canvas');
   off.width = maskImage.width; off.height = maskImage.height;
@@ -1003,7 +1007,7 @@ maskImage.onload = () => {
   mask = { w: off.width, h: off.height, data: o.getImageData(0, 0, off.width, off.height).data };
   populate();
 };
-maskImage.src = asset('mask.png');
+if (window.parent === window) ensureMask();
 
 function atTile(tx, ty) {
   if (!mask) return null;
@@ -6528,6 +6532,7 @@ window.addEventListener('message', event => {
   const said = event.data;
   if (!said || said.rotmg !== 'bare') return;
   bare = said.on !== false;
+  if (!bare) ensureMask();
   /* Said, and said as nothing, are different: `of: null` gives the framing
      back to the ordinary fit, which is how the ring hands the atlas over to
      the panel it came from. Not mentioning `of` at all leaves it alone. */
