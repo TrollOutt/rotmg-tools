@@ -196,13 +196,20 @@ const RealmIndex = (function () {
      * page - which is the one difference between the two copies, and it is
      * three and a half megabytes that most visitors never need.
      */
-    let raw = bundle && bundle.sources && bundle.sources.indexText;
-    if (!raw) {
-      raw = await fetch('assets/index/index.json').then(r => r.text())
-        .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
+    const shared = window.ROTMG_SHARED_DATA
+      || (window.ROTMG_SHARED_DATA = {});
+    let said = shared.index || null;
+
+    if (!said) {
+      let raw = bundle && bundle.sources && bundle.sources.indexText;
+      if (!raw) {
+        raw = await fetch('assets/index/index.json').then(r => r.text())
+          .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
+      }
+      if (!raw) return false;
+      said = JSON.parse(raw);
+      shared.index = said;
     }
-    if (!raw) return false;
-    const said = JSON.parse(raw);
     all = new Map();
     for (const one of said.records) all.set(one.id, one);
     /*

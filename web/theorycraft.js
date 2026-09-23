@@ -73,14 +73,33 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   async function loadAccess() {
     async function read(key, paths, asText = false) {
+      const shared = window.ROTMG_SHARED_DATA
+        || (window.ROTMG_SHARED_DATA = {});
+
+      if (key === 'indexText' && !asText && shared.index) {
+        return shared.index;
+      }
+
       const sources = (window.ROTMG_BUNDLE || {}).sources || {};
-      if (sources[key]) return asText ? sources[key] : JSON.parse(sources[key]);
+      if (sources[key]) {
+        const value = asText ? sources[key] : JSON.parse(sources[key]);
+        if (key === 'indexText' && !asText) shared.index = value;
+        return value;
+      }
+
       for (const path of paths) {
         try {
           const response = await fetch(path);
-          if (response.ok) return asText ? await response.text() : await response.json();
+          if (response.ok) {
+            const value = asText
+              ? await response.text()
+              : await response.json();
+            if (key === 'indexText' && !asText) shared.index = value;
+            return value;
+          }
         } catch (_) { /* Try the local checkout path next. */ }
       }
+
       throw new Error('Progression data unavailable');
     }
     try {
