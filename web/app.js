@@ -386,6 +386,24 @@ async function loadItemOptimizerTheory() {
   }
 }
 
+let itemOptimizerTheoryPromise = null;
+
+async function ensureItemOptimizerTheory() {
+  if (state.theory) return state.theory;
+  if (itemOptimizerTheoryPromise) return itemOptimizerTheoryPromise;
+
+  itemOptimizerTheoryPromise = loadItemOptimizerTheory()
+    .then(theory => {
+      state.theory = theory;
+      return theory;
+    })
+    .finally(() => {
+      itemOptimizerTheoryPromise = null;
+    });
+
+  return itemOptimizerTheoryPromise;
+}
+
 function itemOptimizerCharm(name) {
   if (!state.theory || !state.theory.byCharm) return null;
 
@@ -874,7 +892,6 @@ function renderItemOptimizer(config) {
     visible.length - openCount;
 
   const impossible =
-    !state.theory ||
     !config.slots ||
     !config.type ||
     !openCount;
@@ -886,7 +903,7 @@ function renderItemOptimizer(config) {
 
   run.textContent =
     state.itemOptimizeRunning
-      ? 'Optimizing...'
+      ? (state.theory ? 'Optimizing...' : 'Loading...')
       : state.itemOptimizeBlocked
         ? 'No improvement'
         : 'Optimize';
@@ -895,8 +912,7 @@ function renderItemOptimizer(config) {
 
   if (!state.theory) {
     hint.textContent =
-      'Build mechanics could not be loaded.';
-    hint.classList.add('warn');
+      'Build mechanics load only when you press Optimize.';
 
   } else if (!config.slots) {
     hint.textContent =
@@ -950,13 +966,29 @@ async function optimizeCurrentItem() {
   const run = $('itemOptimizeRun');
 
   if (
-    !state.theory ||
     !config.item ||
     !config.slots ||
     !config.type
   ) {
     renderItemOptimizer(config);
     return;
+  }
+
+  if (!state.theory) {
+    state.itemOptimizeRunning = true;
+    state.itemOptimizeSaid = 'Loading build mechanics...';
+    renderItemOptimizer(config);
+
+    const theory = await ensureItemOptimizerTheory();
+
+    state.itemOptimizeRunning = false;
+
+    if (!theory) {
+      state.itemOptimizeSaid =
+        'Build mechanics could not be loaded. Try again.';
+      renderItemOptimizer(config);
+      return;
+    }
   }
 
   const goal = itemOptimizerGoal();
@@ -3798,7 +3830,6 @@ async function load() {
     const sources = await readSources();
     state.data = EnchantEngine.buildDataset(sources);
     EnchantItems.loadClient(sources.clientItemText);
-    state.theory = await loadItemOptimizerTheory();
     state.itemArt = await loadItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${RealmI18n.number(knownItemNames().length)} items — the slot, dust and base come with it`;
