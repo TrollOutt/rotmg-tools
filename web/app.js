@@ -2805,12 +2805,7 @@ const ambience = {
  * subject for the other at the door.
  */
 function loadSprites(sources) {
-  return Promise.all(sources.map(src => new Promise(resolve => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
-  }))).then(images => images.filter(Boolean));
+  return Promise.resolve(sources.map(src => ({ src })));
 }
 
 async function fameSource() {
@@ -2866,12 +2861,7 @@ function ambienceSprites() {
     const src = asset('GUI Files', 'Enchantment Icons', `${icon}.png`);
     if (src) sources.push(src);
   }
-  return Promise.all(sources.map(src => new Promise(resolve => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
-  }))).then(images => images.filter(Boolean));
+  return loadSprites(sources);
 }
 
 /*
@@ -2950,7 +2940,7 @@ function scatterDom(seed) {
     const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
     if (!sprite || !sprite.src) continue;
     const size = 3.5 + random() * 8;
-    pieces.push(`<img src="${sprite.src}" alt="" style="`
+    pieces.push(`<img src="${sprite.src}" alt="" onerror="this.remove()" style="`
       + `left:${(random() * 104 - 2).toFixed(2)}%;top:${(random() * 104 - 2).toFixed(2)}%;`
       + `width:${size.toFixed(2)}vmin;opacity:${(0.3 + random() * 0.45).toFixed(2)};`
       + `transform:rotate(${((random() - 0.5) * 40).toFixed(1)}deg);`
