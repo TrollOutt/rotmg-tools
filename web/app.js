@@ -1873,7 +1873,8 @@ function itemArtHtml(resolved, name) {
   return '<span class="picker-icon empty">?</span>';
 }
 
-function openItemPicker() {
+async function openItemPicker() {
+  await ensureItemArt();
   rememberPickerOpener();
   const entries = knownItemNames().map(name => ({ name, resolved: resolveItem(name) }));
   state.picker = { kind: 'item', entries };
@@ -3414,13 +3415,10 @@ function newsMadeOn(index) {
   return (index.notes && index.notes.date) || index.made || null;
 }
 
-async function loadItemArt() {
-  // The sheet's address, once, for every picture on the page to point at.
-  document.documentElement.style.setProperty('--sheet',
-    'url(' + ((BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png') + ')');
+async function loadUpdateMade() {
   if (BUNDLE) {
     state.updateMade = newsMadeOn((BUNDLE.whatsNew || {}).index);
-    if (BUNDLE.itemArt) return BUNDLE.itemArt;
+    return;
   }
   try {
     const news = await fetch('assets/whats-new/index.json').then(response => response.json());
@@ -3428,13 +3426,31 @@ async function loadItemArt() {
   } catch (error) {
     /* only the date line loses, and it says nothing rather than a wrong one */
   }
-  try {
-    return await fetch('assets/index/item-art.json').then(response => response.json());
-  } catch (error) {
-    // Pictures are decoration: without them every row falls back to its slot
-    // icon, which is what the calculator did for its first year.
-    return null;
+}
+
+let itemArtLoading = null;
+function ensureItemArt() {
+  if (state.itemArt) return Promise.resolve(state.itemArt);
+  if (itemArtLoading) return itemArtLoading;
+
+  // The sheet's address, once, for every picture on the calculator to point at.
+  document.documentElement.style.setProperty('--sheet',
+    'url(' + ((BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png') + ')');
+
+  if (BUNDLE && BUNDLE.itemArt) {
+    state.itemArt = BUNDLE.itemArt;
+    return Promise.resolve(state.itemArt);
   }
+
+  itemArtLoading = fetch('assets/index/item-art.json')
+    .then(response => response.json())
+    .then(art => {
+      state.itemArt = art;
+      return art;
+    })
+    .catch(() => null);
+
+  return itemArtLoading;
 }
 
 
@@ -3820,7 +3836,8 @@ async function load() {
     const sources = await readSources();
     state.data = EnchantEngine.buildDataset(sources);
     EnchantItems.loadClient(sources.clientItemText);
-    state.itemArt = await loadItemArt();
+    await loadUpdateMade();
+    if (document.body.dataset.page === 'enchant') await ensureItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${RealmI18n.number(knownItemNames().length)} items — the slot, dust and base come with it`;
     initAmbience();
@@ -4386,6 +4403,11 @@ function showPage(name) {
   document.body.dataset.page = page;
   pinRealm(page);
   usePool();
+  if (page === 'enchant' && state.ready && !state.itemArt) {
+    ensureItemArt().then(() => {
+      if (document.body.dataset.page === 'enchant') refresh();
+    });
+  }
   if (page === 'fame') openFamePage();
   // What's New reads its own index the first time it is opened, the same way
   // Fame Sweep does: it is a megabyte of pictures and nobody who came for the
