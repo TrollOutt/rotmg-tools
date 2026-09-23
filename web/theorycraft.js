@@ -1819,6 +1819,14 @@ const TINT = {
   function optimise(state, goal, report) {
     if (!profile || (profile.mode === 'personal' && !access)) throw new Error('Set up your progression before crafting.');
     const work = prepareSearchable(state);
+    // Eligibility stays fixed during this search; rebuild on the next call.
+    const candidatesByHand = new Map();
+    const candidatesForHand = hand => {
+      if (!candidatesByHand.has(hand)) {
+        candidatesByHand.set(hand, searchItems(hand, work.klass, work));
+      }
+      return candidatesByHand.get(hand);
+    };
     /*
      * Each padlock holds the one thing it is on.
      *
@@ -1871,7 +1879,7 @@ const TINT = {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of searchItems(hand, work.klass, work)) {
+        for (const one of candidatesForHand(hand)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
@@ -1917,7 +1925,7 @@ const TINT = {
           if (trial.locked[hand]) continue;
           let best = null, mark = -Infinity;
           const mine = new Set(kit.pieces);
-          for (const one of searchItems(hand, trial.klass, trial)) {
+          for (const one of candidatesForHand(hand)) {
             if (!mine.has(one.name)) continue;
             const was = trial.gear[hand].name;
             trial.gear[hand].name = one.name;
