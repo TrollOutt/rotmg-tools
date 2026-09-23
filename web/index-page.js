@@ -2449,6 +2449,81 @@ const RealmIndex = (function () {
         + '</button>').join('');
   }
 
+  /*
+   * RealmEye's full archive is large. The client index is enough to paint and
+   * use the page, so let that first screen appear before fetching/parsing the
+   * community overlay. Once it arrives, rebuild the browse model without
+   * losing anything the reader selected meanwhile.
+   */
+  let realmeyeQueued = false;
+  let realmeyeLoading = false;
+
+  function refreshAfterRealmEye() {
+    const down = new Set();
+    const opened = new Set();
+
+    for (const group of groups) {
+      if (group.open) opened.add(group.id);
+      for (const chip of group.chips) {
+        if (chip.on) down.add(chip.key);
+      }
+    }
+
+    buildFacets();
+
+    for (const group of groups) {
+      group.open = opened.has(group.id);
+      for (const chip of group.chips) {
+        chip.on = down.has(chip.key);
+      }
+    }
+
+    asked = asked.map(old => {
+      for (const group of groups) {
+        for (const chip of group.chips) {
+          if (chip.key === old.key) return chip;
+        }
+      }
+      return old;
+    }).filter(chip => chip.on);
+
+    repaint();
+    if (showing) drawCard(showing.id);
+  }
+
+  function queueRealmEyeArchive() {
+    if (realmeyeArchive || realmeyeLoading || realmeyeQueued) return;
+
+    realmeyeQueued = true;
+
+    const begin = () => {
+      realmeyeQueued = false;
+
+      /*
+       * Somebody who already left the Index does not need to pay for its
+       * thirteen-megabyte overlay. Re-entering the page schedules it again.
+       */
+      if (document.body.dataset.page !== 'index') return;
+
+      realmeyeLoading = true;
+
+      loadRealmEyeArchive()
+        .then(() => {
+          if (realmeyeArchive) refreshAfterRealmEye();
+        })
+        .catch(() => {})
+        .finally(() => {
+          realmeyeLoading = false;
+        });
+    };
+
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(begin, { timeout: 1500 });
+    } else {
+      setTimeout(begin, 250);
+    }
+  }
+
   async function runStart() {
     const box = el('ixBody');
     if (!box) return false;
@@ -2465,7 +2540,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadRealmEyeArchive(), loadSkinBridge()]);
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge()]);
     buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special
@@ -2515,11 +2590,15 @@ const RealmIndex = (function () {
       });
     }
     started = true;
+    queueRealmEyeArchive();
     return true;
   }
 
   function start() {
-    if (started) return Promise.resolve(true);
+    if (started) {
+      queueRealmEyeArchive();
+      return Promise.resolve(true);
+    }
     if (startPromise) return startPromise;
     starting = true;
     startPromise = runStart().catch(error => {
