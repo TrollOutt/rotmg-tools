@@ -4024,7 +4024,7 @@ const TINT = {
    * wired every listener twice. `starting` covers the window `started` cannot.
    */
   let started = false;
-  let starting = false;
+  let startPromise = null;
   /*
    * And the page's own markup, kept before anything is written over it.
    *
@@ -4039,9 +4039,7 @@ const TINT = {
    * The markup is put back before anything is filled in.
    */
   let shell = null;
-  async function start() {
-    if (started || starting) return;
-    starting = true;
+  async function runStart() {
     const bundled = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources
       && window.ROTMG_BUNDLE.sources.theoryText;
     let raw = bundled;
@@ -4052,7 +4050,6 @@ const TINT = {
       }
     }
     if (!raw) {
-      starting = false;                // it may be worth asking again
       el('tcWelcome').hidden = true;
       el('tcBody').hidden = false;
       const box = el('tcBody');
@@ -4061,7 +4058,7 @@ const TINT = {
         box.innerHTML = '<p class="tc-missing">The build data is not here yet. '
           + 'Run <code>node tools/build-theorycraft.js</code>.</p>';
       }
-      return;
+      return false;
     }
     data = JSON.parse(raw);
     data.byClass = {}; data.byItem = {}; data.byEnch = {}; data.byBoss = {};
@@ -4073,15 +4070,13 @@ const TINT = {
     try { profile = BuildProgression.normalize(JSON.parse(localStorage.getItem(PROFILE_STORE)), access); }
     catch (_) { profile = null; }
     if (!(await loadRules())) {
-      starting = false;
       el('tcWelcome').hidden = true;
       el('tcBody').hidden = false;
       const box = el('tcBody');
       if (box) box.textContent = 'The enchanting data could not be loaded. Reload this page before planning a build.';
-      return;
+      return false;
     }
     started = true;
-    starting = false;                  // `started` has it from here
     {
       const box = el('tcBody');
       if (shell !== null && box) { box.innerHTML = shell; shell = null; }
@@ -4136,6 +4131,19 @@ const TINT = {
     paint();
     if (!profile) editProfile();
     keepPainting();
+    return true;
+  }
+
+  function start() {
+    if (started) return Promise.resolve(true);
+    if (startPromise) return startPromise;
+
+    startPromise = runStart()
+      .finally(() => {
+        if (!started) startPromise = null;
+      });
+
+    return startPromise;
   }
 
   /*

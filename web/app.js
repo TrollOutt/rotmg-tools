@@ -4353,28 +4353,42 @@ window.addEventListener('resize', () => {
 });
 const globeWide = () => document.body.classList.contains('globe-wide');
 let famePageReady = false;
+let famePageLoading = null;
 
-async function openFamePage() {
-  if (famePageReady) return;
-  famePageReady = true;
-  try {
-    const bundled = BUNDLE && BUNDLE.sources;
-    const text = bundled && bundled.fameText ? bundled.fameText
-      : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
-    const info = bundled && bundled.dungeonText ? bundled.dungeonText
-      : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
-    const overrides = bundled && bundled.overrideText ? bundled.overrideText
-      : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
-        .then(response => response.text()).catch(() => '');
-    // Kept so the background can scatter the same portals the page shows.
-    ambience.fameText = text;
-    FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides);
-    usePool();
-  } catch (error) {
-    console.error(error);
-    famePageReady = false;
-    $('fameSummary').innerHTML = '<p class="note warn">Could not read the fame bonuses.</p>';
-  }
+function openFamePage() {
+  if (famePageReady) return Promise.resolve(true);
+  if (famePageLoading) return famePageLoading;
+
+  famePageLoading = (async () => {
+    try {
+      const bundled = BUNDLE && BUNDLE.sources;
+      const text = bundled && bundled.fameText ? bundled.fameText
+        : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
+      const info = bundled && bundled.dungeonText ? bundled.dungeonText
+        : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
+      const overrides = bundled && bundled.overrideText ? bundled.overrideText
+        : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
+          .then(response => response.text()).catch(() => '');
+
+      // Kept so the background can scatter the same portals the page shows.
+      ambience.fameText = text;
+      await Promise.resolve(
+        FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides)
+      );
+      usePool();
+      famePageReady = true;
+      return true;
+    } catch (error) {
+      console.error(error);
+      famePageReady = false;
+      $('fameSummary').innerHTML = '<p class="note warn">Could not read the fame bonuses.</p>';
+      return false;
+    } finally {
+      famePageLoading = null;
+    }
+  })();
+
+  return famePageLoading;
 }
 
 /*
@@ -4395,10 +4409,15 @@ let pageLoading = Promise.resolve();
 
 let theoryScriptLoading = null;
 function ensureTheoryPage() {
-  if (typeof TheoryCraft !== 'undefined') {
-    if (document.body.dataset.page === 'theory') TheoryCraft.start();
-    return Promise.resolve();
-  }
+  const run = () => {
+    if (typeof TheoryCraft === 'undefined') return false;
+    if (document.body.dataset.page !== 'theory') return true;
+    // TheoryCraft.start() owns the complete first-start promise, through its
+    // data loads, wiring and first paint. Keep the black cover attached to it.
+    return TheoryCraft.start();
+  };
+
+  if (typeof TheoryCraft !== 'undefined') return Promise.resolve(run());
 
   if (!theoryScriptLoading) {
     const placeholder = document.querySelector('script[data-lazy-src="theorycraft.js"]');
@@ -4419,11 +4438,7 @@ function ensureTheoryPage() {
     });
   }
 
-  return theoryScriptLoading.then(() => {
-    if (document.body.dataset.page === 'theory' && typeof TheoryCraft !== 'undefined') {
-      TheoryCraft.start();
-    }
-  });
+  return theoryScriptLoading.then(run);
 }
 
 let indexScriptLoading = null;
@@ -4462,6 +4477,74 @@ function ensureIndexPage(open) {
   return indexScriptLoading.then(run);
 }
 
+let enchantPageLoading = null;
+function ensureEnchantPage() {
+  if (enchantPageLoading) return enchantPageLoading;
+
+  enchantPageLoading = Promise.resolve(appLoading)
+    .then(() => {
+      if (!state.ready) return false;
+      if (state.itemArt) return true;
+      return ensureItemArt().then(() => {
+        if (document.body.dataset.page === 'enchant') refresh();
+        return true;
+      });
+    })
+    .finally(() => {
+      enchantPageLoading = null;
+    });
+
+  return enchantPageLoading;
+}
+
+function ensureNewsPage() {
+  if (typeof WhatsNew === 'undefined') return Promise.resolve(false);
+  if (document.body.dataset.page !== 'news') return Promise.resolve(true);
+  return Promise.resolve(WhatsNew.init(BUNDLE && BUNDLE.whatsNew));
+}
+
+let skinPageLoading = null;
+function ensureSkinPage() {
+  const mount = () => {
+    if (!window.SkinViewer) return false;
+    if (document.body.dataset.page !== 'skins') return true;
+
+    return window.SkinViewer.mount(
+      $('skinViewerRoot'),
+      { integrated: true }
+    ).then(viewer => {
+      if (document.body.dataset.page === 'skins') viewer.setActive(true);
+      return true;
+    });
+  };
+
+  if (window.SkinViewer) return Promise.resolve(mount());
+  if (skinPageLoading) return skinPageLoading;
+
+  /*
+   * app.js is immediately before the Skin Viewer module in index.html.
+   * On a direct #skins cold start the parser has therefore not reached that
+   * module yet. DOMContentLoaded waits for module scripts, after which mount()
+   * either exists and exposes its whole createViewer promise, or the module
+   * genuinely failed and navigation is allowed to recover normally.
+   */
+  if (document.readyState !== 'loading') return Promise.resolve(false);
+
+  skinPageLoading = new Promise((resolve, reject) => {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.SkinViewer) {
+        resolve(false);
+        return;
+      }
+      Promise.resolve(mount()).then(resolve, reject);
+    }, { once: true });
+  }).finally(() => {
+    skinPageLoading = null;
+  });
+
+  return skinPageLoading;
+}
+
 function showPage(name) {
   const wideOpen = name === 'realm';
   const here = key => Boolean(PAGES[key]) && Boolean($(PAGES[key]));
@@ -4477,17 +4560,26 @@ function showPage(name) {
   // A dynamically inserted script is invisible to that watcher until it has
   // finished downloading, so expose its own promise to the black cover.
   pageLoading = Promise.resolve();
-  if (page === 'enchant' && state.ready && !state.itemArt) {
-    ensureItemArt().then(() => {
-      if (document.body.dataset.page === 'enchant') refresh();
+  if (page === 'enchant') {
+    pageLoading = ensureEnchantPage().catch(error => {
+      console.error(error);
+      return false;
     });
   }
-  if (page === 'fame') openFamePage();
+  if (page === 'fame') {
+    pageLoading = openFamePage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
   // What's New reads its own index the first time it is opened, the same way
   // Fame Sweep does: it is a megabyte of pictures and nobody who came for the
   // calculator should pay for it.
-  if (page === 'news' && typeof WhatsNew !== 'undefined') {
-    WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
+  if (page === 'news') {
+    pageLoading = ensureNewsPage().catch(error => {
+      console.error(error);
+      return false;
+    });
   }
   /*
    * And the same for theory crafting, which is most of a megabyte of items,
@@ -4511,9 +4603,11 @@ function showPage(name) {
       return false;
     });
   }
-  if (page === 'skins' && window.SkinViewer) {
-    window.SkinViewer.mount($('skinViewerRoot'), { integrated: true })
-      .then(viewer => viewer.setActive(true)).catch(error => console.error(error));
+  if (page === 'skins') {
+    pageLoading = ensureSkinPage().catch(error => {
+      console.error(error);
+      return false;
+    });
   } else if (window.SkinViewer) {
     window.SkinViewer.unmount();
   }
@@ -4718,7 +4812,7 @@ for (const image of document.querySelectorAll('[data-art]')) dressArt(image);
 
 
 bind();
-load();
+const appLoading = load();
 
 
 /* --------------------------------------------------------------------

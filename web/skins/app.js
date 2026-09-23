@@ -226,10 +226,50 @@ S.studioTheme=localStorage.getItem('skinViewerStudioTheme')==='light'?'light':'d
 /* V39_STUDIO_MODE: a neutral inspection background beside the real Beach pocket. */
 S.worldMode=localStorage.getItem('skinViewerWorldMode')==='studio'?'studio':'beach';
 bg.imageSmoothingEnabled=false;fx.imageSmoothingEnabled=false;
-const atlasImages=new Map();
-function atlas(sheet){if(!sheet)return null;if(!atlasImages.has(sheet)){const i=new Image();i.src=`assets/skins/textures/${sheet}.png`;atlasImages.set(sheet,i)}return atlasImages.get(sheet)}
+const atlasImages=new Map(),atlasWork=new WeakMap();
+const THUMB_BATCH=96;
+
+function atlas(sheet){
+  if(!sheet)return null;
+  if(!atlasImages.has(sheet)){
+    const image=new Image();
+    const work={jobs:[],ready:null,finish:null};
+    work.ready=new Promise(resolve=>{work.finish=resolve});
+
+    const drain=()=>{
+      const batch=work.jobs.splice(0,THUMB_BATCH);
+      for(const draw of batch)draw();
+      if(work.jobs.length){
+        requestAnimationFrame(drain);
+        return;
+      }
+      work.finish(true);
+    };
+
+    image.addEventListener('load',()=>requestAnimationFrame(drain),{once:true});
+    image.addEventListener('error',()=>{
+      work.jobs.length=0;
+      work.finish(false);
+    },{once:true});
+
+    atlasWork.set(image,work);
+    atlasImages.set(sheet,image);
+    image.src=`assets/skins/textures/${sheet}.png`;
+  }
+  return atlasImages.get(sheet);
+}
+
+function queueAtlasDraw(img,draw){
+  if(!img)return false;
+  if(img.complete&&img.naturalWidth)return draw();
+  const work=atlasWork.get(img);
+  if(!work)return false;
+  work.jobs.push(draw);
+  return true;
+}
+
 function fitDraw(ctx,img,rect,size){if(!img||!img.complete||!img.naturalWidth||!rect)return false;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,size,size);const scale=Math.max(1,Math.floor(Math.min((size-4)/rect.w,(size-4)/rect.h))),w=rect.w*scale,h=rect.h*scale;ctx.drawImage(img,rect.x,rect.y,rect.w,rect.h,Math.floor((size-w)/2),Math.floor((size-h)/2),w,h);return true}
-function makeThumb(source,size=40,extra=''){const c=document.createElement('canvas');c.width=c.height=size;c.className=`thumb ${extra}`.trim();const img=atlas(source?.sheet),draw=()=>fitDraw(c.getContext('2d'),img,source?.rect,size);if(!draw()&&img)img.addEventListener('load',draw,{once:true});return c}
+function makeThumb(source,size=40,extra=''){const c=document.createElement('canvas');c.width=c.height=size;c.className=`thumb ${extra}`.trim();const img=atlas(source?.sheet),draw=()=>fitDraw(c.getContext('2d'),img,source?.rect,size);if(!draw()&&img)queueAtlasDraw(img,draw);return c}
 function thumbFrame(s){return s.sequences.find(q=>q.set===0&&q.action==='idle'&&q.direction==='front')?.frames.find(f=>f.spriteAvailable)||s.sequences.find(q=>q.set===0&&q.action==='idle'&&q.direction==='side')?.frames.find(f=>f.spriteAvailable)||s.sequences.find(q=>q.set===0&&q.action==='walk'&&q.direction==='front')?.frames.find(f=>f.spriteAvailable)||s.frames.find(f=>f.spriteAvailable)}
 function makeSpriteThumb(s,size=40){const f=thumbFrame(s);return makeThumb(f?{sheet:f.atlas,rect:f.rect}:null,size)}
 /* V36_DYE_PREVIEW: color dyes keep their real client item sprite as the main preview, with a color swatch overlay. */
@@ -657,7 +697,7 @@ function makeFavoriteSkinThumb(s,size=44){
   if(!frame)return c;
   const img=atlas(frame.atlas);
   const draw=()=>fitDraw(c.getContext('2d'),img,frame.rect,size);
-  if(img?.complete&&img.naturalWidth)draw();else if(img)img.addEventListener('load',draw,{once:true});
+  if(img)queueAtlasDraw(img,draw);
   return c;
 }
 function favoriteDyeSummary(dye,label){
@@ -783,6 +823,18 @@ canvas.addEventListener('pointermove',e=>{const p=point(e);if(S.shooting)aimAtta
 window.addEventListener('keydown',e=>setKey(e,true));window.addEventListener('keyup',e=>setKey(e,false));window.addEventListener('blur',()=>{S.keys.clear();S.shooting=false;S.attackUntil=0;applyMovementFacing();syncActivity(performance.now(),true)});
 function referenceBodyWidth(){const f=current();if(!f)return 8;const set=S.seq?.set??0,dir=S.seq?.directionRaw??S.facingRaw,pool=S.skin?.sequences||[];for(const actionRaw of[0,1]){const q=pool.find(q=>q.set===set&&q.actionRaw===actionRaw&&q.directionRaw===dir&&q.frames.some(f=>f.spriteAvailable));const widths=q?.frames.filter(f=>f.spriteAvailable&&f.rect?.w).map(f=>f.rect.w)||[];if(widths.length)return Math.min(...widths)}return Math.min(f.rect.w,f.rect.h)||f.rect.w||8}
 function anchoredWorld(){const f=current();if(!f||S.seq?.actionRaw!==2)return S.world;const bodyWidth=referenceBodyWidth();if(f.rect.w<=bodyWidth)return S.world;return{...S.world,x:attackAnchorX(S.world.x,f.rect.w,bodyWidth,S.world.scale,S.left)}}
+/*
+ * The catalogue shares one texture between thousands of tiny canvases. Let
+ * their first draws drain in bounded batches before mount() declares the page
+ * ready; otherwise one image load fires thousands of draw handlers at once
+ * exactly while the navigation cover is opening.
+ */
+await Promise.all(
+  [...atlasImages.values()]
+    .map(image=>atlasWork.get(image)?.ready)
+    .filter(Boolean)
+);
+
 let previous=performance.now();function tick(now){const dt=Math.min(.05,(now-previous)/1000);previous=now;if(active&&!host.closest('[hidden]')){updateMovement(dt);updateProjectiles(dt,now);drawRealmWorld(now);if(!S.shooting&&S.attackUntil&&now>=S.attackUntil){S.attackUntil=0;applyMovementFacing();syncActivity(now,true)}const attacking=S.seq?.actionRaw===2&&(S.shooting||(S.attackUntil&&now<S.attackUntil)),f=current();if(attacking)attackFrame(now);else if(f&&now-S.last>=FRAME_MS){advance();S.last=now}renderer.draw(current(),S.dyes,now,S.left,anchoredWorld());renderProjectiles()}requestAnimationFrame(tick)}requestAnimationFrame(tick);
 
 function selectExactTarget(target){
