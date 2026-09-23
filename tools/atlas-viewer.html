@@ -909,7 +909,10 @@ function warmAhead(box) {
   if (!moving) return;
   const going = levelFor(want.scale);
   warm(going, want.x, want.y, want.scale, box);
-  if (going === 0) ensureWater();
+  if (going === 0) {
+    ensureWater();
+    ensureThings();
+  }
   // An embedded bare atlas is scenery, not an interactive map: load only
   // the level it is actually heading for. Neighbour levels are for wheel
   // zooming and otherwise add several megabytes to the Home cold start.
@@ -2262,14 +2265,23 @@ function drawBirds(box) {
  * out there is no room to sort anything and the floor picture carries them
  * all flattened into it, which is why this only runs at the closest level.
  */
-let things = null;
+let things = null, thingsLoading = null;
 const thingArt = new Image();
-if (A.things) {
+
+function ensureThings() {
+  if (!A.things || things || thingsLoading) return thingsLoading;
   thingArt.src = asset('things.png');
-  fetch(asset('things.json')).then(r => r.json()).then(index =>
+  thingsLoading = fetch(asset('things.json')).then(r => r.json()).then(index =>
     fetch(asset('things.bin')).then(r => r.arrayBuffer()).then(buffer => {
       things = { index, at: new Uint16Array(buffer), reach: reachOf(index) };
-    })).catch(() => { things = null; });
+      return things;
+    })
+  ).catch(() => {
+    things = null;
+    thingsLoading = null;
+    return null;
+  });
+  return thingsLoading;
 }
 
 /*
