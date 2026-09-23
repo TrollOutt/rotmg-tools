@@ -2766,6 +2766,30 @@ const TINT = {
     stepBits(delta);
     if (duel.hp <= 0) return;                 // it is over; nothing else moves
     duel.at += delta;
+
+    /*
+     * Kill time is DPS time, not projectile travel time. The shots below are
+     * the visualisation of the weapon; their range and speed must not make a
+     * target live longer simply because its sprite is drawn farther away.
+     */
+    const dps = Math.max(0, gun.dps || 0);
+    if (dps > 0) {
+      const before = duel.hp;
+      const hurt = dps * delta;
+
+      if (hurt >= before) {
+        const until = before / dps;
+        duel.dealt += before;
+        duel.hp = 0;
+        duel.over = duel.at - delta + until;
+        blowUp();
+        return;
+      }
+
+      duel.hp = before - hurt;
+      duel.dealt += hurt;
+    }
+
     if (duel.swing > 0) duel.swing -= delta;
 
     if (gun.rate > 0) {
@@ -2819,10 +2843,6 @@ const TINT = {
       one.age += delta;
       if (one.age < one.lasts) continue;
       duel.shots.splice(i, 1);
-      if (duel.hp <= 0) continue;
-      duel.hp -= one.hurt;
-      duel.dealt += one.hurt;
-      if (duel.hp <= 0) { duel.hp = 0; duel.over = duel.at; blowUp(); }
     }
     /*
      * And once it is down it stays down. The time it took is the answer to
