@@ -343,7 +343,10 @@ var WhatsNew = (function () {
    * that is not in it, which is what a shelf of drawers does. The keyboard
    * gets the same: Enter or Space to open, Escape to close.
    */
+  let wired = false;
   function wire() {
+    if (wired) return;
+    wired = true;
     document.addEventListener('click', event => {
       if (!data) return;
       const page = $('pageNews');
@@ -421,3 +424,5 @@ var WhatsNew = (function () {
 
   return { init };
 })();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = WhatsNew;
