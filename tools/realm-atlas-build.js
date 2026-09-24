@@ -1598,7 +1598,7 @@ if (OUT !== path.join(root, 'local', 'atlas')) {
   const cuts = [
     /<aside id="bench">[\s\S]*?<\/aside>\r?\n/,
     /  \/\* The bench, for trying things[\s\S]*?#bench p \{[^}]*\}\r?\n/,
-    /\/\* -+ the bench, wired up -+ \*\/[\s\S]*?\r?\n\}\r?\n\r?\n(?=requestAnimationFrame)/
+    /\/\* -+ the bench, wired up -+ \*\/[\s\S]*?\r?\n\}\r?\n\r?\n(?=(?:requestAnimationFrame|startFrame))/
   ];
   for (const what of cuts) template = template.replace(what, '');
   // What must not go out is the panel itself. The camera still answers to

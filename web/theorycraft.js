@@ -189,6 +189,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return true;
   }
 
+  const theoryOpen = () => document.body.dataset.page === 'theory';
+
   const films = [];
   let filmClock = 0;
   function playFilms(now) {
@@ -202,7 +204,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       while (frame < film.ends.length - 1 && at >= film.ends[frame]) frame++;
       film.node.style.backgroundPositionX = (-(film.x + frame * film.w) * film.zoom) + 'px';
     }
-    if (anyLeft && motionWanted()) filmClock = requestAnimationFrame(playFilms);
+    if (anyLeft && motionWanted() && theoryOpen()) filmClock = requestAnimationFrame(playFilms);
   }
   function startFilms(within) {
     films.length = 0;
@@ -216,7 +218,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     if (filmClock) cancelAnimationFrame(filmClock);
     filmClock = 0;
-    if (films.length && motionWanted()) filmClock = requestAnimationFrame(playFilms);
+    if (films.length && motionWanted() && theoryOpen()) filmClock = requestAnimationFrame(playFilms);
   }
 
   function dungeonCards(dungeons) {
@@ -3244,14 +3246,17 @@ const TINT = {
 
   let painting = false;
   function keepPainting() {
-    if (painting) return;
+    if (painting || !theoryOpen()) return;
     painting = true;
     let was = performance.now();
     const tick = now => {
+      if (!theoryOpen()) {
+        painting = false;
+        return;
+      }
       const delta = Math.min(0.05, (now - was) / 1000);
       was = now;
-      const open = document.body.dataset.page === 'theory';
-      if (open && duel.on && data && build) { stepDuel(delta); drawDuel(); }
+      if (duel.on && data && build) { stepDuel(delta); drawDuel(); }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -4134,8 +4139,19 @@ const TINT = {
     return true;
   }
 
+  function resumeMotion() {
+    if (!theoryOpen()) return;
+    if (!filmClock && films.length && motionWanted()) {
+      filmClock = requestAnimationFrame(playFilms);
+    }
+    keepPainting();
+  }
+
   function start() {
-    if (started) return Promise.resolve(true);
+    if (started) {
+      resumeMotion();
+      return Promise.resolve(true);
+    }
     if (startPromise) return startPromise;
 
     startPromise = runStart()

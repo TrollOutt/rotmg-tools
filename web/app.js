@@ -1075,6 +1075,13 @@ async function optimizeCurrentItem() {
   let beam = [best];
   let looked = 1;
 
+  /*
+   * LIMIT bounds what survives each beam level, not how much work is needed
+   * to build that level. Large real pools can still mean hundreds of
+   * thousands of candidate evaluations, so yield on the same frame budget as
+   * the calculator without changing which candidates are considered.
+   */
+  const optimizerBreathe = budgetedYield(12);
   const LIMIT = 1200;
   const EPSILON = 1e-9;
 
@@ -1091,6 +1098,7 @@ async function optimizeCurrentItem() {
         at < candidates.length;
         at++
       ) {
+        await optimizerBreathe();
         const mod = candidates[at];
 
         if (
@@ -4135,9 +4143,18 @@ if (typeof window.fetch === 'function' && !window.fetch.watched) {
       mine = url.origin === location.origin;
     } catch (error) { /* a relative path this old browser cannot parse; count it */ }
     if (!mine) return passed(...args);
-    const token = { at: performance.now() };
+    const token = { at: performance.now(), expiry: 0 };
     flying.add(token);
-    const drop = () => { flying.delete(token); };
+    const drop = () => {
+      clearTimeout(token.expiry);
+      flying.delete(token);
+    };
+    /*
+     * settled() gives up after WAIT_MOST, so a fetch that has not answered by
+     * then can no longer affect the cover. Do not retain its tracking token
+     * forever if the browser/network leaves the request pending forever.
+     */
+    token.expiry = setTimeout(drop, WAIT_MOST);
     return passed(...args).then(answer => { drop(); return answer; },
       error => { drop(); throw error; });
   };
@@ -4206,6 +4223,8 @@ function dressAtlas(snap, over) {
  * was ever opened.
  */
 window.addEventListener('message', event => {
+  const frame = document.getElementById('realmFrame');
+  if (!frame || !frame.contentWindow || event.source !== frame.contentWindow) return;
   const said = event.data;
   if (!said) return;
   /*

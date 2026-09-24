@@ -40,6 +40,9 @@ export const FACE_AWAY=2,FACE_YOU=3,FACE_SIDE=0;
 export function directionFromPointer(px,py,x,y){const dx=px-x,dy=py-y;if(Math.abs(dx)>Math.abs(dy))return{raw:FACE_SIDE,left:dx<0};return{raw:dy<0?FACE_AWAY:FACE_YOU,left:false}}
 export function familyOrder(a,b){if(a==='Other')return 1;if(b==='Other')return-1;if(a==='Set skins')return 1;if(b==='Set skins')return-1;return a.localeCompare(b)}
 
+function storageGet(key){try{return localStorage.getItem(key)}catch{return null}}
+function storageSet(key,value){try{localStorage.setItem(key,value);return true}catch{return false}}
+
 let mountedInstance=null,mountPromise=null;
 
 export function mount(container=document.getElementById('skinViewerRoot'),options={}){
@@ -200,7 +203,7 @@ for(const one of skins){
 const canvas=$('canvas'),worldBg=$('worldBg'),fxCanvas=$('fxCanvas'),renderer=new Renderer(canvas),bg=worldBg.getContext('2d'),fx=fxCanvas.getContext('2d'),CLASS_ORDER=['Wizard','Priest','Archer','Rogue','Warrior','Knight','Paladin','Assassin','Necromancer','Huntress','Mystic','Trickster','Sorcerer','Ninja','Samurai','Bard','Summoner','Kensei'];
 classes.sort((a,b)=>{const ai=CLASS_ORDER.indexOf(a.name),bi=CLASS_ORDER.indexOf(b.name);return(ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name)});
 const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',dyeTarget:'clothing',dyeCategory:'all',classOpen:true};
-S.attackSpeed=Math.max(.25,Math.min(4,Number(localStorage.getItem('skinViewerAttackSpeed'))||1));
+S.attackSpeed=Math.max(.25,Math.min(4,Number(storageGet('skinViewerAttackSpeed'))||1));
 /* V312_COMBO_FAVORITES: exact local skin + dye combinations, user-named. */
 const COMBO_FAVORITES_KEY='skinViewerComboFavoritesV1';
 function normalizeComboDyeRef(ref){
@@ -217,14 +220,14 @@ function normalizeComboFavorite(favorite){
   const accessory=normalizeComboDyeRef(favorite.accessory);
   return {...favorite,skinId,clothing,accessory,signature:favorite.signature||comboSignature(skinId,clothing,accessory)};
 }
-function readComboFavorites(){try{const value=JSON.parse(localStorage.getItem(COMBO_FAVORITES_KEY)||'[]');return Array.isArray(value)?value.map(normalizeComboFavorite).filter(Boolean):[]}catch{return[]}}
+function readComboFavorites(){try{const value=JSON.parse(storageGet(COMBO_FAVORITES_KEY)||'[]');return Array.isArray(value)?value.map(normalizeComboFavorite).filter(Boolean):[]}catch{return[]}}
 let comboFavorites=readComboFavorites();
-S.catalogMode=localStorage.getItem('skinViewerCatalogMode')==='favorites'?'favorites':'skins';
+S.catalogMode=storageGet('skinViewerCatalogMode')==='favorites'?'favorites':'skins';
 
 /* V311B_STUDIO_THEME */
-S.studioTheme=localStorage.getItem('skinViewerStudioTheme')==='light'?'light':'dark';
+S.studioTheme=storageGet('skinViewerStudioTheme')==='light'?'light':'dark';
 /* V39_STUDIO_MODE: a neutral inspection background beside the real Beach pocket. */
-S.worldMode=localStorage.getItem('skinViewerWorldMode')==='studio'?'studio':'beach';
+S.worldMode=storageGet('skinViewerWorldMode')==='studio'?'studio':'beach';
 bg.imageSmoothingEnabled=false;fx.imageSmoothingEnabled=false;
 const atlasImages=new Map(),atlasWork=new WeakMap();
 const THUMB_BATCH=96;
@@ -374,7 +377,7 @@ setTimeout(scheduleSelectedIndexPanel,0);
 function oneLine(value){return String(value==null?'':value).replace(/\s+/g,' ').trim()}
 function setCatalogMode(mode){
   S.catalogMode=mode==='favorites'?'favorites':'skins';
-  try{localStorage.setItem('skinViewerCatalogMode',S.catalogMode)}catch{}
+  try{storageSet('skinViewerCatalogMode',S.catalogMode)}catch{}
   /* While the shortlist is what the panel shows, the two ways of narrowing
      the whole catalogue have nothing to narrow. */
   host.classList.toggle('favorites-mode',S.catalogMode==='favorites');
@@ -429,7 +432,7 @@ function renderSandboxBar(){
 }
 $('attackSpeed').addEventListener('input',event=>{
   S.attackSpeed=Math.max(.25,Math.min(4,Number(event.target.value)||1));
-  try{localStorage.setItem('skinViewerAttackSpeed',String(S.attackSpeed))}catch{}
+  try{storageSet('skinViewerAttackSpeed',String(S.attackSpeed))}catch{}
   const now=performance.now();
   if(S.shooting){S.attackStart=now;S.nextShotAt=now}
   renderSandboxBar();
@@ -530,14 +533,14 @@ function renderStudioTheme(){
 }
 function setStudioTheme(theme){
   S.studioTheme=theme==='light'?'light':'dark';
-  localStorage.setItem('skinViewerStudioTheme',S.studioTheme);
+  storageSet('skinViewerStudioTheme',S.studioTheme);
   renderStudioTheme();
   if(S.worldMode==='studio'){S.mapDirty=true;drawRealmWorld(performance.now(),true)}
 }
 
 function renderWorldMode(){root.querySelectorAll('[data-world-mode]').forEach(button=>button.classList.toggle('selected',button.dataset.worldMode===S.worldMode));const hint=$('worldModeHint');if(hint)hint.textContent=S.worldMode==='studio'?'Studio · inspection room':'Beach · real Atlas area';renderStudioTheme()}
 function rememberWorldMode(){const slot=S.modeState[S.worldMode]||{};slot.player={...S.player};slot.scale=S.camera.scale;if(!slot.spawn)slot.spawn={...S.player};S.modeState[S.worldMode]=slot}
-function setWorldMode(mode,initial=false){const next=mode==='studio'?'studio':'beach';if(!initial)rememberWorldMode();S.worldMode=next;localStorage.setItem('skinViewerWorldMode',S.worldMode);S.playArea=next==='studio'?S.studioArea:S.beachArea;const slot=S.modeState[next];if(slot?.player)S.player={...slot.player};else if(next==='studio')S.player={x:0,y:0};else if(S.beachArea)S.player={x:(S.beachArea.x0+S.beachArea.x1)/2,y:(S.beachArea.y0+S.beachArea.y1)/2};S.spawn={...(slot?.spawn||S.player)};S.camera.scale=Math.max(minRealmScale(),slot?.scale||defaultScale());S.projectiles.length=0;S.keys.clear();S.attackUntil=0;S.shooting=false;S.mapDirty=true;syncRenderScale();renderWorldMode();drawRealmWorld(performance.now(),true)}
+function setWorldMode(mode,initial=false){const next=mode==='studio'?'studio':'beach';if(!initial)rememberWorldMode();S.worldMode=next;storageSet('skinViewerWorldMode',S.worldMode);S.playArea=next==='studio'?S.studioArea:S.beachArea;const slot=S.modeState[next];if(slot?.player)S.player={...slot.player};else if(next==='studio')S.player={x:0,y:0};else if(S.beachArea)S.player={x:(S.beachArea.x0+S.beachArea.x1)/2,y:(S.beachArea.y0+S.beachArea.y1)/2};S.spawn={...(slot?.spawn||S.player)};S.camera.scale=Math.max(minRealmScale(),slot?.scale||defaultScale());S.projectiles.length=0;S.keys.clear();S.attackUntil=0;S.shooting=false;S.mapDirty=true;syncRenderScale();renderWorldMode();drawRealmWorld(performance.now(),true)}
 function resetWorldMode(){const slot=S.modeState[S.worldMode],spawn=slot?.spawn||{x:0,y:0};S.player={...spawn};S.camera.scale=defaultScale();S.projectiles.length=0;S.keys.clear();S.attackUntil=0;S.shooting=false;if(slot){slot.player={...S.player};slot.scale=S.camera.scale}S.mapDirty=true;syncRenderScale();drawRealmWorld(performance.now(),true)}
 function drawRealmWorld(now,force=false){if(S.worldMode==='studio'){if(!force&&!S.mapDirty)return;bg.clearRect(0,0,worldBg.width,worldBg.height);drawStudioBackground();S.mapDirty=false;S.lastMapDraw=now;return}const z=realmLevelFor();if(!force&&!S.mapDirty&&!(z===0&&now-S.lastMapDraw>=100))return;bg.clearRect(0,0,worldBg.width,worldBg.height);bg.fillStyle='#10151a';bg.fillRect(0,0,worldBg.width,worldBg.height);bg.save();clipBeachPocket();drawRealmLevel(z);if(z===0)drawRealmThings(now);bg.restore();S.mapDirty=false;S.lastMapDraw=now}
 function loadBeachArea(){const area=beachPocket();S.beachArea=area;S.playArea=area;S.beachBeacon=area.beacon;const cx=area.beacon?.x??(area.x0+area.x1)/2,cy=area.beacon?.y??(area.y0+area.y1)/2,pad=1.5;S.player.x=Math.max(area.x0+pad,Math.min(area.x1-pad,cx+2));S.player.y=Math.max(area.y0+pad,Math.min(area.y1-pad,cy+3));S.spawn={x:S.player.x,y:S.player.y};S.camera.scale=defaultScale();S.modeState.beach={player:{...S.player},spawn:{...S.spawn},scale:S.camera.scale};S.projectiles.length=0;S.mapDirty=true;syncRenderScale()}
@@ -649,7 +652,7 @@ function renderFamilies(){
   box.replaceChildren(frag);
 }
 
-function saveComboFavorites(){localStorage.setItem(COMBO_FAVORITES_KEY,JSON.stringify(comboFavorites))}
+function saveComboFavorites(){storageSet(COMBO_FAVORITES_KEY,JSON.stringify(comboFavorites))}
 function comboDyeRef(dye){return dye?{id:dye.id??null,type:dye.type??null}:null}
 function resolveComboDye(ref){if(!ref)return null;return dyes.find(d=>(ref.id!=null&&d.id===ref.id)||(ref.type!=null&&d.type===ref.type))||null}
 function comboSignature(skinId,clothing,accessory){return JSON.stringify([skinId,clothing?.id??clothing?.type??null,accessory?.id??accessory?.type??null])}
@@ -677,7 +680,7 @@ function saveCurrentComboFavorite(name){
   if(same)Object.assign(same,entry);else comboFavorites.unshift(entry);
   saveComboFavorites();
   S.catalogMode='favorites';
-  try{localStorage.setItem('skinViewerCatalogMode','favorites')}catch{}
+  try{storageSet('skinViewerCatalogMode','favorites')}catch{}
   renderSandboxBar();renderCatalogueUI();
 }
 function removeComboFavorite(id){
@@ -817,7 +820,7 @@ if(typeof ResizeObserver==='function'){
 }else window.addEventListener('resize',fitStage);
 
 renderClassPicker();renderFamilies();loadBeachArea();select(skins.find(s=>s.frames.some(f=>f.spriteAvailable))||skins[0]);renderDyePanel();renderSandboxBar();root.querySelectorAll('[data-world-mode]').forEach(button=>button.onclick=()=>setWorldMode(button.dataset.worldMode));setWorldMode(S.worldMode,true);fitStage();
-const attackSpeed=$('attackSpeed'),attackSpeedValue=$('attackSpeedValue');function renderAttackSpeed(){const period=attackPeriod();attackSpeed.value=String(S.attackSpeed);attackSpeedValue.textContent=`${RealmI18n.number(S.attackSpeed,{minimumFractionDigits:2,maximumFractionDigits:2})}× · ${RealmI18n.number(1000/period,{minimumFractionDigits:2,maximumFractionDigits:2})}/s`}renderAttackSpeed();attackSpeed.oninput=()=>{S.attackSpeed=Math.max(.25,Math.min(4,Number(attackSpeed.value)||1));localStorage.setItem('skinViewerAttackSpeed',String(S.attackSpeed));const now=performance.now();if(S.shooting){S.attackStart=now;S.nextShotAt=now}renderAttackSpeed()};
+const attackSpeed=$('attackSpeed'),attackSpeedValue=$('attackSpeedValue');function renderAttackSpeed(){const period=attackPeriod();attackSpeed.value=String(S.attackSpeed);attackSpeedValue.textContent=`${RealmI18n.number(S.attackSpeed,{minimumFractionDigits:2,maximumFractionDigits:2})}× · ${RealmI18n.number(1000/period,{minimumFractionDigits:2,maximumFractionDigits:2})}/s`}renderAttackSpeed();attackSpeed.oninput=()=>{S.attackSpeed=Math.max(.25,Math.min(4,Number(attackSpeed.value)||1));storageSet('skinViewerAttackSpeed',String(S.attackSpeed));const now=performance.now();if(S.shooting){S.attackStart=now;S.nextShotAt=now}renderAttackSpeed()};
 $('search').oninput=()=>{renderCatalogueUI()};$('dyeSearch').oninput=renderDyePanel;$('clearDye').onclick=()=>{S.dyes[S.dyeTarget]=null;renderDyePanel();scheduleSelectedIndexPanel();};$('resetWorld').onclick=()=>{resetWorldMode();renderZoom()};
 canvas.addEventListener('pointermove',e=>{const p=point(e);if(S.shooting)aimAttackPoint(p);else S.pointer=p});canvas.addEventListener('pointerdown',e=>{canvas.focus();attack(e)});canvas.addEventListener('pointerup',releaseAttack);canvas.addEventListener('pointercancel',releaseAttack);canvas.addEventListener('wheel',zoomWheel,{passive:false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>setKey(e,true));window.addEventListener('keyup',e=>setKey(e,false));window.addEventListener('blur',()=>{S.keys.clear();S.shooting=false;S.attackUntil=0;applyMovementFacing();syncActivity(performance.now(),true)});
@@ -835,7 +838,36 @@ await Promise.all(
     .filter(Boolean)
 );
 
-let previous=performance.now();function tick(now){const dt=Math.min(.05,(now-previous)/1000);previous=now;if(active&&!host.closest('[hidden]')){updateMovement(dt);updateProjectiles(dt,now);drawRealmWorld(now);if(!S.shooting&&S.attackUntil&&now>=S.attackUntil){S.attackUntil=0;applyMovementFacing();syncActivity(now,true)}const attacking=S.seq?.actionRaw===2&&(S.shooting||(S.attackUntil&&now<S.attackUntil)),f=current();if(attacking)attackFrame(now);else if(f&&now-S.last>=FRAME_MS){advance();S.last=now}renderer.draw(current(),S.dyes,now,S.left,anchoredWorld());renderProjectiles()}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+let previous=performance.now(),animationFrame=0;
+function tick(now){
+  animationFrame=0;
+  if(!active)return;
+  const dt=Math.min(.05,(now-previous)/1000);
+  previous=now;
+  if(!host.closest('[hidden]')){
+    updateMovement(dt);
+    updateProjectiles(dt,now);
+    drawRealmWorld(now);
+    if(!S.shooting&&S.attackUntil&&now>=S.attackUntil){
+      S.attackUntil=0;
+      applyMovementFacing();
+      syncActivity(now,true);
+    }
+    const attacking=S.seq?.actionRaw===2&&(S.shooting||(S.attackUntil&&now<S.attackUntil)),f=current();
+    if(attacking)attackFrame(now);
+    else if(f&&now-S.last>=FRAME_MS){advance();S.last=now}
+    renderer.draw(current(),S.dyes,now,S.left,anchoredWorld());
+    renderProjectiles();
+  }
+  animationFrame=requestAnimationFrame(tick);
+}
+function startLoop(){
+  if(active&&!animationFrame){
+    previous=performance.now();
+    animationFrame=requestAnimationFrame(tick);
+  }
+}
+startLoop();
 
 function selectExactTarget(target){
   const resolved=resolveExactTarget(target,skins,dyes);
@@ -856,7 +888,21 @@ function snapshot(){return{skin:S.skin?.id||null,clothing:S.dyes.clothing?.id||n
 const api={
   select:selectExactTarget,
   getState:snapshot,
-  setActive(value){active=Boolean(value);if(!active){S.keys.clear();S.shooting=false;S.attackUntil=0}return active},
+  setActive(value){
+    const next=Boolean(value);
+    if(next===active){
+      if(active)startLoop();
+      return active;
+    }
+    active=next;
+    if(!active){
+      S.keys.clear();
+      S.shooting=false;
+      S.attackUntil=0;
+      if(animationFrame){cancelAnimationFrame(animationFrame);animationFrame=0}
+    }else startLoop();
+    return active;
+  },
   root,
   host
 };
