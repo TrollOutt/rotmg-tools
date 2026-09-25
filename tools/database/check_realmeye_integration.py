@@ -162,6 +162,127 @@ def main():
         exported = sidecar.get("records", {})
         page_index = sidecar.get("pageIndex", {})
 
+        # Blueprint acquisition belongs to the Blueprint entity, even though
+        # RealmEye publishes the evidence on the forged gear page. Every
+        # exported Blueprint relation must come from an explicit
+        # "Blueprint Drops From" / "Blueprint Obtained Through" source row.
+        blueprint_ids = {
+            row[0]
+            for row in con.execute(
+                """
+                SELECT DISTINCT entity.legacy_index_id
+                FROM entities entity
+                JOIN source_records record
+                  ON record.entity_uid=entity.entity_uid
+                 AND record.record_type='index_record'
+                JOIN facts activate
+                  ON activate.source_record_uid=record.record_uid
+                 AND activate.field_path='activate'
+                WHERE entity.legacy_index_id IS NOT NULL
+                  AND json_extract(activate.value_json,'$')='UnlockForgeBlueprint'
+                """
+            )
+        }
+
+        blueprint_expected = {}
+        bad_blueprint_provenance = []
+
+        for row in con.execute(
+            """
+            SELECT
+              source.legacy_index_id,
+              relation.relation_type,
+              COALESCE(
+                json_extract(relation.attributes_json,'$.target_slug'),
+                target.legacy_index_id
+              ) AS target_key,
+              lower(COALESCE(source_relation.source_field,'')) AS source_field
+            FROM relations relation
+            JOIN entities source
+              ON source.entity_uid=relation.from_entity_uid
+            LEFT JOIN entities target
+              ON target.entity_uid=relation.to_entity_uid
+            LEFT JOIN source_record_relations source_relation
+              ON source_relation.relation_uid=
+                 json_extract(relation.attributes_json,'$.source_relation_uid')
+            WHERE source.legacy_index_id IS NOT NULL
+              AND json_extract(relation.attributes_json,'$.source')='realmeye_archive'
+              AND relation.relation_type IN ('dropped_by','obtained_through')
+            ORDER BY source.legacy_index_id,relation.relation_type,target_key
+            """
+        ):
+            blueprint_id, relation_type, target_key, source_field = row
+            if blueprint_id not in blueprint_ids:
+                continue
+
+            wanted_field = {
+                "dropped_by": "archive:fact:blueprint_drops_from",
+                "obtained_through": "archive:fact:blueprint_obtained_through",
+            }[relation_type]
+
+            if source_field != wanted_field:
+                bad_blueprint_provenance.append(
+                    (blueprint_id, relation_type, target_key, source_field)
+                )
+
+            if target_key:
+                blueprint_expected.setdefault(blueprint_id, set()).add(
+                    (relation_type, target_key)
+                )
+
+        if bad_blueprint_provenance:
+            raise SystemExit(
+                "Blueprint relations leaked from non-Blueprint source rows: "
+                + repr(bad_blueprint_provenance[:10])
+            )
+
+        blueprint_missing = []
+        blueprint_extra = []
+
+        for blueprint_id in sorted(blueprint_ids):
+            expected = blueprint_expected.get(blueprint_id, set())
+            item = exported.get(blueprint_id) or {}
+
+            actual = {
+                (
+                    relation.get("type"),
+                    relation.get("toRealmEye") or relation.get("to"),
+                )
+                for relation in item.get("relations") or []
+                if relation.get("type") in {"dropped_by", "obtained_through"}
+                and (relation.get("toRealmEye") or relation.get("to"))
+            }
+
+            missing = expected - actual
+            extra = actual - expected
+
+            if missing:
+                blueprint_missing.append(
+                    (blueprint_id, sorted(missing))
+                )
+            if extra:
+                blueprint_extra.append(
+                    (blueprint_id, sorted(extra))
+                )
+
+        if blueprint_missing:
+            raise SystemExit(
+                "Explicit Blueprint relations missing from runtime enrichment: "
+                + repr(blueprint_missing[:10])
+            )
+
+        if blueprint_extra:
+            raise SystemExit(
+                "Blueprint runtime relations have unsupported/leaked sources: "
+                + repr(blueprint_extra[:10])
+            )
+
+        sidecar_checks["blueprint_entities_checked"] = len(blueprint_ids)
+        sidecar_checks["blueprints_with_explicit_sources"] = len(blueprint_expected)
+        sidecar_checks["blueprint_explicit_relations"] = sum(
+            len(value) for value in blueprint_expected.values()
+        )
+
         floral_export = exported.get("place:Floral Escape")
         if floral_entities and not floral_export:
             raise SystemExit("Floral Escape is integrated in SQLite but missing from RealmEye runtime enrichment")

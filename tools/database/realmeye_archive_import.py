@@ -593,18 +593,137 @@ def import_realmeye_archive(imp, snapshot_uid: str, archive_path: str | Path):
             })
         add_evidence(imp, sr, snapshot_uid, er, evidence_type, evidence_key, evidence_payload); relation_counts[relation_type] += 1
 
+    def fact_targets(fact):
+        targets = []
+        for link in fact.get("links", []):
+            target = slug_of(link.get("href"))
+            if target and target not in targets:
+                targets.append(target)
+        return targets
+
+    def blueprint_entity_for(payload):
+        candidates = set()
+        hints = []
+        for fact in payload.get("facts", []):
+            if str(fact.get("key") or "").strip().lower() != "blueprint":
+                continue
+            value = str(fact.get("value") or "").strip()
+            if value:
+                hints.append(value)
+                candidates.update(name_map.get(("item", name_key(value)), set()))
+            for target in fact_targets(fact):
+                candidates.update(current_entity_candidates(imp.con, target))
+        return (next(iter(candidates)) if len(candidates) == 1 else None), hints
+
+    def add_blueprint_relation(evidence_slug, blueprint_entity, relation_type,
+                               target_slug, source_field, evidence_key, evidence_payload):
+        target_slug = slug_of(target_slug)
+        if not target_slug or evidence_slug not in page_records or target_slug not in page_records:
+            return
+
+        raw_type = "blueprint_" + relation_type
+        dedupe = ("blueprint", blueprint_entity, raw_type, target_slug, source_field, evidence_key)
+        if dedupe in seen:
+            return
+        seen.add(dedupe)
+
+        pos_key = (evidence_slug, source_field)
+        position = counters[pos_key]
+        counters[pos_key] += 1
+
+        sr = imp.source_relation(
+            snapshot_uid,
+            page_records[evidence_slug],
+            raw_type,
+            page_records[target_slug],
+            source_field,
+            position,
+            {
+                "source": "realmeye_archive",
+                "evidence_slug": evidence_slug,
+                "target_slug": target_slug,
+                "blueprint_entity_uid": blueprint_entity,
+                "evidence": evidence_payload,
+            },
+        )
+
+        er = None
+        targets = page_entities.get(target_slug, set())
+        if len(targets) == 1:
+            er = imp.relation(
+                blueprint_entity,
+                relation_type,
+                next(iter(targets)),
+                page_records[evidence_slug],
+                "observation",
+                {
+                    "source": "realmeye_archive",
+                    "source_relation_uid": sr,
+                    "evidence_slug": evidence_slug,
+                    "target_slug": target_slug,
+                },
+            )
+
+        add_evidence(
+            imp, sr, snapshot_uid, er,
+            "realmeye_fact", evidence_key, evidence_payload
+        )
+        relation_counts[raw_type] += 1
+
+    blueprint_relations = {
+        "blueprint drops from": "dropped_by",
+        "blueprint obtained through": "obtained_through",
+    }
+
     for slug, payload in payloads.items():
+        blueprint_entity, blueprint_hints = blueprint_entity_for(payload)
+
         for fact in payload["facts"]:
-            relation_type = FACT_RELATIONS.get(str(fact["key"]).strip().lower())
-            if not relation_type: continue
-            targets = []
-            for link in fact.get("links", []):
-                target = slug_of(link.get("href"))
-                if target and target not in targets: targets.append(target)
-            for target in targets:
-                add_relation(slug, relation_type, target, "archive:fact:" + field_key(fact["key"]), "realmeye_fact", fact["key"], {
-                    "key": fact["key"], "value": fact["value"], "section": fact.get("section") or "", "section_path": fact.get("section_path") or "",
-                })
+            fact_key = str(fact["key"]).strip().lower()
+
+            if fact_key in blueprint_relations:
+                # No exact Blueprint identity means no relation. Keep the fact
+                # as evidence, but never infer a Blueprint from the gear name.
+                if not blueprint_entity:
+                    continue
+                for target in fact_targets(fact):
+                    add_blueprint_relation(
+                        slug,
+                        blueprint_entity,
+                        blueprint_relations[fact_key],
+                        target,
+                        "archive:fact:" + field_key(fact["key"]),
+                        fact["key"],
+                        {
+                            "key": fact["key"],
+                            "value": fact["value"],
+                            "section": fact.get("section") or "",
+                            "section_path": fact.get("section_path") or "",
+                            "blueprint": blueprint_hints,
+                        },
+                    )
+                continue
+
+            relation_type = FACT_RELATIONS.get(fact_key)
+            if not relation_type:
+                continue
+
+            for target in fact_targets(fact):
+                add_relation(
+                    slug,
+                    relation_type,
+                    target,
+                    "archive:fact:" + field_key(fact["key"]),
+                    "realmeye_fact",
+                    fact["key"],
+                    {
+                        "key": fact["key"],
+                        "value": fact["value"],
+                        "section": fact.get("section") or "",
+                        "section_path": fact.get("section_path") or "",
+                    },
+                )
+
         for link in pre["semantic_links"].get(slug, []):
             target = link["target_slug"]
             relation_type = semantic_section_relation(payload["type"], link.get("section") or "", pre["page_type"].get(target, ""))
