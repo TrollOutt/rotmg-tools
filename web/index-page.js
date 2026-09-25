@@ -1592,9 +1592,6 @@ const RealmIndex = (function () {
     if (one.kind === 'item') heldBy(one).forEach(x => links.push(['may hold', x.id, true]));
 
     const cardLinks = one.kind === 'place' ? links.filter(([how]) => how !== 'was seen in') : links;
-    const where = one.from
-      ? (all.files[one.from[0]] || '?') + (one.from[1] ? ' · ' + one.from[1] : '')
-      : t('index.source.notDeclared');
 
     return '<header class="ix-card-head">'
       + artCell(one, 44)
@@ -1626,8 +1623,7 @@ const RealmIndex = (function () {
       + drawFacts(one)
       + drawCommunity(one)
       + drawFolds(one)
-      + drawConnections(one, cardLinks)
-      + (one.communityOnly ? '' : '<p class="ix-from">' + esc(t('index.source.readFrom', { source: where })) + '</p>');
+      + drawConnections(one, cardLinks);
   }
 
   /*
@@ -1649,8 +1645,6 @@ const RealmIndex = (function () {
          */
         '<li><span>' + esc(x.as) + '</span>'
         + (x.why ? '<em>' + esc(x.why) + '</em>' : '')
-        + '<code>' + esc((all.files[x.from && x.from[0]] || '?')
-          + (x.from && x.from[1] ? ' · ' + x.from[1] : '')) + '</code>'
         + (x.diff ? '<small>' + esc(x.diff) + '</small>' : '') + '</li>').join('')
       + '</ul>', one.folds.length);
   }
