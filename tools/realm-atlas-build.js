@@ -1609,8 +1609,47 @@ if (OUT !== path.join(root, 'local', 'atlas')) {
   }
 }
 
+if (!template.includes('/*LOOTKIN*/null')) throw new Error('the page has lost its place for the kinds of drop');
 fs.writeFileSync(path.join(OUT, 'index.html'),
-  template.replace('/*ATLAS*/null', JSON.stringify(summary)));
+  template.replace('/*ATLAS*/null', JSON.stringify(summary))
+    .replace('/*LOOTKIN*/null', JSON.stringify(lootKin())));
+}
+
+/*
+ * The kinds of drop the reference names that are no one item - "Common Pet
+ * Eggs", "Stat Increase Potions" - and the potions that only restore health
+ * or magic, read from the Index's own records: the eggs by the rarity the
+ * client gives them, the potions by what drinking one does. The panel shows
+ * a kind as its members in turn and leaves the restoring potions out.
+ *
+ * The Index is built from the client by its own tool; without it beside the
+ * page the table is null and the panel simply says those drops by name.
+ */
+function lootKin() {
+  const file = path.join(root, 'web', 'assets', 'index', 'index.json');
+  if (!fs.existsSync(file)) return null;
+  const items = (JSON.parse(fs.readFileSync(file, 'utf8')).records || [])
+    .filter(one => one && one.kind === 'item' && one.name);
+  const labelled = (one, label) => (one.labels || []).includes(label);
+  // The eggs of a rarity: one of each family, not the placeholder or the
+  // mystery eggs that no creature leaves.
+  const eggs = rank => items.filter(one => one.family === 'pet egg' && one.tier === rank
+    && !/\?\?\?\?|Mystery/.test(one.name)).map(one => one.name);
+  const common = eggs(0), uncommon = eggs(1), rare = eggs(2), legendary = eggs(3);
+  const stat = items.filter(one => one.activate === 'IncrementStat' && labelled(one, 'STATPOTION')
+    && /^Potion of /.test(one.name) && !/\(SB\)/.test(one.name)).map(one => one.name);
+  return {
+    groups: {
+      'Common Pet Eggs': common, 'Uncommon Pet Eggs': uncommon,
+      'Rare Pet Eggs': rare, 'Legendary Pet Eggs': legendary,
+      'Pet Eggs': common.concat(uncommon, rare),
+      'Stat Increase Potions': stat
+    },
+    // The health and magic potions, not every drink that happens to heal.
+    mundane: items.filter(one => labelled(one, 'CONSUMABLE') && !labelled(one, 'STATPOTION')
+      && (one.activate === 'Heal' || one.activate === 'Magic')
+      && /(Health|Magic) Potion$/.test(one.name)).map(one => one.name)
+  };
 }
 
 function main() {

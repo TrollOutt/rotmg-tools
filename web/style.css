@@ -152,15 +152,44 @@
 .tc-welcome-footer > span { font-size: 12px; color: var(--muted); }
 .tc-welcome-footer > div { display: flex; gap: 12px; }
 .tc-run:disabled { opacity: .45; cursor: not-allowed; }
-.tc-loot-source { display: block; color: var(--accent); font-size: 11px; margin: 8px 0; }
-.tc-progress { margin-bottom: 20px; padding: 20px 24px; border-top: 2px solid var(--accent); }
-.tc-progress-top, .tc-progress-controls { display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap; }
-.tc-progress h2 { margin: 3px 0 16px; font-size: 22px; }
-.tc-progress-controls > span { color: var(--muted); font-size: 12px; }
-.tc-access-mode { display: inline-flex; border: 1px solid var(--line); padding: 3px; border-radius: 8px; gap: 3px; }
-.tc-access-mode button { border: 0; padding: 8px 16px; border-radius: 5px; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 13px; }
-.tc-access-mode button[aria-pressed="true"] { color: var(--text); background: var(--panel-2); }
-.tc-progress-detail { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+/*
+ * Which gear the search may use, in the header beside the page's own status:
+ * the same pill the rest of the page switches with ("Fill it all", "Sets"),
+ * at the height of the status pill it stands next to, and the way back into
+ * the questions as one more pill.
+ */
+.tc-progress { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tc-access-mode {
+  display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden;
+  background: rgba(26, 24, 36, .85);
+}
+.tc-access-mode button {
+  background: transparent; border: 0; color: var(--muted); font: inherit; font-size: calc(var(--tc-text, 12.5px) + .5px);
+  padding: 6px 16px; cursor: pointer; white-space: nowrap;
+  transition: color .15s ease, background .15s ease;
+}
+.tc-access-mode button:hover { color: var(--text); }
+.tc-access-mode button[aria-pressed="true"] { background: var(--accent); color: #10141c; font-weight: 650; }
+/* Edit progression is how Personalized is set up, so it looks like the
+   button it is - and it stands down in Best possible, which has nothing of
+   yours to edit. */
+.tc-edit-progress {
+  font: inherit; font-size: calc(var(--tc-text, 12.5px) + .5px); font-weight: 600; color: var(--accent);
+  cursor: pointer; white-space: nowrap;
+  background: rgba(121, 197, 232, .1); border: 1px solid rgba(121, 197, 232, .55); border-radius: 999px;
+  padding: 6px 16px; transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.tc-edit-progress:hover { color: #cfeaf8; border-color: var(--accent); background: rgba(121, 197, 232, .18); }
+.tc-edit-progress span { margin-right: 3px; }
+.tc-edit-progress:disabled {
+  cursor: not-allowed; color: var(--dim); background: rgba(26, 24, 36, .6); border-color: var(--line); font-weight: 400;
+  opacity: .55;
+}
+/* Only when something asks to be done about it. */
+.tc-progress-note {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; margin: -4px 0 10px;
+  font-size: 12px; color: var(--locked, #ffcb70);
+}
 .tc-welcome button:focus-visible, .tc-progress button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (max-width: 550px) {
   #tcWelcome { width: calc(100vw - 12px); max-height: calc(100dvh - 12px); padding: 18px 14px; border-radius: 11px; }
@@ -180,7 +209,6 @@
   .tc-zone-list { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; padding: 6px; }
   .tc-welcome-footer { flex-direction: column; align-items: stretch; gap: 12px; }
   .tc-welcome-footer > div { justify-content: flex-end; }
-  .tc-progress { padding: 18px 16px; }
 }
 * { box-sizing: border-box; }
 /* A class-level `display` beats the browser rule for [hidden], which silently
@@ -197,87 +225,6 @@ body {
 
 img { image-rendering: pixelated; }
 
-/* ---------------- ambience ---------------- *
- * A host behind everything, holding two kinds of decoration: the aurora
- * (home's own richer identity, see the per-page overrides below .aurora
- * span) and the DOM sprite scatter (.ambience-dom, every page). Both are
- * ordinary elements the stylesheet animates - no canvas, no painted colour
- * wash, so a module or tool page behind them reads as the shared starfield.
- */
-.ambience {
-  position: fixed; inset: 0; z-index: 0;
-  overflow: hidden; pointer-events: none;
-}
-
-/*
- * Aurora: one soft blob per realm colour, all of them permanently adrift on
- * their own long, mismatched cycles so the mix never repeats exactly. Changing
- * realm only re-weights their opacities, which is why the colour keeps
- * evolving instead of jumping. Pure compositor work, no repaints.
- */
-.aurora { position: absolute; inset: -25%; }
-.aurora span {
-  position: absolute; display: block;
-  width: 84vmax; height: 84vmax;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, var(--c) 0%, rgba(0, 0, 0, 0) 68%);
-  mix-blend-mode: screen;
-  opacity: 0;
-  transition: opacity 5s ease-in-out;
-  will-change: transform, opacity;
-}
-/* The aurora is the way in's own richer identity, not something every page
-   inherits: a module or tool page shows the plain starfield instead, so the
-   blobs never tint or animate there. Named rather than :not([data-page="home"])
-   for the same reason the starfield rules below are - the default, before
-   script has set the attribute at all, should stay how home looks. */
-body[data-page="enchant"] .aurora,
-body[data-page="fame"] .aurora,
-body[data-page="theory"] .aurora,
-body[data-page="index"] .aurora,
-body[data-page="skins"] .aurora,
-body[data-page="news"] .aurora { opacity: 0; }
-body[data-page="enchant"] .aurora span,
-body[data-page="fame"] .aurora span,
-body[data-page="theory"] .aurora span,
-body[data-page="index"] .aurora span,
-body[data-page="skins"] .aurora span,
-body[data-page="news"] .aurora span { animation: none !important; }
-/* Three-point orbits rather than a there-and-back, so no blob ever retraces
-   the same line and the field keeps reshuffling. */
-@keyframes float-a {
-  0%   { transform: translate3d(-26%, -12%, 0) scale(0.95); }
-  33%  { transform: translate3d(20%, 16%, 0) scale(1.45); }
-  66%  { transform: translate3d(6%, -24%, 0) scale(1.1); }
-  100% { transform: translate3d(-26%, -12%, 0) scale(0.95); }
-}
-@keyframes float-b {
-  0%   { transform: translate3d(30%, 14%, 0) scale(1.3); }
-  33%  { transform: translate3d(-18%, -20%, 0) scale(0.85); }
-  66%  { transform: translate3d(-4%, 26%, 0) scale(1.2); }
-  100% { transform: translate3d(30%, 14%, 0) scale(1.3); }
-}
-@keyframes float-c {
-  0%   { transform: translate3d(8%, 30%, 0) scale(0.9); }
-  33%  { transform: translate3d(-28%, -8%, 0) scale(1.5); }
-  66%  { transform: translate3d(22%, -18%, 0) scale(1); }
-  100% { transform: translate3d(8%, 30%, 0) scale(0.9); }
-}
-@keyframes float-d {
-  0%   { transform: translate3d(-12%, 22%, 0) scale(1.25); }
-  33%  { transform: translate3d(24%, -24%, 0) scale(0.9); }
-  66%  { transform: translate3d(-30%, 2%, 0) scale(1.35); }
-  100% { transform: translate3d(-12%, 22%, 0) scale(1.25); }
-}
-/* Keeps the middle of the screen calm enough to read over, without smothering
-   the realm: the background is already dark, so this only has to take the edges. */
-.ambience::after {
-  content: ''; position: absolute; inset: 0;
-  background:
-    radial-gradient(135% 105% at 50% 0%, transparent 0%, rgba(13, 12, 19, .08) 60%, rgba(13, 12, 19, .48) 100%),
-    linear-gradient(180deg, rgba(13, 12, 19, 0) 0%, rgba(13, 12, 19, .3) 100%);
-}
-
 /*
  * The starfield: one shared sky for every tool page.
  *
@@ -285,8 +232,8 @@ body[data-page="news"] .aurora span { animation: none !important; }
  * places here. It redraws only when its size or device pixel ratio changes;
  * there is no normal-field animation or tiled-dot layer on a tool page.
  *
- * It sits behind .ambience in the document, so the aurora and the drifting
- * sprite scatter lie over it rather than needing a z-index to say so.
+ * It is the only thing behind the interface on a tool page. The way in
+ * stands on the atlas instead, and its column arrangement on this.
  */
 .starfield {
   position: fixed; inset: 0; z-index: 0;
@@ -328,18 +275,7 @@ body[data-page="news"] .starfield { opacity: .85; }
   100%       { opacity: 0; transform: rotate(var(--a, 20deg)) translateX(150px); }
 }
 
-.realm-name {
-  position: fixed; right: 16px; bottom: 12px; z-index: 1;
-  font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase;
-  color: var(--dim); opacity: 0;
-  transition: opacity 1.6s ease-in-out;
-  pointer-events: none;
-}
-.realm-name.show { opacity: .75; }
-
 @media (prefers-reduced-motion: reduce) {
-  .aurora span { transition: none; animation: none !important; }
-  .realm-name { transition: none; }
   .starfield { transition: none; }
   .starfield .shooting-star { animation: none; opacity: 0; }
 }
@@ -638,6 +574,73 @@ select option { background: var(--panel); color: var(--text); }
 }
 .tab-add::before { content: '+'; font-size: 15px; font-weight: 700; }
 .tab-add:hover { background: rgba(121, 197, 232, .2); border-color: var(--accent); color: #cfeaf8; }
+/*
+ * A build sent over from Theory Crafting: its tabs in one bracket, headed by
+ * the build's name - the way a browser groups tabs, in the page's own accent.
+ */
+.tab-group {
+  --g: #79c5e8;
+  position: relative;
+  display: inline-flex; align-items: flex-end; gap: 4px; min-width: 0;
+  padding: 3px 3px 0; border: 1px solid color-mix(in srgb, var(--g) 40%, transparent); border-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: color-mix(in srgb, var(--g) 7%, transparent);
+}
+.tab-group .tab { max-width: 200px; }
+.tab-group .tab.active { box-shadow: inset 0 2px 0 var(--g); }
+/* Folded, it is the chip and nothing under it. */
+.tab-group.is-collapsed { padding-bottom: 3px; border-bottom: 1px solid color-mix(in srgb, var(--g) 40%, transparent);
+  border-radius: var(--radius-sm); align-self: center; }
+.tab-group-head {
+  display: inline-flex; align-items: center; gap: 2px; align-self: center;
+  padding: 0 4px 0 0; margin-right: 2px; border-radius: 999px;
+  background: color-mix(in srgb, var(--g) 18%, transparent); font-size: 11.5px; font-weight: 650;
+  color: color-mix(in srgb, var(--g) 45%, #fff);
+}
+.tab-group.has-active.is-collapsed .tab-group-head { box-shadow: 0 0 0 1px var(--g); }
+.tab-group-name {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 170px; min-width: 0;
+  font: inherit; color: inherit; background: none; border: 0; cursor: pointer;
+  padding: 3px 4px 3px 10px; border-radius: 999px;
+}
+.tab-group-name:hover { background: color-mix(in srgb, var(--g) 14%, transparent); }
+.tab-group-name::before {
+  content: ''; flex: none; width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor;
+  transition: transform .15s ease;
+}
+.tab-group.is-collapsed .tab-group-name::before { transform: rotate(-90deg); }
+.tab-group-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab-group-count {
+  flex: none; min-width: 16px; padding: 0 5px; border-radius: 999px; text-align: center;
+  font-size: 10px; background: color-mix(in srgb, var(--g) 26%, transparent);
+}
+.tab-group-edit, .tab-group-close {
+  flex: none; cursor: pointer; font: inherit; font-size: 12px; line-height: 1; padding: 2px 4px;
+  border-radius: 4px; color: inherit; opacity: .7; background: none; border: 0;
+}
+.tab-group-close { font-size: 14px; }
+.tab-group-edit:hover { opacity: 1; background: color-mix(in srgb, var(--g) 18%, transparent); }
+.tab-group-close:hover { opacity: 1; color: var(--bad); background: rgba(255, 69, 66, .14); }
+.tab-group-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: 220px;
+  display: grid; gap: 10px; padding: 10px 12px;
+  background: rgba(19, 18, 27, .98); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .45);
+}
+.tab-group-field { display: grid; gap: 4px; font-size: 11px; color: var(--muted); }
+.tab-group-field input {
+  font: inherit; font-size: 12.5px; color: var(--text); background: rgba(26, 24, 36, .9);
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px;
+}
+.tab-group-field input:focus { outline: none; border-color: var(--g); }
+.tab-group-swatches { display: flex; gap: 7px; }
+.tab-group-swatch {
+  width: 20px; height: 20px; border-radius: 50%; cursor: pointer; padding: 0;
+  background: var(--swatch); border: 2px solid transparent; box-shadow: 0 0 0 1px rgba(0, 0, 0, .4);
+}
+.tab-group-swatch.is-on { border-color: #fff; }
+.tab-note { margin: -4px 0 10px; font-size: 12px; color: var(--locked); }
 
 .browse {
   flex: none; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer;
@@ -1674,29 +1677,10 @@ body.globe-wide { overflow: hidden; }
  * the map frames.
  */
 /*
- * The realms behind the interface fade out as the frame opens and fade back
- * as it closes, on the same three quarters of a second. Script hides them
- * once the fade is done, which is what saves the painting; the fade is only
- * so that the saving does not arrive as a blink.
- */
-/*
- * And taken out of the picture altogether once it has faded. A layer at zero
- * opacity is still a layer: the browser keeps compositing it, blur and all,
- * behind a map that covers every pixel of it. Hiding it costs nothing on the
- * way back, since visibility snaps in at the start of the fade in and only
- * waits for the end of the fade out.
- */
-.ambience { transition: opacity .78s ease, visibility 0s; }
-body.globe-wide .ambience {
-  opacity: 0; visibility: hidden; transition: opacity .78s ease, visibility 0s linear .78s;
-}
-/*
  * Everything else with a keyframe on it stops once the frame is open. These
  * are behind a full-page map and invisible, so there is nothing to fade -
  * and they are costing the map the frames they animate in.
  */
-body.globe-wide .ambience-dom img,
-body.globe-wide .aurora span,
 body.globe-wide .news-bell-glyph,
 body.globe-wide .news-bell-dot,
 body.globe-wide .home-card-art { animation: none !important; }
@@ -2218,33 +2202,6 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   box-shadow: 0 0 12px rgba(255, 208, 38, .25);
 }
 .base-fame input::placeholder { color: var(--dim); font-weight: 400; }
-
-/*
- * The drifting sprite scatter behind every page: dungeon portals and
- * enchantment icons mixed into one cast, the same on every page rather than
- * swapping subjects at the door. Real elements rather than a canvas, because
- * a canvas paints the first frame of an animated portal and then stops.
- * Small and dense rather than few and large, so it reads as texture behind
- * the shared starfield instead of a set of icons; blurred just enough to
- * stay soft at that size.
- */
-.ambience-dom { position: absolute; inset: 0; overflow: hidden; }
-.ambience-dom img {
-  position: absolute; image-rendering: pixelated;
-  filter: blur(2px) saturate(1.1);
-  animation-name: ambience-drift;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  will-change: transform;
-}
-@keyframes ambience-drift {
-  from { translate: -4vmin 2vmin; }
-  to   { translate: 4vmin -3vmin; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ambience-dom img { animation: none; }
-}
 
 /* ------------------------------------------------------------------ *
  * Fame Sweep, on a screen with room to spare                          *
@@ -2948,6 +2905,16 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   margin-right: 5px;
 }
 .tc-take:hover { color: var(--accent); border-color: var(--accent); }
+/* And the whole build at once, under the four it takes. */
+.tc-gear-foot { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 4px; }
+.tc-take-note { font-size: 11px; color: var(--dim); text-align: right; min-width: 0; }
+.tc-gear-foot .tc-take {
+  margin-right: 0; padding: 6px 14px; font-size: 11px;
+  color: #10141c; background: var(--accent); border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(121, 197, 232, .25), 0 2px 10px rgba(121, 197, 232, .18);
+}
+.tc-gear-foot .tc-take:hover { color: #10141c; filter: brightness(1.1); }
+.tc-gear-foot .tc-take:disabled { opacity: .45; cursor: not-allowed; color: var(--dim); border-color: var(--line); }
 
 .tc-hold {
   flex: none; cursor: pointer; font: inherit; font-size: 10px;
@@ -3085,6 +3052,9 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 }
 .tc-facts .figure { flex-direction: column; align-items: flex-start; gap: 1px; }
 .tc-facts .figure > b { font-size: 17px; }
+#pageTheory .tc-fight .tc-facts { gap: 10px calc(var(--tc-gap) * 2); }
+#pageTheory .tc-fight .tc-facts .figure > b { font-size: calc(var(--tc-text) + 7px); }
+#pageTheory .tc-fight .tc-facts .figure > small { font-size: calc(var(--tc-text) - 1px); }
 .tc-facts .figure.is-loud > b { color: var(--accent); }
 
 /* What the bench draws straight that the game does not. */
@@ -3985,10 +3955,22 @@ body[data-home="ring"] #pageHome {
      size is not the world's business - and so the one thing the sky has to be
      measured against. Against the width and the height both: a wide short
      window has plenty of room beside the world and almost none above it. */
-  --mark-h: clamp(56px, min(10vw, 14vh), 140px);
+  /* And never more than the sky over the world leaves it. The name, the
+     count and the bell are one stack pinned above the world's shoulder, and
+     on a short window it was the world that lost: the stack kept its size
+     and the bell came down onto the planet. Now the name gives up the height
+     instead - the room is half the window less the most the world ever
+     takes (its frame, or itself come forward under the cursor), less what
+     the stack spends past the name: 86px down to the bell (the same 86px
+     `--bell-top` uses), the bell's own 36px and 12px of air. */
+  --mark-h: clamp(30px, min(10vw, 14vh, 50vh - var(--core-room, 328px) / 2 - 134px), 140px);
   /* The name, the count under it and the air around them, or the world's own
      shoulder - whichever leaves the sky standing. */
-  --bell-top: max(calc(var(--mark-h) + 86px), calc(50% - var(--core, 282px) / 2 - 62px));
+  /* The same shoulder: the bell's own 36px and the same 12px of air above
+     the most room the world takes, so it stands still while the world
+     comes forward and back under it. */
+  --bell-top: max(calc(var(--mark-h) + 86px),
+    calc(50% - var(--core-room, 328px) / 2 - 48px));
 }
 body[data-home="ring"] #pageHome .home-head {
   position: fixed; left: 50%; transform: translateX(-50%); z-index: 40;
@@ -4042,11 +4024,11 @@ body[data-home="ring"] #pageHome .news-bell {
   margin: 0; transition: opacity .34s ease, top .45s cubic-bezier(.22, .7, .3, 1);
 }
 
-/* None of it in the column, which has its own heading at the top of itself
-   and no world to stand anything over. Fixed furniture laid across a list is
-   furniture laid across what you are reading. */
-body[data-ring="list"] .home-head,
-body[data-ring="list"] .news-bell { display: none; }
+/* In the column there is no world to stand anything over, and fixed
+   furniture laid across a list is furniture laid across what you are
+   reading - so the name, the count and the bell come down into the flow and
+   head the list instead, scrolling away with it. See "the same modules, in a
+   column" below. */
 
 /* And all of it goes when the map takes the window, on the same breath as the
    modules rather than being switched off. */
@@ -4127,6 +4109,82 @@ body.ring-away .globe-shut {
   transition: border-color .2s ease, color .2s ease, background .2s ease;
 }
 body.ring-away .globe-shut:hover { border-color: var(--accent); color: #fff; }
+
+/*
+ * The clouds' switch, to the left of the cross: the client's own cloud and
+ * nothing round it - struck through in red while the clouds are there, the
+ * way a sign says no, and plain once they have been put away.
+ */
+.globe-sky { display: none; }
+body.ring-away .globe-sky,
+body.globe-wide .globe-sky {
+  display: grid; place-items: center; position: absolute; z-index: 2; padding: 0;
+  cursor: pointer; color: var(--text); background: none; border: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .85));
+  transition: transform .15s ease, filter .15s ease, right .22s cubic-bezier(.2, .7, .3, 1);
+}
+body.ring-away .globe-sky { top: 30px; right: 86px; width: 56px; height: 46px; animation: globe-dim .45s ease both; }
+body:not(.ring-away).globe-wide .globe-sky { top: 10px; right: 54px; width: 52px; height: 34px; }
+body.ring-away .globe-sky:hover, body.globe-wide .globe-sky:hover {
+  transform: scale(1.08); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .85)) brightness(1.15);
+}
+.globe-sky:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.globe-sky-art {
+  position: relative; display: block; width: 44px; height: 16px;
+  background-repeat: no-repeat; image-rendering: pixelated;
+}
+.globe-sky-art.struck::after {
+  content: ''; position: absolute; left: -5px; right: -5px; top: 50%; height: 3px; margin-top: -1.5px;
+  background: #e5484d; border-radius: 2px; transform: rotate(-24deg);
+  box-shadow: 0 0 0 1.5px rgba(12, 11, 18, .9);
+}
+
+/*
+ * While the atlas has a panel open, its cross and the clouds stand just left
+ * of that panel instead of on its heading and its own cross. The atlas says
+ * how wide the panel is; the rest of the time the width is nothing.
+ */
+body.ring-away .globe-shut, body.globe-wide .globe-shut { transition: right .22s cubic-bezier(.2, .7, .3, 1), border-color .2s ease, color .2s ease, background .2s ease; }
+body.ring-away .globe-box.has-atlas-panel .globe-shut { right: calc(var(--atlas-panel, 0px) + 18px); }
+body.ring-away .globe-box.has-atlas-panel .globe-sky { right: calc(var(--atlas-panel, 0px) + 74px); }
+body:not(.ring-away).globe-wide .globe-box.has-atlas-panel .globe-shut { right: calc(var(--atlas-panel, 0px) + 10px); }
+body:not(.ring-away).globe-wide .globe-box.has-atlas-panel .globe-sky { right: calc(var(--atlas-panel, 0px) + 54px); }
+
+/*
+ * The Index, over the atlas's panel: the Index's own card, in a drawer as
+ * wide as that panel and standing exactly where it is, with the way back to
+ * the zone on top. Only while the atlas is open out; anywhere else it is not
+ * drawn at all.
+ */
+.atlas-index { display: none; }
+body.ring-away .atlas-index:not([hidden]),
+body.globe-wide .atlas-index:not([hidden]) {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 3;
+  width: max(var(--atlas-panel, 0px), min(420px, 92%));
+  display: flex; flex-direction: column; cursor: auto;
+  background: rgba(9, 12, 19, .96); border-left: 1px solid rgba(255, 255, 255, .12);
+  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+  box-shadow: -18px 0 40px rgba(0, 0, 0, .45);
+  --ix-fs: clamp(12.5px, .3vw + 8.6px, 16px);
+  animation: atlas-index-in .2s cubic-bezier(.2, .7, .3, 1) both;
+}
+@keyframes atlas-index-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.atlas-index-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+}
+.atlas-index-back, .atlas-index-full {
+  font: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+  border-radius: 999px; padding: 6px 13px; transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.atlas-index-back { font-weight: 600; color: var(--text); background: rgba(255, 255, 255, .06); border: 1px solid var(--line); }
+.atlas-index-back:hover, .atlas-index-back:focus-visible { border-color: var(--accent); color: #fff; outline: none; }
+.atlas-index-full { color: #ffcb70; background: rgba(255, 203, 112, .08); border: 1px solid rgba(255, 203, 112, .4); }
+.atlas-index-full:hover, .atlas-index-full:focus-visible { background: rgba(255, 203, 112, .18); border-color: #ffcb70; outline: none; }
+.atlas-index-wait { margin: 18px 16px; color: var(--muted); font-size: 13px; }
+.atlas-index-card { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 18px 24px; font-size: var(--ix-fs); }
+/* The card's own favourite star keeps its list on the Index page. */
+.atlas-index-card .ix-love { display: none; }
 
 /* ---- the stage ---- */
 
@@ -4612,15 +4670,51 @@ body[data-ring="wheel"] .ring-item:focus-visible {
  * says - the description that the wide arrangement opens on a hover is simply
  * always there, because there is no hover to open it with.
  */
+/*
+ * The column is a page, so it scrolls like one: the window scrolls, not a
+ * fixed box laid over it, and the name at the top goes up with the cards
+ * rather than standing over them.
+ */
+body[data-home="ring"][data-ring="list"] { overflow: hidden auto; }
+body[data-home="ring"][data-ring="list"] .app { height: auto; }
 body[data-ring="list"] .ring-stage {
+  position: relative; inset: auto;
   display: flex; flex-direction: column; align-items: center;
   gap: 12px;
-  padding: 62px max(14px, 4vw) 36px;
-  overflow: hidden auto;
-  -webkit-overflow-scrolling: touch;
+  padding: 4px max(14px, 4vw) 36px;
+  overflow: visible;
 }
 body[data-ring="list"] .ring-wheel,
 body[data-ring="list"] .ring-core { display: none; }
+
+/*
+ * And headed by the same name as the wide arrangement rather than a line of
+ * type: the gold signwriting, the count under it and the bell - in the flow,
+ * above the first card. Positioned only so they paint over the fixed sky
+ * behind the page. The plain heading is what the column had while all of
+ * this was put away; with it here, that would say the name twice.
+ */
+body[data-home="ring"][data-ring="list"] #pageHome .home-head {
+  position: relative; z-index: 1; left: auto; bottom: auto; transform: none;
+  margin: 0 auto; padding: 64px max(14px, 4vw) 0; max-width: none; width: 100%;
+}
+body[data-home="ring"][data-ring="list"] #pageHome .home-head .home-mark img,
+body[data-home="ring"][data-ring="list"] #pageHome .home-head h1.home-mark img {
+  height: auto; width: min(360px, 78vw); max-height: 110px; object-fit: contain;
+}
+/* A paragraph in a masthead, so it takes the masthead's reading measure and
+   left margin unless told otherwise - which put the count off-centre under
+   the name on any window wider than that measure. */
+body[data-home="ring"][data-ring="list"] #pageHome .home-head .seen {
+  flex-wrap: wrap; row-gap: 4px; column-gap: 14px; margin: 8px auto 0; max-width: none;
+}
+body[data-home="ring"][data-ring="list"] #pageHome .news-bell {
+  position: relative; z-index: 1; left: auto; top: auto; transform: none;
+  align-self: center; margin: 0 auto;
+}
+body[data-ring="list"] .ring-list-head { display: none; }
+/* The sky of every other page: there is no world in the column to stand on. */
+body[data-page="home"][data-ring="list"] .starfield { opacity: .85; }
 
 .ring-list-head {
   width: min(100%, 760px); margin: 0 0 6px;
@@ -4645,7 +4739,7 @@ body[data-ring="list"] .ring-item:focus-visible {
 body[data-ring="list"] .ring-copy .d { margin-top: 6px; }
 
 @media (max-width: 560px) {
-  body[data-ring="list"] .ring-stage { gap: 10px; padding-top: 58px; }
+  body[data-ring="list"] .ring-stage { gap: 10px; padding-top: 2px; }
   body[data-ring="list"] .ring-float { gap: 12px; }
   body[data-ring="list"] .ring-item { padding: 11px 12px; }
   .ring-copy .t { font-size: 15px; }
@@ -4926,4 +5020,400 @@ body[data-ring="list"] .ring-copy .d { margin-top: 6px; }
   /* The row is down to glyphs at this width and the button with it: a globe if
      the language was detected, the flag either way, and no room for an arrow. */
   .lang-arrow { display: none; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Theory Crafting, laid out across the width                          *
+ * ------------------------------------------------------------------ *
+ * One reading: who is fighting along the top, what they fight on the left,
+ * what they fight it with on the right, and under that the fight and the
+ * search. The cards are the site's own; what changes is where they stand,
+ * and inside the gear the four slots stand side by side with each item's
+ * enchantments under it. Divisions are spacing and hairlines, not more boxes.
+ */
+/*
+ * How roomy the page is, as a handful of lengths that follow the window:
+ * compact on a small desktop, the site's usual size on an ordinary one, a
+ * little larger on a big one - and no further, since past a point bigger is
+ * only further to look. Every size below is one of these or a share of one,
+ * so the whole page breathes together rather than each part at its own rate.
+ * Each also stops at a share of the window's height, so a wide but short
+ * window does not grow the page taller than it can show.
+ */
+#pageTheory {
+  --tc-text: clamp(12px, min(0.22vw + 9.2px, 1.375vh), 15px);
+  --tc-icon: clamp(40px, min(1.2vw + 25px, 4.6vh), 58px);
+  --tc-pad: clamp(10px, min(0.35vw + 6px, 1.23vh), 18px);
+  --tc-gap: clamp(10px, min(0.45vw + 5px, 1.28vh), 18px);
+  --tc-duel: clamp(170px, 6vw + 95px, 270px);
+  --tc-duel-least: clamp(120px, 14vh, 170px);
+  --tc-duel-most: clamp(220px, 70vh, 1000px);
+  /* The page takes more of a very large window rather than floating in it. */
+  max-width: clamp(1520px, 88vw, 2240px);
+}
+.tc-layout {
+  display: grid;
+  /* The target is a navigator, so it takes about a quarter of the width and
+     the gear the rest: 220px at the least, 360px at the most. */
+  grid-template-columns: clamp(220px, 21vw, 360px) minmax(0, 1fr);
+  grid-template-areas: "char char" "target main";
+  gap: var(--tc-gap); align-items: start; min-width: 0;
+}
+#tcBody .card { padding: var(--tc-pad) calc(var(--tc-pad) + 2px); }
+.tc-layout > .tc-char { grid-area: char; }
+.tc-layout > .tc-target { grid-area: target; min-width: 0; }
+.tc-main {
+  grid-area: main; display: flex; flex-direction: column; gap: var(--tc-gap); min-width: 0;
+  container-type: inline-size;
+}
+
+/* The saved builds sit in the header row, as tabs that do not need a line. */
+.tc-header-tabs { margin: 0; align-items: center; gap: 4px; }
+.tc-header-tabs .tab { padding: 4px 10px; border-bottom-color: var(--line); border-radius: var(--radius-sm); }
+
+/* --- the character, as a band ---
+   Two short lines: who (picture, class, name, level, how far along), then the
+   eight numbers. Its heading is said to a screen reader and not drawn: the
+   picture and the class box already say what the band is. */
+#tcBody .tc-char {
+  display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--tc-gap) * .6) calc(var(--tc-gap) * 1.2);
+  padding: calc(var(--tc-pad) * .8) calc(var(--tc-pad) + 4px);
+}
+#tcBody .tc-char > header {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); margin: 0;
+}
+.tc-char .tc-face-row { flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.tc-char .tc-face { width: calc(var(--tc-icon) * .95); height: calc(var(--tc-icon) * .95); }
+.tc-char #tcClass, .tc-char #tcName {
+  min-height: 0; height: calc(var(--tc-text) * 2.6); padding-top: 3px; padding-bottom: 3px;
+  font-size: calc(var(--tc-text) + 1.5px);
+}
+.tc-char #tcName { font-weight: 600; }
+/* Which gear the search may use, at the far end of the line. */
+.tc-char .tc-progress { margin-left: auto; }
+.tc-char .tc-face-pick { flex: 0 1 170px; }
+.tc-char .tc-name { flex: 0 1 220px; }
+/* The two boxes say what they are by what is in them; the words stay for a
+   screen reader. */
+.tc-char .field-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.tc-char .tc-lvl-said { padding-bottom: 0; font-size: calc(var(--tc-text) - .5px); }
+.tc-char .tc-switches { margin: 0; flex: none; }
+.tc-char .tc-switch { flex: none; padding: 5px 14px; font-size: var(--tc-text); }
+.tc-char .tc-progress-note { flex: 1 1 100%; margin: 0; }
+/* The eight in one row, each its number over a hairline of its bar. */
+.tc-char .tc-stats {
+  flex: 1 1 100%; margin: 0;
+  grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px calc(var(--tc-gap) * 1.1);
+  padding-top: calc(var(--tc-pad) * .6); border-top: 1px solid var(--line);
+}
+.tc-char .tc-stat {
+  grid-template-columns: minmax(0, 1fr); grid-template-areas: "name" "value" "bar";
+  gap: 1px; min-width: 0;
+}
+.tc-char .tc-stat i { grid-area: name; white-space: nowrap; }
+.tc-char .tc-stat b { grid-area: value; min-width: 0; font-size: calc(var(--tc-text) + 2.5px); white-space: nowrap; text-align: left; }
+.tc-char .tc-stat b u, .tc-char .tc-stat b em { font-size: calc(var(--tc-text) - 1.5px); }
+.tc-char .tc-stat .tc-bar { grid-area: bar; height: 4px; }
+.tc-char .tc-stat i { font-size: calc(var(--tc-text) - 1px); letter-spacing: .06em; }
+.tc-char .tc-setline { grid-column: 1 / -1; font-size: calc(var(--tc-text) - .5px); padding: 0; margin: 0; }
+
+/* --- the target, as a column of its own ---
+   As tall as the gear, the fight and the search beside it, and never the
+   reason the row is taller: `contain: size` keeps its own contents out of the
+   row's height, and stretching gives it the row's height back. The grid then
+   fills what is left under its heading - sized to fit by fitTargets() in
+   theorycraft.js, scrolling only when the smallest size still cannot. */
+#tcBody .tc-target {
+  align-self: stretch; contain: size; min-height: 0;
+  display: flex; flex-direction: column;
+}
+#tcBody .tc-target > header { flex-wrap: wrap; row-gap: 2px; flex: none; }
+.tc-target .header-aside { font-size: calc(var(--tc-text) - 1px); }
+.tc-target .tc-bosses {
+  flex: 1 1 auto; min-height: 0; max-height: none; overflow: hidden; align-content: start;
+  grid-template-columns: repeat(var(--tc-target-cols, 6), minmax(0, 1fr));
+  gap: var(--tc-target-row-gap, 4px) var(--tc-target-gap, 4px);
+}
+.tc-target .tc-boss > .tc-charm { transform: scale(var(--tc-target-k, 1)); }
+.tc-target .tc-boss { overflow: hidden; min-width: 0; }
+.tc-target .tc-bosses.is-overfull { overflow-y: auto; }
+
+/* --- the gear, one column a slot --- */
+.tc-gear-card .tc-gear {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 0;
+}
+.tc-gear-card .tc-slot {
+  display: flex; flex-direction: column; gap: 7px; min-width: 0;
+  border: 0; border-radius: 0; background: none; padding: 2px 10px 4px;
+}
+.tc-gear-card .tc-slot + .tc-slot { border-left: 1px solid var(--line); }
+.tc-gear-card .tc-slot:first-child { padding-left: 0; }
+.tc-gear-card .tc-slot:last-child { padding-right: 0; }
+.tc-gear-card .tc-slot:hover { border-left-color: var(--line); }
+.tc-gear-card .tc-slot + .tc-slot:hover { border-left-color: rgba(255, 255, 255, .2); }
+/* Kept: the same accent the rest of the page keeps things in, as a line over
+   the column rather than a box round it. */
+.tc-gear-card .tc-slot.is-held {
+  background: linear-gradient(180deg, rgba(121, 197, 232, .07), transparent 70%);
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+/* The item on top, its three buttons under it, then what it does. */
+.tc-gear-card .tc-slot-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 0 0;
+}
+.tc-gear-card .tc-item-pick { flex: 1 1 100%; gap: 10px; align-items: flex-start; }
+.tc-gear-card .tc-icon-big { width: var(--tc-icon); height: var(--tc-icon); padding: 4px; }
+/* The sprite follows its well in two small steps: a length cannot yet be
+   divided by a length in every browser, so the scale cannot be worked out. */
+@media (min-width: 1700px) { .tc-gear-card .tc-icon-big > * { transform: scale(1.15); } }
+@media (min-width: 2200px) { .tc-gear-card .tc-icon-big > * { transform: scale(1.3); } }
+.tc-gear-card .tc-item-name {
+  white-space: normal; overflow: visible; font-size: calc(var(--tc-text) + 1.5px); line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tc-gear-card .tc-item-where { gap: 5px; }
+.tc-gear-card .tc-take { margin-right: 0; }
+/* What it does and where it drops, on one line between them, each cut short
+   with the whole of it on hover. */
+.tc-gear-card .tc-slot-head > .tc-bits {
+  flex: 1 1 55%; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: calc(var(--tc-text) - 1px); line-height: 1.35;
+}
+/* Where it falls: the places as their own pictures, each opening the Index. */
+.tc-loot { display: inline-flex; align-items: center; gap: 3px; flex: 0 1 auto; min-width: 0; }
+.tc-loot > i {
+  font-style: normal; font-size: calc(var(--tc-text) - 2.5px); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--dim); margin-right: 1px;
+}
+.tc-loot-place {
+  display: inline-grid; place-items: center; overflow: hidden; flex: none; padding: 0;
+  width: calc(var(--tc-icon) * .5); height: calc(var(--tc-icon) * .5);
+  background: rgba(4, 6, 11, .6); border: 1px solid rgba(255, 255, 255, .08); border-radius: 4px;
+  font-size: 9px; color: var(--muted);
+}
+.tc-loot-place.is-named {
+  width: auto; max-width: 11em; padding: 0 6px; font-size: calc(var(--tc-text) - 2.5px);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; line-height: calc(var(--tc-icon) * .5 - 2px);
+}
+button.tc-loot-place { cursor: pointer; }
+button.tc-loot-place:hover, button.tc-loot-place:focus-visible { border-color: var(--accent); outline: none; }
+.tc-loot-place img, .tc-loot-place .sheet-art { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
+.tc-loot-more { font-size: calc(var(--tc-text) - 2px); color: var(--dim); margin-left: 2px; }
+.tc-loot-note { font-size: calc(var(--tc-text) - 1.5px); color: var(--dim); white-space: nowrap; }
+/* The item's own page, beside what can be done to it. */
+.tc-index-open {
+  flex: none; cursor: pointer; font: inherit; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px; color: var(--dim); background: transparent;
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px;
+}
+.tc-index-open:hover { color: #ffcb70; border-color: #ffcb70; }
+.tc-gear-card .tc-slot-head > .tc-rarity { margin-left: auto; }
+/* In a column the row is tight: the word goes (the box still says it to a
+   screen reader and on hover) and the item's buttons are a little smaller. */
+.tc-gear-card .tc-rarity > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.tc-gear-card .tc-slot-head > .tc-take, .tc-gear-card .tc-slot-head > .tc-index-open { padding: 3px 6px; font-size: 9.5px; letter-spacing: .4px; }
+.tc-gear-card .tc-slot-head { column-gap: 4px; }
+/* Its enchantments, one under another, directly under it. */
+.tc-gear-card .tc-ench-strip {
+  flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 4px; padding: 0;
+  margin-top: auto;
+}
+.tc-gear-card .tc-ench-strip > .tc-ench,
+.tc-gear-card .tc-ench-strip > .tc-ench.is-empty { flex: none; width: 100%; }
+.tc-gear-card .tc-ench { flex-wrap: nowrap; }
+.tc-gear-card .tc-ench-pick { flex: 1 1 0; font-size: calc(var(--tc-text) - .5px); }
+.tc-gear-card .tc-ench > .tc-hold { margin-left: 0; }
+.tc-gear-card .tc-ench u {
+  flex: 0 1 auto; max-width: 45%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: calc(var(--tc-text) - 1.5px);
+}
+/* The fight is drawn at the size its frame is given, and follows the density. */
+#pageTheory .tc-duel { height: var(--tc-duel); }
+
+
+/* Where four columns are narrow, an enchantment's name has the line to itself
+   and what it does is said on hover, as the whole of it always is. */
+@container (min-width: 760px) and (max-width: 1040px) {
+  .tc-gear-card .tc-ench u { display: none; }
+}
+
+/* Two by two, then one, as the column narrows - always each item over its own
+   enchantments, never the enchantments of four items side by side. */
+@container (max-width: 759px) {
+  .tc-gear-card .tc-gear { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 0; }
+  .tc-gear-card .tc-slot:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .tc-gear-card .tc-slot:nth-child(even) { padding-right: 0; }
+  .tc-gear-card .tc-slot:nth-child(n + 3) { border-top: 1px solid var(--line); padding-top: 12px; }
+}
+@container (max-width: 419px) {
+  .tc-gear-card .tc-gear { grid-template-columns: minmax(0, 1fr); }
+  .tc-gear-card .tc-slot { border-left: 0 !important; padding-left: 0; padding-right: 0; }
+  .tc-gear-card .tc-slot + .tc-slot { border-top: 1px solid var(--line); padding-top: 12px; }
+}
+
+/* The fight's own header says a sentence and has two buttons; on a narrow
+   card it wraps rather than pushing "again" off the edge. */
+#tcBody .tc-fight > header { flex-wrap: wrap; row-gap: 4px; }
+#tcBody .tc-fight > header .header-aside { flex-wrap: wrap; justify-content: flex-end; row-gap: 2px; }
+
+/* The search's goals: each heading in a column of its own beside its row,
+   rather than on a line above it. A fixed column is what keeps the heading
+   from shouldering into the first button, which is why it went above. */
+.tc-optimize .tc-goal-row {
+  display: grid; grid-template-columns: 4.6em minmax(0, 1fr); align-items: start; column-gap: 8px;
+}
+.tc-optimize .tc-goal-row > i { padding-top: 5px; }
+/* What each goal stands at now, side by side rather than stacked into a
+   tower beside the button - and not at all once the search has reported,
+   since its report says the same numbers with where they came from. */
+.tc-optimize .tc-calc-row { align-items: center; }
+.tc-optimize .tc-now {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; min-width: 0; flex: 1 1 200px;
+}
+.tc-optimize .tc-now .figure { flex-direction: column; align-items: flex-end; gap: 0; }
+.tc-optimize .tc-now .figure > b { font-size: calc(var(--tc-text) + 2px); }
+.tc-optimize .tc-now .figure > small { font-size: calc(var(--tc-text) - 2.5px); }
+.tc-optimize .tc-calc-row:has(+ #tcSaid:not(:empty)) .tc-now { display: none; }
+.tc-optimize #tcSaid { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+/* The shares of several goals, as an even grid rather than a row that
+   leaves its last slider the whole width. */
+.tc-optimize .tc-mix {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 12px 22px;
+  margin: 0; padding: 12px 14px;
+}
+.tc-optimize .tc-mix-one { flex: none; }
+.tc-optimize .tc-mix-one { gap: 7px; }
+.tc-optimize .tc-mix-one i { flex: 0 0 6.5em; overflow: hidden; text-overflow: ellipsis; }
+.tc-optimize .tc-mix-one input[type="range"] { min-width: 36px; }
+.tc-optimize .tc-mix-one .tc-hold { padding: 2px 6px; }
+
+/* The search's own spacing, a little tighter, since its card sets the height
+   of the row it shares with the fight. */
+/* The search, with room to read: its parts a steady gap apart, its buttons and
+   its numbers at the page's size rather than squeezed below it. */
+#tcBody .tc-optimize { display: flex; flex-direction: column; gap: min(calc(var(--tc-gap) * .9), 1vh); padding-bottom: calc(var(--tc-pad) * .6); }
+#tcBody .tc-optimize > * { margin: 0; }
+#tcBody .tc-optimize > header { margin: 0; }
+/* The title keeps to one line; the toolbar beside it folds its own buttons. */
+#tcBody .tc-optimize > header h2 { white-space: nowrap; flex: 0 0 auto; }
+#tcBody .tc-optimize .tc-opt-toolbar { flex: 1 1 0; min-width: 0; row-gap: 3px; }
+.tc-optimize #tcGoals { gap: calc(var(--tc-gap) * .7); }
+.tc-optimize .tc-goal-row > span { gap: 7px; }
+.tc-optimize .tc-goal { font-size: var(--tc-text); padding: min(5px, .45vh) 12px; }
+.tc-optimize .tc-run { padding: min(10px, 1vh) 24px; font-size: calc(var(--tc-text) + 1.5px); }
+.tc-optimize #tcSaid { gap: 10px 22px; padding-top: min(calc(var(--tc-gap) * .7), .8vh); border-top: 1px solid var(--line); }
+.tc-optimize #tcSaid:empty { display: none; }
+.tc-optimize #tcSaid .figure > b { font-size: calc(var(--tc-text) + 5px); }
+.tc-optimize #tcSaid .figure > small { font-size: calc(var(--tc-text) - 1.5px); }
+
+/* --- the alternatives, on the gear's last line ---
+   "Alt", the four items of another whole build, and a step either way when
+   there is more than one. The four pictures are the button that wears it. */
+.tc-gear-card .tc-gear-foot { justify-content: space-between; }
+.tc-take-note { margin-left: auto; }
+.tc-alts {
+  flex: 1 1 auto; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 8px clamp(8px, 1.2vw, 22px);
+  min-width: 0; margin-right: clamp(10px, 1.4vw, 24px);
+}
+.tc-gear-foot .tc-alts:not([hidden]) + .tc-take-note { margin-left: 0; }
+.tc-alts-label {
+  align-self: center; font-size: calc(var(--tc-text) - 1.5px); font-weight: 650; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); cursor: help;
+}
+/* Each build exactly as wide as its four pictures, the builds spread along
+   the line with the spare room between them rather than inside them. */
+.tc-alts { justify-content: space-between; container-type: inline-size; }
+.tc-alts-pick {
+  flex: 0 0 auto;
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 0;
+  padding: 6px 7px 4px; margin-top: 5px; cursor: pointer; font: inherit; color: inherit; text-align: left;
+  background: rgba(13, 12, 19, .45); border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+/* Which build it is, set into the frame's top edge so it costs no height. */
+.tc-alts-tag {
+  position: absolute; top: 0; left: 7px; transform: translateY(-55%); padding: 0 4px;
+  background: #15141c; line-height: 1.2;
+  font-size: calc(var(--tc-text) - 2px); font-weight: 650; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 14px);
+}
+.tc-alts-tag u { text-decoration: none; font-weight: 500; color: var(--dim); letter-spacing: 0; margin-left: 4px; }
+.tc-alts-pick.is-on .tc-alts-tag { color: var(--accent); }
+.tc-alts-cells { display: flex; gap: 4px; }
+.tc-alts-pick:hover, .tc-alts-pick:focus-visible { border-color: rgba(121, 197, 232, .6); outline: none; }
+.tc-alts-pick.is-on { border-color: var(--accent); background: rgba(121, 197, 232, .1); cursor: default; }
+.tc-alts-cell {
+  display: inline-grid; place-items: center; overflow: hidden;
+  /* As large as elsewhere on the page when the line has room; smaller, all
+     alike, when it has not: each build is allowed its frame and a gap. */
+  width: min(calc(var(--tc-icon) * .78), calc((100cqw - 40px - var(--alts, 4) * 42px) / (var(--alts, 4) * 4)));
+  aspect-ratio: 1; height: auto;
+  background: rgba(4, 6, 11, .72); border: 1px solid rgba(255, 255, 255, .09); border-radius: 4px;
+}
+.tc-alts-cell > * { max-width: 88%; max-height: 88%; }
+.tc-alts-cell.is-mid { border-color: rgba(121, 197, 232, .45); }
+.tc-alts-cell.is-high { border-color: rgba(178, 132, 226, .5); }
+.tc-alts-cell.is-top { border-color: rgba(224, 161, 58, .55); }
+.tc-alts-cell.is-ut { border-color: rgba(240, 216, 150, .6); }
+
+/* On a desktop the fight and the search share a row under the gear, in that
+   order, rather than one below the other at the bottom of a long column. */
+@media (min-width: 1180px) {
+  /* Rows as tall as what is in them: in a column of fixed height an auto row
+     would otherwise give way to its cards' own min-height of nothing. */
+  .tc-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-rows: max-content; align-content: start; }
+  .tc-main > .tc-gear-card { grid-column: 1 / -1; }
+}
+
+/* --- on a working screen ---
+   No box of its own that scrolls. The page is at least the window's height;
+   the band and the gear are as tall as they need, the fight takes whatever
+   height is left over - down to a floor - and the target is as tall as the
+   column beside it. On a window too short for even that, the page is simply
+   longer and the browser scrolls it like any other page. */
+@media (min-width: 1041px) and (min-height: 700px) {
+  body[data-page="theory"] { overflow-y: auto; }
+  #pageTheory.app { height: auto; min-height: 100%; }
+  #tcBody.tc-layout {
+    flex: 1 0 auto;
+    grid-template-rows: max-content minmax(0, 1fr);
+  }
+  #tcBody .tc-main { align-self: stretch; }
+  #tcBody .tc-fight { display: flex; flex-direction: column; flex: 1 1 auto; }
+  /* The canvas grows into the card and never below a readable fight. */
+  #pageTheory .tc-fight .tc-duel {
+    flex: 1 1 0; height: 0; min-height: var(--tc-duel-least); max-height: var(--tc-duel-most);
+  }
+}
+@media (min-width: 1180px) and (min-height: 700px) {
+  /* Beside the search, the fight's row is the rest of the column. */
+  #tcBody .tc-main { grid-template-rows: max-content minmax(0, 1fr); grid-auto-rows: auto; }
+}
+
+/* Wide enough, each number stands beside its name, which is one line less. */
+@media (min-width: 1321px) {
+  .tc-char .tc-stat { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "name value" "bar bar"; gap: 2px 6px; }
+  .tc-char .tc-stat b { text-align: right; }
+}
+/* Eight in a row only where eight numbers and their gains fit; four below. */
+@media (max-width: 1100px) {
+  .tc-char .tc-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* --- narrower: the target goes above the gear --- */
+@media (max-width: 900px) {
+  .tc-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "char" "target" "main"; }
+  /* Above the gear there is no column to match, so it is as tall as it needs,
+     up to a screenful of the phone. */
+  #tcBody .tc-target { contain: none; align-self: start; }
+  .tc-target .tc-bosses { flex: none; height: min(260px, 45vh); }
+  .tc-char .tc-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .tc-char { gap: 8px 12px; }
+  .tc-char .tc-face-row { flex-wrap: wrap; }
+  .tc-char .tc-face-pick, .tc-char .tc-name { flex: 1 1 130px; }
+  .tc-char .tc-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

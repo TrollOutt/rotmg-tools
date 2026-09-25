@@ -1851,25 +1851,96 @@ window.benchWith = function (said) {
  * rather than being typed in again. What cannot be resolved is dropped rather
  * than guessed: an enchantment this page does not know is one it cannot price.
  */
-window.enchantThis = function (said) {
-  if (!said || !said.item || !state.data) return false;
+function handoverSetup(said) {
   const resolved = resolveItem(said.item);
   const slots = (said.slots || [])
     .filter(name => state.data.byName.has(name))
     .slice(0, 4)
     .map(name => ({ name, locked: false }));
-  applySetup({
-    item: said.item,
-    rarity: String(Math.max(slots.length, resolved && resolved.slots ? resolved.slots : 0) || ''),
-    type: (resolved && resolved.type) || '',
-    dust: (resolved && resolved.dust) || '',
-    slots
-  });
+  return {
+    resolved,
+    setup: {
+      item: said.item,
+      rarity: String(Math.max(slots.length, resolved && resolved.slots ? resolved.slots : 0) || ''),
+      type: (resolved && resolved.type) || '',
+      dust: (resolved && resolved.dust) || '',
+      slots
+    }
+  };
+}
+
+window.enchantThis = function (said) {
+  if (!said || !said.item || !state.data) return false;
+  applySetup(handoverSetup(said).setup);
   refresh();
   location.hash = 'enchant';
   routeFromHash();
   return true;
 };
+
+/*
+ * A whole build handed over from the bench: one new tab per item, each built
+ * by the same hand-over as a single item and each holding only its own
+ * enchantments. The tabs already open are left exactly as they were - this
+ * adds, it never overwrites. An item this page cannot place is reported back
+ * rather than given a tab it could do nothing with, and does not stop the
+ * others.
+ */
+function tabsForBuild(list, group) {
+  const tabs = [], skipped = [];
+  const taken = new Set(state.tabs.map(tab => tab.id));
+  for (const said of Array.isArray(list) ? list : []) {
+    if (!said || !said.item) continue;
+    const handed = handoverSetup(said);
+    if (!handed.resolved) { skipped.push(said.item); continue; }
+    let tab = newTab(handed.setup);
+    while (taken.has(tab.id)) tab = newTab(handed.setup);
+    taken.add(tab.id);
+    /* The four came as one build and stay together as one: a group in the
+       tab strip, under the build's own name, closed together or one by one. */
+    if (group) tab.group = { id: group.id, label: group.label };
+    tabs.push(tab);
+  }
+  return { tabs, skipped };
+}
+
+/* Whether this page can take an item at all - the one answer the bench asks
+   before it offers to send anything, so the two never disagree. */
+window.enchantCan = name => (state.data ? Boolean(name && resolveItem(name)) : null);
+
+window.enchantBuild = function (list, options) {
+  if (!state.data) return null;
+  const label = String((options && options.label) || 'Build').slice(0, 60);
+  let groupId;
+  do groupId = 'g' + Math.random().toString(36).slice(2, 9);
+  while (state.tabs.some(tab => tab.group && tab.group.id === groupId));
+  const made = tabsForBuild(list, { id: groupId, label });
+  if (!made.tabs.length) return { opened: [], skipped: made.skipped };
+  saveSetup();                 // bank the tab that was on screen
+  state.tabs.push(...made.tabs);
+  state.activeTab = made.tabs[0].id;
+  state.loadingTab = true;     // stop applySetup's edits from writing back
+  applySetup(made.tabs[0].setup);
+  state.loadingTab = false;
+  clearResults();
+  refresh();
+  persistTabs();
+  renderTabs();
+  /* Said on this page, since this is the page that is now on the screen. */
+  sayTabNote(made.skipped.length
+    ? 'Not sent: the game does not let ' + made.skipped.join(', ') + ' be enchanted.'
+    : '');
+  location.hash = 'enchant';
+  routeFromHash();
+  return { opened: made.tabs.map(tab => tab.label), skipped: made.skipped };
+};
+
+function sayTabNote(text) {
+  const note = $('tabNote');
+  if (!note) return;
+  note.textContent = text;
+  note.hidden = !text;
+}
 
 /* ------------------------------------------------------------------ *
  * Item picker                                                         *
@@ -2280,7 +2351,7 @@ function showAudit() {
 
     <ol class="audit-steps">
       <li>
-        <h3>Build the eligible pool</h3>
+        <h3>Build the Eligible Pool</h3>
         <p>Start from the ${openPool.length} enchantments this ${html(config.type.toLowerCase())} can roll${config.item ? ' with the selected item' : ''}, then remove what the ${plural(config.locks.length, 'lock')} forbid.</p>
         <dl>
           <dt>Labels carried by the locks</dt><dd>${labels.length ? `<span class="chips">${labels.map(label => `<i class="chip give">${html(label)}</i>`).join('')}</span>` : '<span class="muted">none</span>'}</dd>
@@ -2291,7 +2362,7 @@ function showAudit() {
       </li>
 
       <li>
-        <h3>Weight the pool for ${html(artifact.name)}</h3>
+        <h3>Weight the Pool for ${html(artifact.name)}</h3>
         <p>Each candidate keeps its base weight unless the artifact multiplies it. An artifact states several rules and every one that matches applies in turn, so two matching rules compound rather than compete. The result is truncated to an integer, as the game does.</p>
         <dl>
           <dt>Total weight of the pool</dt><dd><b>${count(pool.total)}</b></dd>
@@ -2301,12 +2372,12 @@ function showAudit() {
       </li>
 
       <li>
-        <h3>One slot</h3>
+        <h3>One Slot</h3>
         <p class="formula">${count(targetWeight)} ÷ ${count(pool.total)} = <b>${percent(perSlot)}</b></p>
       </li>
 
       <li>
-        <h3>${plural(rolls, 'slot')} in one reroll</h3>
+        <h3>${plural(rolls, 'Slot')} in One Reroll</h3>
         <p>The slots are not independent: whatever the first slot rolls adds its Labels, which removes every remaining candidate that refuses them, and the mod itself leaves the pool. The engine enumerates every weighted path.</p>
         <dl>
           <dt>Exact chance over ${plural(rolls, 'slot')}</dt><dd><b>${percent(exact.odds)}</b>${exact.exact === false ? ' <span class="muted">(sampled)</span>' : ''}</dd>
@@ -2316,7 +2387,7 @@ function showAudit() {
       </li>
 
       <li>
-        <h3>Turn it into dust</h3>
+        <h3>Turn It Into Dust</h3>
         <p class="formula">
           one reroll = ${count(EnchantEngine.BASE_COSTS[config.slots])} base × 2<sup>${config.locks.length}</sup> = <b>${count(cost.perReroll)}</b> ${html(config.dust)}<br>
           mean rerolls = 100 ÷ ${RealmI18n.number(exact.odds, { maximumSignificantDigits: 4 })} = <b>${count(cost.rerolls)}</b><br>
@@ -2759,18 +2830,64 @@ function bind() {
     if (event.key === 'Tab') trapPickerTab(event);
   });
 
-  window.addEventListener('resize', handleAmbienceResize);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
     if (event.target.closest('#changeItem')) { openItemPicker(); return; }
     if (event.target.closest('#clearItem')) clearItem();
   });
   $('tabBar').addEventListener('click', event => {
+    if (event.target.closest('[data-group-menu]')) {
+      const swatch = event.target.closest('[data-group-colour]');
+      if (swatch) updateGroup(swatch.dataset.group, { colour: swatch.dataset.groupColour });
+      return;
+    }
+    sayTabNote('');
+    const fold = event.target.closest('[data-toggle-group]');
+    if (fold) { toggleGroup(fold.dataset.toggleGroup); return; }
+    const edit = event.target.closest('[data-edit-group]');
+    if (edit) {
+      state.editingGroup = state.editingGroup === edit.dataset.editGroup ? null : edit.dataset.editGroup;
+      renderTabs();
+      const field = $('tabBar').querySelector('[data-group-name]');
+      if (field) { field.focus(); field.select(); }
+      return;
+    }
+    const group = event.target.closest('[data-close-group]');
+    if (group) { event.stopPropagation(); closeGroup(group.dataset.closeGroup); return; }
     const close = event.target.closest('[data-close]');
     if (close) { event.stopPropagation(); closeTab(close.dataset.close); return; }
     if (event.target.closest('#tabAdd')) { addTab(); return; }
     const tab = event.target.closest('[data-tab]');
     if (tab) switchTab(tab.dataset.tab);
+  });
+  /* The name is kept as it is typed, and the panel shuts on Enter, Escape or
+     a click anywhere else. */
+  $('tabBar').addEventListener('change', event => {
+    const field = event.target.closest('[data-group-name]');
+    if (!field) return;
+    const label = field.value.trim().slice(0, 60);
+    if (label) updateGroup(field.dataset.groupName, { label });
+  });
+  $('tabBar').addEventListener('keydown', event => {
+    const field = event.target.closest('[data-group-name]');
+    if (!field || (event.key !== 'Enter' && event.key !== 'Escape')) return;
+    event.preventDefault();
+    const id = field.dataset.groupName;
+    if (event.key === 'Enter') {
+      const label = field.value.trim().slice(0, 60);
+      if (label) updateGroup(id, { label });
+    }
+    state.editingGroup = null;
+    renderTabs();
+    const back = $('tabBar').querySelector('[data-edit-group="' + CSS.escape(id) + '"]');
+    if (back) back.focus();
+  });
+  document.addEventListener('click', event => {
+    // A target the strip has just redrawn away was inside it, not outside.
+    if (!state.editingGroup || !event.target.isConnected
+      || event.target.closest('#tabBar .tab-group')) return;
+    state.editingGroup = null;
+    renderTabs();
   });
   /*
    * The atlas frame. Shut, it swallows nothing: the map inside it takes no
@@ -2793,9 +2910,16 @@ function bind() {
   watchGlobe();
   const globeBack = document.getElementById('globeBack');
   if (globeBack) globeBack.addEventListener('click', () => setGlobe(false));
+  const globeSky = document.getElementById('globeSky');
+  if (globeSky) {
+    globeSky.addEventListener('click', event => {
+      event.stopPropagation();
+      tellAtlas({ rotmg: 'clear-sky', on: !skyClear });
+    });
+  }
   const globeShut = document.getElementById('globeShut');
   if (globeShut) {
-    globeShut.addEventListener('click', event => { event.stopPropagation(); setGlobe(false); });
+    globeShut.addEventListener('click', event => { event.stopPropagation(); shutAtlasIndex(); setGlobe(false); });
   }
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && globeWide()) setGlobe(false);
@@ -2834,282 +2958,8 @@ function bind() {
 }
 
 /* ------------------------------------------------------------------ *
- * Ambience: drifting realms behind the interface                      *
+ * The shared sky behind every tool page                               *
  * ------------------------------------------------------------------ */
-
-/*
- * Each realm lends its glow to the aurora and its name to the label; the
- * moving picture underneath is a scatter of the calculator's own sprites -
- * portals and enchantment icons mixed together now, the same cast on every
- * page - drifting as real DOM elements so a portal keeps its own animation
- * instead of freezing on a canvas's first frame. The aurora is the way in's
- * own richer identity - module and tool pages show the shared starfield
- * instead, carrying its own twinkling stars and occasional shooting stars
- * (see buildStarLanguage) behind that same sprite scatter, per-page rules on
- * .aurora and .starfield both.
- *
- * No new artwork is bundled: it is built from the sprites already embedded.
- */
-const REALMS = [
-  { name: 'The Realm',       sky: ['#2c5130', '#0e1a13'], glow: '#5ac45a' },
-  { name: 'Undead Lair',     sky: ['#3d2758', '#140c1e'], glow: '#ca7aff' },
-  { name: 'Ocean Trench',    sky: ['#164257', '#08171f'], glow: '#79c5e8' },
-  { name: 'Abyss of Demons', sky: ['#552018', '#1c0a08'], glow: '#ff4542' },
-  { name: 'The Shatters',    sky: ['#2a2c4f', '#0d0d1a'], glow: '#8854f0' },
-  { name: 'Lost Halls',      sky: ['#443a1e', '#17120a'], glow: '#ffd026' },
-  { name: 'The Nexus',       sky: ['#2a2840', '#0d0c15'], glow: '#ffabf2' },
-  { name: 'Haunted Cemetery', sky: ['#1e2b26', '#080d0b'], glow: '#8fe07a' }
-];
-
-/*
- * Which realm a page sits in.
- *
- * The Nexus is where you choose what to do, so it is the way in. Fame Sweep is
- * about walking into dungeons that kill people, so it sits in the cemetery.
- * The calculator keeps drifting through all of them, which it always did.
- */
-const PAGE_REALM = { home: 'The Nexus', fame: 'Haunted Cemetery' };
-
-/*
- * Every page scatters the same mixed cast now - dungeon portals and
- * enchantment icons together - rather than swapping one subject for the
- * other at the door. Routing can call this before the enchant data is read,
- * which only gets the portals (see spritePool); that early, partial result
- * must never be allowed to land after, and so overwrite, the complete one -
- * completeness decides which result wins, not arrival order.
- */
-async function usePool() {
-  if (!ambience.enabled || ambience.poolComplete) return;
-  const loaded = await spritePool();
-  if (!loaded.complete && ambience.poolComplete) return;   // a complete pool already landed
-  if (!loaded.sprites.length) return;
-  ambience.sprites = loaded.sprites;
-  if (ambience.dom) repaintScatter(ambience.index);
-}
-
-function pinRealm(page) {
-  const wanted = PAGE_REALM[page];
-  const index = wanted ? REALMS.findIndex(realm => realm.name === wanted) : -1;
-  ambience.pinned = index >= 0 ? index : null;
-  if (!ambience.dom) return;
-  if (ambience.pinned !== null && ambience.index !== ambience.pinned) {
-    ambience.index = ambience.pinned;
-    weightAurora(ambience.index);
-    repaintScatter(ambience.index);
-    showRealm(ambience.index, false);
-  }
-}
-// The colour mix is re-weighted often and fades slowly, so it reads as a
-// continuous drift rather than a slideshow. The sprite scatter underneath is
-// repainted far less often, because that one is a real change of picture.
-const REALM_INTERVAL = 32 * 1000;
-const SCATTER_INTERVAL = 100 * 1000;
-
-const ambience = {
-  sprites: [], blobs: [],
-  timer: null, scatterTimer: null, poolComplete: false, poolPromise: null,
-  index: 0, enabled: true, started: false, resizeTimer: null, labelTimer: null
-};
-
-/*
- * What drifts in the background: dungeon portals and enchantment icons
- * together, the same mixed cast on every page rather than swapping one
- * subject for the other at the door.
- */
-function loadSprites(sources) {
-  return Promise.resolve(sources.map(src => ({ src })));
-}
-
-async function fameSource() {
-  if (ambience.fameText) return ambience.fameText;
-  const bundled = BUNDLE && BUNDLE.sources && BUNDLE.sources.fameText;
-  ambience.fameText = bundled
-    || await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/'))
-      .then(response => response.text()).catch(() => '');
-  return ambience.fameText;
-}
-
-/*
- * The portals, at the format each one is actually stored in: eleven are
- * animated GIFs and the rest single PNGs. Asking for a .png every time
- * silently dropped exactly the ones worth having behind a moving page.
- */
-async function dungeonSprites() {
-  const info = await dungeonInfo();
-  const sources = [];
-  for (const [name, kind] of info) {
-    const src = asset('GUI Files', 'Dungeon Icons', name + '.' + kind);
-    if (src) sources.push(src);
-  }
-  return loadSprites(sources);
-}
-
-// name -> "gif" or "png", from data/Fame/dungeon-pages.txt.
-async function dungeonInfo() {
-  if (ambience.dungeonInfo) return ambience.dungeonInfo;
-  const bundled = BUNDLE && BUNDLE.sources && BUNDLE.sources.dungeonText;
-  const text = bundled
-    || await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/'))
-      .then(response => response.text()).catch(() => '');
-  const info = new Map();
-  for (const raw of String(text).split('\n')) {
-    const line = raw.trim();
-    if (!line || line.startsWith('##')) continue;
-    const parts = line.split('|');
-    if (parts[0] && parts[2]) info.set(parts[0], parts[2]);
-  }
-  ambience.dungeonInfo = info;
-  return info;
-}
-
-function ambienceSprites() {
-  if (!state.data) return Promise.resolve([]);
-  const seen = new Set();
-  const sources = [];
-  for (const mod of state.data.enchants) {
-    const icon = enchantIcon(mod);
-    if (!icon || seen.has(icon)) continue;
-    seen.add(icon);
-    const src = asset('GUI Files', 'Enchantment Icons', `${icon}.png`);
-    if (src) sources.push(src);
-  }
-  return loadSprites(sources);
-}
-
-/*
- * The unified scatter pool: portals and enchantment icons loaded together,
- * so every page - the way in included - reads as one shared cast instead of
- * two separate ones swapped in and out by page.
- *
- * Portals need no game data and so can be asked for before the enchant data
- * is read; that early call only ever gets the portals, because ambienceSprites
- * reads state.data synchronously and there is none yet. Memoized once the
- * data is ready - completeness of the request, not when it happens to be
- * asked, decides whether its result is reused or replaced. Concurrent
- * complete requests share the one promise instead of loading every sprite
- * twice.
- */
-function spritePool() {
-  const complete = Boolean(state.data);
-  if (ambience.poolPromise && (ambience.poolComplete || !complete)) return ambience.poolPromise;
-  if (complete) ambience.poolComplete = true;
-  return ambience.poolPromise = Promise.all([dungeonSprites(), ambienceSprites()])
-    .then(([dungeon, enchant]) => ({ sprites: dungeon.concat(enchant), complete }));
-}
-
-// One drifting blob per realm colour. They never stop moving; only their
-// weights change, so the colour field is always somewhere between two realms
-// rather than sitting on one.
-function buildAurora(host) {
-  const aurora = document.createElement('div');
-  aurora.className = 'aurora';
-  const paths = ['float-a', 'float-b', 'float-c', 'float-d'];
-  ambience.blobs = REALMS.map((realm, index) => {
-    const blob = document.createElement('span');
-    blob.style.setProperty('--c', realm.glow);
-    blob.style.left = `${(index * 137) % 70}%`;
-    blob.style.top = `${(index * 89) % 60}%`;
-    // Mismatched periods, so the combination never lands the same way twice.
-    blob.style.animation = `${paths[index % paths.length]} ${34 + index * 9}s ease-in-out ${-index * 7}s infinite`;
-    aurora.append(blob);
-    return blob;
-  });
-  host.append(aurora);
-}
-
-// Weight the blobs around the current realm: its own colour leads, the two
-// next to it stay faintly lit, everything else fades out.
-function weightAurora(index) {
-  const total = REALMS.length;
-  ambience.blobs.forEach((blob, i) => {
-    let distance = Math.abs(i - index);
-    distance = Math.min(distance, total - distance);
-    const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : distance === 2 ? 0.18 : 0;
-    blob.style.opacity = String(opacity);
-  });
-}
-
-function showRealm(index, announce) {
-  const realm = REALMS[index % REALMS.length];
-  weightAurora(index % REALMS.length);
-  if (announce) {
-    const label = $('realmName');
-    label.textContent = realm.name;
-    label.classList.add('show');
-    clearTimeout(ambience.labelTimer);
-    ambience.labelTimer = setTimeout(() => label.classList.remove('show'), 7000);
-  }
-}
-
-// The sprite scatter is a genuine change of picture, so it cross-fades.
-// Small and dense rather than few and large - it reads as texture over the
-// shared starfield instead of a set of icons.
-function scatterDom(seed) {
-  let value = seed >>> 0;
-  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
-  const pieces = [];
-  for (let i = 0; i < 44; i++) {
-    const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
-    if (!sprite || !sprite.src) continue;
-    const size = 3.5 + random() * 8;
-    pieces.push(`<img src="${sprite.src}" alt="" onerror="this.remove()" style="`
-      + `left:${(random() * 104 - 2).toFixed(2)}%;top:${(random() * 104 - 2).toFixed(2)}%;`
-      + `width:${size.toFixed(2)}vmin;opacity:${(0.3 + random() * 0.45).toFixed(2)};`
-      + `transform:rotate(${((random() - 0.5) * 40).toFixed(1)}deg);`
-      + `animation-duration:${(60 + random() * 90).toFixed(0)}s;`
-      + `animation-delay:-${(random() * 90).toFixed(0)}s">`);
-  }
-  ambience.dom.innerHTML = pieces.join('');
-}
-
-function repaintScatter(index) {
-  if (!ambience.dom) return;
-  scatterDom((index + 1) * 2654435761);
-}
-
-function startAmbience() {
-  const host = $('ambience');
-  host.replaceChildren();
-  /*
-   * Real elements rather than a canvas: a canvas draws the first frame of an
-   * animated portal and nothing after, so the moving ones would sit still.
-   * These are ordinary images, blurred and drifting by stylesheet, and they
-   * animate because the browser animates them.
-   */
-  ambience.dom = document.createElement('div');
-  ambience.dom.className = 'ambience-dom';
-  host.append(ambience.dom);
-  buildAurora(host);
-
-  repaintScatter(ambience.index);
-  weightAurora(ambience.index % REALMS.length);
-  showRealm(ambience.index, false);
-  ambience.started = true;
-
-  clearInterval(ambience.timer);
-  clearInterval(ambience.scatterTimer);
-  ambience.timer = setInterval(() => {
-    if (!ambience.enabled) return;
-    if (ambience.pinned !== null && ambience.pinned !== undefined) return;
-    ambience.index = (ambience.index + 1) % REALMS.length;
-    showRealm(ambience.index, true);
-  }, REALM_INTERVAL);
-  ambience.scatterTimer = setInterval(() => {
-    if (!ambience.enabled) return;
-    if (ambience.pinned !== null && ambience.pinned !== undefined) return;
-    repaintScatter(ambience.index);
-  }, SCATTER_INTERVAL);
-}
-
-// The scatter and aurora reshuffle at the new size once the window settles,
-// rather than rebuilding on every intermediate frame of a drag.
-function handleAmbienceResize() {
-  clearTimeout(ambience.resizeTimer);
-  ambience.resizeTimer = setTimeout(() => {
-    if (!ambience.enabled || !ambience.started) return;
-    startAmbience();
-  }, 250);
-}
 
 // The Atlas paints 460 fixed stars: its fourth-power brightness curve leaves
 // most of them close to the threshold and lets the occasional bright point
@@ -3192,29 +3042,13 @@ function buildStarLanguage(host) {
 }
 
 /*
- * The drifting realms behind the interface, always on.
- *
- * It reached into the atlas for a while and froze the clock its weather
- * reads, which worked, and is not what this is for: the atlas is a map you
- * are looking at rather than decoration behind something you are reading,
- * and its weather is part of the map. So this governs the background of
- * the interface, on every page, and the atlas keeps its own weather running
- * regardless.
+ * The sky behind the tool pages: the starfield, built once. The drifting
+ * realms that used to lie over it - an aurora and a scatter of sprites -
+ * are gone rather than paused: the way in stands on the atlas, and a tool
+ * page stands on this.
  */
-async function initAmbience() {
-  ambience.enabled = true;
-  $('ambience').hidden = false;
-  // Start on a random realm so two visitors do not see the same one.
-  ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
-    ? ambience.pinned
-    : Math.floor(Math.random() * REALMS.length);
-  // The enchant data is already read by the time this runs, so this call is
-  // always the complete one - it always wins, whatever partial result
-  // routing may have asked for earlier and whenever that settles.
-  const loaded = await spritePool();
-  if (loaded.sprites.length) ambience.sprites = loaded.sprites;
+function initStarfield() {
   buildStarLanguage(document.querySelector('.starfield'));
-  startAmbience();
 }
 
 /* ------------------------------------------------------------------ *
@@ -3334,7 +3168,49 @@ function loadFilters() {
 function renderTabs() {
   const bar = $('tabBar');
   bar.replaceChildren();
+  /*
+   * A build sent over from Theory Crafting arrives as a group: its tabs stand
+   * together in a bracket headed by the build's name, which also closes the
+   * lot of them. Groups are runs of neighbours - a tab is only ever added
+   * after the others - so each run gets one bracket.
+   */
+  let into = bar, openGroup = null;
   for (const tab of state.tabs) {
+    const group = tab.group && tab.group.id ? tab.group : null;
+    if (!group || !openGroup || openGroup !== group.id) {
+      into = bar;
+      openGroup = null;
+      if (group) {
+        const members = state.tabs.filter(one => one.group && one.group.id === group.id);
+        const colour = GROUP_COLOURS[group.colour] ? group.colour : 'blue';
+        const box = document.createElement('div');
+        box.className = 'tab-group' + (group.collapsed ? ' is-collapsed' : '')
+          + (members.some(one => one.id === state.activeTab) ? ' has-active' : '');
+        box.setAttribute('role', 'group');
+        box.setAttribute('aria-label', group.label);
+        box.style.setProperty('--g', GROUP_COLOURS[colour]);
+        const head = document.createElement('span');
+        head.className = 'tab-group-head';
+        /* The name is the fold: pressed, the group shuts down to its chip
+           and opens again - the way a browser folds a tab group away. */
+        head.innerHTML = `<button type="button" class="tab-group-name" data-toggle-group="${html(group.id)}"`
+          + ` aria-expanded="${group.collapsed ? 'false' : 'true'}"`
+          + ` title="${group.collapsed ? 'Show' : 'Fold away'} the tabs of ${html(group.label)}">`
+          + `<span class="tab-group-label">${html(group.label)}</span>`
+          + `<span class="tab-group-count">${members.length}</span></button>`
+          + `<button type="button" class="tab-group-edit" data-edit-group="${html(group.id)}"`
+          + ` aria-expanded="${state.editingGroup === group.id ? 'true' : 'false'}"`
+          + ` title="Rename or recolour ${html(group.label)}" aria-label="Rename or recolour ${html(group.label)}">✎</button>`
+          + `<span class="tab-group-close" data-close-group="${html(group.id)}" role="button"`
+          + ` title="Close every tab of ${html(group.label)}" aria-label="Close every tab of ${html(group.label)}">×</span>`;
+        box.append(head);
+        if (state.editingGroup === group.id) box.append(groupMenu(group, colour));
+        bar.append(box);
+        into = box;
+        openGroup = group.id;
+      }
+    }
+    if (tab.group && tab.group.collapsed) continue;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `tab${tab.id === state.activeTab ? ' active' : ''}`;
@@ -3343,7 +3219,7 @@ function renderTabs() {
     button.setAttribute('aria-selected', String(tab.id === state.activeTab));
     button.title = tab.label;
     button.innerHTML = `<span class="tab-label">${html(tab.label)}</span>${state.tabs.length > 1 ? `<span class="tab-close" data-close="${tab.id}" role="button" aria-label="Close ${html(tab.label)}">×</span>` : ''}`;
-    bar.append(button);
+    into.append(button);
   }
   const add = document.createElement('button');
   add.type = 'button';
@@ -3371,6 +3247,9 @@ function switchTab(id) {
   if (id === state.activeTab) return;
   const target = state.tabs.find(tab => tab.id === id);
   if (!target) return;
+  if (target.group && target.group.collapsed) {
+    for (const tab of state.tabs) if (tab.group && tab.group.id === target.group.id) tab.group.collapsed = false;
+  }
 
   const layout = document.querySelector('.layout');
   const from = state.tabs.findIndex(tab => tab.id === state.activeTab);
@@ -3419,6 +3298,92 @@ function closeTab(id) {
   state.tabs.splice(index, 1);
   if (wasActive) {
     const next = state.tabs[Math.min(index, state.tabs.length - 1)];
+    state.activeTab = next.id;
+    state.loadingTab = true;
+    applySetup(next.setup);
+    state.loadingTab = false;
+    clearResults();
+  }
+  refresh();
+  persistTabs();
+  renderTabs();
+}
+
+/*
+ * A group's own colours: the page's accent and five more from the same
+ * palette the rest of the site already speaks in, so a group never reads as
+ * a warning or a tier it is not.
+ */
+const GROUP_COLOURS = {
+  blue: '#79c5e8', gold: '#ffcb70', green: '#86d98e',
+  purple: '#c79bf0', rose: '#ff9c8a', grey: '#9aa4ba'
+};
+
+/* The small panel a group is renamed and recoloured in. */
+function groupMenu(group, colour) {
+  const menu = document.createElement('div');
+  menu.className = 'tab-group-menu';
+  menu.dataset.groupMenu = group.id;
+  menu.innerHTML = `<label class="tab-group-field"><span>Name</span>`
+    + `<input type="text" maxlength="60" data-group-name="${html(group.id)}" value="${html(group.label)}"></label>`
+    + `<div class="tab-group-swatches" role="group" aria-label="Group colour">`
+    + Object.entries(GROUP_COLOURS).map(([name, value]) =>
+      `<button type="button" class="tab-group-swatch${name === colour ? ' is-on' : ''}" data-group-colour="${name}"`
+      + ` data-group="${html(group.id)}" style="--swatch:${value}" aria-pressed="${name === colour}"`
+      + ` title="${name}" aria-label="${name}"></button>`).join('')
+    + `</div>`;
+  return menu;
+}
+
+/* Every tab of a group carries its own copy of the group, so a change is
+   written into each of them and kept with the tabs. */
+function updateGroup(id, patch) {
+  let changed = false;
+  for (const tab of state.tabs) {
+    if (tab.group && tab.group.id === id) { Object.assign(tab.group, patch); changed = true; }
+  }
+  if (!changed) return;
+  persistTabs();
+  renderTabs();
+}
+
+/*
+ * Folded away, a group is its chip alone. Folding the group the editor is
+ * showing moves the editor to the nearest tab outside it, so what is on the
+ * screen is never a tab that cannot be seen; with nothing outside it, the
+ * group folds and its chip stays lit as the one being worked on.
+ */
+function toggleGroup(id) {
+  const member = state.tabs.find(tab => tab.group && tab.group.id === id);
+  if (!member) return;
+  const folding = !member.group.collapsed;
+  if (folding && member.group && state.tabs.some(tab => tab.id === state.activeTab
+    && tab.group && tab.group.id === id)) {
+    const at = state.tabs.findIndex(tab => tab.id === state.activeTab);
+    const outside = state.tabs
+      .map((tab, index) => ({ tab, index }))
+      .filter(one => !(one.tab.group && one.tab.group.id === id))
+      .sort((a, b) => Math.abs(a.index - at) - Math.abs(b.index - at))[0];
+    if (outside) {
+      updateGroup(id, { collapsed: true });
+      switchTab(outside.tab.id);
+      return;
+    }
+  }
+  updateGroup(id, { collapsed: folding });
+}
+
+/* Every tab of one sent build at once. The strip is never left empty: if the
+   group was all there was, an empty setup takes its place. */
+function closeGroup(id) {
+  const leaving = state.tabs.filter(tab => tab.group && tab.group.id === id);
+  if (!leaving.length) return;
+  const wasActive = leaving.some(tab => tab.id === state.activeTab);
+  const at = state.tabs.findIndex(tab => tab.group && tab.group.id === id);
+  state.tabs = state.tabs.filter(tab => !(tab.group && tab.group.id === id));
+  if (!state.tabs.length) state.tabs = [newTab({})];
+  if (wasActive) {
+    const next = state.tabs[Math.min(at, state.tabs.length - 1)];
     state.activeTab = next.id;
     state.loadingTab = true;
     applySetup(next.setup);
@@ -3953,7 +3918,7 @@ async function load() {
     if (document.body.dataset.page === 'enchant') await ensureItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${RealmI18n.number(knownItemNames().length)} items — the slot, dust and base come with it`;
-    initAmbience();
+    initStarfield();
     renderOfflineOffer();
     state.ready = true;
     renderClientNews(parseChanges(await readChanges()));
@@ -4241,9 +4206,168 @@ window.addEventListener('message', event => {
     dressAtlas(true);                    // and no glide: it has only just arrived
     return;
   }
+  if (said.rotmg === 'clouds') { dressSkySwitch(said); return; }
+  if (said.rotmg === 'panel') { besideAtlasPanel(said); return; }
+  /* A thing on the map, asked to be opened in the Index. The id is checked
+     by the same route the Index's own links go through. While the atlas is
+     open it is shown in a drawer over the atlas's panel rather than by
+     leaving the map, so putting it away is back where the reader was. */
+  if (said.rotmg === 'index') {
+    if (!RealmRoutes.indexHash(said.id)) return;
+    if (atlasOpenOut()) { openAtlasIndex(said.id, true); return; }
+    if (globeWide()) setGlobe(false);
+    window.openIndexRecord(said.id);
+    return;
+  }
   if (said.rotmg !== 'sky') return;
   if (globeWide()) setGlobe(false);
 });
+
+/*
+ * The clouds' switch, beside the cross. The atlas says when there is weather
+ * to put away and whether it has been, and draws nothing of it itself while
+ * it is framed; this draws the client's cloud off the atlas's own sheet,
+ * struck through while the sky is full.
+ */
+let skyClear = false;
+function dressSkySwitch(said) {
+  const button = document.getElementById('globeSky');
+  if (!button) return;
+  skyClear = Boolean(said.clear);
+  button.hidden = !said.can;
+  button.setAttribute('aria-pressed', String(skyClear));
+  const says = skyClear ? 'Show the clouds' : 'Hide the clouds';
+  button.title = says;
+  button.setAttribute('aria-label', says);
+  const art = button.querySelector('.globe-sky-art');
+  const icon = said.icon;
+  if (art && icon && Array.isArray(icon.cut) && Array.isArray(icon.sheet)
+    && /^https?:|^file:/.test(String(icon.src))) {
+    const k = 44 / icon.cut[2];
+    art.style.width = '44px';
+    art.style.height = Math.round(icon.cut[3] * k) + 'px';
+    art.style.backgroundImage = 'url("' + String(icon.src).replace(/"/g, '%22') + '")';
+    art.style.backgroundSize = (icon.sheet[0] * k) + 'px ' + (icon.sheet[1] * k) + 'px';
+    art.style.backgroundPosition = (-icon.cut[0] * k) + 'px ' + (-icon.cut[1] * k) + 'px';
+  }
+  if (art) art.classList.toggle('struck', !skyClear);
+}
+
+/*
+ * The atlas's panel, as the atlas reports it: open or not, and how wide. The
+ * cross and the clouds' switch stand beside it rather than on its heading and
+ * its own cross, and the Index drawer takes exactly its place.
+ */
+function besideAtlasPanel(said) {
+  const box = document.getElementById('globeBox');
+  if (!box) return;
+  const wide = said.open ? Math.max(0, Math.min(4000, Math.round(Number(said.wide) || 0))) : 0;
+  box.style.setProperty('--atlas-panel', wide + 'px');
+  box.classList.toggle('has-atlas-panel', Boolean(said.open) && wide > 0);
+  if (!said.open) shutAtlasIndex();
+}
+
+/* Open out over the page: the home ring's map, or the panel opened wide. */
+const atlasOpenOut = () => document.body.classList.contains('ring-away') || globeWide();
+
+/*
+ * The Index, without leaving the atlas.
+ *
+ * A drop or a creature in the atlas's panel used to open its Index page,
+ * which took the reader off the map - and back from there was the front page,
+ * with the zone and its panel gone. Now the Index's own card is drawn in a
+ * drawer that stands exactly over the atlas's panel. Links inside it walk on
+ * inside it, Back steps back through them to the zone, and the full Index is
+ * one button away for anyone who does want to go.
+ */
+const atlasIndexTrail = [];
+let atlasIndexAsk = 0;
+async function openAtlasIndex(id, fresh) {
+  const drawer = document.getElementById('atlasIndex');
+  const card = document.getElementById('atlasIndexCard');
+  const wait = document.getElementById('atlasIndexWait');
+  if (!drawer || !card) { window.openIndexRecord(id); return; }
+  const ask = ++atlasIndexAsk;
+  if (fresh) atlasIndexTrail.length = 0;
+  drawer.hidden = false;
+  if (wait) wait.hidden = false;
+  let got = null;
+  try {
+    await ensureIndexPage();
+    got = typeof RealmIndex !== 'undefined' && RealmIndex.card ? await RealmIndex.card(id) : null;
+  } catch (error) { console.error(error); }
+  if (ask !== atlasIndexAsk) return;           // a later one was asked for meanwhile
+  if (wait) wait.hidden = true;
+  if (!got) {
+    if (!atlasIndexTrail.length) shutAtlasIndex();
+    return;
+  }
+  if (atlasIndexTrail[atlasIndexTrail.length - 1] !== got.id) atlasIndexTrail.push(got.id);
+  card.innerHTML = got.html;
+  if (got.sheet) card.style.setProperty('--ix-sheet', got.sheet);
+  card.scrollTop = 0;
+  sayAtlasIndexBack();
+}
+function sayAtlasIndexBack() {
+  const back = document.getElementById('atlasIndexBack');
+  if (!back) return;
+  const deeper = atlasIndexTrail.length > 1;
+  for (const say of back.querySelectorAll('[data-back]')) say.hidden = (say.dataset.back === 'record') !== deeper;
+}
+function shutAtlasIndex() {
+  const drawer = document.getElementById('atlasIndex');
+  atlasIndexAsk++;
+  atlasIndexTrail.length = 0;
+  if (!drawer || drawer.hidden) return;
+  drawer.hidden = true;
+  const card = document.getElementById('atlasIndexCard');
+  if (card) card.innerHTML = '';
+}
+/* Leaving the atlas for somewhere else the card points at. */
+function leaveAtlasFor(go) {
+  shutAtlasIndex();
+  if (globeWide()) setGlobe(false);
+  go();
+}
+{
+  const drawer = document.getElementById('atlasIndex');
+  if (drawer) {
+    drawer.addEventListener('click', event => {
+      event.stopPropagation();             // not a click on the atlas's box
+      const here = atlasIndexTrail[atlasIndexTrail.length - 1];
+      if (event.target.closest('#atlasIndexBack')) {
+        atlasIndexTrail.pop();
+        const before = atlasIndexTrail.pop();
+        if (before) openAtlasIndex(before, false); else shutAtlasIndex();
+        return;
+      }
+      if (event.target.closest('#atlasIndexFull')) {
+        if (here) leaveAtlasFor(() => window.openIndexRecord(here));
+        return;
+      }
+      const open = event.target.closest('[data-open]');
+      if (open) { openAtlasIndex(open.dataset.open, false); return; }
+      const door = event.target.closest('[data-door]');
+      if (door && here && typeof RealmIndex !== 'undefined' && RealmIndex.door) {
+        leaveAtlasFor(() => RealmIndex.door(door.dataset.door, here));
+        return;
+      }
+      const skinDoor = event.target.closest('[data-skin-target]');
+      if (skinDoor && typeof window.openSkinViewerTarget === 'function') {
+        let target = null;
+        try { target = JSON.parse(decodeURIComponent(skinDoor.dataset.skinTarget)); }
+        catch (error) { console.error('Invalid Skin Viewer target', error); }
+        if (target) leaveAtlasFor(() => window.openSkinViewerTarget(target));
+      }
+    });
+    // Its keys are its own: Enter on one of its buttons is not the atlas's
+    // box being asked to open, and Escape puts the drawer away, not the atlas.
+    drawer.addEventListener('keydown', event => {
+      event.stopPropagation();
+      if (event.key === 'Escape') shutAtlasIndex();
+    });
+  }
+}
 
 function tellAtlas(what) {
   const frame = document.getElementById('realmFrame');
@@ -4265,48 +4389,6 @@ function placeGlobe(box, at) {
   box.style.left = at.left + 'px';
   box.style.width = at.width + 'px';
   box.style.height = at.height + 'px';
-}
-
-/*
- * The drifting realms are put on hold while the atlas has the page.
- *
- * Nothing of them can be seen behind a full-page map, and they are a row of
- * sprites and an aurora being animated - which is work taken straight out of
- * the frame budget of the thing you are actually looking at. This is a hold
- * rather than a setting: the switch's own state is not touched, so putting
- * the frame back brings them back exactly as they were left.
- */
-let ambienceGoing = 0;
-function holdAmbience(hold) {
-  const host = document.getElementById('ambience');
-  if (!host) return;
-  clearTimeout(ambienceGoing);
-  if (hold) {
-    /*
-     * Faded, then stopped. The stylesheet takes the opacity down over the
-     * same time the frame takes to open; hiding it outright is what
-     * actually saves the work, so that waits until there is nothing left
-     * to see. Switched off on the spot it was a visible blink at the
-     * moment the frame started moving, which is the one moment there
-     * should be nothing to notice but the frame.
-     */
-    ambienceGoing = setTimeout(() => {
-      if (!globeWide()) return;          // put back before the fade ended
-      host.hidden = true;
-      clearInterval(ambience.timer);
-      clearInterval(ambience.scatterTimer);
-      ambience.timer = 0; ambience.scatterTimer = 0;
-    }, GLOBE_TAKES);
-    return;
-  }
-  if (!ambience.enabled) return;
-  /*
-   * And back the other way: there before it is asked to be seen, so the
-   * stylesheet has something to fade up. Restarted only if it was actually
-   * stopped, since the fade may never have finished.
-   */
-  host.hidden = false;
-  if (!ambience.timer) startAmbience();
 }
 
 /*
@@ -4389,7 +4471,6 @@ function setGlobe(open) {
     Ring.aside(open);
     paceAtlas();
     tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
-    holdAmbience(open);
     clearTimeout(globeSettling);
     /*
      * One journey, both ways.
@@ -4435,7 +4516,6 @@ function setGlobe(open) {
   globeMoving = true;
   paceAtlas();
   tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
-  holdAmbience(open);
 
   /*
    * Going back in, the writing goes at once: it has no business in a panel
@@ -4470,10 +4550,14 @@ function setGlobe(open) {
   }, GLOBE_TAKES + 60);
 }
 
-/* Opened out, it is the window, so it follows the window. */
+/* Opened out, it is the window, so it follows the window - when it was pinned
+   there by hand. Opened from the ring it never was: the stylesheet already
+   makes it the window, and pinning it here wrote the size the window had at
+   the first resize into the box for good, so growing the window afterwards
+   left the map in a corner of it with the page's old sky showing beside. */
 window.addEventListener('resize', () => {
   const box = document.getElementById('globeBox');
-  if (box && globeWide()) placeGlobe(box, globeRoom());
+  if (box && globeWide() && box.style.position === 'fixed') placeGlobe(box, globeRoom());
 });
 const globeWide = () => document.body.classList.contains('globe-wide');
 let famePageReady = false;
@@ -4494,12 +4578,9 @@ function openFamePage() {
         : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
           .then(response => response.text()).catch(() => '');
 
-      // Kept so the background can scatter the same portals the page shows.
-      ambience.fameText = text;
       await Promise.resolve(
         FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides)
       );
-      usePool();
       famePageReady = true;
       return true;
     } catch (error) {
@@ -4678,8 +4759,6 @@ function showPage(name) {
     if (node) node.hidden = key !== page;
   }
   document.body.dataset.page = page;
-  pinRealm(page);
-  usePool();
   // Navigation normally relies on settled() watching fetches and images.
   // A dynamically inserted script is invisible to that watcher until it has
   // finished downloading, so expose its own promise to the black cover.
@@ -5839,6 +5918,13 @@ function worldShare() {
      places the bell above it, and the bell is page furniture standing outside
      the arrangement. */
   document.body.style.setProperty('--core', Math.round(across) + 'px');
+  /* And the most room the world ever takes: the dark arc the bands stand off
+     at, or the world itself come forward under the cursor, whichever reaches
+     further. The name and the bell above it are sized against this rather
+     than against the world of the moment, so they never move while it
+     breathes and it never grows up into them. */
+  document.body.style.setProperty('--core-room',
+    Math.round(Math.max(geo.Ri * 2, geo.R * 2 * (1 + GROW))) + 'px');
   return across / Math.min(window.innerWidth, window.innerHeight);
 }
 

@@ -602,5 +602,17 @@
   "index.picture.clientArt": "a própria arte do jogo",
   "index.picture.givenSkin": "a pele que isso te dá",
   "index.picture.piece": "uma de suas peças",
-  "index.source.notDeclared": "não declarado no cliente"
+  "index.source.notDeclared": "não declarado no cliente",
+  "static.hide.the.clouds": "Ocultar as nuvens",
+  "static.send.build.to.enchant": "enviar build para encantamento",
+  "static.send.build.to.enchant.title": "Abrir cada item desta build, com seus encantamentos, em uma nova aba da Calculadora de Encantamentos",
+  "static.show.the.clouds": "Mostrar as nuvens",
+  "static.alternative.builds": "Builds alternativas",
+  "static.drag.to.widen": "arraste para alargar · clique duplo para redefinir",
+  "static.back.to.the.zone": "Voltar à zona",
+  "static.back": "Voltar",
+  "static.open.in.the.index": "Abrir no Index",
+  "static.reading.the.index": "Lendo o Index…",
+  "static.index.record": "Registro do Index",
+  "static.leave.the.atlas.for.index": "Sair do atlas para a página do Index deste registro"
 }

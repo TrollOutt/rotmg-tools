@@ -255,4 +255,130 @@ for (const one of raw.classes) {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Alternatives: other whole builds, told apart by their four items    *
+ * ------------------------------------------------------------------ */
+
+{
+  // The same two searches the page runs, sharing one table, then ranked.
+  const searchWithAlternatives = (state, goal) => {
+    t.use(state);
+    const gather = new Map();
+    const plain = t.prepareAccessible(t.bareOf(state));
+    const a = t.optimise(plain, goal, null, gather);
+    const b = t.optimise(state, goal, null, gather);
+    const got = a.score >= b.score ? a : b;
+    const ranked = t.alternativesOf(got, gather, goal);
+    return { got, ranked, searched: a.looked + b.looked };
+  };
+  const dps = t.GOALS.find(one => one.id === 'dps');
+  const base = t.fresh('Wizard');
+  const run = searchWithAlternatives(clone(base), dps);
+  const list = run.ranked.list;
+
+  assert(list.length >= 3, 'THEORY-ALT-000 a Wizard damage search offers alternatives');
+  assert.ok(list.length <= 5, 'THEORY-ALT-000 at most four alternatives are kept behind the answer');
+  assert(list[0].score >= run.got.score - 1e-9,
+    'THEORY-ALT-001 the first entry is the best build found');
+  for (let i = 1; i < list.length; i++) {
+    assert(list[i - 1].score >= list[i].score - 1e-9,
+      'THEORY-ALT-009 alternatives are ranked from best to worst');
+    assert.notEqual(list[i].key, list[0].key, 'THEORY-ALT-002 an alternative wears other gear than the best');
+  }
+  assert.equal(new Set(list.map(one => one.key)).size, list.length,
+    'THEORY-ALT-003 no two entries share a gear signature');
+  for (const one of list) {
+    assert.equal(one.key, t.gearSignature(one.state), 'THEORY-ALT-003 the key is the four items worn');
+  }
+
+  // Enchantments are not what makes a build another build.
+  const same = clone(list[0].state);
+  for (const hand of ['weapon', 'ability', 'armor', 'ring']) same.gear[hand].ench = [null, null, null, null];
+  assert.equal(t.gearSignature(same), list[0].key,
+    'THEORY-ALT-004 changing only the enchantments keeps the same gear signature');
+  const twice = new Map([[list[0].key, { key: list[0].key, score: list[0].score + 1, gear: {} }]]);
+  assert.equal(t.alternativesOf(run.got, twice, dps).list.length, 1,
+    'THEORY-ALT-004 the winner\'s own gear set, however enchanted, is never offered as an alternative');
+
+  // Worn as they are, each alternative's enchantments are the ones that scored it.
+  for (const one of list) {
+    const worn = clone(base);
+    worn.gear = clone(one.state.gear);
+    t.use(worn);
+    assert(Math.abs(t.scoreOf(worn, dps) - one.score) < 1e-6,
+      'THEORY-ALT-010 wearing an alternative keeps its own enchantments and its own score');
+  }
+
+  const again = searchWithAlternatives(clone(base), dps).ranked.list;
+  assert.deepEqual(again.map(one => one.key), list.map(one => one.key),
+    'THEORY-ALT-008 the same question gives the same alternatives in the same order');
+
+  // A kept item and a kept enchantment stay kept in every alternative.
+  const kept = clone(list[0].state);
+  kept.locked = { weapon: true, 'armor:0': true };
+  const keptWeapon = kept.gear.weapon.name;
+  const keptEnch = kept.gear.armor.ench[0];
+  const heldRun = searchWithAlternatives(kept, dps).ranked.list;
+  assert(heldRun.length >= 2, 'THEORY-ALT-005 a search with a kept item still offers alternatives');
+  for (const one of heldRun) {
+    assert.equal(one.state.gear.weapon.name, keptWeapon, 'THEORY-ALT-005 a kept item is in every alternative');
+    if (one.state.gear.armor.name === kept.gear.armor.name) {
+      assert.equal(one.state.gear.armor.ench[0], keptEnch, 'THEORY-ALT-005 a kept enchantment stays on its item');
+    }
+    assert.equal(one.state.locked.weapon, true, 'THEORY-ALT-005 the padlocks come back as they were');
+    assert.equal(one.state.locked.ability, undefined, 'THEORY-ALT-005 and no padlock is added');
+  }
+
+  // A blacklisted item is never offered, in the answer or behind it.
+  const banned = clone(base);
+  banned.banned = { [list[0].state.gear.ability.name]: true };
+  const banRun = searchWithAlternatives(banned, dps).ranked.list;
+  for (const one of banRun) {
+    assert.notEqual(one.state.gear.ability.name, list[0].state.gear.ability.name,
+      'THEORY-ALT-006 a blacklisted item appears in no alternative');
+  }
+
+  // With sets left out of the search, no alternative wears a set piece.
+  const noSets = clone(base);
+  noSets.searchSets = false;
+  const setRun = searchWithAlternatives(noSets, dps).ranked.list;
+  for (const one of setRun) {
+    for (const hand of ['weapon', 'ability', 'armor', 'ring']) {
+      const item = raw.items.find(x => x.name === one.state.gear[hand].name);
+      assert(!(item && item.set), 'THEORY-ALT-007 a filter the search obeys, its alternatives obey');
+    }
+  }
+
+  // An alternative is another way to play, never the same way a tier worse.
+  for (const [klass, goalId] of [['Wizard', 'dps'], ['Archer', 'dps'], ['Warrior', 'stat:hp']]) {
+    const goal = t.GOALS.find(one => one.id === goalId);
+    const state = t.fresh(klass);
+    const ranked = searchWithAlternatives(clone(state), goal).ranked.list;
+    for (const one of ranked.slice(1)) {
+      for (const hand of ['weapon', 'ability', 'armor', 'ring']) {
+        const item = raw.items.find(x => x.name === one.state.gear[hand].name);
+        if (!item || !Number.isFinite(item.tier)) continue;
+        const best = Math.max(...t.searchItems(hand, klass, one.state)
+          .map(x => x.tier).filter(Number.isFinite));
+        assert.equal(item.tier, best,
+          'THEORY-ALT-013 ' + klass + ' ' + hand + ': an alternative wears the best tier on offer, not T' + item.tier);
+      }
+    }
+  }
+
+  // With nothing to offer, nothing is offered.
+  assert.equal(t.alternativesOf(run.got, new Map(), dps).list.length, 1,
+    'THEORY-ALT-011 an empty table gives the answer alone');
+  const page = fs.readFileSync(path.join(root, 'web', 'theorycraft.js'), 'utf8');
+  assert(page.includes('alternatives = ranked.list.length > 1 ?')
+    && page.includes("if (!alternativesLive()) { box.hidden = true; box.innerHTML = ''; return; }")
+    && !page.includes('data-alt-step'),
+    'THEORY-ALT-011 the page draws no alternatives when there are none');
+
+  // Logical budget: offering alternatives costs no more than the search did twice over.
+  assert(run.ranked.looked <= run.searched * 2,
+    'THEORY-ALT-012 alternatives stay within twice the search\'s own evaluations ('
+      + run.ranked.looked + ' against ' + run.searched + ')');
+}
+
 console.log('theory optimization contract: ok');

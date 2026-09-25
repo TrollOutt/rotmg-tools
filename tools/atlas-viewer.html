@@ -26,7 +26,7 @@
      for the next ten minutes. What is switched on is already the right size,
      so there is nothing anybody would have wanted to ease. */
   body.unheard #map { opacity: 0; }
-  body.bare #chat, body.bare #chatKnob, body.bare #panel,
+  body.bare #chat, body.bare #knobs, body.bare #panel,
   body.bare #bench { display: none !important; }
   /*
    * The writing is the exception, and it fades rather than being taken away.
@@ -59,13 +59,102 @@
   #chat.bare { background: rgba(7,10,16,.16); box-shadow: none; opacity: .55; }
   #chat .said { color: #a7b2c6; }
   #chat .who { color: #cfa96a; }
-  #chatKnob {
-    position: absolute; left: 12px; bottom: 12px; z-index: 3;
+  /* The two switches a reader of the map has, first in the bar along the
+     bottom: laid out in its row rather than each measured into place over
+     it, so neither one covers the writing and the chat one can change its
+     words without walking into the sky one. The bar lets the pointer
+     through; these take it back. */
+  #knobs {
+    display: flex; gap: 6px; flex: none; pointer-events: auto;
+  }
+  #knobs button {
     font: 11px ui-monospace, monospace; color: #8b94a6;
     background: rgba(7,10,16,.6); border: 0; border-radius: 4px;
     padding: 2px 7px; cursor: pointer;
   }
-  #chatKnob:hover { color: #cfd6e6; }
+  #knobs button:hover { color: #cfd6e6; }
+  /*
+   * The clouds, put away and brought back, from the top right - and only
+   * while there is weather to see: it is the client's own cloud, struck
+   * through while the sky is full and whole once it has been cleared. Framed,
+   * the page around the atlas draws the same switch beside its own cross,
+   * so this one is only for the atlas opened on its own.
+   */
+  #skyKnob {
+    position: absolute; top: 14px; right: 14px; z-index: 4;
+    display: grid; place-items: center; width: 48px; height: 36px; padding: 0;
+    border: 0; background: none; cursor: pointer; color: #cfd6e6;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.85));
+    transition: transform .15s ease, filter .15s ease;
+  }
+  #skyKnob:hover { transform: scale(1.08); filter: drop-shadow(0 1px 2px rgba(0,0,0,.85)) brightness(1.15); }
+  #skyKnob:focus-visible { outline: 1px solid #79c5e8; outline-offset: 2px; border-radius: 6px; }
+  body.framed #skyKnob, #skyKnob[hidden] { display: none; }
+  /* Beside the panel rather than over its own close button. */
+  #panel.is-open ~ #skyKnob { right: calc(min(var(--panel-w, 420px), 92vw) + 14px); }
+  .cloud-art {
+    position: relative; display: block; width: 26px; height: 9px;
+    background-repeat: no-repeat; image-rendering: pixelated;
+  }
+  /* Struck through in red while the clouds are there: the stop sign on them. */
+  .cloud-art.struck::after {
+    content: ''; position: absolute; left: -4px; right: -4px; top: 50%; height: 3px; margin-top: -1.5px;
+    background: #e5484d; border-radius: 2px; transform: rotate(-24deg);
+    box-shadow: 0 0 0 1.5px rgba(12,11,18,.9);
+  }
+
+  /* A creature in a panel: picture, name, the way to it in the Index, and what
+     it drops as the pictures a player knows them by. */
+  .cast { display: grid; gap: 4px; }
+  .who { padding: 8px 9px; border-radius: 7px; }
+  .who:nth-child(odd) { background: rgba(255,255,255,.04); }
+  .who-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .who-top b { font-weight: 600; color: #e3eaf5; font-size: calc(.98em * var(--kt, 1)); min-width: 0; }
+  .who-top em { font-style: normal; color: #7c8899; font-size: .72em; white-space: nowrap; }
+  .to-index {
+    margin-left: auto; flex: none; cursor: pointer; font: inherit; font-size: calc(11px * var(--kt, 1)); font-weight: 600;
+    color: #ffcb70; background: rgba(255,203,112,.08); border: 1px solid rgba(255,203,112,.4);
+    border-radius: 999px; padding: 4px 11px; white-space: nowrap;
+  }
+  .to-index:hover, .to-index:focus-visible { background: rgba(255,203,112,.18); border-color: #ffcb70; outline: none; }
+  .who-drops { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px;
+    margin: 7px 0 0 calc(40px * var(--kf, 1) + 12px); }
+  .drops-row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .drop { display: inline-grid; place-items: center; width: calc(36px * var(--k, 1)); height: calc(36px * var(--k, 1)); padding: 0;
+    border-radius: 6px; background: rgba(255,255,255,.05); border: 1px solid transparent; }
+  /* A dungeon it opens, drawn as its portal: set apart past a thin rule, and
+     round with a violet glow instead of a square - a way somewhere, not a thing
+     to pick up. */
+  .gates { display: inline-flex; gap: 5px; align-items: center; padding-left: 9px; margin-left: 4px;
+    border-left: 1px solid rgba(186,140,255,.35); }
+  .drop.portal { border-radius: 50%; background: radial-gradient(circle, rgba(150,100,255,.28), rgba(150,100,255,.04) 70%);
+    box-shadow: 0 0 0 1px rgba(186,140,255,.45), 0 0 10px rgba(150,100,255,.35); }
+  button.drop.portal:hover, button.drop.portal:focus-visible { border-color: transparent;
+    box-shadow: 0 0 0 1px #d6b8ff, 0 0 14px rgba(170,120,255,.6); }
+  .drop.portal img { width: calc(30px * var(--k, 1)); height: calc(30px * var(--k, 1)); object-fit: contain; image-rendering: pixelated; }
+  /* A picture cut from the Index's sheet is sized in pixels where it is drawn,
+     so it is grown whole - its cell, its sheet and its place on the sheet. */
+  .drop .pic { zoom: var(--k, 1); }
+  .drops .pic { zoom: var(--kc, 1); }
+  /* A blueprint beside the item it unlocks in the Forge: one frame round both. */
+  .pair { display: inline-flex; gap: 2px; padding: 1px; border-radius: 7px;
+    background: rgba(121,197,232,.16); box-shadow: inset 0 0 0 1px rgba(121,197,232,.35); }
+  .pair .drop { background: rgba(9,12,19,.7); }
+  button.drop { cursor: pointer; }
+  button.drop:hover, button.drop:focus-visible { border-color: #ffcb70; outline: none; }
+  .pic { display: inline-block; background-repeat: no-repeat; image-rendering: pixelated; flex: none; }
+  .pic.none { width: 20px; height: 20px; border-radius: 4px; background: rgba(255,255,255,.06); }
+  .tier-run { font-size: 11px; color: #8b96ab; }
+  .kit-row .pic { align-self: center; }
+  .kit-row .to-index { margin-left: 8px; padding: 2px 8px; font-size: 10px; }
+  .haul-go { all: unset; display: block; cursor: pointer; border-radius: 6px; }
+  .haul-go:hover figcaption, .haul-go:focus-visible figcaption { color: #ffcb70; }
+  .haul-go:focus-visible { outline: 1px solid #ffcb70; }
+  .drops > button { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font: inherit;
+    font-size: 11px; padding: 3px 9px 3px 4px; border-radius: 999px; border: 0;
+    background: rgba(120,132,158,.14); color: #a3aec2; }
+  .drops > span { display: inline-flex; align-items: center; gap: 5px; }
+  .drops > button:hover, .drops > button:focus-visible { color: #ffcb70; outline: none; }
   .who-head { display: flex; gap: 10px; align-items: center; margin: 6px 0 2px; }
   .who-head .face {
     width: 34px; height: 34px; background-repeat: no-repeat;
@@ -91,18 +180,38 @@
   #hint { margin-left: auto; opacity: .5; }
 
   /* The panel a zone opens into. */
+  /* As wide as it was last pulled to, never narrower than it reads at and
+     never so wide that the map is gone; a little of the map shows through. */
   #panel {
-    position: absolute; top: 0; right: 0; bottom: 0; width: 372px; max-width: 86vw;
-    background: rgba(9,12,19,.97); border-left: 1px solid rgba(255,255,255,.12);
-    padding: 18px 18px 26px; overflow-y: auto; color: #cfd8e6;
+    position: absolute; top: 0; right: 0; bottom: 0; width: min(var(--panel-w, 420px), 92vw);
+    background: rgba(9,12,19,.86); border-left: 1px solid rgba(255,255,255,.12);
+    -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    display: flex; flex-direction: column; color: #cfd8e6; font-size: 14px;
+    transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.7,.3,1);
+  }
+  #panelBody {
+    /* What is inside grows with the room it is given: pulled wider, the panel
+       draws its pictures larger rather than the same ones further apart. */
+    container: panel / inline-size;
+    flex: 1 1 auto; min-height: 0; padding: 18px 20px 26px 22px; overflow-y: auto;
     /* It scrolls; it does not advertise that it scrolls. A light bar down
        the edge of a dark panel is the brightest thing on the page. */
     scrollbar-width: none; -ms-overflow-style: none;
-    transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.7,.3,1);
   }
-  #panel::-webkit-scrollbar { width: 0; height: 0; }
+  #panelBody::-webkit-scrollbar { width: 0; height: 0; }
+  /* Its left edge is a handle: pulled, the panel follows, the way a window's does. */
+  #panelGrip {
+    position: absolute; left: -4px; top: 0; bottom: 0; width: 10px; z-index: 2;
+    cursor: ew-resize; touch-action: none;
+  }
+  #panelGrip::after {
+    content: ''; position: absolute; left: 3px; top: 50%; width: 3px; height: 46px; margin-top: -23px;
+    border-radius: 2px; background: rgba(255,255,255,.2); transition: background .15s ease;
+  }
+  #panelGrip:hover::after, #panel.is-sizing #panelGrip::after { background: #ffcb70; }
+  #panel.is-sizing { transition: none; user-select: none; }
   #panel.is-open { transform: none; }
-  #panel h2 { margin: 0 28px 0 0; font-size: 1.18rem; color: #f2f6fc; letter-spacing: .01em; }
+  #panel h2 { margin: 0 28px 0 0; font-size: calc(1.18rem * var(--kt, 1)); color: #f2f6fc; letter-spacing: .01em; }
   #panel .sub { margin: 4px 0 14px; font-size: .8em; color: #8d9bb0; }
   /* The rank a realm gives the place, said the way the game says it. */
   .rank { display: inline-block; margin: 7px 0 0; padding: 2px 9px; border-radius: 999px;
@@ -115,11 +224,17 @@
     border-radius: 6px; border: 1px solid rgba(255,255,255,.14);
     background: rgba(255,255,255,.05); color: inherit; cursor: pointer; font: inherit;
   }
-  #panel h3 { margin: 20px 0 8px; font-size: .72rem; letter-spacing: .13em;
+  #panel h3 { margin: 20px 0 8px; font-size: calc(.8rem * var(--kt, 1)); letter-spacing: .13em;
     text-transform: uppercase; color: #ffcb70;
     border-bottom: 1px solid rgba(255,203,112,.2); padding-bottom: 5px; }
   #panel h3 span { float: right; color: #7c8899; letter-spacing: 0; text-transform: none;
     font-weight: 400; }
+  /* A heading that folds what is under it away, and back. */
+  #panel h3 .fold { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; }
+  #panel h3 .fold::before { content: '▾'; display: inline-block; width: 1.1em; transition: transform .15s ease; }
+  #panel h3 .fold[aria-expanded="false"]::before { transform: rotate(-90deg); }
+  #panel h3 .fold:hover, #panel h3 .fold:focus-visible { color: #ffe0a3; }
+  .folded > .fold-body { display: none; }
   .life { display: grid; gap: 2px; }
   .life div { display: flex; gap: 11px; align-items: center;
     padding: 4px 6px; border-radius: 5px; }
@@ -129,27 +244,38 @@
   .life i { font-style: normal; color: #ffcb70; font-size: .68em; letter-spacing: .06em;
     text-transform: uppercase; margin-left: 8px; }
   /* An encounter or a hero: one picture, sized to the row. */
-  .face { flex: none; width: 34px; height: 34px; object-fit: contain;
+  .face { flex: none; width: calc(40px * var(--kf, 1)); height: calc(40px * var(--kf, 1)); object-fit: contain;
     image-rendering: pixelated; }
   /* How much of the floor is what. */
   /* Tiers of gear: the slot's own icon, and the run that falls here. */
   .tiers { margin: 4px 0 12px; }
   .tiers div { display: flex; align-items: center; gap: 9px; padding: 3px 0; }
-  .tiers .slot { width: 18px; height: 18px; image-rendering: pixelated; flex: none; opacity: .85; }
-  .tiers b { flex: 1; font-weight: 500; color: #9aa4ba; font-size: 11px; }
-  .tiers em { font-style: normal; color: #d7c98a; font-size: 12px; letter-spacing: .3px; }
+  .tiers .slot { width: calc(18px * var(--kf, 1)); height: calc(18px * var(--kf, 1)); image-rendering: pixelated; flex: none; opacity: .85; }
+  .tiers b { flex: 1; font-weight: 500; color: #9aa4ba; font-size: calc(12.5px * var(--kt, 1)); }
+  .tiers em { font-style: normal; color: #d7c98a; font-size: calc(13.5px * var(--kt, 1)); letter-spacing: .3px; }
   .tiers em u { text-decoration: none; color: #6f7b90; padding: 0 2px; }
-  .panel h4 { margin: 10px 0 5px; font-size: 10px; font-weight: 600; letter-spacing: .09em;
+  #panel h4 { margin: 12px 0 6px; font-size: 10.5px; font-weight: 600; letter-spacing: .09em;
     text-transform: uppercase; color: #6f7b90; }
-  .haul { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
-    gap: 7px; margin-bottom: 10px; }
+  .haul { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(66px * var(--kf, 1)), 1fr));
+    gap: 8px; margin-bottom: 10px; }
   .haul figure { margin: 0; text-align: center; }
-  .haul img { width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
-  .haul figcaption { font-size: 9px; line-height: 1.25; color: #8b96ab; margin-top: 2px;
+  .haul img { width: calc(36px * var(--k, 1)); height: calc(36px * var(--k, 1)); object-fit: contain; image-rendering: pixelated; }
+  .haul figcaption { font-size: calc(10px * var(--kt, 1)); line-height: 1.25; color: #8b96ab; margin-top: 3px;
     overflow-wrap: anywhere; }
-  .drops { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 12px; }
-  .drops span { font-size: 10px; padding: 2px 6px; border-radius: 9px;
-    background: rgba(120,132,158,.14); color: #93a0b6; }
+  .drops { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 12px; }
+  .drops > span { font-size: 11px; padding: 3px 9px 3px 4px; border-radius: 999px;
+    background: rgba(120,132,158,.14); color: #a3aec2; }
+  .drops > span.bare { padding-left: 9px; }
+  .drops > button, .drops > span { font-size: calc(11px * var(--kt, 1)); }
+  /*
+   * How much larger, by how wide the panel has been pulled: the pictures most,
+   * the portraits less, the writing least - it is read, not looked at.
+   */
+  @container panel (min-width: 460px) { #panelBody > * { --k: 1.2; --kf: 1.1; --kc: 1.1; --kt: 1.04; } }
+  @container panel (min-width: 560px) { #panelBody > * { --k: 1.4; --kf: 1.2; --kc: 1.2; --kt: 1.08; } }
+  @container panel (min-width: 680px) { #panelBody > * { --k: 1.65; --kf: 1.35; --kc: 1.3; --kt: 1.14; } }
+  @container panel (min-width: 820px) { #panelBody > * { --k: 1.9; --kf: 1.5; --kc: 1.4; --kt: 1.2; } }
+  @container panel (min-width: 980px) { #panelBody > * { --k: 2.2; --kf: 1.65; --kc: 1.5; --kt: 1.26; } }
   .life u.stat { display: block; text-decoration: none; font-size: 10px; color: #6f7b90; }
   .life u.shots { display: block; text-decoration: none; font-size: 10px; color: #c98f7a; }
   .life u.shots u { text-decoration: none; color: #66707f; padding: 0 1px; }
@@ -188,10 +314,13 @@
   <label>turn <input id="benchTurn" type="range" min="-90" max="90" step="1" value="0"><i id="benchTurnAt">0&deg;</i></label>
   <p>tilt works at the closest zoom; turn unwinds past the second</p>
 </aside>
-<aside id="panel"><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
+<aside id="panel"><div id="panelGrip" title="drag to widen · double-click to reset"></div><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
 <div id="chat"></div>
-<button id="chatKnob" type="button">chat</button>
+<button id="skyKnob" type="button" aria-pressed="false" aria-label="Hide the clouds" title="Hide the clouds" hidden><span class="cloud-art struck" aria-hidden="true"></span></button>
 <div id="bar">
+  <div id="knobs">
+    <button id="chatKnob" type="button">chat</button>
+  </div>
   <span id="where">—</span>
   <span id="zone"></span>
   <span id="count"></span>
@@ -3650,6 +3779,23 @@ try {
   if (was === 1 || was === 2) chatShy = was;
 } catch (e) { /* a private window, or storage turned off */ }
 
+/*
+ * A clear sky, for reading the ground from far off.
+ *
+ * The weather is thickest exactly where the whole realm is in view, which is
+ * also where somebody is most likely to be looking for a place on it. So the
+ * cloud can be put away - the cloud and nothing else: stars, birds, Oryx and
+ * everything walking below carry on. It asks the frame to skip the sky's two
+ * steps rather than to draw it transparent, so a clear sky costs nothing.
+ *
+ * Only for the map. Framed on the front page the atlas is scenery, and there
+ * its weather is part of the picture whatever the reader chose over here.
+ */
+let clearSky = false;
+try { clearSky = localStorage.getItem('atlas.sky') === 'clear'; }
+catch (e) { /* a private window, or storage turned off */ }
+const skyShown = () => !clearSky || bare;
+
 /* ---------------- the folk who come to fight ---------------- */
 /*
  * Adventurers, in the realm, built the way the game builds them.
@@ -5315,11 +5461,333 @@ function drawNames(box) {
 
 /* ---------------- the panel ---------------- */
 /*
+ * What the rest of the site already knows about a thing on the map.
+ *
+ * Three files the site publishes for its other pages, read here the same
+ * way: the Index's own record ids (assets/index/wiki.json, the join the
+ * Index is built beside), what each creature drops (the imported reference
+ * the roster itself comes from, web/realmeye-data.json) and every item's
+ * picture (the Index's sheet and its map, assets/index/item-art.json). The
+ * kept offline copy carries all three inside the page that frames this, so
+ * that copy is asked first and the files beside it only when it has none.
+ *
+ * A name is matched to a record of the right kind and nothing else: nothing
+ * is spelled from a name into a place to go, so a thing the Index does not
+ * hold gets no button rather than a guessed one. The one liberty is the
+ * apostrophe - the reference writes the curly one and the client the
+ * straight one, and "Davy Jones’ Locker" is the same dungeon either way.
+ *
+ * Asked for the first time a panel opens and not before: together they are
+ * a couple of megabytes, and nobody looking at the front page reads a panel.
+ */
+let known = null, knownAsked = false;
+/*
+ * The few drops that are a kind rather than a thing, and the few not worth a
+ * square, as the Index has them - written into the page when it is built,
+ * from the Index's own records: which eggs are Common, Uncommon, Rare and
+ * Legendary, which potions raise a statistic, and which ones only restore
+ * health or magic. Null in a page built without the Index beside it, and
+ * then every one of those is simply said by name.
+ */
+const KIN = /*LOOTKIN*/null;
+const kinOf = (() => {
+  let groups = null, mundane = null;
+  return {
+    group(name) {
+      if (!groups) {
+        groups = new Map();
+        for (const [kind, list] of Object.entries((KIN && KIN.groups) || {})) groups.set(knownName(kind), list);
+      }
+      return groups.get(knownName(name)) || null;
+    },
+    mundane(name) {
+      if (!mundane) mundane = new Set(((KIN && KIN.mundane) || []).map(knownName));
+      return mundane.has(knownName(name));
+    }
+  };
+})();
+const knownName = name => String(name || '').replace(/[‘’]/g, "'")
+  .replace(/\s+/g, ' ').trim().toLowerCase();
+function hostBundle() {
+  try { return window.parent !== window ? window.parent.ROTMG_BUNDLE || null : null; }
+  catch (e) { return null; }
+}
+function readKnown(text, url) {
+  if (typeof text === 'string' && text) {
+    try { return Promise.resolve(JSON.parse(text)); } catch (e) { /* fall through */ }
+  }
+  if (text && typeof text === 'object') return Promise.resolve(text);
+  return fetch(url).then(reply => (reply.ok ? reply.json() : null)).catch(() => null);
+}
+function askKnown(then) {
+  if (known || knownAsked) return;
+  knownAsked = true;
+  const bundle = hostBundle();
+  const sources = (bundle && bundle.sources) || {};
+  Promise.all([
+    readKnown(sources.wikiText, BASE + '../index/wiki.json'),
+    readKnown(sources.realmLootText, BASE + '../../realmeye-data.json'),
+    readKnown(bundle && bundle.itemArt, BASE + '../index/item-art.json')
+  ]).then(([join, reference, art]) => {
+    const ids = new Map();
+    for (const id of (join && join.ids) || []) {
+      // A variant (enemy:Name#phase) is not the thing a panel names.
+      if (typeof id !== 'string' || id.includes('#')) continue;
+      const split = id.indexOf(':');
+      if (split > 0) ids.set(id.slice(0, split) + ':' + knownName(id.slice(split + 1)), id);
+    }
+    const drops = new Map();
+    for (const one of Object.values((reference && reference.creatures) || {})) {
+      const list = ((one.detail || {}).drops || []).map(drop => drop && drop.name).filter(Boolean);
+      if (one.name && list.length) drops.set(knownName(one.name), list);
+    }
+    const pics = new Map(), named = new Map();
+    for (const [name, rect] of Object.entries((art && art.art) || {})) {
+      pics.set(knownName(name), rect);
+      named.set(knownName(name), name);
+    }
+    known = {
+      ids, drops, pics, named,
+      sheet: (bundle && bundle.indexSheet) || BASE + '../index/sheet.png',
+      wide: (art && art.sheet && art.sheet.wide) || 1024,
+      tall: (art && art.sheet && art.sheet.tall) || 1280
+    };
+    if (then) then();
+  });
+}
+/*
+ * The Index's own id for a name, under the first kind that has one.
+ *
+ * The join lists the records that have a wiki page; an item without one - a
+ * blueprint, an egg - is still an Index record, and the Index's picture map
+ * is written from those records under their exact names. So an item the
+ * picture map holds is an item the Index holds, under the name it holds it by.
+ */
+function knownId(name, kinds) {
+  if (!known) return '';
+  for (const kind of kinds) {
+    const id = known.ids.get(kind + ':' + knownName(name));
+    if (id) return id;
+    if (kind === 'item' && known.named && known.named.has(knownName(name))) {
+      return 'item:' + known.named.get(knownName(name));
+    }
+  }
+  return '';
+}
+const quoted = text => String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+/* The way to the Index page about it, or nothing. */
+function indexButton(name, kinds) {
+  const id = knownId(name, kinds);
+  return id ? '<button type="button" class="to-index" data-index="' + quoted(id) + '"'
+    + ' title="Open ' + quoted(name) + ' in the Index">Index →</button>' : '';
+}
+/* An item as the Index draws it: one cell of its sheet, scaled up whole. */
+function itemPic(name, size) {
+  const rect = known && known.pics.get(knownName(name));
+  if (!rect) return '';
+  const k = size / Math.max(rect[2], rect[3]);
+  return '<span class="pic" style="width:' + size + 'px;height:' + size + 'px;'
+    + 'background-image:url(' + quoted(known.sheet) + ');'
+    + 'background-size:' + (known.wide * k) + 'px ' + (known.tall * k) + 'px;'
+    + 'background-position:' + (-rect[0] * k) + 'px ' + (-rect[1] * k) + 'px"></span>';
+}
+/*
+ * A kind of drop - "Common Pet Eggs", "Stat Increase Potions" - is no one
+ * picture but a handful, so it shows each of them in turn: the same cell of
+ * the Index's sheet, moved along the positions it is handed.
+ */
+function kindPic(name, size) {
+  const members = (kinOf.group(name) || []).filter(one => known && known.pics.get(knownName(one)));
+  if (!members.length) return '';
+  const first = itemPic(members[0], size);
+  if (members.length === 1) return first;
+  const steps = members.map(one => {
+    const rect = known.pics.get(knownName(one));
+    const k = size / Math.max(rect[2], rect[3]);
+    return (-rect[0] * k) + 'px ' + (-rect[1] * k) + 'px';
+  });
+  return first.replace('<span class="pic"', '<span class="pic" data-roll="' + steps.join(';') + '"');
+}
+/*
+ * A dungeon it opens, as the portal the zone's own loot already draws it by.
+ * Asked of the atlas itself, so a panel without the atlas has none.
+ */
+let portalArt = null;
+function portalOf(name) {
+  if (!portalArt) {
+    portalArt = new Map();
+    const zones = (typeof A !== 'undefined' && A && A.zones) || [];
+    for (const zone of zones) {
+      for (const one of ((zone.loot || {}).dungeons || [])) {
+        if (one && one.name && one.art) portalArt.set(knownName(one.name), one.art);
+      }
+    }
+  }
+  return portalArt.get(knownName(name)) || '';
+}
+/*
+ * The item a blueprint unlocks, among the things that fall beside it: the one
+ * named after it - "Juggernaut Blueprint" and "Helm of the Juggernaut". Which
+ * is how the game names them; a blueprint whose item is not beside it stands
+ * on its own rather than being guessed a partner.
+ */
+function blueprintFor(blueprint, beside) {
+  const stem = knownName(String(blueprint).replace(/ Blueprint$/, ''));
+  if (!stem || stem === knownName(blueprint)) return '';
+  return beside.find(one => !/ Blueprint$/.test(one) && knownName(one).includes(stem)) || '';
+}
+/* One drop as its square: a picture that opens it in the Index when it can. */
+function dropCell(drop, note) {
+  const title = quoted(drop + (note ? ' — ' + note : ''));
+  const portal = portalOf(drop);
+  if (portal && typeof asset === 'function') {
+    const id = knownId(drop, ['portal']);
+    const img = '<img src="' + asset('loot/' + portal) + '" alt="" loading="lazy">';
+    return id
+      ? '<button type="button" class="drop portal" data-index="' + quoted(id) + '" title="' + title + '">' + img + '</button>'
+      : '<span class="drop portal" title="' + title + '">' + img + '</span>';
+  }
+  const pic = itemPic(drop, 30) || kindPic(drop, 30);
+  if (!pic) return '';
+  const id = knownId(drop, ['item']);
+  return id
+    ? '<button type="button" class="drop" data-index="' + quoted(id) + '" title="' + title + '">' + pic + '</button>'
+    : '<span class="drop" title="' + title + '">' + pic + '</span>';
+}
+/*
+ * What it drops, as the pictures a player knows them by. A named item is a
+ * picture that opens the item in the Index, a blueprint stands framed with
+ * the item it unlocks, a dungeon is its portal, and a kind of drop turns
+ * through the things it may be. The tiers are not said here: the zone says
+ * once what tiers fall in it, and every creature repeating them was most of
+ * the panel. Health and magic potions fall from everything and are left out.
+ */
+function dropsOf(name) {
+  const list = known && known.drops.get(knownName(name));
+  if (!list) return '';
+  const named = [];
+  for (const drop of list) {
+    if (/^Tier \d+ /.test(drop) || kinOf.mundane(drop)) continue;
+    if (!named.includes(drop)) named.push(drop);
+  }
+  const paired = new Map();
+  for (const drop of named) {
+    if (!/ Blueprint$/.test(drop)) continue;
+    const item = blueprintFor(drop, named);
+    if (item && dropCell(item) && !paired.has(item)) paired.set(item, drop);
+  }
+  const blueprints = new Set(paired.values());
+  const cells = [], portals = [], unpictured = [];
+  for (const drop of named) {
+    if (blueprints.has(drop)) continue;
+    const cell = dropCell(drop);
+    if (!cell) { unpictured.push(drop); continue; }
+    const blueprint = paired.get(drop);
+    const shown = blueprint
+      ? '<span class="pair">' + cell + dropCell(blueprint, 'unlocks ' + drop + ' in the Forge') + '</span>'
+      : cell;
+    (portalOf(drop) ? portals : cells).push(shown);
+  }
+  const pics = cells.join('') + (portals.length ? '<span class="gates">' + portals.join('') + '</span>' : '');
+  // A drop with no picture is said by name, rather than shown as an empty square.
+  return (pics ? '<span class="drops-row">' + pics + '</span>' : '')
+    + (unpictured.length ? '<span class="tier-run">' + unpictured.join(' · ') + '</span>' : '');
+}
+/* Whichever panel is open is drawn again once all of that arrives. */
+function knownThen() {
+  if (!panel.classList.contains('is-open')) return;
+  if (chosenFolk) openFolk(chosenFolk);
+  else if (chosenBeacon) openBeacon(chosenBeacon);
+  else if (chosen) openZone(chosen);
+}
+/*
+ * Going there. Framed, the page around this owns the Index and is asked to
+ * open it; opened on its own, the atlas simply goes to the site's page.
+ */
+panelBody.addEventListener('click', event => {
+  const go = event.target.closest('[data-index]');
+  if (!go) return;
+  const id = go.dataset.index;
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ rotmg: 'index', id }, '*'); } catch (e) { /* gone */ }
+  } else {
+    location.href = new URL('../../#index?open=' + encodeURIComponent(id), location.href).href;
+  }
+});
+
+/*
+ * A heading that folds its part of the panel away. Which ones are folded is
+ * remembered by their title, so the Monsters folded in one place are folded
+ * in the next one opened too.
+ */
+const folded = new Set();
+try { for (const one of JSON.parse(localStorage.getItem('atlas.folded') || '[]')) folded.add(one); }
+catch (e) { /* no storage: nothing folded */ }
+function fold(title, count, body) {
+  if (!body) return '';
+  const shut = folded.has(title);
+  return '<section class="fold-part' + (shut ? ' folded' : '') + '" data-fold="' + quoted(title) + '">'
+    + '<h3><button type="button" class="fold" aria-expanded="' + !shut + '">' + title
+    + (count ? '<span>' + count + '</span>' : '') + '</button></h3>'
+    + '<div class="fold-body">' + body + '</div></section>';
+}
+panelBody.addEventListener('click', event => {
+  const head = event.target.closest('.fold');
+  if (!head) return;
+  const part = head.closest('.fold-part');
+  const title = part.dataset.fold;
+  const shut = !part.classList.contains('folded');
+  part.classList.toggle('folded', shut);
+  head.setAttribute('aria-expanded', String(!shut));
+  if (shut) folded.add(title); else folded.delete(title);
+  try { localStorage.setItem('atlas.folded', JSON.stringify([...folded])); } catch (e) { /* no storage */ }
+});
+
+/*
+ * The kinds of drop turn through their pictures while a panel shows them, and
+ * stop with it: one clock for the whole panel, gone when there is nothing to
+ * turn, and idle while the page is out of sight.
+ */
+let rollClock = 0;
+function rollKinds() {
+  if (rollClock || !panelBody.querySelector('[data-roll]')) return;
+  rollClock = setInterval(() => {
+    const all = panelBody.querySelectorAll('[data-roll]');
+    if (!all.length || !panel.classList.contains('is-open')) {
+      clearInterval(rollClock); rollClock = 0; return;
+    }
+    if (document.hidden) return;
+    for (const pic of all) {
+      const steps = pic.dataset.roll.split(';');
+      const at = (Number(pic.dataset.at || 0) + 1) % steps.length;
+      pic.dataset.at = String(at);
+      pic.style.backgroundPosition = steps[at];
+    }
+  }, 1100);
+}
+
+/*
+ * One creature: its picture and its name, the way to it in the Index, and
+ * what it leaves behind. How hard it is and how it shoots are left to the
+ * Index page the button opens - in a panel over a map, what somebody wants
+ * to know about a thing is whether it is worth killing.
+ */
+function whoRow(name, art, note) {
+  const drops = dropsOf(name);
+  return '<div class="who">'
+    + '<div class="who-top">' + art + '<b>' + name + '</b>'
+    + (note ? '<em>' + note + '</em>' : '')
+    + indexButton(name, ['enemy']) + '</div>'
+    + (drops ? '<div class="who-drops">' + drops + '</div>' : '')
+    + '</div>';
+}
+
+/*
  * A row of creatures with their pictures, used by both panels.
  */
 function livesList(list) {
   if (!list || !list.length) return '<p class="sub">Nothing was met here.</p>';
-  return '<div class="life">' + list.map(one => {
+  return '<div class="cast">' + list.map(one => {
     const s = one.sprite;
     const k = Math.max(2, Math.min(6, Math.round(30 / s.height)));
     const style = 'width:' + (s.tile * k) + 'px;height:' + (s.height * k) + 'px;'
@@ -5327,8 +5795,9 @@ function livesList(list) {
       + 'background-size:' + (s.tile * s.frames * k) + 'px 100%;'
       + '--w:' + (s.tile * s.frames * k) + 'px;--steps:' + s.frames + ';'
       + '--time:' + (s.frames * 0.24).toFixed(2) + 's';
-    return '<div><span class="art' + (s.frames > 1 ? ' runs' : '') + '" style="' + style + '"></span>'
-      + '<b>' + one.name + '</b><em>' + one.seen + '</em></div>';
+    return whoRow(one.name,
+      '<span class="art' + (s.frames > 1 ? ' runs' : '') + '" style="' + style + '"></span>',
+      one.seen + ' seen');
   }).join('') + '</div>';
 }
 
@@ -5341,6 +5810,7 @@ function livesList(list) {
 let chosenBeacon = null;
 let hoveredBeacon = null;
 function openBeacon(beacon) {
+  askKnown(knownThen);
   chosen = 0;
   chosenBeacon = beacon;
   const zone = zoneById.get(beacon.zone);
@@ -5351,8 +5821,7 @@ function openBeacon(beacon) {
     + '<span><i>guardians met</i> ' + (beacon.guards || []).length + '</span>'
     + '</div>'
     + (beacon.guardian
-      ? '<h3>Guardian</h3>'
-        + castList([beacon.guardian.name ? beacon.guardian : { name: beacon.guardian }])
+      ? fold('Guardian', 0, castList([beacon.guardian.name ? beacon.guardian : { name: beacon.guardian }]))
       : '')
     /*
      * The ground's other guardians, if it has any this one is not. A beacon
@@ -5362,12 +5831,11 @@ function openBeacon(beacon) {
     + (() => {
       const mine = beacon.guardian && (beacon.guardian.name || beacon.guardian);
       const rest = ((zone && zone.guardians) || []).filter(one => one.name !== mine);
-      return rest.length
-        ? '<h3>Others on this ground<span>' + rest.length + '</span></h3>' + castList(rest) : '';
+      return rest.length ? fold('Others on this ground', rest.length, castList(rest)) : '';
     })()
-    + '<h3>Standing round it<span>' + (beacon.guards || []).length + '</span></h3>'
-      + livesList(beacon.guards);
+    + fold('Standing round it', (beacon.guards || []).length || 0, livesList(beacon.guards));
   panel.classList.add('is-open');
+  rollKinds();
 }
 
 /*
@@ -5380,52 +5848,12 @@ function openBeacon(beacon) {
  */
 function castList(list, note) {
   if (!list || !list.length) return '';
-  return '<div class="life">' + list.map(one => {
-    const art = one.art
+  return '<div class="cast">' + list.map(one => whoRow(one.name,
+    one.art
       ? '<img class="face" src="' + asset('boss/' + one.art) + '" alt="" loading="lazy">'
-      : '<span class="face"></span>';
-    /*
-     * What it is worth going after. Hit points and defence say how long it
-     * takes, experience says what it is worth; a thing with none of the three
-     * simply does not show a line, rather than showing three dashes.
-     */
-    const facts = [
-      one.hp !== undefined ? Number(one.hp).toLocaleString() + ' hp' : '',
-      one.def !== undefined ? one.def + ' def' : '',
-      one.exp !== undefined ? Number(one.exp).toLocaleString() + ' xp' : ''
-    ].filter(Boolean).join(' \u00b7 ');
-    /*
-     * And how it fights, which the client knows and the reference does not.
-     * Its shots, worst first, as damage at a reach; then anything it cannot be
-     * stopped by, which is the difference between a fight and a formality.
-     */
-    const shots = (one.shots || []).slice().sort((a, b) => b.hurt - a.hurt)
-      .map(shot => shot.hurt + (shot.reach ? '<u>@</u>' + shot.reach : '')
-        + (shot.pierce ? '<u>\u25b8</u>' : ''))
-      .join('<u>,</u>');
-    const held = (one.immune || []).length
-      ? '<span class="held">immune ' + one.immune.join(', ') + '</span>' : '';
-    /*
-     * And which bags it leaves, which is the one part of the loot question
-     * the client settles outright: every item carries the colour of bag it
-     * falls in, and the reference says which items this thing drops. The
-     * commonest colour on its table comes first, so a long brown table with
-     * one white line on it reads as what it is.
-     */
-    const bags = (one.bags || []).slice().sort((p, q) => q.many - p.many)
-      .map(b => {
-        const kept = ((A.marks && A.marks.bags) || [])[b.bag];
-        return kept ? '<img class="bag" src="' + asset('life/' + kept.sprite.file)
-          + '" alt="" loading="lazy" title="' + b.many + ' of its drops">' : '';
-      }).join('');
-    return '<div>' + art + '<b>' + one.name + '</b>'
-      + (facts ? '<u class="stat">' + facts + '</u>' : '')
-      + (shots ? '<u class="shots">' + shots + '</u>' : '')
-      + (bags ? '<u class="bags">' + bags + '</u>' : '')
-      + held
-      + (one.onMap ? '<i>on the map</i>' : '')
-      + (note ? '<em>' + note + '</em>' : '') + '</div>';
-  }).join('') + '</div>';
+      : '<span class="face"></span>',
+    [one.onMap ? 'on the map' : '', note || ''].filter(Boolean).join(' · ')
+  )).join('') + '</div>';
 }
 
 /*
@@ -5457,25 +5885,45 @@ function lootList(loot) {
     const icon = slot ? '<img class="slot" src="' + art(slot) + '" alt="" loading="lazy">'
       : '<span class="slot"></span>';
     return '<div>' + icon + '<b>' + kind + '</b>'
-      + '<em>' + t[0] + (t.length > 1 ? '<u>\u2013</u>' + t[t.length - 1] : '') + '</em></div>';
+      + '<em>' + t[0] + (t.length > 1 ? '<u>–</u>' + t[t.length - 1] : '') + '</em></div>';
   }).join('');
 
-  // The things that have a picture of their own, each under it.
-  const shelf = (title, list) => (list && list.length)
-    ? '<h4>' + title + '</h4><div class="haul">' + list.map(one =>
-      '<figure><img src="' + art(one.art) + '" alt="" loading="lazy">'
-      + '<figcaption>' + one.name + '</figcaption></figure>').join('') + '</div>'
+  // The things that have a picture of their own, each under it - and each a
+  // way into the Index where the Index holds it.
+  const shelf = (title, list, kinds) => (list && list.length)
+    ? '<h4>' + title + '</h4><div class="haul">' + list.map(one => {
+      const inner = '<img src="' + art(one.art) + '" alt="" loading="lazy">'
+        + '<figcaption>' + one.name + '</figcaption>';
+      const id = knownId(one.name, kinds);
+      return id
+        ? '<figure><button type="button" class="haul-go" data-index="' + quoted(id) + '"'
+          + ' title="Open ' + quoted(one.name) + ' in the Index">' + inner + '</button></figure>'
+        : '<figure>' + inner + '</figure>';
+    }).join('') + '</div>'
     : '';
 
   return '<div class="tiers">' + rows + '</div>'
-    + shelf('Dungeons', loot.dungeons)
-    + shelf('Named gear', loot.gear)
-    + ((loot.items || []).length
-      ? '<p class="drops">' + loot.items.map(one => '<span>' + one + '</span>').join('') + '</p>'
-      : '');
+    + shelf('Dungeons', loot.dungeons, ['portal'])
+    + shelf('Named gear', loot.gear, ['item'])
+    + (() => {
+      const loose = (loot.items || []).filter(one => !kinOf.mundane(one));
+      if (!loose.length) return '';
+      const everything = loose.concat((loot.gear || []).map(one => one.name));
+      return '<h4>Also falls here</h4><p class="drops">' + loose.map(one => {
+        const id = knownId(one, ['item']);
+        const pic = itemPic(one, 20) || kindPic(one, 20);
+        const item = / Blueprint$/.test(one) ? blueprintFor(one, everything) : '';
+        const title = 'Open ' + one + ' in the Index' + (item ? ' — it unlocks ' + item + ' in the Forge' : '');
+        return id
+          ? '<button type="button" data-index="' + quoted(id) + '" title="' + quoted(title) + '">' + pic + one + '</button>'
+          : '<span' + (pic ? '' : ' class="bare"') + (item ? ' title="' + quoted('unlocks ' + item + ' in the Forge') + '"' : '')
+            + '>' + pic + one + '</span>';
+      }).join('') + '</p>';
+    })();
 }
 
 function openZone(id) {
+  askKnown(knownThen);
   const zone = zoneById.get(id);
   if (!zone) return;
   chosen = id;
@@ -5500,7 +5948,7 @@ function openZone(id) {
     : '';
 
   const roster = (title, list, note) => (list && list.length)
-    ? '<h3>' + title + '<span>' + list.length + '</span></h3>' + castList(list, note) : '';
+    ? fold(title, list.length, castList(list, note)) : '';
 
   panelBody.innerHTML = '<h2>' + zone.name + '</h2>'
     + '<p class="sub">' + zone.tiles.toLocaleString() + ' tiles, ' + wide + ' by ' + tall
@@ -5530,8 +5978,9 @@ function openZone(id) {
      * the walk's list is the roster with the client's names on it instead of
      * the reference's, which reads as twice as many creatures as there are.
      */
-    + (zone.loot ? '<h3>What falls here</h3>' + lootList(zone.loot) : '');
+    + (zone.loot ? fold('What falls here', 0, lootList(zone.loot)) : '');
   panel.classList.add('is-open');
+  rollKinds();
 }
 /*
  * One adventurer, in full.
@@ -5549,6 +5998,7 @@ const STAT_NAMES = [
 ];
 
 function openFolk(one) {
+  askKnown(knownThen);
   chosenFolk = one;
   chosen = 0; chosenBeacon = null;
   const kind = one.kind;
@@ -5581,7 +6031,8 @@ function openFolk(one) {
     if (piece.worn) {
       for (const k of Object.keys(piece.worn)) says.push('+' + piece.worn[k] + ' ' + k.toLowerCase());
     }
-    return '<div class="kit-row"><i>' + slot + '</i><b>' + piece.name + '</b>'
+    return '<div class="kit-row"><i>' + slot + '</i>' + itemPic(piece.name, 18) + '<b>' + piece.name + '</b>'
+      + indexButton(piece.name, ['item'])
       + (says.length ? '<em>' + says.join(' \u00b7 ') + '</em>' : '') + '</div>';
   }).join('');
 
@@ -5625,7 +6076,68 @@ function shutPanel() {
   chosen = 0; chosenBeacon = null; chosenFolk = null;
   panel.classList.remove('is-open');
 }
+/*
+ * Framed, the page around the atlas has its own buttons in the top right -
+ * the cross that closes the atlas, the clouds - and a panel open under them
+ * put them on its heading and its own cross. So it is told whether a panel is
+ * open and how wide, and stands its buttons beside it.
+ */
+let panelSaid = '';
+function tellPanel() {
+  if (window.parent === window) return;
+  const open = panel.classList.contains('is-open');
+  const wide = open ? Math.round(panel.getBoundingClientRect().width) : 0;
+  const now = open + ':' + wide;
+  if (now === panelSaid) return;
+  panelSaid = now;
+  try { window.parent.postMessage({ rotmg: 'panel', open, wide }, '*'); } catch (e) { /* gone */ }
+}
+new MutationObserver(tellPanel).observe(panel, { attributes: true, attributeFilter: ['class'] });
 document.getElementById('shut').addEventListener('click', shutPanel);
+
+/*
+ * The panel's width, pulled by its left edge like a window's. Never narrower
+ * than it reads at, never wider than leaves some map beside it, and kept for
+ * the next visit; a double-click on the edge puts it back.
+ */
+(function panelWidth() {
+  const grip = document.getElementById('panelGrip');
+  const LEAST = 340, USUAL = 420;
+  const most = () => Math.max(LEAST, Math.min(1100, window.innerWidth - 120));
+  const set = wide => {
+    const px = Math.round(Math.max(LEAST, Math.min(most(), wide)));
+    document.documentElement.style.setProperty('--panel-w', px + 'px');
+    tellPanel();
+    return px;
+  };
+  let kept = USUAL;
+  try { kept = Number(localStorage.getItem('atlas.panel')) || USUAL; } catch (e) { /* no storage */ }
+  set(kept);
+  const keep = px => { try { localStorage.setItem('atlas.panel', String(px)); } catch (e) { /* no storage */ } };
+  let from = null;
+  grip.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    from = { x: event.clientX, wide: panel.getBoundingClientRect().width };
+    grip.setPointerCapture(event.pointerId);
+    panel.classList.add('is-sizing');
+  });
+  grip.addEventListener('pointermove', event => {
+    if (!from) return;
+    kept = set(from.wide + (from.x - event.clientX));
+  });
+  const done = () => {
+    if (!from) return;
+    from = null;
+    panel.classList.remove('is-sizing');
+    keep(kept);
+  };
+  grip.addEventListener('pointerup', done);
+  grip.addEventListener('pointercancel', done);
+  grip.addEventListener('dblclick', () => { kept = set(USUAL); keep(kept); });
+  // A window made smaller takes the panel in with it.
+  window.addEventListener('resize', () => set(kept));
+})();
 
 /* ---------------- the frame ---------------- */
 let last = performance.now();
@@ -6414,6 +6926,75 @@ function settleInto(box) {
   });
   show();
 }
+/*
+ * And the sky's switch.
+ *
+ * It is only offered while there is weather to put away: from far off the
+ * cloud is part of the picture, and close in it has already parted, so the
+ * switch shows over the range the cloud is actually in the way. Framed, the
+ * page around the atlas draws it beside its own cross and this says when; on
+ * its own the atlas draws it in its own corner. Both are the client's cloud
+ * off the same sheet as the weather, struck through while the sky is full.
+ *
+ * A sky coming back starts from where the camera is now: the drag it was
+ * keeping was not kept while it was away, and picking it up again would throw
+ * the cloud across the window.
+ */
+const framed = window.parent !== window;
+const skyKnob = document.getElementById('skyKnob');
+let skySaid = '';
+function setClearSky(on) {
+  if (clearSky === on) return;
+  clearSky = on;
+  if (!clearSky) Object.assign(skyPull, { x: 0, y: 0, toX: 0, toY: 0, set: false });
+  try { localStorage.setItem('atlas.sky', clearSky ? 'clear' : 'weather'); } catch (e) { /* no storage */ }
+  tellSky();
+}
+/* The cloud the switch is drawn with, as a place on the weather's own sheet. */
+function skyIcon() {
+  const cut = skyArt && skyArt.clouds && (skyArt.clouds[5] || skyArt.clouds[0]);
+  if (!cut || !skyArt.sheet) return null;
+  return { src: new URL(asset('sky.png'), location.href).href, cut, sheet: skyArt.sheet };
+}
+function dressCloud(node, icon, struck) {
+  if (!node || !icon) return;
+  const k = 40 / icon.cut[2];
+  node.style.width = '40px';
+  node.style.height = Math.round(icon.cut[3] * k) + 'px';
+  node.style.backgroundImage = 'url(' + icon.src + ')';
+  node.style.backgroundSize = (icon.sheet[0] * k) + 'px ' + (icon.sheet[1] * k) + 'px';
+  node.style.backgroundPosition = (-icon.cut[0] * k) + 'px ' + (-icon.cut[1] * k) + 'px';
+  node.classList.toggle('struck', struck);
+}
+/*
+ * Said only when it changes, so the frame can ask every time it draws: a
+ * comparison of two short strings, and a message a few times a session.
+ */
+function tellSky() {
+  const icon = skyIcon();
+  const can = !bare && !!icon && skyGone() < 1 && skyLeft() > 0.01;
+  const now = (can ? 'can' : 'not') + (clearSky ? ':clear' : ':weather');
+  if (now === skySaid) return;
+  skySaid = now;
+  if (framed) {
+    try { window.parent.postMessage({ rotmg: 'clouds', can, clear: clearSky, icon }, '*'); } catch (e) { /* gone */ }
+    return;
+  }
+  skyKnob.hidden = !can;
+  skyKnob.setAttribute('aria-pressed', clearSky ? 'true' : 'false');
+  const says = clearSky ? 'Show the clouds' : 'Hide the clouds';
+  skyKnob.title = says;
+  skyKnob.setAttribute('aria-label', says);
+  dressCloud(skyKnob.querySelector('.cloud-art'), icon, !clearSky);
+}
+skyKnob.addEventListener('click', () => setClearSky(!clearSky));
+/* The page around it throws the same switch from its own corner. */
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  const said = event.data;
+  if (!said || said.rotmg !== 'clear-sky') return;
+  setClearSky(said.on !== false);
+});
 
 /*
  * How often to draw at all.
@@ -6567,10 +7148,12 @@ function frame(now) {
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);
-  stepSky(delta, box);
+  const weatherOn = skyShown();
+  tellSky();
+  if (weatherOn) stepSky(delta, box);
   stepBirds(delta);
   drawBirds(box);
-  drawSky(box, now);
+  if (weatherOn) drawSky(box, now);
   drawOryxHands(box, now);
 
   if (pointer) {
@@ -7066,6 +7649,7 @@ document.body.classList.toggle('bare', bare);
  * of ground, and the atlas has been painting for a second by then.
  */
 document.body.classList.toggle('unheard', bare);
+document.body.classList.toggle('framed', framed);
 if (bare) {
   try { window.parent.postMessage({ rotmg: 'hello' }, '*'); } catch (error) { }
   /* Unless nobody answers, in which case whoever framed this does not speak
