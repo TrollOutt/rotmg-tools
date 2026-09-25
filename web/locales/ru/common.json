@@ -602,5 +602,17 @@
   "index.picture.clientArt": "собственный арт игры",
   "index.picture.givenSkin": "кожа, которую он тебе дает",
   "index.picture.piece": "одна из его частей",
-  "index.source.notDeclared": "не заявлено в клиенте"
+  "index.source.notDeclared": "не заявлено в клиенте",
+  "static.hide.the.clouds": "Скрыть облака",
+  "static.send.build.to.enchant": "отправить билд в зачарование",
+  "static.send.build.to.enchant.title": "Открыть каждый предмет билда с его зачарованиями в отдельной новой вкладке калькулятора зачарований",
+  "static.show.the.clouds": "Показать облака",
+  "static.alternative.builds": "Альтернативные билды",
+  "static.drag.to.widen": "потяните, чтобы расширить · двойной щелчок для сброса",
+  "static.back.to.the.zone": "Назад к зоне",
+  "static.back": "Назад",
+  "static.open.in.the.index": "Открыть в Index",
+  "static.reading.the.index": "Чтение Index…",
+  "static.index.record": "Запись Index",
+  "static.leave.the.atlas.for.index": "Покинуть атлас ради страницы Index этой записи"
 }

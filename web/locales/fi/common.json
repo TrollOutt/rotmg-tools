@@ -602,5 +602,17 @@
   "index.picture.clientArt": "pelin omaa taidetta",
   "index.picture.givenSkin": "ihoa, jonka se sinulle antaa",
   "index.picture.piece": "yksi sen palasista",
-  "index.source.notDeclared": "ei ole ilmoitettu asiakkaassa"
+  "index.source.notDeclared": "ei ole ilmoitettu asiakkaassa",
+  "static.hide.the.clouds": "Piilota pilvet",
+  "static.send.build.to.enchant": "lähetä build lumoukseen",
+  "static.send.build.to.enchant.title": "Avaa tämän buildin jokainen esine lumouksineen omaan uuteen lumouslaskurin välilehteen",
+  "static.show.the.clouds": "Näytä pilvet",
+  "static.alternative.builds": "Vaihtoehtoiset buildit",
+  "static.drag.to.widen": "vedä leventääksesi · kaksoisnapsauta palauttaaksesi",
+  "static.back.to.the.zone": "Takaisin alueelle",
+  "static.back": "Takaisin",
+  "static.open.in.the.index": "Avaa Indexissä",
+  "static.reading.the.index": "Luetaan Indexiä…",
+  "static.index.record": "Index-merkintä",
+  "static.leave.the.atlas.for.index": "Poistu atlaksesta tämän merkinnän Index-sivulle"
 }

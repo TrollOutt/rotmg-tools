@@ -386,6 +386,24 @@ async function loadItemOptimizerTheory() {
   }
 }
 
+let itemOptimizerTheoryPromise = null;
+
+async function ensureItemOptimizerTheory() {
+  if (state.theory) return state.theory;
+  if (itemOptimizerTheoryPromise) return itemOptimizerTheoryPromise;
+
+  itemOptimizerTheoryPromise = loadItemOptimizerTheory()
+    .then(theory => {
+      state.theory = theory;
+      return theory;
+    })
+    .finally(() => {
+      itemOptimizerTheoryPromise = null;
+    });
+
+  return itemOptimizerTheoryPromise;
+}
+
 function itemOptimizerCharm(name) {
   if (!state.theory || !state.theory.byCharm) return null;
 
@@ -874,7 +892,6 @@ function renderItemOptimizer(config) {
     visible.length - openCount;
 
   const impossible =
-    !state.theory ||
     !config.slots ||
     !config.type ||
     !openCount;
@@ -886,7 +903,7 @@ function renderItemOptimizer(config) {
 
   run.textContent =
     state.itemOptimizeRunning
-      ? 'Optimizing...'
+      ? (state.theory ? 'Optimizing...' : 'Loading...')
       : state.itemOptimizeBlocked
         ? 'No improvement'
         : 'Optimize';
@@ -895,8 +912,7 @@ function renderItemOptimizer(config) {
 
   if (!state.theory) {
     hint.textContent =
-      'Build mechanics could not be loaded.';
-    hint.classList.add('warn');
+      'Build mechanics load only when you press Optimize.';
 
   } else if (!config.slots) {
     hint.textContent =
@@ -950,13 +966,29 @@ async function optimizeCurrentItem() {
   const run = $('itemOptimizeRun');
 
   if (
-    !state.theory ||
     !config.item ||
     !config.slots ||
     !config.type
   ) {
     renderItemOptimizer(config);
     return;
+  }
+
+  if (!state.theory) {
+    state.itemOptimizeRunning = true;
+    state.itemOptimizeSaid = 'Loading build mechanics...';
+    renderItemOptimizer(config);
+
+    const theory = await ensureItemOptimizerTheory();
+
+    state.itemOptimizeRunning = false;
+
+    if (!theory) {
+      state.itemOptimizeSaid =
+        'Build mechanics could not be loaded. Try again.';
+      renderItemOptimizer(config);
+      return;
+    }
   }
 
   const goal = itemOptimizerGoal();
@@ -1043,6 +1075,13 @@ async function optimizeCurrentItem() {
   let beam = [best];
   let looked = 1;
 
+  /*
+   * LIMIT bounds what survives each beam level, not how much work is needed
+   * to build that level. Large real pools can still mean hundreds of
+   * thousands of candidate evaluations, so yield on the same frame budget as
+   * the calculator without changing which candidates are considered.
+   */
+  const optimizerBreathe = budgetedYield(12);
   const LIMIT = 1200;
   const EPSILON = 1e-9;
 
@@ -1059,6 +1098,7 @@ async function optimizeCurrentItem() {
         at < candidates.length;
         at++
       ) {
+        await optimizerBreathe();
         const mod = candidates[at];
 
         if (
@@ -1514,8 +1554,14 @@ function scheduleCalculation() {
 }
 
 function renderTiers(config) {
-  const target = state.data.byName.get(config.desired);
-  const tiered = Boolean(target && target.tags.has('TIERED'));
+  // One tier selection applies to every tiered enchantment still wanted.
+  // Looking only at the first target hid this constraint whenever a later
+  // wanted enchantment was tiered.
+  const goals = [config.desired, ...config.goals].filter(Boolean);
+  const tiered = goals.some(name => {
+    const target = state.data.byName.get(name);
+    return Boolean(target && target.tags.has('TIERED'));
+  });
   $('tiers').hidden = !tiered;
   $('tiers').disabled = !tiered;
 }
@@ -1805,25 +1851,96 @@ window.benchWith = function (said) {
  * rather than being typed in again. What cannot be resolved is dropped rather
  * than guessed: an enchantment this page does not know is one it cannot price.
  */
-window.enchantThis = function (said) {
-  if (!said || !said.item || !state.data) return false;
+function handoverSetup(said) {
   const resolved = resolveItem(said.item);
   const slots = (said.slots || [])
     .filter(name => state.data.byName.has(name))
     .slice(0, 4)
     .map(name => ({ name, locked: false }));
-  applySetup({
-    item: said.item,
-    rarity: String(Math.max(slots.length, resolved && resolved.slots ? resolved.slots : 0) || ''),
-    type: (resolved && resolved.type) || '',
-    dust: (resolved && resolved.dust) || '',
-    slots
-  });
+  return {
+    resolved,
+    setup: {
+      item: said.item,
+      rarity: String(Math.max(slots.length, resolved && resolved.slots ? resolved.slots : 0) || ''),
+      type: (resolved && resolved.type) || '',
+      dust: (resolved && resolved.dust) || '',
+      slots
+    }
+  };
+}
+
+window.enchantThis = function (said) {
+  if (!said || !said.item || !state.data) return false;
+  applySetup(handoverSetup(said).setup);
   refresh();
   location.hash = 'enchant';
   routeFromHash();
   return true;
 };
+
+/*
+ * A whole build handed over from the bench: one new tab per item, each built
+ * by the same hand-over as a single item and each holding only its own
+ * enchantments. The tabs already open are left exactly as they were - this
+ * adds, it never overwrites. An item this page cannot place is reported back
+ * rather than given a tab it could do nothing with, and does not stop the
+ * others.
+ */
+function tabsForBuild(list, group) {
+  const tabs = [], skipped = [];
+  const taken = new Set(state.tabs.map(tab => tab.id));
+  for (const said of Array.isArray(list) ? list : []) {
+    if (!said || !said.item) continue;
+    const handed = handoverSetup(said);
+    if (!handed.resolved) { skipped.push(said.item); continue; }
+    let tab = newTab(handed.setup);
+    while (taken.has(tab.id)) tab = newTab(handed.setup);
+    taken.add(tab.id);
+    /* The four came as one build and stay together as one: a group in the
+       tab strip, under the build's own name, closed together or one by one. */
+    if (group) tab.group = { id: group.id, label: group.label };
+    tabs.push(tab);
+  }
+  return { tabs, skipped };
+}
+
+/* Whether this page can take an item at all - the one answer the bench asks
+   before it offers to send anything, so the two never disagree. */
+window.enchantCan = name => (state.data ? Boolean(name && resolveItem(name)) : null);
+
+window.enchantBuild = function (list, options) {
+  if (!state.data) return null;
+  const label = String((options && options.label) || 'Build').slice(0, 60);
+  let groupId;
+  do groupId = 'g' + Math.random().toString(36).slice(2, 9);
+  while (state.tabs.some(tab => tab.group && tab.group.id === groupId));
+  const made = tabsForBuild(list, { id: groupId, label });
+  if (!made.tabs.length) return { opened: [], skipped: made.skipped };
+  saveSetup();                 // bank the tab that was on screen
+  state.tabs.push(...made.tabs);
+  state.activeTab = made.tabs[0].id;
+  state.loadingTab = true;     // stop applySetup's edits from writing back
+  applySetup(made.tabs[0].setup);
+  state.loadingTab = false;
+  clearResults();
+  refresh();
+  persistTabs();
+  renderTabs();
+  /* Said on this page, since this is the page that is now on the screen. */
+  sayTabNote(made.skipped.length
+    ? 'Not sent: the game does not let ' + made.skipped.join(', ') + ' be enchanted.'
+    : '');
+  location.hash = 'enchant';
+  routeFromHash();
+  return { opened: made.tabs.map(tab => tab.label), skipped: made.skipped };
+};
+
+function sayTabNote(text) {
+  const note = $('tabNote');
+  if (!note) return;
+  note.textContent = text;
+  note.hidden = !text;
+}
 
 /* ------------------------------------------------------------------ *
  * Item picker                                                         *
@@ -1841,7 +1958,8 @@ function itemArtHtml(resolved, name) {
   return '<span class="picker-icon empty">?</span>';
 }
 
-function openItemPicker() {
+async function openItemPicker() {
+  await ensureItemArt();
   rememberPickerOpener();
   const entries = knownItemNames().map(name => ({ name, resolved: resolveItem(name) }));
   state.picker = { kind: 'item', entries };
@@ -2023,10 +2141,16 @@ function enableKind(kind) {
   applyFilterChange();
 }
 
+function blacklistedArtifacts() {
+  if (!state.artifactBlacklist) state.artifactBlacklist = new Set();
+  return state.artifactBlacklist;
+}
+
 function allowedArtifacts() {
+  const blocked = blacklistedArtifacts();
   return state.data.artifacts.filter(artifact => {
     const kind = artifactKind(artifact);
-    return kind === 'none' || state.filters[kind];
+    return kind === 'none' || (state.filters[kind] && !blocked.has(artifact.name));
   });
 }
 
@@ -2038,11 +2162,19 @@ function artifactFilterHtml() {
     const kind = artifactKind(artifact);
     if (kind !== 'none') counts[kind]++;
   }
+  const blocked = [...blacklistedArtifacts()].sort((a, b) => a.localeCompare(b));
+
   return `<div class="filter-chips" role="group" aria-label="Which artifacts you are willing to use">
     <span class="filter-caption">Artifacts</span>
     ${Object.keys(KIND_LABEL).map(kind => `
       <button type="button" class="filter-chip${state.filters[kind] ? ' on' : ''}" data-kind="${kind}"
         aria-pressed="${state.filters[kind]}">${KIND_LABEL[kind]} <b>${counts[kind]}</b></button>`).join('')}
+    ${blocked.length ? `
+      <span class="filter-caption">Unavailable</span>
+      ${blocked.map(name => `
+        <button type="button" class="filter-chip" data-artifact-restore="${html(name)}"
+          title="Make this artifact available again">↺ ${html(name)}</button>`).join('')}
+    ` : ''}
   </div>`;
 }
 
@@ -2129,7 +2261,7 @@ function renderSummary(rows, config) {
   if (multi) {
     figures = [
       figure(rolls, `random slot${rolls === 1 ? '' : 's'} per reroll`, `${config.slots} total, ${config.locks.length} locked`),
-      figure(goals.length, 'wanted, locked as they land'),
+      figure(goals.length, 'wanted, lock or reroll by outcome'),
       figure(`×${Math.pow(2, config.locks.length)}`, 'dust per reroll', 'Doubles with every lock')
     ].join('');
   } else {
@@ -2219,7 +2351,7 @@ function showAudit() {
 
     <ol class="audit-steps">
       <li>
-        <h3>Build the eligible pool</h3>
+        <h3>Build the Eligible Pool</h3>
         <p>Start from the ${openPool.length} enchantments this ${html(config.type.toLowerCase())} can roll${config.item ? ' with the selected item' : ''}, then remove what the ${plural(config.locks.length, 'lock')} forbid.</p>
         <dl>
           <dt>Labels carried by the locks</dt><dd>${labels.length ? `<span class="chips">${labels.map(label => `<i class="chip give">${html(label)}</i>`).join('')}</span>` : '<span class="muted">none</span>'}</dd>
@@ -2230,7 +2362,7 @@ function showAudit() {
       </li>
 
       <li>
-        <h3>Weight the pool for ${html(artifact.name)}</h3>
+        <h3>Weight the Pool for ${html(artifact.name)}</h3>
         <p>Each candidate keeps its base weight unless the artifact multiplies it. An artifact states several rules and every one that matches applies in turn, so two matching rules compound rather than compete. The result is truncated to an integer, as the game does.</p>
         <dl>
           <dt>Total weight of the pool</dt><dd><b>${count(pool.total)}</b></dd>
@@ -2240,12 +2372,12 @@ function showAudit() {
       </li>
 
       <li>
-        <h3>One slot</h3>
+        <h3>One Slot</h3>
         <p class="formula">${count(targetWeight)} ÷ ${count(pool.total)} = <b>${percent(perSlot)}</b></p>
       </li>
 
       <li>
-        <h3>${plural(rolls, 'slot')} in one reroll</h3>
+        <h3>${plural(rolls, 'Slot')} in One Reroll</h3>
         <p>The slots are not independent: whatever the first slot rolls adds its Labels, which removes every remaining candidate that refuses them, and the mod itself leaves the pool. The engine enumerates every weighted path.</p>
         <dl>
           <dt>Exact chance over ${plural(rolls, 'slot')}</dt><dd><b>${percent(exact.odds)}</b>${exact.exact === false ? ' <span class="muted">(sampled)</span>' : ''}</dd>
@@ -2255,7 +2387,7 @@ function showAudit() {
       </li>
 
       <li>
-        <h3>Turn it into dust</h3>
+        <h3>Turn It Into Dust</h3>
         <p class="formula">
           one reroll = ${count(EnchantEngine.BASE_COSTS[config.slots])} base × 2<sup>${config.locks.length}</sup> = <b>${count(cost.perReroll)}</b> ${html(config.dust)}<br>
           mean rerolls = 100 ÷ ${RealmI18n.number(exact.odds, { maximumSignificantDigits: 4 })} = <b>${count(cost.rerolls)}</b><br>
@@ -2303,62 +2435,127 @@ async function renderBuildPlan(config) {
     return;
   }
 
-  const together = EnchantEngine.planSimultaneous(state.data, config, goals, { artifacts });
   const dust = amount => `${dustIcon(config.dust)}${count(amount)}`;
 
   const steps = plan.path.map((step, index) => {
-    const last = index === plan.path.length - 1;
     const icon = artifactIcon(step.artifact.name);
+    const hasDirectHunt = step.hunt && step.hunt.length;
+    const huntNames = hasDirectHunt ? step.hunt : (step.likelyGain || []);
 
-    // What to do when the reroll lands something. Phrased as the instruction it
-    // is, rather than as a probability the reader has to interpret.
-    const outcome = step.likelyGain && step.likelyGain.length
-      ? `<p class="plan-then"><b>When ${step.likelyGain.map(name => html(name)).join(' + ')} turns up</b> — the most likely useful result, ${percent(step.likelyChance)} of rerolls — lock it${last ? ' and you are done.' : ` and move to step ${index + 2}.`}</p>`
-      : '';
+    const tieredHunt = huntNames.some(name => {
+      const members = EnchantEngine.membersOf(state.data, name);
+      return members.some(member => {
+        const mod = state.data.byName.get(member);
+        return Boolean(mod && mod.tags.has('TIERED'));
+      });
+    });
 
-    const decline = step.declined.length
-      ? `<p class="plan-then warn"><b>Do not lock ${step.declined.map(entry => html(entry.name)).join(' or ')}</b> if it comes up alone here (${step.declined.map(entry => percent(entry.chance)).join(', ')} of rerolls). Locking it would double every reroll of the harder hunt for less than it saves. Throw it back and reroll.</p>`
-      : '';
+    const tierLabel = [...config.tiers]
+      .sort((a, b) => a - b)
+      .map(tier => ['I', 'II', 'III', 'IV'][tier - 1])
+      .join(', ');
 
-    const partial = step.throwsBack
-      ? '<p class="plan-then">Some combined results are worth locking only in part — keep what the step is hunting, throw the rest back.</p>'
-      : '';
+    const tierHint = tieredHunt ? `<small>accepted tier${config.tiers.size === 1 ? '' : 's'} ${tierLabel}</small>` : '';
+
+    const sameDustArtifact = step.artifactCharge > 0
+      && step.artifactDustType === config.dust;
+    const primaryAttempt = step.perReroll
+      + (sameDustArtifact ? step.artifactCharge : 0);
+
+    // Every attempt at this step costs the same and leaves it with the same
+    // chance, so the time spent here is geometric: what this step alone is
+    // expected to cost, before the next one starts.
+    const stepRerolls = 100 / step.progressChance;
+    const stepDust = primaryAttempt * stepRerolls;
+
+    // The figure is always the primary dust. An artifact paid in the same dust
+    // is folded into it; one paid in another dust is shown beside it, and
+    // plainly not counted.
+    let artifactCost = '';
+    if (step.artifactCharge > 0) {
+      artifactCost = sameDustArtifact
+        ? `<span class="plan-side">(${count(step.perReroll)} reroll + ${count(step.artifactCharge)} artifact)</span>`
+        : `<span class="plan-side">+ ${dustIcon(step.artifactDustType)}${count(step.artifactCharge)} ${html(step.artifactDustType)} artifact, not counted</span>`;
+    }
+
+    // Combined wanted-enchantment outcomes are handled by the planner but not
+    // listed here: the useful player instruction is what to do when one wanted
+    // enchantment appears by itself.
+    const simpleDecisions = (step.decisions || [])
+      .filter(decision => decision.rolled.length === 1);
+
+    // What you keep carries its sprite, so it is recognised on the item the
+    // moment it lands; what you throw back stays plain text.
+    const decisionRow = (decision, reroll) => {
+      const name = decision.rolled[0];
+      const mod = !reroll && state.data.byName.get(name);
+      return `
+        <div class="plan-action-row">
+          <span class="plan-action-name">${mod ? enchantIconHtml(mod, 'inline-icon') : ''}${html(name)}${reroll ? '<i> alone</i>' : ''}</span>
+          <span class="plan-action-chance">${percent(decision.chance)}</span>
+        </div>`;
+    };
+
+    const lockDecisions = simpleDecisions.filter(decision => decision.action === 'lock');
+    const rerollDecisions = simpleDecisions.filter(decision => decision.action === 'reroll');
+    const lockFinishes = step.locked.length + 1 >= goals.length;
+
+    const policy = `
+      <div class="plan-policy">
+        <section class="plan-policy-group lock">
+          <h4><span aria-hidden="true">✓</span> ${lockFinishes ? 'Lock &amp; finish' : 'Lock &amp; continue'}${tierHint}</h4>
+          ${lockDecisions.length
+            ? lockDecisions.map(decision => decisionRow(decision, false)).join('')
+            : '<div class="plan-action-empty">No single enchantment to lock here</div>'}
+        </section>
+
+        <section class="plan-policy-group reroll">
+          <h4><span aria-hidden="true">↻</span> Reroll</h4>
+          ${rerollDecisions.map(decision => decisionRow(decision, true)).join('')}
+          <div class="plan-action-row fallback">
+            <span class="plan-action-name">Anything else</span>
+          </div>
+        </section>
+      </div>`;
 
     return `
       <li>
+        <span class="plan-step">${index + 1}</span>
+
         <div class="plan-head">
-          <span class="plan-step">${index + 1}</span>
           <div class="plan-goal">
-            <b>Roll for ${step.pending.map(name => html(name)).join(' or ')}</b>
-            <small>${step.locked.length ? `${step.locked.map(name => html(name)).join(' + ')} locked by now` : 'nothing locked yet'}</small>
+            <small>Roll with</small>
+            <div class="plan-target">
+              <img src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+              <span>${html(step.artifact.name)}</span>
+              ${artifactKind(step.artifact) !== 'none'
+                ? `<button type="button" class="plan-dismiss" data-blacklist-artifact="${html(step.artifact.name)}">I don't have this</button>`
+                : ''}
+            </div>
+          </div>
+          <div class="plan-finish">
+            <b>${dust(stepDust)}</b>
+            <small>expected ${html(config.dust)} for this step · ~${count(stepRerolls)} reroll${Math.round(stepRerolls) === 1 ? '' : 's'}</small>
+            <small class="plan-left">${count(step.expectedDustFromHere)} left until the end</small>
           </div>
         </div>
-        <div class="plan-use">
-          <img src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
-          <span>Use <b>${html(step.artifact.name)}</b></span>
+
+        <div class="plan-meta">
+          <span><b>${percent(step.progressChance)}</b> chance of useful progress</span>
+          <span><b>${dust(primaryAttempt)}</b> fixed per reroll ${artifactCost}</span>
         </div>
-        <dl class="plan-figures">
-          <div><dt>Useful reroll</dt><dd>${percent(step.progressChance)}</dd></div>
-          <div><dt>Each reroll</dt><dd>${dust(step.perReroll)}</dd></div>
-          <div><dt>Left to finish</dt><dd>${dust(step.expectedDustFromHere)}</dd></div>
-        </dl>
-        ${outcome}${decline}${partial}
+
+        ${policy}
       </li>`;
   }).join('');
 
-  // Two honest ways to read the comparison: one at a time, or hold out for the
-  // lot in a single reroll. The second is almost always worse, and saying by
-  // how much is more useful than not mentioning it.
-  const comparison = together
-    ? `<p class="plan-compare">Holding out for all ${goals.length} in a single reroll instead: <b>${dust(together.dust)}</b> at ${percent(together.odds)} per reroll — ${together.dust > plan.dust ? `${count(together.dust - plan.dust)} more` : `${count(plan.dust - together.dust)} less`}.</p>`
-    : '';
 
   output.innerHTML = `
     <div class="plan-total">
       <span class="figure strong"><b>${dust(plan.dust)}</b><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></span>
       <span class="figure"><b>${count(plan.rerolls)}</b><small>rerolls in total</small></span>
     </div>
-    ${comparison}
+
     <ol class="plan-steps">${steps}</ol>`;
 }
 
@@ -2633,21 +2830,65 @@ function bind() {
     if (event.key === 'Tab') trapPickerTab(event);
   });
 
-  window.addEventListener('resize', handleAmbienceResize);
   $('itemEmpty').addEventListener('click', openItemPicker);
   $('itemCard').addEventListener('click', event => {
     if (event.target.closest('#changeItem')) { openItemPicker(); return; }
     if (event.target.closest('#clearItem')) clearItem();
   });
   $('tabBar').addEventListener('click', event => {
+    if (event.target.closest('[data-group-menu]')) {
+      const swatch = event.target.closest('[data-group-colour]');
+      if (swatch) updateGroup(swatch.dataset.group, { colour: swatch.dataset.groupColour });
+      return;
+    }
+    sayTabNote('');
+    const fold = event.target.closest('[data-toggle-group]');
+    if (fold) { toggleGroup(fold.dataset.toggleGroup); return; }
+    const edit = event.target.closest('[data-edit-group]');
+    if (edit) {
+      state.editingGroup = state.editingGroup === edit.dataset.editGroup ? null : edit.dataset.editGroup;
+      renderTabs();
+      const field = $('tabBar').querySelector('[data-group-name]');
+      if (field) { field.focus(); field.select(); }
+      return;
+    }
+    const group = event.target.closest('[data-close-group]');
+    if (group) { event.stopPropagation(); closeGroup(group.dataset.closeGroup); return; }
     const close = event.target.closest('[data-close]');
     if (close) { event.stopPropagation(); closeTab(close.dataset.close); return; }
     if (event.target.closest('#tabAdd')) { addTab(); return; }
     const tab = event.target.closest('[data-tab]');
     if (tab) switchTab(tab.dataset.tab);
   });
-  $('ambienceToggle').addEventListener('click', () => setAmbience($('ambienceToggle').getAttribute('aria-pressed') !== 'true'));
-
+  /* The name is kept as it is typed, and the panel shuts on Enter, Escape or
+     a click anywhere else. */
+  $('tabBar').addEventListener('change', event => {
+    const field = event.target.closest('[data-group-name]');
+    if (!field) return;
+    const label = field.value.trim().slice(0, 60);
+    if (label) updateGroup(field.dataset.groupName, { label });
+  });
+  $('tabBar').addEventListener('keydown', event => {
+    const field = event.target.closest('[data-group-name]');
+    if (!field || (event.key !== 'Enter' && event.key !== 'Escape')) return;
+    event.preventDefault();
+    const id = field.dataset.groupName;
+    if (event.key === 'Enter') {
+      const label = field.value.trim().slice(0, 60);
+      if (label) updateGroup(id, { label });
+    }
+    state.editingGroup = null;
+    renderTabs();
+    const back = $('tabBar').querySelector('[data-edit-group="' + CSS.escape(id) + '"]');
+    if (back) back.focus();
+  });
+  document.addEventListener('click', event => {
+    // A target the strip has just redrawn away was inside it, not outside.
+    if (!state.editingGroup || !event.target.isConnected
+      || event.target.closest('#tabBar .tab-group')) return;
+    state.editingGroup = null;
+    renderTabs();
+  });
   /*
    * The atlas frame. Shut, it swallows nothing: the map inside it takes no
    * pointer at all, so a click anywhere on it opens it out rather than
@@ -2669,9 +2910,16 @@ function bind() {
   watchGlobe();
   const globeBack = document.getElementById('globeBack');
   if (globeBack) globeBack.addEventListener('click', () => setGlobe(false));
+  const globeSky = document.getElementById('globeSky');
+  if (globeSky) {
+    globeSky.addEventListener('click', event => {
+      event.stopPropagation();
+      tellAtlas({ rotmg: 'clear-sky', on: !skyClear });
+    });
+  }
   const globeShut = document.getElementById('globeShut');
   if (globeShut) {
-    globeShut.addEventListener('click', event => { event.stopPropagation(); setGlobe(false); });
+    globeShut.addEventListener('click', event => { event.stopPropagation(); shutAtlasIndex(); setGlobe(false); });
   }
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && globeWide()) setGlobe(false);
@@ -2683,7 +2931,25 @@ function bind() {
     const row = event.target.closest('tr.off-group');
     if (row) enableKind(row.dataset.kind);
   });
+  $('buildPlan').addEventListener('click', event => {
+    const button = event.target.closest('[data-blacklist-artifact]');
+    if (!button) return;
+
+    const name = button.dataset.blacklistArtifact;
+    if (!name) return;
+
+    blacklistedArtifacts().add(name);
+    refresh();
+  });
+
   $('summary').addEventListener('click', event => {
+    const restore = event.target.closest('[data-artifact-restore]');
+    if (restore) {
+      blacklistedArtifacts().delete(restore.dataset.artifactRestore);
+      refresh();
+      return;
+    }
+
     const chip = event.target.closest('[data-kind]');
     if (!chip) return;
     toggleKind(chip.dataset.kind);
@@ -2692,388 +2958,97 @@ function bind() {
 }
 
 /* ------------------------------------------------------------------ *
- * Ambience: drifting realms behind the interface                      *
+ * The shared sky behind every tool page                               *
  * ------------------------------------------------------------------ */
 
-/*
- * Each realm is one painting: a colour wash taken from the game's palette,
- * a scatter of the very sprites the calculator already carries, and a vignette.
- * Everything is blurred while it is drawn, so the browser stores a finished
- * bitmap and never has to filter anything again — changing realm is nothing
- * more than two opacities crossing, which the compositor does on the GPU.
- *
- * No new artwork is bundled: it is built from the sprites already embedded.
- */
-const REALMS = [
-  { name: 'The Realm',       sky: ['#2c5130', '#0e1a13'], glow: '#5ac45a' },
-  { name: 'Undead Lair',     sky: ['#3d2758', '#140c1e'], glow: '#ca7aff' },
-  { name: 'Ocean Trench',    sky: ['#164257', '#08171f'], glow: '#79c5e8' },
-  { name: 'Abyss of Demons', sky: ['#552018', '#1c0a08'], glow: '#ff4542' },
-  { name: 'The Shatters',    sky: ['#2a2c4f', '#0d0d1a'], glow: '#8854f0' },
-  { name: 'Lost Halls',      sky: ['#443a1e', '#17120a'], glow: '#ffd026' },
-  { name: 'The Nexus',       sky: ['#2a2840', '#0d0c15'], glow: '#ffabf2' },
-  { name: 'Haunted Cemetery', sky: ['#1e2b26', '#080d0b'], glow: '#8fe07a' }
-];
+// The Atlas paints 460 fixed stars: its fourth-power brightness curve leaves
+// most of them close to the threshold and lets the occasional bright point
+// carry the field.  Keep the same number and seed here, but paint them once
+// into the module host rather than spending a frame loop on page decoration.
+const MODULE_STARS = 460;
+// Six streaks on an eighteen-second round trip average one crossing every
+// three seconds - roughly double the atlas' own meteors on the way in, four
+// of them firing every eleven to thirty-seven seconds for about one every
+// six. See web/assets/atlas/index.html's STARS/METEORS block for that math;
+// it is not reread here, only matched.
+const SHOOTING_STARS = 6;
+const SHOOTING_CYCLE = 18;
 
 /*
- * Which realm a page sits in.
- *
- * The Nexus is where you choose what to do, so it is the way in. Fame Sweep is
- * about walking into dungeons that kill people, so it sits in the cemetery.
- * The calculator keeps drifting through all of them, which it always did.
+ * The module sky's own rich-star language, built once into the otherwise
+ * empty .starfield host so the opacity rules that gate that host - off for
+ * the way in, on for every tool page - gate this exactly the same way with
+ * no extra wiring. The normal field is a single static, DPR-aware canvas;
+ * only the existing occasional meteors still animate as DOM elements.
  */
-const PAGE_REALM = { home: 'The Nexus', fame: 'Haunted Cemetery' };
-
-async function usePool(page) {
-  // The Nexus is the room every portal opens into, so the way in gets them
-  // too — under its own colours rather than the cemetery's.
-  const wanted = (page === 'fame' || page === 'home') ? 'dungeon' : 'enchant';
-  if (!ambience.enabled || ambience.pool === wanted) return;
-  ambience.pool = wanted;
-  const loaded = wanted === 'dungeon' ? await dungeonSprites() : await ambienceSprites();
-  if (loaded.length) {
-    ambience.sprites = loaded;
-    if (ambience.layers && ambience.layers.length) repaintScatter(ambience.index);
+function buildStarLanguage(host) {
+  if (!host || host.dataset.stars) return;
+  host.dataset.stars = '1';
+  let value = 987654321;
+  const random = () => ((value = (Math.imul(value, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const stars = [];
+  for (let i = 0; i < MODULE_STARS; i++) {
+    const lit = Math.pow(random(), 4);
+    stars.push({
+      x: random(), y: random(),
+      lit: 0.16 + lit * 0.84,
+      size: 0.5 + lit * 1.5,
+      warm: random()
+    });
+    // Advance through the Atlas' live-twinkle fields too, so every later
+    // point keeps the same fixed-seed position and colour as its sky.
+    random();
+    random();
   }
-}
-
-function pinRealm(page) {
-  const wanted = PAGE_REALM[page];
-  const index = wanted ? REALMS.findIndex(realm => realm.name === wanted) : -1;
-  ambience.pinned = index >= 0 ? index : null;
-  if (!ambience.layers || !ambience.layers.length) return;
-  if (ambience.pinned !== null && ambience.index !== ambience.pinned) {
-    ambience.index = ambience.pinned;
-    weightAurora(ambience.index);
-    repaintScatter(ambience.index);
-    showRealm(ambience.index, false);
-  }
-}
-// The colour mix is re-weighted often and fades slowly, so it reads as a
-// continuous drift rather than a slideshow. The sprite scatter underneath is
-// repainted far less often, because that one is a real change of picture.
-const REALM_INTERVAL = 32 * 1000;
-const SCATTER_INTERVAL = 100 * 1000;
-const AMBIENCE_KEY = 'rotmg-enchant-calculator/ambience';
-
-const ambience = {
-  layers: [], front: 0, sprites: [], blobs: [],
-  timer: null, scatterTimer: null,
-  index: 0, enabled: true, canBlur: true, started: false, resizeTimer: null, labelTimer: null
-};
-
-// The scatter uses the enchantment icons: they are the most varied and the
-// most recognisable of the sprites already in memory.
-/*
- * What drifts in the background. Enchantment icons on the calculator, dungeon
- * portals on Fame Sweep — the page's own subject, out of focus.
- */
-function loadSprites(sources) {
-  return Promise.all(sources.map(src => new Promise(resolve => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
-  }))).then(images => images.filter(Boolean));
-}
-
-async function fameSource() {
-  if (ambience.fameText) return ambience.fameText;
-  const bundled = BUNDLE && BUNDLE.sources && BUNDLE.sources.fameText;
-  ambience.fameText = bundled
-    || await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/'))
-      .then(response => response.text()).catch(() => '');
-  return ambience.fameText;
-}
-
-/*
- * The portals, at the format each one is actually stored in: eleven are
- * animated GIFs and the rest single PNGs. Asking for a .png every time
- * silently dropped exactly the ones worth having behind a moving page.
- */
-async function dungeonSprites() {
-  const info = await dungeonInfo();
-  const sources = [];
-  for (const [name, kind] of info) {
-    const src = asset('GUI Files', 'Dungeon Icons', name + '.' + kind);
-    if (src) sources.push(src);
-  }
-  return loadSprites(sources);
-}
-
-// name -> "gif" or "png", from data/Fame/dungeon-pages.txt.
-async function dungeonInfo() {
-  if (ambience.dungeonInfo) return ambience.dungeonInfo;
-  const bundled = BUNDLE && BUNDLE.sources && BUNDLE.sources.dungeonText;
-  const text = bundled
-    || await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/'))
-      .then(response => response.text()).catch(() => '');
-  const info = new Map();
-  for (const raw of String(text).split('\n')) {
-    const line = raw.trim();
-    if (!line || line.startsWith('##')) continue;
-    const parts = line.split('|');
-    if (parts[0] && parts[2]) info.set(parts[0], parts[2]);
-  }
-  ambience.dungeonInfo = info;
-  return info;
-}
-
-function ambienceSprites() {
-  if (!state.data) return Promise.resolve([]);
-  const seen = new Set();
-  const sources = [];
-  for (const mod of state.data.enchants) {
-    const icon = enchantIcon(mod);
-    if (!icon || seen.has(icon)) continue;
-    seen.add(icon);
-    const src = asset('GUI Files', 'Enchantment Icons', `${icon}.png`);
-    if (src) sources.push(src);
-  }
-  return Promise.all(sources.map(src => new Promise(resolve => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
-  }))).then(images => images.filter(Boolean));
-}
-
-function paintRealm(canvas, realm, seed) {
-  const width = canvas.width, height = canvas.height;
-  const ctx = canvas.getContext('2d');
-  // A fixed seed per realm keeps a given realm looking like itself between
-  // repaints, instead of reshuffling on every resize.
-  let value = seed >>> 0;
-  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
-
-  ctx.clearRect(0, 0, width, height);
-  const sky = ctx.createLinearGradient(0, 0, width * 0.3, height);
-  sky.addColorStop(0, realm.sky[0]);
-  sky.addColorStop(1, realm.sky[1]);
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, width, height);
-
-  // A couple of broad light pools, so the wash is not flat.
-  ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 3; i++) {
-    const x = width * (0.15 + random() * 0.7);
-    const y = height * (0.1 + random() * 0.6);
-    const r = Math.min(width, height) * (0.3 + random() * 0.35);
-    const pool = ctx.createRadialGradient(x, y, 0, x, y, r);
-    pool.addColorStop(0, `${realm.glow}7a`);
-    pool.addColorStop(1, `${realm.glow}00`);
-    ctx.fillStyle = pool;
-    ctx.fillRect(0, 0, width, height);
-  }
-  ctx.globalCompositeOperation = 'source-over';
-
-  if (ambience.sprites.length) {
-    if (ambience.canBlur) ctx.filter = 'blur(5px)';
-    ctx.globalAlpha = 0.5;
-    const count = 34;
-    for (let i = 0; i < count; i++) {
-      const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
-      const size = Math.min(width, height) * (0.07 + random() * 0.16);
-      const x = random() * width - size / 2;
-      const y = random() * height - size / 2;
-      ctx.save();
-      ctx.translate(x + size / 2, y + size / 2);
-      ctx.rotate((random() - 0.5) * 0.7);
-      ctx.globalAlpha = 0.34 + random() * 0.5;
-      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
-      ctx.restore();
+  const canvas = document.createElement('canvas');
+  canvas.className = 'module-star-canvas';
+  host.appendChild(canvas);
+  const paintStars = () => {
+    const box = canvas.getBoundingClientRect();
+    const width = Math.round(box.width), height = Math.round(box.height);
+    if (!width || !height) return;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    for (const star of stars) {
+      const ink = star.warm < 0.62 ? '198, 214, 255'
+        : star.warm < 0.86 ? '255, 248, 232' : '255, 214, 178';
+      ctx.fillStyle = 'rgba(' + ink + ',' + star.lit.toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(star.x * width, star.y * height, star.size, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.filter = 'none';
-    ctx.globalAlpha = 1;
-  }
-
-  // Darken the edges so the panels always sit on something quiet.
-  const vignette = ctx.createRadialGradient(width / 2, height * 0.35, 0, width / 2, height * 0.5, Math.max(width, height) * 0.75);
-  vignette.addColorStop(0, 'rgba(13,12,19,0)');
-  vignette.addColorStop(1, 'rgba(13,12,19,0.42)');
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, width, height);
-}
-
-// One drifting blob per realm colour. They never stop moving; only their
-// weights change, so the colour field is always somewhere between two realms
-// rather than sitting on one.
-function buildAurora(host) {
-  const aurora = document.createElement('div');
-  aurora.className = 'aurora';
-  const paths = ['float-a', 'float-b', 'float-c', 'float-d'];
-  ambience.blobs = REALMS.map((realm, index) => {
-    const blob = document.createElement('span');
-    blob.style.setProperty('--c', realm.glow);
-    blob.style.left = `${(index * 137) % 70}%`;
-    blob.style.top = `${(index * 89) % 60}%`;
-    // Mismatched periods, so the combination never lands the same way twice.
-    blob.style.animation = `${paths[index % paths.length]} ${34 + index * 9}s ease-in-out ${-index * 7}s infinite`;
-    aurora.append(blob);
-    return blob;
-  });
-  host.append(aurora);
-}
-
-// Weight the blobs around the current realm: its own colour leads, the two
-// next to it stay faintly lit, everything else fades out.
-function weightAurora(index) {
-  const total = REALMS.length;
-  ambience.blobs.forEach((blob, i) => {
-    let distance = Math.abs(i - index);
-    distance = Math.min(distance, total - distance);
-    const opacity = distance === 0 ? 1 : distance === 1 ? 0.5 : distance === 2 ? 0.18 : 0;
-    blob.style.opacity = String(opacity);
-  });
-}
-
-function showRealm(index, announce) {
-  const realm = REALMS[index % REALMS.length];
-  weightAurora(index % REALMS.length);
-  if (announce) {
-    const label = $('realmName');
-    label.textContent = realm.name;
-    label.classList.add('show');
-    clearTimeout(ambience.labelTimer);
-    ambience.labelTimer = setTimeout(() => label.classList.remove('show'), 7000);
-  }
-}
-
-// The sprite scatter is a genuine change of picture, so it cross-fades.
-function scatterDom(seed) {
-  let value = seed >>> 0;
-  const random = () => ((value = (1664525 * value + 1013904223) >>> 0) / 4294967296);
+  };
+  paintStars();
+  // Resize is the only reason the normal field is painted again; this also
+  // catches display-DPR changes that browsers report with a resize.
+  window.addEventListener('resize', paintStars);
   const pieces = [];
-  for (let i = 0; i < 26; i++) {
-    const sprite = ambience.sprites[Math.floor(random() * ambience.sprites.length)];
-    if (!sprite || !sprite.src) continue;
-    const size = 7 + random() * 16;
-    pieces.push(`<img src="${sprite.src}" alt="" style="`
-      + `left:${(random() * 104 - 2).toFixed(2)}%;top:${(random() * 104 - 2).toFixed(2)}%;`
-      + `width:${size.toFixed(2)}vmin;opacity:${(0.3 + random() * 0.45).toFixed(2)};`
-      + `transform:rotate(${((random() - 0.5) * 40).toFixed(1)}deg);`
-      + `animation-duration:${(60 + random() * 90).toFixed(0)}s;`
-      + `animation-delay:-${(random() * 90).toFixed(0)}s">`);
+  // Evenly spaced round-robin rather than independently random starts, so
+  // six streaks on one cycle length land one every CYCLE/6 seconds instead
+  // of clumping and leaving gaps.
+  for (let i = 0; i < SHOOTING_STARS; i++) {
+    const angle = 18 + random() * 20;
+    pieces.push('<i class="shooting-star" style="'
+      + `left:${(random() * 90).toFixed(2)}%;top:${(random() * 45).toFixed(2)}%;`
+      + `--a:${angle.toFixed(1)}deg;`
+      + `animation-duration:${SHOOTING_CYCLE}s;`
+      + `animation-delay:-${(i * (SHOOTING_CYCLE / SHOOTING_STARS)).toFixed(2)}s"></i>`);
   }
-  ambience.dom.innerHTML = pieces.join('');
-}
-
-function repaintScatter(index) {
-  if (ambience.pool === 'dungeon' && ambience.dom) {
-    ambience.dom.hidden = false;
-    for (const canvas of ambience.layers) canvas.classList.remove('on');
-    scatterDom((index + 1) * 2654435761);
-    return;
-  }
-  if (ambience.dom) { ambience.dom.hidden = true; ambience.dom.innerHTML = ''; }
-  const back = ambience.layers[1 - ambience.front];
-  paintRealm(back, REALMS[index % REALMS.length], (index + 1) * 2654435761);
-  back.classList.add('on', 'drift');
-  ambience.layers[ambience.front].classList.remove('on');
-  ambience.front = 1 - ambience.front;
-}
-
-function startAmbience() {
-  const host = $('ambience');
-  // Half resolution: the whole thing is blurred, so nobody can tell, and it
-  // keeps the paint cheap on a laptop.
-  const width = Math.min(1280, Math.round(window.innerWidth * 0.6)) || 960;
-  const height = Math.min(800, Math.round(window.innerHeight * 0.6)) || 600;
-  host.replaceChildren();
-  ambience.layers = [0, 1].map(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    host.append(canvas);
-    return canvas;
-  });
-  const probe = ambience.layers[0].getContext('2d');
-  ambience.canBlur = typeof probe.filter === 'string';
-  host.classList.toggle('css-blur', !ambience.canBlur);
-  /*
-   * A layer of real elements beside the canvases.
-   *
-   * A canvas draws the first frame of an animated portal and nothing after, so
-   * the moving ones would sit still. These are ordinary images, blurred and
-   * drifting by stylesheet, and they animate because the browser animates them.
-   */
-  ambience.dom = document.createElement('div');
-  ambience.dom.className = 'ambience-dom';
-  host.append(ambience.dom);
-  buildAurora(host);
-
-  ambience.front = 1;
-  repaintScatter(ambience.index);
-  weightAurora(ambience.index % REALMS.length);
-  showRealm(ambience.index, false);
-  ambience.started = true;
-
-  clearInterval(ambience.timer);
-  clearInterval(ambience.scatterTimer);
-  ambience.timer = setInterval(() => {
-    if (!ambience.enabled) return;
-    if (ambience.pinned !== null && ambience.pinned !== undefined) return;
-    ambience.index = (ambience.index + 1) % REALMS.length;
-    showRealm(ambience.index, true);
-  }, REALM_INTERVAL);
-  ambience.scatterTimer = setInterval(() => {
-    if (!ambience.enabled) return;
-    if (ambience.pinned !== null && ambience.pinned !== undefined) return;
-    repaintScatter(ambience.index);
-  }, SCATTER_INTERVAL);
-}
-
-// A canvas stretched by CSS distorts when the window changes shape.
-// object-fit keeps it honest while dragging; this repaints at the new size
-// once the dragging stops, so the resolution matches again.
-function handleAmbienceResize() {
-  clearTimeout(ambience.resizeTimer);
-  ambience.resizeTimer = setTimeout(() => {
-    if (!ambience.enabled || !ambience.started) return;
-    startAmbience();
-  }, 250);
+  host.insertAdjacentHTML('beforeend', pieces.join(''));
 }
 
 /*
- * The drifting realms behind the interface, on or off.
- *
- * This and nothing else. It reached into the atlas for a while and froze
- * the clock its weather reads, which worked, and is not what the switch is
- * for: the atlas is a map you are looking at rather than decoration behind
- * something you are reading, and its weather is part of the map. So the
- * switch governs the background of the interface, on every page, and the
- * atlas keeps its own weather running whatever it is set to.
+ * The sky behind the tool pages: the starfield, built once. The drifting
+ * realms that used to lie over it - an aurora and a scatter of sprites -
+ * are gone rather than paused: the way in stands on the atlas, and a tool
+ * page stands on this.
  */
-function setAmbience(enabled) {
-  ambience.enabled = enabled;
-  $('ambience').hidden = !enabled;
-  $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
-  const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
-  if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
-  try { localStorage.setItem(AMBIENCE_KEY, enabled ? 'on' : 'off'); } catch (error) { /* not essential */ }
-  if (enabled && !ambience.started) startAmbience();
-}
-
-async function initAmbience() {
-  let enabled = true;
-  try { enabled = localStorage.getItem(AMBIENCE_KEY) !== 'off'; } catch (error) { /* default on */ }
-  $('ambienceToggle').setAttribute('aria-pressed', String(enabled));
-  const says = $('ambienceToggle').querySelector('.ambience-toggle-text');
-  if (says) says.textContent = enabled ? 'Animations on' : 'Animations off';
-  ambience.enabled = enabled;
-  $('ambience').hidden = !enabled;
-  if (!enabled) return;
-  // Start on a random realm so two visitors do not see the same one.
-  ambience.index = ambience.pinned !== null && ambience.pinned !== undefined
-    ? ambience.pinned
-    : Math.floor(Math.random() * REALMS.length);
-  // Whichever set the page already asked for. Routing happens before the data
-  // is read, so this runs second and must not undo the choice it made.
-  if (!ambience.pool) ambience.pool = 'enchant';
-  ambience.sprites = ambience.pool === 'dungeon'
-    ? await dungeonSprites()
-    : await ambienceSprites();
-  startAmbience();
+function initStarfield() {
+  buildStarLanguage(document.querySelector('.starfield'));
 }
 
 /* ------------------------------------------------------------------ *
@@ -3093,6 +3068,7 @@ function captureSetup() {
     item: $('awakenedItem').value,
     subtypes: [...document.querySelectorAll('#subtypePanel input:checked')].map(box => box.value),
     tiers: [...document.querySelectorAll('#tiers input:checked')].map(box => box.value),
+    artifactBlacklist: [...blacklistedArtifacts()],
     optimizeGoal: state.itemOptimizeGoal,
     slots: state.slots.map(slot => ({ name: slot.name, locked: slot.locked }))
   };
@@ -3119,6 +3095,7 @@ function applySetup(saved) {
   renderSubtypes();
   for (const box of document.querySelectorAll('#subtypePanel input')) box.checked = (saved.subtypes || []).includes(box.value);
   for (const box of document.querySelectorAll('#tiers input')) box.checked = !saved.tiers || saved.tiers.includes(box.value);
+  state.artifactBlacklist = new Set(Array.isArray(saved.artifactBlacklist) ? saved.artifactBlacklist : []);
   state.slots.forEach(slot => { slot.name = ''; slot.locked = false; });
   if (Array.isArray(saved.slots)) {
     saved.slots.slice(0, 4).forEach((entry, index) => {
@@ -3191,7 +3168,49 @@ function loadFilters() {
 function renderTabs() {
   const bar = $('tabBar');
   bar.replaceChildren();
+  /*
+   * A build sent over from Theory Crafting arrives as a group: its tabs stand
+   * together in a bracket headed by the build's name, which also closes the
+   * lot of them. Groups are runs of neighbours - a tab is only ever added
+   * after the others - so each run gets one bracket.
+   */
+  let into = bar, openGroup = null;
   for (const tab of state.tabs) {
+    const group = tab.group && tab.group.id ? tab.group : null;
+    if (!group || !openGroup || openGroup !== group.id) {
+      into = bar;
+      openGroup = null;
+      if (group) {
+        const members = state.tabs.filter(one => one.group && one.group.id === group.id);
+        const colour = GROUP_COLOURS[group.colour] ? group.colour : 'blue';
+        const box = document.createElement('div');
+        box.className = 'tab-group' + (group.collapsed ? ' is-collapsed' : '')
+          + (members.some(one => one.id === state.activeTab) ? ' has-active' : '');
+        box.setAttribute('role', 'group');
+        box.setAttribute('aria-label', group.label);
+        box.style.setProperty('--g', GROUP_COLOURS[colour]);
+        const head = document.createElement('span');
+        head.className = 'tab-group-head';
+        /* The name is the fold: pressed, the group shuts down to its chip
+           and opens again - the way a browser folds a tab group away. */
+        head.innerHTML = `<button type="button" class="tab-group-name" data-toggle-group="${html(group.id)}"`
+          + ` aria-expanded="${group.collapsed ? 'false' : 'true'}"`
+          + ` title="${group.collapsed ? 'Show' : 'Fold away'} the tabs of ${html(group.label)}">`
+          + `<span class="tab-group-label">${html(group.label)}</span>`
+          + `<span class="tab-group-count">${members.length}</span></button>`
+          + `<button type="button" class="tab-group-edit" data-edit-group="${html(group.id)}"`
+          + ` aria-expanded="${state.editingGroup === group.id ? 'true' : 'false'}"`
+          + ` title="Rename or recolour ${html(group.label)}" aria-label="Rename or recolour ${html(group.label)}">✎</button>`
+          + `<span class="tab-group-close" data-close-group="${html(group.id)}" role="button"`
+          + ` title="Close every tab of ${html(group.label)}" aria-label="Close every tab of ${html(group.label)}">×</span>`;
+        box.append(head);
+        if (state.editingGroup === group.id) box.append(groupMenu(group, colour));
+        bar.append(box);
+        into = box;
+        openGroup = group.id;
+      }
+    }
+    if (tab.group && tab.group.collapsed) continue;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `tab${tab.id === state.activeTab ? ' active' : ''}`;
@@ -3200,7 +3219,7 @@ function renderTabs() {
     button.setAttribute('aria-selected', String(tab.id === state.activeTab));
     button.title = tab.label;
     button.innerHTML = `<span class="tab-label">${html(tab.label)}</span>${state.tabs.length > 1 ? `<span class="tab-close" data-close="${tab.id}" role="button" aria-label="Close ${html(tab.label)}">×</span>` : ''}`;
-    bar.append(button);
+    into.append(button);
   }
   const add = document.createElement('button');
   add.type = 'button';
@@ -3228,6 +3247,9 @@ function switchTab(id) {
   if (id === state.activeTab) return;
   const target = state.tabs.find(tab => tab.id === id);
   if (!target) return;
+  if (target.group && target.group.collapsed) {
+    for (const tab of state.tabs) if (tab.group && tab.group.id === target.group.id) tab.group.collapsed = false;
+  }
 
   const layout = document.querySelector('.layout');
   const from = state.tabs.findIndex(tab => tab.id === state.activeTab);
@@ -3276,6 +3298,92 @@ function closeTab(id) {
   state.tabs.splice(index, 1);
   if (wasActive) {
     const next = state.tabs[Math.min(index, state.tabs.length - 1)];
+    state.activeTab = next.id;
+    state.loadingTab = true;
+    applySetup(next.setup);
+    state.loadingTab = false;
+    clearResults();
+  }
+  refresh();
+  persistTabs();
+  renderTabs();
+}
+
+/*
+ * A group's own colours: the page's accent and five more from the same
+ * palette the rest of the site already speaks in, so a group never reads as
+ * a warning or a tier it is not.
+ */
+const GROUP_COLOURS = {
+  blue: '#79c5e8', gold: '#ffcb70', green: '#86d98e',
+  purple: '#c79bf0', rose: '#ff9c8a', grey: '#9aa4ba'
+};
+
+/* The small panel a group is renamed and recoloured in. */
+function groupMenu(group, colour) {
+  const menu = document.createElement('div');
+  menu.className = 'tab-group-menu';
+  menu.dataset.groupMenu = group.id;
+  menu.innerHTML = `<label class="tab-group-field"><span>Name</span>`
+    + `<input type="text" maxlength="60" data-group-name="${html(group.id)}" value="${html(group.label)}"></label>`
+    + `<div class="tab-group-swatches" role="group" aria-label="Group colour">`
+    + Object.entries(GROUP_COLOURS).map(([name, value]) =>
+      `<button type="button" class="tab-group-swatch${name === colour ? ' is-on' : ''}" data-group-colour="${name}"`
+      + ` data-group="${html(group.id)}" style="--swatch:${value}" aria-pressed="${name === colour}"`
+      + ` title="${name}" aria-label="${name}"></button>`).join('')
+    + `</div>`;
+  return menu;
+}
+
+/* Every tab of a group carries its own copy of the group, so a change is
+   written into each of them and kept with the tabs. */
+function updateGroup(id, patch) {
+  let changed = false;
+  for (const tab of state.tabs) {
+    if (tab.group && tab.group.id === id) { Object.assign(tab.group, patch); changed = true; }
+  }
+  if (!changed) return;
+  persistTabs();
+  renderTabs();
+}
+
+/*
+ * Folded away, a group is its chip alone. Folding the group the editor is
+ * showing moves the editor to the nearest tab outside it, so what is on the
+ * screen is never a tab that cannot be seen; with nothing outside it, the
+ * group folds and its chip stays lit as the one being worked on.
+ */
+function toggleGroup(id) {
+  const member = state.tabs.find(tab => tab.group && tab.group.id === id);
+  if (!member) return;
+  const folding = !member.group.collapsed;
+  if (folding && member.group && state.tabs.some(tab => tab.id === state.activeTab
+    && tab.group && tab.group.id === id)) {
+    const at = state.tabs.findIndex(tab => tab.id === state.activeTab);
+    const outside = state.tabs
+      .map((tab, index) => ({ tab, index }))
+      .filter(one => !(one.tab.group && one.tab.group.id === id))
+      .sort((a, b) => Math.abs(a.index - at) - Math.abs(b.index - at))[0];
+    if (outside) {
+      updateGroup(id, { collapsed: true });
+      switchTab(outside.tab.id);
+      return;
+    }
+  }
+  updateGroup(id, { collapsed: folding });
+}
+
+/* Every tab of one sent build at once. The strip is never left empty: if the
+   group was all there was, an empty setup takes its place. */
+function closeGroup(id) {
+  const leaving = state.tabs.filter(tab => tab.group && tab.group.id === id);
+  if (!leaving.length) return;
+  const wasActive = leaving.some(tab => tab.id === state.activeTab);
+  const at = state.tabs.findIndex(tab => tab.group && tab.group.id === id);
+  state.tabs = state.tabs.filter(tab => !(tab.group && tab.group.id === id));
+  if (!state.tabs.length) state.tabs = [newTab({})];
+  if (wasActive) {
+    const next = state.tabs[Math.min(at, state.tabs.length - 1)];
     state.activeTab = next.id;
     state.loadingTab = true;
     applySetup(next.setup);
@@ -3385,13 +3493,10 @@ function newsMadeOn(index) {
   return (index.notes && index.notes.date) || index.made || null;
 }
 
-async function loadItemArt() {
-  // The sheet's address, once, for every picture on the page to point at.
-  document.documentElement.style.setProperty('--sheet',
-    'url(' + ((BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png') + ')');
+async function loadUpdateMade() {
   if (BUNDLE) {
     state.updateMade = newsMadeOn((BUNDLE.whatsNew || {}).index);
-    if (BUNDLE.itemArt) return BUNDLE.itemArt;
+    return;
   }
   try {
     const news = await fetch('assets/whats-new/index.json').then(response => response.json());
@@ -3399,13 +3504,31 @@ async function loadItemArt() {
   } catch (error) {
     /* only the date line loses, and it says nothing rather than a wrong one */
   }
-  try {
-    return await fetch('assets/index/item-art.json').then(response => response.json());
-  } catch (error) {
-    // Pictures are decoration: without them every row falls back to its slot
-    // icon, which is what the calculator did for its first year.
-    return null;
+}
+
+let itemArtLoading = null;
+function ensureItemArt() {
+  if (state.itemArt) return Promise.resolve(state.itemArt);
+  if (itemArtLoading) return itemArtLoading;
+
+  // The sheet's address, once, for every picture on the calculator to point at.
+  document.documentElement.style.setProperty('--sheet',
+    'url(' + ((BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png') + ')');
+
+  if (BUNDLE && BUNDLE.itemArt) {
+    state.itemArt = BUNDLE.itemArt;
+    return Promise.resolve(state.itemArt);
   }
+
+  itemArtLoading = fetch('assets/index/item-art.json')
+    .then(response => response.json())
+    .then(art => {
+      state.itemArt = art;
+      return art;
+    })
+    .catch(() => null);
+
+  return itemArtLoading;
 }
 
 
@@ -3791,11 +3914,11 @@ async function load() {
     const sources = await readSources();
     state.data = EnchantEngine.buildDataset(sources);
     EnchantItems.loadClient(sources.clientItemText);
-    state.theory = await loadItemOptimizerTheory();
-    state.itemArt = await loadItemArt();
+    await loadUpdateMade();
+    if (document.body.dataset.page === 'enchant') await ensureItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${RealmI18n.number(knownItemNames().length)} items — the slot, dust and base come with it`;
-    initAmbience();
+    initStarfield();
     renderOfflineOffer();
     state.ready = true;
     renderClientNews(parseChanges(await readChanges()));
@@ -3985,9 +4108,18 @@ if (typeof window.fetch === 'function' && !window.fetch.watched) {
       mine = url.origin === location.origin;
     } catch (error) { /* a relative path this old browser cannot parse; count it */ }
     if (!mine) return passed(...args);
-    const token = { at: performance.now() };
+    const token = { at: performance.now(), expiry: 0 };
     flying.add(token);
-    const drop = () => { flying.delete(token); };
+    const drop = () => {
+      clearTimeout(token.expiry);
+      flying.delete(token);
+    };
+    /*
+     * settled() gives up after WAIT_MOST, so a fetch that has not answered by
+     * then can no longer affect the cover. Do not retain its tracking token
+     * forever if the browser/network leaves the request pending forever.
+     */
+    token.expiry = setTimeout(drop, WAIT_MOST);
     return passed(...args).then(answer => { drop(); return answer; },
       error => { drop(); throw error; });
   };
@@ -4056,6 +4188,8 @@ function dressAtlas(snap, over) {
  * was ever opened.
  */
 window.addEventListener('message', event => {
+  const frame = document.getElementById('realmFrame');
+  if (!frame || !frame.contentWindow || event.source !== frame.contentWindow) return;
   const said = event.data;
   if (!said) return;
   /*
@@ -4072,9 +4206,168 @@ window.addEventListener('message', event => {
     dressAtlas(true);                    // and no glide: it has only just arrived
     return;
   }
+  if (said.rotmg === 'clouds') { dressSkySwitch(said); return; }
+  if (said.rotmg === 'panel') { besideAtlasPanel(said); return; }
+  /* A thing on the map, asked to be opened in the Index. The id is checked
+     by the same route the Index's own links go through. While the atlas is
+     open it is shown in a drawer over the atlas's panel rather than by
+     leaving the map, so putting it away is back where the reader was. */
+  if (said.rotmg === 'index') {
+    if (!RealmRoutes.indexHash(said.id)) return;
+    if (atlasOpenOut()) { openAtlasIndex(said.id, true); return; }
+    if (globeWide()) setGlobe(false);
+    window.openIndexRecord(said.id);
+    return;
+  }
   if (said.rotmg !== 'sky') return;
   if (globeWide()) setGlobe(false);
 });
+
+/*
+ * The clouds' switch, beside the cross. The atlas says when there is weather
+ * to put away and whether it has been, and draws nothing of it itself while
+ * it is framed; this draws the client's cloud off the atlas's own sheet,
+ * struck through while the sky is full.
+ */
+let skyClear = false;
+function dressSkySwitch(said) {
+  const button = document.getElementById('globeSky');
+  if (!button) return;
+  skyClear = Boolean(said.clear);
+  button.hidden = !said.can;
+  button.setAttribute('aria-pressed', String(skyClear));
+  const says = skyClear ? 'Show the clouds' : 'Hide the clouds';
+  button.title = says;
+  button.setAttribute('aria-label', says);
+  const art = button.querySelector('.globe-sky-art');
+  const icon = said.icon;
+  if (art && icon && Array.isArray(icon.cut) && Array.isArray(icon.sheet)
+    && /^https?:|^file:/.test(String(icon.src))) {
+    const k = 44 / icon.cut[2];
+    art.style.width = '44px';
+    art.style.height = Math.round(icon.cut[3] * k) + 'px';
+    art.style.backgroundImage = 'url("' + String(icon.src).replace(/"/g, '%22') + '")';
+    art.style.backgroundSize = (icon.sheet[0] * k) + 'px ' + (icon.sheet[1] * k) + 'px';
+    art.style.backgroundPosition = (-icon.cut[0] * k) + 'px ' + (-icon.cut[1] * k) + 'px';
+  }
+  if (art) art.classList.toggle('struck', !skyClear);
+}
+
+/*
+ * The atlas's panel, as the atlas reports it: open or not, and how wide. The
+ * cross and the clouds' switch stand beside it rather than on its heading and
+ * its own cross, and the Index drawer takes exactly its place.
+ */
+function besideAtlasPanel(said) {
+  const box = document.getElementById('globeBox');
+  if (!box) return;
+  const wide = said.open ? Math.max(0, Math.min(4000, Math.round(Number(said.wide) || 0))) : 0;
+  box.style.setProperty('--atlas-panel', wide + 'px');
+  box.classList.toggle('has-atlas-panel', Boolean(said.open) && wide > 0);
+  if (!said.open) shutAtlasIndex();
+}
+
+/* Open out over the page: the home ring's map, or the panel opened wide. */
+const atlasOpenOut = () => document.body.classList.contains('ring-away') || globeWide();
+
+/*
+ * The Index, without leaving the atlas.
+ *
+ * A drop or a creature in the atlas's panel used to open its Index page,
+ * which took the reader off the map - and back from there was the front page,
+ * with the zone and its panel gone. Now the Index's own card is drawn in a
+ * drawer that stands exactly over the atlas's panel. Links inside it walk on
+ * inside it, Back steps back through them to the zone, and the full Index is
+ * one button away for anyone who does want to go.
+ */
+const atlasIndexTrail = [];
+let atlasIndexAsk = 0;
+async function openAtlasIndex(id, fresh) {
+  const drawer = document.getElementById('atlasIndex');
+  const card = document.getElementById('atlasIndexCard');
+  const wait = document.getElementById('atlasIndexWait');
+  if (!drawer || !card) { window.openIndexRecord(id); return; }
+  const ask = ++atlasIndexAsk;
+  if (fresh) atlasIndexTrail.length = 0;
+  drawer.hidden = false;
+  if (wait) wait.hidden = false;
+  let got = null;
+  try {
+    await ensureIndexPage();
+    got = typeof RealmIndex !== 'undefined' && RealmIndex.card ? await RealmIndex.card(id) : null;
+  } catch (error) { console.error(error); }
+  if (ask !== atlasIndexAsk) return;           // a later one was asked for meanwhile
+  if (wait) wait.hidden = true;
+  if (!got) {
+    if (!atlasIndexTrail.length) shutAtlasIndex();
+    return;
+  }
+  if (atlasIndexTrail[atlasIndexTrail.length - 1] !== got.id) atlasIndexTrail.push(got.id);
+  card.innerHTML = got.html;
+  if (got.sheet) card.style.setProperty('--ix-sheet', got.sheet);
+  card.scrollTop = 0;
+  sayAtlasIndexBack();
+}
+function sayAtlasIndexBack() {
+  const back = document.getElementById('atlasIndexBack');
+  if (!back) return;
+  const deeper = atlasIndexTrail.length > 1;
+  for (const say of back.querySelectorAll('[data-back]')) say.hidden = (say.dataset.back === 'record') !== deeper;
+}
+function shutAtlasIndex() {
+  const drawer = document.getElementById('atlasIndex');
+  atlasIndexAsk++;
+  atlasIndexTrail.length = 0;
+  if (!drawer || drawer.hidden) return;
+  drawer.hidden = true;
+  const card = document.getElementById('atlasIndexCard');
+  if (card) card.innerHTML = '';
+}
+/* Leaving the atlas for somewhere else the card points at. */
+function leaveAtlasFor(go) {
+  shutAtlasIndex();
+  if (globeWide()) setGlobe(false);
+  go();
+}
+{
+  const drawer = document.getElementById('atlasIndex');
+  if (drawer) {
+    drawer.addEventListener('click', event => {
+      event.stopPropagation();             // not a click on the atlas's box
+      const here = atlasIndexTrail[atlasIndexTrail.length - 1];
+      if (event.target.closest('#atlasIndexBack')) {
+        atlasIndexTrail.pop();
+        const before = atlasIndexTrail.pop();
+        if (before) openAtlasIndex(before, false); else shutAtlasIndex();
+        return;
+      }
+      if (event.target.closest('#atlasIndexFull')) {
+        if (here) leaveAtlasFor(() => window.openIndexRecord(here));
+        return;
+      }
+      const open = event.target.closest('[data-open]');
+      if (open) { openAtlasIndex(open.dataset.open, false); return; }
+      const door = event.target.closest('[data-door]');
+      if (door && here && typeof RealmIndex !== 'undefined' && RealmIndex.door) {
+        leaveAtlasFor(() => RealmIndex.door(door.dataset.door, here));
+        return;
+      }
+      const skinDoor = event.target.closest('[data-skin-target]');
+      if (skinDoor && typeof window.openSkinViewerTarget === 'function') {
+        let target = null;
+        try { target = JSON.parse(decodeURIComponent(skinDoor.dataset.skinTarget)); }
+        catch (error) { console.error('Invalid Skin Viewer target', error); }
+        if (target) leaveAtlasFor(() => window.openSkinViewerTarget(target));
+      }
+    });
+    // Its keys are its own: Enter on one of its buttons is not the atlas's
+    // box being asked to open, and Escape puts the drawer away, not the atlas.
+    drawer.addEventListener('keydown', event => {
+      event.stopPropagation();
+      if (event.key === 'Escape') shutAtlasIndex();
+    });
+  }
+}
 
 function tellAtlas(what) {
   const frame = document.getElementById('realmFrame');
@@ -4096,49 +4389,6 @@ function placeGlobe(box, at) {
   box.style.left = at.left + 'px';
   box.style.width = at.width + 'px';
   box.style.height = at.height + 'px';
-}
-
-/*
- * The drifting realms are put on hold while the atlas has the page.
- *
- * Nothing of them can be seen behind a full-page map, and they are two
- * canvases being repainted and a row of sprites being animated - which is
- * work taken straight out of the frame budget of the thing you are actually
- * looking at. This is a hold rather than a setting: the switch's own state is
- * not touched, so putting the frame back brings them back exactly as they
- * were left.
- */
-let ambienceGoing = 0;
-function holdAmbience(hold) {
-  const host = document.getElementById('ambience');
-  if (!host) return;
-  clearTimeout(ambienceGoing);
-  if (hold) {
-    /*
-     * Faded, then stopped. The stylesheet takes the opacity down over the
-     * same time the frame takes to open; hiding it outright is what
-     * actually saves the work, so that waits until there is nothing left
-     * to see. Switched off on the spot it was a visible blink at the
-     * moment the frame started moving, which is the one moment there
-     * should be nothing to notice but the frame.
-     */
-    ambienceGoing = setTimeout(() => {
-      if (!globeWide()) return;          // put back before the fade ended
-      host.hidden = true;
-      clearInterval(ambience.timer);
-      clearInterval(ambience.scatterTimer);
-      ambience.timer = 0; ambience.scatterTimer = 0;
-    }, GLOBE_TAKES);
-    return;
-  }
-  if (!ambience.enabled) return;
-  /*
-   * And back the other way: there before it is asked to be seen, so the
-   * stylesheet has something to fade up. Restarted only if it was actually
-   * stopped, since the fade may never have finished.
-   */
-  host.hidden = false;
-  if (!ambience.timer) startAmbience();
 }
 
 /*
@@ -4221,7 +4471,6 @@ function setGlobe(open) {
     Ring.aside(open);
     paceAtlas();
     tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
-    holdAmbience(open);
     clearTimeout(globeSettling);
     /*
      * One journey, both ways.
@@ -4267,7 +4516,6 @@ function setGlobe(open) {
   globeMoving = true;
   paceAtlas();
   tellAtlas({ rotmg: 'settle', frames: GLOBE_FRAMES });
-  holdAmbience(open);
 
   /*
    * Going back in, the writing goes at once: it has no business in a panel
@@ -4302,35 +4550,50 @@ function setGlobe(open) {
   }, GLOBE_TAKES + 60);
 }
 
-/* Opened out, it is the window, so it follows the window. */
+/* Opened out, it is the window, so it follows the window - when it was pinned
+   there by hand. Opened from the ring it never was: the stylesheet already
+   makes it the window, and pinning it here wrote the size the window had at
+   the first resize into the box for good, so growing the window afterwards
+   left the map in a corner of it with the page's old sky showing beside. */
 window.addEventListener('resize', () => {
   const box = document.getElementById('globeBox');
-  if (box && globeWide()) placeGlobe(box, globeRoom());
+  if (box && globeWide() && box.style.position === 'fixed') placeGlobe(box, globeRoom());
 });
 const globeWide = () => document.body.classList.contains('globe-wide');
 let famePageReady = false;
+let famePageLoading = null;
 
-async function openFamePage() {
-  if (famePageReady) return;
-  famePageReady = true;
-  try {
-    const bundled = BUNDLE && BUNDLE.sources;
-    const text = bundled && bundled.fameText ? bundled.fameText
-      : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
-    const info = bundled && bundled.dungeonText ? bundled.dungeonText
-      : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
-    const overrides = bundled && bundled.overrideText ? bundled.overrideText
-      : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
-        .then(response => response.text()).catch(() => '');
-    // Kept so the background can scatter the same portals the page shows.
-    ambience.fameText = text;
-    FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides);
-    usePool('fame');
-  } catch (error) {
-    console.error(error);
-    famePageReady = false;
-    $('fameSummary').innerHTML = '<p class="note warn">Could not read the fame bonuses.</p>';
-  }
+function openFamePage() {
+  if (famePageReady) return Promise.resolve(true);
+  if (famePageLoading) return famePageLoading;
+
+  famePageLoading = (async () => {
+    try {
+      const bundled = BUNDLE && BUNDLE.sources;
+      const text = bundled && bundled.fameText ? bundled.fameText
+        : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
+      const info = bundled && bundled.dungeonText ? bundled.dungeonText
+        : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
+      const overrides = bundled && bundled.overrideText ? bundled.overrideText
+        : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
+          .then(response => response.text()).catch(() => '');
+
+      await Promise.resolve(
+        FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides)
+      );
+      famePageReady = true;
+      return true;
+    } catch (error) {
+      console.error(error);
+      famePageReady = false;
+      $('fameSummary').innerHTML = '<p class="note warn">Could not read the fame bonuses.</p>';
+      return false;
+    } finally {
+      famePageLoading = null;
+    }
+  })();
+
+  return famePageLoading;
 }
 
 /*
@@ -4347,6 +4610,145 @@ async function openFamePage() {
 /* Which page is already on screen, so that being asked for it again can be
    told apart from arriving at it. */
 let shownPage = null;
+let pageLoading = Promise.resolve();
+
+let theoryScriptLoading = null;
+function ensureTheoryPage() {
+  const run = () => {
+    if (typeof TheoryCraft === 'undefined') return false;
+    if (document.body.dataset.page !== 'theory') return true;
+    // TheoryCraft.start() owns the complete first-start promise, through its
+    // data loads, wiring and first paint. Keep the black cover attached to it.
+    return TheoryCraft.start();
+  };
+
+  if (typeof TheoryCraft !== 'undefined') return Promise.resolve(run());
+
+  if (!theoryScriptLoading) {
+    const placeholder = document.querySelector('script[data-lazy-src="theorycraft.js"]');
+    if (!placeholder) {
+      return Promise.reject(new Error('Theory Crafting script placeholder is missing.'));
+    }
+
+    theoryScriptLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = placeholder.dataset.lazySrc;
+      script.onload = resolve;
+      script.onerror = () => {
+        script.remove();
+        theoryScriptLoading = null;
+        reject(new Error('Could not load Theory Crafting.'));
+      };
+      placeholder.before(script);
+    });
+  }
+
+  return theoryScriptLoading.then(run);
+}
+
+let indexScriptLoading = null;
+function ensureIndexPage(open) {
+  const run = () => {
+    if (typeof RealmIndex === 'undefined') return false;
+    if (document.body.dataset.page !== 'index') return true;
+    // Both APIs expose the whole first-start promise. Keep that promise
+    // attached to the navigation so the black cover stays down through
+    // parsing, facet construction and the first Index render.
+    if (open) return RealmIndex.open(open);
+    return RealmIndex.start();
+  };
+
+  if (typeof RealmIndex !== 'undefined') return Promise.resolve(run());
+
+  if (!indexScriptLoading) {
+    const placeholder = document.querySelector('script[data-lazy-src="index-page.js"]');
+    if (!placeholder) {
+      return Promise.reject(new Error('Index script placeholder is missing.'));
+    }
+
+    indexScriptLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = placeholder.dataset.lazySrc;
+      script.onload = resolve;
+      script.onerror = () => {
+        script.remove();
+        indexScriptLoading = null;
+        reject(new Error('Could not load Index.'));
+      };
+      placeholder.before(script);
+    });
+  }
+
+  return indexScriptLoading.then(run);
+}
+
+let enchantPageLoading = null;
+function ensureEnchantPage() {
+  if (enchantPageLoading) return enchantPageLoading;
+
+  enchantPageLoading = Promise.resolve(appLoading)
+    .then(() => {
+      if (!state.ready) return false;
+      if (state.itemArt) return true;
+      return ensureItemArt().then(() => {
+        if (document.body.dataset.page === 'enchant') refresh();
+        return true;
+      });
+    })
+    .finally(() => {
+      enchantPageLoading = null;
+    });
+
+  return enchantPageLoading;
+}
+
+function ensureNewsPage() {
+  if (typeof WhatsNew === 'undefined') return Promise.resolve(false);
+  if (document.body.dataset.page !== 'news') return Promise.resolve(true);
+  return Promise.resolve(WhatsNew.init(BUNDLE && BUNDLE.whatsNew));
+}
+
+let skinPageLoading = null;
+function ensureSkinPage() {
+  const mount = () => {
+    if (!window.SkinViewer) return false;
+    if (document.body.dataset.page !== 'skins') return true;
+
+    return window.SkinViewer.mount(
+      $('skinViewerRoot'),
+      { integrated: true }
+    ).then(viewer => {
+      if (document.body.dataset.page === 'skins') viewer.setActive(true);
+      return true;
+    });
+  };
+
+  if (window.SkinViewer) return Promise.resolve(mount());
+  if (skinPageLoading) return skinPageLoading;
+
+  /*
+   * app.js is immediately before the Skin Viewer module in index.html.
+   * On a direct #skins cold start the parser has therefore not reached that
+   * module yet. DOMContentLoaded waits for module scripts, after which mount()
+   * either exists and exposes its whole createViewer promise, or the module
+   * genuinely failed and navigation is allowed to recover normally.
+   */
+  if (document.readyState !== 'loading') return Promise.resolve(false);
+
+  skinPageLoading = new Promise((resolve, reject) => {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.SkinViewer) {
+        resolve(false);
+        return;
+      }
+      Promise.resolve(mount()).then(resolve, reject);
+    }, { once: true });
+  }).finally(() => {
+    skinPageLoading = null;
+  });
+
+  return skinPageLoading;
+}
 
 function showPage(name) {
   const wideOpen = name === 'realm';
@@ -4357,30 +4759,58 @@ function showPage(name) {
     if (node) node.hidden = key !== page;
   }
   document.body.dataset.page = page;
-  pinRealm(page);
-  usePool(page);
-  if (page === 'fame') openFamePage();
+  // Navigation normally relies on settled() watching fetches and images.
+  // A dynamically inserted script is invisible to that watcher until it has
+  // finished downloading, so expose its own promise to the black cover.
+  pageLoading = Promise.resolve();
+  if (page === 'enchant') {
+    pageLoading = ensureEnchantPage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
+  if (page === 'fame') {
+    pageLoading = openFamePage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
   // What's New reads its own index the first time it is opened, the same way
   // Fame Sweep does: it is a megabyte of pictures and nobody who came for the
   // calculator should pay for it.
-  if (page === 'news' && typeof WhatsNew !== 'undefined') {
-    WhatsNew.init(BUNDLE && BUNDLE.whatsNew);
+  if (page === 'news') {
+    pageLoading = ensureNewsPage().catch(error => {
+      console.error(error);
+      return false;
+    });
   }
   /*
    * And the same for theory crafting, which is most of a megabyte of items,
    * enchantments and things to hit. It reads it once, the first time it is
    * asked for, and nobody who came for the enchanter pays for it.
    */
-  if (page === 'theory' && typeof TheoryCraft !== 'undefined') TheoryCraft.start();
+  if (page === 'theory') {
+    pageLoading = ensureTheoryPage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
   /*
    * And the index, which is three and a half megabytes of records: it is read
    * the first time somebody asks for it and not a moment before, the same way
    * the other two heavy pages are.
    */
-  if (page === 'index' && typeof RealmIndex !== 'undefined') RealmIndex.start();
-  if (page === 'skins' && window.SkinViewer) {
-    window.SkinViewer.mount($('skinViewerRoot'), { integrated: true })
-      .then(viewer => viewer.setActive(true)).catch(error => console.error(error));
+  if (page === 'index') {
+    pageLoading = ensureIndexPage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
+  if (page === 'skins') {
+    pageLoading = ensureSkinPage().catch(error => {
+      console.error(error);
+      return false;
+    });
   } else if (window.SkinViewer) {
     window.SkinViewer.unmount();
   }
@@ -4461,17 +4891,22 @@ function routeFromHash() {
    */
   const route = RealmRoutes.parse(location.hash);
   showPage(route.page);
-  if (route.page === 'index' && route.open && typeof RealmIndex !== 'undefined') {
-    RealmIndex.open(route.open);
+  if (route.page === 'index' && route.open) {
+    pageLoading = ensureIndexPage(route.open).catch(error => {
+      console.error(error);
+      return false;
+    });
   }
+  return pageLoading;
 }
 
 window.openIndexRecord = async function (id) {
-  if (typeof RealmIndex === 'undefined') return false;
   const hash = RealmRoutes.indexHash(id);
   if (!hash) return false;
   if (location.hash !== '#' + hash) location.hash = hash;
   showPage('index');
+  await ensureIndexPage();
+  if (typeof RealmIndex === 'undefined') return false;
   return RealmIndex.open(id);
 };
 
@@ -4580,7 +5015,7 @@ for (const image of document.querySelectorAll('[data-art]')) dressArt(image);
 
 
 bind();
-load();
+const appLoading = load();
 
 
 /* --------------------------------------------------------------------
@@ -5483,6 +5918,13 @@ function worldShare() {
      places the bell above it, and the bell is page furniture standing outside
      the arrangement. */
   document.body.style.setProperty('--core', Math.round(across) + 'px');
+  /* And the most room the world ever takes: the dark arc the bands stand off
+     at, or the world itself come forward under the cursor, whichever reaches
+     further. The name and the bell above it are sized against this rather
+     than against the world of the moment, so they never move while it
+     breathes and it never grows up into them. */
+  document.body.style.setProperty('--core-room',
+    Math.round(Math.max(geo.Ri * 2, geo.R * 2 * (1 + GROW))) + 'px');
   return across / Math.min(window.innerWidth, window.innerHeight);
 }
 
@@ -5651,8 +6093,13 @@ function chose(go) {
        cover stays down until that page is actually there - however long that
        takes - before opening again out of the module it grew from. */
     location.hash = go;
-    routeFromHash();
-    settled(() => veil(go, 1, 0, shed));
+    const ready = routeFromHash();
+    // Keep the cover fully shut while a lazy page script itself is arriving.
+    // Once it has run, settled() takes over and waits for the fetches/images
+    // that page started before the cover opens again.
+    Promise.resolve(ready).finally(() => {
+      settled(() => veil(go, 1, 0, shed));
+    });
   });
 }
 
@@ -5678,6 +6125,8 @@ function shed() {
   if (!cover) return;
   cover.remove();
   cover = null; coverPath = null; shutFade = null; shutRect = null;
+  // Deferred page work can now run without stealing frames from the reveal.
+  window.dispatchEvent(new Event('rotmgtransitionend'));
 }
 
 /*

@@ -602,5 +602,17 @@
   "index.picture.clientArt": "le propre art du jeu",
   "index.picture.givenSkin": "la peau qu'il te donne",
   "index.picture.piece": "une de ses pièces",
-  "index.source.notDeclared": "non déclaré dans le client"
+  "index.source.notDeclared": "non déclaré dans le client",
+  "static.hide.the.clouds": "Masquer les nuages",
+  "static.send.build.to.enchant": "envoyer le build à l’enchantement",
+  "static.send.build.to.enchant.title": "Ouvrir chaque objet de ce build, avec ses enchantements, dans un nouvel onglet du calculateur d’enchantement",
+  "static.show.the.clouds": "Afficher les nuages",
+  "static.alternative.builds": "Builds alternatifs",
+  "static.drag.to.widen": "glisser pour élargir · double-clic pour réinitialiser",
+  "static.back.to.the.zone": "Retour à la zone",
+  "static.back": "Retour",
+  "static.open.in.the.index": "Ouvrir dans l'Index",
+  "static.reading.the.index": "Lecture de l'Index…",
+  "static.index.record": "Fiche de l'Index",
+  "static.leave.the.atlas.for.index": "Quitter l'atlas pour la page Index de cette fiche"
 }

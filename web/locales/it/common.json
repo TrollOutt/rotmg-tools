@@ -602,5 +602,17 @@
   "index.picture.clientArt": "l'arte stessa del gioco",
   "index.picture.givenSkin": "la pelle che ti dà",
   "index.picture.piece": "uno dei suoi pezzi",
-  "index.source.notDeclared": "non dichiarato nel client"
+  "index.source.notDeclared": "non dichiarato nel client",
+  "static.hide.the.clouds": "Nascondi le nuvole",
+  "static.send.build.to.enchant": "invia build all’incantamento",
+  "static.send.build.to.enchant.title": "Apri ogni oggetto di questa build, con i suoi incantesimi, in una nuova scheda del calcolatore di incantamenti",
+  "static.show.the.clouds": "Mostra le nuvole",
+  "static.alternative.builds": "Build alternative",
+  "static.drag.to.widen": "trascina per allargare · doppio clic per ripristinare",
+  "static.back.to.the.zone": "Torna alla zona",
+  "static.back": "Indietro",
+  "static.open.in.the.index": "Apri nell'Index",
+  "static.reading.the.index": "Lettura dell'Index…",
+  "static.index.record": "Voce dell'Index",
+  "static.leave.the.atlas.for.index": "Lascia l'atlante per la pagina Index di questa voce"
 }

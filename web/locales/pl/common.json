@@ -602,5 +602,17 @@
   "index.picture.clientArt": "grafika własna gry",
   "index.picture.givenSkin": "skórę, którą ci daje",
   "index.picture.piece": "jeden z jego kawałków",
-  "index.source.notDeclared": "nie zadeklarowany w kliencie"
+  "index.source.notDeclared": "nie zadeklarowany w kliencie",
+  "static.hide.the.clouds": "Ukryj chmury",
+  "static.send.build.to.enchant": "wyślij build do zaklinania",
+  "static.send.build.to.enchant.title": "Otwórz każdy przedmiot tego buildu, z jego zaklęciami, w osobnej nowej karcie kalkulatora zaklinania",
+  "static.show.the.clouds": "Pokaż chmury",
+  "static.alternative.builds": "Alternatywne buildy",
+  "static.drag.to.widen": "przeciągnij, aby poszerzyć · kliknij dwukrotnie, aby przywrócić",
+  "static.back.to.the.zone": "Powrót do strefy",
+  "static.back": "Wstecz",
+  "static.open.in.the.index": "Otwórz w Index",
+  "static.reading.the.index": "Wczytywanie Index…",
+  "static.index.record": "Wpis w Index",
+  "static.leave.the.atlas.for.index": "Opuść atlas na stronę Index tego wpisu"
 }

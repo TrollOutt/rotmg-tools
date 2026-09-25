@@ -504,6 +504,30 @@ check('and it can be planned alongside another goal', (() => {
   return plan && plan.feasible === true && Number.isFinite(plan.dust);
 })());
 
+check('the multi-goal planner respects the accepted tiers', (() => {
+  const goals = ['Mana -any Tradeoff', 'Attack Bonus'];
+  const artifacts = [artifact('No Artifact')];
+  const make = tiers => baseCfg({
+    type: 'ARMOR',
+    item: '',
+    desired: goals[0],
+    goals: [goals[1]],
+    tiers: new Set(tiers)
+  });
+
+  const allCfg = make([1, 2, 3, 4]);
+  const tier4Cfg = make([4]);
+  const all = engine.planGoals(data, allCfg, goals, { artifacts });
+  const tier4 = engine.planGoals(data, tier4Cfg, goals, { artifacts });
+  const togetherAll = engine.planSimultaneous(data, allCfg, goals, { artifacts });
+  const togetherTier4 = engine.planSimultaneous(data, tier4Cfg, goals, { artifacts });
+
+  return all && all.feasible && tier4 && tier4.feasible
+    && togetherAll && togetherTier4
+    && tier4.dust > all.dust
+    && togetherTier4.dust > togetherAll.dust;
+})());
+
 
 /* ------------------------------------------------------------------ *
  * 3. Incompatibility direction                                        *

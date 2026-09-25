@@ -634,11 +634,26 @@ var EnchantEngine = (function () {
    * the roll gives. Every member of such a family is then one class of its own
    * with the same goal bit, so the walk needs no other change.
    */
-  function goalDistribution(pool, artifact, rolls, goalSets, blockingLabels, budget) {
+  function goalDistribution(pool, artifact, rolls, goalSets, blockingLabels, budget, acceptedTiers) {
     const goalIds = new Set();
     const bitOfId = new Map();
+    const acceptedById = new Map();
+    const tiers = acceptedTiers ? asSet(acceptedTiers) : null;
     goalSets.forEach((set, index) => {
-      for (const mod of set) { goalIds.add(mod.id); bitOfId.set(mod.id, 1 << index); }
+      for (const mod of set) {
+        goalIds.add(mod.id);
+        bitOfId.set(mod.id, 1 << index);
+        // No tier filter, or every tier selected, means the whole rolled
+        // enchantment is acceptable. This must be exactly 1 even when the
+        // client's rounded tier shares add up to 0.99999.
+        const acceptsEveryTier = !tiers || !mod.tags.has('TIERED')
+          || mod.distribution.every((_, index) => tiers.has(index + 1));
+        const share = acceptsEveryTier ? 1 : tierMultiplier(mod, artifact, tiers);
+        acceptedById.set(mod.id,
+          Math.abs(share - 1) < 1e-12 ? 1
+            : Math.abs(share) < 1e-12 ? 0
+              : Math.max(0, Math.min(1, share)));
+      }
     });
     const size = 1 << goalSets.length;
     const full = size - 1;
@@ -652,6 +667,8 @@ var EnchantEngine = (function () {
     const tagMask = classes.map(entry => entry.tagMask);
     const excludeMask = classes.map(entry => entry.excludeMask);
     const goalBit = classes.map(entry => entry.goalId === null ? 0 : (bitOfId.get(entry.goalId) || 0));
+    const goalAccept = classes.map(entry => entry.goalId === null ? 1
+      : (acceptedById.has(entry.goalId) ? acceptedById.get(entry.goalId) : 1));
     const remaining = classes.map(entry => entry.count);
 
     const memo = new Map();
@@ -686,11 +703,27 @@ var EnchantEngine = (function () {
       for (let i = 0; i < count; i++) {
         if (!remaining[i] || (excludeMask[i] & active)) continue;
         const chance = weight[i] * remaining[i] / total;
-        const nextAchieved = achieved | goalBit[i];
-        if (nextAchieved === full) { local[full] += chance; continue; }
+        const bit = goalBit[i];
+        const acceptance = bit && !(bit & achieved) ? goalAccept[i] : 1;
+
         remaining[i]--;
         insert(i);
-        walk(left - 1, active | tagMask[i], nextAchieved, local, chance);
+
+        if (bit && !(bit & achieved) && acceptance < 1) {
+          if (acceptance > 0) {
+            const nextAchieved = achieved | bit;
+            if (nextAchieved === full) local[full] += chance * acceptance;
+            else walk(left - 1, active | tagMask[i], nextAchieved, local, chance * acceptance);
+          }
+          if (acceptance < 1) {
+            walk(left - 1, active | tagMask[i], achieved, local, chance * (1 - acceptance));
+          }
+        } else {
+          const nextAchieved = achieved | bit;
+          if (nextAchieved === full) local[full] += chance;
+          else walk(left - 1, active | tagMask[i], nextAchieved, local, chance);
+        }
+
         remove(i);
         remaining[i]++;
       }
@@ -707,17 +740,34 @@ var EnchantEngine = (function () {
    * its node budget, which the class collapse makes very unlikely; the caller
    * is told so it can label the number as an estimate rather than a fact.
    */
-  function sampledDistribution(pool, artifact, rolls, goalSets, blockingLabels, seedText, samples) {
+  function sampledDistribution(pool, artifact, rolls, goalSets, blockingLabels, seedText, samples, acceptedTiers) {
     const goalIds = new Set();
     const bitOfId = new Map();
+    const acceptedById = new Map();
+    const tiers = acceptedTiers ? asSet(acceptedTiers) : null;
     goalSets.forEach((set, index) => {
-      for (const mod of set) { goalIds.add(mod.id); bitOfId.set(mod.id, 1 << index); }
+      for (const mod of set) {
+        goalIds.add(mod.id);
+        bitOfId.set(mod.id, 1 << index);
+        // No tier filter, or every tier selected, means the whole rolled
+        // enchantment is acceptable. This must be exactly 1 even when the
+        // client's rounded tier shares add up to 0.99999.
+        const acceptsEveryTier = !tiers || !mod.tags.has('TIERED')
+          || mod.distribution.every((_, index) => tiers.has(index + 1));
+        const share = acceptsEveryTier ? 1 : tierMultiplier(mod, artifact, tiers);
+        acceptedById.set(mod.id,
+          Math.abs(share - 1) < 1e-12 ? 1
+            : Math.abs(share) < 1e-12 ? 0
+              : Math.max(0, Math.min(1, share)));
+      }
     });
     const size = 1 << goalSets.length;
     const result = new Float64Array(size);
     const { classes } = buildClasses(pool, artifact, goalIds, blockingLabels);
     const count = classes.length;
     const goalBit = classes.map(entry => entry.goalId === null ? 0 : (bitOfId.get(entry.goalId) || 0));
+    const goalAccept = classes.map(entry => entry.goalId === null ? 1
+      : (acceptedById.has(entry.goalId) ? acceptedById.get(entry.goalId) : 1));
     let seed = [...String(seedText)].reduce((value, ch) => ((value * 31) + ch.charCodeAt(0)) >>> 0, 2166136261);
     const random = () => ((seed = (1664525 * seed + 1013904223) >>> 0) / 4294967296);
     const total = samples || 20000;
@@ -736,7 +786,11 @@ var EnchantEngine = (function () {
           if (pick <= 0) { chosen = i; break; }
         }
         if (chosen < 0) break;
-        achieved |= goalBit[chosen];
+        const bit = goalBit[chosen];
+        if (bit && !(bit & achieved)) {
+          const acceptance = goalAccept[chosen];
+          if (acceptance >= 1 || (acceptance > 0 && random() < acceptance)) achieved |= bit;
+        }
         active |= classes[chosen].tagMask;
         remaining[chosen]--;
       }
@@ -768,11 +822,11 @@ var EnchantEngine = (function () {
     }
     const rolls = rollsRemaining(cfg);
     try {
-      const exact = goalDistribution(pool, artifact, rolls, goalMods, data.blockingLabels, settings.budget);
+      const exact = goalDistribution(pool, artifact, rolls, goalMods, data.blockingLabels, settings.budget, settings.acceptedTiers);
       return Object.assign(exact, { pool });
     } catch (error) {
       const seed = `${artifact.name}|${goalNames.join('+')}|${cfg.item}|${cfg.locks.join('+')}|${rolls}`;
-      const sampled = sampledDistribution(pool, artifact, rolls, goalMods, data.blockingLabels, seed, settings.samples);
+      const sampled = sampledDistribution(pool, artifact, rolls, goalMods, data.blockingLabels, seed, settings.samples, settings.acceptedTiers);
       return Object.assign(sampled, { pool });
     }
   }
@@ -976,6 +1030,7 @@ var EnchantEngine = (function () {
    */
   function planGoals(data, cfg, goalNames, options) {
     const settings = options || {};
+    const planSettings = Object.assign({}, settings, { acceptedTiers: cfg.tiers });
     const goals = goalNames.filter(Boolean);
     const count = goals.length;
     if (!count) return null;
@@ -1007,7 +1062,7 @@ var EnchantEngine = (function () {
         let best = null;
 
         for (const artifact of artifacts) {
-          const result = distributionFor(data, stateCfg, artifact, pending, settings);
+          const result = distributionFor(data, stateCfg, artifact, pending, planSettings);
           if (result.exact === false) exact = false;
           const cost = perReroll + (artifact.cost.dust === cfg.dust ? artifact.cost.value * lockMultiplier : 0);
 
@@ -1074,7 +1129,48 @@ var EnchantEngine = (function () {
         const outcome = step.rejected.find(entry => entry.sub === alone);
         if (outcome && outcome.probability > 0) declined.push({ name: step.pending[bit], chance: outcome.probability * 100 });
       }
-      path.push({
+
+      // Expose the complete conditional policy for this displayed state.
+      // An accepted outcome may still lock only part of what rolled; a rejected
+      // outcome means throw the whole result back and reroll.
+      const lockedNow = names(mask);
+      const decisionFor = (outcome, accepted) => {
+        const rolled = [];
+        for (let bit = 0; bit < step.pending.length; bit++) {
+          if (outcome.sub & (1 << bit)) rolled.push(step.pending[bit]);
+        }
+
+        const lock = accepted
+          ? names(outcome.next).filter(name => !lockedNow.includes(name))
+          : [];
+        const reroll = rolled.filter(name => !lock.includes(name));
+
+        return {
+          rolled,
+          lock,
+          reroll,
+          chance: outcome.probability * 100,
+          action: accepted ? (reroll.length ? 'partial' : 'lock') : 'reroll'
+        };
+      };
+
+      const actionOrder = { lock: 0, partial: 1, reroll: 2 };
+      const decisions = [
+        ...step.accepted.map(outcome => decisionFor(outcome, true)),
+        ...step.rejected.map(outcome => decisionFor(outcome, false))
+      ].sort((a, b) =>
+        actionOrder[a.action] - actionOrder[b.action]
+        || b.chance - a.chance
+      );
+
+      // A singleton accepted on its own is an honest "hunt now" target.
+      // If none exists, the UI falls back to the most likely accepted result.
+      const hunt = decisions
+        .filter(decision => decision.action === 'lock' && decision.rolled.length === 1)
+        .flatMap(decision => decision.lock)
+        .filter((name, index, all) => all.indexOf(name) === index);
+
+      const pathStep = {
         locked: names(mask),
         pending: step.pending,
         artifact: step.artifact,
@@ -1088,7 +1184,16 @@ var EnchantEngine = (function () {
         likelyChance: likely ? likely.probability * 100 : 0,
         throwsBack,
         declined
+      };
+
+      // Presentation metadata: available to the live UI without changing the
+      // enumerable planner output recorded by the historical rules corpus.
+      Object.defineProperties(pathStep, {
+        decisions: { value: decisions, enumerable: false },
+        hunt: { value: hunt, enumerable: false }
       });
+
+      path.push(pathStep);
       mask = likely ? likely.next : states - 1;
     }
 
@@ -1099,10 +1204,11 @@ var EnchantEngine = (function () {
   // Useful as a sanity contrast: it is always at least as expensive as the
   // lock-as-you-go policy, and usually far worse.
   function planSimultaneous(data, cfg, goalNames, options) {
-    const artifacts = (options && options.artifacts) || data.artifacts;
+    const settings = Object.assign({}, options || {}, { acceptedTiers: cfg.tiers });
+    const artifacts = settings.artifacts || data.artifacts;
     let best = null;
     for (const artifact of artifacts) {
-      const result = oddsAll(data, cfg, artifact, goalNames, options);
+      const result = oddsAll(data, cfg, artifact, goalNames, settings);
       if (!(result.odds > 0)) continue;
       const cost = costFor(cfg, result.odds, artifact, cfg.dust);
       if (!best || cost.dust < best.dust) best = Object.assign({ artifact, odds: result.odds, exact: result.exact }, cost);
