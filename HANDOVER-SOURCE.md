@@ -209,3 +209,36 @@ ICECAVE nor NEST was guessed, and no new community source was added.
 The corpus is `tests/rules-corpus.json`; ordinary tests never rewrite it.
 `node tests/rules-corpus.js --record` is only for a reviewed source/rule change.
 No git commit or publication was made as part of this work.
+
+## Future client update acceptance
+
+A successful command is not enough to accept a client update.
+
+For every newly added or materially changed client item:
+
+1. Identify the canonical Index record and preserve its client working name /
+   alias separately from its displayed canonical name.
+
+2. Run the normal Index projections. Do not maintain duplicate module-specific
+   lists by hand.
+
+3. Check eligibility rather than requiring universal membership:
+   - Theory Crafting: compatible gear must be available to the manual picker.
+     Personal progression may still exclude an item whose acquisition is unknown.
+   - Enchanting: only client-enchantable items belong in the calculator.
+   - Other specialised modules include the record only when their own contract
+     applies.
+
+4. Verify the generated file AND the served runtime. A record present in
+   `web/assets/...` but absent from the preview response is not a successful
+   integration.
+
+5. Run the deterministic tests after real source/projection changes.
+
+Community data is a separate update:
+- never use gear Drops From as Blueprint Drops From;
+- accept only explicit Blueprint Drops From / Blueprint Obtained Through;
+- deduplicate Blueprint identities before work;
+- for update deltas, fetch exact relevant gear pages only;
+- do not launch a whole-site RealmEye crawl merely to discover new Blueprint
+  sources.

@@ -10,3 +10,9 @@
 - Record incidents in `LESSONS.md`, then turn recurring failures into a rule, preflight, or regression test.
 - Provider health is lightweight and durable in `.ai/provider-health.json`: record provider, status (`healthy`, `temporarily_unavailable`, or `unknown`), reason, and timestamp. Usage, session, rate, and transport failures pause repeated retries; a later success restores `healthy`, and no provider is permanently blacklisted.
 - DeepSeek defaults to read-only scouting and may provide low/medium review fallback. Prefer cross-provider reviews; high-risk changes use the designated primary reviewer and an independent cross-provider review when available.
+
+- Client-update tasks must follow `HANDOVER-SOURCE.md`; generated module
+  catalogues are projections of the Index, not independently maintained sources.
+- A normal client update must not trigger a full-site RealmEye crawl. Community
+  enrichment is targeted to exact justified pages, and Blueprint acquisition
+  requires explicit Blueprint-specific evidence.
