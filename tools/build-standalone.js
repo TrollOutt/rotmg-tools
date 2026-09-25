@@ -725,6 +725,14 @@ fs.copyFileSync(path.join(web, 'i18n.js'), path.join(pagesDir, 'i18n.js'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
 fs.writeFileSync(path.join(pagesDir, 'assets', 'theory', 'progression.json'), sources.realmLootText + '\n');
+
+/*
+ * The Atlas normally receives this through its parent bundle. Keep the same
+ * compact Realm data at its standalone HTTP fallback too, so the served Atlas
+ * does not depend on parent timing or an old cached host page.
+ */
+fs.writeFileSync(path.join(pagesDir, 'realmeye-data.json'), sources.realmLootText + '\n');
+
 fs.copyFileSync(path.join(root, 'data', 'TheoryCraft', 'theorycraft.json'),
   path.join(pagesDir, 'assets', 'theory', 'theorycraft.json'));
 /*
