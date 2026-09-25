@@ -3,7 +3,7 @@
  * in a biome does not make that dungeon's loot accessible in the biome. */
 var BuildProgression = (function () {
   'use strict';
-  function catalogue(index, wiki, items, realm, dungeonText = '') {
+  function catalogue(index, wiki, items, realm, dungeonText = '', enrichment = null) {
     const ratings = new Map();
     const ratingKey = value => value.toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
     for (const line of dungeonText.split(/\r?\n/)) {
@@ -85,15 +85,28 @@ var BuildProgression = (function () {
       'abandoned-city': (records.get('enemy:Captured Abandoned Beacon') || {}).art,
       'deep-sea-abyss': (records.get('enemy:Captured Abyssal Beacon') || {}).art
     };
+    /*
+     * The biomes the client has no place record for - the seasonal ones, and
+     * the plains and forests the Index knows only from the community - are
+     * still records in the Index, added from the community file. Found here by
+     * name, so such a biome shows the picture the Index shows and opens the
+     * Index page about it, instead of being a bare name that goes nowhere.
+     */
+    const communityPlaces = new Map();
+    for (const [id, one] of Object.entries((enrichment && enrichment.records) || {})) {
+      if (!/^place:/.test(id)) continue;
+      communityPlaces.set(slugOf(one.name || id.slice(6)), { id, icon: one.sprite });
+    }
     for (const biome of Object.values((realm || {}).biomes || {})) {
       const existing = [...zones.values()].find(z => z.kind === 'biome' && slugOf(z.name) === biome.slug);
       const key = existing ? existing.id : (aliases[biome.slug] || 'biome:' + biome.slug);
       const page = pageBySlug.get(biome.slug);
       const name = (zones.get(key) || {}).name || (wiki.pages[page] || [])[1]
         || biome.slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      zones.set(key, { id: key, index: (zones.get(key) || {}).index, name, kind: 'biome', rank: biome.rank,
+      const community = communityPlaces.get(slugOf(name)) || communityPlaces.get(biome.slug) || {};
+      zones.set(key, { id: key, index: (zones.get(key) || {}).index || community.id, name, kind: 'biome', rank: biome.rank,
         art: (zones.get(key) || {}).art || biomeArt[biome.slug],
-        icon: (zones.get(key) || {}).icon });
+        icon: (zones.get(key) || {}).icon || community.icon });
       biomeIds.set(biome.id, key);
       if (page !== undefined) addPage(page, key);
     }

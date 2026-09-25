@@ -402,6 +402,12 @@ for (const one of cut) {
   for (let slot = 0; slot < one.frames && slot < one.tiles.length; slot++) {
     cells.push({ x: one.px + slot * one.w, y: one.py, w: one.w, h: one.h });
   }
+  /*
+   * Keep the visible window of every frame too. The picker and the fight may
+   * show only the walk/idle run; an enormous attack frame must not make that
+   * displayed animation look tiny.
+   */
+  one.visibleFrames = cells.map(cell => cellAlphaBounds(sheet, WIDE, cell));
   const visible = visibleBounds(sheet, WIDE, cells);
   if (visible && (visible.x || visible.y || visible.w !== one.w || visible.h !== one.h)) {
     one.visible = visible;
@@ -420,7 +426,8 @@ facts.sheet = {
     ...(one.tilt ? { tilt: one.tilt } : {}),
     ...(one.spin ? { spin: one.spin } : {}),
     ...(one.poses ? { poses: one.poses } : {}),
-    ...(one.visible ? { visible: one.visible } : {})
+    ...(one.visible ? { visible: one.visible } : {}),
+    ...(one.visibleFrames ? { visibleFrames: one.visibleFrames } : {})
   }]))
 };
 

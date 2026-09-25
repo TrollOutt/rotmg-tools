@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "send build til fortryllelse",
   "static.send.build.to.enchant.title": "Åbn hver genstand i dette build med dens fortryllelser i sin egen nye fane i fortryllelsesberegneren",
   "static.show.the.clouds": "Vis skyerne",
+  "static.switch.to.the.light.theme": "Skift til lyst tema",
+  "static.switch.to.the.dark.theme": "Skift til mørkt tema",
   "static.alternative.builds": "Alternative builds",
   "static.drag.to.widen": "træk for at gøre bredere · dobbeltklik for at nulstille",
   "static.back.to.the.zone": "Tilbage til zonen",

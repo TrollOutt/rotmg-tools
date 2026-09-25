@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "Build zur Verzauberung senden",
   "static.send.build.to.enchant.title": "Jeden Gegenstand dieses Builds mit seinen Verzauberungen in einem eigenen neuen Tab des Verzauberungsrechners öffnen",
   "static.show.the.clouds": "Wolken einblenden",
+  "static.switch.to.the.light.theme": "Zum hellen Design wechseln",
+  "static.switch.to.the.dark.theme": "Zum dunklen Design wechseln",
   "static.alternative.builds": "Alternative Builds",
   "static.drag.to.widen": "ziehen zum Verbreitern · Doppelklick zum Zurücksetzen",
   "static.back.to.the.zone": "Zurück zur Zone",

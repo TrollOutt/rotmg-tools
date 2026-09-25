@@ -37,8 +37,8 @@ const templateGuards =
 
 assert.equal(
   templateListeners,
-  4,
-  'LINK-003 Atlas template has four message channels (settle, clear-sky, pace, bare)'
+  5,
+  'LINK-003 Atlas template has five message channels (settle, clear-sky, pace, bare, panel-width)'
 );
 
 assert.equal(
@@ -55,7 +55,7 @@ const builtGuards =
 
 assert.equal(
   builtListeners,
-  4,
+  5,
   'LINK-004 published Atlas has the expected message channels'
 );
 

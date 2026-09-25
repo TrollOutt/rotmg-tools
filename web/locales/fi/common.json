@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "lähetä build lumoukseen",
   "static.send.build.to.enchant.title": "Avaa tämän buildin jokainen esine lumouksineen omaan uuteen lumouslaskurin välilehteen",
   "static.show.the.clouds": "Näytä pilvet",
+  "static.switch.to.the.light.theme": "Vaihda vaaleaan teemaan",
+  "static.switch.to.the.dark.theme": "Vaihda tummaan teemaan",
   "static.alternative.builds": "Vaihtoehtoiset buildit",
   "static.drag.to.widen": "vedä leventääksesi · kaksoisnapsauta palauttaaksesi",
   "static.back.to.the.zone": "Takaisin alueelle",

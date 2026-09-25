@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "yapıyı büyülemeye gönder",
   "static.send.build.to.enchant.title": "Bu yapının her eşyasını büyüleriyle birlikte büyü hesaplayıcısında ayrı bir yeni sekmede aç",
   "static.show.the.clouds": "Bulutları göster",
+  "static.switch.to.the.light.theme": "Açık temaya geç",
+  "static.switch.to.the.dark.theme": "Koyu temaya geç",
   "static.alternative.builds": "Alternatif yapılar",
   "static.drag.to.widen": "genişletmek için sürükleyin · sıfırlamak için çift tıklayın",
   "static.back.to.the.zone": "Bölgeye dön",

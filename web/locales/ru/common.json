@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "отправить билд в зачарование",
   "static.send.build.to.enchant.title": "Открыть каждый предмет билда с его зачарованиями в отдельной новой вкладке калькулятора зачарований",
   "static.show.the.clouds": "Показать облака",
+  "static.switch.to.the.light.theme": "Переключить на светлую тему",
+  "static.switch.to.the.dark.theme": "Переключить на тёмную тему",
   "static.alternative.builds": "Альтернативные билды",
   "static.drag.to.widen": "потяните, чтобы расширить · двойной щелчок для сброса",
   "static.back.to.the.zone": "Назад к зоне",
