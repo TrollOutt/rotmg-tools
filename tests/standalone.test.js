@@ -21,9 +21,65 @@ for (const version of [served, offline]) {
 }
 assert(JSON.parse(offline.data.sources.realmLootText).creatures, 'Biome loot evidence missing');
 assert.equal(read('docs/assets/theory/progression.json').trim(), offline.data.sources.realmLootText);
-const index = read('data/Index/index.json').replace(/\r\n/g, '\n');
+const privateIndex = JSON.parse(read('data/Index/index.json'));
+const publicIndex = JSON.parse(offline.data.sources.indexText);
+const servedIndex = JSON.parse(read('docs/assets/index/index.json'));
+
+function publicIndexProjection(source) {
+  const out = JSON.parse(JSON.stringify(source));
+
+  delete out.files;
+  delete out.from;
+
+  for (const one of out.records || []) {
+    delete one.from;
+    delete one.also;
+    for (const fold of one.folds || []) delete fold.from;
+  }
+
+  return out;
+}
+
+assert(
+  privateIndex.records.some(one => one.from),
+  'Private local Index must retain client provenance'
+);
+
+assert.deepEqual(
+  publicIndex,
+  publicIndexProjection(privateIndex),
+  'Download must contain only the public Index projection'
+);
+
+assert.deepEqual(
+  servedIndex,
+  publicIndex,
+  'Served and downloadable public Index projections must match'
+);
+
+for (const [where, index] of [
+  ['download', publicIndex],
+  ['served', servedIndex]
+]) {
+  assert(!Object.hasOwn(index, 'files'), where + ': client file table must stay private');
+  assert(!Object.hasOwn(index, 'from'), where + ': build source metadata must stay private');
+
+  for (const one of index.records || []) {
+    assert(!Object.hasOwn(one, 'from'), where + ': record source address must stay private');
+    assert(!Object.hasOwn(one, 'also'), where + ': duplicate source addresses must stay private');
+
+    for (const fold of one.folds || []) {
+      assert(!Object.hasOwn(fold, 'from'), where + ': folded source address must stay private');
+    }
+  }
+
+  assert(
+    !/Objects\.\d+\.xml/i.test(JSON.stringify(index)),
+    where + ': client document names must never be published'
+  );
+}
+
 const theory = read('data/TheoryCraft/theorycraft.json').replace(/\r\n/g, '\n');
-assert.equal(offline.data.sources.indexText.trim(), index.trim());
 assert.equal(offline.data.sources.theoryText.trim(), theory.trim());
 assert.equal(read('docs/assets/theory/theorycraft.json').trim(), theory.trim());
 assert(offline.data.theorySheet.startsWith('data:image/png;base64,'));

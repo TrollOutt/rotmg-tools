@@ -103,6 +103,33 @@ const readText = (...parts) =>
  * 1. Data                                                           *
  * ---------------------------------------------------------------- */
 
+/*
+ * Public Index projection.
+ *
+ * Client document names and numeric object/type addresses are build-time
+ * provenance only. They remain in data/Index/index.json for local tooling but
+ * must never be embedded in, or copied to, the published site.
+ */
+function publicIndexText() {
+  const index = JSON.parse(readText('Index', 'index.json'));
+
+  delete index.files;
+  delete index.from;
+
+  for (const one of index.records || []) {
+    delete one.from;
+    delete one.also;
+
+    for (const fold of one.folds || []) {
+      delete fold.from;
+    }
+  }
+
+  return JSON.stringify(index);
+}
+
+const servedIndexText = publicIndexText();
+
 const sources = {
   clientModText: readText('Enchantment documents', 'client-enchantments.txt'),
   clientItemText: readText('Items', 'client-items.txt'),
@@ -123,7 +150,7 @@ const sources = {
    * that page. One file that works with no server is the whole point of the
    * offline copy; a page in it that cannot answer is worse than the weight.
    */
-  indexText: readText('Index', 'index.json'),
+  indexText: servedIndexText,
   /*
    * And the community join beside it: which of our records has a page on the
    * wiki, and what players have written down about where things come from.
@@ -713,6 +740,15 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  * one thing on the site that lives beside the page instead of inside it.
  */
 carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+
+/*
+ * carryAcross copied the development Index. Replace it with the public
+ * projection before anything can be uploaded by Pages.
+ */
+fs.writeFileSync(
+  path.join(pagesDir, 'assets', 'index', 'index.json'),
+  servedIndexText + '\n'
+);
 
 /*
  * Skin Viewer stays modular on the served site. Copy both its runtime modules

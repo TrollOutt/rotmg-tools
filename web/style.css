@@ -3171,8 +3171,6 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 }
 .enchant-optimizer #itemOptimizeHint { margin: 0; flex: 1 1 auto; min-width: 0; }
 .enchant-optimizer .tc-calc-row .tc-run { flex: none; }
-.enchant-optimizer .tc-said { flex: 0 0 100%; width: 100%; }
-.enchant-optimizer .tc-said:empty { display: none; }
 
 /*
  * What is asked for, the artifacts allowed and Explain these odds, inside the

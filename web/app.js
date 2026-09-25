@@ -910,7 +910,23 @@ function renderItemOptimizer(config) {
 
   hint.classList.remove('warn');
 
-  if (!state.theory) {
+  /*
+   * Optimization feedback reuses the existing hint line instead of adding a
+   * second row under the card. That keeps the whole page fixed vertically.
+   */
+  const optimizeSaid = state.itemOptimizeSaid || '';
+  const showOptimizeSaid =
+    state.itemOptimizeRunning ||
+    /^Selected /.test(optimizeSaid) ||
+    /could not be loaded/.test(optimizeSaid);
+
+  if (showOptimizeSaid) {
+    hint.textContent = optimizeSaid;
+    if (/could not be loaded/.test(optimizeSaid)) {
+      hint.classList.add('warn');
+    }
+
+  } else if (!state.theory) {
     hint.textContent =
       'Build mechanics load only when you press Optimize.';
 
@@ -951,8 +967,6 @@ function renderItemOptimizer(config) {
         : 'Only this item is optimized. All available slots may be replaced.';
   }
 
-  $('itemOptimizeSaid').textContent =
-    state.itemOptimizeSaid || '';
 }
 
 function itemOptimizerGoal() {

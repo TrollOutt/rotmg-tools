@@ -81,7 +81,6 @@ const indexUi = {
   'index.biome.lootAvailable': 'Loot available in this biome',
   'index.bench.unavailable': 'Not offered on the bench',
   'index.duplicate.warning': 'The game has more than one thing by this name. The words in brackets are how they differ.',
-  'index.source.readFrom': 'Read from {source} in the game’s own files',
   'index.door.priceEnchantments': 'Price its enchantments',
   'index.door.priceEnchantmentsTitle': 'Open the calculator on this item',
   'index.door.buildClass': 'Build this class',
@@ -148,7 +147,6 @@ const indexUi = {
   'index.source.archiveMerged': 'RealmEye source page ({count} archived pages are merged into this record)',
   'index.source.archivePage': 'Its archived RealmEye source page', 'index.source.communityPage': 'Its page on the community wiki',
   'index.source.communityFilesUnder': 'The community wiki files this one under {title} rather than giving it a page',
-  'index.source.notDeclared': 'not declared in the client',
   'index.skin.clothingDye': 'clothing dye', 'index.skin.accessoryDye': 'accessory dye', 'index.skin.setSkin': 'set skin',
   'index.skin.skin': 'skin', 'index.door.skinViewer': 'Open in Skin Viewer',
   'index.door.skinViewerTitle': 'Open the exact linked {kind} in the local Skin Viewer'
