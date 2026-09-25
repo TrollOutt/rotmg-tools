@@ -763,11 +763,36 @@ const sets = [];
 }
 
 /* ---------------- something to hit ---------------- */
+/*
+ * The realm's own cast, as the atlas lists it: its Heroes of Oryx and its
+ * encounters, by the name the game shows. A Hero of Oryx is a role the realm
+ * gives a creature, not a label the client writes on it - half of them carry
+ * no labels at all - so this list is the only thing that can say which they
+ * are. It picks which client creatures are offered and says which group each
+ * falls in; everything fought (life, armour, picture) is still the client's.
+ */
+const castKey = name => String(name || '').toLowerCase().replace(/[‘’`]/g, "'")
+  .replace(/\s+/g, ' ').trim();
+const realmHeroes = new Set(), realmEncounters = new Set();
+try {
+  const realm = JSON.parse(fs.readFileSync(path.join(root, 'web', 'realmeye-data.json'), 'utf8'));
+  for (const biome of Object.values(realm.biomes || {})) {
+    const groups = biome.groups || {};
+    for (const one of groups.heroes || []) realmHeroes.add(castKey(one.name));
+    for (const one of groups.encounters || []) realmEncounters.add(castKey(one.name));
+  }
+} catch (error) { /* no realm list: the client's own labels still decide */ }
 const bosses = [];
 for (const [, one] of byType) {
   if (!/<Enemy\s*\/>/.test(one.body)) continue;
   const hp = num(one.body, 'MaxHitPoints');
-  if (!hp || hp < 1000) continue;
+  const listedAs = (() => {
+    const key = castKey(text(one.body, 'DisplayId') || one.id);
+    return realmHeroes.has(key) ? 'hero' : realmEncounters.has(key) ? 'encounter' : '';
+  })();
+  // The realm's cast is offered whatever its size; anything else has to be
+  // worth building against.
+  if (!hp || (hp < 1000 && !listedAs)) continue;
   /*
    * Only the two kinds of thing anybody builds against, and the client names
    * them itself rather than leaving it to be inferred: an ENCOUNTER is what
@@ -777,7 +802,7 @@ for (const [, one] of byType) {
    */
   const labels = text(one.body, 'Labels') || '';
   const labelSet = labels.split(',').map(one => one.trim());
-  if (!labelSet.includes('ENCOUNTER') && !labelSet.includes('BOSS')) continue;
+  if (!labelSet.includes('ENCOUNTER') && !labelSet.includes('BOSS') && !listedAs) continue;
   /*
    * And not the ones that come round once a year. This is the one filter here
    * the client does not make for me: it labels a snowball chest and a marble
@@ -788,7 +813,9 @@ for (const [, one] of byType) {
    */
   const shown = text(one.body, 'DisplayId') || one.id;
   if (/^[{]/.test(shown)) continue;
-  if (/(^|[^a-z])(retro|snowball|present|chicken|bunny|carnival|party|beach bum|cupcake|effigy|lol|easter|santa|turkey|pumpkin|valentine|nostalgi)/i
+  // Unless the realm lists it: a seasonal encounter the atlas shows in a zone
+  // is one somebody meets there, and so one somebody builds against.
+  if (!listedAs && /(^|[^a-z])(retro|snowball|present|chicken|bunny|carnival|party|beach bum|cupcake|effigy|lol|easter|santa|turkey|pumpkin|valentine|nostalgi)/i
     .test(shown)) continue;
     /*
    * And not the loot. Nine things in the moonlight village are chests the
@@ -806,7 +833,14 @@ bosses.push({
     def: num(one.body, 'Defense') || 0,
     god: /\bGOD\b/.test(labels) || undefined,
     hero: /\bHERO\b/.test(labels) || undefined,
-    quest: /<Quest\s*\/>/.test(one.body) || undefined
+    quest: /<Quest\s*\/>/.test(one.body) || undefined,
+    /*
+     * Which of the three it is, for the target picker's groups: a Hero of
+     * Oryx by the realm's list, an encounter by the client's ENCOUNTER label
+     * or the realm's list, and otherwise the boss at the end of a dungeon.
+     */
+    role: listedAs === 'hero' ? 'hero'
+      : (labelSet.includes('ENCOUNTER') || listedAs === 'encounter') ? 'encounter' : 'boss'
   });
 }
 // One entry a name: a boss appears once per dungeon it is used in.
@@ -814,7 +848,15 @@ bosses.push({
   const seen = new Map();
   for (const one of bosses) {
     const had = seen.get(one.name);
-    if (!had || had.hp < one.hp) seen.set(one.name, one);
+    /*
+     * A Hero of Oryx is often two objects under one name: an untouchable
+     * shell with a placeholder three hundred thousand life, and the body you
+     * actually hit ("Actual Ghost King", five thousand). The one fought is
+     * the one with the least life. Everything else keeps the most, as a boss
+     * used in several dungeons always has.
+     */
+    const better = one.role === 'hero' ? one.hp < had?.hp : one.hp > had?.hp;
+    if (!had || better) seen.set(one.name, one);
   }
   bosses.length = 0;
   bosses.push(...seen.values());

@@ -7,7 +7,7 @@ const fields = {
   classes: 'name about hp hpTop mp mpTop att attTop def defTop spd spdTop dex dexTop vit vitTop wis wisTop grow slots kit art pic',
   enchants: 'id name says labels fits notFits notWith notOn weight worn mul sub rel heal alters pic',
   sets: 'name pieces steps',
-  bosses: 'name id hp def god hero quest art strip pic'
+  bosses: 'name id hp def god hero quest role art strip pic'
 };
 const kinds = { items: 'item', classes: 'class', enchants: 'enchant', sets: 'set', bosses: 'enemy' };
 function key(group, field) {

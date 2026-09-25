@@ -106,19 +106,31 @@
   /* A creature in a panel: picture, name, the way to it in the Index, and what
      it drops as the pictures a player knows them by. */
   .cast { display: grid; gap: 4px; }
-  .who { padding: 8px 9px; border-radius: 7px; }
+  .who { padding: 7px 9px 8px; border-radius: 7px; }
   .who:nth-child(odd) { background: rgba(255,255,255,.04); }
-  .who-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .who-top { display: flex; align-items: center; gap: 10px; min-width: 0; margin-bottom: 6px; }
+  .who-top .to-index { padding: 2px 9px; }
+  /* The creature, then what it leaves: one line, the creature in a well of its
+     own and its drops set off past a rule, so the two never read as one row. */
+  .who-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .who-line > .who-go, .who-line > .who-face { flex: none; }
+  .who-face { display: inline-grid; place-items: center; padding: 3px; border-radius: 8px;
+    background: rgba(0,0,0,.28); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
   .who-top b { font-weight: 600; color: #e3eaf5; font-size: calc(.98em * var(--kt, 1)); min-width: 0; }
   .who-top em { font-style: normal; color: #7c8899; font-size: .72em; white-space: nowrap; }
+  .who-go { display: inline-flex; align-items: center; gap: 12px; min-width: 0; padding: 0; margin: 0;
+    font: inherit; color: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+  .who-go:hover b, .who-go:focus-visible b { color: #ffcb70; }
+  .who-go:hover .face, .who-go:focus-visible .face { filter: brightness(1.15); }
+  .who-go:focus-visible { outline: 1px solid #ffcb70; outline-offset: 3px; border-radius: 4px; }
   .to-index {
     margin-left: auto; flex: none; cursor: pointer; font: inherit; font-size: calc(11px * var(--kt, 1)); font-weight: 600;
     color: #ffcb70; background: rgba(255,203,112,.08); border: 1px solid rgba(255,203,112,.4);
     border-radius: 999px; padding: 4px 11px; white-space: nowrap;
   }
   .to-index:hover, .to-index:focus-visible { background: rgba(255,203,112,.18); border-color: #ffcb70; outline: none; }
-  .who-drops { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px;
-    margin: 7px 0 0 calc(40px * var(--kf, 1) + 12px); }
+  .who-drops { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; flex: 1 1 auto; min-width: 0;
+    padding-left: 10px; border-left: 1px solid rgba(255,255,255,.14); }
   .drops-row { display: flex; flex-wrap: wrap; gap: 4px; }
   .drop { display: inline-grid; place-items: center; width: calc(36px * var(--k, 1)); height: calc(36px * var(--k, 1)); padding: 0;
     border-radius: 6px; background: rgba(255,255,255,.05); border: 1px solid transparent; }
@@ -268,14 +280,10 @@
   .drops > span.bare { padding-left: 9px; }
   .drops > button, .drops > span { font-size: calc(11px * var(--kt, 1)); }
   /*
-   * How much larger, by how wide the panel has been pulled: the pictures most,
-   * the portraits less, the writing least - it is read, not looked at.
+   * Pulling the panel wider gives it room, not size: the pictures, portraits
+   * and writing stay as they are and more of them fit on a line. (It scaled
+   * them up with the width for a while; a wide panel read as a zoomed one.)
    */
-  @container panel (min-width: 460px) { #panelBody > * { --k: 1.2; --kf: 1.1; --kc: 1.1; --kt: 1.04; } }
-  @container panel (min-width: 560px) { #panelBody > * { --k: 1.4; --kf: 1.2; --kc: 1.2; --kt: 1.08; } }
-  @container panel (min-width: 680px) { #panelBody > * { --k: 1.65; --kf: 1.35; --kc: 1.3; --kt: 1.14; } }
-  @container panel (min-width: 820px) { #panelBody > * { --k: 1.9; --kf: 1.5; --kc: 1.4; --kt: 1.2; } }
-  @container panel (min-width: 980px) { #panelBody > * { --k: 2.2; --kf: 1.65; --kc: 1.5; --kt: 1.26; } }
   .life u.stat { display: block; text-decoration: none; font-size: 10px; color: #6f7b90; }
   .life u.shots { display: block; text-decoration: none; font-size: 10px; color: #c98f7a; }
   .life u.shots u { text-decoration: none; color: #66707f; padding: 0 1px; }
@@ -5758,11 +5766,24 @@ function rollKinds() {
  */
 function whoRow(name, art, note) {
   const drops = dropsOf(name);
+  /*
+   * The name on a line of its own, and under it everything on one line: the
+   * creature in its own well, then past a rule what it drops and the portal it
+   * opens. The drops used to start on a second line indented under the name,
+   * so every creature cost two rows of pictures where one holds them all.
+   * Its picture and its name both open its Index page, as the button says.
+   */
+  const id = knownId(name, ['enemy']);
+  const go = (inner, quiet) => id
+    ? '<button type="button" class="who-go" data-index="' + quoted(id) + '"'
+      + (quiet ? ' tabindex="-1"' : '') + ' title="Open ' + quoted(name) + ' in the Index">' + inner + '</button>'
+    : inner;
   return '<div class="who">'
-    + '<div class="who-top">' + art + '<b>' + name + '</b>'
+    + '<div class="who-top">' + go('<b>' + name + '</b>')
     + (note ? '<em>' + note + '</em>' : '')
     + indexButton(name, ['enemy']) + '</div>'
-    + (drops ? '<div class="who-drops">' + drops + '</div>' : '')
+    + '<div class="who-line">' + go('<span class="who-face">' + art + '</span>', true)
+    + (drops ? '<div class="who-drops">' + drops + '</div>' : '') + '</div>'
     + '</div>';
 }
 
@@ -6119,6 +6140,18 @@ document.getElementById('shut').addEventListener('click', shutPanel);
   grip.addEventListener('pointerup', done);
   grip.addEventListener('pointercancel', done);
   grip.addEventListener('dblclick', () => { kept = set(USUAL); keep(kept); });
+  /* The page around the atlas lays an Index record over this panel, with a
+     handle of its own on the same edge; pulling that one says so here. */
+  window.addEventListener('message', event => {
+    if (event.source !== window.parent) return;
+    const said = event.data;
+    if (!said || said.rotmg !== 'panel-width') return;
+    // Sized without its easing, as its own handle does, so the width it
+    // reports back is the one it has just been given.
+    panel.classList.add('is-sizing');
+    kept = set(said.reset ? USUAL : Number(said.wide) || kept);
+    if (said.keep || said.reset) { panel.classList.remove('is-sizing'); keep(kept); }
+  });
   // A window made smaller takes the panel in with it.
   window.addEventListener('resize', () => set(kept));
 })();

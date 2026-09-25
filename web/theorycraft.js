@@ -125,14 +125,18 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       throw new Error('Progression data unavailable');
     }
     try {
-      const [index, wiki, realm, ratings] = await Promise.all([
+      const [index, wiki, realm, ratings, community] = await Promise.all([
         read('indexText', ['assets/index/index.json', '../data/Index/index.json']),
         read('wikiText', ['assets/index/wiki.json', '../data/Index/wiki.json']),
         read('realmLootText', ['assets/theory/progression.json', 'realmeye-data.json']),
-        read('dungeonText', ['../data/Fame/dungeon-pages.txt'], true)
+        read('dungeonText', ['../data/Fame/dungeon-pages.txt'], true),
+        // The places the Index adds from the community, so a seasonal biome
+        // is a picture and a way into the Index here too. Optional.
+        read('realmeyeEnrichmentText', ['assets/index/realmeye-enrichment.json',
+          '../data/Index/realmeye-enrichment.json']).catch(() => null)
       ]);
       itemSearchAliases = indexItemAliases(index);
-      access = BuildProgression.catalogue(index, wiki, data.items, realm, ratings);
+      access = BuildProgression.catalogue(index, wiki, data.items, realm, ratings, community);
     } catch (_) {
       itemSearchAliases = new Map();
       access = null;
@@ -2353,8 +2357,32 @@ const TINT = {
    * A piece with no measured window keeps the rectangle it always had, which
    * is every charm, every item and every class.
    */
-  function targetBounds(piece) {
+  function targetBounds(piece, frames) {
     if (!piece) return null;
+
+    /*
+     * Size the creature from the animation actually being displayed, not from
+     * attack/effect frames that may extend far outside its body.
+     */
+    if (piece.visibleFrames && frames && frames.length) {
+      let out = null;
+      for (const frame of frames) {
+        const seen = piece.visibleFrames[frame];
+        if (!seen || seen.w <= 0 || seen.h <= 0) continue;
+        if (!out) {
+          out = { x: seen.x, y: seen.y, w: seen.w, h: seen.h };
+          continue;
+        }
+        const right = Math.max(out.x + out.w, seen.x + seen.w);
+        const bottom = Math.max(out.y + out.h, seen.y + seen.h);
+        out.x = Math.min(out.x, seen.x);
+        out.y = Math.min(out.y, seen.y);
+        out.w = right - out.x;
+        out.h = bottom - out.y;
+      }
+      if (out) return out;
+    }
+
     const seen = piece.visible;
     if (seen && seen.w > 0 && seen.h > 0) {
       return { x: seen.x, y: seen.y, w: seen.w, h: seen.h };
@@ -2362,8 +2390,8 @@ const TINT = {
     return { x: 0, y: 0, w: piece.w, h: piece.h };
   }
 
-  function targetFit(piece, room) {
-    const bounds = targetBounds(piece);
+  function targetFit(piece, room, frames) {
+    const bounds = targetBounds(piece, frames);
     if (!bounds) return null;
     const longest = Math.max(1, Math.max(bounds.w, bounds.h));
     const scale = room / longest;
@@ -2382,6 +2410,71 @@ const TINT = {
       + ';background-position:' + (-(piece.x + fit.bounds.x) * zoom) + 'px '
       + (-(piece.y + fit.bounds.y) * zoom) + 'px'
       + '"></span>';
+  }
+
+  /*
+   * A target in the picker, moving the way it moves in the fight.
+   *
+   * The same fitted window as sheetIcon - the pixels the creature actually
+   * draws, centred in its cell - but stepped through its walk, or through
+   * whatever frames it has, rather than frozen on the first. The frames are
+   * packed at the rectangle's own width, so each step moves the window by
+   * that width; the fitted part inside it stays where it is, and the
+   * creature keeps its footing. One clock (rollTargets) turns them all.
+   */
+  /*
+   * The target picker and the fight use the same animation run.
+   *
+   * Prefer the creature's walk when the client supplies one. A target with
+   * no pose registry but several frames uses all of them. Otherwise it keeps
+   * its idle frame.
+   */
+  function targetFrames(piece) {
+    if (!piece) return [0];
+    const all = [];
+    for (let at = 0; at < (piece.frames || 1); at++) all.push(at);
+    const poses = piece.poses || {};
+    const walk = poses['0/1'] || poses['3/1'];
+    if (walk && walk.length > 1) return walk;
+    if (!piece.poses && all.length > 1) return all;
+    return [((poses['0/0'] || poses['3/0'] || [0])[0])];
+  }
+
+  function targetFrame(piece, clock) {
+    const run = targetFrames(piece);
+    return run[Math.floor(clock / 0.28) % run.length] ?? 0;
+  }
+
+  function targetIcon(key, side) {
+    const piece = data.sheet && data.sheet.pics[key];
+    if (!piece) return '';
+    const run = targetFrames(piece);
+    const fit = targetFit(piece, side, run);
+    const zoom = fit.scale;
+    const at = frame => (-(piece.x + frame * piece.w + fit.bounds.x) * zoom) + 'px '
+      + (-(piece.y + fit.bounds.y) * zoom) + 'px';
+    return '<span class="tc-charm"'
+      + (run.length > 1 ? ' data-roll="' + run.map(at).join(';') + '"' : '')
+      + ' style="width:' + fit.width + 'px;height:' + fit.height + 'px'
+      + ';background-size:' + (data.sheet.wide * zoom) + 'px '
+      + (data.sheet.tall * zoom) + 'px'
+      + ';background-position:' + at(run[0]) + '"></span>';
+  }
+  let targetClock = 0;
+  function rollTargets() {
+    if (targetClock) return;
+    targetClock = setInterval(() => {
+      const box = el('tcBosses');
+      if (!box || !box.isConnected) return;
+      if (document.hidden || document.body.dataset.page !== 'theory') return;
+      for (const pic of box.querySelectorAll('[data-roll]')) {
+        if (pic.closest('.tc-target-group:not([open])')) continue;
+        const steps = pic.dataset.roll.split(';');
+        const next = (Number(pic.dataset.at || 0) + 1) % steps.length;
+        pic.dataset.at = String(next);
+        pic.style.backgroundPosition = steps[next];
+      }
+    }, 280);
   }
 
   /*
@@ -2622,13 +2715,20 @@ const TINT = {
             + '" title="take this enchantment off">×</button>' : '')
           + '</span>');
       }
-      // How many slots the item has, among the item's own buttons rather
-      // than on a line of its own under the enchantments.
-      const rarity = '<label class="tc-rarity" title="How many enchantment slots it has"><span>slots</span>'
-        + '<select data-slots="' + hand + '" aria-label="Enchantment slots">'
-        + [0, 1, 2, 3, 4].map(n => '<option value="' + n + '"'
-          + (n === worn.slots ? ' selected' : '') + '>' + n + '</option>').join('')
-        + '</select></label>';
+      /*
+       * How many slots the item has, shown the way the game shows it: four
+       * gems, as many lit as the copy has slots, in the colour of the rarity
+       * that gives that many - green, blue, purple, gold. A number in a box
+       * said nothing about what it counted. Pressing a gem sets that many;
+       * pressing the last lit one again takes it away, down to none.
+       */
+      const rarity = '<span class="tc-slots-pick" role="group" aria-label="Enchantment slots"'
+        + ' data-lit="' + worn.slots + '" title="' + worn.slots + ' enchantment slot'
+        + (worn.slots === 1 ? '' : 's') + '">'
+        + [1, 2, 3, 4].map(n => '<button type="button" class="tc-gem' + (n <= worn.slots ? ' is-lit' : '') + '"'
+          + ' data-slots-set="' + hand + ':' + n + '" aria-pressed="' + (n <= worn.slots) + '"'
+          + ' aria-label="' + n + ' slot' + (n === 1 ? '' : 's') + '"></button>').join('')
+        + '</span>';
 
       return '<div class="tc-slot' + (locked ? ' is-held' : '') + '">'
         + '<div class="tc-slot-head">'
@@ -2806,9 +2906,17 @@ const TINT = {
       const names = Object.keys(build.banned || {});
       aside.hidden = !names.length;
       aside.innerHTML = names.length
-        ? '<i>Set aside</i>' + names.map(name =>
-          '<button type="button" class="tc-aside-one" data-unban="' + esc(name)
-          + '" title="Put it back in the running">' + esc(name) + ' ×</button>').join('')
+        ? '<i>Set aside</i>' + names.map(name => {
+          // Its picture beside its name: a list of names alone was hard to
+          // scan, and the sprite is how the thing is known in the game.
+          const item = data.byItem[name];
+          const art = item && item.icon && indexIcon(item.icon, 24, '');
+          return '<button type="button" class="tc-aside-one" data-unban="' + esc(name)
+            + '" title="Put it back in the running">'
+            + (art ? '<span class="tc-aside-art">' + art + '</span>' : '')
+            + '<span class="tc-aside-name">' + esc(name) + '</span>'
+            + '<span class="tc-aside-x" aria-hidden="true">×</span></button>';
+        }).join('')
         : '';
     }
     const kept = el('tcKept');
@@ -3015,13 +3123,26 @@ const TINT = {
    * run of poses the game keeps for them, and the nine hundred projectiles
    * the weapons actually throw. One picture, one index of rectangles.
    */
+  /*
+   * The sprite coordinates and the PNG are one generated artifact. When a
+   * rebuild repacks the sheet, an old browser-cached PNG with new coordinates
+   * draws unrelated sprites. Give every generated catalogue its own sheet URL.
+   * The standalone bundle already embeds the exact PNG and needs no suffix.
+   */
+  function theorySheetUrl() {
+    const bundle = window.ROTMG_BUNDLE;
+    if (bundle && bundle.theorySheet) return bundle.theorySheet;
+    const mark = data && (data.built || (data.from && data.from.build));
+    return 'assets/theory/sheet.png'
+      + (mark ? '?v=' + encodeURIComponent(mark) : '');
+  }
+
   function theSheet() {
     let img = duel.art.get('sheet');
     if (!img) {
-      const bundle = window.ROTMG_BUNDLE;
       img = new Image();
       img.decoding = 'async';
-      img.src = (bundle && bundle.theorySheet) || 'assets/theory/sheet.png';
+      img.src = theorySheetUrl();
       duel.art.set('sheet', img);
     }
     return img;
@@ -3058,7 +3179,7 @@ const TINT = {
     const img = theSheet();
     if (!piece || !img.complete || !img.naturalWidth) return false;
     if (fit) {
-      const box = targetFit(piece, tall);
+      const box = targetFit(piece, tall, Array.isArray(fit) ? fit : null);
       pen.drawImage(img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
         box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height);
       return true;
@@ -3306,7 +3427,8 @@ const TINT = {
     // The room goes to what the target draws, not to the rectangle that
     // carries its swing - see targetFit. A piece with no measured window
     // measures as its rectangle, which is what it always was.
-    const fit = piece ? targetFit(piece, room) : null;
+    const targetRun = piece ? targetFrames(piece) : null;
+    const fit = piece ? targetFit(piece, room, targetRun) : null;
     const big = fit ? fit.height : room;
     const across = fit ? fit.width : room;
     const me = pieceOf((kind && kind.pic) || '');
@@ -3351,12 +3473,12 @@ const TINT = {
      */
     const struck = duel.hp > 0 && duel.shots.some(s => s.age > s.lasts * 0.86);
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
-    const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, room, true);
+    const drew = drawPiece(pen, piece, targetFrame(piece, duel.at), bossX, floor, room, targetRun);
     if (drew && struck) {
       pen.globalAlpha = 0.35;
       pen.fillStyle = '#fff';
       pen.globalCompositeOperation = 'lighter';
-      drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, room, true);
+      drawPiece(pen, piece, targetFrame(piece, duel.at), bossX, floor, room, targetRun);
       pen.globalCompositeOperation = 'source-over';
     }
     if (!drew) {
@@ -3867,6 +3989,10 @@ const TINT = {
     for (const node of el('tcBosses').querySelectorAll('[data-boss]')) {
       node.classList.toggle('is-on', node.dataset.boss === build.boss);
     }
+    // A folded group still says it holds the one being fought.
+    for (const group of el('tcBosses').querySelectorAll('.tc-target-group')) {
+      group.classList.toggle('has-on', Boolean(group.querySelector('.tc-boss.is-on')));
+    }
     const chosenBoss = data.byBoss[build.boss];
     el('tcBossSay').textContent = chosenBoss
       ? chosenBoss.name + ' · ' + commas(chosenBoss.hp) + ' life, '
@@ -3897,12 +4023,39 @@ const TINT = {
    * a window resized, or the column beside it grown by an enchantment.
    */
   const TARGET_LEAST = 16, TARGET_MOST = 72;
+  /* The groups, easiest first, and which of them this browser has folded. */
+  const TARGET_GROUPS = [['hero', 'Heroes of Oryx'], ['encounter', 'Encounters'], ['boss', 'Dungeon bosses']];
+  const TARGET_SHUT_STORE = 'rotmg-theory-target-groups-shut';
+  function shutTargetGroups() {
+    try { return new Set(JSON.parse(localStorage.getItem(TARGET_SHUT_STORE) || '[]')); }
+    catch (_) { return new Set(); }
+  }
+  function keepShutTargetGroups() {
+    const shut = [...el('tcBosses').querySelectorAll('.tc-target-group:not([open])')].map(one => one.dataset.role);
+    try { localStorage.setItem(TARGET_SHUT_STORE, JSON.stringify(shut)); } catch (_) { /* private mode */ }
+  }
   function fitTargets() {
     const box = el('tcBosses');
     if (!box) return;
-    const count = box.children.length;
-    const wide = box.clientWidth, tall = box.clientHeight;
-    if (!count || !wide || !tall) return;
+    /*
+     * Fitted across the open groups together: every open group starts a row
+     * of its own, and the room each heading takes comes off the height first.
+     * A folded group is its heading alone.
+     */
+    const open = [...box.querySelectorAll('.tc-target-group[open]')];
+    const counts = open.map(group => group.querySelectorAll('.tc-boss').length).filter(Boolean);
+    const count = counts.reduce((sum, n) => sum + n, 0);
+    // Everything a group takes that is not its grid - its heading, its
+    // margins, the whole of it when folded - measured rather than assumed.
+    const groups = [...box.querySelectorAll('.tc-target-group')];
+    const heads = groups.reduce((sum, group) => {
+      const grid = group.open && group.querySelector('.tc-target-grid');
+      return sum + group.getBoundingClientRect().height - (grid ? grid.getBoundingClientRect().height : 0);
+    }, 0);
+    const between = Math.max(0, groups.length - 1) * parseFloat(getComputedStyle(box).rowGap || 0);
+    const wide = box.clientWidth, tall = box.clientHeight - heads - between;
+    if (!count || !wide || tall <= 0) return;
+    const rowsFor = cols => counts.reduce((sum, n) => sum + Math.ceil(n / cols), 0);
     const gapFor = cell => Math.round(Math.max(3, Math.min(8, cell * 0.1)));
     let pick = null;
     for (let cols = 1; cols <= count; cols++) {
@@ -3910,11 +4063,11 @@ const TINT = {
       const cell = (wide - (cols - 1) * gap) / cols;
       if (cell > TARGET_MOST) continue;
       if (cell < TARGET_LEAST) break;
-      const rows = Math.ceil(count / cols);
+      const rows = rowsFor(cols);
       pick = { cols, gap, cell };
       // A couple of pixels in hand: the browser rounds every row, and a grid
       // that fits by a fraction of a pixel on paper shows a scrollbar.
-      if (rows * cell + (rows - 1) * gap <= tall - 2) break;
+      if (rows * cell + (rows - counts.length) * gap <= tall - 2) break;
     }
     if (!pick) {
       const gap = gapFor(TARGET_LEAST);
@@ -3924,12 +4077,13 @@ const TINT = {
     /* Whatever height a fitted grid leaves over is shared out between its
        rows rather than left in a band at the bottom - up to a point, past
        which it would read as a grid pulled apart. */
-    const rows = Math.ceil(count / pick.cols);
-    const spare = tall - (rows * pick.cell + (rows - 1) * pick.gap);
-    const rowGap = spare > 2 && rows > 1
-      ? Math.floor(Math.min(pick.gap + (spare - 2) / (rows - 1), pick.gap + pick.cell * 0.35) * 10) / 10 : pick.gap;
+    const rows = rowsFor(pick.cols);
+    const spare = tall - (rows * pick.cell + (rows - counts.length) * pick.gap);
+    const inner = rows - counts.length;         // the gaps between rows inside groups
+    const rowGap = spare > 2 && inner > 0
+      ? Math.floor(Math.min(pick.gap + (spare - 2) / inner, pick.gap + pick.cell * 0.35) * 10) / 10 : pick.gap;
     // Scrolling is the last resort, for a box too small for even the least.
-    box.classList.toggle('is-overfull', rows * pick.cell + (rows - 1) * pick.gap > tall);
+    box.classList.toggle('is-overfull', rows * pick.cell + inner * pick.gap > tall);
     box.style.setProperty('--tc-target-cols', String(pick.cols));
     box.style.setProperty('--tc-target-gap', pick.gap + 'px');
     box.style.setProperty('--tc-target-row-gap', rowGap.toFixed(1) + 'px');
@@ -4061,13 +4215,29 @@ const TINT = {
      * as a quest - which leaves a list short enough to show as pictures, and
      * a picture is how anybody actually knows which one is the Shatters.
      */
-    const targets = data.bosses.slice()
-      .filter(one => one.pic).sort((a, b) => a.hp - b.hp);
-    el('tcBosses').innerHTML = targets.map(one =>
-      '<button type="button" class="tc-boss" data-boss="' + esc(one.name) + '"'
-      + ' title="' + esc(one.name) + ' — ' + commas(one.hp) + ' life, '
-      + one.def + ' armour">' + sheetIcon(one.pic, 34) + '</button>').join('');
+    /*
+     * In three groups, the three things there are to fight: the realm's
+     * Heroes of Oryx, its encounters, and the bosses at the end of dungeons -
+     * each folding away on its own, and each from the easiest to the hardest,
+     * which is life first and armour after. The groups themselves stand in
+     * the same order. Each creature is its own picture, moving as it moves.
+     */
+    const targets = data.bosses.filter(one => one.pic);
+    const shut = shutTargetGroups();
+    el('tcBosses').innerHTML = TARGET_GROUPS.map(([role, say]) => {
+      const list = targets.filter(one => (one.role || 'boss') === role)
+        .sort((a, b) => a.hp - b.hp || a.def - b.def || a.name.localeCompare(b.name));
+      if (!list.length) return '';
+      return '<details class="tc-target-group" data-role="' + role + '"' + (shut.has(role) ? '' : ' open') + '>'
+        + '<summary><span>' + esc(say) + '</span><i>' + list.length + '</i></summary>'
+        + '<div class="tc-target-grid">' + list.map(one =>
+          '<button type="button" class="tc-boss" data-boss="' + esc(one.name) + '"'
+          + ' title="' + esc(one.name) + ' — ' + commas(one.hp) + ' life, '
+          + one.def + ' armour">' + targetIcon(one.pic, 34) + '</button>').join('')
+        + '</div></details>';
+    }).join('');
     watchTargetFit();
+    rollTargets();
     const groups = [...new Set(GOALS.map(one => one.group))];
     el('tcGoals').innerHTML = groups.map(name =>
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
@@ -4212,6 +4382,12 @@ const TINT = {
       tuneMix(bar);
     });
 
+    /* A group folded or opened: remembered, and the rest refitted to the room. */
+    el('tcBosses').addEventListener('toggle', event => {
+      if (!event.target.matches || !event.target.matches('.tc-target-group')) return;
+      keepShutTargetGroups();
+      fitTargets();
+    }, true);
     el('tcBosses').addEventListener('click', event => {
       const pick = event.target.closest('[data-boss]');
       if (!pick) return;
@@ -4336,11 +4512,13 @@ const TINT = {
         keep(); drawSlots();
       }
     });
-    el('tcGear').addEventListener('change', event => {
-      const slots = event.target.closest('[data-slots]');
-      if (!slots) return;
-      const worn = build.gear[slots.dataset.slots];
-      worn.slots = Number(slots.value) || 0;
+    el('tcGear').addEventListener('click', event => {
+      const gem = event.target.closest('[data-slots-set]');
+      if (!gem) return;
+      const [hand, count] = gem.dataset.slotsSet.split(':');
+      const worn = build.gear[hand];
+      const n = Number(count) || 0;
+      worn.slots = worn.slots === n ? n - 1 : n;
       keep(); paint();
     });
 
@@ -4545,7 +4723,7 @@ const TINT = {
     {
       const bundle = window.ROTMG_BUNDLE;
       el('tcBody').style.setProperty('--tc-sheet', 'url('
-        + ((bundle && bundle.theorySheet) || 'assets/theory/sheet.png') + ')');
+        + theorySheetUrl() + ')');
       const wrap = el('tcPickerWrap');
       if (wrap) wrap.style.setProperty('--tc-sheet', el('tcBody').style.getPropertyValue('--tc-sheet'));
       /*

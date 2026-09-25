@@ -44,16 +44,16 @@ const targetHelpers = (() => {
 {
   const checks = {
     Archer: {
-      backgroundPosition: '-4410px -3260.25px',
-      backgroundSize: '5376px 3617.25px'
+      backgroundPosition: '-2562px -3984.75px',
+      backgroundSize: '5376px 4320.75px'
     },
     Assassin: {
-      backgroundPosition: '-1008px -3302.25px',
-      backgroundSize: '5376px 3617.25px'
+      backgroundPosition: '-3822px -3984.75px',
+      backgroundSize: '5376px 4320.75px'
     },
     Bard: {
-      backgroundPosition: '-2016px -3302.25px',
-      backgroundSize: '5376px 3617.25px'
+      backgroundPosition: '-4830px -3984.75px',
+      backgroundSize: '5376px 4320.75px'
     }
   };
 
@@ -714,8 +714,14 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     'the source window must step by the declared cell width and then move onto the drawing');
   assert.ok(!/frame \* box\.bounds\.w|frame \* fit\.bounds\.w/.test(source),
     'the stride must never be the visible width');
-  assert.ok(/drawPiece\(pen, piece, frameOf\(piece, 0, duel\.at\), bossX, floor, room, true\)/.test(source),
-    'the bench must draw its target through the measured window');
+  assert.ok(
+    /const targetRun = piece \? targetFrames\(piece\) : null/.test(source),
+    'the bench must choose the same target animation run as the picker'
+  );
+  assert.ok(
+    /drawPiece\(pen, piece, targetFrame\(piece, duel\.at\), bossX, floor, room, targetRun\)/.test(source),
+    'the bench must draw its animated target through that run\'s measured window'
+  );
 }
 
 /*

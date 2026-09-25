@@ -240,6 +240,8 @@
       <!-- A thing the atlas's panel points at, shown from the Index over that
            panel rather than by leaving the map. Filled by app.js. -->
       <aside id="atlasIndex" class="atlas-index" aria-label="Index record" hidden>
+        <!-- The same handle the atlas panel has, since the record lies over it. -->
+        <div id="atlasIndexGrip" class="atlas-index-grip" title="drag to widen · double-click to reset"></div>
         <header class="atlas-index-head">
           <button type="button" id="atlasIndexBack" class="atlas-index-back"><span aria-hidden="true">←</span> <span data-back="zone">Back to the zone</span><span data-back="record" hidden>Back</span></button>
           <button type="button" id="atlasIndexFull" class="atlas-index-full" title="Leave the atlas for this record's Index page">Open in the Index <span aria-hidden="true">→</span></button>
@@ -334,6 +336,77 @@
   <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
 
   <main class="layout">
+
+    <!--
+      What to aim for, as a band across both columns: above the item and above
+      the plan, so neither side is pushed down on its own. Under the slots it
+      was a scroll away; at the head of the results it pushed the plan down.
+    -->
+    <section id="itemOptimizer" class="card enchant-optimizer" hidden>
+      <header>
+        <h2>Optimize Build For</h2>
+        <span class="header-aside">this item only</span>
+      </header>
+
+      <div id="itemOptimizeGoals" class="tc-goals">
+        <div class="tc-goal-row">
+          <i>Others</i>
+          <span>
+            <button type="button" class="tc-goal is-on"
+              data-item-goal="dps" style="--tint:#e08a3c">
+              <span class="tc-dot"></span>Damage a second
+            </button>
+          </span>
+        </div>
+
+        <div class="tc-goal-row">
+          <i>Stats</i>
+          <span>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:hp" style="--tint:#58cfda">
+              <span class="tc-dot"></span>Life
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:mp" style="--tint:#f4d24c">
+              <span class="tc-dot"></span>Magic
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:att" style="--tint:#ca46dd">
+              <span class="tc-dot"></span>Attack
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:def" style="--tint:#8b9cb3">
+              <span class="tc-dot"></span>Defence
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:spd" style="--tint:#58da6e">
+              <span class="tc-dot"></span>Speed
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:dex" style="--tint:#ff5f2a">
+              <span class="tc-dot"></span>Dexterity
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:vit" style="--tint:#dd0c32">
+              <span class="tc-dot"></span>Vitality
+            </button>
+            <button type="button" class="tc-goal"
+              data-item-goal="stat:wis" style="--tint:#4b9be7">
+              <span class="tc-dot"></span>Wisdom
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <div class="tc-calc-row">
+        <p id="itemOptimizeHint" class="note off"></p>
+        <button type="button" id="itemOptimizeRun" class="tc-run">
+          Optimize
+        </button>
+      </div>
+
+      <div id="itemOptimizeSaid" class="tc-said"></div>
+    </section>
 
     <!-- ------------------------------------------------------------ -->
     <section class="column config" aria-label="Configuration">
@@ -432,79 +505,10 @@
         </fieldset>
       </section>
 
-      <section id="itemOptimizer" class="card enchant-optimizer" hidden>
-        <header>
-          <h2>Optimize Build For</h2>
-          <span class="header-aside">this item only</span>
-        </header>
-
-        <div id="itemOptimizeGoals" class="tc-goals">
-          <div class="tc-goal-row">
-            <i>Others</i>
-            <span>
-              <button type="button" class="tc-goal is-on"
-                data-item-goal="dps" style="--tint:#e08a3c">
-                <span class="tc-dot"></span>Damage a second
-              </button>
-            </span>
-          </div>
-
-          <div class="tc-goal-row">
-            <i>Stats</i>
-            <span>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:hp" style="--tint:#58cfda">
-                <span class="tc-dot"></span>Life
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:mp" style="--tint:#f4d24c">
-                <span class="tc-dot"></span>Magic
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:att" style="--tint:#ca46dd">
-                <span class="tc-dot"></span>Attack
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:def" style="--tint:#8b9cb3">
-                <span class="tc-dot"></span>Defence
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:spd" style="--tint:#58da6e">
-                <span class="tc-dot"></span>Speed
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:dex" style="--tint:#ff5f2a">
-                <span class="tc-dot"></span>Dexterity
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:vit" style="--tint:#dd0c32">
-                <span class="tc-dot"></span>Vitality
-              </button>
-              <button type="button" class="tc-goal"
-                data-item-goal="stat:wis" style="--tint:#4b9be7">
-                <span class="tc-dot"></span>Wisdom
-              </button>
-            </span>
-          </div>
-        </div>
-
-        <p id="itemOptimizeHint" class="note off"></p>
-
-        <div class="tc-calc-row">
-          <button type="button" id="itemOptimizeRun" class="tc-run">
-            Optimize
-          </button>
-        </div>
-
-        <div id="itemOptimizeSaid" class="tc-said"></div>
-      </section>
-
     </section>
 
     <!-- ------------------------------------------------------------ -->
     <section class="column results" aria-label="Results">
-
-      <section id="summary" class="card summary" hidden aria-live="polite"></section>
 
       <section id="artifactCard" class="card">
         <header><h2>Artifacts</h2><span class="header-aside">sorted by chance</span></header>
@@ -528,6 +532,10 @@
 
       <section id="planCard" class="card" hidden>
         <header><h2>Build Plan</h2><span class="header-aside">the cheapest order to roll them in</span></header>
+        <!-- What is asked for, which artifacts may be used and Explain these odds:
+             part of the answer rather than a card above it. app.js carries it
+             to the Artifacts card when there is only one target. -->
+        <div id="summary" class="summary result-summary" hidden aria-live="polite"></div>
         <div id="buildPlan"></div>
       </section>
 

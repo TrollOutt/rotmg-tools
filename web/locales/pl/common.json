@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "wyślij build do zaklinania",
   "static.send.build.to.enchant.title": "Otwórz każdy przedmiot tego buildu, z jego zaklęciami, w osobnej nowej karcie kalkulatora zaklinania",
   "static.show.the.clouds": "Pokaż chmury",
+  "static.switch.to.the.light.theme": "Przełącz na jasny motyw",
+  "static.switch.to.the.dark.theme": "Przełącz na ciemny motyw",
   "static.alternative.builds": "Alternatywne buildy",
   "static.drag.to.widen": "przeciągnij, aby poszerzyć · kliknij dwukrotnie, aby przywrócić",
   "static.back.to.the.zone": "Powrót do strefy",

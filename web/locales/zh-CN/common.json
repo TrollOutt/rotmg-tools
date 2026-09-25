@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "发送配装到附魔",
   "static.send.build.to.enchant.title": "将此配装的每件物品连同其附魔各自在新的附魔计算器标签页中打开",
   "static.show.the.clouds": "显示云层",
+  "static.switch.to.the.light.theme": "切换到浅色主题",
+  "static.switch.to.the.dark.theme": "切换到深色主题",
   "static.alternative.builds": "备选配装",
   "static.drag.to.widen": "拖动以加宽 · 双击以重置",
   "static.back.to.the.zone": "返回区域",

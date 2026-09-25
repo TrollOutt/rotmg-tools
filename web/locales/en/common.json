@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "send build to enchant",
   "static.send.build.to.enchant.title": "Open every item of this build, with its enchantments, in its own new Enchant Calculator tab",
   "static.show.the.clouds": "Show the clouds",
+  "static.switch.to.the.light.theme": "Switch to the light theme",
+  "static.switch.to.the.dark.theme": "Switch to the dark theme",
   "static.alternative.builds": "Alternative builds",
   "static.drag.to.widen": "drag to widen · double-click to reset",
   "static.back.to.the.zone": "Back to the zone",

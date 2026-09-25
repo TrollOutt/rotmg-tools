@@ -703,9 +703,26 @@ const RealmIndex = (function () {
       }
       if (fromThere.size) {
         const out = group('Dungeon', t('index.group.dungeon'), 'wiki', t('index.note.communityDrops'));
+        /*
+         * One dungeon, one chip. The client keeps a portal record per way in -
+         * The Shatters, and The Shatters (King Portal), (Sentinel Portal),
+         * (Archmage Portal) - and each was a chip of its own, the same picture
+         * and nearly the same name four times over. They are one door now,
+         * named the plain way, its picture taken from the plain record where
+         * there is one; what each gives is pooled, and the other records are
+         * still reached from its card.
+         */
+        const plainOf = name => String(name || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+        const doors = new Map();
         for (const [one, gives] of fromThere) {
-          chip(out, one.name, one.said || one.name, gives, one.id);
+          const said = one.said || one.name;
+          const base = plainOf(said) || said;
+          const door = doors.get(base) || { gives: new Set(), pic: one.id, plain: false };
+          for (const id of gives) door.gives.add(id);
+          if (!door.plain && said === base) { door.pic = one.id; door.plain = true; }
+          doors.set(base, door);
         }
+        for (const [base, door] of doors) chip(out, base, base, door.gives, door.pic);
       }
     }
 
@@ -1084,7 +1101,6 @@ const RealmIndex = (function () {
         + '<b>' + esc(one[1]) + '</b>'
         + (difficulty ? '<small class="ix-difficulty" title="' + esc(t('index.difficulty.ratingTitle')) + '">☠ ' + difficulty + '/10</small>' : '')
         + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
-        + (one[4] ? '<u class="ix-hidden" title="' + esc(t('index.hidden.title')) + '">' + esc(t('index.hidden.label')) + '</u>' : '')
         + '</button>'
         + star(one[0])
         + '</div>';
@@ -2466,6 +2482,28 @@ const RealmIndex = (function () {
    */
   let realmeyeQueued = false;
   let realmeyeLoading = false;
+  let realmeyePromise = null;
+
+  /*
+   * The overlay, read once however many ask for it. The Index page asks when
+   * it is idle; the atlas's drawer asks at once and waits, because a record
+   * shown over the map without it is missing what drops it - its drop list is
+   * the community's - and read as if the Index knew nothing more.
+   */
+  function realmEyeOnce() {
+    if (realmeyeArchive) return Promise.resolve();
+    if (!realmeyePromise) {
+      realmeyeLoading = true;
+      realmeyePromise = loadRealmEyeArchive()
+        .then(() => { if (realmeyeArchive) refreshAfterRealmEye(); })
+        .catch(() => {})
+        .finally(() => {
+          realmeyeLoading = false;
+          if (!realmeyeArchive) realmeyePromise = null;   // a later ask may try again
+        });
+    }
+    return realmeyePromise;
+  }
 
   function refreshAfterRealmEye() {
     const down = new Set();
@@ -2533,16 +2571,7 @@ const RealmIndex = (function () {
        */
       if (document.body.dataset.page !== 'index') return;
 
-      realmeyeLoading = true;
-
-      loadRealmEyeArchive()
-        .then(() => {
-          if (realmeyeArchive) refreshAfterRealmEye();
-        })
-        .catch(() => {})
-        .finally(() => {
-          realmeyeLoading = false;
-        });
+      realmEyeOnce();
     }
 
     schedule();
@@ -2676,6 +2705,7 @@ const RealmIndex = (function () {
   async function card(id) {
     if (typeof id !== 'string' || !id) return null;
     if (!await start()) return null;
+    await realmEyeOnce();
     const one = all && all.get(id);
     if (!one) return null;
     return { id: one.id, name: one.said || one.name, html: cardHtml(one), sheet: el('ixBody')

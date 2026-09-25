@@ -607,6 +607,8 @@
   "static.send.build.to.enchant": "enviar build a encantamiento",
   "static.send.build.to.enchant.title": "Abrir cada objeto de esta build, con sus encantamientos, en una pestaña nueva de la Calculadora de Encantamientos",
   "static.show.the.clouds": "Mostrar las nubes",
+  "static.switch.to.the.light.theme": "Cambiar al tema claro",
+  "static.switch.to.the.dark.theme": "Cambiar al tema oscuro",
   "static.alternative.builds": "Builds alternativas",
   "static.drag.to.widen": "arrastra para ensanchar · doble clic para restablecer",
   "static.back.to.the.zone": "Volver a la zona",

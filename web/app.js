@@ -1830,15 +1830,22 @@ window.enchantRules = () => state.data;
  * bench decides what it can use; anything it cannot is ignored.
  */
 window.benchWith = function (said) {
-  if (!said || typeof TheoryCraft === 'undefined') return false;
+  if (!said) return false;
   location.hash = 'theory';
   routeFromHash();
-  // The page reads its data on first opening, so the hand-over waits for it.
+  /*
+   * The page reads its data on first opening, so the hand-over waits for it -
+   * and for its script, which is only fetched the first time the page is
+   * opened. It used to give up when the script was not there yet, so "Fight
+   * it" from the Index or the atlas did nothing at all until Theory Crafting
+   * had been opened once by hand.
+   */
   const tryIt = (left) => {
-    if (typeof TheoryCraft.put === 'function' && TheoryCraft.put(said)) return;
-    if (left > 0) setTimeout(() => tryIt(left - 1), 120);
+    if (typeof TheoryCraft !== 'undefined' && typeof TheoryCraft.put === 'function'
+      && TheoryCraft.put(said)) return;
+    if (left > 0) setTimeout(() => tryIt(left - 1), 150);
   };
-  tryIt(40);
+  tryIt(100);
   return true;
 };
 
@@ -1869,10 +1876,35 @@ function handoverSetup(said) {
   };
 }
 
+/*
+ * One item handed over from the Index, in a tab of its own. It used to be
+ * written into whichever tab was open, so pricing a helm threw away the
+ * hourglass somebody had been working on. Only a tab with nothing in it yet
+ * is used as it is.
+ */
 window.enchantThis = function (said) {
   if (!said || !said.item || !state.data) return false;
-  applySetup(handoverSetup(said).setup);
-  refresh();
+  const setup = handoverSetup(said).setup;
+  const current = state.tabs.find(tab => tab.id === state.activeTab);
+  const blank = !current || (!(current.setup && current.setup.item) && !$('awakenedItem').value);
+  if (blank) {
+    applySetup(setup);
+    refresh();
+  } else {
+    saveSetup();               // bank the tab that was on screen
+    const taken = new Set(state.tabs.map(tab => tab.id));
+    let tab = newTab(setup);
+    while (taken.has(tab.id)) tab = newTab(setup);
+    state.tabs.push(tab);
+    state.activeTab = tab.id;
+    state.loadingTab = true;   // stop applySetup's edits from writing back
+    applySetup(setup);
+    state.loadingTab = false;
+    clearResults();
+    refresh();
+    persistTabs();
+    renderTabs();
+  }
   location.hash = 'enchant';
   routeFromHash();
   return true;
@@ -2244,6 +2276,12 @@ function renderSummary(rows, config) {
   const multi = goals.length > 1;
   const viable = rows.filter(row => row.odds > 0);
 
+  // It is part of whichever answer is showing, not a card of its own above
+  // it: straight under that card's heading, the plan's or the table's.
+  const host = $(multi ? 'planCard' : 'artifactCard');
+  const heading = host.querySelector(':scope > header');
+  if (heading.nextElementSibling !== panel) heading.after(panel);
+
   if (!viable.length && !multi) {
     panel.hidden = false;
     panel.innerHTML = `<div class="summary-title bad">“${html(config.desired)}” cannot be rolled with this configuration.</div><p class="note">Check the locked slots: one of their Labels is probably in the target's Incompatible Labels.</p>`;
@@ -2286,10 +2324,12 @@ function renderSummary(rows, config) {
     <div class="summary-head">
       <div class="summary-title">${title}</div>
       <button id="showAudit" type="button" class="secondary">${$('auditCard').hidden ? 'Explain these odds' : 'Hide the explanation'}</button>
-      ${artifactFilterHtml()}
     </div>
-    <div class="summary-figures">${figures}</div>`;
-  revealResultCard(panel);
+    <div class="summary-line">
+      ${artifactFilterHtml()}
+      <div class="summary-figures">${figures}</div>
+    </div>`;
+  panel.hidden = false;
 }
 
 /* ------------------------------------------------------------------ *
@@ -3349,9 +3389,9 @@ function updateGroup(id, patch) {
 
 /*
  * Folded away, a group is its chip alone. Folding the group the editor is
- * showing moves the editor to the nearest tab outside it, so what is on the
- * screen is never a tab that cannot be seen; with nothing outside it, the
- * group folds and its chip stays lit as the one being worked on.
+ * showing moves the editor to the nearest tab that can still be seen outside
+ * it, so what is on the screen is never a tab that cannot be seen; with none,
+ * the group folds and its chip stays lit as the one being worked on.
  */
 function toggleGroup(id) {
   const member = state.tabs.find(tab => tab.group && tab.group.id === id);
@@ -3360,9 +3400,12 @@ function toggleGroup(id) {
   if (folding && member.group && state.tabs.some(tab => tab.id === state.activeTab
     && tab.group && tab.group.id === id)) {
     const at = state.tabs.findIndex(tab => tab.id === state.activeTab);
+    /* Only a tab that can already be seen: one inside another folded group
+       would unfold that group on arrival, so folding one build opened the
+       other - which is the opposite of what was asked. */
     const outside = state.tabs
       .map((tab, index) => ({ tab, index }))
-      .filter(one => !(one.tab.group && one.tab.group.id === id))
+      .filter(one => !(one.tab.group && (one.tab.group.id === id || one.tab.group.collapsed)))
       .sort((a, b) => Math.abs(a.index - at) - Math.abs(b.index - at))[0];
     if (outside) {
       updateGroup(id, { collapsed: true });
@@ -3995,8 +4038,15 @@ function pointAtAtlas() {
          stored preference and would nearly always agree on its own; the one
          case it cannot is a page being shown in a language by its address,
          which the frame's own address knows nothing about. */
-      frame.src = base + 'index.html'
+      const src = base + 'index.html'
         + (window.RealmI18n ? '?lang=' + encodeURIComponent(RealmI18n.locale) : '');
+      /* Asked of the server first, so a changed atlas is the one loaded
+         rather than the copy the browser kept from an earlier visit - a
+         frame given its address late is otherwise handed that copy even
+         after a hard reload. "Not modified" costs nothing. */
+      const served = /^https?:$/.test(location.protocol);
+      (served ? fetch(src, { cache: 'no-cache' }).catch(() => {}) : Promise.resolve())
+        .then(() => { frame.src = src; });
     })
     .catch(() => {
       frame.hidden = true;
@@ -4243,12 +4293,14 @@ function dressSkySwitch(said) {
   const icon = said.icon;
   if (art && icon && Array.isArray(icon.cut) && Array.isArray(icon.sheet)
     && /^https?:|^file:/.test(String(icon.src))) {
-    const k = 44 / icon.cut[2];
-    art.style.width = '44px';
-    art.style.height = Math.round(icon.cut[3] * k) + 'px';
+    // In em of the art's own font-size, which the stylesheet sets to the
+    // cloud's width - so its size is the stylesheet's, per way of opening.
+    const k = 1 / icon.cut[2];
+    art.style.width = '1em';
+    art.style.height = (icon.cut[3] * k) + 'em';
     art.style.backgroundImage = 'url("' + String(icon.src).replace(/"/g, '%22') + '")';
-    art.style.backgroundSize = (icon.sheet[0] * k) + 'px ' + (icon.sheet[1] * k) + 'px';
-    art.style.backgroundPosition = (-icon.cut[0] * k) + 'px ' + (-icon.cut[1] * k) + 'px';
+    art.style.backgroundSize = (icon.sheet[0] * k) + 'em ' + (icon.sheet[1] * k) + 'em';
+    art.style.backgroundPosition = (-icon.cut[0] * k) + 'em ' + (-icon.cut[1] * k) + 'em';
   }
   if (art) art.classList.toggle('struck', !skyClear);
 }
@@ -4366,6 +4418,39 @@ function leaveAtlasFor(go) {
       event.stopPropagation();
       if (event.key === 'Escape') shutAtlasIndex();
     });
+    /*
+     * Its handle resizes the atlas panel underneath, which then reports its
+     * new width back like any other change - so the record follows it.
+     */
+    const grip = document.getElementById('atlasIndexGrip');
+    if (grip) {
+      let from = null;
+      grip.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        from = { x: event.clientX, wide: drawer.getBoundingClientRect().width };
+        grip.setPointerCapture(event.pointerId);
+        drawer.classList.add('is-sizing');
+      });
+      grip.addEventListener('pointermove', event => {
+        if (!from) return;
+        tellAtlas({ rotmg: 'panel-width', wide: from.wide + (from.x - event.clientX) });
+      });
+      const done = event => {
+        if (!from) return;
+        tellAtlas({ rotmg: 'panel-width', wide: from.wide + (from.x - event.clientX), keep: true });
+        from = null;
+        drawer.classList.remove('is-sizing');
+      };
+      grip.addEventListener('pointerup', done);
+      grip.addEventListener('pointercancel', done);
+      grip.addEventListener('click', event => event.stopPropagation());
+      grip.addEventListener('dblclick', event => {
+        event.stopPropagation();
+        tellAtlas({ rotmg: 'panel-width', reset: true });
+      });
+    }
   }
 }
 
@@ -4631,19 +4716,39 @@ function ensureTheoryPage() {
     }
 
     theoryScriptLoading = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = placeholder.dataset.lazySrc;
-      script.onload = resolve;
-      script.onerror = () => {
-        script.remove();
+      loadLateScript(placeholder, resolve, () => {
         theoryScriptLoading = null;
         reject(new Error('Could not load Theory Crafting.'));
-      };
-      placeholder.before(script);
+      });
     });
   }
 
   return theoryScriptLoading.then(run);
+}
+
+/*
+ * A module script added after the page has loaded, asked of the server first.
+ *
+ * A browser keeps a script it has seen and, for one inserted late, often hands
+ * that copy back even after a hard reload - so a change to the Index or to
+ * Theory Crafting could go on not being there for somebody who had already
+ * opened it once. One revalidating request refreshes the cached copy (the
+ * server answers "not modified" when nothing changed), and the script tag then
+ * reads the fresh one. A copy opened from disk has no server to ask and loads
+ * as it always did.
+ */
+function loadLateScript(placeholder, onload, onerror) {
+  const src = placeholder.dataset.lazySrc;
+  const add = () => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = onload;
+    script.onerror = () => { script.remove(); onerror(); };
+    placeholder.before(script);
+  };
+  const served = /^https?:$/.test(location.protocol) && typeof fetch === 'function';
+  if (!served) { add(); return; }
+  fetch(src, { cache: 'no-cache' }).catch(() => {}).then(add);
 }
 
 let indexScriptLoading = null;
@@ -4667,15 +4772,10 @@ function ensureIndexPage(open) {
     }
 
     indexScriptLoading = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = placeholder.dataset.lazySrc;
-      script.onload = resolve;
-      script.onerror = () => {
-        script.remove();
+      loadLateScript(placeholder, resolve, () => {
         indexScriptLoading = null;
         reject(new Error('Could not load Index.'));
-      };
-      placeholder.before(script);
+      });
     });
   }
 
