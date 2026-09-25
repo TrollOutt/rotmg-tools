@@ -484,6 +484,31 @@ function main() {
 
   console.log('  ' + added.length + ' new, ' + changed.length + ' changed, ' + gone.length + ' gone');
 
+  /*
+   * The client is allowed to call a new object RWMysticST1 while the Index
+   * already knows that object as Entrancing Hourglass. News is presentation,
+   * so show the canonical Index name while retaining the raw client identity.
+   * Ambiguous aliases are deliberately left untouched rather than guessed.
+   */
+  const canonical = new Map(), ambiguous = new Set();
+  const indexFile = path.join(root, 'data', 'Index', 'index.json');
+  if (fs.existsSync(indexFile)) {
+    const current = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+    for (const record of current.records || []) {
+      if (record.kind !== 'item' || !record.name) continue;
+      for (const key of [record.alias, record.clientId]) {
+        if (!key || key === record.name || ambiguous.has(key)) continue;
+        if (canonical.has(key) && canonical.get(key) !== record.name) {
+          canonical.delete(key);
+          ambiguous.add(key);
+        } else {
+          canonical.set(key, record.name);
+        }
+      }
+    }
+  }
+  const canonicalName = id => canonical.get(id) || id;
+
   const sprites = loadSprites();
   const cut = cutter();
   fs.rmSync(OUT, { recursive: true, force: true });
@@ -495,6 +520,11 @@ function main() {
 
   const withArt = thing => {
     const out = { ...thing };
+    const shownName = canonicalName(thing.id);
+    if (shownName !== thing.id) {
+      out.clientId = thing.id;
+      out.id = shownName;
+    }
     delete out.from;
     if (!thing.art) return out;
     let name = slug(thing.id);

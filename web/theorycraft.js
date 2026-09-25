@@ -70,6 +70,28 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   let picking = null;                  // which slot a picker is open for
   const PROFILE_STORE = 'rotmg-build-progression-v1';
   let access = null, profile = null, profileDraft = null, profileSaved = true;
+  let itemSearchAliases = new Map();
+
+  /*
+   * The Index owns item identity. TheoryCraft displays the canonical name,
+   * but somebody debugging a new client build may still type the raw client
+   * id or alias they saw in the update data.
+   */
+  function indexItemAliases(index) {
+    const out = new Map();
+    for (const record of (index && index.records) || []) {
+      if (record.kind !== 'item' || !record.name) continue;
+      const names = [...new Set([record.alias, record.clientId]
+        .filter(name => name && name !== record.name))];
+      if (names.length) {
+        out.set(record.name, [...new Set([
+          ...(out.get(record.name) || []),
+          ...names
+        ])]);
+      }
+    }
+    return out;
+  }
 
   async function loadAccess() {
     async function read(key, paths, asText = false) {
@@ -109,8 +131,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         read('realmLootText', ['assets/theory/progression.json', 'realmeye-data.json']),
         read('dungeonText', ['../data/Fame/dungeon-pages.txt'], true)
       ]);
+      itemSearchAliases = indexItemAliases(index);
       access = BuildProgression.catalogue(index, wiki, data.items, realm, ratings);
-    } catch (_) { access = null; }
+    } catch (_) {
+      itemSearchAliases = new Map();
+      access = null;
+    }
   }
 
   const accessible = name => BuildProgression.allows(access, profile, name);
@@ -1385,22 +1411,30 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
   }
 
-  function itemsFor(hand, klass, state = build) {
+  /*
+   * Everything that physically fits this class slot, minus the reader's
+   * blacklist. This is the manual picker catalogue: progression must not make
+   * an existing item disappear when somebody simply wants to inspect it.
+   */
+  function compatibleItemsFor(hand, klass, state = build) {
     const kind = data.byClass[klass];
     const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
-    /*
-     * Minus whatever has been set aside. Half the best answers in this game
-     * are things a particular reader will never hold - a white bag from a
-     * dungeon they do not run, an exalted drop three hundred hours away - and
-     * an answer built out of those is not an answer to their question.
-     */
     const out = (state && state.banned) || {};
 
     ensureItemSearchIndex();
     const key = hand + '/' + (slot === undefined ? '*' : slot);
     const candidates = itemsByFit.get(key) || [];
 
-    return candidates.filter(one => !out[one.name] && accessible(one.name));
+    return candidates.filter(one => !out[one.name]);
+  }
+
+  /*
+   * What an automatic personalised search may actually offer.
+   * Best-possible mode makes accessible() true for the full catalogue.
+   */
+  function itemsFor(hand, klass, state = build) {
+    return compatibleItemsFor(hand, klass, state)
+      .filter(one => accessible(one.name));
   }
 
   /* ---------------- what the search need not try ---------------- *
@@ -3489,7 +3523,7 @@ const TINT = {
 
   function openItems(hand) {
     picking = { kind: 'item', hand };
-    const list = itemsFor(hand, build.klass);
+    const list = compatibleItemsFor(hand, build.klass);
     show('Choose a ' + hand, list.map(one => {
       const gun = one.shots && one.shots[0];
       const bits = [];
@@ -3504,7 +3538,18 @@ const TINT = {
         bits.push(plus(part.pct) + '% of ' + part.of
           + (part.of === part.stat ? '' : ' as ' + part.stat));
       }
-      return { id: one.name, name: one.name, says: bits.join(' · '), art: true, ban: true };
+      const aliases = itemSearchAliases.get(one.name) || [];
+      const outside = !!(profile && profile.mode === 'personal'
+        && !accessible(one.name));
+      return {
+        id: one.name,
+        name: one.name,
+        says: bits.join(' · '),
+        search: [one.name, ...aliases, bits.join(' ')].join(' '),
+        note: outside ? 'outside progression' : '',
+        art: true,
+        ban: true
+      };
     }), 'nothing');
   }
 
@@ -3602,6 +3647,7 @@ const TINT = {
           : (one.pic ? sheetIcon(one.pic, 26, 'tc-charm-row') : '<span class="tc-icon-big"></span>'))
         + '<b>' + esc(one.name) + '</b>'
         + '<u>' + esc(one.says || '') + '</u>'
+        + (one.note ? '<em class="tc-uncounted">' + esc(one.note) + '</em>' : '')
         + (one.counted === false ? '<em class="tc-uncounted">not counted</em>' : '')
         + '</button>' + (one.ban ? '</span>' : ''));
     }
@@ -4318,7 +4364,9 @@ const TINT = {
       const rows = JSON.parse(el('tcPicker').dataset.rows || '[]');
       const want = RealmI18n.canonicalSearch(event.target.value);
       paintPicker(want
-        ? rows.filter(one => (one.name + ' ' + (one.says || '')).toLowerCase().includes(want))
+        ? rows.filter(one => RealmI18n.canonicalSearch(
+          one.search || (one.name + ' ' + (one.says || ''))
+        ).includes(want))
         : rows);
     });
     el('tcPickerShut').addEventListener('click', shutPicker);

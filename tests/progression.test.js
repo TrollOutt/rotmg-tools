@@ -84,6 +84,22 @@ t.progression(cat, { ...personal, mode: 'best' });
 assert(t.itemsFor('weapon', state.klass).some(i => i.name === 'Unknown staff'));
 t.progression(cat, personal);
 assert(!t.itemsFor('weapon', state.klass).some(i => i.name === 'Unknown staff'));
+assert(t.compatibleItemsFor('weapon', state.klass).some(i => i.name === 'Unknown staff'),
+  'Manual picker must not hide compatible gear merely because its source is outside progression');
+
+/*
+ * Item aliases belong to the Index identity boundary. Every raw client alias
+ * retained there must remain searchable without replacing the canonical name.
+ */
+const indexAliases = t.indexItemAliases(index);
+for (const record of index.records) {
+  if (record.kind !== 'item' || !record.name) continue;
+  for (const alias of [record.alias, record.clientId]) {
+    if (!alias || alias === record.name) continue;
+    assert((indexAliases.get(record.name) || []).includes(alias),
+      record.name + ': picker lost Index alias ' + alias);
+  }
+}
 
 // The shipped data should retain separate late-game destinations and exact
 // links, and every known source must point at a selectable place.

@@ -8,7 +8,8 @@ module.exports = function(sources, raw, withEngine = true) {
   if (!original.includes(marker)) throw new Error('Theory harness return marker moved');
   const script = original.replace(marker, `return {
     statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate,
-    numbersFor, optimise, scoreOf, aimOf, beatenOnes, enchantsFor, itemsFor, fresh, GOALS,
+    numbersFor, optimise, scoreOf, aimOf, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
+    indexItemAliases, fresh, GOALS,
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,
     progression(catalogue, saved) { access = catalogue; profile = saved; beaten = null; },
     configure(raw) {

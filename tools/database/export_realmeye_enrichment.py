@@ -591,6 +591,76 @@ def export(db: Path, output: Path, served: Path | None):
         page_index[row["source_key"]].add(rid)
         page_runtime_count[row["record_uid"]] += 1
 
+    # Some explicit RealmEye relations describe an Index entity which has
+    # no RealmEye page of its own. Blueprint Drops From is the important
+    # example: the evidence lives on the forged gear page, while the relation
+    # belongs to the Blueprint entity. Keep those relation-only entities in
+    # the runtime enrichment instead of silently discarding their relations.
+    #
+    # Evidence pages are deliberately NOT added to page_index: the page is
+    # evidence for this entity, not a statement that the page is "about" it.
+    about_backed_ids = set(records)
+    for row in con.execute(
+        """
+        SELECT DISTINCT relation.from_entity_uid,page.source_key,page.payload_json
+        FROM relations relation
+        JOIN source_records page ON page.record_uid=relation.source_record_uid
+        WHERE json_extract(relation.attributes_json,'$.source')='realmeye_archive'
+          AND page.record_type='realmeye_archive_page'
+        ORDER BY relation.from_entity_uid,page.source_key
+        """
+    ):
+        rid = runtime.get(row["from_entity_uid"])
+        if not rid or rid in about_backed_ids:
+            continue
+
+        emeta = entity_meta.get(
+            row["from_entity_uid"],
+            {"id": rid, "communityOnly": False},
+        )
+        base = {
+            key: value
+            for key, value in emeta.items()
+            if key not in {"scope", "searchAlias", "mergeReason"}
+        }
+        item = records.setdefault(
+            rid,
+            {**base, "pages": [], "facts": {}, "relations": [], "images": []},
+        )
+
+        alias = emeta.get("searchAlias")
+        if alias:
+            aliases[rid].add(alias)
+
+        scope = emeta.get("scope")
+        if scope:
+            scopes[rid].add(scope)
+
+        payload = load_json(row["payload_json"], {}) or {}
+        page = {
+            "slug": row["source_key"],
+            "title": payload.get("title") or row["source_key"],
+            "type": payload.get("type") or "other",
+            "rawHash": payload.get("raw_hash") or "",
+            "url": payload.get("url")
+                or ("https://www.realmeye.com/wiki/" + row["source_key"]),
+            "evidenceOnly": True,
+        }
+
+        summary = page_summary(payload)
+        if summary:
+            page["summary"] = summary
+
+        generation_status = page_generation_status(payload)
+        if generation_status:
+            page["generationStatus"] = generation_status
+
+        if scope:
+            page["scope"] = scope
+
+        if page not in item["pages"]:
+            item["pages"].append(page)
+
     def resolve_page_slug(slug):
         ids = sorted(page_index.get(str(slug or ""), set()))
         if len(ids) == 1:

@@ -1,5 +1,5 @@
 {
- "made": "2026-09-01",
+ "made": "2026-09-25",
  "notes": {
   "parts": [
    {
@@ -101,9 +101,9 @@
   "date": "2026-09-01",
   "lede": "Ten years since Oryx took the realm, and the anniversary is the update. A hub of twelve portals leads to classic dungeons rebuilt as they were; six new encounters fill the biomes that had none; and an event runs five weeks on top of it."
  },
- "before": "cc64814365a64de583f547b036685ac2",
+ "before": "15a3ce058fe946c792c23558bdb10e2c",
  "counts": {
-  "added": 827,
+  "added": 876,
   "changed": 20,
   "gone": 121
  },
@@ -119,7 +119,7 @@
    "gone": 9
   },
   "skins": {
-   "added": 16,
+   "added": 54,
    "changed": 0,
    "gone": 1
   },
@@ -134,12 +134,12 @@
    "gone": 111
   },
   "consumables": {
-   "added": 44,
+   "added": 46,
    "changed": 0,
    "gone": 0
   },
   "equipment": {
-   "added": 14,
+   "added": 23,
    "changed": 1,
    "gone": 0
   },
@@ -223,15 +223,15 @@
        },
        "attack": {
         "file": "old-king-pet-skin-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 2
        }
       }
      }
     },
     {
-     "id": "Old King Pet Stone",
+     "id": "Old King Pet Skin",
      "type": "0x9DFF",
      "art": {
       "kind": "moving",
@@ -249,6 +249,7 @@
       "soulbound": true,
       "consumable": true
      },
+     "clientId": "Old King Pet Stone",
      "sprite": {
       "moving": true,
       "clips": {
@@ -266,8 +267,8 @@
        },
        "attack": {
         "file": "old-king-pet-stone-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 2
        }
       }
@@ -337,7 +338,7 @@
      }
     },
     {
-     "id": "Malphas Head Pet Stone",
+     "id": "Malphas Head Pet Skin",
      "type": "0x9E02",
      "art": {
       "kind": "moving",
@@ -355,6 +356,7 @@
       "soulbound": true,
       "consumable": true
      },
+     "clientId": "Malphas Head Pet Stone",
      "sprite": {
       "moving": true,
       "clips": {
@@ -435,15 +437,15 @@
        },
        "attack": {
         "file": "fancy-turtle-pet-skin-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 2
        }
       }
      }
     },
     {
-     "id": "Fancy Turtle Pet Stone",
+     "id": "Fancy Turtle Pet Skin",
      "type": "0xcfd4",
      "art": {
       "kind": "moving",
@@ -461,6 +463,7 @@
       "soulbound": true,
       "consumable": true
      },
+     "clientId": "Fancy Turtle Pet Stone",
      "sprite": {
       "moving": true,
       "clips": {
@@ -478,8 +481,8 @@
        },
        "attack": {
         "file": "fancy-turtle-pet-stone-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 2
        }
       }
@@ -523,8 +526,8 @@
        },
        "attack": {
         "file": "celestial-sentinel-knight-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 4
        }
       }
@@ -562,8 +565,8 @@
        },
        "attack": {
         "file": "celestial-harmonist-bard-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 4
        }
       }
@@ -601,8 +604,8 @@
        },
        "attack": {
         "file": "chrono-woven-druid-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 4
        }
       }
@@ -640,8 +643,8 @@
        },
        "attack": {
         "file": "decennial-chrono-wizard-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 4
        }
       }
@@ -679,8 +682,8 @@
        },
        "attack": {
         "file": "evolutionary-mantis-shiny-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 2
        }
       }
@@ -718,8 +721,8 @@
        },
        "attack": {
         "file": "evolutionary-trex-shiny-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 2
        }
       }
@@ -757,8 +760,8 @@
        },
        "attack": {
         "file": "evolutionary-crabshiny-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 2
        }
       }
@@ -795,8 +798,8 @@
        },
        "attack": {
         "file": "mini-timekeeper-mystic-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 2
        }
       }
@@ -833,11 +836,296 @@
        },
        "attack": {
         "file": "timekeeper-mystic-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 2
        }
       }
+     }
+    },
+    {
+     "id": "2-Bit Archer",
+     "type": "0xFDCF",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1042
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Archer"
+     }
+    },
+    {
+     "id": "2-Bit Rogue",
+     "type": "0xFDD1",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1043
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Rogue"
+     }
+    },
+    {
+     "id": "2-Bit Wizard",
+     "type": "0xFDD3",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1044
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Wizard"
+     }
+    },
+    {
+     "id": "2-Bit Priest",
+     "type": "0xFDD5",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1045
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Priest"
+     }
+    },
+    {
+     "id": "2-Bit Warrior",
+     "type": "0xFDD7",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1046
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Warrior"
+     }
+    },
+    {
+     "id": "2-Bit Knight",
+     "type": "0xFDD9",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1047
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Knight"
+     }
+    },
+    {
+     "id": "2-Bit Paladin",
+     "type": "0xFDDB",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1048
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Paladin"
+     }
+    },
+    {
+     "id": "2-Bit Assassin",
+     "type": "0xFDDD",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1049
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Assassin"
+     }
+    },
+    {
+     "id": "2-Bit Necromancer",
+     "type": "0xFDDF",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1050
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Necromancer"
+     }
+    },
+    {
+     "id": "2-Bit Huntress",
+     "type": "0xFDE1",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1051
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Huntress"
+     }
+    },
+    {
+     "id": "2-Bit Mystic",
+     "type": "0xFDE3",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1052
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Mystic"
+     }
+    },
+    {
+     "id": "2-Bit Trickster",
+     "type": "0xFDE5",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1053
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Trickster"
+     }
+    },
+    {
+     "id": "2-Bit Sorcerer",
+     "type": "0xFDE7",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1054
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Sorcerer"
+     }
+    },
+    {
+     "id": "2-Bit Ninja",
+     "type": "0xFDE9",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1055
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Ninja"
+     }
+    },
+    {
+     "id": "2-Bit Samurai",
+     "type": "0xFDEB",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1056
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Samurai"
+     }
+    },
+    {
+     "id": "2-Bit Bard",
+     "type": "0xFDED",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1057
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Bard"
+     }
+    },
+    {
+     "id": "2-Bit Summoner",
+     "type": "0xFDEF",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1058
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Summoner"
+     }
+    },
+    {
+     "id": "2-Bit Kensei",
+     "type": "0xFDF1",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1059
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Kensei"
+     }
+    },
+    {
+     "id": "2-Bit Druid",
+     "type": "0xFDF3",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1060
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "for": "Druid"
      }
     },
     {
@@ -876,8 +1164,8 @@
        },
        "attack": {
         "file": "mini-undersea-phantom-skin-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 2
        }
       }
@@ -919,8 +1207,8 @@
        },
        "attack": {
         "file": "celestial-sentinel-knight-skin-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 4
        }
       }
@@ -962,8 +1250,8 @@
        },
        "attack": {
         "file": "celestial-harmonist-bard-skin-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 4
        }
       }
@@ -1005,8 +1293,8 @@
        },
        "attack": {
         "file": "chrono-woven-druid-skin-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 4
        }
       }
@@ -1048,8 +1336,8 @@
        },
        "attack": {
         "file": "decennial-chrono-wizard-skin-attack.png",
-        "tile": 16,
-        "height": 32,
+        "tile": 32,
+        "height": 16,
         "frames": 4
        }
       }
@@ -1090,11 +1378,334 @@
        },
        "attack": {
         "file": "mini-timekeeper-mystic-skin-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 2
        }
       }
+     }
+    },
+    {
+     "id": "2-Bit Archer Skin",
+     "type": "0xFDD0",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1042
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Archer",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Rogue Skin",
+     "type": "0xFDD2",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1043
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Rogue",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Wizard Skin",
+     "type": "0xFDD4",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1044
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Wizard",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Priest Skin",
+     "type": "0xFDD6",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1045
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Priest",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Warrior Skin",
+     "type": "0xFDD8",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1046
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Warrior",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Knight Skin",
+     "type": "0xFDDA",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1047
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Knight",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Paladin Skin",
+     "type": "0xFDDC",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1048
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Paladin",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Assassin Skin",
+     "type": "0xFDDE",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1049
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Assassin",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Necromancer Skin",
+     "type": "0xFDE0",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1050
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Necromancer",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Huntress Skin",
+     "type": "0xFDE2",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1051
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Huntress",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Mystic Skin",
+     "type": "0xFDE4",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1052
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Mystic",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Trickster Skin",
+     "type": "0xFDE6",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1053
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Trickster",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Sorcerer Skin",
+     "type": "0xFDE8",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1054
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Sorcerer",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Ninja Skin",
+     "type": "0xFDEA",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1055
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Ninja",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Samurai Skin",
+     "type": "0xFDEC",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1056
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Samurai",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Bard Skin",
+     "type": "0xFDEE",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1057
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Bard",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Summoner Skin",
+     "type": "0xFDF0",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1058
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Summoner",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Kensei Skin",
+     "type": "0xFDF2",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1059
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Kensei",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
+     }
+    },
+    {
+     "id": "2-Bit Druid Skin",
+     "type": "0xFDF4",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1060
+     },
+     "description": "Equip your character with Retro colors!\\n\\nSkin Class: Druid",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 7,
+      "consumable": true
      }
     },
     {
@@ -1128,8 +1739,8 @@
        },
        "attack": {
         "file": "centipede-head-attack.png",
-        "tile": 8,
-        "height": 16,
+        "tile": 16,
+        "height": 8,
         "frames": 2
        }
       }
@@ -1818,6 +2429,159 @@
        }
       }
      }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x1",
+     "type": "0xfdc4",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x2",
+     "type": "0xfdc5",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x3",
+     "type": "0xfdc6",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x4",
+     "type": "0xfdc7",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x5",
+     "type": "0xfdc8",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x6",
+     "type": "0xfdc9",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x7",
+     "type": "0xfdca",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x8",
+     "type": "0xfdcb",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
+    },
+    {
+     "id": "2-Bit Skin Collection Token x9",
+     "type": "0xfdcc",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 2102
+     },
+     "description": "Consume full token stack to get a 2-Bit Skin Collection Chest.",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "bag": 2,
+      "soulbound": true
+     }
     }
    ],
    "changed": [
@@ -1879,7 +2643,7 @@
   "weapons": {
    "added": [
     {
-     "id": "RWMysticST0",
+     "id": "Staff of Rich History",
      "type": "0xFE20",
      "art": {
       "kind": "still",
@@ -1910,6 +2674,7 @@
       "range": 9.6,
       "on equip WIS": 4
      },
+     "clientId": "RWMysticST0",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2368,7 +3133,7 @@
      }
     },
     {
-     "id": "Retro Poison Fang Dagger",
+     "id": "Poison Fang Dagger",
      "type": "0xcfc0",
      "art": {
       "kind": "still",
@@ -2395,6 +3160,7 @@
       "damage": "55-120",
       "range": 5.6
      },
+     "clientId": "Retro Poison Fang Dagger",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2408,7 +3174,7 @@
      }
     },
     {
-     "id": "Retro Doom Bow",
+     "id": "Doom Bow",
      "type": "0xcfc1",
      "art": {
       "kind": "still",
@@ -2438,6 +3204,7 @@
       "range": 7,
       "pierces": true
      },
+     "clientId": "Retro Doom Bow",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2451,7 +3218,7 @@
      }
     },
     {
-     "id": "Retro Staff of Extreme Prejudice",
+     "id": "Staff of Extreme Prejudice",
      "type": "0xcfc2",
      "art": {
       "kind": "still",
@@ -2481,6 +3248,7 @@
       "damage": "80-95",
       "range": 4
      },
+     "clientId": "Retro Staff of Extreme Prejudice",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2494,7 +3262,7 @@
      }
     },
     {
-     "id": "Retro Pirate King's Cutlass",
+     "id": "Pirate King's Cutlass",
      "type": "0xcfc4",
      "art": {
       "kind": "still",
@@ -2524,6 +3292,7 @@
       "on equip DEF": -2,
       "on equip SPD": 3
      },
+     "clientId": "Retro Pirate King's Cutlass",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2537,7 +3306,7 @@
      }
     },
     {
-     "id": "Retro Doku No Ken",
+     "id": "Doku No Ken",
      "type": "0xcfc5",
      "art": {
       "kind": "still",
@@ -2566,6 +3335,7 @@
       "range": 5.2,
       "pierces": true
      },
+     "clientId": "Retro Doku No Ken",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2579,7 +3349,7 @@
      }
     },
     {
-     "id": "Retro Leaf Bow",
+     "id": "Leaf Bow",
      "type": "0xcfc6",
      "art": {
       "kind": "still",
@@ -2609,6 +3379,7 @@
       "range": 7.2,
       "on equip SPD": 5
      },
+     "clientId": "Retro Leaf Bow",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2622,7 +3393,7 @@
      }
     },
     {
-     "id": "Retro Celestial Blade",
+     "id": "Sullen Blade",
      "type": "0xcfcb",
      "art": {
       "kind": "still",
@@ -2649,6 +3420,7 @@
       "damage": "200-220",
       "range": 5.2
      },
+     "clientId": "Retro Celestial Blade",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2662,7 +3434,7 @@
      }
     },
     {
-     "id": "Retro Demon Blade",
+     "id": "Demon Blade",
      "type": "0xcfcf",
      "art": {
       "kind": "still",
@@ -2692,6 +3464,7 @@
       "damage": "150-175",
       "range": 3.4
      },
+     "clientId": "Retro Demon Blade",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2705,7 +3478,7 @@
      }
     },
     {
-     "id": "Torrential Staff Shiny",
+     "id": "Torrential Staff",
      "type": "0xCFDD",
      "art": {
       "kind": "still",
@@ -2739,6 +3512,7 @@
       "pierces": true,
       "subattacks": 5
      },
+     "clientId": "Torrential Staff Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2752,7 +3526,7 @@
      }
     },
     {
-     "id": "Celestial Recurve Shiny",
+     "id": "Celestial Recurve",
      "type": "0xCFDE",
      "art": {
       "kind": "still",
@@ -2787,6 +3561,7 @@
       "passes cover": true,
       "subattacks": 5
      },
+     "clientId": "Celestial Recurve Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2800,7 +3575,7 @@
      }
     },
     {
-     "id": "Pirate's Artillery Shiny",
+     "id": "Pirate's Artillery",
      "type": "0xCFE0",
      "art": {
       "kind": "still",
@@ -2834,6 +3609,7 @@
       "passes cover": true,
       "subattacks": 9
      },
+     "clientId": "Pirate's Artillery Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2847,7 +3623,7 @@
      }
     },
     {
-     "id": "Bloodbath Blade Shiny",
+     "id": "Bloodbath Blade",
      "type": "0xCFE7",
      "art": {
       "kind": "still",
@@ -2882,6 +3658,7 @@
       "subattacks": 2,
       "on equip VIT": -15
      },
+     "clientId": "Bloodbath Blade Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2953,7 +3730,7 @@
   "abilities": {
    "added": [
     {
-     "id": "RWMysticST1",
+     "id": "Entrancing Hourglass",
      "type": "0xFE21",
      "art": {
       "kind": "still",
@@ -2981,6 +3758,7 @@
       "XP bonus": 6,
       "mp cost": 125
      },
+     "clientId": "RWMysticST1",
      "sprite": {
       "moving": false,
       "clips": {
@@ -2994,7 +3772,7 @@
      }
     },
     {
-     "id": "Kaiju Skull",
+     "id": "Fossilized Skull",
      "type": "0xbc01",
      "art": null,
      "description": "The fossilized skull of a kaiju even older and more powerful than the one that roams the Carboniferous.",
@@ -3019,7 +3797,8 @@
       "mp cost": 130,
       "soulbound": true,
       "on equip MAXHP": 35
-     }
+     },
+     "clientId": "Kaiju Skull"
     },
     {
      "id": "Rectangular Prism",
@@ -3235,7 +4014,7 @@
      }
     },
     {
-     "id": "Retro Cloak of the Planewalker",
+     "id": "Cloak of the Planewalker",
      "type": "0xcfc3",
      "art": {
       "kind": "still",
@@ -3266,6 +4045,7 @@
       "on equip SPD": 5,
       "on equip DEX": 4
      },
+     "clientId": "Retro Cloak of the Planewalker",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3279,7 +4059,7 @@
      }
     },
     {
-     "id": "Retro Skull of Endless Torment",
+     "id": "Skull of Endless Torment",
      "type": "0xcfc7",
      "art": {
       "kind": "still",
@@ -3309,6 +4089,7 @@
       "on equip DEF": 3,
       "on equip DEX": 3
      },
+     "clientId": "Retro Skull of Endless Torment",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3322,7 +4103,7 @@
      }
     },
     {
-     "id": "Mace of the Pumpkin Effigy Shiny",
+     "id": "Mace of the Pumpkin Effigy",
      "type": "0xCFDF",
      "art": {
       "kind": "still",
@@ -3356,6 +4137,7 @@
       "on equip DEF": 5,
       "on equip ATT": 5
      },
+     "clientId": "Mace of the Pumpkin Effigy Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3369,7 +4151,7 @@
      }
     },
     {
-     "id": "Skull of Restless Souls Shiny",
+     "id": "Skull of Restless Souls",
      "type": "0xCFE1",
      "art": {
       "kind": "still",
@@ -3402,6 +4184,7 @@
       "on equip ATT": 4,
       "on equip DEF": 4
      },
+     "clientId": "Skull of Restless Souls Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3415,7 +4198,7 @@
      }
     },
     {
-     "id": "Doom's Emblem Shiny",
+     "id": "Doom's Emblem",
      "type": "0xCFE2",
      "art": {
       "kind": "still",
@@ -3448,6 +4231,7 @@
       "on equip DEX": 4,
       "on equip VIT": 4
      },
+     "clientId": "Doom's Emblem Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3461,7 +4245,7 @@
      }
     },
     {
-     "id": "Cavalry Lance Shiny",
+     "id": "Cavalry Lance",
      "type": "0xCFE3",
      "art": {
       "kind": "still",
@@ -3497,6 +4281,7 @@
       "on equip DEF": 10,
       "on equip ATT": 6
      },
+     "clientId": "Cavalry Lance Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3510,7 +4295,7 @@
      }
     },
     {
-     "id": "Cloak of the Deep Shiny",
+     "id": "Cloak of the Deep",
      "type": "0xCFE4",
      "art": {
       "kind": "still",
@@ -3548,6 +4333,7 @@
       "on equip MAXMP": 50,
       "on equip DEF": 5
      },
+     "clientId": "Cloak of the Deep Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3561,7 +4347,7 @@
      }
     },
     {
-     "id": "Evolutionary Records Shiny",
+     "id": "Evolutionary Records",
      "type": "0xCFE5",
      "art": {
       "kind": "still",
@@ -3592,6 +4378,7 @@
       "on equip MAXHP": 50,
       "on equip MAXMP": 50
      },
+     "clientId": "Evolutionary Records Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3605,7 +4392,7 @@
      }
     },
     {
-     "id": "Pollen Incendiary Shiny",
+     "id": "Pollen Incendiary",
      "type": "0xCFE6",
      "art": {
       "kind": "still",
@@ -3639,6 +4426,7 @@
       "on equip VIT": -6,
       "on equip WIS": -6
      },
+     "clientId": "Pollen Incendiary Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3652,7 +4440,7 @@
      }
     },
     {
-     "id": "Runes of Knowledge Shiny",
+     "id": "Runes of Knowledge",
      "type": "0xCFE8",
      "art": {
       "kind": "still",
@@ -3687,6 +4475,7 @@
       "on equip DEF": 5,
       "on equip VIT": 5
      },
+     "clientId": "Runes of Knowledge Shiny",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3702,7 +4491,7 @@
    ],
    "changed": [
     {
-     "id": "tD Seal",
+     "id": "Seal of Cubic Conundra",
      "type": "0x4b68",
      "art": {
       "kind": "still",
@@ -3739,6 +4528,7 @@
        "now": null
       }
      ],
+     "clientId": "tD Seal",
      "sprite": {
       "moving": false,
       "clips": {
@@ -3802,7 +4592,7 @@
   "armour": {
    "added": [
     {
-     "id": "RWMysticST2",
+     "id": "Traditional Blouse",
      "type": "0xFE22",
      "art": {
       "kind": "still",
@@ -3832,6 +4622,7 @@
       "on equip VIT": 5,
       "on equip WIS": 5
      },
+     "clientId": "RWMysticST2",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4067,7 +4858,7 @@
      }
     },
     {
-     "id": "Retro Leaf Dragon Hide Armor",
+     "id": "Leaf Draon Hide Armor",
      "type": "0xcfc8",
      "art": {
       "kind": "still",
@@ -4096,6 +4887,7 @@
       "on equip VIT": 3,
       "on equip WIS": 3
      },
+     "clientId": "Retro Leaf Dragon Hide Armor",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4109,7 +4901,7 @@
      }
     },
     {
-     "id": "Retro Water Dragon Silk Robe",
+     "id": "Water Dragon Silk Robe",
      "type": "0xcfc9",
      "art": {
       "kind": "still",
@@ -4138,6 +4930,7 @@
       "on equip SPD": 6,
       "on equip WIS": 3
      },
+     "clientId": "Retro Water Dragon Silk Robe",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4151,7 +4944,7 @@
      }
     },
     {
-     "id": "Retro Fire Dragon Battle Armor",
+     "id": "Fire Dragon Battle Armor",
      "type": "0xcfca",
      "art": {
       "kind": "still",
@@ -4179,6 +4972,7 @@
       "on equip SPD": 3,
       "on equip VIT": 3
      },
+     "clientId": "Retro Fire Dragon Battle Armor",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4251,7 +5045,7 @@
   "rings": {
    "added": [
     {
-     "id": "RWMysticST3",
+     "id": "Bronze Pocketwatch",
      "type": "0xFE23",
      "art": {
       "kind": "still",
@@ -4285,6 +5079,7 @@
       "on equip DEX": 15,
       "on equip VIT": 15
      },
+     "clientId": "RWMysticST3",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4465,7 +5260,7 @@
      }
     },
     {
-     "id": "Retro Snake Eye Ring",
+     "id": "Snake Eye Ring",
      "type": "0xcfbe",
      "art": {
       "kind": "still",
@@ -4490,6 +5285,7 @@
       "on equip ATT": 3,
       "on equip SPD": 3
      },
+     "clientId": "Retro Snake Eye Ring",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4503,7 +5299,7 @@
      }
     },
     {
-     "id": "Retro Spider's Eye Ring",
+     "id": "Spider's Eye Ring",
      "type": "0xcfbf",
      "art": {
       "kind": "still",
@@ -4528,6 +5324,7 @@
       "on equip VIT": 3,
       "on equip WIS": 3
      },
+     "clientId": "Retro Spider's Eye Ring",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4541,7 +5338,7 @@
      }
     },
     {
-     "id": "Retro The Forgotten Crown",
+     "id": "The Forgotten Crown",
      "type": "0xcfcc",
      "art": {
       "kind": "still",
@@ -4567,6 +5364,7 @@
       "on equip ATT": 6,
       "on equip MAXHP": 110
      },
+     "clientId": "Retro The Forgotten Crown",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4580,7 +5378,7 @@
      }
     },
     {
-     "id": "Retro The Twilight Gemstone",
+     "id": "The Twilight Gemstone",
      "type": "0xcfcd",
      "art": {
       "kind": "still",
@@ -4606,6 +5404,7 @@
       "on equip DEF": 6,
       "on equip MAXMP": 110
      },
+     "clientId": "Retro The Twilight Gemstone",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4619,7 +5418,7 @@
      }
     },
     {
-     "id": "Retro Bracer of the Guardian",
+     "id": "Bracer of the Guardian",
      "type": "0xcfce",
      "art": {
       "kind": "still",
@@ -4646,6 +5445,7 @@
       "on equip MAXHP": 60,
       "on equip MAXMP": 60
      },
+     "clientId": "Retro Bracer of the Guardian",
      "sprite": {
       "moving": false,
       "clips": {
@@ -4659,7 +5459,7 @@
      }
     },
     {
-     "id": "Adventurer's Scarf Shiny",
+     "id": "Adventurer's Scarf",
      "type": "0xCFDC",
      "art": {
       "kind": "still",
@@ -4690,6 +5490,7 @@
       "on equip SPD": 5,
       "on equip VIT": 5
      },
+     "clientId": "Adventurer's Scarf Shiny",
      "sprite": {
       "moving": false,
       "clips": {

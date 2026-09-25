@@ -40,7 +40,7 @@ except Exception:
 HOST = "https://www.realmeye.com"
 WIKI_PREFIX = "/wiki/"
 SCHEMA_VERSION = 4
-PARSER_VERSION = 3
+PARSER_VERSION = 4
 
 # Tables under these headings are rosters/relationship grids, not key/value
 # facts. Treating a two-cell Heroes row as "Deathmage = Lich" was one of the
@@ -70,7 +70,9 @@ HIGH_VALUE_FAMILIES = {
     },
     "loot_sources": {
         "headings": ["drops", "drops of interest", "historical drops", "loot and purpose", "rewards"],
-        "facts": ["drops from", "obtained through", "loot bag", "blueprint", "drop location", "soulbound"],
+        "facts": ["drops from", "obtained through", "loot bag", "blueprint",
+                  "blueprint drops from", "blueprint obtained through",
+                  "drop location", "soulbound"],
     },
     "item_economy": {
         "headings": ["set bonuses", "reskins"],
@@ -647,6 +649,7 @@ def extract_facts(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
         # pairs into generic facts.
         if kind != "key-value":
             continue
+        blueprint_sources = False
         for row_idx, row in enumerate(table.get("rows", [])):
             if len(row) != 2:
                 continue
@@ -665,6 +668,18 @@ def extract_facts(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
                 continue
             if not value and key.lower() not in {"soulbound", "consumed with use"}:
                 continue
+
+            # RealmEye renders Blueprint as a small subsection of an item's
+            # source table. The following Drops From / Obtained Through rows
+            # describe the blueprint, not the equipment above it.
+            low_key = key.lower()
+            if low_key == "blueprint":
+                blueprint_sources = True
+            elif blueprint_sources and low_key in {"drops from", "obtained through"}:
+                key = "Blueprint " + key
+            elif blueprint_sources:
+                blueprint_sources = False
+
             facts.append({
                 "section_ord": table["section_ord"],
                 "key": key,
