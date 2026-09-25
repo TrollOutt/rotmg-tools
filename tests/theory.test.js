@@ -718,4 +718,53 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     'the bench must draw its target through the measured window');
 }
 
+/*
+ * The layout: who, then what is fought on the left and what fights it on the
+ * right. What is guarded is the arrangement a reader relies on - every item
+ * keeps its enchantments under it, and the alternative never shows a build
+ * the search did not make - not how many pixels any of it is.
+ */
+{
+  const page = fs.readFileSync(path.join(__dirname, '..', 'web', 'index.html'), 'utf8');
+  const body = page.slice(page.indexOf('<main class="tc-layout" id="tcBody"'), page.indexOf('id="tcPickerWrap"'));
+  const order = ['tc-char', 'tc-target', 'tc-main', 'tc-gear-card', 'id="tcAlts"', 'tc-fight', 'tc-optimize']
+    .map(token => body.indexOf(token));
+  assert.ok(order.every(at => at > 0) && order.every((at, i) => i === 0 || at > order[i - 1]),
+    'the theory page must read character, target, then gear (with its alternatives), fight and search');
+  for (const id of ['tcClass', 'tcName', 'tcStats', 'tcBosses', 'tcBossSay', 'tcGear', 'tcTakeAll', 'tcDuel', 'tcGoals', 'tcRun'])
+    assert.ok(body.includes('id="' + id + '"'), 'the theory layout must keep #' + id);
+  const theorySource = fs.readFileSync(path.join(__dirname, '..', 'web', 'theorycraft.js'), 'utf8');
+  const slot = theorySource.slice(theorySource.indexOf("return '<div class=\"tc-slot'"), theorySource.indexOf('function drawStats()'));
+  assert.ok(slot.indexOf('tc-slot-head') > 0 && slot.indexOf('tc-ench-strip') > slot.indexOf('tc-slot-head'),
+    'each slot must draw its enchantments inside itself, under its own item');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'web', 'style.css'), 'utf8');
+  assert.ok(/grid-template-areas: "char char" "target main";/.test(css),
+    'on a desktop the target must stand left of the gear, under the character band');
+  assert.ok(/\.tc-gear-card \.tc-gear \{\s*display: grid; grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(css),
+    'the four slots must stand side by side');
+  assert.ok(css.includes('@container (max-width: 759px)') && css.includes('@media (max-width: 900px) {\n  .tc-layout {'),
+    'the gear must only fold to two by two in a narrow column, and the target only move above it below 900px');
+  assert.ok(/#tcBody \.tc-target \{\s*align-self: stretch; contain: size;/.test(css),
+    'the target column must take the height of the column beside it, never set it');
+  assert.ok(theorySource.includes('function fitTargets()') && theorySource.includes('new ResizeObserver(() => fitTargets())')
+    && !/function fitTargets\(\)[\s\S]{0,2000}requestAnimationFrame/.test(theorySource),
+    'the target grid must be fitted to its box on resize only, with no frame loop');
+  assert.ok(body.indexOf('id="tcProgress"') > body.indexOf('tc-char') && body.indexOf('id="tcProgress"') < body.indexOf('tc-target'),
+    'the progression switch must stand in the character band');
+  const foot = body.slice(body.indexOf('class="tc-gear-foot"'), body.indexOf('id="tcTakeAll"'));
+  assert.ok(foot.includes('id="tcAlts"') && /id="tcAlts"[^>]*hidden/.test(foot),
+    "the alternatives live on the gear's last line, hidden until there are some");
+  assert.ok(theorySource.includes("'<span class=\"tc-alts-label\"") && theorySource.includes('list.map((one, i) =>'),
+    'every alternative is drawn on the one line, none behind arrows');
+  assert.ok(theorySource.includes('data-index-open="item:') && theorySource.includes('data-index-open="\' + esc(zone.index)')
+    && theorySource.includes('window.openIndexRecord(open.dataset.indexOpen)'),
+    'an item and the places it drops in each open their Index page through the checked route');
+  assert.ok(/\.tc-target \.tc-bosses \{[^}]*overflow: hidden;/.test(css) && css.includes('.tc-target .tc-bosses.is-overfull { overflow-y: auto; }'),
+    'the target grid shows no scrollbar unless even its smallest cells cannot fit');
+  assert.ok(!/No alternative build yet|class="tc-alt"/.test(body + theorySource),
+    'no empty placeholder stands in for alternatives that do not exist');
+  assert.ok(!/#tcBody\.tc-layout \{[^}]*overflow-y: auto/.test(css),
+    'the theory page must not be a box that scrolls inside the page');
+}
+
 console.log('TheoryCraft: target windows, fitting, frame stride and real targets check out.');

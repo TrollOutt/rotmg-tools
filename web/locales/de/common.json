@@ -602,5 +602,17 @@
   "index.picture.clientArt": "die eigene Kunst des Spiels",
   "index.picture.givenSkin": "die Haut, die es dir gibt",
   "index.picture.piece": "eines seiner Stücke",
-  "index.source.notDeclared": "nicht im Client deklariert"
+  "index.source.notDeclared": "nicht im Client deklariert",
+  "static.hide.the.clouds": "Wolken ausblenden",
+  "static.send.build.to.enchant": "Build zur Verzauberung senden",
+  "static.send.build.to.enchant.title": "Jeden Gegenstand dieses Builds mit seinen Verzauberungen in einem eigenen neuen Tab des Verzauberungsrechners öffnen",
+  "static.show.the.clouds": "Wolken einblenden",
+  "static.alternative.builds": "Alternative Builds",
+  "static.drag.to.widen": "ziehen zum Verbreitern · Doppelklick zum Zurücksetzen",
+  "static.back.to.the.zone": "Zurück zur Zone",
+  "static.back": "Zurück",
+  "static.open.in.the.index": "Im Index öffnen",
+  "static.reading.the.index": "Index wird gelesen…",
+  "static.index.record": "Index-Eintrag",
+  "static.leave.the.atlas.for.index": "Den Atlas für die Index-Seite dieses Eintrags verlassen"
 }

@@ -102,15 +102,12 @@ assert(!/ambienceToggle/.test(benchSource),
 /*
  * The starfield: one shared sky for the tool pages, and the planet kept out
  * of it. These are static checks rather than a rendered page, so what they
- * guard is the wiring - that the sky is named once, sits behind the aurora
- * and sprite scatter instead of on top of them, and is never turned on for
- * the way in - not how the gradient actually looks.
+ * guard is the wiring - that the sky is named once and is never turned on
+ * behind the planet of the way in - not how the gradient actually looks.
  */
 const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
 assert.equal((homeSource.match(/class="starfield"/g) || []).length, 1,
   'web/index.html must define exactly one shared starfield layer');
-assert(homeSource.indexOf('class="starfield"') < homeSource.indexOf('id="ambience"'),
-  'the starfield must sit before .ambience in the document so the aurora and sprite scatter paint over it');
 assert(/^\.starfield \{/m.test(styleSource), 'web/style.css must style the shared starfield layer');
 for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
   assert(styleSource.includes(`body[data-page="${page}"] .starfield`),
@@ -118,6 +115,12 @@ for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
 }
 assert(!/\[data-page="home"\]\s*\.starfield|\.starfield[^{]*:not\(\[data-page="home"\]\)/.test(styleSource),
   'the starfield must not be enabled for the home page, by name or by a not() default-on selector');
+/* The column arrangement of the way in has no planet in it, so it takes the
+   tool pages' sky - and only that arrangement: the wide one keeps its own. */
+assert(styleSource.includes('body[data-page="home"][data-ring="list"] .starfield { opacity: .85; }'),
+  'the home list arrangement must show the shared starfield');
+assert(!/body\[data-page="home"\](?:\[data-ring="wheel"\])?\s*\.starfield/.test(styleSource),
+  'the starfield must stay off behind the planet of the wide home arrangement');
 assert(styleSource.includes('.starfield { transition: none; }') && !/star-drift/.test(styleSource),
   'the static starfield must not retain a drifting normal-star layer');
 const globeMarkup = homeSource.match(/id="globeBox"/g) || [];
@@ -127,54 +130,19 @@ assert(pageHomeSpan.includes('id="globeBox"'),
   'the planet embed must live inside #pageHome, not a tool page');
 
 /*
- * The painted colour wash and the aurora used to tint every tool page from a
- * shared "realm". The wash is gone outright - no page paints it any more -
- * and the aurora is now the way in's own richer identity, so a module or
- * tool page shows the starfield through nothing but a small, dense sprite
- * scatter. These guard the wiring against regressing back, not the exact
- * look of the scatter.
+ * The drifting realms are gone, not paused: the painted colour wash, the
+ * aurora and the sprite scatter that lay over the starfield were a second
+ * background on every page, animated behind a planet or a tool that covered
+ * them. The starfield is the one sky of a tool page and the atlas is the
+ * ground of the way in. Nothing of the old layer may come back by the back
+ * door - no host element, no styles, no timers, no sprite pool.
  */
-assert(!/\.ambience canvas/.test(styleSource),
-  'web/style.css must not paint the retired colour-wash canvas on any page');
-assert(!/@keyframes drift\b/.test(styleSource),
-  'web/style.css must not keep the retired colour-wash drift animation');
-assert(!/\bpaintRealm\b/.test(appSource),
-  'web/app.js must not keep the retired canvas colour-wash painter');
-for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
-  assert(styleSource.includes(`body[data-page="${page}"] .aurora`),
-    `web/style.css must turn the aurora off on the ${page} tool page`);
-}
-assert(!/\[data-page="home"\]\s*\.aurora/.test(styleSource),
-  'the aurora must stay on for the home page, by name or by a not() default-on selector');
-assert(/for \(let i = 0; i < 44; i\+\+\)/.test(appSource) && /const size = 3\.5 \+ random\(\) \* 8;/.test(appSource),
-  'web/app.js must keep the DOM sprite scatter smaller and denser than the old colour-wash-era params');
-assert(styleSource.includes('filter: blur(2px) saturate(1.1);'),
-  'web/style.css must keep the DOM sprite scatter blur subtle for its smaller size');
-
-/*
- * The scatter used to swap between two separate pools by page - portals on
- * the way in and Fame Sweep, enchantment icons everywhere else. It is one
- * mixed pool now, loaded together and shared by every page, without raising
- * the on-screen scatter count above the ~44 it already was.
- */
-assert(/function spritePool\s*\(\s*\)\s*\{[\s\S]{0,300}?Promise\.all\(\[dungeonSprites\(\),\s*ambienceSprites\(\)\]\)/.test(appSource),
-  'web/app.js must load dungeon portals and enchantment icons together into one shared pool');
-assert(!/wanted === 'dungeon' \? await dungeonSprites\(\) : await ambienceSprites\(\)/.test(appSource),
-  'web/app.js must not keep the retired per-page dungeon/enchant pool switch');
-assert(!/\(page === 'fame' \|\| page === 'home'\) \? 'dungeon' : 'enchant'/.test(appSource),
-  'web/app.js must not keep the retired per-page pool selector');
-/*
- * Codex-flagged: a pre-data (portal-only) fetch resolving after a post-data
- * (complete) one must not be allowed to overwrite it - completeness, not
- * arrival order, must gate what gets applied. The behavioural proof is the
- * async ordering test further down; these are the wiring it depends on.
- */
-assert(/const complete = Boolean\(state\.data\);/.test(appSource),
-  'web/app.js\'s spritePool must know at call time whether this fetch can be the complete one');
-assert(/ambience\.poolPromise/.test(appSource) && /ambience\.poolComplete/.test(appSource),
-  'web/app.js must memoize the sprite pool and track whether a complete fetch has already landed');
-assert(!/ambience\.poolLoaded/.test(appSource),
-  'web/app.js must not keep the retired poolLoaded flag that could not tell a partial fetch from a complete one');
+assert(!/id="ambience"|class="ambience|id="realmName"/.test(homeSource),
+  'web/index.html must not carry the retired ambience or realm-name layers');
+assert(!/\.ambience\b|\.aurora\b|\.realm-name\b|ambience-drift|@keyframes float-[a-d]\b|@keyframes drift\b/.test(styleSource),
+  'web/style.css must not style the retired aurora, sprite scatter, colour wash or realm label');
+assert(!/\bambience\b|\bpaintRealm\b|spritePool|usePool|pinRealm|buildAurora|scatterDom|REALM_INTERVAL/.test(appSource),
+  'web/app.js must not keep any of the retired ambience machinery');
 
 /*
  * The module sky keeps the Atlas' normal field static: its actual fixed-seed
@@ -187,7 +155,7 @@ assert(/const MODULE_STARS = 460;/.test(appSource) && /const SHOOTING_STARS = \d
 assert(/function buildStarLanguage\(/.test(appSource),
   'web/app.js must build the module star language into the shared starfield host');
 const moduleStarSource = appSource.slice(appSource.indexOf('function buildStarLanguage('),
-  appSource.indexOf('/*\n * The drifting realms'));
+  appSource.indexOf('function initStarfield('));
 assert(/className = 'module-star-canvas'/.test(appSource) && /^\.starfield \.module-star-canvas \{/m.test(styleSource),
   'the module field must be one canvas scoped inside the shared starfield host');
 assert(/Math\.imul\(value, 1664525\) \+ 1013904223/.test(appSource)
@@ -235,81 +203,5 @@ const ratio = moduleHz / atlasHz;
 assert(ratio > 1.5 && ratio < 2.5,
   `module shooting stars must fire at roughly 2x the atlas' own pace on the way in (measured ${ratio.toFixed(2)}x)`);
 
-/*
- * A real race, not just a source pattern: routing can ask for the sprite
- * pool before the enchant data is read (spritePool only gets the portals
- * then), and the data load finishing asks for it again once it is (the
- * complete, mixed pool). Nothing orders the two underlying fetches - a slow
- * portal image can settle after the fast complete one - so a naive "last
- * write wins" lets the early, partial result land second and clobber the
- * complete one. This drives the actual spritePool/usePool source from
- * web/app.js, sliced out and run for real with fully-controlled promises,
- * to prove completeness decides the winner rather than arrival order.
- */
-(async () => {
-  function extractBlock(name, startMarker) {
-    const start = appSource.indexOf(startMarker);
-    assert(start !== -1, `sprite-pool ordering test: could not find "${startMarker}" (${name}) in web/app.js`);
-    const end = appSource.indexOf('\n}', start + startMarker.length);
-    assert(end !== -1, `sprite-pool ordering test: could not find the end of "${startMarker}" (${name}) in web/app.js`);
-    const block = appSource.slice(start, end + 2);
-    let depth = 0;
-    for (const ch of block) { if (ch === '{') depth++; else if (ch === '}') depth--; }
-    assert.equal(depth, 0,
-      `sprite-pool ordering test: "${name}" extraction is unbalanced - its markers in web/app.js may be stale`);
-    return block;
-  }
-  const sliceScript = extractBlock('ambience state', 'const ambience = {') + ';\n\n'
-    + extractBlock('spritePool', 'function spritePool() {') + '\n\n'
-    + extractBlock('usePool', 'async function usePool() {') + '\n\n'
-    + 'this.__probe = { ambience, spritePool, usePool };\n';
-
-  function deferred() {
-    let resolve;
-    const promise = new Promise(r => { resolve = r; });
-    return { promise, resolve };
-  }
-  const calls = { dungeon: [], enchant: [] };
-  const context = {
-    state: { data: null },
-    dungeonSprites: () => { const d = deferred(); calls.dungeon.push(d); return d.promise; },
-    ambienceSprites: () => { const d = deferred(); calls.enchant.push(d); return d.promise; }
-  };
-  vm.runInNewContext(sliceScript, context, { filename: 'app.js (sprite-pool slice)' });
-  const { usePool, ambience: sliceAmbience } = context.__probe;
-
-  // Call A: routing asks for the pool before the enchant data is read.
-  context.state.data = null;
-  const callA = usePool();
-  assert.equal(calls.dungeon.length, 1, 'the pre-data call must fetch the portals');
-  assert.equal(calls.enchant.length, 1, 'the pre-data call must still ask for the enchant pool');
-
-  // Call B: the data finishes loading and the app asks again - the complete
-  // request, exactly what initAmbience does once state.data is set.
-  context.state.data = { enchants: [] };
-  const callB = usePool();
-  assert.equal(calls.dungeon.length, 2,
-    'the post-data call must fetch its own portals rather than reusing the stale in-flight partial one');
-
-  // Call B's fetch settles first...
-  calls.dungeon[1].resolve([{ src: 'portalB' }]);
-  calls.enchant[1].resolve([{ src: 'enchantB' }]);
-  await callB;
-  assert.deepEqual(sliceAmbience.sprites.map(sprite => sprite.src), ['portalB', 'enchantB'],
-    'the complete pool must apply once it lands');
-
-  // ...and Call A's slower, portal-only fetch settles after it. It must not
-  // win: this is the exact ordering Codex flagged.
-  calls.dungeon[0].resolve([{ src: 'portalA' }]);
-  calls.enchant[0].resolve([]);
-  await callA;
-  assert.deepEqual(sliceAmbience.sprites.map(sprite => sprite.src), ['portalB', 'enchantB'],
-    'a pre-data partial fetch resolving after the complete one must not overwrite it');
-
-  console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
-    + 'animations-toggle removal, shared-starfield wiring, module colour-wash/aurora removal, unified '
-    + 'sprite pool, module star-language, and sprite-pool ordering checks pass.');
-})().catch(error => {
-  console.error(error);
-  process.exitCode = 1;
-});
+console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
+  + 'animations-toggle removal, shared-starfield wiring, retired background layers and module star-language checks pass.');

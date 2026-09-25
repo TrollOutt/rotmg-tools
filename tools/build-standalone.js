@@ -140,7 +140,8 @@ const sources = {
       biomes: Object.fromEntries(Object.entries(source.biomes).map(([key, b]) =>
         [key, { id: b.id, slug: b.slug, rank: b.rank }])),
       creatures: Object.fromEntries(Object.entries(source.creatures).map(([key, c]) =>
-        [key, { groups: c.groups, detail: { drops: (c.detail || {}).drops || [] } }])) };
+        // The name too: the Atlas finds a creature's drops by the name its panel shows.
+        [key, { name: c.name, groups: c.groups, detail: { drops: (c.detail || {}).drops || [] } }])) };
   })()),
 };
 

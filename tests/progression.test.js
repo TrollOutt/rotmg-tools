@@ -93,6 +93,17 @@ for (const id of ['dungeon:pirate-cave', 'dungeon:oryx-s-sanctuary', 'dungeon:th
   assert(shipped.zones.some(z => z.id === id), 'Missing place: ' + id);
 }
 const knownZones = new Set(shipped.zones.map(z => z.id));
+{
+  // A place links to the Index only through a record the Index holds.
+  const records = new Set(index.records.map(r => r.id));
+  const linked = shipped.zones.filter(z => z.index);
+  assert(linked.some(z => z.kind === 'dungeon') && linked.some(z => z.kind === 'biome'),
+    'dungeons and biomes both carry their Index record');
+  for (const zone of linked) assert(records.has(zone.index), 'unknown Index record for ' + zone.name + ': ' + zone.index);
+  for (const zone of shipped.zones.filter(z => !z.index)) {
+    assert(!records.has('place:' + zone.name), 'a place the Index holds must keep its link: ' + zone.name);
+  }
+}
 for (const sources of shipped.sources.values()) for (const id of sources) assert(knownZones.has(id));
 const beach = { ...personal, zones: ['biome:beach'] };
 assert(P.allows(shipped, beach, 'Comet Staff'), 'Rookie loot must include explicit common tier drops');

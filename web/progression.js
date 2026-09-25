@@ -36,7 +36,8 @@ var BuildProgression = (function () {
        * client declares them - fifty of them do, each frame with its own
        * duration. A dungeon that shimmers is how it looks in the game.
        */
-      if (!zones.has(key)) zones.set(key, { id: key, name, kind: 'dungeon', art: record.art,
+      // `index`: the portal's own Index record, so a page can open it.
+      if (!zones.has(key)) zones.set(key, { id: key, index: record.id, name, kind: 'dungeon', art: record.art,
         film: record.film, filmFor: record.filmFor,
         difficulty: ratings.get(ratingKey(name)) });
       addPage(page, key);
@@ -47,7 +48,7 @@ var BuildProgression = (function () {
     }
     for (const record of index.records) {
       if (record.kind !== 'place') continue;
-      zones.set(record.id, { id: record.id, name: record.name, kind: 'biome', rank: record.rank,
+      zones.set(record.id, { id: record.id, index: record.id, name: record.name, kind: 'biome', rank: record.rank,
         art: record.art, icon: record.icon });
       // Named biome gear is already resolved by the Index onto exact client
       // records. Keep both UT and ST pieces: neither is covered by a generic
@@ -90,7 +91,7 @@ var BuildProgression = (function () {
       const page = pageBySlug.get(biome.slug);
       const name = (zones.get(key) || {}).name || (wiki.pages[page] || [])[1]
         || biome.slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      zones.set(key, { id: key, name, kind: 'biome', rank: biome.rank,
+      zones.set(key, { id: key, index: (zones.get(key) || {}).index, name, kind: 'biome', rank: biome.rank,
         art: (zones.get(key) || {}).art || biomeArt[biome.slug],
         icon: (zones.get(key) || {}).icon });
       biomeIds.set(biome.id, key);

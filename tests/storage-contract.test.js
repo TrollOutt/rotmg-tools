@@ -240,7 +240,7 @@ function fameHarness(localStorage) {
 function indexHarness(localStorage) {
   const source = read('web/index-page.js');
   const marker =
-    'return { start, show, open, __test: { createOpenController } };';
+    'return { start, show, open, card, door, __test: { createOpenController } };';
 
   assert(source.includes(marker),
     'STORAGE-020 RealmIndex test hook marker exists');
@@ -248,7 +248,7 @@ function indexHarness(localStorage) {
   const script = source.replace(
     marker,
     `return {
-      start, show, open,
+      start, show, open, card, door,
       __test: {
         createOpenController,
         readLoved,

@@ -41,6 +41,7 @@ const RealmIndex = (function () {
    * line to the moment `started` takes over.
    */
   let started = false;
+  let startedAway = false;           // built while another page was on screen
   let starting = false;
   let startPromise = null;
   /*
@@ -1552,6 +1553,14 @@ const RealmIndex = (function () {
      * inside another card is a way in too.
      */
     if (body) body.classList.add('has-card', 'has-list');
+    box.innerHTML = cardHtml(one);
+  }
+
+  /*
+   * One record's card as markup: the same card wherever it is shown, so the
+   * atlas's drawer is the Index's own card rather than a second one to keep.
+   */
+  function cardHtml(one) {
     const links = [];
     for (const [how, to] of one.outLinks || []) links.push([how, to, false]);
     for (const [how, from] of one.inLinks || []) links.push([how, from, true]);
@@ -1571,7 +1580,7 @@ const RealmIndex = (function () {
       ? (all.files[one.from[0]] || '?') + (one.from[1] ? ' · ' + one.from[1] : '')
       : t('index.source.notDeclared');
 
-    box.innerHTML = '<header class="ix-card-head">'
+    return '<header class="ix-card-head">'
       + artCell(one, 44)
       + '<span class="ix-kind is-' + esc(filedAs(one).replace(/ /g, '-'))
         + '">' + esc(sayKind(filedAs(one))) + '</span>'
@@ -2605,12 +2614,22 @@ const RealmIndex = (function () {
       });
     }
     started = true;
+    startedAway = document.body.dataset.page !== 'index';
     queueRealmEyeArchive();
     return true;
   }
 
   function start() {
     if (started) {
+      /*
+       * Built out of sight - for the atlas's drawer - it measured a page that
+       * was not laid out, so the first time it is really shown it measures
+       * again.
+       */
+      if (startedAway && document.body.dataset.page === 'index') {
+        startedAway = false;
+        requestAnimationFrame(repaint);
+      }
       queueRealmEyeArchive();
       return Promise.resolve(true);
     }
@@ -2649,7 +2668,26 @@ const RealmIndex = (function () {
     id => showing && showing.id === id ? true : show(id)
   );
 
-  return { start, show, open, __test: { createOpenController } };
+  /*
+   * A record's card for somebody else to show - the atlas, over its map -
+   * without leaving the page they are on. Null when the Index cannot be read
+   * or does not hold it.
+   */
+  async function card(id) {
+    if (typeof id !== 'string' || !id) return null;
+    if (!await start()) return null;
+    const one = all && all.get(id);
+    if (!one) return null;
+    return { id: one.id, name: one.said || one.name, html: cardHtml(one), sheet: el('ixBody')
+      ? el('ixBody').style.getPropertyValue('--ix-sheet') : '' };
+  }
+  /* And the doors on that card - the bench, the Enchant Calculator - by record. */
+  function door(where, id) {
+    const one = all && all.get(id);
+    if (one) walkThrough(where, one);
+  }
+
+  return { start, show, open, card, door, __test: { createOpenController } };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = RealmIndex;

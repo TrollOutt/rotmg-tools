@@ -602,5 +602,17 @@
   "index.picture.clientArt": "spelets egen konst",
   "index.picture.givenSkin": "huden den ger dig",
   "index.picture.piece": "en av dess delar",
-  "index.source.notDeclared": "inte deklareras i klienten"
+  "index.source.notDeclared": "inte deklareras i klienten",
+  "static.hide.the.clouds": "Dölj molnen",
+  "static.send.build.to.enchant": "skicka build till förtrollning",
+  "static.send.build.to.enchant.title": "Öppna varje föremål i denna build, med dess förtrollningar, i en egen ny flik i förtrollningskalkylatorn",
+  "static.show.the.clouds": "Visa molnen",
+  "static.alternative.builds": "Alternativa builds",
+  "static.drag.to.widen": "dra för att bredda · dubbelklicka för att återställa",
+  "static.back.to.the.zone": "Tillbaka till zonen",
+  "static.back": "Tillbaka",
+  "static.open.in.the.index": "Öppna i Index",
+  "static.reading.the.index": "Läser Index…",
+  "static.index.record": "Index-post",
+  "static.leave.the.atlas.for.index": "Lämna atlasen för postens Index-sida"
 }
