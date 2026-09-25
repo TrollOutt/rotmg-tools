@@ -32,8 +32,7 @@
  *     stage that is slow to composite reads as cheap here. The frame total
  *     is the honest ceiling; the stages are CPU only.
  *   - layout and paint of the ordinary DOM, which is why the site half
- *     compares whole frames with the animation on and off rather than
- *     trying to time CSS.
+ *     measures whole frames rather than trying to time CSS.
  *   - a phone. Everything here is whatever machine it is run on; the shape
  *     of the answer travels, the milliseconds do not.
  */
@@ -189,7 +188,7 @@ BENCH.atlas = async function () {
 /* ---------------------------------------------------------------- *
  * The site                                                         *
  * ---------------------------------------------------------------- */
-/* Whole frames, with the drifting realms behind everything and without. */
+/* Whole frames, with the drifting realms behind everything. */
 function framesFor(seconds) {
   return new Promise(resolve => {
     const gaps = [];
@@ -204,17 +203,11 @@ function framesFor(seconds) {
 }
 
 BENCH.site = async function () {
-  const toggle = document.getElementById('ambienceToggle');
-  const was = toggle && toggle.getAttribute('aria-pressed') === 'true';
   const out = { where: location.hash || '#home' };
 
-  if (toggle) {
-    if (!was) toggle.click();
-    out.animationsOn = summarise(await framesFor(3));
-    toggle.click();
-    out.animationsOff = summarise(await framesFor(3));
-    if (was) toggle.click();
-  }
+  // The drifting realms are always on now, so this is a steady-state
+  // reading rather than a comparison against an off state nothing offers.
+  out.frames = summarise(await framesFor(3));
 
   /*
    * What each page costs to open for the first time - which is when it reads

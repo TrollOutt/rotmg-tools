@@ -75,4 +75,133 @@ const indexSource = fs.readFileSync(path.join(root, 'web', 'index-page.js'), 'ut
 assert(indexSource.includes('esc(text)'), 'record descriptions must stay rendered as source data');
 assert(!indexSource.includes('RealmI18n.label(text)'), 'record descriptions must not be localized as UI copy');
 assert.equal(first.api.canonicalSearch('Potion of Dexterity'), 'potion of dexterity');
-console.log('English-only locale gate, catalogue retention, canonical search, and static-control checks pass.');
+
+/*
+ * The corner used to carry a visible "Animations on/off" switch. It is gone
+ * now - the drifting background stays capable of animating and still
+ * defers to prefers-reduced-motion, just with no user-facing control left
+ * behind to rot: no button, no click wiring, no storage key, nothing in
+ * Theory Crafting still reaching for the element that used to hold it, and
+ * nothing in the site benchmark still clicking it for an on/off comparison.
+ */
+const homeSource = fs.readFileSync(path.join(root, 'web', 'index.html'), 'utf8');
+assert(!/ambienceToggle|ambience-toggle/.test(homeSource),
+  'web/index.html must not contain the removed animations-toggle markup');
+const appSource = fs.readFileSync(path.join(root, 'web', 'app.js'), 'utf8');
+assert(!/ambienceToggle|AMBIENCE_KEY/.test(appSource),
+  'web/app.js must not wire up or persist the removed animations toggle');
+const theorySource = fs.readFileSync(path.join(root, 'web', 'theorycraft.js'), 'utf8');
+assert(!/ambienceToggle/.test(theorySource),
+  'web/theorycraft.js must not query the removed animations-toggle element');
+assert(/prefers-reduced-motion/.test(theorySource),
+  'web/theorycraft.js must still defer to prefers-reduced-motion');
+const benchSource = fs.readFileSync(path.join(root, 'tools', 'bench.js'), 'utf8');
+assert(!/ambienceToggle/.test(benchSource),
+  'tools/bench.js must not query or click the removed animations-toggle element');
+
+/*
+ * The starfield: one shared sky for the tool pages, and the planet kept out
+ * of it. These are static checks rather than a rendered page, so what they
+ * guard is the wiring - that the sky is named once and is never turned on
+ * behind the planet of the way in - not how the gradient actually looks.
+ */
+const styleSource = fs.readFileSync(path.join(root, 'web', 'style.css'), 'utf8');
+assert.equal((homeSource.match(/class="starfield"/g) || []).length, 1,
+  'web/index.html must define exactly one shared starfield layer');
+assert(/^\.starfield \{/m.test(styleSource), 'web/style.css must style the shared starfield layer');
+for (const page of ['enchant', 'fame', 'theory', 'index', 'skins', 'news']) {
+  assert(styleSource.includes(`body[data-page="${page}"] .starfield`),
+    `web/style.css must show the starfield on the ${page} tool page`);
+}
+assert(!/\[data-page="home"\]\s*\.starfield|\.starfield[^{]*:not\(\[data-page="home"\]\)/.test(styleSource),
+  'the starfield must not be enabled for the home page, by name or by a not() default-on selector');
+/* The column arrangement of the way in has no planet in it, so it takes the
+   tool pages' sky - and only that arrangement: the wide one keeps its own. */
+assert(styleSource.includes('body[data-page="home"][data-ring="list"] .starfield { opacity: .85; }'),
+  'the home list arrangement must show the shared starfield');
+assert(!/body\[data-page="home"\](?:\[data-ring="wheel"\])?\s*\.starfield/.test(styleSource),
+  'the starfield must stay off behind the planet of the wide home arrangement');
+assert(styleSource.includes('.starfield { transition: none; }') && !/star-drift/.test(styleSource),
+  'the static starfield must not retain a drifting normal-star layer');
+const globeMarkup = homeSource.match(/id="globeBox"/g) || [];
+assert.equal(globeMarkup.length, 1, 'the atlas planet embed must appear exactly once');
+const pageHomeSpan = homeSource.slice(homeSource.indexOf('id="pageHome"'), homeSource.indexOf('id="pageSkins"'));
+assert(pageHomeSpan.includes('id="globeBox"'),
+  'the planet embed must live inside #pageHome, not a tool page');
+
+/*
+ * The drifting realms are gone, not paused: the painted colour wash, the
+ * aurora and the sprite scatter that lay over the starfield were a second
+ * background on every page, animated behind a planet or a tool that covered
+ * them. The starfield is the one sky of a tool page and the atlas is the
+ * ground of the way in. Nothing of the old layer may come back by the back
+ * door - no host element, no styles, no timers, no sprite pool.
+ */
+assert(!/id="ambience"|class="ambience|id="realmName"/.test(homeSource),
+  'web/index.html must not carry the retired ambience or realm-name layers');
+assert(!/\.ambience\b|\.aurora\b|\.realm-name\b|ambience-drift|@keyframes float-[a-d]\b|@keyframes drift\b/.test(styleSource),
+  'web/style.css must not style the retired aurora, sprite scatter, colour wash or realm label');
+assert(!/\bambience\b|\bpaintRealm\b|spritePool|usePool|pinRealm|buildAurora|scatterDom|REALM_INTERVAL/.test(appSource),
+  'web/app.js must not keep any of the retired ambience machinery');
+
+/*
+ * The module sky keeps the Atlas' normal field static: its actual fixed-seed
+ * 460-star distribution is painted to one DPR-aware canvas on initialisation
+ * and resize only. Meteors remain the sole animated pieces.
+ */
+assert(/const MODULE_STARS = 460;/.test(appSource) && /const SHOOTING_STARS = \d+;/.test(appSource)
+  && /const SHOOTING_CYCLE = \d+;/.test(appSource),
+  'web/app.js must define the module star-language star and shooting-star counts');
+assert(/function buildStarLanguage\(/.test(appSource),
+  'web/app.js must build the module star language into the shared starfield host');
+const moduleStarSource = appSource.slice(appSource.indexOf('function buildStarLanguage('),
+  appSource.indexOf('function initStarfield('));
+assert(/className = 'module-star-canvas'/.test(appSource) && /^\.starfield \.module-star-canvas \{/m.test(styleSource),
+  'the module field must be one canvas scoped inside the shared starfield host');
+assert(/Math\.imul\(value, 1664525\) \+ 1013904223/.test(appSource)
+  && /Math\.pow\(random\(\), 4\)/.test(appSource)
+  && /0\.16 \+ lit \* 0\.84/.test(appSource)
+  && /0\.5 \+ lit \* 1\.5/.test(appSource),
+  'the module canvas must retain the Atlas seed, fourth-power brightness, and star sizing math');
+assert(/window\.devicePixelRatio/.test(appSource) && /ctx\.setTransform\(dpr, 0, 0, dpr, 0, 0\)/.test(appSource),
+  'the module canvas must scale its backing store and drawing coordinates for device pixel ratio');
+assert(/window\.addEventListener\('resize', paintStars\)/.test(appSource),
+  'the module canvas must repaint when its viewport size changes');
+assert(!/requestAnimationFrame|star-twinkle|TWINKLE_STARS/.test(moduleStarSource),
+  'the module normal-star field must not use a frame loop or DOM twinkles');
+assert(/^\.starfield \.shooting-star \{/m.test(styleSource) && /@keyframes shooting-star/.test(styleSource),
+  'web/style.css must keep shooting stars scoped under the starfield');
+assert(/linear-gradient\(90deg, rgba\(236, 244, 255, 0\), rgba\(236, 244, 255, \.9\)\)/.test(styleSource),
+  'shooting stars must fade from their transparent -X tail to their bright +X head');
+
+/*
+ * The way in keeps showing the atlas' own star language through its planet
+ * embed rather than a duplicate full-page field - these are untouched by
+ * the module star-language work, so the planet and its single embed must
+ * still be exactly what they were.
+ */
+assert(!/\[data-page="home"\]\s*\.starfield/.test(styleSource),
+  'the module star language must not be turned on for the home page');
+
+/*
+ * Roughly double the atlas' own meteor pace: the atlas fires METEORS slots
+ * every (base + roll() * range) seconds on average, and the module streaks
+ * fire SHOOTING_STARS times every SHOOTING_CYCLE seconds. Read straight from
+ * both sources rather than hard-coded, so either one drifting out of the
+ * ~2x relationship the task called for fails here instead of silently.
+ */
+const atlasSource = fs.readFileSync(path.join(root, 'web', 'assets', 'atlas', 'index.html'), 'utf8');
+const meteorCount = Number((atlasSource.match(/const METEORS = (\d+);/) || [])[1]);
+const meteorEvery = atlasSource.match(/every:\s*(\d+)\s*\+\s*roll\(\)\s*\*\s*(\d+)/);
+assert(meteorCount && meteorEvery, 'could not read the atlas meteor cadence to compare against');
+const atlasHz = meteorCount / (Number(meteorEvery[1]) + Number(meteorEvery[2]) / 2);
+const moduleStars = Number((appSource.match(/const SHOOTING_STARS = (\d+);/) || [])[1]);
+const moduleCycle = Number((appSource.match(/const SHOOTING_CYCLE = (\d+);/) || [])[1]);
+assert(moduleStars && moduleCycle, 'could not read the module shooting-star cadence');
+const moduleHz = moduleStars / moduleCycle;
+const ratio = moduleHz / atlasHz;
+assert(ratio > 1.5 && ratio < 2.5,
+  `module shooting stars must fire at roughly 2x the atlas' own pace on the way in (measured ${ratio.toFixed(2)}x)`);
+
+console.log('English-only locale gate, catalogue retention, canonical search, static-control, '
+  + 'animations-toggle removal, shared-starfield wiring, retired background layers and module star-language checks pass.');

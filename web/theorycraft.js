@@ -73,14 +73,33 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   async function loadAccess() {
     async function read(key, paths, asText = false) {
+      const shared = window.ROTMG_SHARED_DATA
+        || (window.ROTMG_SHARED_DATA = {});
+
+      if (key === 'indexText' && !asText && shared.index) {
+        return shared.index;
+      }
+
       const sources = (window.ROTMG_BUNDLE || {}).sources || {};
-      if (sources[key]) return asText ? sources[key] : JSON.parse(sources[key]);
+      if (sources[key]) {
+        const value = asText ? sources[key] : JSON.parse(sources[key]);
+        if (key === 'indexText' && !asText) shared.index = value;
+        return value;
+      }
+
       for (const path of paths) {
         try {
           const response = await fetch(path);
-          if (response.ok) return asText ? await response.text() : await response.json();
+          if (response.ok) {
+            const value = asText
+              ? await response.text()
+              : await response.json();
+            if (key === 'indexText' && !asText) shared.index = value;
+            return value;
+          }
         } catch (_) { /* Try the local checkout path next. */ }
       }
+
       throw new Error('Progression data unavailable');
     }
     try {
@@ -95,14 +114,41 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   const accessible = name => BuildProgression.allows(access, profile, name);
-  function sourceSaid(name) {
-    if (!profile || profile.mode !== 'personal' || !access || !name) return '';
-    const sources = access.sources.get(name) || new Set();
-    const selectedIds = new Set(BuildProgression.selectedZoneIds(access, profile));
-    const selected = access.zones.filter(z => selectedIds.has(z.id) && sources.has(z.id));
-    if (selected.length) return 'Loot: ' + selected.slice(0, 2).map(z => z.name).join(' · ')
-      + (selected.length > 2 ? ' · +' + (selected.length - 2) + ' more' : '');
-    return access.starter.has(name) ? 'Basic starter gear' : 'Outside your selected loot sources';
+  /*
+   * Where an item falls, as the places themselves: each portal or biome as
+   * the picture the game gives it, and each one a way to the Index page
+   * about it. Personalized, the places you have chosen; best possible,
+   * everywhere it falls. A few, then how many more.
+   */
+  const LOOT_SHOWN = 5;
+  function lootRow(name) {
+    if (!access || !name) return '';
+    const sources = access.sources.get(name);
+    if (!sources || !sources.size) {
+      return access.starter.has(name) ? '<span class="tc-loot-note">Basic starter gear</span>' : '';
+    }
+    const personal = profile && profile.mode === 'personal';
+    const selectedIds = personal ? new Set(BuildProgression.selectedZoneIds(access, profile)) : null;
+    const zones = access.zones.filter(zone => sources.has(zone.id) && (!selectedIds || selectedIds.has(zone.id)));
+    if (!zones.length) {
+      return personal ? '<span class="tc-loot-note">Outside your selected loot sources</span>' : '';
+    }
+    const shown = zones.slice(0, LOOT_SHOWN);
+    const more = zones.length - shown.length;
+    const all = zones.map(zone => zone.name).join(' · ');
+    return '<span class="tc-loot" title="Loot: ' + esc(all) + '"><i>Loot</i>'
+      + shown.map(zone => {
+        // A place with no picture of its own is said by name instead.
+        const art = zonePicture(zone, 20) || indexIcon(zone.art, 20, '');
+        const kind = art ? 'tc-loot-place' : 'tc-loot-place is-named';
+        const inner = art || esc(zone.name);
+        return zone.index
+          ? '<button type="button" class="' + kind + '" data-index-open="' + esc(zone.index) + '"'
+            + ' title="' + esc(zone.name) + ' - open it in the Index">' + inner + '</button>'
+          : '<span class="' + kind + '" title="' + esc(zone.name) + '">' + inner + '</span>';
+      }).join('')
+      + (more > 0 ? '<span class="tc-loot-more">+' + more + '</span>' : '')
+      + '</span>';
   }
   function prepareAccessible(state) {
     const out = JSON.parse(JSON.stringify(state));
@@ -161,17 +207,16 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /*
-   * Nothing moves when the reader has said they want it still - the switch in
-   * the corner that stops the realms drifting stops these too - or when the
-   * machine they are on asks for less motion.
+   * Nothing moves when the machine the reader is on asks for less motion.
    */
   function motionWanted() {
     try {
       if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
     } catch (error) { /* an old browser answers by not answering */ }
-    const toggle = document.getElementById('ambienceToggle');
-    return !toggle || toggle.getAttribute('aria-pressed') !== 'false';
+    return true;
   }
+
+  const theoryOpen = () => document.body.dataset.page === 'theory';
 
   const films = [];
   let filmClock = 0;
@@ -186,7 +231,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       while (frame < film.ends.length - 1 && at >= film.ends[frame]) frame++;
       film.node.style.backgroundPositionX = (-(film.x + frame * film.w) * film.zoom) + 'px';
     }
-    if (anyLeft && motionWanted()) filmClock = requestAnimationFrame(playFilms);
+    if (anyLeft && motionWanted() && theoryOpen()) filmClock = requestAnimationFrame(playFilms);
   }
   function startFilms(within) {
     films.length = 0;
@@ -200,7 +245,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     if (filmClock) cancelAnimationFrame(filmClock);
     filmClock = 0;
-    if (films.length && motionWanted()) filmClock = requestAnimationFrame(playFilms);
+    if (films.length && motionWanted() && theoryOpen()) filmClock = requestAnimationFrame(playFilms);
   }
 
   function dungeonCards(dungeons) {
@@ -267,7 +312,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const dungeons = selectedDungeons(draft);
     el('tcWelcome').innerHTML = '<div class="tc-welcome-intro"><span class="tc-eyebrow">BUILD CRAFTER · WELCOME</span>'
       + '<h2 id="tcWelcomeTitle" tabindex="-1">What’s the highest dungeon difficulty you’ve completed?</h2></div>'
-      + '<section class="tc-biome-picker" aria-labelledby="tcBiomeTitle"><div><h3 id="tcBiomeTitle">Realm zones</h3>'
+      + '<section class="tc-biome-picker" aria-labelledby="tcBiomeTitle"><div><h3 id="tcBiomeTitle">Realm Zones</h3>'
       + '<span>Include loot found directly in these zones</span></div><div class="tc-biome-ranks">'
       + biomeRankCards(draft) + '</div></section>'
       + '<div class="tc-slider-block"><div class="tc-slider-value">' + difficultyIcon + '<output id="tcDifficultyValue" for="tcDifficultySlider">'
@@ -279,7 +324,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         + Array.from({ length: 10 }, (_, i) => '<span style="left:' + (i / 9 * 100) + '%">' + (i + 1) + '</span>').join('') + '</div></div>'
       + '<div class="tc-difficulty-caption"><span>First adventures</span><span>Hardest challenges</span></div></div>'
       + (!access ? '<p class="tc-access-note">Dungeon data could not be loaded.</p><button type="button" class="tc-undo" id="tcRetryAccess">Retry loading sources</button>' : '')
-      + '<section id="tcZoneEditor" aria-labelledby="tcSelectedDungeons"><div class="tc-zone-heading"><div><h3 id="tcSelectedDungeons">Selected dungeons</h3>'
+      + '<section id="tcZoneEditor" aria-labelledby="tcSelectedDungeons"><div class="tc-zone-heading"><div><h3 id="tcSelectedDungeons">Selected Dungeons</h3>'
       + '<span id="tcZoneCount-dungeon"></span></div><div class="tc-zone-toolbar"><input id="tcZoneSearch" type="search" aria-label="Find a selected dungeon" placeholder="Search selected dungeons…" autocomplete="off">'
       + '<button type="button" class="tc-undo" id="tcRestoreDungeons">Restore level selection</button></div></div>'
       + '<div class="tc-zone-list" id="tcZones-dungeon">'
@@ -315,6 +360,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (editing && !el('tcWelcome').open) el('tcWelcome').showModal();
     if (!editing && el('tcWelcome').open) el('tcWelcome').close();
     el('tcProgress').hidden = editing;
+    if (editing) el('tcProgressNote').hidden = true;
     el('tcBody').hidden = editing;
     el('tcTabs').hidden = editing;
     el('tcRun').disabled = editing || (profile.mode === 'personal' && !access);
@@ -322,19 +368,35 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const personal = profile.mode === 'personal';
     const allowed = data.items.filter(item => accessible(item.name)).length;
     const outside = HANDS.filter(([hand]) => build.gear[hand].name && !accessible(build.gear[hand].name));
-    el('tcProgress').innerHTML = '<div class="tc-progress-top"><div><span class="tc-eyebrow">YOUR PROGRESSION</span><h2>'
-      + (personal ? 'A build within your reach' : 'The best possible build') + '</h2></div>'
-      + '<button type="button" class="tc-undo" id="tcEditProfile">Edit progression</button></div>'
-      + '<div class="tc-progress-controls"><div class="tc-access-mode" role="group" aria-label="Calculation mode">'
+    /*
+     * Three controls in the page's own header: which of the two pools the
+     * search draws from, and the way back into the questions that decide the
+     * personal one. What the pool currently holds is read on hover, since it
+     * is the answer to a question nobody asks twice. Only a note that asks
+     * for something to be done gets a line of its own, under the header.
+     */
+    const summary = (personal ? (profile.selection === 'difficulty' ? 'Difficulty ≤ ' + profile.difficulty + '/10 · ' : 'Manual selection · ')
+      + profile.zones.length + ' dungeons · ' + (profile.biomeRanks || ['Rookie']).join(' + ') + ' zones · '
+      : 'All sources · ') + RealmI18n.number(allowed) + ' choices across all classes';
+    const meaning = personal
+      ? 'Only equipment linked to your places and starter gear. Unconfirmed sources are excluded.'
+      : 'Full equipment catalogue. Your selected places are saved for personalized mode.';
+    // Edit progression stands on Personalized's side, the mode it sets up.
+    el('tcProgress').innerHTML = '<button type="button" class="tc-edit-progress" id="tcEditProfile"'
+      + (personal ? ' title="' + esc(summary) + '"'
+        : ' disabled title="Best possible uses the whole catalogue; your progression only shapes Personalized"')
+      + '><span aria-hidden="true">✎</span> Edit progression</button>'
+      + '<span class="tc-access-mode" role="group" aria-label="Calculation mode"'
+      + ' title="' + esc(summary + '\n' + meaning) + '">'
       + '<button type="button" data-access-mode="personal" aria-pressed="' + personal + '">Personalized</button>'
-      + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></div>'
-      + '<span>' + (personal ? (profile.selection === 'difficulty' ? 'Difficulty ≤ ' + profile.difficulty + '/10 · ' : 'Manual selection · ')
-        + profile.zones.length + ' dungeons · ' + (profile.biomeRanks || ['Rookie']).join(' + ') + ' zones · '
-        : 'All sources · ') + RealmI18n.number(allowed) + ' choices across all classes</span></div>'
-      + (personal ? '<p class="tc-progress-detail">Only equipment linked to your places and starter gear. Unconfirmed sources are excluded.</p>' : '<p class="tc-progress-detail">Full equipment catalogue. Your selected places are saved for personalized mode.</p>')
-      + (outside.length ? '<p class="tc-progress-detail">Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.</p>' : '')
-      + (!access && personal ? '<p class="tc-progress-detail">Loot sources are unavailable. Edit progression to retry.</p>' : '')
-      + (!profileSaved ? '<p class="tc-progress-detail">Browser storage is unavailable. This profile lasts for this visit only.</p>' : '');
+      + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></span>';
+    const notes = [
+      outside.length ? 'Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.' : '',
+      !access && personal ? 'Loot sources are unavailable. Edit progression to retry.' : '',
+      !profileSaved ? 'Browser storage is unavailable. This profile lasts for this visit only.' : ''
+    ].filter(Boolean);
+    el('tcProgressNote').innerHTML = notes.map(note => '<span>' + note + '</span>').join('');
+    el('tcProgressNote').hidden = !notes.length;
   }
 
   function saveProfile(value) {
@@ -452,29 +514,58 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * thing a search that changes one item at a time can never find.
    */
   let sharedPieces = null;
-  function timesListed(name) {
-    if (!sharedPieces) {
-      sharedPieces = new Map();
-      for (const kit of data.sets || []) {
-        for (const piece of kit.pieces) {
-          sharedPieces.set(piece, (sharedPieces.get(piece) || 0) + 1);
-        }
+  let setsByPiece = null;
+
+  function ensureSetIndex() {
+    if (sharedPieces && setsByPiece) return;
+
+    sharedPieces = new Map();
+    setsByPiece = new Map();
+
+    for (const [order, kit] of (data.sets || []).entries()) {
+      for (const piece of kit.pieces) {
+        sharedPieces.set(piece, (sharedPieces.get(piece) || 0) + 1);
+        if (!setsByPiece.has(piece)) setsByPiece.set(piece, []);
+        setsByPiece.get(piece).push({ kit, order });
       }
     }
+  }
+
+  function timesListed(name) {
+    ensureSetIndex();
     return sharedPieces.get(name) || 0;
   }
 
   function setsOn(state) {
+    ensureSetIndex();
+
     const worn = new Set(HANDS.map(h => (state.gear[h[0]] || {}).name).filter(Boolean));
-    const out = [];
-    for (const kit of data.sets || []) {
-      let howMany = 0, ours = false;
-      for (const piece of kit.pieces) {
-        if (!worn.has(piece)) continue;
-        howMany++;
+    const hits = new Map();
+
+    /*
+     * Only sets containing something actually worn can possibly pay.
+     * Record their hit count while walking the four equipped pieces instead
+     * of walking every piece of every set for every optimiser score.
+     */
+    for (const piece of worn) {
+      for (const { kit, order } of setsByPiece.get(piece) || []) {
+        let hit = hits.get(kit);
+        if (!hit) {
+          hit = { kit, order, many: 0, ours: false };
+          hits.set(kit, hit);
+        }
+        hit.many++;
         // Something that belongs to this set and to no other.
-        if (timesListed(piece) === 1) ours = true;
+        if (timesListed(piece) === 1) hit.ours = true;
       }
+    }
+
+    const out = [];
+    const active = Array.from(hits.values()).sort((a, b) => a.order - b.order);
+
+    for (const hit of active) {
+      const kit = hit.kit;
+      const howMany = hit.many;
       /*
        * A set pays only when something you are wearing is its own.
        *
@@ -485,7 +576,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
        * handed over all thirteen bonuses. What separates them is the piece
        * that appears in one list and nowhere else.
        */
-      if (howMany < 2 || !ours) continue;
+      if (howMany < 2 || !hit.ours) continue;
       const gives = {};
       for (const step of Object.keys(kit.steps)) {
         if (Number(step) > howMany) continue;
@@ -1090,6 +1181,42 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   const plainly = name => String(name).replace(NUMERAL, '').trim().toLowerCase();
 
   /*
+   * One slot, as the enchant calculator is handed it: the item, and the
+   * enchantments on that item alone, in the calculator's own spelling.
+   * Nothing when the slot is empty. What the calculator does not know is
+   * dropped rather than guessed - an enchantment it cannot name is one it
+   * cannot price.
+   */
+  function handoverFor(hand) {
+    const worn = build && build.gear && build.gear[hand];
+    if (!worn || !worn.name) return null;
+    const held = rulesFor();
+    const wanted = [];
+    for (const id of worn.ench || []) {
+      const one = id && data.byEnch[id];
+      if (!one) continue;
+      // The calculator knows them by its own spelling; this is the same
+      // translation the search uses when it reads what is already on an item.
+      const bare = plainly(one.name);
+      let name = null;
+      for (const key of [one.name, one.name.replace(NUMERAL, '').trim()]) {
+        if (held && held.byName && held.byName.get(key)) { name = key; break; }
+      }
+      if (!name && held) {
+        for (const [other] of held.byName) {
+          if (plainly(other) === bare) { name = other; break; }
+        }
+      }
+      if (name) wanted.push(name);
+    }
+    return { item: worn.name, slots: wanted };
+  }
+  /* The whole build, slot by slot in the order the page shows them. */
+  function buildHandover() {
+    return HANDS.map(([hand]) => handoverFor(hand)).filter(Boolean);
+  }
+
+  /*
    * Boundary aliases between raw client names carried by TheoryCraft and
    * the canonical names exposed by the shared EnchantEngine.
    *
@@ -1134,7 +1261,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   };
 
   let enchByName = null;
+  const charmByQuery = new Map();
   function charmNamed(name) {
+    if (charmByQuery.has(name)) return charmByQuery.get(name);
     if (!enchByName) {
       enchByName = new Map();
       for (const one of data.enchants) {
@@ -1144,9 +1273,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         }
       }
     }
-    return enchByName.get(name)
+    const found = enchByName.get(name)
       || enchByName.get(plainly(name))
       || enchByName.get(enchantKey(name));
+    charmByQuery.set(name, found);
+    return found;
   }
 
   /*
@@ -1177,7 +1308,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return out;
   }
 
-  function enchantsFor(itemName, already, at) {
+  function rollableEnchantsFor(itemName, already, at) {
     const item = data.byItem[itemName];
     if (!item) return [];
     const held = rulesFor();
@@ -1190,38 +1321,68 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         locks,
         subtypes: EnchantEngine.subtypesForItem(held, itemName)
       };
-      const pool = EnchantEngine.rollablePool(held, cfg);
-      const out = [];
-      const seen = new Set();
-      for (const mod of pool) {
-        /*
-         * Only what an enchanting will actually put on an item.
-         *
-         * The calculator's list is the whole list, and the whole list is
-         * wider than what a player can roll. The retired ones - Kogbold
-         * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
-         * item already carrying one still reads, and are given a weight of
-         * nought to say they can never come out again. The seasonal ones -
-         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
-         * at the time, not out of enchanting, and the client marks the
-         * difference with a ROLLABLE label. This page has no artifact in it,
-         * so it plans with what a plain enchanting can roll and nothing else.
-         */
-        if (seen.has(mod.name)) continue;
-        seen.add(mod.name);
-        const mine = charmNamed(mod.name);
-        // How likely it is to come out, kept for the slot that has nothing
-        // countable left to put in it.
-        out.push(Object.assign(
-          { roll: mod.weight },
-          mine || { id: 'n:' + mod.name },
-          { name: mod.name }
-        ));
-      }
-      return out;
+      return EnchantEngine.rollablePool(held, cfg);
     }
 
     throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
+  }
+
+  function enchantsFor(itemName, already, at) {
+    const pool = rollableEnchantsFor(itemName, already, at);
+    const out = [];
+    const seen = new Set();
+    for (const mod of pool) {
+      /*
+       * Only what an enchanting will actually put on an item.
+       *
+       * The calculator's list is the whole list, and the whole list is
+       * wider than what a player can roll. The retired ones - Kogbold
+       * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
+       * item already carrying one still reads, and are given a weight of
+       * nought to say they can never come out again. The seasonal ones -
+       * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
+       * at the time, not out of enchanting, and the client marks the
+       * difference with a ROLLABLE label. This page has no artifact in it,
+       * so it plans with what a plain enchanting can roll and nothing else.
+       */
+      if (seen.has(mod.name)) continue;
+      seen.add(mod.name);
+      const mine = charmNamed(mod.name);
+      // How likely it is to come out, kept for the slot that has nothing
+      // countable left to put in it.
+      out.push(Object.assign(
+        { roll: mod.weight },
+        mine || { id: 'n:' + mod.name },
+        { name: mod.name }
+      ));
+    }
+    return out;
+  }
+
+  function enchantFitsItem(itemName, already, at) {
+    const wanted = already[at];
+    return rollableEnchantsFor(itemName, already, at).some(mod => {
+      const mine = charmNamed(mod.name);
+      return (mine ? mine.id : 'n:' + mod.name) === wanted;
+    });
+  }
+
+  let itemsByFit = null;
+
+  function ensureItemSearchIndex() {
+    if (itemsByFit) return;
+
+    itemsByFit = new Map();
+    for (const one of data.items) {
+      const broad = one.hand + '/*';
+      const exact = one.hand + '/' + one.slot;
+
+      if (!itemsByFit.has(broad)) itemsByFit.set(broad, []);
+      itemsByFit.get(broad).push(one);
+
+      if (!itemsByFit.has(exact)) itemsByFit.set(exact, []);
+      itemsByFit.get(exact).push(one);
+    }
   }
 
   function itemsFor(hand, klass, state = build) {
@@ -1234,9 +1395,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * an answer built out of those is not an answer to their question.
      */
     const out = (state && state.banned) || {};
-    return data.items.filter(one => one.hand === hand
-      && (slot === undefined || one.slot === slot)
-      && !out[one.name] && accessible(one.name));
+
+    ensureItemSearchIndex();
+    const key = hand + '/' + (slot === undefined ? '*' : slot);
+    const candidates = itemsByFit.get(key) || [];
+
+    return candidates.filter(one => !out[one.name] && accessible(one.name));
   }
 
   /* ---------------- what the search need not try ---------------- *
@@ -1750,9 +1914,52 @@ const TINT = {
     return out;
   }
 
-  function optimise(state, goal, report) {
+  /*
+   * What makes one build another build: its four items, and nothing else.
+   *
+   * Two answers wearing the same four things with different enchantments are
+   * the same build told two ways - the blacklist is how somebody asks for a
+   * different item, and an enchantment is what gets rolled on whatever is
+   * worn. So an alternative has to differ in at least one of the four.
+   */
+  const gearSignature = one => HANDS.map(([hand]) =>
+    (one && one.gear && one.gear[hand] && one.gear[hand].name) || '').join('\u241f');
+
+  /*
+   * How many gear sets a search remembers, and how many it offers.
+   *
+   * The search already scores whole builds as it goes - every item it tries
+   * in a slot is tried inside a complete build - so the next-best gear sets
+   * are there to be kept for nothing: a small table, best score per
+   * signature, pruned back whenever it doubles. Afterwards the best few that
+   * are not the winner are given their own enchantments and ranked by the
+   * same score, which is what the page offers as alternatives.
+   */
+  const GATHER_KEEP = 16, ALTERNATIVES_TRY = 6, ALTERNATIVES_KEEP = 4;
+  const byScoreThenSignature = (a, b) =>
+    (b.score - a.score) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+
+  function optimise(state, goal, report, gather) {
     if (!profile || (profile.mode === 'personal' && !access)) throw new Error('Set up your progression before crafting.');
     const work = prepareSearchable(state);
+    // Cache compatibility only for this search, including the full slot state.
+    const enchantFitCache = new Map();
+    const enchantFits = (itemName, already, at) => {
+      const key = JSON.stringify([itemName, already, at]);
+      if (!enchantFitCache.has(key)) {
+        enchantFitCache.set(key,
+          enchantFitsItem(itemName, already, at));
+      }
+      return enchantFitCache.get(key);
+    };
+    // Eligibility stays fixed during this search; rebuild on the next call.
+    const candidatesByHand = new Map();
+    const candidatesForHand = hand => {
+      if (!candidatesByHand.has(hand)) {
+        candidatesByHand.set(hand, searchItems(hand, work.klass, work));
+      }
+      return candidatesByHand.get(hand);
+    };
     /*
      * Each padlock holds the one thing it is on.
      *
@@ -1799,20 +2006,73 @@ const TINT = {
     }
     let score = scoreOf(work, goal);
     let looked = 0;
+    /*
+     * A gear set the search has just scored, kept if it is one somebody
+     * could actually wear: all four slots filled, every free slot with
+     * something this search was allowed to offer there - so whatever the
+     * page later proposes has been through the same progression, blacklist
+     * and filters as the answer itself - and every kept slot as it is.
+     * Nothing is scored for it; the number is the one the search just made.
+     */
+    const offered = new Map();
+    const offers = (hand, name) => {
+      if (!offered.has(hand)) offered.set(hand, new Set(candidatesForHand(hand).map(item => item.name)));
+      return offered.get(hand).has(name);
+    };
+    /*
+     * And never a lower tier than the slot can have. An alternative is
+     * another way to play, not the same way a tier worse: a T5 ring where the
+     * T6 one is on offer is only a downgrade that happens to spell a new
+     * signature. A tiered item is noted only at the best tier this search
+     * may offer in its slot; untiered and set pieces carry no tier and are
+     * judged on their score like anything else.
+     */
+    const bestTier = new Map();
+    const topTier = hand => {
+      if (!bestTier.has(hand)) {
+        let most = -Infinity;
+        for (const item of candidatesForHand(hand)) if (Number.isFinite(item.tier)) most = Math.max(most, item.tier);
+        bestTier.set(hand, most);
+      }
+      return bestTier.get(hand);
+    };
+    const note = (one, value) => {
+      if (!gather || !Number.isFinite(value)) return;
+      const names = {};
+      for (const [hand] of HANDS) {
+        const name = one.gear[hand].name;
+        if (!name) return;
+        if (!one.locked[hand] && !offers(hand, name)) return;
+        const item = data.byItem[name];
+        if (!one.locked[hand] && item && Number.isFinite(item.tier) && item.tier < topTier(hand)) return;
+        names[hand] = name;
+      }
+      const key = gearSignature(one);
+      const had = gather.get(key);
+      if (had && had.score >= value) return;
+      gather.set(key, { key, score: value, gear: names });
+      if (gather.size > GATHER_KEEP * 2) {
+        const kept = [...gather.values()].sort(byScoreThenSignature).slice(0, GATHER_KEEP);
+        gather.clear();
+        for (const one of kept) gather.set(one.key, one);
+      }
+    };
+    note(work, score);
     for (let pass = 0; pass < 4; pass++) {
       let moved = false;
       for (const [hand] of HANDS) {
         if (work.locked[hand]) continue;
         const was = work.gear[hand].name;
         let best = was;
-        for (const one of searchItems(hand, work.klass, work)) {
+        for (const one of candidatesForHand(hand)) {
           work.gear[hand].name = one.name;
           // An enchantment that no longer fits the item cannot be counted.
           const kept = work.gear[hand].ench.slice();
           work.gear[hand].ench = kept.map((id, i) =>
-            (id && enchantsFor(one.name, kept, i).some(e => e.id === id)) ? id : null);
+            (id && enchantFits(one.name, kept, i)) ? id : null);
           const now = scoreOf(work, goal);
           looked++;
+          note(work, now);
           /*
            * A stat goal often cannot see whole equipment slots. Life, for
            * example, gives an ordinary staff the same score as the starter
@@ -1851,7 +2111,7 @@ const TINT = {
           if (trial.locked[hand]) continue;
           let best = null, mark = -Infinity;
           const mine = new Set(kit.pieces);
-          for (const one of searchItems(hand, trial.klass, trial)) {
+          for (const one of candidatesForHand(hand)) {
             if (!mine.has(one.name)) continue;
             const was = trial.gear[hand].name;
             trial.gear[hand].name = one.name;
@@ -1865,12 +2125,13 @@ const TINT = {
           // An enchantment that no longer fits the item cannot be counted.
           const kept = trial.gear[hand].ench.slice();
           trial.gear[hand].ench = kept.map((id, i) =>
-            (id && enchantsFor(best, kept, i).some(e => e.id === id)) ? id : null);
+            (id && enchantFits(best, kept, i)) ? id : null);
           put++;
         }
         if (put < 2) continue;
         const now = scoreOf(trial, goal);
         looked++;
+        note(trial, now);
         if (now <= score) continue;
         score = now;
         for (const [hand] of HANDS) {
@@ -1969,7 +2230,51 @@ const TINT = {
       if (report) report(pass + 1, looked, score);
       if (!moved) break;
     }
+    // The answer itself, enchanted, is the best this gear set has shown.
+    note(work, score);
     return { state: work, score, looked };
+  }
+
+  /*
+   * The answer and the next best builds behind it.
+   *
+   * Every gear set the searches remembered, other than the winner's, best
+   * first; the first ALTERNATIVES_TRY of them are worn as they are and given
+   * their own enchantments by the same search, told to change nothing but
+   * the enchantments and to aim at the same thing. Whatever padlocks were on
+   * the enchantments stay on; what the padlocks on the items were is put
+   * back afterwards. Then the lot is ranked by the one score, so the first
+   * entry is always the best build found - which is the winner unless one
+   * of the others, enchanted in its own right, came out ahead of it.
+   */
+  function alternativesOf(best, gather, goal) {
+    const lead = { key: gearSignature(best.state), state: best.state, score: best.score };
+    const pool = [...(gather ? gather.values() : [])]
+      .filter(one => one.key !== lead.key).sort(byScoreThenSignature).slice(0, ALTERNATIVES_TRY);
+    let looked = 0;
+    const found = [];
+    for (const one of pool) {
+      const trial = JSON.parse(JSON.stringify(best.state));
+      const locks = Object.assign({}, trial.locked);
+      for (const [hand] of HANDS) {
+        const worn = trial.gear[hand];
+        worn.name = one.gear[hand];
+        // What no longer fits the item it is on cannot stay on it.
+        const had = worn.ench.slice();
+        worn.ench = had.map((id, at) => (id && enchantFitsItem(worn.name, had, at)) ? id : null);
+        trial.locked[hand] = true;
+      }
+      const done = optimise(trial, goal, null);
+      looked += done.looked;
+      if (!Number.isFinite(done.score)) continue;
+      done.state.locked = locks;
+      const key = gearSignature(done.state);
+      if (key === lead.key || found.some(other => other.key === key)) continue;
+      found.push({ key, state: done.state, score: done.score });
+    }
+    const list = [lead].concat(found).sort((a, b) =>
+      (b.score - a.score) || (a === lead ? -1 : b === lead ? 1 : byScoreThenSignature(a, b)));
+    return { list: list.slice(0, 1 + ALTERNATIVES_KEEP), looked };
   }
 
   /* ---------------- the page ---------------- */
@@ -1999,15 +2304,49 @@ const TINT = {
    * it: that is why several of them appeared to be standing next to a copy of
    * themselves.
    */
+  /*
+   * What a piece actually draws, and how that fits a room.
+   *
+   * A target's rectangle carries the reach of its swing as well as the thing
+   * swinging, so fitting the rectangle to a room drew a small creature in the
+   * corner of a large empty box. The generator measures the pixels once and
+   * writes the window beside the rectangle (see tools/theory-sprites.js), and
+   * everything drawn - the picker's picture and the one on the bench - fits
+   * that window instead. One window for the whole run, so a target keeps its
+   * size and its footing as it animates; the frames themselves still step by
+   * the full declared width.
+   *
+   * A piece with no measured window keeps the rectangle it always had, which
+   * is every charm, every item and every class.
+   */
+  function targetBounds(piece) {
+    if (!piece) return null;
+    const seen = piece.visible;
+    if (seen && seen.w > 0 && seen.h > 0) {
+      return { x: seen.x, y: seen.y, w: seen.w, h: seen.h };
+    }
+    return { x: 0, y: 0, w: piece.w, h: piece.h };
+  }
+
+  function targetFit(piece, room) {
+    const bounds = targetBounds(piece);
+    if (!bounds) return null;
+    const longest = Math.max(1, Math.max(bounds.w, bounds.h));
+    const scale = room / longest;
+    return { bounds, scale, width: bounds.w * scale, height: bounds.h * scale };
+  }
+
   function sheetIcon(key, side, extra) {
     const piece = data.sheet && data.sheet.pics[key];
     if (!piece) return '';
-    const zoom = side / Math.max(piece.w, piece.h);
+    const fit = targetFit(piece, side);
+    const zoom = fit.scale;
     return '<span class="tc-charm' + (extra ? ' ' + extra : '') + '"'
-      + ' style="width:' + (piece.w * zoom) + 'px;height:' + (piece.h * zoom) + 'px'
+      + ' style="width:' + fit.width + 'px;height:' + fit.height + 'px'
       + ';background-size:' + (data.sheet.wide * zoom) + 'px '
       + (data.sheet.tall * zoom) + 'px'
-      + ';background-position:' + (-piece.x * zoom) + 'px ' + (-piece.y * zoom) + 'px'
+      + ';background-position:' + (-(piece.x + fit.bounds.x) * zoom) + 'px '
+      + (-(piece.y + fit.bounds.y) * zoom) + 'px'
       + '"></span>';
   }
 
@@ -2062,8 +2401,8 @@ const TINT = {
   function itemIcon(name) {
     const grade = gradeOf(name);
     const item = data.byItem[name];
-    const cut = item && item.icon && indexIcon(item.icon, 34, 'tc-icon-big ' + grade);
-    return cut || '<span class="tc-icon-big ' + grade + '"></span>';
+    const cut = item && item.icon && indexIcon(item.icon, 34, '');
+    return '<span class="tc-icon-big ' + grade + '">' + (cut || '') + '</span>';
   }
 
   /*
@@ -2236,7 +2575,9 @@ const TINT = {
           + (one ? '' : ' is-empty') + '"'
           + (whole ? ' title="' + esc(one.name + ' — ' + whole) + '"' : '') + '>'
           + (one ? sheetIcon(one.pic, 18) : '')
-          + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '">'
+          // Its whole name on hover: a gear column is narrow enough to cut it.
+          + '<button type="button" class="tc-ench-pick" data-ench="' + hand + ':' + at + '"'
+          + (one ? ' title="' + esc(one.name) + '"' : '') + '>'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
           + said
           + '<button type="button" class="tc-hold tc-lock" data-hold="'
@@ -2247,11 +2588,13 @@ const TINT = {
             + '" title="take this enchantment off">×</button>' : '')
           + '</span>');
       }
-      chips.push('<label class="tc-rarity">slots'
-        + '<select data-slots="' + hand + '">'
+      // How many slots the item has, among the item's own buttons rather
+      // than on a line of its own under the enchantments.
+      const rarity = '<label class="tc-rarity" title="How many enchantment slots it has"><span>slots</span>'
+        + '<select data-slots="' + hand + '" aria-label="Enchantment slots">'
         + [0, 1, 2, 3, 4].map(n => '<option value="' + n + '"'
           + (n === worn.slots ? ' selected' : '') + '>' + n + '</option>').join('')
-        + '</select></label>');
+        + '</select></label>';
 
       return '<div class="tc-slot' + (locked ? ' is-held' : '') + '">'
         + '<div class="tc-slot-head">'
@@ -2267,6 +2610,8 @@ const TINT = {
         + (worn.name ? '<button type="button" class="tc-take" data-take="' + hand
           + '" title="Take this item and what is on it to the enchant calculator">'
           + 'enchant</button>' : '')
+        + (worn.name ? '<button type="button" class="tc-index-open" data-index-open="item:' + esc(worn.name) + '"'
+          + ' title="Open ' + esc(worn.name) + ' in the Index" aria-label="Open ' + esc(worn.name) + ' in the Index">Index</button>' : '')
         + (worn.name ? '<button type="button" class="tc-ban tc-slot-ban" data-ban-held="' + hand
           + '" title="Blacklist this item - the search will not offer it"'
           + ' aria-label="Blacklist ' + esc(worn.name) + '">⊘</button>' : '')
@@ -2274,6 +2619,7 @@ const TINT = {
         + '" aria-pressed="' + (locked ? 'true' : 'false')
         + '" title="' + lockSays(locked) + ' while the calculator works"'
         + ' aria-label="' + lockSays(locked) + '">' + LOCK(locked) + '</button>'
+        + rarity
         /*
          * What the item does goes under the row rather than in it.
          *
@@ -2282,8 +2628,8 @@ const TINT = {
          * off mid-sentence while the width beneath those buttons sat empty.
          * On its own line it has the whole card and says all of it.
          */
-        + (bits.length ? '<span class="tc-bits">' + esc(bits.join(' · ')) + '</span>' : '')
-        + (sourceSaid(worn.name) ? '<span class="tc-loot-source">' + esc(sourceSaid(worn.name)) + '</span>' : '')
+        + (bits.length ? '<span class="tc-bits" title="' + esc(bits.join(' · ')) + '">' + esc(bits.join(' · ')) + '</span>' : '')
+        + lootRow(worn.name)
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
         + '</div>';
@@ -2664,9 +3010,25 @@ const TINT = {
     return list[Math.floor(clock * (doing === 1 ? 6 : 3)) % list.length];
   }
 
-  function drawPiece(pen, piece, frame, x, y, tall) {
+  /*
+   * One frame of a piece, stood on the floor at x.
+   *
+   * `tall` is the height it is drawn at - unless `fit` is set, when it is the
+   * room the longest side of what the piece actually draws may fill. Targets
+   * are drawn that way: their rectangle includes the swing, so filling the
+   * rectangle leaves a small creature in a large empty box. The frame still
+   * steps by the rectangle's own width, because that is how the frames are
+   * packed.
+   */
+  function drawPiece(pen, piece, frame, x, y, tall, fit) {
     const img = theSheet();
     if (!piece || !img.complete || !img.naturalWidth) return false;
+    if (fit) {
+      const box = targetFit(piece, tall);
+      pen.drawImage(img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
+        box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height);
+      return true;
+    }
     const wide = tall * (piece.w / piece.h);
     pen.drawImage(img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
       x, y - tall, wide, tall);
@@ -2700,6 +3062,30 @@ const TINT = {
     stepBits(delta);
     if (duel.hp <= 0) return;                 // it is over; nothing else moves
     duel.at += delta;
+
+    /*
+     * Kill time is DPS time, not projectile travel time. The shots below are
+     * the visualisation of the weapon; their range and speed must not make a
+     * target live longer simply because its sprite is drawn farther away.
+     */
+    const dps = Math.max(0, gun.dps || 0);
+    if (dps > 0) {
+      const before = duel.hp;
+      const hurt = dps * delta;
+
+      if (hurt >= before) {
+        const until = before / dps;
+        duel.dealt += before;
+        duel.hp = 0;
+        duel.over = duel.at - delta + until;
+        blowUp();
+        return;
+      }
+
+      duel.hp = before - hurt;
+      duel.dealt += hurt;
+    }
+
     if (duel.swing > 0) duel.swing -= delta;
 
     if (gun.rate > 0) {
@@ -2753,10 +3139,6 @@ const TINT = {
       one.age += delta;
       if (one.age < one.lasts) continue;
       duel.shots.splice(i, 1);
-      if (duel.hp <= 0) continue;
-      duel.hp -= one.hurt;
-      duel.dealt += one.hurt;
-      if (duel.hp <= 0) { duel.hp = 0; duel.over = duel.at; blowUp(); }
     }
     /*
      * And once it is down it stays down. The time it took is the answer to
@@ -2848,7 +3230,8 @@ const TINT = {
     const wide = canvas.clientWidth || 320;
     const tall = canvas.clientHeight || 150;
     const dpr = window.devicePixelRatio || 1;
-    if (canvas.width !== Math.round(wide * dpr)) {
+    // Its box can grow taller without growing wider, so both are checked.
+    if (canvas.width !== Math.round(wide * dpr) || canvas.height !== Math.round(tall * dpr)) {
       canvas.width = Math.round(wide * dpr);
       canvas.height = Math.round(tall * dpr);
     }
@@ -2859,7 +3242,15 @@ const TINT = {
 
     const kind = data.byClass[build.klass];
     const boss = data.byBoss[build.boss];
-    const floor = tall - 30;
+    /*
+     * How large the bench is drawn: the frame it is given, not a fixed size.
+     * Every length below was written for a frame about 170 tall and 480 wide;
+     * a bigger frame draws the same bench larger - the fighters, the floor,
+     * a tile, the writing - rather than the same small figures in more dark.
+     * Only the drawing changes: the fight itself runs on seconds and tiles.
+     */
+    const k = Math.max(1, Math.min(2.4, tall / 170, wide / 480));
+    const floor = tall - 30 * k;
 
     /*
      * How far apart they stand: the range of the weapon in your hand.
@@ -2875,14 +3266,17 @@ const TINT = {
     const arm = data.byItem[(build.gear.weapon || {}).name];
     const shooting = kit
       ? weaponRate(arm, kit.now, 0, scaleOf(build), subOf(build)) : {};
-    const PX_TILE = 30;
+    const PX_TILE = 30 * k;
     const piece = pieceOf(boss && boss.pic);
-    const room = Math.min(88, tall * 0.64);
-    const longest = piece ? Math.max(piece.w, piece.h) : 1;
-    const big = piece ? room * (piece.h / longest) : room;
-    const across = piece ? room * (piece.w / longest) : room;
+    const room = Math.min(88 * k, tall * 0.64);
+    // The room goes to what the target draws, not to the rectangle that
+    // carries its swing - see targetFit. A piece with no measured window
+    // measures as its rectangle, which is what it always was.
+    const fit = piece ? targetFit(piece, room) : null;
+    const big = fit ? fit.height : room;
+    const across = fit ? fit.width : room;
     const me = pieceOf((kind && kind.pic) || '');
-    const side = Math.min(52, tall * 0.4);
+    const side = Math.min(52 * k, tall * 0.4);
     const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
     const apart = Math.max(80, Math.min(wide - 40 - mine - across,
       (shooting.reach || 6) * PX_TILE));
@@ -2923,17 +3317,17 @@ const TINT = {
      */
     const struck = duel.hp > 0 && duel.shots.some(s => s.age > s.lasts * 0.86);
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
-    const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
+    const drew = drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, room, true);
     if (drew && struck) {
       pen.globalAlpha = 0.35;
       pen.fillStyle = '#fff';
       pen.globalCompositeOperation = 'lighter';
-      drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, big);
+      drawPiece(pen, piece, frameOf(piece, 0, duel.at), bossX, floor, room, true);
       pen.globalCompositeOperation = 'source-over';
     }
     if (!drew) {
       pen.fillStyle = duel.hp > 0 ? '#8a5a5a' : 'rgba(138,90,90,.25)';
-      pen.fillRect(bossX, floor - big, big, big);
+      pen.fillRect(bossX, floor - big, across, big);
     }
     pen.globalAlpha = 1;
 
@@ -3026,7 +3420,7 @@ const TINT = {
       for (const one of duel.bits) {
         pen.globalAlpha = Math.max(0, one.left / one.full);
         pen.fillStyle = one.left > 0.6 ? '#fff2cf' : '#e0a13a';
-        pen.fillRect(middle + one.x, floor - big / 2 + one.y, 3, 3);
+        pen.fillRect(middle + one.x * k, floor - big / 2 + one.y * k, 3 * k, 3 * k);
       }
       pen.globalAlpha = 1;
     }
@@ -3038,10 +3432,14 @@ const TINT = {
      * running total sit on the other side where the fight is being counted
      * rather than suffered.
      */
-    pen.font = '11px ui-monospace, monospace';
+    // The writing grows more gently than the figures: it is read, not seen.
+    const say = Math.min(k, 1.6);
+    const small = Math.round(11 * say) + 'px ui-monospace, monospace';
+    const edge = 22 * say, low = tall - 25 * say, line = 12 * say;
+    pen.font = small;
     pen.textAlign = 'right';
     pen.fillStyle = 'rgba(255,255,255,.6)';
-    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - 22, tall - 25);
+    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - edge, low);
     /*
      * And what it is wearing, beside what it has left. Every number under
      * this frame is read against that armour - it is subtracted from each
@@ -3050,35 +3448,38 @@ const TINT = {
      */
     if (boss) {
       pen.fillStyle = 'rgba(255,255,255,.38)';
-      pen.fillText(boss.def + ' armour', wide - 22, tall - 37);
+      pen.fillText(boss.def + ' armour', wide - edge, low - line);
     }
     pen.textAlign = 'left';
     pen.fillStyle = 'rgba(255,255,255,.45)';
-    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', 22, tall - 25);
+    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', edge, low);
 
     /* And how long it took, said once and said large. */
     if (duel.hp <= 0) {
       pen.textAlign = 'center';
       pen.fillStyle = '#f0c274';
-      pen.font = '600 20px ui-monospace, monospace';
+      pen.font = '600 ' + Math.round(20 * k) + 'px ui-monospace, monospace';
       pen.fillText('dead in ' + round(duel.over) + 's', wide / 2, tall * 0.42);
-      pen.font = '11px ui-monospace, monospace';
+      pen.font = small;
       pen.fillStyle = 'rgba(255,255,255,.45)';
-      pen.fillText(commas(duel.dealt) + ' damage', wide / 2, tall * 0.42 + 16);
+      pen.fillText(commas(duel.dealt) + ' damage', wide / 2, tall * 0.42 + 16 * say);
       pen.textAlign = 'left';
     }
   }
 
   let painting = false;
   function keepPainting() {
-    if (painting) return;
+    if (painting || !theoryOpen()) return;
     painting = true;
     let was = performance.now();
     const tick = now => {
+      if (!theoryOpen()) {
+        painting = false;
+        return;
+      }
       const delta = Math.min(0.05, (now - was) / 1000);
       was = now;
-      const open = document.body.dataset.page === 'theory';
-      if (open && duel.on && data && build) { stepDuel(delta); drawDuel(); }
+      if (duel.on && data && build) { stepDuel(delta); drawDuel(); }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -3337,6 +3738,37 @@ const TINT = {
 
   /* ---------------- putting it on the screen ---------------- */
 
+  /*
+   * A class frame may be wider than its body.  The static portrait is a
+   * square window at that frame's leading edge, not a centred crop: the
+   * sheet's frame stride still includes the whole source-frame width.
+   */
+  function facePortrait(kind, sheet) {
+    const piece = kind && sheet && sheet.pics[kind.pic];
+    if (!piece) return null;
+    const stand = (piece.poses
+      && (piece.poses['3/0'] || piece.poses['0/0']) || [0])[0];
+    return {
+      x: piece.x + stand * piece.w,
+      y: piece.y,
+      bodyW: Math.min(piece.w, piece.h),
+      h: piece.h,
+      zoom: 42 / piece.h,
+      pad: 0
+    };
+  }
+
+  function faceStyle(portrait, sheet) {
+    if (!portrait || !sheet) return null;
+    const { x, y, bodyW, h, zoom, pad } = portrait;
+    return {
+      width: (bodyW * zoom) + 'px',
+      height: (h * zoom) + 'px',
+      backgroundSize: (sheet.wide * zoom) + 'px ' + (sheet.tall * zoom) + 'px',
+      backgroundPosition: (-(x + pad) * zoom) + 'px ' + (-y * zoom) + 'px'
+    };
+  }
+
   function paint() {
     const kind = el('tcClass');
     if (kind && kind.value !== build.klass) kind.value = build.klass;
@@ -3358,18 +3790,10 @@ const TINT = {
        * with no figure at all. It is on the one sheet now, cut to the shape
        * of the drawing rather than to the shape of the rectangle around it.
        */
-      const piece = kind && data.sheet && data.sheet.pics[kind.pic];
-      if (piece) {
-        const stand = (piece.poses
-          && (piece.poses['3/0'] || piece.poses['0/0']) || [0])[0];
-        const zoom = 42 / Math.max(piece.w, piece.h);
-        face.style.width = (piece.w * zoom) + 'px';
-        face.style.height = (piece.h * zoom) + 'px';
-        face.style.backgroundSize = (data.sheet.wide * zoom) + 'px '
-          + (data.sheet.tall * zoom) + 'px';
-        face.style.backgroundPosition =
-          (-(piece.x + stand * piece.w) * zoom) + 'px '
-          + (-piece.y * zoom) + 'px';
+      const portrait = facePortrait(kind, data.sheet);
+      const style = faceStyle(portrait, data.sheet);
+      if (style) {
+        Object.assign(face.style, style);
         face.hidden = false;
       } else { face.hidden = true; }
     }
@@ -3409,8 +3833,177 @@ const TINT = {
     drawStats();
     drawNumbers();
     drawProgress();
+    drawTakeAll();
+    drawAlternatives();
     resetDuel();
     drawDuel();
+  }
+
+  /*
+   * The targets, as large as the room they are given.
+   *
+   * The target column is as tall as the gear, the fight and the search beside
+   * it, and no taller: its height is the layout's, not its own. So the grid is
+   * fitted into that box rather than the box to the grid - the largest cell,
+   * between TARGET_LEAST and TARGET_MOST, at which every target is on screen
+   * at once, and the least of them with the grid scrolling when even that
+   * cannot show them all. Asked again only when the box itself changes size:
+   * a window resized, or the column beside it grown by an enchantment.
+   */
+  const TARGET_LEAST = 16, TARGET_MOST = 72;
+  function fitTargets() {
+    const box = el('tcBosses');
+    if (!box) return;
+    const count = box.children.length;
+    const wide = box.clientWidth, tall = box.clientHeight;
+    if (!count || !wide || !tall) return;
+    const gapFor = cell => Math.round(Math.max(3, Math.min(8, cell * 0.1)));
+    let pick = null;
+    for (let cols = 1; cols <= count; cols++) {
+      const gap = gapFor(wide / cols);
+      const cell = (wide - (cols - 1) * gap) / cols;
+      if (cell > TARGET_MOST) continue;
+      if (cell < TARGET_LEAST) break;
+      const rows = Math.ceil(count / cols);
+      pick = { cols, gap, cell };
+      // A couple of pixels in hand: the browser rounds every row, and a grid
+      // that fits by a fraction of a pixel on paper shows a scrollbar.
+      if (rows * cell + (rows - 1) * gap <= tall - 2) break;
+    }
+    if (!pick) {
+      const gap = gapFor(TARGET_LEAST);
+      const cols = Math.max(1, Math.floor((wide + gap) / (TARGET_LEAST + gap)));
+      pick = { cols, gap, cell: (wide - (cols - 1) * gap) / cols };
+    }
+    /* Whatever height a fitted grid leaves over is shared out between its
+       rows rather than left in a band at the bottom - up to a point, past
+       which it would read as a grid pulled apart. */
+    const rows = Math.ceil(count / pick.cols);
+    const spare = tall - (rows * pick.cell + (rows - 1) * pick.gap);
+    const rowGap = spare > 2 && rows > 1
+      ? Math.floor(Math.min(pick.gap + (spare - 2) / (rows - 1), pick.gap + pick.cell * 0.35) * 10) / 10 : pick.gap;
+    // Scrolling is the last resort, for a box too small for even the least.
+    box.classList.toggle('is-overfull', rows * pick.cell + (rows - 1) * pick.gap > tall);
+    box.style.setProperty('--tc-target-cols', String(pick.cols));
+    box.style.setProperty('--tc-target-gap', pick.gap + 'px');
+    box.style.setProperty('--tc-target-row-gap', rowGap.toFixed(1) + 'px');
+    // The sprites were cut for a 34px picture; the cell carries its own
+    // scale, a little under that in the smallest cells and up to double.
+    box.style.setProperty('--tc-target-k',
+      Math.max(0.6, Math.min(2, pick.cell * 0.82 / 34)).toFixed(3));
+  }
+  let targetWatch = null;
+  function watchTargetFit() {
+    fitTargets();
+    if (targetWatch || typeof ResizeObserver === 'undefined') return;
+    targetWatch = new ResizeObserver(() => fitTargets());
+    targetWatch.observe(el('tcBosses'));
+  }
+
+  /*
+   * The other builds the last search found, as four pictures under the gear.
+   *
+   * They belong to one moment: the build, the goal, the filters, the
+   * progression and the target the search was asked about. Change any of
+   * those, or change one of the four items by hand, and they are no longer
+   * alternatives to anything on the page - so they are not shown until the
+   * search is asked again. With nothing to offer there is nothing drawn.
+   */
+  let alternatives = null;
+  function alternativeContext(state) {
+    const rest = Object.assign({}, state, { gear: null, name: null });
+    return JSON.stringify(rest) + '|' + JSON.stringify(profile);
+  }
+  function alternativesLive() {
+    return !!(alternatives && alternatives.list.length > 1
+      && alternatives.context === alternativeContext(build)
+      && alternatives.list[alternatives.at]
+      && alternatives.list[alternatives.at].key === gearSignature(build));
+  }
+  /*
+   * All of them on the one line, so they can be compared at a glance: the
+   * best found first, then the alternatives in order, each its four items as
+   * one button that wears it. The one being worn is marked rather than hidden,
+   * so the row does not reshuffle under the pointer.
+   */
+  function drawAlternatives() {
+    const box = el('tcAlts');
+    if (!box) return;
+    if (!alternativesLive()) { box.hidden = true; box.innerHTML = ''; return; }
+    const { list, at } = alternatives;
+    const lead = list[0];
+    const goals = goalsOf(build);
+    box.hidden = false;
+    // How many share the line, so the stylesheet can size their pictures to fit it.
+    box.style.setProperty('--alts', list.length);
+    box.innerHTML = '<span class="tc-alts-label" title="Whole builds the last search found, ranked by the same goal">Alt</span>'
+      + list.map((one, i) => {
+        const probe = JSON.parse(JSON.stringify(build));
+        probe.gear = JSON.parse(JSON.stringify(one.gear));
+        const said = goals.map(goal => goal.say + ' ' + sayGoal(goal, scoreOf(probe, goal))).join(' · ');
+        const behind = lead.score && i ? Math.round((one.score - lead.score) / Math.abs(lead.score) * 1000) / 10 : 0;
+        const where = i === 0 ? 'Best found' : 'Alternative ' + i;
+        const names = HANDS.map(([hand]) => one.gear[hand].name || '').join(', ');
+        const tag = (i === 0 ? 'Best found' : 'Alt ' + i)
+          + (i && behind ? ' <u>' + (behind > 0 ? '+' : '') + behind + '%</u>' : '');
+        return '<button type="button" class="tc-alts-pick' + (i === at ? ' is-on' : '') + '"'
+          + ' data-alt-apply="' + i + '" aria-pressed="' + (i === at) + '"'
+          + ' title="' + esc(where + ' · ' + said + (i ? ' · ' + (behind > 0 ? '+' : '') + behind + '% against the best found' : '')
+            + '\n' + names + (i === at ? '\nworn now' : '\nclick to wear it')) + '">'
+          + '<span class="tc-alts-tag">' + tag + '</span><span class="tc-alts-cells">'
+          + HANDS.map(([hand]) => {
+            const item = data.byItem[one.gear[hand].name];
+            const cut = item && item.icon && indexIcon(item.icon, 28, '');
+            return '<span class="tc-alts-cell ' + gradeOf(one.gear[hand].name) + '">' + (cut || '') + '</span>';
+          }).join('')
+          + '</span></button>';
+      }).join('');
+  }
+  /* Wearing one: its four items and its own enchantments, and nothing else of
+     the build changes - the class, the goal, the padlocks and the target stay. */
+  function wearAlternative(index) {
+    if (!alternativesLive() || !alternatives.list[index]) return;
+    alternatives.at = index;
+    build.gear = JSON.parse(JSON.stringify(alternatives.list[index].gear));
+    tabs[onTab] = build;
+    keep(); paint();
+  }
+
+
+  /*
+   * What the whole-build button can actually send, said before it is pressed.
+   * The calculator is the one that knows what the game lets be enchanted -
+   * starter gear, for one, cannot be - so it is asked, and the button says
+   * how many of the build it will open, or stands idle and says why.
+   */
+  function sendable() {
+    const handed = buildHandover();
+    const can = typeof window.enchantCan === 'function' ? window.enchantCan : null;
+    // null is the calculator still reading its data: not a no.
+    const refused = said => can && can(said.item) === false;
+    return { handed, ok: handed.filter(said => !refused(said)),
+      no: handed.filter(refused).map(said => said.item) };
+  }
+  function drawTakeAll() {
+    const button = el('tcTakeAll');
+    if (!button) return;
+    const { handed, ok, no } = sendable();
+    button.disabled = !ok.length;
+    button.textContent = !ok.length || ok.length === handed.length
+      ? 'send build to enchant'
+      : 'send ' + ok.length + ' of ' + handed.length + ' to enchant';
+    button.title = !handed.length ? 'Nothing is equipped yet.'
+      : no.length ? 'The game does not let ' + no.join(', ') + ' be enchanted.'
+        + (ok.length ? ' The other ' + ok.length + ' each open in a new Enchant Calculator tab.' : '')
+      : 'Open every item of this build, with its enchantments, in its own new Enchant Calculator tab';
+    // And said beside it, not only on hover: a button that is idle for a
+    // reason nobody can see reads as a button that is broken.
+    const note = el('tcTakeNote');
+    if (note) {
+      note.textContent = !no.length ? ''
+        : (no.length === handed.length ? 'none of these can be enchanted in the game'
+          : no.join(', ') + ' cannot be enchanted in the game');
+    }
   }
 
   function fillPickers() {
@@ -3428,6 +4021,7 @@ const TINT = {
       '<button type="button" class="tc-boss" data-boss="' + esc(one.name) + '"'
       + ' title="' + esc(one.name) + ' — ' + commas(one.hp) + ' life, '
       + one.def + ' armour">' + sheetIcon(one.pic, 34) + '</button>').join('');
+    watchTargetFit();
     const groups = [...new Set(GOALS.map(one => one.group))];
     el('tcGoals').innerHTML = groups.map(name =>
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
@@ -3488,28 +4082,32 @@ const TINT = {
     el('tcBody').addEventListener('click', event => {
       const take = event.target.closest('[data-take]');
       if (!take) return;
-      const worn = build.gear[take.dataset.take];
-      if (!worn || !worn.name || typeof window.enchantThis !== 'function') return;
-      const held = rulesFor();
-      const wanted = [];
-      for (const id of worn.ench || []) {
-        const one = id && data.byEnch[id];
-        if (!one) continue;
-        // The calculator knows them by its own spelling; this is the same
-        // translation the search uses when it reads what is already on an item.
-        const bare = plainly(one.name);
-        let name = null;
-        for (const key of [one.name, one.name.replace(NUMERAL, '').trim()]) {
-          if (held && held.byName && held.byName.get(key)) { name = key; break; }
-        }
-        if (!name && held) {
-          for (const [other] of held.byName) {
-            if (plainly(other) === bare) { name = other; break; }
-          }
-        }
-        if (name) wanted.push(name);
+      const said = handoverFor(take.dataset.take);
+      if (!said || typeof window.enchantThis !== 'function') return;
+      window.enchantThis(said);
+    });
+    /*
+     * And the whole of it at once: each of the four, with only its own
+     * enchantments, as a tab of its own. Each hand-over is built by the same
+     * function the single button uses, so the two cannot drift apart.
+     */
+    el('tcBody').addEventListener('click', event => {
+      const wear = event.target.closest('[data-alt-apply]');
+      if (wear) { wearAlternative(Number(wear.dataset.altApply)); return; }
+      // An item or a place, opened in the Index through its own checked route.
+      const open = event.target.closest('[data-index-open]');
+      if (open && typeof window.openIndexRecord === 'function') window.openIndexRecord(open.dataset.indexOpen);
+    });
+    el('tcBody').addEventListener('click', event => {
+      if (!event.target.closest('#tcTakeAll')) return;
+      if (typeof window.enchantBuild !== 'function') return;
+      const said = buildHandover();
+      const answer = said.length ? window.enchantBuild(said, { label: build.name }) : null;
+      // Only said here when nothing went: otherwise the calculator is now on
+      // the screen, and it says what it could not take itself.
+      if (!answer || !answer.opened.length) {
+        el('tcSaid').textContent = 'nothing in this build can be enchanted in the game';
       }
-      window.enchantThis({ item: worn.name, slots: wanted });
     });
 
     el('tcBody').addEventListener('click', event => {
@@ -3779,12 +4377,21 @@ const TINT = {
         const plain = prepareAccessible(bareOf(build));
         const aim = aimOf(plain, wanted);
         const was = wanted.map(one => scoreOf(build, one));
-        const fromPlain = optimise(plain, aim, null);
-        const fromHere = optimise(build, aim, null);
+        /* Both searches note the gear sets they score in one table, and the
+           best of the others are then enchanted and ranked behind the answer. */
+        const gather = new Map();
+        const fromPlain = optimise(plain, aim, null, gather);
+        const fromHere = optimise(build, aim, null, gather);
         const got = fromPlain.score >= fromHere.score ? fromPlain : fromHere;
-        got.looked = fromPlain.looked + fromHere.looked;
-        got.state.name = build.name;
-        tabs[onTab] = build = got.state;
+        const ranked = alternativesOf(got, gather, aim);
+        got.looked = fromPlain.looked + fromHere.looked + ranked.looked;
+        const name = build.name;
+        for (const one of ranked.list) one.state.name = name;
+        tabs[onTab] = build = ranked.list[0].state;
+        alternatives = ranked.list.length > 1 ? {
+          list: ranked.list.map(one => ({ key: one.key, gear: JSON.parse(JSON.stringify(one.state.gear)), score: one.score })),
+          at: 0, view: 1, context: alternativeContext(build), goal: aim
+        } : null;
         keep(); paint();
         el('tcRun').disabled = false;
         /*
@@ -3828,7 +4435,7 @@ const TINT = {
    * wired every listener twice. `starting` covers the window `started` cannot.
    */
   let started = false;
-  let starting = false;
+  let startPromise = null;
   /*
    * And the page's own markup, kept before anything is written over it.
    *
@@ -3843,9 +4450,7 @@ const TINT = {
    * The markup is put back before anything is filled in.
    */
   let shell = null;
-  async function start() {
-    if (started || starting) return;
-    starting = true;
+  async function runStart() {
     const bundled = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources
       && window.ROTMG_BUNDLE.sources.theoryText;
     let raw = bundled;
@@ -3856,7 +4461,6 @@ const TINT = {
       }
     }
     if (!raw) {
-      starting = false;                // it may be worth asking again
       el('tcWelcome').hidden = true;
       el('tcBody').hidden = false;
       const box = el('tcBody');
@@ -3865,7 +4469,7 @@ const TINT = {
         box.innerHTML = '<p class="tc-missing">The build data is not here yet. '
           + 'Run <code>node tools/build-theorycraft.js</code>.</p>';
       }
-      return;
+      return false;
     }
     data = JSON.parse(raw);
     data.byClass = {}; data.byItem = {}; data.byEnch = {}; data.byBoss = {};
@@ -3877,15 +4481,13 @@ const TINT = {
     try { profile = BuildProgression.normalize(JSON.parse(localStorage.getItem(PROFILE_STORE)), access); }
     catch (_) { profile = null; }
     if (!(await loadRules())) {
-      starting = false;
       el('tcWelcome').hidden = true;
       el('tcBody').hidden = false;
       const box = el('tcBody');
       if (box) box.textContent = 'The enchanting data could not be loaded. Reload this page before planning a build.';
-      return;
+      return false;
     }
     started = true;
-    starting = false;                  // `started` has it from here
     {
       const box = el('tcBody');
       if (shell !== null && box) { box.innerHTML = shell; shell = null; }
@@ -3940,6 +4542,30 @@ const TINT = {
     paint();
     if (!profile) editProfile();
     keepPainting();
+    return true;
+  }
+
+  function resumeMotion() {
+    if (!theoryOpen()) return;
+    if (!filmClock && films.length && motionWanted()) {
+      filmClock = requestAnimationFrame(playFilms);
+    }
+    keepPainting();
+  }
+
+  function start() {
+    if (started) {
+      resumeMotion();
+      return Promise.resolve(true);
+    }
+    if (startPromise) return startPromise;
+
+    startPromise = runStart()
+      .finally(() => {
+        if (!started) startPromise = null;
+      });
+
+    return startPromise;
   }
 
   /*

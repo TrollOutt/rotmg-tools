@@ -41,6 +41,7 @@ const RealmIndex = (function () {
    * line to the moment `started` takes over.
    */
   let started = false;
+  let startedAway = false;           // built while another page was on screen
   let starting = false;
   let startPromise = null;
   /*
@@ -181,10 +182,11 @@ const RealmIndex = (function () {
   }
 
   /* The star, wherever it is drawn. */
-  const star = id => '<span class="ix-love' + (loved.has(id) ? ' is-on' : '')
-    + '" data-love="' + esc(id) + '" role="button" tabindex="-1"'
-    + ' title="' + (loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
-    + '">\u2605</span>';
+  const star = id => '<button type="button" class="ix-love' + (loved.has(id) ? ' is-on' : '')
+    + '" data-love="' + esc(id) + '" aria-label="' + esc(loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
+    + '" title="' + esc(loved.has(id) ? t('index.favourite.remove') : t('index.favourite.keep'))
+    + '" aria-pressed="' + (loved.has(id) ? 'true' : 'false')
+    + '" tabindex="0">\u2605</button>';
 
   /* ---------------- reading it in ---------------- */
   async function load() {
@@ -195,13 +197,20 @@ const RealmIndex = (function () {
      * page - which is the one difference between the two copies, and it is
      * three and a half megabytes that most visitors never need.
      */
-    let raw = bundle && bundle.sources && bundle.sources.indexText;
-    if (!raw) {
-      raw = await fetch('assets/index/index.json').then(r => r.text())
-        .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
+    const shared = window.ROTMG_SHARED_DATA
+      || (window.ROTMG_SHARED_DATA = {});
+    let said = shared.index || null;
+
+    if (!said) {
+      let raw = bundle && bundle.sources && bundle.sources.indexText;
+      if (!raw) {
+        raw = await fetch('assets/index/index.json').then(r => r.text())
+          .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
+      }
+      if (!raw) return false;
+      said = JSON.parse(raw);
+      shared.index = said;
     }
-    if (!raw) return false;
-    const said = JSON.parse(raw);
     all = new Map();
     for (const one of said.records) all.set(one.id, one);
     /*
@@ -1068,15 +1077,17 @@ const RealmIndex = (function () {
       : t(rows.total === 1 ? 'index.results.oneThing' : 'index.results.manyThings', { count: many });
     box.innerHTML = rows.map(one => {
       const difficulty = dungeonDifficultyOf(all.get(one[0]));
-      return '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
+      return '<div class="ix-row-item">'
+        + '<button type="button" class="ix-row' + (one[0] === (showing && showing.id) ? ' is-on' : '')
         + '" data-open="' + esc(one[0]) + '">'
         + artCell(all.get(one[0]), 20)
         + '<b>' + esc(one[1]) + '</b>'
         + (difficulty ? '<small class="ix-difficulty" title="' + esc(t('index.difficulty.ratingTitle')) + '">☠ ' + difficulty + '/10</small>' : '')
         + '<i class="ix-kind is-' + esc(one[2].replace(/ /g, '-')) + '">' + esc(sayKind(one[2])) + '</i>'
         + (one[4] ? '<u class="ix-hidden" title="' + esc(t('index.hidden.title')) + '">' + esc(t('index.hidden.label')) + '</u>' : '')
+        + '</button>'
         + star(one[0])
-        + '</button>';
+        + '</div>';
     }).join('') || '<p class="ix-none">' + esc(t('index.results.none')) + '</p>';
     fitList(box);
   }
@@ -1542,6 +1553,14 @@ const RealmIndex = (function () {
      * inside another card is a way in too.
      */
     if (body) body.classList.add('has-card', 'has-list');
+    box.innerHTML = cardHtml(one);
+  }
+
+  /*
+   * One record's card as markup: the same card wherever it is shown, so the
+   * atlas's drawer is the Index's own card rather than a second one to keep.
+   */
+  function cardHtml(one) {
     const links = [];
     for (const [how, to] of one.outLinks || []) links.push([how, to, false]);
     for (const [how, from] of one.inLinks || []) links.push([how, from, true]);
@@ -1561,7 +1580,7 @@ const RealmIndex = (function () {
       ? (all.files[one.from[0]] || '?') + (one.from[1] ? ' · ' + one.from[1] : '')
       : t('index.source.notDeclared');
 
-    box.innerHTML = '<header class="ix-card-head">'
+    return '<header class="ix-card-head">'
       + artCell(one, 44)
       + '<span class="ix-kind is-' + esc(filedAs(one).replace(/ /g, '-'))
         + '">' + esc(sayKind(filedAs(one))) + '</span>'
@@ -2327,6 +2346,7 @@ const RealmIndex = (function () {
        */
       const loves = event.target.closest('[data-love]');
       if (loves) {
+        event.stopPropagation();
         const id = loves.dataset.love;
         if (loved.has(id)) loved.delete(id); else loved.add(id);
         writeLoved();
@@ -2438,6 +2458,96 @@ const RealmIndex = (function () {
         + '</button>').join('');
   }
 
+  /*
+   * RealmEye's full archive is large. The client index is enough to paint and
+   * use the page, so let that first screen appear before fetching/parsing the
+   * community overlay. Once it arrives, rebuild the browse model without
+   * losing anything the reader selected meanwhile.
+   */
+  let realmeyeQueued = false;
+  let realmeyeLoading = false;
+
+  function refreshAfterRealmEye() {
+    const down = new Set();
+    const opened = new Set();
+
+    for (const group of groups) {
+      if (group.open) opened.add(group.id);
+      for (const chip of group.chips) {
+        if (chip.on) down.add(chip.key);
+      }
+    }
+
+    buildFacets();
+
+    for (const group of groups) {
+      group.open = opened.has(group.id);
+      for (const chip of group.chips) {
+        chip.on = down.has(chip.key);
+      }
+    }
+
+    asked = asked.map(old => {
+      for (const group of groups) {
+        for (const chip of group.chips) {
+          if (chip.key === old.key) return chip;
+        }
+      }
+      return old;
+    }).filter(chip => chip.on);
+
+    repaint();
+    if (showing) drawCard(showing.id);
+  }
+
+  function queueRealmEyeArchive() {
+    if (realmeyeArchive || realmeyeLoading || realmeyeQueued) return;
+
+    realmeyeQueued = true;
+
+    const schedule = () => {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(begin, { timeout: 1500 });
+      } else {
+        setTimeout(begin, 250);
+      }
+    };
+
+    function begin() {
+      /*
+       * The Index can finish its first render while the black cover is still
+       * opening. RealmEye is deliberately background work, so never let its
+       * thirteen-megabyte parse take frames from that reveal. Stay queued
+       * until shed() removes the cover, then ask for idle again.
+       */
+      if (document.querySelector('.ring-sheet')) {
+        window.addEventListener('rotmgtransitionend', schedule, { once: true });
+        return;
+      }
+
+      realmeyeQueued = false;
+
+      /*
+       * Somebody who already left the Index does not need to pay for its
+       * thirteen-megabyte overlay. Re-entering the page schedules it again.
+       */
+      if (document.body.dataset.page !== 'index') return;
+
+      realmeyeLoading = true;
+
+      loadRealmEyeArchive()
+        .then(() => {
+          if (realmeyeArchive) refreshAfterRealmEye();
+        })
+        .catch(() => {})
+        .finally(() => {
+          realmeyeLoading = false;
+        });
+    }
+
+    schedule();
+  }
+
   async function runStart() {
     const box = el('ixBody');
     if (!box) return false;
@@ -2454,7 +2564,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadRealmEyeArchive(), loadSkinBridge()]);
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge()]);
     buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special
@@ -2504,11 +2614,25 @@ const RealmIndex = (function () {
       });
     }
     started = true;
+    startedAway = document.body.dataset.page !== 'index';
+    queueRealmEyeArchive();
     return true;
   }
 
   function start() {
-    if (started) return Promise.resolve(true);
+    if (started) {
+      /*
+       * Built out of sight - for the atlas's drawer - it measured a page that
+       * was not laid out, so the first time it is really shown it measures
+       * again.
+       */
+      if (startedAway && document.body.dataset.page === 'index') {
+        startedAway = false;
+        requestAnimationFrame(repaint);
+      }
+      queueRealmEyeArchive();
+      return Promise.resolve(true);
+    }
     if (startPromise) return startPromise;
     starting = true;
     startPromise = runStart().catch(error => {
@@ -2544,7 +2668,26 @@ const RealmIndex = (function () {
     id => showing && showing.id === id ? true : show(id)
   );
 
-  return { start, show, open, __test: { createOpenController } };
+  /*
+   * A record's card for somebody else to show - the atlas, over its map -
+   * without leaving the page they are on. Null when the Index cannot be read
+   * or does not hold it.
+   */
+  async function card(id) {
+    if (typeof id !== 'string' || !id) return null;
+    if (!await start()) return null;
+    const one = all && all.get(id);
+    if (!one) return null;
+    return { id: one.id, name: one.said || one.name, html: cardHtml(one), sheet: el('ixBody')
+      ? el('ixBody').style.getPropertyValue('--ix-sheet') : '' };
+  }
+  /* And the doors on that card - the bench, the Enchant Calculator - by record. */
+  function door(where, id) {
+    const one = all && all.get(id);
+    if (one) walkThrough(where, one);
+  }
+
+  return { start, show, open, card, door, __test: { createOpenController } };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = RealmIndex;

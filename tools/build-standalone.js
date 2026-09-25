@@ -140,7 +140,8 @@ const sources = {
       biomes: Object.fromEntries(Object.entries(source.biomes).map(([key, b]) =>
         [key, { id: b.id, slug: b.slug, rank: b.rank }])),
       creatures: Object.fromEntries(Object.entries(source.creatures).map(([key, c]) =>
-        [key, { groups: c.groups, detail: { drops: (c.detail || {}).drops || [] } }])) };
+        // The name too: the Atlas finds a creature's drops by the name its panel shows.
+        [key, { name: c.name, groups: c.groups, detail: { drops: (c.detail || {}).drops || [] } }])) };
   })()),
 };
 
@@ -473,7 +474,7 @@ const appSource = readWeb('app.js');
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script src=\"theorycraft.js\"></script>\n<script src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);

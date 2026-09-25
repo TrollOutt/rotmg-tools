@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert/strict');
+const { execFileSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const read = where => JSON.parse(fs.readFileSync(path.join(root, where), 'utf8'));
@@ -27,6 +28,46 @@ const looks = read(generated + 'looks.json');
 
 const records = new Map(index.records.map(one => [one.id, one]));
 const typeOf = one => (one.from && one.from[1]) || '';
+
+/* ---------------- the live silhouette outline ---------------- */
+{
+  /* This is deliberately pure: it is the same cardinal-neighbour rule the
+     renderer's shader applies to alpha, without requiring WebGL in CI. */
+  const rendererSource = fs.readFileSync(path.join(root, 'web/skins/renderer.js'), 'utf8');
+  const renderer = 'data:text/javascript;base64,' + Buffer.from(rendererSource).toString('base64');
+  const check = `import { OUTLINE_PIXELS, isOutlinePixel, quadAt, frameTexel } from ${JSON.stringify(renderer)};
+    if(OUTLINE_PIXELS!==.5)throw Error('Atlas SS=2 outline must stay half a source pixel wide');
+    if([isOutlinePixel(0,1,0,0,0),isOutlinePixel(0,0,1,0,0),isOutlinePixel(0,0,0,1,0),isOutlinePixel(0,0,0,0,1)].some(value=>!value))throw Error('each cardinal neighbour outlines');
+    if(isOutlinePixel(0,0,0,0,0)||isOutlinePixel(1,1,1,1,1))throw Error('clear-only rule');
+    const plain=quadAt({w:8,h:8},100,100,50,60,4),outlined=quadAt({w:8,h:8},100,100,50,60,4,OUTLINE_PIXELS);
+    const band=OUTLINE_PIXELS*4/100*2,originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+band,outlined[2]-band,outlined[5]-band,outlined[1]+band];
+    if(!outlinedEdges.every((value,index)=>Math.abs(value-originalEdges[index])<1e-9))throw Error('outline quad keeps source position anchored');
+    const rect={x:19,y:23,w:3,h:2};
+    for(const [local,expected] of [[{x:0,y:0},{x:19,y:23}],[{x:2.99,y:1.99},{x:21,y:24}]]){const got=frameTexel(rect,local);if(got.x!==expected.x||got.y!==expected.y)throw Error('frame texel escaped its source rectangle');}
+    if(frameTexel(rect,{x:-.01,y:0})||frameTexel(rect,{x:3,y:0})||frameTexel(rect,{x:0,y:2}))throw Error('a frame sampled its packed neighbour');
+    const outlineFor=(rows,x,y)=>{const h=rows.length,w=rows[0].length,alphaAt=(px,py)=>px>=0&&py>=0&&px<w&&py<h&&rows[Math.floor(py)][Math.floor(px)]==='1'?1:0;return isOutlinePixel(alphaAt(x,y),alphaAt(x-.5,y),alphaAt(x+.5,y),alphaAt(x,y-.5),alphaAt(x,y+.5));};
+    const expectOutline=(rows,yes,no,label)=>{if(!yes.every(([x,y])=>outlineFor(rows,x,y)))throw Error(label+' missed a cardinal outline');if(!no.every(([x,y])=>!outlineFor(rows,x,y)))throw Error(label+' drew a non-cardinal outline');};
+    expectOutline(['000','010','000'],[[.75,1.25],[2.25,1.25],[1.25,.75],[1.25,2.25]],[[1.25,1.25],[.75,.75]],'isolated pixel');
+    expectOutline(['000','010','010','000'],[[.75,1.25],[.75,2.25],[2.25,1.25],[2.25,2.25],[1.25,.75],[1.25,3.25]],[[1.25,1.25],[1.25,2.25],[.75,.75]],'vertical run');
+    expectOutline(['0000','0110','0000'],[[.75,1.25],[3.25,1.25],[1.25,.75],[2.25,.75],[1.25,2.25],[2.25,2.25]],[[1.25,1.25],[2.25,1.25],[.75,.75]],'horizontal run');
+    expectOutline(['0000','0100','0010','0000'],[[1.25,.75],[.75,1.25]],[[.75,.75],[1.25,1.25],[2.25,2.25]],'diagonal pair');
+    expectOutline(['111','101','111'],[[1.25,1.25]],[[.25,.25],[1.25,.75],[.75,.75]],'hole');
+    expectOutline(['11','11'],[[ -.25,.25],[2.25,.25],[.25,-.25],[.25,2.25]],[[ -.75,.25],[.25,-.75],[-.25,-.25]],'frame boundary');
+    const alphaAt=local=>frameTexel(rect,local)?1:0,outlineAt=local=>isOutlinePixel(alphaAt(local),alphaAt({x:local.x-.5,y:local.y}),alphaAt({x:local.x+.5,y:local.y}),alphaAt({x:local.x,y:local.y-.5}),alphaAt({x:local.x,y:local.y+.5}));
+    if(outlineAt({x:1.25,y:.75}))throw Error('an opaque frame centre cannot become outline');
+    if(![{x:-.25,y:.75},{x:3.25,y:.75},{x:1.25,y:-.25},{x:1.25,y:2.25}].every(outlineAt))throw Error('each half-texel frame edge must receive its cardinal outline');
+    if(outlineAt({x:-.25,y:-.25}))throw Error('a diagonal outside a frame cannot become outline');`;
+  execFileSync(process.execPath, ['--input-type=module', '--eval', check], { stdio: 'pipe' });
+  assert(rendererSource.includes('local+vec2(-.5,0.)') && rendererSource.includes('local+vec2(.5,0.)')
+    && rendererSource.includes('local+vec2(0.,-.5)') && rendererSource.includes('local+vec2(0.,.5)'),
+  'the shader must use cardinal neighbours, not diagonal or rectangular borders');
+  assert(rendererSource.includes('if(any(lessThan(local,vec2(0.)))||any(greaterThanEqual(local,r.zw)))return vec4(0.);'),
+    'out-of-frame samples must be transparent so packed frames cannot bleed');
+  assert(rendererSource.includes('floor(local)+vec2(.5)'),
+    'WebGL must sample the centre of an integer source texel');
+  assert(rendererSource.includes('baseRect.zw+vec2(1.))-vec2(.5)'),
+    'the UV mapping must expose only Atlas\' half-source-texel outline band');
+}
 
 /* ---------------- the guessed bridge is gone ---------------- */
 assert(!fs.existsSync(path.join(root, generated, 'index-links.json')),
@@ -85,7 +126,9 @@ for (const one of catalogue.skins) {
     assert.equal(row.length, looks.row.length, one.id + ': a frame row of the wrong width');
     const [set, action, direction, x, y, w, h, maskX, maskY] = row;
     assert(Number.isInteger(set) && set >= 0, one.id + ': an animation set must be a number');
-    assert(Number.isInteger(action) && Number.isInteger(direction));
+    assert(Number.isInteger(action) && Number.isInteger(direction)
+      && Number.isInteger(x) && Number.isInteger(y) && Number.isInteger(w) && Number.isInteger(h),
+    one.id + ': source rectangles must be integer texel coordinates');
     assert(w > 0 && h > 0, one.id + ': a frame with no size');
     assert(x >= 0 && y >= 0 && x + w <= sheet.wide && y + h <= sheet.tall,
       one.id + ': a frame that falls off the packed sheet');
@@ -154,6 +197,8 @@ assert(/one\.direction === 3 \? 0/.test(spriteSource),
   'index-sprites must still rank direction 3 as the one facing the reader');
 
 const viewerSource = fs.readFileSync(path.join(root, 'web/skins/app.js'), 'utf8');
+assert(viewerSource.includes('ctx.drawImage(img,rect.x,rect.y,rect.w,rect.h,'),
+  'list thumbnails must continue to use their exact source rectangle');
 assert(/FACE_AWAY=2,FACE_YOU=3/.test(viewerSource),
   'the viewer must name the facings the way the client numbers them');
 assert(/dy<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),

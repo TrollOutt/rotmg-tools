@@ -602,5 +602,17 @@
   "index.picture.clientArt": "oyunun kendi sanatı",
   "index.picture.givenSkin": "sana verdiği cilt",
   "index.picture.piece": "onun parçalarından biri",
-  "index.source.notDeclared": "istemcide bildirilmedi"
+  "index.source.notDeclared": "istemcide bildirilmedi",
+  "static.hide.the.clouds": "Bulutları gizle",
+  "static.send.build.to.enchant": "yapıyı büyülemeye gönder",
+  "static.send.build.to.enchant.title": "Bu yapının her eşyasını büyüleriyle birlikte büyü hesaplayıcısında ayrı bir yeni sekmede aç",
+  "static.show.the.clouds": "Bulutları göster",
+  "static.alternative.builds": "Alternatif yapılar",
+  "static.drag.to.widen": "genişletmek için sürükleyin · sıfırlamak için çift tıklayın",
+  "static.back.to.the.zone": "Bölgeye dön",
+  "static.back": "Geri",
+  "static.open.in.the.index": "Index'te aç",
+  "static.reading.the.index": "Index okunuyor…",
+  "static.index.record": "Index kaydı",
+  "static.leave.the.atlas.for.index": "Bu kaydın Index sayfası için atlastan çık"
 }

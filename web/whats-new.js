@@ -343,7 +343,10 @@ var WhatsNew = (function () {
    * that is not in it, which is what a shelf of drawers does. The keyboard
    * gets the same: Enter or Space to open, Escape to close.
    */
+  let wired = false;
   function wire() {
+    if (wired) return;
+    wired = true;
     document.addEventListener('click', event => {
       if (!data) return;
       const page = $('pageNews');
@@ -388,19 +391,38 @@ var WhatsNew = (function () {
   }
 
   let started = false;
+  let startPromise = null;
+
   function init(bundled) {
-    if (started) return;
-    started = true;
+    if (started) return Promise.resolve(true);
+    if (startPromise) return startPromise;
+
     wire();
-    if (bundled && bundled.index) { show(bundled.index, bundled.art); return; }
-    fetch('assets/whats-new/index.json')
-      .then(response => response.json())
-      .then(index => show(index, null))
+
+    startPromise = (
+      bundled && bundled.index
+        ? Promise.resolve().then(() => show(bundled.index, bundled.art))
+        : fetch('assets/whats-new/index.json')
+          .then(response => response.json())
+          .then(index => show(index, null))
+    )
+      .then(() => {
+        started = true;
+        return true;
+      })
       .catch(() => {
         started = false;
         $('newsScale').innerHTML = '<span class="note warn">Nothing to show just now.</span>';
+        return false;
+      })
+      .finally(() => {
+        if (!started) startPromise = null;
       });
+
+    return startPromise;
   }
 
   return { init };
 })();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = WhatsNew;
