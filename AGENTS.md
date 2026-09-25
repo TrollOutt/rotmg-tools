@@ -88,3 +88,30 @@ General implementation, JavaScript logic, Node tooling, tests, Python and data p
 The orchestrator chooses task profiles but must never silently escalate to a more expensive model after failure.
 
 A failed delegation must be reported instead of automatically substituting another model.
+
+## Client update / scraping contract
+
+For a game-client update, read `HANDOVER-SOURCE.md` before changing data.
+
+The client Index is the build-time source of truth. New client declarations
+must enter through the Index and then reach downstream tools through their
+normal projections. Do not add a new gear item independently to Theory Crafting,
+the Enchant Calculator, or another generated catalogue.
+
+After an update, verify every new or changed equipment record at the boundaries
+where it is eligible:
+- present in the Index with canonical display name and client alias/id;
+- present in Theory Crafting when compatible with a class;
+- searchable in the manual Theory picker even when progression provenance is unknown;
+- present in enchanting data only when the client marks it enchantable;
+- represented canonically in What's New;
+- served by the browser preview, not merely present in generated files.
+
+RealmEye is a separate community source. Never infer Blueprint acquisition from
+the gear's ordinary Drops From relation. Only explicit Blueprint Drops From or
+Blueprint Obtained Through evidence may create acquisition relations for a
+Blueprint.
+
+For an ordinary client update, do not run a recursive/full-site RealmEye crawl.
+Fetch only exact pages justified by new or changed records unless the user
+explicitly requests a full refresh.
