@@ -7,14 +7,14 @@
     "lint": "node tools/lint.js && node tools/check-i18n.js",
     "i18n:compile": "node tools/build-i18n.js",
     "i18n:check": "node tools/check-i18n.js",
-    "test": "npm run i18n:check && npm run i18n:compile && node tests/i18n.test.js && node tests/test-gate.test.js && node tests/engine.test.js && node tests/enchant-optimization.test.js && node tools/check-artifacts.js && node tools/check-index.js && node tests/projections.test.js && node tests/theory.test.js && node tests/theory-optimization.test.js && node tests/progression.test.js && node tests/rules-corpus.js && node tests/index-quality.test.js && node tests/router-contract.test.js && node tests/module-links.test.js && node tests/build-handover.test.js && node tests/runtime-lifecycle.test.js && node tests/storage-contract.test.js && node tests/ui-cache.test.js && node tests/sprite-contract.test.js && node tests/realm-codec.test.js && node tests/realm-brush-engine.test.js && node tests/realm-contract.test.js && node tests/atlas-combat.test.js && node tests/skins.test.js",
+    "test": "npm run i18n:check && npm run i18n:compile && node tests/i18n.test.js && node tests/test-gate.test.js && node tests/engine.test.js && node tests/enchant-optimization.test.js && node tools/check-artifacts.js && node tools/check-index.js && node tests/projections.test.js && node tests/theory.test.js && node tests/theory-optimization.test.js && node tests/progression.test.js && node tests/rules-corpus.js && node tests/index-quality.test.js && node tests/router-contract.test.js && node tests/module-links.test.js && node tests/build-handover.test.js && node tests/runtime-lifecycle.test.js && node tests/storage-contract.test.js && node tests/ui-cache.test.js && node tests/sprite-contract.test.js && node tests/realm-codec.test.js && node tests/realm-brush-engine.test.js && node tests/realm-contract.test.js && node tests/atlas-combat.test.js && node tests/skins.test.js && node tests/index-extras.test.js",
     "build": "npm run i18n:check && npm run i18n:compile && node tools/build-standalone.js && node tests/standalone.test.js",
     "sprites": "node tools/fetch-sprites.js",
     "realm-sprites": "node tools/generate-realm.js && node tools/fetch-realm-sprites.js && node tools/generate-realm.js",
     "realm-wiki": "node tools/fetch-realmeye-realm.js --details --assets && node tools/generate-realm.js",
     "wiki-dungeons": "node tools/link-index-dungeons.js",
     "wiki-tiers": "node tools/fetch-realmeye-tier-drops.js",
-    "scrape": "npm run extract-client-data && npm run build-index-db && npm run publish-index-db && npm run wiki-publish && npm run skin-looks && npm run project-data && node tools/read-client.js --snapshot --news",
+    "scrape": "npm run extract-client-data && npm run wiki-availability && npm run build-index-db && npm run publish-index-db && npm run wiki-publish && npm run skin-looks && npm run index-extras && npm run project-data && node tools/read-client.js --snapshot --news",
     "shortcut": "powershell -ExecutionPolicy Bypass -File tools/make-shortcut.ps1",
     "release": "npm test && npm run build",
     "project-data": "node tools/build-theorycraft.js && node tools/generate-item-art.js && node tools/generate-items.js && node tools/generate-enchantments.js && node tools/generate-artifacts.js && node tools/generate-fame.js && node tools/generate-skins.js && node tools/build-ring-walk.js",
@@ -28,8 +28,10 @@
     "wiki-publish": "python tools/database/export_realmeye_enrichment.py && node tools/fetch-realmeye-index-sprites.js && python tools/database/export_realmeye_enrichment.py",
     "wiki-check": "python tools/database/check_realmeye_integration.py",
     "wiki-sprites:audit": "python tools/audit-realmeye-sprites.py",
-    "wiki-integrate": "npm run wiki-index && npm run build-index-db && npm run publish-index-db && npm run project-data && npm run wiki-publish && npm run wiki-check && npm run wiki-sprites:audit && npm run build",
+    "wiki-integrate": "npm run wiki-index && npm run wiki-availability && npm run build-index-db && npm run publish-index-db && npm run project-data && npm run wiki-publish && npm run wiki-check && npm run wiki-sprites:audit && npm run build",
     "wiki-refresh": "npm run wiki-monitor && npm run wiki-integrate",
-    "skin-looks": "node tools/build-skin-looks.js"
+    "skin-looks": "node tools/build-skin-looks.js",
+    "index-extras": "node tools/build-index-extras.js",
+    "wiki-availability": "python tools/database/export_realmeye_availability.py"
   }
 }

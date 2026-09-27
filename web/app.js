@@ -1875,7 +1875,8 @@ window.benchWith = function (said) {
 function handoverSetup(said) {
   const resolved = resolveItem(said.item);
   const slots = (said.slots || [])
-    .filter(name => state.data.byName.has(name))
+    .map(handoverEnchantName)
+    .filter(Boolean)
     .slice(0, 4)
     .map(name => ({ name, locked: false }));
   return {
@@ -1888,6 +1889,25 @@ function handoverSetup(said) {
       slots
     }
   };
+}
+
+/* An enchantment's name as this page knows it: exact, without its rank numeral, or up to spelling. */
+function handoverEnchantName(name) {
+  if (!name) return null;
+  const byName = state.data.byName;
+  if (byName.has(name)) return name;
+  const bare = String(name).replace(/\s+(?:[IVX]+|\d+)$/, '').trim();
+  if (byName.has(bare)) return bare;
+  const plain = value => String(value).replace(/\s+(?:[IVX]+|\d+)$/, '').replace(/['’\s-]+/g, ' ').trim().toLowerCase();
+  const want = plain(name);
+  const tier = (/\s+([IVX]+|\d+)$/.exec(String(name)) || [])[1];
+  let fallback = null;
+  for (const other of byName.keys()) {
+    if (plain(other) !== want) continue;
+    if (!tier || new RegExp('\\s' + tier + '$').test(other)) return other;
+    fallback = fallback || other;
+  }
+  return fallback;
 }
 
 /*
@@ -2474,15 +2494,57 @@ async function renderBuildPlan(config) {
   const goals = [config.desired, ...config.goals].filter(Boolean);
   if (goals.length < 2) return;
 
+  const planGeneration =
+    state.runId;
+
   if (!output.textContent.trim()) output.innerHTML = '<p class="note">Solving the cheapest lock order…</p>';
   await yieldToUi();
+
+  /*
+   * PERF/LIFECYCLE:
+   * Navigation and newer calculator runs are allowed to win while this task
+   * yields. Do not start a long synchronous probability walk afterwards.
+   */
+  if (
+    document.body.dataset.page !== 'enchant'
+    || state.runId !== planGeneration
+  ) {
+    return;
+  }
 
   // The plan may only use artifacts you said you would use. Unlike the single
   // target table, this is a constraint on the search: a cheaper order that
   // needs a card you do not have is not an answer.
   const artifacts = allowedArtifacts();
-  const plan = EnchantEngine.planGoals(state.data, config, goals, { artifacts });
-  if (!plan || !plan.feasible) {
+
+  /*
+   * PERF:
+   * The exact multi-goal planner can visit many state/artifact pairs.
+   * Keep every individual probability walk synchronous, but yield between
+   * artifacts once the normal UI compute budget has been spent.
+   */
+  const planBreathe =
+    budgetedYield(12);
+
+  const plan =
+    await EnchantEngine.planGoalsAsync(
+      state.data,
+      config,
+      goals,
+      {
+        artifacts,
+        breathe: planBreathe,
+        cancelled: () =>
+          document.body.dataset.page !== 'enchant'
+          || state.runId !== planGeneration
+      }
+    );
+
+  if (!plan) {
+    return;
+  }
+
+  if (!plan.feasible) {
     output.innerHTML = plan && plan.reason === 'slots'
       ? '<p class="note warn">These enchantments need more slots than the item has.</p>'
       : '<p class="note warn">No order can put all of these on the same item. At least one pair is mutually incompatible — open “Explain these odds” and compare their Labels against their Incompatible Labels.</p>';
@@ -4268,21 +4330,39 @@ window.addEventListener('message', event => {
     atlasPace = '';                      // a fresh document knows nothing yet
     paceAtlas();
     dressAtlas(true);                    // and no glide: it has only just arrived
+    wireAtlasIndexSelection();
     return;
   }
   if (said.rotmg === 'clouds') { dressSkySwitch(said); return; }
-  if (said.rotmg === 'panel') { besideAtlasPanel(said); return; }
+  if (said.rotmg === 'panel') {
+    besideAtlasPanel(said);
+    wireAtlasIndexSelection();
+
+    if (!said.open) {
+      shutAtlasIndex();
+    }
+
+    return;
+  }
   /* A thing on the map, asked to be opened in the Index. The id is checked
      by the same route the Index's own links go through. While the atlas is
      open it is shown in a drawer over the atlas's panel rather than by
      leaving the map, so putting it away is back where the reader was. */
   if (said.rotmg === 'index') {
     if (!RealmRoutes.indexHash(said.id)) return;
+
+    wireAtlasIndexSelection();
+    markAtlasIndexFocused();
     if (atlasOpenOut()) { openAtlasIndex(said.id, true); return; }
     if (globeWide()) setGlobe(false);
     window.openIndexRecord(said.id);
     return;
   }
+  if (said.rotmg === 'index-close') {
+    shutAtlasIndex();
+    return;
+  }
+
   if (said.rotmg !== 'sky') return;
   if (globeWide()) setGlobe(false);
 });
@@ -4348,11 +4428,533 @@ const atlasOpenOut = () => document.body.classList.contains('ring-away') || glob
  */
 const atlasIndexTrail = [];
 let atlasIndexAsk = 0;
+
+
+/*
+ * ============================================================
+ * Atlas Index drawer UI
+ * ============================================================
+ */
+
+function atlasFrameDocument() {
+  const frame = document.getElementById('realmFrame');
+
+  try {
+    return frame && frame.contentDocument
+      ? frame.contentDocument
+      : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+
+function clearAtlasIndexSelection() {
+  const doc = atlasFrameDocument();
+
+  if (!doc) return;
+
+  for (const element of doc.querySelectorAll('.atlas-index-selected')) {
+    element.classList.remove('atlas-index-selected');
+  }
+}
+
+
+function wireAtlasIndexSelection() {
+  const doc = atlasFrameDocument();
+
+  if (!doc || !doc.documentElement) return;
+
+  if (
+    doc.documentElement.dataset.atlasIndexSelectionWired === '1'
+  ) {
+    return;
+  }
+
+  doc.documentElement.dataset.atlasIndexSelectionWired = '1';
+
+
+  /*
+   * Mise en valeur de l'enregistrement ouvert
+   * dans la fiche Index de gauche.
+   */
+  if (
+    !doc.querySelector(
+      'style[data-atlas-index-selection-style]'
+    )
+  ) {
+    const style =
+      doc.createElement('style');
+
+    style.dataset.atlasIndexSelectionStyle =
+      '1';
+
+    style.textContent = `
+      .atlas-index-selected {
+        position: relative !important;
+
+        background:
+          linear-gradient(
+            90deg,
+            rgba(201, 137, 71, .22),
+            rgba(201, 137, 71, .07)
+          ) !important;
+
+        box-shadow:
+          inset 3px 0 0 #c98947,
+          inset 0 0 20px rgba(140, 69, 29, .14),
+          0 0 0 1px rgba(201, 137, 71, .30)
+          !important;
+
+        border-radius: 6px;
+      }
+    `;
+
+    doc.head.appendChild(style);
+  }
+
+
+  function findRow(control) {
+    if (!control) return null;
+
+    const panel =
+      doc.getElementById('panelBody');
+
+    const panelWidth =
+      panel
+        ? panel.getBoundingClientRect().width
+        : 400;
+
+    /*
+     * Structures sémantiques éventuelles.
+     */
+    const semantic =
+      control.closest(
+        'article, li, [role="listitem"], [data-row], [data-entry]'
+      );
+
+    if (semantic) {
+      return semantic;
+    }
+
+
+    /*
+     * Sinon on remonte jusqu'au conteneur
+     * géométrique de l'enregistrement.
+     */
+    let row =
+      control.parentElement;
+
+    while (
+      row &&
+      row !== panel &&
+      row !== doc.body
+    ) {
+      const rect =
+        row.getBoundingClientRect();
+
+      if (
+        rect.width >= panelWidth * .72 &&
+        rect.height >= 38 &&
+        rect.height <= 190
+      ) {
+        return row;
+      }
+
+      row =
+        row.parentElement;
+    }
+
+    return null;
+  }
+
+
+  function isIndexControl(element) {
+    if (
+      !element ||
+      element.nodeType !== 1
+    ) {
+      return false;
+    }
+
+    const text =
+      (element.textContent || '')
+        .trim();
+
+    return /^Index(?:\s|→|$)/i.test(
+      text
+    );
+  }
+
+
+  function controlFromEvent(event) {
+    const path =
+      typeof event.composedPath === 'function'
+        ? event.composedPath()
+        : [];
+
+    /*
+     * On ne suppose plus que le contrôle soit
+     * obligatoirement un <button> ou un <a>.
+     */
+    for (const element of path) {
+      if (
+        element &&
+        element.nodeType === 1 &&
+        isIndexControl(element)
+      ) {
+        return element;
+      }
+    }
+
+    const target =
+      event.target;
+
+    if (
+      target &&
+      target.nodeType === 1
+    ) {
+      const control =
+        target.closest(
+          'button, a, [role="button"]'
+        );
+
+      if (
+        control &&
+        isIndexControl(control)
+      ) {
+        return control;
+      }
+    }
+
+    return null;
+  }
+
+
+  function mark(control) {
+    const row =
+      findRow(control);
+
+    if (!row) {
+      return false;
+    }
+
+    clearAtlasIndexSelection();
+
+    row.classList.add(
+      'atlas-index-selected'
+    );
+
+    return true;
+  }
+
+
+  doc.addEventListener(
+    'pointerdown',
+    event => {
+      const control =
+        controlFromEvent(event);
+
+      /*
+       * Clic sur Index :
+       * sélectionne cette ligne.
+       */
+      if (control) {
+        mark(control);
+        return;
+      }
+
+
+      /*
+       * Clic ailleurs dans Atlas :
+       * si une fiche Index était attachée
+       * à une sélection, on la ferme.
+       */
+      const selected =
+        doc.querySelector(
+          '.atlas-index-selected'
+        );
+
+      if (!selected) {
+        return;
+      }
+
+      const target =
+        event.target;
+
+      if (
+        target &&
+        target.nodeType === 1 &&
+        selected.contains(target)
+      ) {
+        return;
+      }
+
+      clearAtlasIndexSelection();
+
+      try {
+        doc.defaultView.parent.postMessage(
+          {
+            rotmg: 'index-close'
+          },
+          '*'
+        );
+      } catch (error) {
+        // parent indisponible
+      }
+    },
+    true
+  );
+}
+
+
+/*
+ * Fallback fiable :
+ *
+ * quand Realm Atlas envoie déjà son message
+ * rotmg:index, le bouton cliqué possède normalement
+ * le focus dans l'iframe.
+ */
+function markAtlasIndexFocused() {
+  const doc =
+    atlasFrameDocument();
+
+  if (!doc) return false;
+
+  let control =
+    doc.activeElement;
+
+  if (
+    !control ||
+    control === doc.body
+  ) {
+    return false;
+  }
+
+
+  if (
+    control.nodeType === 1
+  ) {
+    const text =
+      (control.textContent || '')
+        .trim();
+
+    if (
+      !/^Index(?:\s|→|$)/i.test(text)
+    ) {
+      control =
+        control.closest?.(
+          'button, a, [role="button"]'
+        );
+    }
+  }
+
+
+  if (!control) {
+    return false;
+  }
+
+
+  const text =
+    (control.textContent || '')
+      .trim();
+
+  if (
+    !/^Index(?:\s|→|$)/i.test(text)
+  ) {
+    return false;
+  }
+
+
+  const panel =
+    doc.getElementById('panelBody');
+
+  const panelWidth =
+    panel
+      ? panel.getBoundingClientRect().width
+      : 400;
+
+  let row =
+    control.parentElement;
+
+  while (
+    row &&
+    row !== panel &&
+    row !== doc.body
+  ) {
+    const rect =
+      row.getBoundingClientRect();
+
+    if (
+      rect.width >= panelWidth * .72 &&
+      rect.height >= 38 &&
+      rect.height <= 190
+    ) {
+      clearAtlasIndexSelection();
+
+      row.classList.add(
+        'atlas-index-selected'
+      );
+
+      return true;
+    }
+
+    row =
+      row.parentElement;
+  }
+
+  return false;
+}
+
+
+function armAtlasIndexSelection() {
+  const frame =
+    document.getElementById(
+      'realmFrame'
+    );
+
+  if (!frame) return;
+
+  if (
+    frame.dataset.atlasIndexSelectionLoadWired !== '1'
+  ) {
+    frame.dataset.atlasIndexSelectionLoadWired =
+      '1';
+
+    frame.addEventListener(
+      'load',
+      () => {
+        requestAnimationFrame(
+          wireAtlasIndexSelection
+        );
+      }
+    );
+  }
+
+  requestAnimationFrame(
+    wireAtlasIndexSelection
+  );
+}
+
+armAtlasIndexSelection();
+
+
+/*
+ * As wide as the reader wants, up to the atlas panel on the right with a
+ * strip of the map left between them - not a fixed share of the window, which
+ * stopped the record short of the width its two columns need.
+ */
+function atlasIndexWidthBounds(drawer) {
+  const box = drawer && (drawer.closest('.globe-box') || drawer.parentElement);
+  const room = box && box.clientWidth
+    ? box.clientWidth
+    : (window.innerWidth || document.documentElement.clientWidth || 1200);
+  const panel = box
+    ? parseFloat(getComputedStyle(box).getPropertyValue('--atlas-panel')) || 0
+    : 0;
+
+  return {
+    min: 280,
+    max: Math.max(280, room - panel - 120)
+  };
+}
+
+
+function setAtlasIndexWidth(
+  drawer,
+  wide,
+  keep
+) {
+  if (!drawer) return;
+
+  const bounds =
+    atlasIndexWidthBounds(drawer);
+
+  const number =
+    Number(wide);
+
+  const wanted =
+    Number.isFinite(number)
+      ? number
+      : 480;
+
+  const next =
+    Math.round(
+      Math.max(
+        bounds.min,
+        Math.min(
+          bounds.max,
+          wanted
+        )
+      )
+    );
+
+  drawer.style.setProperty(
+    '--atlas-index-width',
+    next + 'px'
+  );
+
+  if (keep) {
+    try {
+      localStorage.setItem(
+        'atlas-index-width',
+        String(next)
+      );
+    } catch (error) {
+      // storage indisponible
+    }
+  }
+}
+
+
+function restoreAtlasIndexWidth(drawer) {
+  if (!drawer) return;
+
+  let saved = null;
+
+  try {
+    saved =
+      localStorage.getItem(
+        'atlas-index-width'
+      );
+  } catch (error) {
+    saved = null;
+  }
+
+  if (saved !== null) {
+    setAtlasIndexWidth(
+      drawer,
+      saved,
+      false
+    );
+  }
+}
+
+
+function resetAtlasIndexWidth(drawer) {
+  if (!drawer) return;
+
+  drawer.style.removeProperty(
+    '--atlas-index-width'
+  );
+
+  try {
+    localStorage.removeItem(
+      'atlas-index-width'
+    );
+  } catch (error) {
+    // storage indisponible
+  }
+}
+
 async function openAtlasIndex(id, fresh) {
   const drawer = document.getElementById('atlasIndex');
   const card = document.getElementById('atlasIndexCard');
   const wait = document.getElementById('atlasIndexWait');
   if (!drawer || !card) { window.openIndexRecord(id); return; }
+
+  restoreAtlasIndexWidth(drawer);
+
   const ask = ++atlasIndexAsk;
   if (fresh) atlasIndexTrail.length = 0;
   drawer.hidden = false;
@@ -4376,18 +4978,40 @@ async function openAtlasIndex(id, fresh) {
 }
 function sayAtlasIndexBack() {
   const back = document.getElementById('atlasIndexBack');
+
   if (!back) return;
-  const deeper = atlasIndexTrail.length > 1;
-  for (const say of back.querySelectorAll('[data-back]')) say.hidden = (say.dataset.back === 'record') !== deeper;
+
+  back.innerHTML = '<span aria-hidden="true">×</span>';
+
+  back.setAttribute(
+    'aria-label',
+    'Close index record'
+  );
+
+  back.title =
+    'Close index record';
 }
 function shutAtlasIndex() {
   const drawer = document.getElementById('atlasIndex');
+
   atlasIndexAsk++;
+
   atlasIndexTrail.length = 0;
+
+  clearAtlasIndexSelection();
+
   if (!drawer || drawer.hidden) return;
+
   drawer.hidden = true;
-  const card = document.getElementById('atlasIndexCard');
-  if (card) card.innerHTML = '';
+
+  const card =
+    document.getElementById(
+      'atlasIndexCard'
+    );
+
+  if (card) {
+    card.innerHTML = '';
+  }
 }
 /* Leaving the atlas for somewhere else the card points at. */
 function leaveAtlasFor(go) {
@@ -4402,9 +5026,7 @@ function leaveAtlasFor(go) {
       event.stopPropagation();             // not a click on the atlas's box
       const here = atlasIndexTrail[atlasIndexTrail.length - 1];
       if (event.target.closest('#atlasIndexBack')) {
-        atlasIndexTrail.pop();
-        const before = atlasIndexTrail.pop();
-        if (before) openAtlasIndex(before, false); else shutAtlasIndex();
+        shutAtlasIndex();
         return;
       }
       if (event.target.closest('#atlasIndexFull')) {
@@ -4449,11 +5071,19 @@ function leaveAtlasFor(go) {
       });
       grip.addEventListener('pointermove', event => {
         if (!from) return;
-        tellAtlas({ rotmg: 'panel-width', wide: from.wide + (from.x - event.clientX) });
+        setAtlasIndexWidth(
+          drawer,
+          from.wide + (event.clientX - from.x),
+          false
+        );
       });
       const done = event => {
         if (!from) return;
-        tellAtlas({ rotmg: 'panel-width', wide: from.wide + (from.x - event.clientX), keep: true });
+        setAtlasIndexWidth(
+          drawer,
+          from.wide + (event.clientX - from.x),
+          true
+        );
         from = null;
         drawer.classList.remove('is-sizing');
       };
@@ -4462,7 +5092,7 @@ function leaveAtlasFor(go) {
       grip.addEventListener('click', event => event.stopPropagation());
       grip.addEventListener('dblclick', event => {
         event.stopPropagation();
-        tellAtlas({ rotmg: 'panel-width', reset: true });
+        resetAtlasIndexWidth(drawer);
       });
     }
   }

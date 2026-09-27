@@ -1,0 +1,361 @@
+/* Proposition C — infobulle du jeu + dossier de l'Index (maquette) */
+#ixCard, #atlasIndexCard { container: fccard / inline-size; }
+.fc-root { display: grid; gap: 12px; }
+.fc-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fc-bar .fc-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.fc-bar .fc-tools .ix-doors { margin: 0; }
+.fc-mode { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-size: 11.5px; }
+.fc-mode button { background: transparent; color: var(--muted); border: 0; padding: 4px 11px; cursor: pointer; font: inherit; }
+.fc-mode button[aria-pressed="true"] { background: rgb(121 197 232 / .16); color: var(--text); }
+.fc-cols { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@container fccard (min-width: 640px) {
+  .fc-cols { grid-template-columns: minmax(330px, 410px) minmax(0, 1fr); }
+  .fc-left { position: sticky; top: 0; }
+}
+@container fccard (min-width: 980px) {
+  .fc-cols { grid-template-columns: 450px minmax(0, 1fr); }
+}
+
+/* ---------- l'infobulle ---------- */
+.fc-tt { --sep: #6b5a2a; width: 100%; max-width: 450px; background: #2c2c2c; color: #dcdcdc; border: 2px solid #111;
+  outline: 1px solid #3c3c3c; font-family: "Jersey 10", system-ui, sans-serif; font-size: 20px; line-height: 1.15; letter-spacing: .02em; }
+.fc-tt.k-st { background: #2b2224; }
+.fc-tt .h { background: #212121; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; padding: 10px 12px 8px; align-items: center; }
+.fc-tt.k-st .h, .fc-tt.k-st .cls { background: #231c1e; }
+.fc-tt .ic { width: 62px; height: 62px; --fc-z: 1.25; display: grid; place-items: center; background: #262626; box-shadow: inset 0 0 0 1px #181818; overflow: hidden; }
+.fc-tt .ic .ix-cell { background: none !important; border: 0 !important; padding: 0 !important; display: grid; place-items: center; width: 56px !important; height: 56px !important; }
+.fc-tt .ic .ix-art, .fc-tt .ic img { transform: scale(var(--fc-z, 1)); transform-origin: center; }
+.fc-tt .rar { color: #9a9a9a; }
+.fc-tt .nm { font-size: 30px; line-height: 1; }
+.fc-tt .tb { font-size: 40px; line-height: 1; text-align: right; align-self: start; }
+.fc-tt .tb small { display: block; font-size: 20px; color: #9a9a9a; }
+.fc-tt .cls { background: #212121; padding: 0 12px 8px; color: #9a9a9a; border-bottom: 1px solid #191919; }
+.fc-tt .b { padding: 8px 14px 12px; }
+.fc-tt .big { color: #fff38a; font-size: 50px; line-height: .95; margin: 2px 0 6px; }
+.fc-tt .lab { color: #9a9a9a; }
+.fc-tt .sb { color: #e8e8e8; }
+.fc-tt .desc { color: #8d8d8d; margin: 2px 0 0; }
+.fc-tt hr { border: 0; height: 2px; margin: 10px 0 8px; background: var(--sep); }
+.fc-tt .ln { margin: 1px 0; color: #cfcfcf; }
+.fc-tt .ln .v { color: #f7e36b; }
+.fc-tt .ln.gold { color: #fff38a; }
+.fc-tt .ln.flag { color: #f7e36b; }
+.fc-tt .oe { margin-top: 8px; color: #cfcfcf; }
+.fc-tt .grid { background: #1d1d1d; margin-top: 4px; padding: 8px 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 10px; box-shadow: inset 0 0 0 1px #151515; }
+.fc-tt .grid span { color: #f7e36b; white-space: nowrap; }
+.fc-tt .grid .neg { color: #ff3b3b; }
+.fc-tt .grid.two { grid-template-columns: repeat(2, 1fr); }
+.fc-tt .grid .dim { color: #8d8d8d; }
+.fc-tt .set h5 { margin: 0 0 4px; color: #ff9a1f; font-size: 20px; font-weight: 400; }
+.fc-tt .set .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; color: #8b8074; }
+.fc-tt .set .cols i { font-style: normal; display: block; color: #9a8d7c; }
+.fc-tt .pips { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 6px 0 4px; }
+.fc-tt .pips i { height: 14px; background: #3a3a3a; box-shadow: inset 0 0 0 1px #151515; }
+.fc-tt .pips i.on { background: #e8483b; }
+.fc-tt .f { background: #1a1a1a; padding: 8px 14px; display: flex; justify-content: space-between; gap: 10px; align-items: center; border-top: 1px solid #111; flex-wrap: wrap; }
+.fc-tt.k-st .f { background: #1f1819; }
+.fc-tt .f small { color: #9a9a9a; font-size: 20px; }
+.fc-tt .re { color: #7aa6c2; font: 10px var(--mono); vertical-align: super; margin-left: 2px; cursor: help; letter-spacing: 0; }
+.fc-note { color: var(--dim); font-size: 11.5px; margin-top: 6px; max-width: 450px; }
+
+/* ---------- le dossier ---------- */
+.fc-right { display: grid; gap: 10px; min-width: 0; }
+.fc-dos { background: rgb(var(--bg-2-rgb) / .7); border: 1px solid var(--line-soft); border-radius: 10px; padding: 11px 13px; min-width: 0; }
+.fc-dos > h4 { margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+.fc-src { font-size: 10px; letter-spacing: .04em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); text-transform: none; font-weight: 500; }
+.fc-src.re { border-color: #2e4a5c; color: #7aa6c2; }
+.fc-kv { display: grid; grid-template-columns: minmax(110px, max-content) 1fr; gap: 6px 14px; font-size: 13px; margin: 0; }
+.fc-kv dt { color: var(--dim); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding-top: 3px; }
+.fc-kv dd { margin: 0; color: var(--text); min-width: 0; }
+.fc-kv dd .ix-jump, .fc-kv dd .ix-data-chip { margin: 0 4px 4px 0; }
+.fc-kv dd em { color: var(--dim); font-size: 12px; }
+.fc-classes { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px; }
+.fc-cl { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 7px; border-radius: 6px; background: rgb(var(--panel-rgb) / .9); border: 1px solid var(--line-soft); color: var(--text); cursor: pointer; font-family: inherit; }
+.fc-cl.off { opacity: .25; cursor: default; }
+.fc-prose { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.fc-prose + .fc-prose { margin-top: 6px; }
+.fc-ench { display: grid; gap: 6px; font-size: 13px; }
+.fc-ench .st { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.fc-pill { font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.fc-pill.ok { border-color: rgb(90 196 90 / .5); color: var(--good); }
+.fc-pill.no { color: var(--dim); }
+.fc-dos details summary { cursor: pointer; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+.fc-dos details[open] summary { margin-bottom: 8px; }
+.fc-labels { display: flex; flex-wrap: wrap; gap: 4px; }
+.fc-legacy .ix-block { margin: 0; }
+.fc-right { container: fcdos / inline-size; }
+/* Dossier étroit : l'intitulé au-dessus de ses puces, les classes en icônes. */
+@container fcdos (max-width: 520px) {
+  .fc-kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .fc-kv dd { margin-bottom: 6px; }
+}
+@container fcdos (max-width: 380px) {
+  .fc-classes { grid-template-columns: repeat(auto-fill, 30px); }
+  .fc-cl { width: 30px; height: 30px; padding: 0; justify-content: center; font-size: 0; }
+}
+
+/* Sac de butin sous l'infobulle */
+.fc-bag { margin-top: 10px; max-width: 450px; background: #2c2c2c; border: 2px solid #111; outline: 1px solid #3c3c3c; }
+.fc-bag-h { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 12px; background: #212121;
+  font: 20px/1.1 "Jersey 10", system-ui, sans-serif; color: #d6d6d6; }
+.fc-bag-h .re { color: #7aa6c2; font: 10px var(--mono); vertical-align: super; margin-left: 2px; }
+.fc-bag-h span { color: #9a9a9a; }
+.fc-bag-grid { display: grid; grid-template-columns: repeat(auto-fill, 44px); gap: 4px; padding: 10px 12px 12px; }
+.fc-slot { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  background: #1f1f1f; border: 1px solid #151515; box-shadow: inset 0 0 0 1px #3a3a3a; font: 11px system-ui; color: #9a9a9a; }
+.fc-slot:hover { box-shadow: inset 0 0 0 1px #f7e36b; }
+.fc-slot .ix-art, .fc-slot img { transform: scale(1.6); image-rendering: pixelated; }
+
+/* ---------- C harmonisée : composants de l'Index uniquement ---------- */
+.fc2 .fc-cols { gap: 14px; }
+.fc2 .ix-block { margin-top: 0; }
+.fc2-right { display: grid; gap: 12px; align-content: start; }
+.fc2-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.fc2-head .ix-cell {
+  background: rgb(var(--shade) / calc(.28 * var(--shade-k))); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 5px; box-sizing: content-box;
+}
+.fc2-name { min-width: 0; }
+.fc2-name h3 { margin: 2px 0 2px; font-size: calc(var(--ix-fs) * 1.45); font-weight: 650; line-height: 1.15; }
+.fc2-sub { color: var(--muted); font-size: calc(var(--ix-fs) * .86); }
+.fc2-tier { font: 800 calc(var(--ix-fs) * 1.6)/1 var(--mono); align-self: start; }
+.fc2-dmg { font-size: calc(var(--ix-fs) * 2.2); font-weight: 700; color: var(--text-strong);
+  font-variant-numeric: tabular-nums; line-height: 1.05; }
+.fc2-dmg small { font-size: calc(var(--ix-fs) * .8); font-weight: 500; color: var(--dim); margin-left: 8px;
+  text-transform: uppercase; letter-spacing: .4px; }
+.fc2-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.fc2-stats .ix-data-chip { color: var(--muted); }
+.fc2-stats b.pos { color: var(--good); }
+.fc2-stats b.neg { color: var(--bad); }
+.fc2-note { margin: 0; color: var(--dim); font-size: calc(var(--ix-fs) * .8); }
+.fc2 .ix-does .fc2-always { color: var(--divine); }
+.fc2 .ix-does em { color: var(--dim); font-style: normal; }
+.fc2-tag { font-size: 10px; letter-spacing: .04em; text-transform: none; font-weight: 500;
+  padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+/* La fiche de gauche garde la gouttière du site ; le dossier, plus étroit, passe l'intitulé au-dessus. */
+.fc2-sheet .ix-facts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); }
+.fc2-right .ix-link-row, .fc2-right .ix-facts > div { grid-template-columns: minmax(0, 1fr); }
+.fc2-right .ix-link-row > i, .fc2-right .ix-facts dt { text-align: left; }
+@container fccard (min-width: 980px) {
+  .fc2 .fc-cols { grid-template-columns: minmax(380px, 1fr) minmax(0, 1fr); }
+  .fc2-right .ix-link-row, .fc2-right .ix-facts > div { grid-template-columns: var(--ix-label) minmax(0, 1fr); }
+  .fc2-right .ix-link-row > i, .fc2-right .ix-facts dt { text-align: right; }
+}
+.fc2-sheet .ix-facts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 5px 18px; }
+.fc2-sheet .ix-facts > div { grid-template-columns: 8.5em minmax(0, 1fr); }
+.fc2-sheet .ix-facts dt { text-align: left; }
+.fc2-sheet .ix-facts dd { white-space: nowrap; }
+.fc2 .ix-realm-table { overflow-x: auto; margin: 0; }
+.fc2 .ix-realm-table table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: calc(var(--ix-fs) * .82); }
+.fc2 .ix-realm-table th, .fc2 .ix-realm-table td { padding: 4px 3px; text-align: center; font-variant-numeric: tabular-nums; }
+.fc2 .ix-realm-table th:first-child, .fc2 .ix-realm-table td:first-child { width: 7.5em; text-align: left; white-space: normal; line-height: 1.25; padding-right: 8px; }
+.fc2 .ix-realm-table td:not(:first-child) { color: var(--good); }
+
+.fc2-matchip b { font-variant-numeric: tabular-nums; color: var(--text-strong); }
+.fc2-fire { font-size: 13px; margin-right: 2px; }
+.fc2-src { font-style: normal; color: var(--dim); font-size: .85em; }
+.fc2-forge .ix-link-row, .fc2-forge .ix-link-row > span { align-items: center; }
+.fc2-forge .ix-link-row { grid-template-columns: minmax(0, 1fr); }
+.fc2-forge .ix-link-row > i { text-align: left; }
+
+.fc2-matchip { gap: 3px; }
+.fc2-bag { display: inline-block; width: 24px; height: 24px; vertical-align: middle; margin: -6px 0 -5px;
+  image-rendering: pixelated; background: url(assets/index/loot-bags.png) no-repeat;
+  background-size: 240px 24px; background-position: calc(var(--i) * -24px) 0; }
+
+/* Icônes d'interface de la Forge (GUI Atlas du client, 16 px) */
+.fc2-ui { display: inline-block; width: 20px; height: 20px; margin: -4px 1px -5px -4px; image-rendering: pixelated;
+  background: url(assets/index/forge-ui.png) no-repeat; background-size: 160px 20px;
+  background-position: calc(var(--i) * -20px) 0; }
+/* Stats : le code couleur de Theory Crafting */
+.fc2-stats .fc2-stat { color: color-mix(in srgb, var(--tint) 60%, var(--muted));
+  border-color: color-mix(in srgb, var(--tint) 35%, var(--line)); }
+.fc2-stats .fc2-stat b { color: var(--tint); }
+.fc2-stats .fc2-stat.is-cut { border-style: dashed; }
+.fc2-stats .fc2-stat.is-cut b { color: var(--bad); }
+.fc2 .ix-realm-table th[style] { color: var(--tint); }
+.fc2 .ix-realm-table td[style] { color: var(--tint) !important; }
+:root[data-theme="light"] .fc2-stats .fc2-stat b,
+:root[data-theme="light"] .fc2 .ix-realm-table td[style],
+:root[data-theme="light"] .fc2 .ix-realm-table th[style] { color: color-mix(in srgb, var(--tint) 55%, #16121c) !important; }
+
+/* Icône de famille (CollectionIcon du client) et marques de l'en-tête */
+.fc2-marks { display: grid; justify-items: end; gap: 6px; align-self: start; }
+.fc2-fam { display: inline-block; width: 24px; height: 24px; image-rendering: pixelated;
+  background: url(assets/index/collection-icons.png) no-repeat; }
+.fc2-fam-inline { width: 24px; height: 24px; align-self: center; margin-right: 2px; }
+.fc2-pips { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.fc2-pips i { height: 8px; border-radius: 2px; background: rgb(var(--hi-rgb) / .08); }
+.fc2-pips i.on { background: var(--bad); }
+.fc2-stats .fc2-stat .dim { color: var(--dim); }
+.fc2 .ix-data-chip.fc2-no { color: var(--dim); text-decoration: line-through; }
+
+.fc2-more { display: contents; }
+.fc2-more > summary { list-style: none; cursor: pointer; font-size: calc(var(--ix-fs) * .86); color: var(--accent);
+  padding: 3px 10px; border: 1px dashed var(--line); border-radius: 999px; }
+.fc2-more > summary::-webkit-details-marker { display: none; }
+.fc2-more[open] > summary { display: none; }
+.fc2-more > span { display: contents; }
+
+/* Set : skin final et pièces */
+.fc2-setskin { display: flex; gap: 14px; align-items: center; }
+.fc2-setskin > div { display: grid; gap: 6px; justify-items: start; }
+.fc2-bigart { display: grid; place-items: center; width: 88px; height: 88px; border-radius: var(--radius-sm);
+  background: rgb(var(--shade) / calc(.28 * var(--shade-k))); border: 1px solid var(--line); }
+.fc2-bigart .ix-art { image-rendering: pixelated; }
+.fc2-pieces { width: 100%; border-collapse: collapse; font-size: calc(var(--ix-fs) * .9); }
+.fc2-pieces td { padding: 5px 4px; border-top: 1px solid var(--line-soft); vertical-align: middle; }
+.fc2-pieces td:first-child { white-space: nowrap; width: 1%; color: var(--muted); }
+.fc2-pieces tr.is-me td:first-child .ix-jump { border-color: var(--accent); }
+.fc2-pieces tr.fc2-sum td { color: var(--muted); }
+.fc2-pieces tr.fc2-total td { border-top: 1px solid var(--line); color: var(--text); font-weight: 600; }
+/* Classe face aux autres */
+.fc2-cmps { display: grid; gap: 6px; }
+.fc2-cmp { display: grid; grid-template-columns: 3em minmax(60px, 1fr) 6.5em 6.5em; gap: 8px; align-items: center; font-size: calc(var(--ix-fs) * .86); }
+.fc2-cmp > i { font-style: normal; color: var(--tint); font-weight: 600; }
+.fc2-bar { position: relative; height: 8px; border-radius: 4px; background: rgb(var(--hi-rgb) / .06); }
+.fc2-bar b { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--tint); opacity: .85; }
+.fc2-bar s { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--dim); }
+.fc2-num { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.fc2-num b { color: var(--text); }
+.fc2-cmp em { font-style: normal; color: var(--dim); }
+.fc2-cmp em.is-best, .fc2-cmp em.is-good { color: var(--good); }
+.fc2-cmp em.is-worst, .fc2-cmp em.is-weak { color: var(--bad); }
+/* Simulation */
+.fc2-sim { display: grid; gap: 8px; }
+.fc2-sim-canvas { width: 100%; height: 170px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft);
+  background: rgb(var(--well-rgb, 4 6 11) / .55); image-rendering: pixelated; }
+.fc2-sim-ctl { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: calc(var(--ix-fs) * .86); color: var(--muted); }
+.fc2-sim-ctl label { display: inline-flex; gap: 6px; align-items: center; }
+.fc2-sim-ctl input[type=range] { width: 110px; accent-color: var(--accent); }
+.fc2-sim-ctl output { min-width: 2ch; color: var(--text); font-variant-numeric: tabular-nums; }
+.fc2-sim-ctl select { background: var(--bg-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; font: inherit; }
+.fc2-sim-out { display: flex; flex-wrap: wrap; gap: 5px; }
+.fc2-door { font-size: calc(var(--ix-fs) * .86); padding: 4px 12px; }
+.fc2-viewer:empty { display: none; }
+
+.fc2-skin { width: 80px; height: 80px; image-rendering: pixelated; }
+.fc2-piecerow .ix-jump.is-me { border-color: var(--accent); color: var(--accent); }
+.fc2-sim { display: grid; gap: 6px; justify-items: start; }
+.fc2-sim-canvas { width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--line-soft);
+  background: rgb(var(--well-rgb, 4 6 11) / .55); image-rendering: pixelated; }
+.fc2-speed { font-size: 11px; }
+
+.fc2-sim-ctl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.fc2-sim-who { color: var(--dim); font-size: calc(var(--ix-fs) * .82); }
+.fc2-setmode { font-size: 11px; }
+.fc2-xp { margin: 0 0 6px; color: var(--muted); font-size: calc(var(--ix-fs) * .9); }
+.fc2-xp b { color: var(--text); }
+
+/* Gear : infos à gauche, simulation et set à droite, le dossier en dessous sur toute la largeur */
+.fc2-side { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.fc2 .fc-cols.is-solo { grid-template-columns: minmax(0, 1fr) !important; }
+.fc2-below { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 12px; align-items: start; }
+.fc2-below .ix-block { margin: 0; }
+.fc2-below .ix-link-row, .fc2-below .ix-facts > div { grid-template-columns: minmax(0, 1fr); }
+.fc2-below .ix-link-row > i, .fc2-below .ix-facts dt { text-align: left; }
+.fc2-settotal td { border-top: 1px solid var(--line) !important; font-weight: 700; }
+.fc2-settotal td:first-child { color: var(--text); }
+
+/* Gear : deux colonnes égales seulement quand la fiche a la place ; sinon la simulation et le set passent sous les infos. */
+.fc2-gear .fc-cols, .fc2-gear .fc-cols:not(.is-solo) { grid-template-columns: minmax(0, 1fr) !important; }
+.fc2-gear .fc-left { position: static; }
+@container fccard (min-width: 640px) {
+  .fc2-gear .fc-cols:not(.is-solo) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+  .fc2-gear .fc-left { position: sticky; top: 0; }
+}
+
+/* Tableau de set : les chiffres ne débordent jamais sur les libellés */
+.fc2 .ix-realm-table table { table-layout: auto; }
+.fc2 .ix-realm-table td:not(:first-child), .fc2 .ix-realm-table th:not(:first-child) { white-space: nowrap; min-width: 2.6em; }
+/* Boîtes « rien ici » : seulement en deux colonnes, et elles comblent la hauteur au lieu de laisser un trou */
+.fc2-empty { display: none; }
+.fc2-empty .ix-part { height: 100%; display: grid; grid-template-rows: auto 1fr; }
+.fc2-empty h4 { margin: 0; font-size: 11.5px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--dim); }
+.fc2-empty p { margin: 0; align-self: center; justify-self: center; color: var(--dim); font-size: calc(var(--ix-fs) * .9); padding: 18px 0; }
+.fc2-gear .fc-cols:not(.is-solo) .fc2-side:not(:has(> :not(.fc2-empty))) { display: none; }
+@container fccard (min-width: 640px) {
+  .fc2-gear .fc-cols:not(.is-solo) { align-items: stretch; }
+  .fc2-gear .fc2-side { display: flex; flex-direction: column; gap: 12px; }
+  .fc2-gear .fc-cols:not(.is-solo) .fc2-side:not(:has(> :not(.fc2-empty))) { display: flex; }
+  .fc2-gear .fc2-empty { display: block; flex: 1 1 auto; min-height: 90px; }
+  .fc2-gear .fc2-side > .ix-block:not(.fc2-empty) { flex: none; }
+}
+
+/* ---------- Compacité : la fiche d'un gear doit tenir sans défiler ---------- */
+.fc2.fc-root { gap: 8px; }
+.fc2 .fc-bar .ix-doors { margin: 0; }
+.fc2 .ix-part { padding: 7px 12px 8px; }
+.fc2 .ix-part > * + * { margin-top: 5px; }
+.fc2 .ix-part > summary { font-size: 10.5px; }
+.fc2 .ix-links { gap: 4px; }
+.fc2 .ix-link-row { gap: 2px 10px; }
+.fc2 .ix-jump, .fc2 .ix-data-chip { padding: 1px 8px; font-size: calc(var(--ix-fs) * .82); }
+.fc2 .ix-jump .ix-art { margin-right: 4px; }
+.fc2 .fc2-chips, .fc2 .ix-link-row > span { gap: 3px; }
+.fc2 .ix-prose { line-height: 1.45; font-size: calc(var(--ix-fs) * .92); }
+.fc2 .ix-does li { margin: 1px 0; }
+.fc2 .ix-facts { gap: 2px 16px; }
+.fc2-dmg { font-size: calc(var(--ix-fs) * 1.8); }
+.fc2-head .ix-cell { padding: 3px; }
+.fc2-name h3 { font-size: calc(var(--ix-fs) * 1.3); }
+.fc2-gear .fc-cols { gap: 10px; }
+.fc2-side { gap: 8px; }
+.fc2-setskin .fc2-bigart { width: 64px; height: 64px; }
+.fc2-setskin .fc2-skin { width: 60px; height: 60px; }
+.fc2 .fc2-ui { width: 16px; height: 16px; background-size: 128px 16px; background-position: calc(var(--i) * -16px) 0; margin: -3px 1px -3px -3px; }
+.fc2-bag { width: 20px; height: 20px; background-size: 200px 20px; background-position: calc(var(--i) * -20px) 0; }
+/* Les boîtes « rien ici » restent petites : c'est le dossier qui remplit la colonne maintenant */
+@container fccard (min-width: 640px) {
+  .fc2-gear .fc-cols:not(.is-solo) { align-items: start; }
+  .fc2-gear .fc2-empty { flex: none; min-height: 0; }
+}
+.fc2-empty p { padding: 4px 0; font-size: calc(var(--ix-fs) * .82); }
+.fc2-empty .ix-part { display: flex; align-items: baseline; gap: 12px; }
+/* Intitulé à gauche de ses puces quand la colonne a la place, au-dessus sinon */
+.fc2-side .ix-link-row, .fc2-side .ix-facts > div, .fc2-forge .ix-link-row { grid-template-columns: minmax(0, 1fr); }
+.fc2-side .ix-link-row > i, .fc2-side .ix-facts dt, .fc2-forge .ix-link-row > i { text-align: left; }
+@container fcdos (min-width: 300px) {
+  .fc2-side .ix-link-row, .fc2-side .ix-facts > div { grid-template-columns: 6.8em minmax(0, 1fr); }
+  .fc2-side .ix-link-row > i, .fc2-side .ix-facts dt { font-size: calc(var(--ix-fs) * .72); padding-top: 3px; }
+}
+@container fccard (min-width: 640px) {
+  .fc2-forge .ix-link-row { grid-template-columns: 9.5em minmax(0, 1fr); }
+}
+
+.fc-left > .fc2-moved { margin-top: 8px; }
+.fc-left > .ix-block.fc2-moved .ix-link-row { grid-template-columns: 9.5em minmax(0, 1fr); }
+.fc-left > .ix-block.fc2-moved .ix-link-row > i { text-align: left; }
+
+.fc2-piecerow.is-icons .ix-jump { padding: 3px; line-height: 0; }
+.fc2-piecerow.is-icons .ix-jump .ix-art { margin: 0; }
+
+/* Barre d'actions et en-tête plus fins */
+.fc2 .fc-bar .ix-door { padding: 3px 11px; font-size: calc(var(--ix-fs) * .82); }
+.fc2 .fc-bar .ix-away { padding: 2px 8px; font-size: calc(var(--ix-fs) * .78); }
+.fc2 .fc-bar .ix-love { width: 26px; height: 26px; font-size: 16px; }
+.fc2-head { gap: 10px; }
+.fc2-head .ix-cell { transform: scale(.85); transform-origin: left center; }
+.fc2-sub { line-height: 1.3; }
+.fc2 .fc2-sim-ctl { gap: 4px 8px; }
+.fc2 .fc-mode button { padding: 2px 9px; }
+
+.fc2-sim-ctl { flex-wrap: nowrap; }
+.fc2-sim .fc-mode button { font-size: 11px; }
+.fc2-sim-ctl .fc-mode [data-speed] { min-width: 2.4em; }
+
+/* Les titres de blocs suivent la taille de base, pour grandir avec elle */
+.fc2 .ix-part > summary, .fc2-empty h4 { font-size: calc(var(--ix-fs) * .7); }
+.fc2 .ix-realm-table table { font-size: calc(var(--ix-fs) * .8); }
+.fc2-tag { font-size: calc(var(--ix-fs) * .66); }
+.fc2 .fc-mode button, .fc2-sim .fc-mode button { font-size: calc(var(--ix-fs) * .72); }
+
+/* Pas de glissement ni de fondu : la mise en page est déjà à sa taille finale quand on la voit */
+.ix-layout { transition: none !important; }
+.ix-find, .ix-card { transition: none !important; }
+#ixTypes:not([hidden]), #ixChosen:not([hidden]) { animation: none !important; }
+
+/* Not yet in the game (RealmEye's Unreleased Content): a plain warning badge beside the tier */
+.fc2-unreleased { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+  color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 55%, transparent); border-radius: 999px; padding: 2px 8px; }

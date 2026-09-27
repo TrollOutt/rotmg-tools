@@ -2238,23 +2238,32 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 /* ------------------------------------------------------------------ *
  * Fame Sweep, on a screen with room to spare                          *
  * ------------------------------------------------------------------ *
- * The dungeon grid takes whatever height is left in its column rather
- * than stopping at a fixed fraction of the window and leaving the
- * bottom of the screen empty. fitGrid() then makes the tiles as large
- * as that space allows, so a tall window shows bigger dungeons rather
- * than the same ones with a gap underneath.
+ * The Dungeons card follows its content instead of stretching to fill
+ * the remaining viewport height.
  *
- * The sum stays under "do this next" rather than being pushed to the
- * floor: it is the third step of a column that reads downwards, and
- * parking it at the bottom of the window separated it from the two
- * cards it belongs to.
+ * Filtering the dungeon list therefore naturally makes the card shorter
+ * or taller. The surrounding Fame Sweep layout keeps its normal flow.
  */
 @media (min-width: 1041px) and (min-height: 700px) {
-  #pageFame .column.results { overflow: hidden; }
-  #pageFame .column.results > .card {
-    flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+  #pageFame .column.results {
+    overflow: visible;
+    align-self: start;
   }
-  #pageFame .fame-grid { flex: 1 1 auto; min-height: 0; max-height: none; }
+
+  #pageFame .column.results > .card {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #pageFame .fame-grid {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
 }
 
 /* ---------------- things arriving ---------------- *
@@ -5782,3 +5791,274 @@ button.tc-loot-place:hover, button.tc-loot-place:focus-visible { border-color: v
 :root[data-theme="light"] .tc-stat.is-lifted b { color: color-mix(in srgb, var(--tint, var(--text)) 55%, #16121c); }
 :root[data-theme="light"] .tc-stat em { color: color-mix(in srgb, var(--tint, var(--accent)) 55%, #16121c); }
 :root[data-theme="light"] .tc-stat.is-cut em { color: var(--dim); }
+
+
+/* ========================================================================== */
+/* HALLOWEEN THEME TEST — Theory / The Gear                                   */
+/* ========================================================================== */
+
+body.theme-halloween-test #pageTheory .tc-gear-card {
+  position: relative;
+  isolation: isolate;
+
+  --halloween-bg-opacity: .35;
+  --halloween-frame-opacity: 1;
+}
+
+/*
+ * Fond indépendant.
+ * L'AVIF est recadré mais jamais déformé.
+ */
+body.theme-halloween-test #pageTheory .tc-gear-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    url("./assets/themes/halloween/backgrounds/halloween-bg-ultrawide-4x1.avif");
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  opacity: var(--halloween-bg-opacity);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/*
+ * Cadre indépendant.
+ *
+ * Pour CE TEST uniquement, on étire volontairement le frame 3:1
+ * jusqu'aux dimensions réelles de la card.
+ *
+ * Le but est précisément de voir jusqu'où la déformation reste acceptable.
+ */
+body.theme-halloween-test #pageTheory .tc-gear-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    url("./assets/themes/halloween/frames/halloween-frame-wide-3x1.png");
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  opacity: var(--halloween-frame-opacity);
+
+  pointer-events: none;
+  user-select: none;
+
+  z-index: 3;
+}
+
+/*
+ * Tout le contenu existant reste entre le fond et le cadre.
+ */
+body.theme-halloween-test #pageTheory .tc-gear-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ========================================================================== */
+/* END HALLOWEEN THEME TEST                                                   */
+/* ========================================================================== */
+
+
+/* ========================================================================== */
+/* HALLOWEEN TEST V2 — Theory / The Gear / background only                    */
+/* ========================================================================== */
+
+body.theme-halloween-test-v2 #pageTheory .tc-gear-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  /* On neutralise le visuel natif de la card testée */
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+
+  --halloween-bg-opacity: .55;
+}
+
+/* Fond seul */
+body.theme-halloween-test-v2 #pageTheory .tc-gear-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    url("./assets/themes/halloween/backgrounds/halloween-bg-ultrawide-4x1.avif");
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  opacity: var(--halloween-bg-opacity);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Pas de cadre pour ce test */
+body.theme-halloween-test-v2 #pageTheory .tc-gear-card::after {
+  content: none;
+}
+
+/* Le contenu reste au-dessus du fond */
+body.theme-halloween-test-v2 #pageTheory .tc-gear-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ========================================================================== */
+/* END HALLOWEEN TEST V2                                                      */
+/* ========================================================================== */
+
+/* =================================================================
+   ATLAS INDEX — LEFT DRAWER TEST
+   ================================================================= */
+
+body.ring-away .atlas-index:not([hidden]),
+body.globe-wide .atlas-index:not([hidden]) {
+  left: 0;
+  right: auto;
+
+  width: var(--atlas-index-width, 480px);
+
+  min-width: min(280px, 92vw);
+  /* Up to the atlas panel, with a strip of the map left between them. */
+  max-width: max(280px, calc(100% - var(--atlas-panel, 0px) - 120px));
+
+  border-left: 0;
+  border-right:
+    1px solid
+    rgb(var(--hi-rgb) / .12);
+
+  box-shadow:
+    18px 0 40px
+    rgb(
+      var(--shade) /
+      calc(.45 * var(--shade-k))
+    );
+
+  animation:
+    atlas-index-in-left
+    .2s
+    cubic-bezier(.2, .7, .3, 1)
+    both;
+}
+
+
+/*
+ * The drawer lies over the map at its full height and scrolls inside, like
+ * the atlas panel. A theme that marks the hosts it finds static as
+ * position: relative saw it while hidden and took it for one, which let the
+ * drawer grow as tall as its record and run off the bottom with no scroll.
+ */
+body.ring-away #atlasIndex:not([hidden]),
+body.globe-wide #atlasIndex:not([hidden]) {
+  position: absolute !important;
+  top: 0;
+  bottom: 0;
+  height: auto;
+}
+
+
+@keyframes atlas-index-in-left {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+
+/*
+ * Le resize est maintenant sur le bord DROIT
+ * de la fiche gauche.
+ */
+.atlas-index-grip {
+  left: auto;
+  right: -4px;
+}
+
+
+/*
+ * Header :
+ *
+ * Open in Index              ×
+ */
+.atlas-index-head {
+  padding: 8px 10px;
+}
+
+
+.atlas-index-full {
+  margin-right: auto;
+}
+
+
+.atlas-index-back {
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  flex: none;
+
+  border-radius: 50%;
+
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+
+  color: var(--text);
+
+  background:
+    rgb(var(--hi-rgb) / .06);
+
+  border:
+    1px solid
+    var(--line);
+}
+
+
+.atlas-index-back:hover,
+.atlas-index-back:focus-visible {
+  color: var(--text-strong);
+
+  border-color:
+    var(--accent);
+
+  background:
+    rgb(var(--hi-rgb) / .10);
+
+  outline: none;
+}
+
+/* Atlas Index header final order */
+
+.atlas-index-full {
+  order: 1;
+  margin-right: 0;
+}
+
+.atlas-index-back {
+  order: 2;
+  margin-left: auto;
+}

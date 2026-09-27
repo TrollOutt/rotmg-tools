@@ -678,8 +678,31 @@ var EnchantEngine = (function () {
     // `picked` holds the class indices already consumed, kept sorted so that
     // permutations of the same multiset share one memo entry.
     const picked = [];
-    const insert = index => { let at = picked.length; while (at > 0 && picked[at - 1] > index) { picked[at] = picked[at - 1]; at--; } picked[at] = index; };
-    const remove = index => { const at = picked.indexOf(index); picked.splice(at, 1); };
+    const insert = index => {
+      let at = picked.length;
+
+      while (
+        at > 0
+        && picked[at - 1] > index
+      ) {
+        picked[at] =
+          picked[at - 1];
+
+        at--;
+      }
+
+      picked[at] =
+        index;
+
+      return at;
+    };
+
+    const removeAt = at => {
+      picked.splice(
+        at,
+        1
+      );
+    };
 
     function walk(left, active, achieved, out, scale) {
       if (++nodes > limit) throw new Error('tree budget exceeded');
@@ -707,7 +730,8 @@ var EnchantEngine = (function () {
         const acceptance = bit && !(bit & achieved) ? goalAccept[i] : 1;
 
         remaining[i]--;
-        insert(i);
+        const pickedAt =
+          insert(i);
 
         if (bit && !(bit & achieved) && acceptance < 1) {
           if (acceptance > 0) {
@@ -724,7 +748,9 @@ var EnchantEngine = (function () {
           else walk(left - 1, active | tagMask[i], nextAchieved, local, chance);
         }
 
-        remove(i);
+        removeAt(
+          pickedAt
+        );
         remaining[i]++;
       }
       memo.set(key, local);
@@ -799,7 +825,212 @@ var EnchantEngine = (function () {
     return { distribution: result, exact: false, nodes: 0, samples: total };
   }
 
-  function distributionFor(data, cfg, artifact, goalNames, options) {
+  /*
+   * PERF:
+   * goalDistribution memoizes nodes inside one tree walk, but UI redraws can
+   * ask distributionFor the exact same question again. Keep a small LRU per
+   * dataset so those repeated requests do not rebuild the whole probability
+   * tree.
+   */
+  const DISTRIBUTION_CACHE_MAX = 256;
+  const distributionCacheByData = new WeakMap();
+  const distributionArtifactIds = new WeakMap();
+  let distributionArtifactSerial = 0;
+
+  function distributionArtifactId(artifact) {
+    if (
+      !artifact
+      || (
+        typeof artifact !== 'object'
+        && typeof artifact !== 'function'
+      )
+    ) {
+      return String(artifact);
+    }
+
+    let id =
+      distributionArtifactIds.get(
+        artifact
+      );
+
+    if (!id) {
+      id =
+        ++distributionArtifactSerial;
+
+      distributionArtifactIds.set(
+        artifact,
+        id
+      );
+    }
+
+    return id;
+  }
+
+  function distributionCacheShape(value, seen) {
+    if (value === undefined) {
+      return '[Undefined]';
+    }
+
+    if (
+      value === null
+      || typeof value !== 'object'
+    ) {
+      return value;
+    }
+
+    const visited =
+      seen || new WeakSet();
+
+    if (visited.has(value)) {
+      return '[Circular]';
+    }
+
+    visited.add(value);
+
+    let out;
+
+    if (value instanceof Set) {
+      out = [
+        'Set',
+        [...value]
+          .map(one =>
+            distributionCacheShape(
+              one,
+              visited
+            )
+          )
+          .sort((a, b) =>
+            JSON.stringify(a)
+              .localeCompare(
+                JSON.stringify(b)
+              )
+          )
+      ];
+    } else if (value instanceof Map) {
+      out = [
+        'Map',
+        [...value]
+          .map(([key, item]) => [
+            distributionCacheShape(
+              key,
+              visited
+            ),
+            distributionCacheShape(
+              item,
+              visited
+            )
+          ])
+          .sort((a, b) =>
+            JSON.stringify(a[0])
+              .localeCompare(
+                JSON.stringify(b[0])
+              )
+          )
+      ];
+    } else if (Array.isArray(value)) {
+      out =
+        value.map(one =>
+          distributionCacheShape(
+            one,
+            visited
+          )
+        );
+    } else {
+      out = {};
+
+      for (
+        const key
+        of Object.keys(value).sort()
+      ) {
+        out[key] =
+          distributionCacheShape(
+            value[key],
+            visited
+          );
+      }
+    }
+
+    visited.delete(value);
+
+    return out;
+  }
+
+  function distributionCacheFor(data) {
+    let cache =
+      distributionCacheByData.get(
+        data
+      );
+
+    if (!cache) {
+      cache = new Map();
+
+      distributionCacheByData.set(
+        data,
+        cache
+      );
+    }
+
+    return cache;
+  }
+
+  function distributionCacheKey(
+    cfg,
+    artifact,
+    goalNames,
+    settings
+  ) {
+    const usefulSettings = {};
+
+    for (
+      const key
+      of Object.keys(settings || {}).sort()
+    ) {
+      /*
+       * planGoals passes the artifact list through its settings. It selects
+       * which calls are made, but does not change one distribution itself.
+       */
+      if (key === 'artifacts') continue;
+
+      usefulSettings[key] =
+        settings[key];
+    }
+
+    return JSON.stringify([
+      distributionArtifactId(
+        artifact
+      ),
+      distributionCacheShape(cfg),
+      goalNames,
+      distributionCacheShape(
+        usefulSettings
+      )
+    ]);
+  }
+
+  function cloneDistributionResult(result) {
+    const copy =
+      Object.assign(
+        {},
+        result
+      );
+
+    if (
+      result.distribution
+      && typeof result.distribution.slice === 'function'
+    ) {
+      copy.distribution =
+        result.distribution.slice();
+    }
+
+    if (Array.isArray(result.pool)) {
+      copy.pool =
+        result.pool.slice();
+    }
+
+    return copy;
+  }
+
+  function distributionForUncached(data, cfg, artifact, goalNames, options) {
     const settings = options || {};
     const pool = eligiblePool(data, cfg, artifact);
     const present = new Map(pool.map(mod => [mod.name, mod]));
@@ -829,6 +1060,70 @@ var EnchantEngine = (function () {
       const sampled = sampledDistribution(pool, artifact, rolls, goalMods, data.blockingLabels, seed, settings.samples, settings.acceptedTiers);
       return Object.assign(sampled, { pool });
     }
+  }
+
+  function distributionFor(
+    data,
+    cfg,
+    artifact,
+    goalNames,
+    options
+  ) {
+    const settings =
+      options || {};
+
+    const cache =
+      distributionCacheFor(data);
+
+    const key =
+      distributionCacheKey(
+        cfg,
+        artifact,
+        goalNames,
+        settings
+      );
+
+    const cached =
+      cache.get(key);
+
+    if (cached) {
+      /*
+       * Refresh insertion order: Map doubles as a tiny LRU.
+       */
+      cache.delete(key);
+      cache.set(key, cached);
+
+      return cloneDistributionResult(
+        cached
+      );
+    }
+
+    const result =
+      distributionForUncached(
+        data,
+        cfg,
+        artifact,
+        goalNames,
+        settings
+      );
+
+    cache.set(
+      key,
+      cloneDistributionResult(
+        result
+      )
+    );
+
+    if (
+      cache.size
+      > DISTRIBUTION_CACHE_MAX
+    ) {
+      cache.delete(
+        cache.keys().next().value
+      );
+    }
+
+    return result;
   }
 
   // Probability (in percent) that at least one of `goalNames` is rolled.
@@ -1028,7 +1323,7 @@ var EnchantEngine = (function () {
    * charging for the wait until the thing turns up — which the comparator that
    * used to live here did not do, so it is gone rather than misleading.
    */
-  function planGoals(data, cfg, goalNames, options) {
+  function* planGoalsSteps(data, cfg, goalNames, options) {
     const settings = options || {};
     const planSettings = Object.assign({}, settings, { acceptedTiers: cfg.tiers });
     const goals = goalNames.filter(Boolean);
@@ -1062,6 +1357,14 @@ var EnchantEngine = (function () {
         let best = null;
 
         for (const artifact of artifacts) {
+          /*
+           * PERF:
+           * One artifact is one indivisible probability calculation.
+           * The async UI wrapper yields between artifacts so the complete
+           * multi-goal plan no longer monopolises the main thread.
+           */
+          yield;
+
           const result = distributionFor(data, stateCfg, artifact, pending, planSettings);
           if (result.exact === false) exact = false;
           const cost = perReroll + (artifact.cost.dust === cfg.dust ? artifact.cost.value * lockMultiplier : 0);
@@ -1203,6 +1506,96 @@ var EnchantEngine = (function () {
   // Cost of insisting that every wanted enchantment lands in the same reroll.
   // Useful as a sanity contrast: it is always at least as expensive as the
   // lock-as-you-go policy, and usually far worse.
+  /*
+   * Public synchronous contract.
+   *
+   * Tests, Node consumers and callers that need an immediate answer keep the
+   * exact historical API. The generator only introduces safe pause points;
+   * driving every step immediately reproduces the old synchronous algorithm.
+   */
+  function planGoals(data, cfg, goalNames, options) {
+    const steps =
+      planGoalsSteps(
+        data,
+        cfg,
+        goalNames,
+        options
+      );
+
+    let step =
+      steps.next();
+
+    while (!step.done) {
+      step =
+        steps.next();
+    }
+
+    return step.value;
+  }
+
+  /*
+   * Browser/UI version.
+   *
+   * `breathe` is deliberately removed before entering the probability cache:
+   * it controls scheduling only and must never become part of a distribution
+   * key.
+   *
+   * `cancelled` lets a newer calculator generation stop obsolete work as soon
+   * as the browser gets control back.
+   */
+  async function planGoalsAsync(data, cfg, goalNames, options) {
+    const settings =
+      options || {};
+
+    const breathe =
+      typeof settings.breathe === 'function'
+        ? settings.breathe
+        : async () => {};
+
+    const cancelled =
+      typeof settings.cancelled === 'function'
+        ? settings.cancelled
+        : () => false;
+
+    const coreOptions =
+      Object.assign(
+        {},
+        settings
+      );
+
+    delete coreOptions.breathe;
+    delete coreOptions.cancelled;
+
+    const steps =
+      planGoalsSteps(
+        data,
+        cfg,
+        goalNames,
+        coreOptions
+      );
+
+    let step =
+      steps.next();
+
+    while (!step.done) {
+      if (cancelled()) {
+        return null;
+      }
+
+      await breathe();
+
+      if (cancelled()) {
+        return null;
+      }
+
+      step =
+        steps.next();
+    }
+
+    return step.value;
+  }
+
+
   function planSimultaneous(data, cfg, goalNames, options) {
     const settings = Object.assign({}, options || {}, { acceptedTiers: cfg.tiers });
     const artifacts = settings.artifacts || data.artifacts;
@@ -1270,7 +1663,7 @@ var EnchantEngine = (function () {
     eligiblePool, isNaturallyRollable, rollablePool, weightFor, weightedPool,
     goalDistribution, distributionFor, oddsAny, oddsAll, tradeoffFamilies, membersOf, tierMultiplier, tierMass, tierRules,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,
-    planGoals, planSimultaneous,
+    planGoals, planGoalsAsync, planSimultaneous,
     ITEM_SPRITE_ALIAS, NOTES
   };
   return engine;

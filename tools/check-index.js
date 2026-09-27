@@ -21,6 +21,27 @@ assert.equal(index.records.filter(r => r.kind === 'item' && r.bench).length, pro
 for (const r of index.records.filter(r => r.kind === 'item' && !r.bench)) {
   assert(r.hidden?.length || r.benchWhy, r.id + ': no explanation for bench exclusion');
 }
+/*
+ * What RealmEye lists as unreleased is in the Index, marked, and in no tool:
+ * not the bench, not the Enchant Calculator, not a fight.
+ */
+{
+  const listed = JSON.parse(fs.readFileSync(path.join(root, 'data/Index/availability.json'), 'utf8')).records;
+  const byId = new Map(index.records.map(r => [r.id, r]));
+  const offeredItems = new Set(projected.items.map(one => one.name));
+  const offeredBosses = new Set(projected.bosses.map(one => one.name));
+  const enchantableNames = new Set(fs.readFileSync(path.join(root, 'data/Items/client-items.txt'), 'utf8')
+    .split(/\n/).filter(line => line.startsWith('item|')).map(line => line.split('|')[1]));
+  for (const [id, status] of Object.entries(listed)) {
+    const r = byId.get(id);
+    if (!r) continue;
+    assert.equal(r.availability, status, id + ' is not marked ' + status);
+    assert(r.hidden?.length && !r.bench && !r.ench && !r.fight, id + ' is ' + status + ' but still offered to a tool');
+    const name = id.slice(id.indexOf(':') + 1);
+    assert(!(r.kind === 'item' && (offeredItems.has(name) || enchantableNames.has(name))), id + ' reached the bench or the calculator');
+    assert(!(r.kind === 'enemy' && offeredBosses.has(name)), id + ' is offered as a fight');
+  }
+}
 assert.deepEqual(theory.sheet, index.theorySheet, 'Theory artwork must come from the index');
 assert.deepEqual(theory.iconSheet, index.sheet, 'Item pictures must come from the index sheet');
 

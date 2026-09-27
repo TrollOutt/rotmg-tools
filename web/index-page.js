@@ -631,6 +631,16 @@ const RealmIndex = (function () {
      * in the rail is a wall to read before choosing anything; four slots and
      * then the kinds that slot holds is one question after another.
      */
+    /*
+     * MAQUETTE — les trois familles de gear que le jeu sépare lui-même :
+     * le gear à tiers, les UT et les ST. Proposées dans la colonne du milieu
+     * dès que le lecteur regarde du gear, avant les types d'objet.
+     */
+    const byGearTier = group('Gear tier', 'Gear type', 'client', undefined, true);
+    chip(byGearTier, 'tiered', 'Tiered', gather(x => x.kind === 'item' && (x.labels || []).includes('TIERED')));
+    chip(byGearTier, 'ut', 'UT', gather(x => x.kind === 'item' && (x.labels || []).includes('UT')));
+    chip(byGearTier, 'st', 'ST', gather(x => x.kind === 'item' && (x.labels || []).includes('ST')));
+
     const byType = group('Kind of gear', t('index.group.kindOfGear'), 'client', undefined, true);
     for (const slot of Object.keys(all.slots)) {
       chip(byType, 'slot' + slot, all.slots[slot][0],
@@ -649,6 +659,16 @@ const RealmIndex = (function () {
     chip(marks, 'shiny', t('index.chip.shiny'), gather(x => (x.labels || []).includes('SHINY')));
     chip(marks, 'reskin', t('index.chip.reskin'), gather(x => (x.labels || []).includes('RESKIN')));
     chip(marks, 'hidden', t('index.chip.noCategory'), gather(x => Boolean(x.hidden)));
+
+    /*
+     * What RealmEye lists as not yet in the game. The client ships it and says
+     * nothing, so the tools used to offer it; build-index now files it hidden
+     * and out of every tool (data/Index/availability.json). It stays here,
+     * gathered in one place, with its links.
+     */
+    const availability = group('Availability', 'Availability', 'wiki',
+      'Listed by RealmEye as unreleased: kept in the Index, left out of the tools.');
+    chip(availability, 'unreleased', 'Unreleased', gather(x => x.availability === 'unreleased'));
 
     /*
      * The seasons, as far as the client names them. It labels a couple of
@@ -782,6 +802,28 @@ const RealmIndex = (function () {
    * out, or picking one option would rule out its neighbours - and a chip
    * with nothing left behind it goes away until it has something again.
    */
+  /*
+   * MAQUETTE — les familles encore offertes tiennent compte de ce qui est tapé.
+   * Une famille sans aucun résultat pour la recherche n'est pas une étape utile :
+   * elle disparaît, et chaque famille compte les résultats qu'elle donnerait.
+   */
+  function matchesSearch(one, term) {
+    if (!term) return true;
+    if (one[6] && one[6].includes(term)) return false;
+    if (one[1].toLowerCase().includes(term)) return true;
+    return Boolean(one[3]) && one[3].toLowerCase().includes(term);
+  }
+  function recountKinds() {
+    const term = RealmI18n.canonicalSearch(((el('ixSearch') || {}).value) || '');
+    let base = light.map(one => one[0]);
+    for (const one of narrowed) base = base.filter(id => one.set.has(id));
+    const room = new Set(base);
+    kindsLeft = new Map();
+    for (const one of light) {
+      if (!room.has(one[0]) || !matchesSearch(one, term)) continue;
+      kindsLeft.set(one[2], (kindsLeft.get(one[2]) || 0) + 1);
+    }
+  }
   function refine() {
     /*
      * Counted against everything the index holds, hidden and all, because a
@@ -797,16 +839,7 @@ const RealmIndex = (function () {
      * offered - the rail's own choice of family left out, the same way each
      * group is left out of its own counting.
      */
-    {
-      let base = alive;
-      for (const one of narrowed) base = base.filter(id => one.set.has(id));
-      const room = new Set(base);
-      kindsLeft = new Map();
-      for (const one of light) {
-        if (!room.has(one[0])) continue;
-        kindsLeft.set(one[2], (kindsLeft.get(one[2]) || 0) + 1);
-      }
-    }
+    recountKinds();
     for (const set of groups) {
       const others = narrowed.filter(one => one.group !== set);
       let base = alive;
@@ -1134,7 +1167,8 @@ const RealmIndex = (function () {
     for (const row of box.querySelectorAll('.ix-row')) {
       const name = row.querySelector('b');
       if (!name) continue;
-      need = Math.max(need, row.clientWidth - name.clientWidth + name.scrollWidth);
+      /* MAQUETTE — mesuré sur la liste, pas sur la ligne : l'étoile de favori est à côté de la ligne et comptait pour rien. */
+      need = Math.max(need, box.clientWidth - name.clientWidth + name.scrollWidth);
     }
     if (!need) { body.style.removeProperty('--ix-listw'); return; }
     /* The panel around the list: its padding, its border, its scrollbar. */
@@ -1166,6 +1200,9 @@ const RealmIndex = (function () {
    * only appears when there are two to tell apart.
    */
   const SUB_ASKED_BY = {
+    'Gear tier': () => kindWanted === 'item'
+      || groups.some(one => (one.id === 'Gears' || one.id === 'Class')
+        && one.chips.some(chip => chip.on)),
     'Kind of gear': () => kindWanted === 'item'
       || groups.some(one => (one.id === 'Gears' || one.id === 'Class')
         && one.chips.some(chip => chip.on)),
@@ -2327,6 +2364,8 @@ const RealmIndex = (function () {
         body.classList.toggle('has-list',
           narrowed.length > 0 || Boolean(kindWanted) || Boolean(el('ixSearch').value.trim()));
       }
+      recountKinds();
+      drawKinds();
       drawResults();
     });
     hook('ixKinds', 'click', event => {
@@ -2635,6 +2674,16 @@ const RealmIndex = (function () {
           if (list) fitList(list);
         }
       });
+      /*
+       * MAQUETTE — les colonnes ne glissent plus : elles prennent leur largeur
+       * finale d'un coup, et le rail et la liste se mesurent aussitôt, avant
+       * que le navigateur ne peigne, au lieu d'attendre la fin d'un glissement.
+       */
+      new MutationObserver(() => {
+        fitGroups();
+        const list = el('ixList');
+        if (list) fitList(list);
+      }).observe(body, { attributes: true, attributeFilter: ['class'] });
     }
     started = true;
     startedAway = document.body.dataset.page !== 'index';

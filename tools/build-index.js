@@ -1373,6 +1373,37 @@ for (const it of gear) {
   }
 }
 
+/* ---------------- what no player can have yet ---------------- */
+/*
+ * The client ships things before the game releases them, and says nothing to
+ * tell them apart: the tier 8 abilities are LOOTABLE like any other, so a
+ * best-possible build came back wearing an ability nobody can own. RealmEye
+ * keeps the list (its Unreleased Content page), and
+ * tools/database/export_realmeye_availability.py copies the Index records it
+ * names into data/Index/availability.json. They stay in the Index, marked and
+ * with the reason on their card; they leave the bench, the Enchant Calculator
+ * and the fights, which offer only what can be had.
+ */
+{
+  const file = path.join(OUT, 'availability.json');
+  const listed = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).records || {} : {};
+  const REASON = { unreleased: 'unreleased - listed by RealmEye, not yet in the game' };
+  const out = new Set();
+  for (const [id, status] of Object.entries(listed)) {
+    const record = records.get(id);
+    if (!record || !REASON[status]) continue;
+    record.hidden = [...new Set([...(record.hidden || []), REASON[status]])];
+    record.availability = status;
+    delete record.bench;
+    delete record.ench;
+    delete record.fight;
+    out.add(id);
+  }
+  mechanics.items = mechanics.items.filter(one => !out.has('item:' + one.name));
+  mechanics.bosses = mechanics.bosses.filter(one => !out.has('enemy:' + one.name));
+  catalogues.items = catalogues.items.filter(one => !out.has('item:' + one.name));
+}
+
 const theoryView = require('./index-model').attach(records, mechanics, objects);
 
 /* ---------------- the links, from both ends ---------------- */

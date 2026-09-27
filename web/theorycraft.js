@@ -250,8 +250,36 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
   const films = [];
   let filmClock = 0;
+  const FILM_FRAME_MIN_MS =
+    1000 / 72;
+
+  let filmDrawnAt =
+    -1e9;
+
   function playFilms(now) {
     filmClock = 0;
+
+    if (
+      now - filmDrawnAt
+      < FILM_FRAME_MIN_MS
+    ) {
+      if (
+        films.length
+        && motionWanted()
+        && theoryOpen()
+      ) {
+        filmClock =
+          requestAnimationFrame(
+            playFilms
+          );
+      }
+
+      return;
+    }
+
+    filmDrawnAt =
+      now;
+
     let anyLeft = false;
     for (const film of films) {
       if (!film.node.isConnected) continue;
@@ -259,7 +287,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       const at = now % film.whole;
       let frame = 0;
       while (frame < film.ends.length - 1 && at >= film.ends[frame]) frame++;
-      film.node.style.backgroundPositionX = (-(film.x + frame * film.w) * film.zoom) + 'px';
+      if (film.lastFrame !== frame) {
+        film.lastFrame = frame;
+        film.node.style.backgroundPositionX =
+          (-(film.x + frame * film.w) * film.zoom) + 'px';
+      }
     }
     if (anyLeft && motionWanted() && theoryOpen()) filmClock = requestAnimationFrame(playFilms);
   }
@@ -271,7 +303,15 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (!(count > 1) || times.length !== count) continue;
       let whole = 0;
       const ends = times.map(one => (whole += one));
-      films.push({ node, x, w, zoom, ends, whole });
+      films.push({
+        node,
+        x,
+        w,
+        zoom,
+        ends,
+        whole,
+        lastFrame: -1
+      });
     }
     if (filmClock) cancelAnimationFrame(filmClock);
     filmClock = 0;
@@ -1237,7 +1277,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           if (plainly(other) === bare) { name = other; break; }
         }
       }
-      if (name) wanted.push(name);
+      /* Without the rules, or with no match, the client's name goes as it is: the calculator recognises it. */
+      wanted.push(name || one.name);
     }
     return { item: worn.name, slots: wanted };
   }
@@ -1977,7 +2018,7 @@ const TINT = {
   const byScoreThenSignature = (a, b) =>
     (b.score - a.score) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 
-  function optimise(state, goal, report, gather) {
+  function* optimiseSteps(state, goal, report, gather) {
     if (!profile || (profile.mode === 'personal' && !access)) throw new Error('Set up your progression before crafting.');
     const work = prepareSearchable(state);
     // Cache compatibility only for this search, including the full slot state.
@@ -2042,6 +2083,7 @@ const TINT = {
         if (!work.locked[hand + ':' + at]) work.gear[hand].ench[at] = null;
       }
     }
+    yield;
     let score = scoreOf(work, goal);
     let looked = 0;
     /*
@@ -2108,6 +2150,7 @@ const TINT = {
           const kept = work.gear[hand].ench.slice();
           work.gear[hand].ench = kept.map((id, i) =>
             (id && enchantFits(one.name, kept, i)) ? id : null);
+          yield;
           const now = scoreOf(work, goal);
           looked++;
           note(work, now);
@@ -2153,6 +2196,7 @@ const TINT = {
             if (!mine.has(one.name)) continue;
             const was = trial.gear[hand].name;
             trial.gear[hand].name = one.name;
+            yield;
             const now = scoreOf(trial, goal);
             looked++;
             if (now > mark) { mark = now; best = one.name; }
@@ -2167,6 +2211,7 @@ const TINT = {
           put++;
         }
         if (put < 2) continue;
+        yield;
         const now = scoreOf(trial, goal);
         looked++;
         note(trial, now);
@@ -2224,6 +2269,7 @@ const TINT = {
             // shot in ways it does not model.
             if (!one.worn && !one.mul && !one.heal && !one.rel && !one.sub) continue;
             worn.ench[at] = one.id;
+            yield;
             const now = scoreOf(work, goal);
             looked++;
             const mine = worth(one);
@@ -2285,7 +2331,87 @@ const TINT = {
    * entry is always the best build found - which is the winner unless one
    * of the others, enchanted in its own right, came out ahead of it.
    */
-  function alternativesOf(best, gather, goal) {
+
+  /*
+   * Drive the exact synchronous optimiser to completion.
+   *
+   * This preserves the historical public/internal contract used by tests and
+   * non-UI callers. The generator's pause points cost no scheduling here.
+   */
+  function runOptimiserSteps(steps) {
+    let step =
+      steps.next();
+
+    while (!step.done) {
+      step =
+        steps.next();
+    }
+
+    return step.value;
+  }
+
+  /*
+   * Browser driver.
+   *
+   * A candidate score remains indivisible, but after roughly 12 ms of
+   * accumulated search work the browser gets a timer turn for input, paint
+   * and animation before the exact same generator continues.
+   */
+  async function runOptimiserStepsAsync(steps) {
+    let sliceStarted =
+      performance.now();
+
+    let step =
+      steps.next();
+
+    while (!step.done) {
+      if (
+        performance.now()
+        - sliceStarted
+        >= 12
+      ) {
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              0
+            )
+        );
+
+        sliceStarted =
+          performance.now();
+      }
+
+      step =
+        steps.next();
+    }
+
+    return step.value;
+  }
+
+  function optimise(state, goal, report, gather) {
+    return runOptimiserSteps(
+      optimiseSteps(
+        state,
+        goal,
+        report,
+        gather
+      )
+    );
+  }
+
+  function optimiseAsync(state, goal, report, gather) {
+    return runOptimiserStepsAsync(
+      optimiseSteps(
+        state,
+        goal,
+        report,
+        gather
+      )
+    );
+  }
+
+  function* alternativesOfSteps(best, gather, goal) {
     const lead = { key: gearSignature(best.state), state: best.state, score: best.score };
     const pool = [...(gather ? gather.values() : [])]
       .filter(one => one.key !== lead.key).sort(byScoreThenSignature).slice(0, ALTERNATIVES_TRY);
@@ -2302,7 +2428,7 @@ const TINT = {
         worn.ench = had.map((id, at) => (id && enchantFitsItem(worn.name, had, at)) ? id : null);
         trial.locked[hand] = true;
       }
-      const done = optimise(trial, goal, null);
+      const done = yield* optimiseSteps(trial, goal, null);
       looked += done.looked;
       if (!Number.isFinite(done.score)) continue;
       done.state.locked = locks;
@@ -2313,6 +2439,27 @@ const TINT = {
     const list = [lead].concat(found).sort((a, b) =>
       (b.score - a.score) || (a === lead ? -1 : b === lead ? 1 : byScoreThenSignature(a, b)));
     return { list: list.slice(0, 1 + ALTERNATIVES_KEEP), looked };
+  }
+
+
+  function alternativesOf(best, gather, goal) {
+    return runOptimiserSteps(
+      alternativesOfSteps(
+        best,
+        gather,
+        goal
+      )
+    );
+  }
+
+  function alternativesOfAsync(best, gather, goal) {
+    return runOptimiserStepsAsync(
+      alternativesOfSteps(
+        best,
+        gather,
+        goal
+      )
+    );
   }
 
   /* ---------------- the page ---------------- */
@@ -2429,15 +2576,64 @@ const TINT = {
    * no pose registry but several frames uses all of them. Otherwise it keeps
    * its idle frame.
    */
+  const targetFrameRuns =
+    new WeakMap();
+
   function targetFrames(piece) {
     if (!piece) return [0];
+
+    const cached =
+      targetFrameRuns.get(piece);
+
+    if (cached) {
+      return cached;
+    }
+
     const all = [];
-    for (let at = 0; at < (piece.frames || 1); at++) all.push(at);
-    const poses = piece.poses || {};
-    const walk = poses['0/1'] || poses['3/1'];
-    if (walk && walk.length > 1) return walk;
-    if (!piece.poses && all.length > 1) return all;
-    return [((poses['0/0'] || poses['3/0'] || [0])[0])];
+
+    for (
+      let at = 0;
+      at < (piece.frames || 1);
+      at++
+    ) {
+      all.push(at);
+    }
+
+    const poses =
+      piece.poses || {};
+
+    const walk =
+      poses['0/1']
+      || poses['3/1'];
+
+    let run;
+
+    if (
+      walk
+      && walk.length > 1
+    ) {
+      run = walk;
+    } else if (
+      !piece.poses
+      && all.length > 1
+    ) {
+      run = all;
+    } else {
+      run = [
+        (
+          poses['0/0']
+          || poses['3/0']
+          || [0]
+        )[0]
+      ];
+    }
+
+    targetFrameRuns.set(
+      piece,
+      run
+    );
+
+    return run;
   }
 
   function targetFrame(piece, clock) {
@@ -2464,6 +2660,13 @@ const TINT = {
   function rollTargets() {
     if (targetClock) return;
     targetClock = setInterval(() => {
+      if (
+        !theoryOpen()
+        || !motionWanted()
+      ) {
+        return;
+      }
+
       const box = el('tcBosses');
       if (!box || !box.isConnected) return;
       if (document.hidden || document.body.dataset.page !== 'theory') return;
@@ -3379,11 +3582,91 @@ const TINT = {
     }
   }
 
+  /*
+   * PERF:
+   * drawDuel runs on every animation frame. Canvas CSS geometry changes only
+   * when layout changes, so ResizeObserver owns that measurement instead of
+   * clientWidth/clientHeight forcing the question every frame.
+   */
+  let duelMeasureCanvas = null;
+  let duelMeasureObserver = null;
+  let duelMeasure = null;
+
   function drawDuel() {
     const canvas = el('tcDuel');
     if (!canvas) return;
-    const wide = canvas.clientWidth || 320;
-    const tall = canvas.clientHeight || 150;
+    if (
+      canvas !== duelMeasureCanvas
+    ) {
+      if (duelMeasureObserver) {
+        duelMeasureObserver.disconnect();
+      }
+
+      duelMeasureCanvas =
+        canvas;
+
+      duelMeasure = {
+        wide:
+          canvas.clientWidth
+          || 320,
+        tall:
+          canvas.clientHeight
+          || 150
+      };
+
+      duelMeasureObserver = null;
+
+      if (
+        typeof ResizeObserver === 'function'
+      ) {
+        duelMeasureObserver =
+          new ResizeObserver(
+            entries => {
+              const entry =
+                entries[0];
+
+              if (!entry) return;
+
+              const rect =
+                entry.contentRect;
+
+              if (rect.width > 0) {
+                duelMeasure.wide =
+                  Math.max(
+                    1,
+                    Math.round(rect.width)
+                  );
+              }
+
+              if (rect.height > 0) {
+                duelMeasure.tall =
+                  Math.max(
+                    1,
+                    Math.round(rect.height)
+                  );
+              }
+            }
+          );
+
+        duelMeasureObserver.observe(
+          canvas
+        );
+      }
+    }
+
+    /*
+     * Old browsers keep the previous behaviour. Modern browsers read the
+     * cached ResizeObserver geometry.
+     */
+    const wide =
+      duelMeasureObserver
+        ? duelMeasure.wide
+        : canvas.clientWidth || 320;
+
+    const tall =
+      duelMeasureObserver
+        ? duelMeasure.tall
+        : canvas.clientHeight || 150;
     const dpr = window.devicePixelRatio || 1;
     // Its box can grow taller without growing wider, so both are checked.
     if (canvas.width !== Math.round(wide * dpr) || canvas.height !== Math.round(tall * dpr)) {
@@ -3627,18 +3910,62 @@ const TINT = {
   function keepPainting() {
     if (painting || !theoryOpen()) return;
     painting = true;
-    let was = performance.now();
+
+    let was =
+      performance.now();
+
+    let duelDrawnAt =
+      -1e9;
+
+    const DUEL_FRAME_MIN_MS =
+      1000 / 72;
+
     const tick = now => {
       if (!theoryOpen()) {
         painting = false;
         return;
       }
-      const delta = Math.min(0.05, (now - was) / 1000);
-      was = now;
-      if (duel.on && data && build) { stepDuel(delta); drawDuel(); }
-      requestAnimationFrame(tick);
+
+      if (
+        now - duelDrawnAt
+        < DUEL_FRAME_MIN_MS
+      ) {
+        requestAnimationFrame(
+          tick
+        );
+
+        return;
+      }
+
+      duelDrawnAt =
+        now;
+
+      const delta =
+        Math.min(
+          0.05,
+          (now - was) / 1000
+        );
+
+      was =
+        now;
+
+      if (
+        duel.on
+        && data
+        && build
+      ) {
+        stepDuel(delta);
+        drawDuel();
+      }
+
+      requestAnimationFrame(
+        tick
+      );
     };
-    requestAnimationFrame(tick);
+
+    requestAnimationFrame(
+      tick
+    );
   }
 
   /* ---------------- pickers ---------------- */
@@ -4295,9 +4622,11 @@ const TINT = {
      * is one page away - so the item and everything on it go there rather
      * than being typed in again.
      */
-    el('tcBody').addEventListener('click', event => {
+    el('tcBody').addEventListener('click', async event => {
       const take = event.target.closest('[data-take]');
       if (!take) return;
+      /* The calculator's names come from the rules, which the served site loads on demand. */
+      await loadRules();
       const said = handoverFor(take.dataset.take);
       if (!said || typeof window.enchantThis !== 'function') return;
       window.enchantThis(said);
@@ -4314,9 +4643,10 @@ const TINT = {
       const open = event.target.closest('[data-index-open]');
       if (open && typeof window.openIndexRecord === 'function') window.openIndexRecord(open.dataset.indexOpen);
     });
-    el('tcBody').addEventListener('click', event => {
+    el('tcBody').addEventListener('click', async event => {
       if (!event.target.closest('#tcTakeAll')) return;
       if (typeof window.enchantBuild !== 'function') return;
+      await loadRules();
       const said = buildHandover();
       const answer = said.length ? window.enchantBuild(said, { label: build.name }) : null;
       // Only said here when nothing went: otherwise the calculator is now on
@@ -4591,7 +4921,15 @@ const TINT = {
       el('tcRun').disabled = true;
       said.textContent = 'trying things...';
       // Off the paint, so the button has time to say it is working.
-      setTimeout(() => {
+      setTimeout(async () => {
+        const busy =
+          el('tcBody');
+
+        if (busy) {
+          busy.inert = true;
+        }
+
+        try {
         /*
          * Two searches, and the better of them. One from the plainest gear
          * there is, which is the same starting point every time and so gives
@@ -4606,10 +4944,10 @@ const TINT = {
         /* Both searches note the gear sets they score in one table, and the
            best of the others are then enchanted and ranked behind the answer. */
         const gather = new Map();
-        const fromPlain = optimise(plain, aim, null, gather);
-        const fromHere = optimise(build, aim, null, gather);
+        const fromPlain = await optimiseAsync(plain, aim, null, gather);
+        const fromHere = await optimiseAsync(build, aim, null, gather);
         const got = fromPlain.score >= fromHere.score ? fromPlain : fromHere;
-        const ranked = alternativesOf(got, gather, aim);
+        const ranked = await alternativesOfAsync(got, gather, aim);
         got.looked = fromPlain.looked + fromHere.looked + ranked.looked;
         const name = build.name;
         for (const one of ranked.list) one.state.name = name;
@@ -4619,7 +4957,6 @@ const TINT = {
           at: 0, view: 1, context: alternativeContext(build), goal: aim
         } : null;
         keep(); paint();
-        el('tcRun').disabled = false;
         /*
          * Where each thing asked for started and where it got to. Measured as
          * how far it moved rather than as a ratio: killing a boss scores as
@@ -4643,6 +4980,14 @@ const TINT = {
         }).join('')
           + '<span class="figure"><b>' + RealmI18n.number(got.looked)
           + '</b><small>builds tried</small></span>';
+        } finally {
+          if (busy) {
+            busy.inert = false;
+          }
+
+          el('tcRun').disabled =
+            false;
+        }
       }, 20);
     });
 

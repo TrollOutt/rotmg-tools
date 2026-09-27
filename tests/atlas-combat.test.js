@@ -126,4 +126,24 @@ for (const phrase of ['function equipLoot(', 'one.lootGoal = usefulLootFor(one)'
 assert(!published.includes('local live captures plus client projectile declarations'),
   'the combat payload must not be inlined into the initial Atlas page');
 
+/*
+ * PERF/PROJECTION:
+ * The browser loads web/assets/atlas/index.html, not the template directly.
+ * Performance fixes in the Atlas template must therefore survive generation.
+ */
+assert(
+  viewer.includes('const atlasCssSize = {')
+    && viewer.includes('atlasSizeObserver.observe(canvas);'),
+  'Atlas template must cache canvas CSS geometry'
+);
+
+assert(
+  published.includes('const atlasCssSize = {')
+    && published.includes('atlasSizeObserver.observe(canvas);')
+    && !published.includes(
+      'return { w: canvas.clientWidth, h: canvas.clientHeight };'
+    ),
+  'Atlas published projection must retain the canvas geometry cache'
+);
+
 console.log(`atlas combat: ${types.size} creatures, ${Object.keys(combat.observed).length} observed types, ${clipCount} clips`);

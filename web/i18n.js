@@ -108,8 +108,13 @@
     const watch = new MutationObserver(records => {
       for (const record of records) for (const node of record.addedNodes) localize(node);
     });
-    watch.observe(root, { childList: true, characterData: true, attributes: true,
-      attributeFilter: ATTRIBUTES, subtree: true });
+    watch.observe(
+      root,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
     return watch;
   }
 

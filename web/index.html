@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Realm Tools</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="fiches-c.css">
+  <link rel="stylesheet" href="ui-style.css" data-ui-style>
+  <!-- Theme UI (Halloween) switched off for now; uncomment here and at the end of the body to bring it back.
+  <link rel="stylesheet" href="./theme-ui-test.css"> -->
 </head>
 <body>
 <!-- A quiet field of stars, shared by every tool page so each one reads as
@@ -43,6 +47,19 @@
   mail with, addressed and titled, and you send it yourself if you still want
   to once you have read it.
 -->
+<!--
+  The reader's own look: the boxes' background, their frame and its colour,
+  kept in this browser. The panel is written by ui-style.js.
+-->
+<div id="styleBox" class="ui-style">
+  <button id="styleOpen" type="button" class="corner-button ui-style-open" aria-expanded="false"
+    aria-controls="styleMenu" title="Choose how the boxes look">
+    <span class="corner-glyph" aria-hidden="true">◐</span>
+    <span class="corner-text">Style</span>
+  </button>
+  <div id="styleMenu" class="ui-style-menu" role="dialog" aria-label="Style" hidden></div>
+</div>
+
 <div id="sayBox" class="say">
   <button id="sayOpen" type="button" class="corner-button say-open" aria-expanded="false"
     title="Report something broken, or ask for something">
@@ -808,6 +825,10 @@
 <script data-lazy-src="index-page.js"></script>
 <script src="router-contract.js"></script>
 <script src="app.js"></script>
+<script src="fiches-c.js"></script>
+<script src="ui-style.js"></script>
 <script type="module" src="skins/app.js"></script>
+<!-- Theme UI (Halloween), switched off for now:
+<script src="./theme-ui-test.js"></script> -->
 </body>
 </html>

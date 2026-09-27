@@ -9,9 +9,12 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
 const app = read('web/app.js');
 const theory = read('web/theorycraft.js');
+const engineSource = read('web/engine.js');
+const i18nSource = read('web/i18n.js');
 const realm = read('web/realm-map.js');
 const newsSource = read('web/whats-new.js');
 const skinsSource = read('web/skins/app.js');
+const fichesSource = read('web/fiches-c.js');
 const atlasSource = read('tools/atlas-viewer.html');
 
 /* LOAD: expensive modules own one in-flight startup promise. */
@@ -80,6 +83,17 @@ assert(
   'MEM: Atlas render loop must start once and stop when inactive'
 );
 
+/*
+ * PERF:
+ * Full Atlas drawing must not scale linearly with 120/144/240 Hz monitors.
+ * The simulation has its own fixed clock; this only caps presentation.
+ */
+assert(
+  atlasSource.includes("pace = said.pace === 'still'")
+    && /\?\s*Infinity\s*:\s*12/.test(atlasSource),
+  'PERF: active Atlas rendering must cap high-refresh displays'
+);
+
 /* MEM/PERF: embedded Atlas owns no RAF while still or backgrounded. */
 assert(
   atlasSource.includes('let frameClock = 0;')
@@ -123,6 +137,165 @@ assert(
     && skinsSource.includes('}else startLoop();'),
   'MEM/PERF: Skin Viewer render loop must stop when inactive and restart once'
 );
+
+
+/*
+ * MEM/PERF:
+ * fiche projectile simulations cache geometry instead of forcing layout on
+ * every animation frame, and the RAF disappears while the canvas is offscreen.
+ */
+assert(
+  fichesSource.includes('const fitSim = width =>')
+    && fichesSource.includes("typeof ResizeObserver === 'function'")
+    && /fitSim\s*\(\s*entry\.contentRect\.width\s*\)/.test(fichesSource)
+    && fichesSource.includes("typeof IntersectionObserver === 'function'")
+    && /simVisible\s*=\s*Boolean\s*\(/.test(fichesSource)
+    && fichesSource.includes('stopSimFrame();')
+    && fichesSource.includes('scheduleSimFrame();'),
+  'MEM/PERF: fiche simulations must cache geometry and sleep offscreen'
+);
+
+/*
+ * PERF: low-rate fiche skin animation must not poll at display refresh rate.
+ */
+assert(
+  fichesSource.includes('let skinTimer = 0;')
+    && fichesSource.includes('setTimeout(')
+    && fichesSource.includes('tickSkin,')
+    && fichesSource.includes('skinVisibilityObserver')
+    && fichesSource.includes('const setAttackFrames = [];'),
+  'MEM/PERF: fiche skin animation must use its real cadence and sleep offscreen'
+);
+
+/*
+ * PERF: Theory must reuse immutable animation frame lists and obtain animated
+ * duel geometry from ResizeObserver rather than forcing a layout read per RAF.
+ */
+assert(
+  theory.includes('const targetFrameRuns =')
+    && theory.includes('new WeakMap();')
+    && theory.includes('let duelMeasureObserver = null;')
+    && theory.includes('entry.contentRect')
+    && theory.includes('duelMeasure.wide'),
+  'MEM/PERF: Theory animation metadata and duel geometry must stay cached'
+);
+
+/*
+ * PERF: repeated probability questions reuse finished distributions.
+ */
+assert(
+  engineSource.includes('const DISTRIBUTION_CACHE_MAX = 256;')
+    && engineSource.includes('const distributionCacheByData = new WeakMap();')
+    && engineSource.includes('function distributionForUncached(')
+    && engineSource.includes('return cloneDistributionResult('),
+  'PERF: enchant distributions must retain a bounded cross-call cache'
+);
+
+/*
+ * PERF: the i18n observer localizes newly inserted trees. It must not subscribe
+ * to mutation classes its callback does not consume.
+ */
+assert(
+  /watch\.observe\(\s*root,\s*\{\s*childList:\s*true,\s*subtree:\s*true\s*\}\s*\)/s.test(i18nSource),
+  'PERF: i18n observer must watch inserted trees only'
+);
+
+
+/*
+ * PERF: fiche simulation scenery is static and must stay cached between
+ * projectile frames.
+ */
+assert(
+  fichesSource.includes("const simBackdrop =")
+    && fichesSource.includes("const paintSimBackdrop = (")
+    && fichesSource.includes("pen.drawImage(")
+    && fichesSource.includes("simBackdrop,"),
+  'PERF: fiche simulations must cache their static canvas backdrop'
+);
+
+/*
+ * PERF: Theory film sprites may be checked each RAF, but unchanged frames
+ * must not trigger another style invalidation.
+ */
+assert(
+  theory.includes('lastFrame: -1')
+    && theory.includes('if (film.lastFrame !== frame)')
+    && theory.includes('film.lastFrame = frame;'),
+  'PERF: Theory films must only write style when their frame changes'
+);
+
+/*
+ * PERF: Skin Viewer resize storms collapse to one expensive stage fit per
+ * animation frame.
+ */
+assert(
+  skinsSource.includes('let fitStageFrame=0;')
+    && skinsSource.includes('function scheduleFitStage()')
+    && skinsSource.includes('new ResizeObserver(scheduleFitStage)'),
+  'PERF: Skin Viewer stage fitting must be coalesced'
+);
+
+
+/*
+ * PERF: high-refresh displays must not multiply the cost of small preview
+ * animations.
+ */
+assert(
+  fichesSource.includes('const SIM_FRAME_MIN_MS =')
+    && fichesSource.includes('1000 / 72')
+    && theory.includes('const FILM_FRAME_MIN_MS =')
+    && theory.includes('const DUEL_FRAME_MIN_MS ='),
+  'PERF: preview animations must stay bounded on high-refresh displays'
+);
+
+/*
+ * PERF: Theory target animation does no DOM work while its page is inactive.
+ */
+assert(
+  /targetClock\s*=\s*setInterval\(\(\)\s*=>\s*\{[\s\S]*?!theoryOpen\(\)[\s\S]*?!motionWanted\(\)/.test(theory),
+  'MEM/PERF: Theory target interval must sleep off-page'
+);
+
+
+
+/*
+ * PERF: Atlas canvas geometry is owned by ResizeObserver rather than queried
+ * from every animation frame.
+ */
+assert(
+  atlasSource.includes('const atlasCssSize = {')
+    && atlasSource.includes("typeof ResizeObserver === 'function'")
+    && atlasSource.includes('atlasSizeObserver.observe(canvas);')
+    && atlasSource.includes('atlasSizeObserver')
+    && atlasSource.includes('atlasCssSize.w')
+    && atlasSource.includes('atlasCssSize.h'),
+  'PERF: Atlas must cache its CSS canvas geometry'
+);
+
+/*
+ * MEM/PERF: a yielded Enchant build plan must not start after navigation or
+ * after a newer calculator generation superseded it.
+ */
+assert(
+  app.includes('const planGeneration =')
+    && app.includes("document.body.dataset.page !== 'enchant'")
+    && app.includes('state.runId !== planGeneration'),
+  'MEM/PERF: stale Enchant build plans must stop before expensive work'
+);
+
+/*
+ * PERF: the probability walk already knows the insertion position. Do not
+ * scan picked[] with indexOf() again on every recursive unwind.
+ */
+assert(
+  engineSource.includes('const pickedAt =')
+    && engineSource.includes('insert(i);')
+    && engineSource.includes('const removeAt = at =>')
+    && engineSource.includes('removeAt(')
+    && !engineSource.includes('picked.indexOf(index)'),
+  'PERF: enchant walk must remove picked classes without a linear search'
+);
+
 
 /*
  * MEM/LOAD regression:
@@ -187,3 +360,20 @@ checkWhatsNewRetry()
     console.error(error);
     process.exitCode = 1;
   });
+
+
+/*
+ * PERF:
+ * Theory's Search button keeps the exact synchronous optimiser for its
+ * contract tests, while the browser drives the same work cooperatively.
+ */
+assert(
+  theory.includes('function* optimiseSteps(')
+    && theory.includes('async function runOptimiserStepsAsync(')
+    && /yield;\s*(?:const|let)\s+\w+\s*=\s*scoreOf\(/.test(theory)
+    && theory.includes('yield* optimiseSteps(trial, goal, null);')
+    && theory.includes('await optimiseAsync(plain, aim, null, gather);')
+    && theory.includes('await optimiseAsync(build, aim, null, gather);')
+    && theory.includes('await alternativesOfAsync(got, gather, aim);'),
+  'PERF: Theory optimizer must yield inside scored candidate work'
+);

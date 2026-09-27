@@ -263,7 +263,7 @@ for (const [where, source] of [['template', atlasTemplate], ['published', atlasB
     && indexPageSource.includes('html: cardHtml(one)'),
     'LINK-049 the Atlas opens a record in a drawer drawn from the Index card itself');
   assert(atlasTemplate.includes("window.parent.postMessage({ rotmg: 'panel', open, wide }, '*')")
-    && app.includes("if (said.rotmg === 'panel') { besideAtlasPanel(said); return; }")
+    && /if \(said\.rotmg === 'panel'\) \{\s*besideAtlasPanel\(said\);/.test(app)
     && css.includes('.globe-box.has-atlas-panel .globe-shut { right: calc(var(--atlas-panel, 0px) + 18px); }'),
     "LINK-050 the host's cross and clouds stand beside the Atlas panel, not on it");
   assert(atlasTemplate.includes(`'<span class="gates">' + portals.join('') + '</span>'`),

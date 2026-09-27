@@ -498,11 +498,24 @@ const jsonForScript = value => JSON.stringify(value)
 
 const css = readWeb('style.css');
 const appSource = readWeb('app.js');
+// The Index card, drawn over the one index-page.js writes: inlined like the rest.
+const cardCss = readWeb('fiches-c.css');
+const cardSource = readWeb('fiches-c.js');
+const cardStyleTag = '<link rel="stylesheet" href="fiches-c.css">';
+const cardScriptTag = '<script src="fiches-c.js"></script>';
+// The reader's look (ui-style.js). Its style keeps the data-ui-style mark: the script copies the
+// stylesheet into the Skin Viewer's shadow root and the atlas's frame from whichever element has it.
+const lookCss = readWeb('ui-style.css');
+const lookSource = readWeb('ui-style.js');
+const lookStyleTag = '<link rel="stylesheet" href="ui-style.css" data-ui-style>';
+const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
 const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
-if (!page.includes(styleTag) || !page.includes(scriptTags)) {
+if (!page.includes(styleTag) || !page.includes(scriptTags)
+  || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
+  || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
 }
@@ -600,6 +613,10 @@ const dress = (bundleSources, { skins = true } = {}) =>
   (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
+  .replace(cardStyleTag, () => `<style>\n${cardCss}\n</style>`)
+  .replace(cardScriptTag, () => `<script>\n${safe(cardSource)}\n</script>`)
+  .replace(lookStyleTag, () => `<style data-ui-style>\n${lookCss}\n</style>`)
+  .replace(lookScriptTag, () => `<script>\n${safe(lookSource)}\n</script>`)
   .replace(scriptTags, () => [
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
       theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '' })};</script>`,
@@ -759,6 +776,8 @@ carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'sk
 fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));
 fs.copyFileSync(path.join(web, 'i18n.js'), path.join(pagesDir, 'i18n.js'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
+// The stone the boxes are laid on by default: five small pictures, one per shape of box.
+carryAcross(path.join(web, 'assets', 'ui'), path.join(pagesDir, 'assets', 'ui'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
 fs.writeFileSync(path.join(pagesDir, 'assets', 'theory', 'progression.json'), sources.realmLootText + '\n');
 

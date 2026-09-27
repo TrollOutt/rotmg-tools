@@ -1,0 +1,121 @@
+/*
+ * The reader's look (web/ui-style.js). Every surface it dresses carries
+ * .ui-host and one class per choice, and its colour as three channels:
+ * --ui-hi (the rail's light), --ui-lo (its body) and --ui-glow (the light
+ * it gives off). Nothing here changes a size, a margin or a position.
+ */
+
+/* ---------------- background: textured ---------------- */
+/* The dark stone, cut to the box's shape, under a veil so the writing on it keeps its contrast. */
+.ui-host.ui-textured {
+  background-color: #0b0910 !important;
+  background-image:
+    linear-gradient(rgb(8 7 13 / .10), rgb(8 7 13 / .10)),
+    var(--ui-tex, none) !important;
+  background-position: center, center !important;
+  background-size: cover, cover !important;
+  background-repeat: no-repeat, no-repeat !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+/* Ornate on stone: the frame's corners and the light along its middles are painted into the background too. */
+.ui-host.ui-textured.ui-ornate {
+  background-image:
+    radial-gradient(circle at 3px 3px, rgb(var(--ui-hi) / .4) 0 1px, rgb(var(--ui-lo) / .4) 1px 2px, transparent 2.25px),
+    radial-gradient(circle at calc(100% - 3px) 3px, rgb(var(--ui-hi) / .4) 0 1px, rgb(var(--ui-lo) / .4) 1px 2px, transparent 2.25px),
+    radial-gradient(circle at 3px calc(100% - 3px), rgb(var(--ui-hi) / .4) 0 1px, rgb(var(--ui-lo) / .4) 1px 2px, transparent 2.25px),
+    radial-gradient(circle at calc(100% - 3px) calc(100% - 3px), rgb(var(--ui-hi) / .4) 0 1px, rgb(var(--ui-lo) / .4) 1px 2px, transparent 2.25px),
+    radial-gradient(ellipse 62% 42px at 50% 0%, rgb(var(--ui-glow) / .08), transparent 74%),
+    radial-gradient(ellipse 62% 42px at 50% 100%, rgb(var(--ui-glow) / .08), transparent 74%),
+    radial-gradient(ellipse 42px 62% at 0% 50%, rgb(var(--ui-glow) / .06), transparent 74%),
+    radial-gradient(ellipse 42px 62% at 100% 50%, rgb(var(--ui-glow) / .06), transparent 74%),
+    linear-gradient(rgb(8 7 13 / .10), rgb(8 7 13 / .10)),
+    var(--ui-tex, none) !important;
+  background-position: top left, top right, bottom left, bottom right, center, center, center, center, center, center !important;
+  background-size: 16px 16px, 16px 16px, 16px 16px, 16px 16px, auto, auto, auto, auto, cover, cover !important;
+  background-repeat: no-repeat !important;
+}
+/* The front page's cards lay a film of their own over their background; on stone it would hide it. */
+.home-card.ui-textured .home-card-film {
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* ---------------- frame: ornate ---------------- */
+/*
+ * A three-pixel rail - dark at the very edge, then the metal - with a soft
+ * light inside and out. Shadows rather than an element laid over the box, so
+ * the frame costs no layout and stays put on a box that scrolls.
+ */
+.ui-host.ui-ornate {
+  border-color: transparent !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(32 25 35 / .75),
+    inset 0 0 0 2px rgb(var(--ui-lo) / .2),
+    inset 0 0 0 3px rgb(var(--ui-lo) / .3),
+    inset 0 0 22px rgb(var(--ui-glow) / .05),
+    0 0 7px 1px rgb(var(--ui-glow) / .07),
+    0 0 20px 3px rgb(var(--ui-glow) / .04) !important;
+}
+
+/* ---------------- frame: simple, in a colour of the reader's ---------------- */
+.ui-host.ui-tinted {
+  border-color: rgb(var(--ui-hi) / .45) !important;
+}
+
+/* ---------------- the ring on the front page ---------------- */
+html[data-ui-bg="textured"] .ring-seg .back { fill: #0b0910 !important; }
+html[data-ui-bg="textured"] .ring-seg .face,
+html[data-ui-bg="textured"] .ring-seg.on .face { fill: url(#uiRingTexture) !important; fill-opacity: 1 !important; }
+html[data-ui-frame="ornate"] .ring-seg .lift { fill: none !important; stroke: rgb(var(--ui-lo) / .18) !important; stroke-width: 3 !important; }
+html[data-ui-frame="ornate"] .ring-seg :is(.lip, .cap, .end) { stroke: rgb(var(--ui-lo) / .5) !important; }
+/* Only the edge against the world brightens when a band is chosen. */
+html[data-ui-frame="ornate"] .ring-seg.on .lip {
+  stroke: rgb(var(--ui-hi) / .6) !important;
+  filter: drop-shadow(0 0 3px rgb(var(--ui-glow) / .5));
+}
+html[data-ui-frame="simple"]:not([data-ui-color="current"]) .ring-seg :is(.lip, .cap, .end) { stroke: rgb(var(--ui-hi) / .4) !important; }
+
+/* ---------------- the Style button and its panel ---------------- */
+.ui-style { position: relative; }
+.ui-style-open { color: var(--dim); }
+.ui-style-open:hover, .ui-style-open[aria-expanded="true"] { color: var(--text); border-color: var(--accent); }
+.ui-style-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 292px; z-index: 2;
+  display: grid; gap: 12px; padding: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: 0 18px 40px rgb(var(--shade) / calc(.55 * var(--shade-k)));
+}
+.ui-style-menu[hidden] { display: none; }
+.ui-style-row { display: grid; gap: 6px; }
+.ui-style-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+.ui-style-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ui-style-choice {
+  display: flex; align-items: center; gap: 8px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  color: var(--dim); background: rgb(var(--hi-rgb) / .04); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
+}
+.ui-style-choice:hover { color: var(--text); }
+.ui-style-choice.is-on { color: var(--text-strong); border-color: var(--accent); background: rgb(var(--hi-rgb) / .08); }
+.ui-style-choice:focus-visible, .ui-style-swatch:focus-visible, .ui-style-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* What each choice looks like, drawn small. */
+.ui-style-sample { flex: none; width: 22px; height: 16px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel-2, #262233); }
+.ui-style-sample.is-bg-textured { background: #0b0910 url("assets/ui/textured/textured-landscape-4x3.avif") center / cover; }
+.ui-style-sample.is-frame-ornate {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px rgb(32 25 35 / .8), inset 0 0 0 2px rgb(var(--ui-lo) / .6), 0 0 6px rgb(var(--ui-glow) / .35);
+}
+.ui-style-swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+.ui-style-swatch {
+  width: 24px; height: 24px; border-radius: 50%; cursor: pointer; padding: 0;
+  border: 1px solid rgb(var(--hi-rgb) / .18);
+  background: radial-gradient(circle at 35% 30%, rgb(var(--sw-hi)), rgb(var(--sw-lo)) 72%);
+}
+.ui-style-swatch:hover { transform: scale(1.08); }
+.ui-style-swatch.is-on { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px rgb(var(--sw-hi)); }
+.ui-style-said { font-size: 12px; color: var(--muted); }
+.ui-style-reset {
+  justify-self: start; font: inherit; font-size: 12px; cursor: pointer; padding: 2px 0;
+  color: var(--dim); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px;
+}
+.ui-style-reset:hover { color: var(--text); }

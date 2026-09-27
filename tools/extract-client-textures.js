@@ -96,11 +96,11 @@ function openAssets(file) {
   const objects = [];
   for (let i = 0; i < objectCount; i++) {
     r.align();
-    r.i64();                                       // path id
+    const pathID = r.i64();
     const byteStart = version >= 22 ? r.i64() : r.u32();
     const byteSize = r.u32();
     const typeIndex = r.i32();
-    objects.push({ byteStart: dataOffset + byteStart, byteSize, classID: classes[typeIndex] });
+    objects.push({ pathID, byteStart: dataOffset + byteStart, byteSize, classID: classes[typeIndex] });
   }
   return { buffer, unityVersion, endianness, objects };
 }
@@ -188,67 +188,74 @@ function findClient() {
   return null;
 }
 
-const assets = findClient();
-if (!assets) {
-  console.error('\n  No installed client found. Looked in:');
-  for (const base of DEFAULT_CLIENTS) console.error('    ' + base);
-  console.error('');
-  process.exit(1);
-}
+/* Other generators read the same client through this reader. */
+module.exports = { Reader, openAssets, readTexture, findClient, CLIENT_DATA };
 
-const wanted = process.argv.slice(2);
-const names = new Set(wanted.length ? wanted : WANTED);
-
-console.log('\n  reading ' + path.basename(assets) + ' ('
-  + (fs.statSync(assets).size / 1048576).toFixed(0) + ' MB)');
-const file = openAssets(assets);
-console.log('  unity ' + file.unityVersion + ', ' + file.objects.length.toLocaleString('en-US') + ' objects');
-
-fs.mkdirSync(OUT, { recursive: true });
-let written = 0;
-const missing = new Set(names);
-for (const object of file.objects) {
-  if (object.classID !== 28) continue;
-  const texture = readTexture(file, object);
-  if (!texture || !names.has(texture.name)) continue;
-  missing.delete(texture.name);
-  if (texture.format !== RGBA32) {
-    console.log('    ' + texture.name.padEnd(20) + 'format ' + texture.format + ', not raw pixels — skipped');
-    continue;
+function main() {
+  const assets = findClient();
+  if (!assets) {
+    console.error('\n  No installed client found. Looked in:');
+    for (const base of DEFAULT_CLIENTS) console.error('    ' + base);
+    console.error('');
+    process.exit(1);
   }
-  // Unity keeps a texture bottom-up; everything else reads top-down.
-  const source = file.buffer.subarray(texture.dataStart, texture.dataStart + texture.imageSize);
-  const flipped = Buffer.alloc(source.length);
-  const stride = texture.width * 4;
-  for (let y = 0; y < texture.height; y++) {
-    source.copy(flipped, y * stride, (texture.height - 1 - y) * stride, (texture.height - y) * stride);
+
+  const wanted = process.argv.slice(2);
+  const names = new Set(wanted.length ? wanted : WANTED);
+
+  console.log('\n  reading ' + path.basename(assets) + ' ('
+    + (fs.statSync(assets).size / 1048576).toFixed(0) + ' MB)');
+  const file = openAssets(assets);
+  console.log('  unity ' + file.unityVersion + ', ' + file.objects.length.toLocaleString('en-US') + ' objects');
+
+  fs.mkdirSync(OUT, { recursive: true });
+  let written = 0;
+  const missing = new Set(names);
+  for (const object of file.objects) {
+    if (object.classID !== 28) continue;
+    const texture = readTexture(file, object);
+    if (!texture || !names.has(texture.name)) continue;
+    missing.delete(texture.name);
+    if (texture.format !== RGBA32) {
+      console.log('    ' + texture.name.padEnd(20) + 'format ' + texture.format + ', not raw pixels — skipped');
+      continue;
+    }
+    // Unity keeps a texture bottom-up; everything else reads top-down.
+    const source = file.buffer.subarray(texture.dataStart, texture.dataStart + texture.imageSize);
+    const flipped = Buffer.alloc(source.length);
+    const stride = texture.width * 4;
+    for (let y = 0; y < texture.height; y++) {
+      source.copy(flipped, y * stride, (texture.height - 1 - y) * stride, (texture.height - y) * stride);
+    }
+    const out = path.join(OUT, texture.name + '.png');
+    fs.writeFileSync(out, writePng(texture.width, texture.height, flipped));
+    written++;
+    console.log('    ' + texture.name.padEnd(20) + texture.width + 'x' + texture.height
+      + '  ' + (fs.statSync(out).size / 1048576).toFixed(1) + ' MB  -> ' + path.relative(root, out));
   }
-  const out = path.join(OUT, texture.name + '.png');
-  fs.writeFileSync(out, writePng(texture.width, texture.height, flipped));
-  written++;
-  console.log('    ' + texture.name.padEnd(20) + texture.width + 'x' + texture.height
-    + '  ' + (fs.statSync(out).size / 1048576).toFixed(1) + ' MB  -> ' + path.relative(root, out));
-}
-/*
- * And the registry that says which tile is which.
- *
- * A TextAsset called "spritesheet": for every one of the game's atlases, the
- * rectangle each of its sprites occupies in the sheets above. Without it the
- * sheets are ten thousand tiles in no order; with it, "lofiEnvironment2 index
- * 99" is a rectangle. It is FlatBuffers, and build-realm-tiles.js reads it.
- */
-for (const object of file.objects) {
-  if (object.classID !== 49) continue;                 // TextAsset
-  const r = new Reader(file.buffer, file.endianness === 1);
-  r.at = object.byteStart;
-  if (r.string() !== 'spritesheetf') continue;
-  const length = r.i32();
-  const out = path.join(CLIENT_DATA, 'spritesheet.bin');
-  fs.writeFileSync(out, file.buffer.subarray(r.at, r.at + length));
-  console.log('    ' + 'spritesheet'.padEnd(20) + (length / 1048576).toFixed(1)
-    + ' MB  -> ' + path.relative(root, out));
-  break;
+  /*
+   * And the registry that says which tile is which.
+   *
+   * A TextAsset called "spritesheet": for every one of the game's atlases, the
+   * rectangle each of its sprites occupies in the sheets above. Without it the
+   * sheets are ten thousand tiles in no order; with it, "lofiEnvironment2 index
+   * 99" is a rectangle. It is FlatBuffers, and build-realm-tiles.js reads it.
+   */
+  for (const object of file.objects) {
+    if (object.classID !== 49) continue;                 // TextAsset
+    const r = new Reader(file.buffer, file.endianness === 1);
+    r.at = object.byteStart;
+    if (r.string() !== 'spritesheetf') continue;
+    const length = r.i32();
+    const out = path.join(CLIENT_DATA, 'spritesheet.bin');
+    fs.writeFileSync(out, file.buffer.subarray(r.at, r.at + length));
+    console.log('    ' + 'spritesheet'.padEnd(20) + (length / 1048576).toFixed(1)
+      + ' MB  -> ' + path.relative(root, out));
+    break;
+  }
+
+  console.log('\n  ' + written + ' written'
+    + (missing.size ? ', not found: ' + [...missing].join(', ') : '') + '\n');
 }
 
-console.log('\n  ' + written + ' written'
-  + (missing.size ? ', not found: ' + [...missing].join(', ') : '') + '\n');
+if (require.main === module) main();

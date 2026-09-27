@@ -448,10 +448,52 @@ const zoneById = new Map(A.zones.map(z => [z.id, z]));
  */
 const screenDpr = () => Math.min(2, window.devicePixelRatio || 1);
 
+/*
+ * PERF:
+ * Canvas CSS geometry changes on layout/resize, not on every rendered map
+ * frame. Chrome was settling layout repeatedly through clientWidth here.
+ * Keep the current CSS box and let ResizeObserver update it.
+ */
+const atlasCssSize = {
+  w: canvas.clientWidth,
+  h: canvas.clientHeight
+};
+
+let atlasSizeObserver = null;
+
+if (typeof ResizeObserver === 'function') {
+  atlasSizeObserver =
+    new ResizeObserver(entries => {
+      const entry = entries[0];
+
+      if (!entry) return;
+
+      atlasCssSize.w =
+        entry.contentRect.width;
+
+      atlasCssSize.h =
+        entry.contentRect.height;
+    });
+
+  atlasSizeObserver.observe(canvas);
+}
+
 function size() {
   const dpr = screenDpr();
-  const wide = Math.round(canvas.clientWidth * dpr);
-  const tall = Math.round(canvas.clientHeight * dpr);
+  const wide = Math.round(
+    (
+      atlasSizeObserver
+        ? atlasCssSize.w
+        : canvas.clientWidth
+    ) * dpr
+  );
+  const tall = Math.round(
+    (
+      atlasSizeObserver
+        ? atlasCssSize.h
+        : canvas.clientHeight
+    ) * dpr
+  );
   /*
    * Only when it has actually changed. Assigning a canvas its own width
    * throws away the bitmap and builds another one - sixty times a second,
@@ -462,7 +504,15 @@ function size() {
     canvas.height = tall;
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w: canvas.clientWidth, h: canvas.clientHeight };
+  return atlasSizeObserver
+    ? {
+        w: atlasCssSize.w,
+        h: atlasCssSize.h
+      }
+    : {
+        w: canvas.clientWidth,
+        h: canvas.clientHeight
+      };
 }
 /* ------------------------------------------------------------------ *
  * Leaning and turning the camera                                      *
@@ -7069,12 +7119,23 @@ window.addEventListener('message', event => {
    * is 0.41 ms a frame at full size and full rate, which is not worth
    * degrading in either direction.
    *
-   * So 'slow' now asks for nothing at all and the word is kept only because
-   * the page on the other side of the message still says it. 'still' is the
-   * one that matters, and it is the one that was always doing the work: a
-   * globe scrolled off the page stops dead.
+   * Rendering still follows the display, but not beyond the point where
+   * another complete Atlas frame buys visible smoothness. The simulation has
+   * its own fixed 30 Hz clock, so limiting high-refresh drawing does not slow
+   * the realm itself.
+   *
+   * Twelve milliseconds deliberately fits between common display rates:
+   * a 60 Hz screen keeps every frame while a 144 Hz screen draws about every
+   * other refresh. 'still' remains a complete stop.
    */
-  pace = said.pace === 'still' ? Infinity : (said.pace === 'slow' ? 12 : 0);
+  /*
+   * PERF:
+   * Do not render the complete Atlas at unrestricted high-refresh rates.
+   * The realm simulation remains independently stepped at 30 Hz.
+   */
+  pace = said.pace === 'still'
+    ? Infinity
+    : 12;
   if (frameWanted()) startFrame();
   else stopFrame();
 });

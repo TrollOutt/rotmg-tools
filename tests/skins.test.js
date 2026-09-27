@@ -236,8 +236,8 @@ assert(/y<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
   const drawable = catalogue.skins.filter(one => one.drawn);
   const undrawable = catalogue.skins.filter(one => !one.drawn);
   assert.equal(drawable.length + undrawable.length, catalogue.skins.length);
-  assert(undrawable.length > 0 && undrawable.length < 40,
-    'a handful of skins have no picture, not none and not most');
+  /* The client's registry of 2026-09-09 draws the 2-Bit classes too, so none may be left - but never most. */
+  assert(undrawable.length < 40, 'at most a handful of skins have no picture, never most');
   for (const one of drawable) {
     assert(looks.skins[one.type], one.id + ' is offered but has no frames');
   }
