@@ -2560,14 +2560,13 @@ const TINT = {
   }
 
   /*
-   * A target in the picker, moving the way it moves in the fight.
+   * A target in the picker, fitted the same way as the moving target in the
+   * fight, but deliberately kept on its first frame.
    *
-   * The same fitted window as sheetIcon - the pixels the creature actually
-   * draws, centred in its cell - but stepped through its walk, or through
-   * whatever frames it has, rather than frozen on the first. The frames are
-   * packed at the rectangle's own width, so each step moves the window by
-   * that width; the fitted part inside it stays where it is, and the
-   * creature keeps its footing. One clock (rollTargets) turns them all.
+   * The picker can contain hundreds of creatures. Advancing all of those DOM
+   * sprites on one 280 ms interval made the whole page hitch at exactly that
+   * cadence. The fight still animates the selected creature through
+   * targetFrame(); the catalogue itself stays static so browsing is smooth.
    */
   /*
    * The target picker and the fight use the same animation run.
@@ -2650,36 +2649,11 @@ const TINT = {
     const at = frame => (-(piece.x + frame * piece.w + fit.bounds.x) * zoom) + 'px '
       + (-(piece.y + fit.bounds.y) * zoom) + 'px';
     return '<span class="tc-charm"'
-      + (run.length > 1 ? ' data-roll="' + run.map(at).join(';') + '"' : '')
       + ' style="width:' + fit.width + 'px;height:' + fit.height + 'px'
       + ';background-size:' + (data.sheet.wide * zoom) + 'px '
       + (data.sheet.tall * zoom) + 'px'
       + ';background-position:' + at(run[0]) + '"></span>';
   }
-  let targetClock = 0;
-  function rollTargets() {
-    if (targetClock) return;
-    targetClock = setInterval(() => {
-      if (
-        !theoryOpen()
-        || !motionWanted()
-      ) {
-        return;
-      }
-
-      const box = el('tcBosses');
-      if (!box || !box.isConnected) return;
-      if (document.hidden || document.body.dataset.page !== 'theory') return;
-      for (const pic of box.querySelectorAll('[data-roll]')) {
-        if (pic.closest('.tc-target-group:not([open])')) continue;
-        const steps = pic.dataset.roll.split(';');
-        const next = (Number(pic.dataset.at || 0) + 1) % steps.length;
-        pic.dataset.at = String(next);
-        pic.style.backgroundPosition = steps[next];
-      }
-    }, 280);
-  }
-
   /*
    * The same window, onto the other sheet.
    *
@@ -4564,7 +4538,6 @@ const TINT = {
         + '</div></details>';
     }).join('');
     watchTargetFit();
-    rollTargets();
     const groups = [...new Set(GOALS.map(one => one.group))];
     el('tcGoals').innerHTML = groups.map(name =>
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'

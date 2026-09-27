@@ -249,11 +249,15 @@ assert(
 );
 
 /*
- * PERF: Theory target animation does no DOM work while its page is inactive.
+ * PERF: the target catalogue must not periodically rewrite every creature
+ * sprite. The selected creature still animates in the fight itself.
  */
 assert(
-  /targetClock\s*=\s*setInterval\(\(\)\s*=>\s*\{[\s\S]*?!theoryOpen\(\)[\s\S]*?!motionWanted\(\)/.test(theory),
-  'MEM/PERF: Theory target interval must sleep off-page'
+  !theory.includes('function rollTargets()')
+    && !theory.includes('targetClock = setInterval')
+    && !theory.includes('data-roll="')
+    && theory.includes('targetFrame(piece, duel.at)'),
+  'PERF: Theory target picker must stay static instead of bulk polling sprites'
 );
 
 
