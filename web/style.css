@@ -2358,8 +2358,16 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 .news-bell-glyph { font-size: 1rem; line-height: 1; animation: news-ring 6s ease-in-out infinite; transform-origin: 50% 15%; }
 .news-bell-text { opacity: .92; }
 .news-bell-dot {
+  position: relative;
   width: 6px; height: 6px; border-radius: 50%; background: #ffcb70;
-  box-shadow: 0 0 0 0 rgba(255,203,112,.6); animation: news-pulse 2.4s ease-out infinite;
+}
+/* The pulse was a growing box-shadow, which repaints the bell on every frame;
+   the same ring grown by scale and faded by opacity is the compositor's. */
+.news-bell-dot::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(255,203,112,.55);
+  animation: news-pulse 2.4s ease-out infinite;
+  will-change: transform, opacity;
 }
 @keyframes news-ring {
   0%, 88%, 100% { transform: rotate(0); }
@@ -2368,11 +2376,11 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   96% { transform: rotate(5deg); }
 }
 @keyframes news-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255,203,112,.55); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(255,203,112,0); }
+  0% { transform: scale(1); opacity: 1; }
+  70%, 100% { transform: scale(3.33); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .news-bell-glyph, .news-bell-dot { animation: none; }
+  .news-bell-glyph, .news-bell-dot, .news-bell-dot::after { animation: none; }
 }
 
 .news-head #newsHead { margin: 0; }
@@ -4328,6 +4336,44 @@ body.globe-wide .atlas-index:not([hidden]) {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-4px); }
 }
+/*
+ * The bands, though, are shapes in one drawing, and an SVG group that moves
+ * has the whole drawing - six bands, their blurred light, their picture -
+ * painted again. So the bands float along the same curve in twenty-four
+ * held steps a cycle (half a pixel at most), and app.js staggers them by
+ * whole steps so all six move on the same frame: one painting every 0.3s
+ * instead of one every frame. The writing, which has a layer of its own,
+ * keeps the smooth float.
+ */
+.ring-drift { animation-name: ring-drift-steps; animation-timing-function: step-end; }
+@keyframes ring-drift-steps {
+  0% { transform: translateY(0px); }
+  4.167% { transform: translateY(-0.068px); }
+  8.333% { transform: translateY(-0.268px); }
+  12.5% { transform: translateY(-0.586px); }
+  16.667% { transform: translateY(-1px); }
+  20.833% { transform: translateY(-1.482px); }
+  25% { transform: translateY(-2px); }
+  29.167% { transform: translateY(-2.518px); }
+  33.333% { transform: translateY(-3px); }
+  37.5% { transform: translateY(-3.414px); }
+  41.667% { transform: translateY(-3.732px); }
+  45.833% { transform: translateY(-3.932px); }
+  50% { transform: translateY(-4px); }
+  54.167% { transform: translateY(-3.932px); }
+  58.333% { transform: translateY(-3.732px); }
+  62.5% { transform: translateY(-3.414px); }
+  66.667% { transform: translateY(-3px); }
+  70.833% { transform: translateY(-2.518px); }
+  75% { transform: translateY(-2px); }
+  79.167% { transform: translateY(-1.482px); }
+  83.333% { transform: translateY(-1px); }
+  87.5% { transform: translateY(-0.586px); }
+  91.667% { transform: translateY(-0.268px); }
+  95.833% { transform: translateY(-0.068px); }
+  100% { transform: translateY(0px); }
+}
+}
 
 /*
  * A band moves sideways three times and never any other way: a neighbour
@@ -4471,6 +4517,8 @@ body.ring-open[data-ring="wheel"] .ring-item.is-soon { opacity: .45; }
  * page nobody is touching has nothing running on it.
  */
 .ring-ripple { pointer-events: none; opacity: 0; transition: opacity .45s ease; }
+/* The ripples' drawing, under the bands, on a layer of its own so their swell repaints only them. */
+.ring-wave-sheet { pointer-events: none; will-change: transform; }
 body.ring-near .ring-ripple { opacity: 1; }
 /*
  * It does not travel. A ring going out across a pond is a signal; what a ball
@@ -4571,11 +4619,14 @@ body.ring-near .ring-core b { opacity: 1; }
   width: var(--ring-art); height: var(--ring-art);
   transition: width .36s cubic-bezier(.22, .7, .3, 1),
               height .36s cubic-bezier(.22, .7, .3, 1);
+  /* The pulse is the frame's: it gets the layer, and the picture with its
+     glow is painted into that layer once instead of being filtered again on
+     every frame of the pulse. */
+  animation: enchanting 4.4s ease-in-out infinite;
 }
 .ring-art-pic {
   width: 100%; height: 100%;
   object-fit: contain; image-rendering: pixelated;
-  animation: enchanting 4.4s ease-in-out infinite;
 }
 /* The same three exceptions the cards make, for the same reasons: the
    enchanter's room has been resampled and only looks worse sharpened, while
@@ -4683,17 +4734,16 @@ body[data-ring="wheel"] .ring-copy .s,
 body[data-ring="wheel"] .ring-copy .d { text-shadow: 0 1px 8px #000, 0 0 18px rgb(var(--shade) / calc(.95 * var(--shade-k))); }
 /*
  * The pictures' glow, in the reader's colour (web/ui-style.js), the site's
- * blue without it. It is a still filter on a picture that has a layer of its
- * own: drawn once, then only scaled and faded by the enchanting pulse, which
- * the compositor does without painting the picture again. The glow used to be
- * the animated thing, and a filter that changes is a full repaint every frame.
+ * blue without it. A still filter on a picture with no layer of its own: it
+ * is painted once into its frame's layer, which the enchanting pulse scales
+ * and fades on the compositor. On a layer of its own the picture had its
+ * three shadows worked out again by the graphics card on every frame.
  */
 body[data-ring="wheel"] .ring-art-pic {
   filter:
     drop-shadow(0 0 4px rgb(var(--ui-glow, 96 168 236) / .55))
     drop-shadow(0 0 10px rgb(var(--ui-hi, 126 196 255) / .35))
     drop-shadow(0 2px 8px #000);
-  will-change: transform, opacity;
 }
 
 body[data-ring="wheel"] .ring-item.on .t { color: var(--ring-lit); }
@@ -4869,7 +4919,7 @@ body[data-ring="list"] .ring-copy .d { margin-top: 6px; }
   .ring-seg, .ring-seg .back, .ring-seg .face, .ring-seg .end, .ring-seg .lip,
   .ring-shade, .ring-core, .ring-core b, .ring-item, .ring-copy .t,
   .ring-copy .s, body[data-ring="wheel"] .ring-copy .d { transition: none; }
-  .ring-art-pic { animation: none; }
+  .ring-art, .ring-art-pic { animation: none; }
 }
 
 .ix-loot-tier {
