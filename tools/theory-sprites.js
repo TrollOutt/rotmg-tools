@@ -130,6 +130,14 @@ for (const text of objectText) {
      * arrow. Neither changes where the shot goes; both change how it looks
      * going there.
      */
+    /*
+     * A projectile with an <Animation> is drawn by its frames: the texture
+     * above them is a placeholder (Love Witch Proj 1's is an orange bullet),
+     * and the animation always plays.
+     */
+    const anim = /<Class>Projectile<\/Class>/.test(m[2]) && /<Animation\b[^>]*>([\s\S]*?)<\/Animation>/.exec(m[2]);
+    const frames = anim ? [...anim[1].matchAll(/<Frame\b[^>]*>\s*<Texture>\s*<File>([^<]+)<\/File>\s*<Index>([^<]+)<\/Index>/g)]
+      .map(f => ({ atlas: f[1].trim(), index: Number(f[2]) })) : [];
     const tilt = /<AngleCorrection>([^<]*)<\/AngleCorrection>/.exec(m[2]);
     const spin = /<Rotation>([^<]*)<\/Rotation>/.exec(m[2]);
     artOf.set(m[1], {
@@ -138,7 +146,8 @@ for (const text of objectText) {
       size: size ? Math.max(10, Math.min(400, Number(size[1]))) : 100,
       shown: shown ? shown[1].trim() : null,
       tilt: tilt ? Number(tilt[1]) : undefined,
-      spin: spin ? Number(spin[1]) : undefined
+      spin: spin ? Number(spin[1]) : undefined,
+      frames: frames.length ? frames : undefined
     });
   }
 }
@@ -162,8 +171,12 @@ function cutOne(key, where, wantPoses) {
   const art = artOf.get(where);
   if (!art) { already.set(key, null); return null; }
   let rects = null, poses = null;
-  const run = wantPoses && moving.get(art.atlas + '#' + art.index);
-  if (run && run.length) {
+  const played = art.frames
+    ? art.frames.map(f => (still.get(f.atlas) || new Map()).get(f.index)).filter(Boolean).slice(0, 8) : [];
+  const run = wantPoses && !played.length && moving.get(art.atlas + '#' + art.index);
+  if (played.length) {
+    rects = played;
+  } else if (run && run.length) {
     rects = run.slice().sort((a, b) => (a.facing - b.facing) || (a.doing - b.doing));
     poses = {};
     rects.forEach((r, slot) => {
@@ -240,7 +253,12 @@ for (const one of facts.bosses) {
 // And the bolt each weapon and ability actually throws.
 let bolts = 0;
 for (const one of facts.items) {
-  const thrown = shotOf.get(one.name);
+  /*
+   * By the client's id for it: that is what the objects are filed under.
+   * Looked up by the name shown instead, the 167 items whose name differs from
+   * their id (the Bolt Thrower is 3HuntressST0) were thrown with no picture.
+   */
+  const thrown = shotOf.get(one.id) || shotOf.get(one.name);
   if (!thrown) continue;
   const key = 'p:' + thrown;
   // Poses wanted: a good many bolts have a run of frames and spin as they go.

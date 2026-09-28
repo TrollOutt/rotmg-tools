@@ -1,25 +1,55 @@
 /*
  * The reader's look (web/ui-style.js). Every surface it dresses carries
- * .ui-host and one class per choice, and its colour as three channels:
- * --ui-hi (the rail's light), --ui-lo (its body) and --ui-glow (the light
- * it gives off). Nothing here changes a size, a margin or a position.
+ * .ui-host, one class per choice, and its variables:
+ *
+ *   --ui-hi, --ui-lo, --ui-glow   the colour, three channels each: the rail's
+ *                                 light, its body, and the light it gives off
+ *   --ui-tex, --ui-size           the grey background and the size it is shown
+ *                                 at (its own, unless the box is larger)
+ *   --ui-tint-a                   how much of the colour lies over the background
+ *   --ui-opacity                  how opaque the background is (transparency)
+ *   --ui-bw                       the box's border width, which its layer reaches over
+ *
+ * Nothing here changes a size, a margin or a position.
  */
 
-/* ---------------- background: textured ---------------- */
-/* The dark stone, cut to the box's shape, under a veil so the writing on it keeps its contrast. */
-.ui-host.ui-textured {
-  background-color: #0b0910 !important;
-  background-image:
-    linear-gradient(rgb(8 7 13 / .10), rgb(8 7 13 / .10)),
-    var(--ui-tex, none) !important;
-  background-position: center, center !important;
-  background-size: cover, cover !important;
-  background-repeat: no-repeat, no-repeat !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
+/* ---------------- background: one of the grey pictures ---------------- */
+/*
+ * Only once the box has been measured (ui-anchor / ui-placed): until then it
+ * keeps its own background, since its layer would not yet know what to sit in.
+ *
+ * Drawn on the box's ::before, behind its content, so the box can be made
+ * see-through (--ui-opacity) without its writing fading. Three layers, top
+ * first: the colour, blended into the picture's light and shade; a light
+ * veil so the writing keeps its contrast; the picture, cut from its middle.
+ */
+.ui-host.ui-anchor:is(.ui-textured, .ui-washed) { position: relative; }
+.ui-host:is(.ui-textured, .ui-washed):is(.ui-anchor, .ui-placed):not(.ui-scrolls) { isolation: isolate; }
+/* The box's own blur of what is behind it is kept: see-through, it shows a softened map or sky, not a sharp one. */
+.ui-host.ui-textured:is(.ui-anchor, .ui-placed):not(.ui-scrolls) {
+  background: transparent !important;
 }
-/* Ornate on stone: the frame's corners and the light along its middles are painted into the background too. */
-.ui-host.ui-textured.ui-ornate {
+.ui-host.ui-textured:is(.ui-anchor, .ui-placed):not(.ui-scrolls)::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; pointer-events: none;
+  opacity: var(--ui-opacity, 1);
+  background-color: #0b0b0c;
+  background-image:
+    linear-gradient(rgb(var(--ui-hi) / var(--ui-tint-a, 0)), rgb(var(--ui-hi) / var(--ui-tint-a, 0))),
+    linear-gradient(rgb(0 0 0 / .22), rgb(0 0 0 / .22)),
+    var(--ui-tex, none);
+  background-blend-mode: color, normal, normal;
+  background-position: center;
+  background-size: auto, auto, var(--ui-size, auto);
+  background-repeat: no-repeat;
+}
+/*
+ * Ornate on a picture: the frame's corners, the light along its middles and
+ * its rail are drawn on the same layer, which reaches over the (transparent)
+ * border so nothing shows between the picture and the box's edge.
+ */
+.ui-host.ui-textured.ui-ornate:is(.ui-anchor, .ui-placed):not(.ui-scrolls)::before {
+  inset: calc(-1 * var(--ui-bw, 0px));
   background-image:
     radial-gradient(circle at 3px 3px, rgb(var(--ui-hi) / .4) 0 1px, rgb(var(--ui-lo) / .4) 1px 2px, transparent 2.25px),
     radial-gradient(circle at calc(100% - 3px) 3px, rgb(var(--ui-hi) / .4) 0 1px, rgb(var(--ui-lo) / .4) 1px 2px, transparent 2.25px),
@@ -29,13 +59,85 @@
     radial-gradient(ellipse 62% 42px at 50% 100%, rgb(var(--ui-glow) / .08), transparent 74%),
     radial-gradient(ellipse 42px 62% at 0% 50%, rgb(var(--ui-glow) / .06), transparent 74%),
     radial-gradient(ellipse 42px 62% at 100% 50%, rgb(var(--ui-glow) / .06), transparent 74%),
-    linear-gradient(rgb(8 7 13 / .10), rgb(8 7 13 / .10)),
+    linear-gradient(rgb(var(--ui-hi) / var(--ui-tint-a, 0)), rgb(var(--ui-hi) / var(--ui-tint-a, 0))),
+    linear-gradient(rgb(0 0 0 / .22), rgb(0 0 0 / .22)),
+    var(--ui-tex, none);
+  background-blend-mode: normal, normal, normal, normal, normal, normal, normal, normal, color, normal, normal;
+  background-position: top left, top right, bottom left, bottom right, center, center, center, center, center, center, center;
+  background-size: 16px 16px, 16px 16px, 16px 16px, 16px 16px, auto, auto, auto, auto, auto, auto, var(--ui-size, auto);
+  box-shadow:
+    inset 0 0 0 1px rgb(20 20 22 / .75),
+    inset 0 0 0 2px rgb(var(--ui-lo) / .2),
+    inset 0 0 0 3px rgb(var(--ui-lo) / .3),
+    inset 0 0 22px rgb(var(--ui-glow) / .05);
+}
+/* The panels over the atlas are never see-through: the map under them is too busy to read writing on. */
+.ui-host.ui-solid::before { opacity: 1 !important; }
+
+/* A box that scrolls keeps the picture as its own background: a layer inside it would scroll away. */
+.ui-host.ui-textured.ui-scrolls {
+  background-color: #0b0b0c !important;
+  background-image:
+    linear-gradient(rgb(var(--ui-hi) / var(--ui-tint-a, 0)), rgb(var(--ui-hi) / var(--ui-tint-a, 0))),
+    linear-gradient(rgb(0 0 0 / .22), rgb(0 0 0 / .22)),
     var(--ui-tex, none) !important;
-  background-position: top left, top right, bottom left, bottom right, center, center, center, center, center, center !important;
-  background-size: 16px 16px, 16px 16px, 16px 16px, 16px 16px, auto, auto, auto, auto, cover, cover !important;
+  background-blend-mode: color, normal, normal !important;
+  background-position: center !important;
+  background-size: auto, auto, var(--ui-size, auto) !important;
   background-repeat: no-repeat !important;
 }
-/* The front page's cards lay a film of their own over their background; on stone it would hide it. */
+
+/*
+ * And see-through all the same where the browser can fade a picture into
+ * nothing (Chrome, Edge, Opera, Safari): the picture is cross-faded with an
+ * empty one of the same size, and the colour and veil are thinned to match.
+ * Elsewhere a scrolling box stays opaque.
+ */
+@supports (background-image: -webkit-cross-fade(url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"), url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"), 50%)) {
+  .ui-host.ui-textured.ui-scrolls {
+    background-color: rgb(11 11 12 / var(--ui-opacity, 1)) !important;
+    background-image:
+      linear-gradient(rgb(var(--ui-hi) / calc(var(--ui-tint-a, 0) * var(--ui-opacity, 1))), rgb(var(--ui-hi) / calc(var(--ui-tint-a, 0) * var(--ui-opacity, 1)))),
+      linear-gradient(rgb(0 0 0 / calc(.22 * var(--ui-opacity, 1))), rgb(0 0 0 / calc(.22 * var(--ui-opacity, 1)))),
+      -webkit-cross-fade(var(--ui-tex), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1672' height='941'/>"), var(--ui-clear, 0%)) !important;
+  }
+}
+
+/* ---------------- background: simple, in the reader's colour ---------------- */
+/* The box keeps its own background; the colour is blended into it from a layer just above it. */
+.ui-host.ui-washed:is(.ui-anchor, .ui-placed):not(.ui-scrolls)::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; pointer-events: none;
+  background: rgb(var(--ui-hi) / var(--ui-tint-a, 0));
+  mix-blend-mode: color;
+}
+/* A box that scrolls cannot hold that layer still: a veil of the colour, painted as a shadow over its whole inside, does. */
+.ui-host.ui-washed.ui-scrolls:not(.ui-ornate) {
+  box-shadow: inset 0 0 0 100vmax rgb(var(--ui-hi) / calc(var(--ui-tint-a, 0) * .35)) !important;
+}
+.ui-host.ui-washed.ui-scrolls.ui-ornate {
+  box-shadow:
+    inset 0 0 0 1px rgb(20 20 22 / .75),
+    inset 0 0 0 2px rgb(var(--ui-lo) / .2),
+    inset 0 0 0 3px rgb(var(--ui-lo) / .3),
+    inset 0 0 22px rgb(var(--ui-glow) / .05),
+    inset 0 0 0 100vmax rgb(var(--ui-hi) / calc(var(--ui-tint-a, 0) * .35)),
+    0 0 7px 1px rgb(var(--ui-glow) / .07),
+    0 0 20px 3px rgb(var(--ui-glow) / .04) !important;
+}
+/*
+ * Writing on a picture. The site's greys were chosen for its flat, very dark
+ * panels; on a lighter, busier picture the descriptions and labels went grey
+ * on grey. On a pictured box they are lifted, and the veil under them is a
+ * little deeper. The plain background keeps the site's own.
+ */
+.ui-host.ui-textured {
+  --text: #f4f0e8;
+  --muted: #d2ccdb;
+  --dim: #a39cb1;
+}
+
+/* The front page's cards lay a film of their own over their background; on a picture it would hide it. */
 .home-card.ui-textured .home-card-film {
   background: transparent !important;
   box-shadow: none !important;
@@ -51,7 +153,7 @@
 .ui-host.ui-ornate {
   border-color: transparent !important;
   box-shadow:
-    inset 0 0 0 1px rgb(32 25 35 / .75),
+    inset 0 0 0 1px rgb(20 20 22 / .75),
     inset 0 0 0 2px rgb(var(--ui-lo) / .2),
     inset 0 0 0 3px rgb(var(--ui-lo) / .3),
     inset 0 0 22px rgb(var(--ui-glow) / .05),
@@ -65,9 +167,9 @@
 }
 
 /* ---------------- the ring on the front page ---------------- */
-html[data-ui-bg="textured"] .ring-seg .back { fill: #0b0910 !important; }
-html[data-ui-bg="textured"] .ring-seg .face,
-html[data-ui-bg="textured"] .ring-seg.on .face { fill: url(#uiRingTexture) !important; fill-opacity: 1 !important; }
+html:not([data-ui-bg="simple"]) .ring-seg .back { fill: #0b0b0c !important; fill-opacity: var(--ui-opacity, 1) !important; }
+html:not([data-ui-bg="simple"]) .ring-seg .face,
+html:not([data-ui-bg="simple"]) .ring-seg.on .face { fill: url(#uiRingTexture) !important; fill-opacity: var(--ui-opacity, 1) !important; }
 html[data-ui-frame="ornate"] .ring-seg .lift { fill: none !important; stroke: rgb(var(--ui-lo) / .18) !important; stroke-width: 3 !important; }
 html[data-ui-frame="ornate"] .ring-seg :is(.lip, .cap, .end) { stroke: rgb(var(--ui-lo) / .5) !important; }
 /* Only the edge against the world brightens when a band is chosen. */
@@ -82,14 +184,53 @@ html[data-ui-frame="simple"]:not([data-ui-color="current"]) .ring-seg :is(.lip, 
 .ui-style-open { color: var(--dim); }
 .ui-style-open:hover, .ui-style-open[aria-expanded="true"] { color: var(--text); border-color: var(--accent); }
 .ui-style-menu {
-  position: absolute; top: calc(100% + 8px); right: 0; width: 292px; z-index: 2;
-  display: grid; gap: 12px; padding: 12px;
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 2;
+  width: 340px; max-width: calc(100vw - 28px); max-height: calc(100vh - 80px); overflow-y: auto;
+  display: grid; gap: 14px; padding: 14px;
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-sm);
   box-shadow: 0 18px 40px rgb(var(--shade) / calc(.55 * var(--shade-k)));
 }
 .ui-style-menu[hidden] { display: none; }
-.ui-style-row { display: grid; gap: 6px; }
+.ui-style-row { display: grid; gap: 7px; }
+.ui-style-row.is-off { opacity: .45; pointer-events: none; }
 .ui-style-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+.ui-style-label em { font-style: normal; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 6px; }
+.ui-style-menu :is(button, label):focus-visible, .ui-style-menu input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Whole looks: a row of chips. */
+.ui-style-looks { display: flex; flex-wrap: wrap; gap: 5px; }
+.ui-style-look {
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 10px;
+  color: var(--dim); background: rgb(var(--hi-rgb) / .04); border: 1px solid var(--line); border-radius: 999px;
+}
+.ui-style-look:hover { color: var(--text); }
+.ui-style-look.is-on { color: var(--text-strong); border-color: rgb(var(--ui-hi) / .8); background: rgb(var(--ui-hi) / .12); }
+
+/* The backgrounds, each shown with the colour over it as it will be. */
+.ui-style-backs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.ui-style-back {
+  position: relative; aspect-ratio: 16 / 10; padding: 0; cursor: pointer; overflow: hidden;
+  background: var(--panel-2, #262233); border: 1px solid var(--line); border-radius: 6px;
+}
+.ui-style-back > span {
+  position: absolute; inset: 0;
+  background-color: #0b0b0c;
+  background-image:
+    linear-gradient(rgb(var(--ui-hi) / var(--ui-tint-a, 0)), rgb(var(--ui-hi) / var(--ui-tint-a, 0))),
+    var(--thumb);
+  background-blend-mode: color, normal;
+  background-size: cover; background-position: center;
+  /* A preview is a fraction of the picture's size: brightened a little so its pattern can be seen. */
+  filter: brightness(1.7) contrast(1.05);
+}
+.ui-style-back.is-simple > span { background: var(--panel); filter: none; }
+.ui-style-back.is-simple > span::after {
+  content: ''; position: absolute; inset: 30% 42%; border-radius: 2px; border: 1px solid var(--line);
+}
+.ui-style-back:hover { border-color: var(--text); }
+.ui-style-back.is-on { border-color: rgb(var(--ui-hi)); box-shadow: 0 0 0 1px rgb(var(--ui-hi)), 0 0 10px rgb(var(--ui-glow) / .45); }
+
+/* Frame: two choices, each drawn small. */
 .ui-style-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .ui-style-choice {
   display: flex; align-items: center; gap: 8px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
@@ -97,23 +238,51 @@ html[data-ui-frame="simple"]:not([data-ui-color="current"]) .ring-seg :is(.lip, 
 }
 .ui-style-choice:hover { color: var(--text); }
 .ui-style-choice.is-on { color: var(--text-strong); border-color: var(--accent); background: rgb(var(--hi-rgb) / .08); }
-.ui-style-choice:focus-visible, .ui-style-swatch:focus-visible, .ui-style-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-/* What each choice looks like, drawn small. */
 .ui-style-sample { flex: none; width: 22px; height: 16px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel-2, #262233); }
-.ui-style-sample.is-bg-textured { background: #0b0910 url("assets/ui/textured/textured-landscape-4x3.avif") center / cover; }
 .ui-style-sample.is-frame-ornate {
   border-color: transparent;
-  box-shadow: inset 0 0 0 1px rgb(32 25 35 / .8), inset 0 0 0 2px rgb(var(--ui-lo) / .6), 0 0 6px rgb(var(--ui-glow) / .35);
+  box-shadow: inset 0 0 0 1px rgb(20 20 22 / .8), inset 0 0 0 2px rgb(var(--ui-lo) / .7), 0 0 6px rgb(var(--ui-glow) / .4);
 }
-.ui-style-swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+
+/* One colour for the frame and the background: swatches, and one the reader picks. */
+.ui-style-swatches { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
 .ui-style-swatch {
-  width: 24px; height: 24px; border-radius: 50%; cursor: pointer; padding: 0;
+  position: relative; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; padding: 0;
   border: 1px solid rgb(var(--hi-rgb) / .18);
   background: radial-gradient(circle at 35% 30%, rgb(var(--sw-hi)), rgb(var(--sw-lo)) 72%);
 }
 .ui-style-swatch:hover { transform: scale(1.08); }
 .ui-style-swatch.is-on { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px rgb(var(--sw-hi)); }
-.ui-style-said { font-size: 12px; color: var(--muted); }
+.ui-style-swatch.is-custom { overflow: hidden; }
+.ui-style-swatch.is-custom::after {
+  content: '+'; position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 15px; font-weight: 700; color: rgb(255 255 255 / .85); text-shadow: 0 0 3px rgb(0 0 0 / .8); pointer-events: none;
+}
+.ui-style-swatch.is-custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+
+/* The two sliders, drawn the same in every browser: a track filled up to the thumb, in the colour. */
+.ui-style-slide.is-off { opacity: .45; pointer-events: none; }
+.ui-style-strength { display: grid; grid-template-columns: 1fr 3.2em; align-items: center; gap: 8px; }
+.ui-style-strength output { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.ui-style-strength input {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0;
+  background: transparent; cursor: pointer;
+}
+.ui-style-strength input::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, rgb(var(--ui-hi)) var(--at, 0%), rgb(var(--hi-rgb) / .16) var(--at, 0%));
+}
+.ui-style-strength input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%;
+  background: rgb(var(--ui-hi)); border: 2px solid var(--panel); box-shadow: 0 0 0 1px rgb(var(--ui-hi));
+}
+.ui-style-strength input::-moz-range-track { height: 4px; border-radius: 2px; background: rgb(var(--hi-rgb) / .16); }
+.ui-style-strength input::-moz-range-progress { height: 4px; border-radius: 2px; background: rgb(var(--ui-hi)); }
+.ui-style-strength input::-moz-range-thumb {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgb(var(--ui-hi)); border: 2px solid var(--panel); box-shadow: 0 0 0 1px rgb(var(--ui-hi));
+}
+
 .ui-style-reset {
   justify-self: start; font: inherit; font-size: 12px; cursor: pointer; padding: 2px 0;
   color: var(--dim); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px;
