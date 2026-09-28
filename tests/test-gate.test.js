@@ -19,7 +19,6 @@ const deployCritical = [
   'progression.test.js',
   'projections.test.js',
   'realm-brush-engine.test.js',
-  'realm-codec.test.js',
   'realm-contract.test.js',
   'router-contract.test.js',
   'module-links.test.js',

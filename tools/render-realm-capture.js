@@ -1,13 +1,13 @@
 'use strict';
 
 /*
- * Render a decoded Realm capture at the game's own 8px-per-tile scale.
+ * Render a recorded Realm map at the game's own 8px-per-tile scale.
  *
  *   node tools/render-realm-capture.js client-data/capture/realm-map.json
  *
- * Ground ids and static-object positions are copied from decrypted UPDATE
- * packets.  Only RandomTexture frame selection remains cosmetic/client-side;
- * the server transmits an object/ground type, not a particular random frame.
+ * Ground ids and static-object positions are taken as recorded. Only
+ * RandomTexture frame selection remains cosmetic/client-side: the map holds
+ * an object/ground type, not a particular random frame.
  */
 const fs = require('fs');
 const path = require('path');
@@ -107,9 +107,9 @@ const html = `<!doctype html>
 <meta charset="utf-8"><title>Realm capture — exact tiles and props</title>
 <style>body{margin:24px;background:#10131a;color:#e8edf5;font:14px system-ui,sans-serif}canvas{display:block;margin-top:14px;max-width:100%;height:auto;image-rendering:pixelated;border:1px solid #465264;background:#0d1721}small{color:#aeb8c8}details{margin-top:12px}summary{cursor:pointer}</style>
 <h1>Realm capture — exact ground and static props</h1>
-<p>${map.tileCount.toLocaleString('en-US')} decrypted ground placements; ${props.length.toLocaleString('en-US')} distinct static prop placements.</p>
+<p>${map.tileCount.toLocaleString('en-US')} recorded ground placements; ${props.length.toLocaleString('en-US')} distinct static prop placements.</p>
 <p>Window: x=${map.bounds.minX}…${map.bounds.maxX}, y=${map.bounds.minY}…${map.bounds.maxY}; native resolution: ${width * tileSize}×${height * tileSize}px (${width}×${height} game tiles).</p>
-<small>The floor ids and prop coordinates/types come from the server’s decrypted <code>UPDATE</code> packets. RandomTexture is selected deterministically for preview only, because that animation/cosmetic frame is not sent by the server.</small>
+<small>The floor ids and prop coordinates/types are as recorded. RandomTexture is selected deterministically for preview only, because that animation/cosmetic frame is not part of the map.</small>
 <canvas id="map" width="${width * tileSize}" height="${height * tileSize}"></canvas>
 <details><summary>Static prop types (${sourceCounts.size})</summary><pre>${[...sourceCounts].sort((a,b)=>b[1]-a[1]).map(([name,count]) => count + ' × ' + name).join('\n')}</pre></details>
 <script>

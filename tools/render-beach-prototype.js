@@ -3,7 +3,7 @@
 /*
  * Beach-only prototype.  It deliberately does not stitch captured viewports.
  * The annotated realm topology supplies the shape (letter `t` = Beach); the
- * decrypted capture supplies the actual sand ground id and client sprite.
+ * recorded realm map supplies the actual sand ground id and client sprite.
  *
  *   node tools/render-beach-prototype.js
  */
