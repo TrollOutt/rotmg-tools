@@ -1811,6 +1811,11 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
  * catch the eye on the way past, not enough to read as a warning.
  */
 .home-card-art {
+  filter:
+    drop-shadow(0 0 4px rgba(96, 168, 236, .55))
+    drop-shadow(0 0 10px rgba(126, 196, 255, .38));
+  transform: translateZ(0);
+  will-change: transform, opacity;
   animation: enchanting 4.4s ease-in-out infinite;
 }
 
@@ -1840,6 +1845,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   animation: index-book 2.4s steps(20, jump-none) infinite,
     enchanting 4.4s ease-in-out infinite;
 }
+
 @keyframes index-book {
   from { background-position-x: 0%; }
   to   { background-position-x: 100%; }
@@ -1937,8 +1943,14 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
    the room itself — the antlers, the shelf, the edge of the carpet — instead
    of haloing a rectangle. */
 @keyframes enchanting {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(96, 168, 236, .3)) brightness(1); }
-  50%      { filter: drop-shadow(0 0 12px rgba(126, 196, 255, .62)) brightness(1.08); }
+  0%, 100% {
+    transform: translateZ(0) scale(1);
+    opacity: .94;
+  }
+  50% {
+    transform: translateZ(0) scale(1.025);
+    opacity: 1;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-card-art {
@@ -4669,7 +4681,20 @@ body[data-ring="wheel"] .ring-item.right .ring-copy { align-items: flex-end; }
 body[data-ring="wheel"] .ring-copy .t { text-shadow: 0 2px 10px #000, 0 0 22px rgb(var(--shade) / calc(.9 * var(--shade-k))); }
 body[data-ring="wheel"] .ring-copy .s,
 body[data-ring="wheel"] .ring-copy .d { text-shadow: 0 1px 8px #000, 0 0 18px rgb(var(--shade) / calc(.95 * var(--shade-k))); }
-body[data-ring="wheel"] .ring-art-pic { filter: drop-shadow(0 2px 10px #000); }
+/*
+ * The pictures' glow, in the reader's colour (web/ui-style.js), the site's
+ * blue without it. It is a still filter on a picture that has a layer of its
+ * own: drawn once, then only scaled and faded by the enchanting pulse, which
+ * the compositor does without painting the picture again. The glow used to be
+ * the animated thing, and a filter that changes is a full repaint every frame.
+ */
+body[data-ring="wheel"] .ring-art-pic {
+  filter:
+    drop-shadow(0 0 4px rgb(var(--ui-glow, 96 168 236) / .55))
+    drop-shadow(0 0 10px rgb(var(--ui-hi, 126 196 255) / .35))
+    drop-shadow(0 2px 8px #000);
+  will-change: transform, opacity;
+}
 
 body[data-ring="wheel"] .ring-item.on .t { color: var(--ring-lit); }
 body[data-ring="wheel"] .ring-item.on .s { color: var(--muted); }
