@@ -5746,12 +5746,14 @@ function dressArt(image) {
      * blinking. A row of people walking past only ever goes one way: coming
      * back would be the parade reversing into itself.
      */
+    /* On the ring the pulse is the frame's, not the picture's (see .ring-art in the stylesheet). */
+    const pulse = image.closest('.ring-art') ? '' : ', enchanting 4.4s ease-in-out infinite';
     image.style.animation = image.classList.contains('is-walk')
       ? 'index-book ' + (many * 0.18).toFixed(2) + 's'
         + ' steps(' + many + ', jump-none) infinite'
       : 'index-book ' + (many * 0.26).toFixed(2) + 's'
-        + ' steps(' + many + ', jump-none) infinite alternate,'
-        + ' enchanting 4.4s ease-in-out infinite';
+        + ' steps(' + many + ', jump-none) infinite alternate'
+        + pulse;
   });
   strip.src = src;
 }
@@ -6074,6 +6076,15 @@ function narrow() {
 
 let parts = null, stage = null, wheel = null, core = null, glow = null, shade = null;
 let waves = null, coming = 0;
+/*
+ * Each band floats on its own clock, a fixed share of the float's 7.4s
+ * behind the one before. The bands' drawing is one picture, so their float
+ * is drawn in twenty-four steps a cycle (see ring-drift-steps in the
+ * stylesheet) rather than every frame - and the share is ten of those steps,
+ * so all six bands step at the same instant and the picture is painted once a
+ * step, not six times.
+ */
+const DRIFT_OFFSET = 10 * 7.4 / 24;
 let planetOn = false, run = 0, on = false, geo = null, openAt = null, stood = false;
 
 /*
@@ -6241,7 +6252,20 @@ function build() {
    * the world, so a front page nobody is pointing at is a front page with
    * nothing running on it.
    */
-  const rings = el('g', wheel, { class: 'ring-ripple' });
+  /*
+   * On a drawing of their own, laid just under the bands and given a layer of
+   * its own. A ring swelling inside the bands' drawing made the whole of it -
+   * six bands with their blurred light and their picture - be painted again
+   * on every frame the cursor spent on the world; alone, a swell repaints
+   * three circles.
+   */
+  let sheet = document.getElementById('ringWaveSheet');
+  if (!sheet) {
+    sheet = el('svg', null, { id: 'ringWaveSheet', class: 'ring-wheel ring-wave-sheet',
+      'aria-hidden': 'true', preserveAspectRatio: 'none' });
+    wheel.before(sheet);
+  }
+  const rings = el('g', sheet, { class: 'ring-ripple' });
   waves = [];
   for (let i = 0; i < 3; i++) {
     waves.push(el('circle', rings, { class: 'ring-wave',
@@ -6328,7 +6352,7 @@ function build() {
      * two answers to the same question - so they are given one each.
      */
     const drift = el('g', wheel, { class: 'ring-drift',
-      style: 'animation-delay:' + (-3.1 * MODULES.indexOf(m)).toFixed(1) + 's' });
+      style: 'animation-delay:' + (-DRIFT_OFFSET * MODULES.indexOf(m)).toFixed(3) + 's' });
     const g = el('g', drift, { class: 'ring-seg ' + (m.side < 0 ? 'left' : 'right')
       + (m.soon ? ' is-soon' : '') });
     /* The light a band sits in, which is the same outline blurred and laid
@@ -6370,7 +6394,7 @@ function build() {
     /* And the writing drifts on the same clock as the band it belongs to,
        from its own wrapper for the same reason. */
     item.innerHTML = '<span class="ring-float" style="animation-delay:'
-      + (-3.1 * MODULES.indexOf(m)).toFixed(1) + 's">'
+      + (-DRIFT_OFFSET * MODULES.indexOf(m)).toFixed(3) + 's">'
       + '<span class="ring-art"></span>'
       + '<span class="ring-copy"><span class="t"></span>'
       + '<span class="s"></span><span class="d"></span></span></span>';
@@ -6706,6 +6730,7 @@ function fit() {
   }
   measure();
   wheel.setAttribute('viewBox', '0 0 ' + geo.W + ' ' + geo.H);
+  document.getElementById('ringWaveSheet')?.setAttribute('viewBox', '0 0 ' + geo.W + ' ' + geo.H);
   /* Measured and drawn even while the map has the window, so that shutting it
      hands back an arrangement that already fits - but not shown, which is the
      one thing standing aside means. */
