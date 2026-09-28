@@ -596,3 +596,2536 @@ a.chosen-chip:hover { border-color: var(--sk-accent); color: var(--sk-text); }
   .stage-panel { min-height: 62vh; }
   .class-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer rework V1 — browsing gets the space.
+ *
+ * Class and Family are alternate catalogue views rather than two filters
+ * stacked on top of one another. Clothing and Accessory work the same way.
+ * The freed height belongs to the actual skins and dyes.
+ * ---------------------------------------------------------------------- */
+
+.browse-mode-head,
+.dye-category-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 7px;
+}
+
+.browse-mode-head > span,
+.dye-category-row > span {
+  color: var(--sk-dim);
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  white-space: nowrap;
+}
+
+.browse-mode-switch,
+.dye-target-switch {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  min-width: 0;
+  border: 1px solid var(--sk-line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgb(var(--shade, 0 0 0) / calc(.18 * var(--shade-k, 1)));
+}
+
+.browse-mode-switch button,
+.dye-target-tab {
+  min-width: 0;
+  min-height: 30px;
+  margin: 0;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--sk-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.browse-mode-switch button + button,
+.dye-target-tab + .dye-target-tab {
+  border-left: 1px solid var(--sk-line);
+}
+
+.browse-mode-switch button:hover,
+.dye-target-tab:hover {
+  color: var(--sk-text);
+  background: rgb(var(--hi-rgb, 255 255 255) / .04);
+}
+
+.browse-mode-switch button.selected,
+.dye-target-tab.active {
+  background: var(--sk-accent);
+  color: var(--sk-on-accent);
+}
+
+.skin-filter-panel {
+  flex: none;
+  min-height: 0;
+}
+
+.skin-filter-panel[hidden] {
+  display: none !important;
+}
+
+/* Family is now allowed to use a compact scrolling strip rather than sharing
+   permanent vertical space with all nineteen classes. */
+#skinFamilyFilter #families {
+  max-height: clamp(74px, 15vh, 150px);
+  padding-right: 2px;
+}
+
+/* The content, not the filters, is now the dominant part of both side rails. */
+#skins.browse-grid,
+#dyeList.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 6px;
+  overflow: auto;
+  padding-top: 2px;
+}
+
+#skins .skin.card,
+#dyeList .dye.card {
+  position: relative;
+  min-width: 0;
+  min-height: 100px;
+  padding: 8px 5px 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  border-color: var(--sk-line-soft);
+  background: rgb(var(--hi-rgb, 255 255 255) / .018);
+}
+
+#skins .skin.card:hover,
+#dyeList .dye.card:hover {
+  transform: translateY(-1px);
+}
+
+#skins .skin.card .thumb {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+}
+
+#dyeList .dye.card .dye-preview {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+#dyeList .dye.card .dye-effect {
+  width: 46px;
+  height: 46px;
+}
+
+#skins .skin.card .card-copy,
+#dyeList .dye.card .card-copy {
+  width: 100%;
+  align-items: center;
+  gap: 3px;
+}
+
+#skins .skin.card .card-copy b,
+#dyeList .dye.card .card-copy b {
+  width: 100%;
+  font-size: 11px;
+  line-height: 1.12;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+#skins .skin.card .card-copy small,
+#dyeList .dye.card .card-copy small {
+  width: 100%;
+  font-size: 9.5px;
+  text-align: center;
+}
+
+#dyeList .dye.card > .color-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+}
+
+.dye-mode-head {
+  align-items: stretch;
+}
+
+.dye-mode-head > span {
+  display: flex;
+  align-items: center;
+}
+
+.dye-target-switch {
+  flex: 1;
+}
+
+.dye-target-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+}
+
+.dye-target-tab small {
+  max-width: 110px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  opacity: .75;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.dye-category-row {
+  align-items: flex-start;
+}
+
+.dye-category-row #dyeCategories {
+  justify-content: flex-end;
+}
+
+/* Favorites keep their current list layout until the dedicated Saved Looks
+   pass. This prevents V1 from accidentally redesigning two systems at once. */
+:host(.favorites-mode) #skins.browse-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* On medium widths, a minimum tile stays useful instead of collapsing into
+   unreadable narrow cards. */
+@media (max-width: 960px) {
+  #skins.browse-grid,
+  #dyeList.browse-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer rework V2
+ * Folded Family / Dye Type choices + temporary rail expansion.
+ * ---------------------------------------------------------------------- */
+
+.panel-title-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.panel-title-tools > span {
+  white-space: nowrap;
+}
+
+.panel-expand {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: rgb(var(--hi-rgb, 255 255 255) / .035);
+  color: var(--sk-muted);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.panel-expand:hover,
+.panel-expand[aria-pressed="true"] {
+  color: var(--sk-accent);
+  border-color: var(--sk-accent);
+  background: rgba(121, 197, 232, .09);
+}
+
+/* A selected Family or Dye type becomes one compact row, like Class. */
+.filter-chips.is-folded {
+  display: block;
+  min-height: 0;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.filter-choice-folded {
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  color: var(--sk-text);
+  border-color: var(--sk-accent);
+  background: rgba(121, 197, 232, .12);
+}
+
+.filter-choice-copy {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.filter-choice-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.filter-choice-copy small {
+  color: var(--sk-muted);
+  font-size: 9.5px;
+}
+
+.filter-choice-folded em {
+  margin-left: auto;
+  color: var(--sk-muted);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.filter-choice-folded:hover em {
+  color: var(--sk-accent);
+}
+
+/*
+ * Temporary browsing space.
+ *
+ * Normal:
+ *   catalogue | sandbox | dyes
+ *
+ * Expanded:
+ *   a rail borrows part of the sandbox, but the preview remains visible.
+ */
+main {
+  transition: grid-template-columns .18s ease;
+}
+
+:host(.skins-expanded) main {
+  grid-template-columns:
+    minmax(420px, clamp(440px, 38vw, 680px))
+    minmax(280px, 1fr)
+    minmax(230px, clamp(240px, 21vw, 340px));
+}
+
+:host(.dyes-expanded) main {
+  grid-template-columns:
+    minmax(210px, clamp(230px, 20vw, 330px))
+    minmax(280px, 1fr)
+    minmax(420px, clamp(440px, 38vw, 680px));
+}
+
+:host(.skins-expanded) .catalogue,
+:host(.dyes-expanded) .dyes {
+  box-shadow:
+    inset 0 1px 0 rgb(var(--text-rgb, 236 231 220) / .06),
+    0 5px 30px rgb(var(--shade, 0 0 0) / calc(.52 * var(--shade-k, 1)));
+}
+
+/* The extra width immediately becomes more visible choices. */
+:host(.skins-expanded) #skins.browse-grid,
+:host(.dyes-expanded) #dyeList.browse-grid {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
+
+@media (max-width: 1040px) {
+  :host(.skins-expanded) main {
+    grid-template-columns:
+      minmax(340px, 42vw)
+      minmax(260px, 1fr)
+      minmax(210px, 24vw);
+  }
+
+  :host(.dyes-expanded) main {
+    grid-template-columns:
+      minmax(210px, 24vw)
+      minmax(260px, 1fr)
+      minmax(340px, 42vw);
+  }
+}
+
+@media (max-width: 820px) {
+  .panel-expand {
+    display: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer rework V3
+ * Side-edge expansion handles + permanent Saved Combos shelf.
+ * ---------------------------------------------------------------------- */
+
+.catalogue,
+.dyes {
+  position: relative;
+}
+
+/*
+ * The expand control lives on the physical border between the browser and
+ * the sandbox. It is deliberately taller than a normal button so its purpose
+ * reads as "pull this panel" rather than "run an action".
+ */
+.panel-expand {
+  position: absolute;
+  top: 50%;
+  z-index: 30;
+
+  width: 36px;
+  height: 68px;
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  transform: translateY(-50%);
+
+  border: 1px solid var(--sk-accent);
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--panel-rgb, 26 24 36) / .98),
+      rgb(var(--bg-2-rgb, 19 18 27) / .98)
+    );
+
+  color: var(--sk-accent);
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1;
+
+  box-shadow:
+    0 5px 18px rgb(var(--shade, 0 0 0) / calc(.55 * var(--shade-k, 1))),
+    inset 0 1px 0 rgb(var(--text-rgb, 236 231 220) / .08);
+
+  transition:
+    background .15s ease,
+    transform .15s ease,
+    box-shadow .15s ease;
+}
+
+.panel-expand-skins {
+  right: -19px;
+  border-radius: 0 11px 11px 0;
+}
+
+.panel-expand-dyes {
+  left: -19px;
+  border-radius: 11px 0 0 11px;
+}
+
+.panel-expand:hover {
+  background: var(--sk-accent);
+  color: var(--sk-on-accent);
+  transform: translateY(-50%) scale(1.05);
+  box-shadow:
+    0 7px 24px rgb(var(--shade, 0 0 0) / calc(.7 * var(--shade-k, 1))),
+    0 0 0 3px rgba(121, 197, 232, .12);
+}
+
+.panel-expand[aria-pressed="true"] {
+  background: rgba(121, 197, 232, .18);
+}
+
+/* Small explanation when discovering the control. */
+.panel-expand:after {
+  content: attr(data-tip);
+  position: absolute;
+  top: 50%;
+  width: max-content;
+  max-width: 150px;
+  padding: 5px 8px;
+
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+
+  border: 1px solid var(--sk-line);
+  border-radius: 6px;
+
+  background: var(--sk-panel);
+  color: var(--sk-text);
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  box-shadow: 0 5px 20px rgb(var(--shade, 0 0 0) / calc(.55 * var(--shade-k, 1)));
+
+  transition: opacity .12s ease;
+}
+
+.panel-expand-skins:after {
+  left: calc(100% + 8px);
+}
+
+.panel-expand-dyes:after {
+  right: calc(100% + 8px);
+}
+
+.panel-expand:hover:after {
+  opacity: 1;
+}
+
+
+/* ---------------- permanent saved combos ---------------- */
+
+.combo-workbench {
+  flex: none;
+  min-width: 0;
+
+  margin: 10px 14px 0;
+  padding: 8px 10px 9px;
+
+  border: 1px solid var(--sk-line-soft);
+  border-radius: var(--sk-radius-sm);
+
+  background:
+    rgb(var(--shade, 0 0 0) / calc(.2 * var(--shade-k, 1)));
+}
+
+.combo-workbench-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 7px;
+}
+
+.combo-workbench-title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.combo-workbench-title strong {
+  color: var(--sk-text);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.combo-workbench-title small {
+  color: var(--sk-dim);
+  font-size: 9.5px;
+}
+
+.combo-save-main {
+  flex: none;
+  min-height: 28px;
+  padding: 0 11px;
+}
+
+.combo-shelf {
+  min-width: 0;
+
+  display: flex;
+  gap: 7px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding-bottom: 2px;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--sk-line) transparent;
+}
+
+.combo-shelf-empty {
+  width: 100%;
+  padding: 7px 4px;
+
+  color: var(--sk-dim);
+  font-size: 10.5px;
+}
+
+.combo-saved-card {
+  flex: 0 0 245px;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 5px 8px;
+
+  padding: 7px;
+
+  border: 1px solid var(--sk-line);
+  border-radius: 7px;
+
+  background: rgb(var(--hi-rgb, 255 255 255) / .025);
+}
+
+.combo-saved-card.current {
+  border-color: var(--sk-accent);
+  background: rgba(121, 197, 232, .08);
+}
+
+.combo-saved-preview {
+  grid-row: 1 / 3;
+
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--sk-line-soft);
+  border-radius: 6px;
+
+  overflow: hidden;
+  background: var(--sk-bg);
+}
+
+.combo-saved-preview canvas {
+  width: 42px;
+  height: 42px;
+}
+
+.combo-saved-copy {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.combo-saved-copy strong,
+.combo-saved-copy small,
+.combo-saved-dyes span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combo-saved-copy strong {
+  color: var(--sk-text);
+  font-size: 11px;
+  line-height: 1.15;
+}
+
+.combo-saved-copy small {
+  color: var(--sk-muted);
+  font-size: 9.5px;
+}
+
+.combo-saved-dyes {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  color: var(--sk-dim);
+  font-size: 9px;
+}
+
+.combo-saved-dyes span {
+  max-width: 90px;
+}
+
+.combo-saved-dyes i {
+  flex: none;
+  font-style: normal;
+}
+
+.combo-saved-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.combo-saved-actions button {
+  min-height: 23px;
+  padding: 0 8px;
+
+  border-radius: 999px;
+
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.combo-use {
+  border-color: var(--sk-accent);
+  color: var(--sk-accent);
+}
+
+.combo-use:disabled {
+  opacity: 1;
+  background: rgba(121, 197, 232, .12);
+  cursor: default;
+}
+
+.combo-delete {
+  color: var(--sk-dim);
+}
+
+.combo-delete:hover {
+  color: var(--sk-bad);
+  border-color: rgba(255, 69, 66, .45);
+  background: rgba(255, 69, 66, .08);
+}
+
+/* The old Favorites mode no longer exists. */
+:host(.favorites-mode) #classes,
+:host(.favorites-mode) #families {
+  opacity: 1;
+  pointer-events: auto;
+  filter: none;
+}
+
+@media (max-width: 820px) {
+  .panel-expand {
+    display: none;
+  }
+
+  .combo-saved-card {
+    flex-basis: 220px;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer rework V3b
+ *
+ * Skin and Dye browsers are independent drawers. Either can stay expanded,
+ * including both at once, until its own handle is clicked again.
+ * ---------------------------------------------------------------------- */
+
+:host(.skins-expanded.dyes-expanded) main {
+  grid-template-columns:
+    minmax(360px, clamp(380px, 31vw, 600px))
+    minmax(240px, 1fr)
+    minmax(360px, clamp(380px, 31vw, 600px));
+}
+
+@media (max-width: 1040px) {
+  :host(.skins-expanded.dyes-expanded) main {
+    grid-template-columns:
+      minmax(300px, 34vw)
+      minmax(220px, 1fr)
+      minmax(300px, 34vw);
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer — draggable side rails.
+ *
+ * Same visual language as the Atlas resize grip: the boundary is the
+ * control. No button, no arrow, just a generous invisible hit area with a
+ * small centre mark when the pointer reaches it.
+ * ---------------------------------------------------------------------- */
+
+main {
+  grid-template-columns:
+    minmax(210px, var(--skin-browser-width, clamp(260px, 28.5vw, 620px)))
+    minmax(300px, 1fr)
+    minmax(230px, var(--dye-browser-width, clamp(260px, 28.5vw, 620px)));
+
+  transition: none;
+}
+
+.catalogue,
+.dyes {
+  position: relative;
+}
+
+/* Old experimental arrow controls are dead even if stale CSS remains above. */
+.panel-expand {
+  display: none !important;
+}
+
+.panel-resize-grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 50;
+
+  width: 12px;
+
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+
+  background: transparent;
+  outline: none;
+}
+
+/* The hit area straddles the real panel boundary. */
+.panel-resize-grip-skins {
+  right: -7px;
+}
+
+.panel-resize-grip-dyes {
+  left: -7px;
+}
+
+/*
+ * The Atlas-style centre marker is deliberately subtle until used.
+ * The whole 12 px vertical strip remains draggable.
+ */
+.panel-resize-grip::after {
+  content: "";
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 3px;
+  height: 48px;
+
+  border-radius: 999px;
+
+  background: var(--sk-line);
+
+  transform: translate(-50%, -50%);
+
+  transition:
+    height .12s ease,
+    background .12s ease,
+    box-shadow .12s ease;
+}
+
+.panel-resize-grip:hover::after,
+.panel-resize-grip:focus-visible::after,
+.panel-resize-grip.is-sizing::after {
+  height: 64px;
+  background: var(--sk-accent);
+  box-shadow: 0 0 0 3px rgba(121, 197, 232, .10);
+}
+
+.panel-resize-grip.is-sizing {
+  cursor: col-resize;
+}
+
+/*
+ * The old experimental expanded classes no longer have a job. Neutralise
+ * them so a stale class from a live development tab cannot affect layout.
+ */
+:host(.skins-expanded) main,
+:host(.dyes-expanded) main,
+:host(.skins-expanded.dyes-expanded) main {
+  grid-template-columns:
+    minmax(210px, var(--skin-browser-width, clamp(260px, 28.5vw, 620px)))
+    minmax(300px, 1fr)
+    minmax(230px, var(--dye-browser-width, clamp(260px, 28.5vw, 620px)));
+}
+
+@media (max-width: 820px) {
+  .panel-resize-grip {
+    display: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Saved combos — the whole card is the selector.
+ * No Use / Current action: selected state is visual only.
+ * ---------------------------------------------------------------------- */
+
+.combo-saved-card {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-rows: 1fr;
+  align-items: center;
+
+  cursor: pointer;
+
+  transition:
+    border-color .12s ease,
+    background .12s ease,
+    box-shadow .12s ease,
+    transform .12s ease;
+}
+
+.combo-saved-card:hover {
+  border-color: var(--sk-accent);
+  background: rgb(var(--hi-rgb, 255 255 255) / .045);
+  transform: translateY(-1px);
+}
+
+.combo-saved-card:focus-visible {
+  outline: none;
+  border-color: var(--sk-accent);
+  box-shadow: 0 0 0 3px rgba(121, 197, 232, .12);
+}
+
+.combo-saved-card.current {
+  border-color: var(--sk-accent);
+  background: rgba(121, 197, 232, .12);
+
+  box-shadow:
+    inset 3px 0 0 var(--sk-accent),
+    inset 0 1px 0 rgb(var(--text-rgb, 236 231 220) / .05);
+}
+
+.combo-saved-preview {
+  grid-row: auto;
+}
+
+.combo-saved-actions {
+  grid-column: 3;
+  grid-row: 1;
+
+  display: flex;
+  align-items: center;
+  align-self: center;
+}
+
+.combo-delete {
+  min-height: 25px;
+  padding: 0 8px;
+
+  color: var(--sk-dim);
+  background: transparent;
+  border-color: transparent;
+}
+
+.combo-delete:hover {
+  color: var(--sk-bad);
+  border-color: rgba(255, 69, 66, .45);
+  background: rgba(255, 69, 66, .08);
+}
+
+/* Obsolete button from the previous prototype. */
+.combo-use {
+  display: none !important;
+}
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer rework — filter boxes
+ *
+ * Filters belong to the same visual hierarchy as the rest of Realm Tools:
+ * quiet panels, soft boundaries and an accent only for the active choice.
+ * ---------------------------------------------------------------------- */
+
+.filter-box {
+  flex: none;
+
+  display: grid;
+  gap: 8px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-top: 9px;
+  padding: 8px;
+
+  border: 1px solid var(--sk-line-soft);
+  border-radius: var(--sk-radius-sm);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--hi-rgb, 255 255 255) / .025),
+      rgb(var(--shade, 0 0 0) / calc(.12 * var(--shade-k, 1)))
+    );
+
+  box-shadow:
+    inset 0 1px 0
+      rgb(var(--text-rgb, 236 231 220) / .035);
+}
+
+.filter-box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  min-width: 0;
+}
+
+.filter-box-head > span {
+  color: var(--sk-dim);
+
+  font-size: 10.5px;
+  font-weight: 650;
+
+  text-transform: uppercase;
+  letter-spacing: .7px;
+
+  white-space: nowrap;
+}
+
+
+/* ---------------- Class / Family box ---------------- */
+
+.skin-browse-box {
+  gap: 7px;
+}
+
+.skin-browse-box .browse-mode-switch {
+  min-width: 150px;
+  margin-left: auto;
+}
+
+.skin-browse-box .skin-filter-panel {
+  width: 100%;
+  min-width: 0;
+}
+
+.skin-browse-box #families {
+  width: 100%;
+  max-height: clamp(72px, 14vh, 150px);
+
+  margin: 0;
+
+  overflow: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--sk-line) transparent;
+}
+
+
+/*
+ * Secondary filters are quieter than the main Class / Family switch.
+ * Active still reads immediately, but without a huge solid-blue pill.
+ */
+.skin-browse-box .filter-chip,
+.dye-type-box .filter-chip {
+  color: var(--sk-muted);
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .025);
+
+  border-color: var(--sk-line);
+}
+
+.skin-browse-box .filter-chip:hover,
+.dye-type-box .filter-chip:hover {
+  color: var(--sk-text);
+
+  border-color: var(--sk-accent);
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .045);
+}
+
+.skin-browse-box .filter-chip.chosen,
+.dye-type-box .filter-chip.chosen {
+  color: var(--sk-text);
+
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .11);
+
+  box-shadow:
+    inset 0 0 0 1px
+      rgba(121, 197, 232, .05);
+}
+
+
+/* ---------------- Apply to ---------------- */
+
+.dye-target-box {
+  gap: 7px;
+}
+
+.dye-target-box .dye-target-switch {
+  width: 100%;
+}
+
+.dye-target-box .dye-target-tab {
+  min-height: 34px;
+}
+
+
+/* ---------------- Dye Type ---------------- */
+
+/*
+ * TYPE owns its entire line.
+ *
+ * Open:
+ *   All | Colors | Textiles | Animated
+ *
+ * Folded:
+ *   [ Textiles       184 dyes                 change ]
+ */
+.dye-type-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
+.dye-type-box .filter-box-head {
+  width: 100%;
+}
+
+.dye-type-box #dyeCategories {
+  width: 100%;
+  min-width: 0;
+}
+
+.dye-type-box #dyeCategories:not(.is-folded) {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 5px;
+}
+
+.dye-type-box #dyeCategories:not(.is-folded) .filter-chip {
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 6px 5px;
+
+  text-align: center;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dye-type-box #dyeCategories.is-folded {
+  display: block;
+
+  width: 100%;
+
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.dye-type-box .filter-choice-folded {
+  position: relative;
+
+  width: 100%;
+  min-height: 44px;
+
+  padding: 6px 10px 6px 13px;
+
+  border: 1px solid var(--sk-line);
+  border-radius: var(--sk-radius-sm);
+
+  color: var(--sk-text);
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .025);
+
+  box-shadow:
+    inset 3px 0 0 var(--sk-accent);
+}
+
+.dye-type-box .filter-choice-folded:hover {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .06);
+}
+
+.dye-type-box .filter-choice-copy strong {
+  color: var(--sk-text);
+}
+
+.dye-type-box .filter-choice-copy small {
+  color: var(--sk-muted);
+}
+
+.dye-type-box .filter-choice-folded em {
+  padding: 3px 7px;
+
+  border-radius: 999px;
+
+  color: var(--sk-muted);
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .035);
+}
+
+.dye-type-box .filter-choice-folded:hover em {
+  color: var(--sk-accent);
+}
+
+
+/* Previous experimental row no longer owns layout. */
+.dye-category-row,
+.browse-mode-head.dye-mode-head {
+  margin: 0;
+}
+
+
+/* On genuinely narrow panels, two rows are clearer than crushed text. */
+@media (max-width: 960px) {
+  .dye-type-box #dyeCategories:not(.is-folded) {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Skin Viewer — filter layout correction.
+ *
+ * TYPE is a complete section, never a label beside a floating selection box.
+ * ---------------------------------------------------------------------- */
+
+.dye-type-box {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.dye-type-box .filter-box-head {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+
+  justify-content: flex-start;
+}
+
+.dye-type-box #dyeCategories {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.dye-type-box #dyeCategories:not(.is-folded) {
+  display: grid;
+
+  width: 100%;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 6px;
+}
+
+.dye-type-box #dyeCategories.is-folded {
+  display: block;
+  width: 100%;
+}
+
+.dye-type-box .filter-choice-folded {
+  width: 100%;
+  max-width: none;
+
+  margin: 0;
+}
+
+
+
+/* Remove a selected Clothing / Accessory dye directly from Index · Selected. */
+.chosen-remove {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 26px;
+  padding: 0 10px;
+
+  border: 1px solid rgba(255, 69, 66, .35);
+  border-radius: 999px;
+
+  background: rgba(255, 69, 66, .055);
+  color: var(--sk-muted);
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chosen-remove:hover,
+.chosen-remove:focus-visible {
+  color: var(--sk-bad);
+  border-color: var(--sk-bad);
+  background: rgba(255, 69, 66, .10);
+}
+
+
+/* PERF_V3_CATALOGUE_CONTAINMENT
+ *
+ * Two containment boundaries, not one boundary / visibility observer for
+ * every card. The lists remain ordinary scrolling DOM.
+ */
+#skins,
+#dyeList {
+  contain: layout;
+}
+
+/* PERF_V4_WINDOWED_CATALOGUES
+ *
+ * The two list containers keep their existing grid. Only lightweight
+ * full-width spacer rows stand in for off-screen rows.
+ */
+#skins,
+#dyeList {
+  overflow-anchor: none;
+  contain: layout;
+}
+
+.catalogue-window-spacer {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+ * Compact Saved Combos — final layout.
+ * ---------------------------------------------------------------------- */
+
+.combo-workbench.combo-workbench-top {
+  flex: none;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  min-width: 0;
+
+  margin: 6px 14px 0;
+  padding: 5px 7px;
+
+  border: 1px solid var(--sk-line-soft);
+  border-radius: var(--sk-radius-sm);
+
+  background:
+    rgb(var(--shade, 0 0 0) / calc(.16 * var(--shade-k, 1)));
+}
+
+.combo-workbench-top .combo-workbench-title {
+  flex: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+
+  min-width: 58px;
+}
+
+.combo-workbench-top .combo-workbench-title strong {
+  font-size: 9.5px;
+  line-height: 1.15;
+}
+
+.combo-workbench-top .combo-workbench-title small {
+  font-size: 8.5px;
+  line-height: 1.15;
+}
+
+.combo-workbench-top .combo-shelf {
+  flex: 1 1 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  min-width: 0;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 0;
+}
+
+
+/* Old large combo-card layout is completely overridden. */
+.combo-saved-card.combo-saved-skin-only {
+  position: relative;
+
+  flex: 0 0 50px;
+
+  width: 50px;
+  min-width: 50px;
+  height: 50px;
+  min-height: 50px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 3px;
+
+  border: 1px solid var(--sk-line);
+  border-radius: 6px;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .02);
+
+  cursor: pointer;
+}
+
+.combo-saved-card.combo-saved-skin-only:hover {
+  border-color: var(--sk-accent);
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .055);
+}
+
+.combo-saved-card.combo-saved-skin-only.current {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .10);
+
+  box-shadow:
+    inset 0 0 0 1px
+      rgba(121, 197, 232, .12);
+}
+
+.combo-saved-skin-only .combo-saved-preview {
+  grid-row: auto;
+
+  width: 42px;
+  height: 42px;
+
+  margin: 0;
+
+  border: 0;
+  border-radius: 4px;
+
+  background: transparent;
+}
+
+.combo-saved-skin-only .combo-saved-preview canvas {
+  width: 42px;
+  height: 42px;
+}
+
+
+/* Tiny delete control over the thumbnail. */
+.combo-saved-skin-only .combo-delete-compact {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  min-height: 16px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0 !important;
+
+  border-radius: 50%;
+
+  color: var(--sk-muted);
+  background: var(--sk-bg);
+
+  font-size: 11px;
+  line-height: 1;
+
+  opacity: .45;
+}
+
+.combo-saved-skin-only:hover .combo-delete-compact,
+.combo-saved-skin-only:focus-within .combo-delete-compact {
+  opacity: 1;
+}
+
+
+/* Save combo belongs to the help line, immediately after wheel zoom. */
+.sandbox-help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sandbox-help > span {
+  min-width: 0;
+}
+
+.sandbox-save-combo {
+  flex: none;
+
+  min-height: 22px;
+
+  margin: 0;
+  padding: 1px 7px;
+
+  color: var(--sk-gold);
+
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.sandbox-save-combo:hover {
+  color: var(--sk-gold);
+  border-color: var(--sk-gold);
+
+  background:
+    rgba(255, 208, 38, .10);
+}
+
+/* -------------------------------------------------------------------------
+ * Final centre-column hierarchy:
+ *
+ *   selected Index
+ *   saved combos
+ *   sandbox
+ *
+ * The currently selected objects are useful reference information, so they
+ * stay visible above the playground rather than below it.
+ * ---------------------------------------------------------------------- */
+
+.selected-index.selected-index-top {
+  flex: none;
+
+  margin: 6px 14px 0;
+  padding: 0;
+}
+
+
+/*
+ * Keep the selected row compact enough that moving it above the sandbox does
+ * not steal unnecessary preview height.
+ */
+.selected-index-top .chosen-head {
+  margin-top: 0;
+}
+
+.selected-index-top .chosen-grid {
+  gap: 7px;
+}
+
+.selected-index-top .chosen-card {
+  min-height: 0;
+}
+
+
+/* -------------------------------------------------------------------------
+ * Saved combo thumbnails need to be visually recognizable.
+ * ---------------------------------------------------------------------- */
+
+.combo-workbench-top {
+  margin-top: 6px;
+}
+
+.combo-workbench-top .combo-shelf {
+  min-height: 76px;
+  gap: 7px;
+}
+
+
+/*
+ * Override the previous 50px compact prototype.
+ * Only the skin remains visible, but now at a useful inspection size.
+ */
+.combo-saved-card.combo-saved-skin-only {
+  flex: 0 0 76px;
+
+  width: 76px;
+  min-width: 76px;
+  height: 76px;
+  min-height: 76px;
+
+  padding: 5px;
+
+  border-radius: 8px;
+}
+
+.combo-saved-skin-only .combo-saved-preview {
+  width: 64px;
+  height: 64px;
+
+  border-radius: 6px;
+}
+
+.combo-saved-skin-only .combo-saved-preview canvas {
+  width: 64px;
+  height: 64px;
+}
+
+
+/* Delete remains available without covering a significant part of the skin. */
+.combo-saved-skin-only .combo-delete-compact {
+  top: 2px;
+  right: 2px;
+
+  width: 17px;
+  min-width: 17px;
+  height: 17px;
+  min-height: 17px;
+
+  background:
+    rgb(var(--bg-rgb, 10 10 16) / .88);
+
+  opacity: .35;
+}
+
+.combo-saved-skin-only:hover .combo-delete-compact,
+.combo-saved-skin-only:focus-within .combo-delete-compact {
+  opacity: .95;
+}
+
+/* -------------------------------------------------------------------------
+ * Saved combos — polished compact rail.
+ *
+ * Clear hierarchy:
+ *   SAVED COMBOS  1 saved
+ *   [ skin ][×]  [ skin ][×] ...
+ *
+ * Selection and deletion never overlap.
+ * ---------------------------------------------------------------------- */
+
+.combo-workbench.combo-workbench-top {
+  flex: none;
+
+  display: block;
+
+  min-width: 0;
+
+  margin: 7px 14px 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  background: transparent;
+}
+
+
+/* Heading follows the same language as INDEX · SELECTED. */
+.combo-workbench-top .combo-workbench-title {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+
+  margin: 0 0 6px;
+
+  color: var(--sk-dim);
+
+  text-transform: uppercase;
+  letter-spacing: .55px;
+}
+
+.combo-workbench-top .combo-workbench-title::after {
+  content: "";
+
+  flex: 1 1 auto;
+  height: 1px;
+
+  background: var(--sk-line-soft);
+}
+
+.combo-workbench-top .combo-workbench-title strong {
+  flex: none;
+
+  color: var(--sk-dim);
+
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.combo-workbench-top .combo-workbench-title small {
+  flex: none;
+
+  color: var(--sk-muted);
+
+  font-size: 9px;
+  line-height: 1;
+
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+
+/* Horizontal rail. */
+.combo-workbench-top .combo-shelf {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 76px;
+
+  padding: 0 1px 2px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--sk-line) transparent;
+}
+
+
+/*
+ * Wrapper is deliberately non-interactive.
+ *
+ * 64px skin + a reserved 20px delete rail.
+ * No absolute positioning, no hover collision.
+ */
+.combo-saved-card.combo-saved-skin-only {
+  position: static;
+
+  flex: 0 0 auto;
+
+  width: auto;
+  min-width: 0;
+  height: 76px;
+  min-height: 76px;
+
+  display: grid;
+  grid-template-columns: 68px 20px;
+  align-items: stretch;
+  gap: 3px;
+
+  margin: 0;
+  padding: 3px;
+
+  border: 1px solid var(--sk-line-soft);
+  border-radius: 8px;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .018);
+
+  box-shadow: none;
+
+  cursor: default;
+}
+
+
+/* Current combo is communicated by the wrapper, not by fighting hover styles. */
+.combo-saved-card.combo-saved-skin-only.current {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--sk-accent) 70%,
+      var(--sk-line)
+    );
+
+  background:
+    rgba(121, 197, 232, .055);
+
+  box-shadow:
+    inset 3px 0 0
+      rgba(121, 197, 232, .70);
+}
+
+
+/* Main selection target. */
+.combo-saved-select {
+  width: 68px;
+  min-width: 68px;
+  height: 68px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 2px;
+
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  color: inherit;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    background 90ms ease,
+    border-color 90ms ease;
+}
+
+.combo-saved-select:hover {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .07);
+}
+
+.combo-saved-select:focus-visible {
+  outline: none;
+
+  border-color: var(--sk-accent);
+
+  box-shadow:
+    inset 0 0 0 1px
+      rgba(121, 197, 232, .18);
+}
+
+
+/*
+ * No movement on hover.
+ * This is important here: neighbouring saved looks should never visually
+ * collide or jump into one another.
+ */
+.combo-saved-card.combo-saved-skin-only:hover {
+  transform: none;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .018);
+}
+
+
+/* Skin presentation. */
+.combo-saved-skin-only .combo-saved-preview {
+  width: 64px;
+  height: 64px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+
+  border: 0;
+  border-radius: 5px;
+
+  overflow: hidden;
+
+  background: var(--sk-bg);
+}
+
+.combo-saved-skin-only .combo-saved-preview canvas {
+  display: block;
+
+  width: 64px;
+  height: 64px;
+}
+
+
+/*
+ * Delete owns an actual column instead of floating over the skin.
+ * It stays deliberately quiet until hovered.
+ */
+.combo-saved-skin-only .combo-delete-compact {
+  position: static;
+
+  align-self: center;
+
+  width: 20px;
+  min-width: 20px;
+  height: 30px;
+  min-height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0 !important;
+
+  border: 1px solid transparent;
+  border-radius: 5px;
+
+  color: var(--sk-dim);
+
+  background: transparent;
+
+  font-size: 13px;
+  line-height: 1;
+
+  opacity: .58;
+
+  transition:
+    opacity 90ms ease,
+    color 90ms ease,
+    background 90ms ease,
+    border-color 90ms ease;
+}
+
+.combo-saved-skin-only .combo-delete-compact:hover,
+.combo-saved-skin-only .combo-delete-compact:focus-visible {
+  opacity: 1;
+
+  color: var(--sk-bad);
+
+  border-color:
+    rgba(255, 69, 66, .32);
+
+  background:
+    rgba(255, 69, 66, .07);
+}
+
+
+/* Empty state should not reserve the same height as a thumbnail card. */
+.combo-workbench-top .combo-shelf-empty {
+  min-height: 30px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 3px 1px;
+
+  color: var(--sk-dim);
+}
+
+/* The Index summary is the first information layer under the skin title. */
+.selected-index.selected-index-top {
+  margin: 7px 14px 0;
+}
+
+.selected-index-top .chosen-head {
+  margin: 0 0 6px;
+}
+
+.selected-index-top .chosen-grid {
+  gap: 7px;
+}
+
+.selected-index-top .chosen-card {
+  border-color: var(--sk-line-soft);
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .014);
+}
+
+/* -------------------------------------------------------------------------
+ * Saved combos — one interaction outline only.
+ *
+ * The article is layout-only. The skin button is the only selectable surface,
+ * therefore it owns the only visible border/hover/current state.
+ * ---------------------------------------------------------------------- */
+
+/* Wrapper: absolutely no visual frame. */
+.combo-saved-card.combo-saved-skin-only,
+.combo-saved-card.combo-saved-skin-only:hover,
+.combo-saved-card.combo-saved-skin-only.current {
+  padding: 0;
+
+  border: 0;
+  border-color: transparent;
+  border-radius: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+
+/* The skin itself is the one and only framed/selectable object. */
+.combo-saved-skin-only .combo-saved-select {
+  width: 68px;
+  min-width: 68px;
+  height: 68px;
+  min-height: 68px;
+
+  margin: 0;
+  padding: 2px;
+
+  border: 1px solid var(--sk-line);
+  border-radius: 7px;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .025);
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+
+/* One blue frame on hover. */
+.combo-saved-skin-only .combo-saved-select:hover {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .065);
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+
+/* One blue frame for the currently applied combo. */
+.combo-saved-card.current .combo-saved-select {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .085);
+
+  box-shadow: none;
+}
+
+
+/* Keyboard focus uses the same frame instead of adding a second outline. */
+.combo-saved-skin-only .combo-saved-select:focus-visible {
+  outline: none;
+
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .085);
+
+  box-shadow: none;
+}
+
+
+/* Sprite itself has no second frame. */
+.combo-saved-skin-only .combo-saved-preview {
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+
+/* Delete stays outside the selectable skin frame. */
+.combo-saved-card.combo-saved-skin-only {
+  grid-template-columns: 68px 20px;
+  gap: 4px;
+}
+
+/* -------------------------------------------------------------------------
+ * Saved combos — final interaction frame.
+ *
+ * One frame only, around the COMPLETE combo:
+ * skin + delete column.
+ *
+ * The inner skin button has no frame of its own.
+ * ---------------------------------------------------------------------- */
+
+.combo-saved-card.combo-saved-skin-only {
+  position: relative;
+
+  padding: 3px;
+
+  border: 1px solid var(--sk-line);
+  border-radius: 8px;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .022);
+
+  box-shadow: none;
+
+  transition:
+    border-color 90ms ease,
+    background 90ms ease;
+}
+
+
+/* Hovering the selectable skin lights the outer combo frame. */
+.combo-saved-card.combo-saved-skin-only:has(.combo-saved-select:hover) {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .055);
+}
+
+
+/* Keyboard focus uses that same outer frame. */
+.combo-saved-card.combo-saved-skin-only:has(.combo-saved-select:focus-visible) {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .07);
+}
+
+
+/* Current combo: the SAME outer frame, not another nested one. */
+.combo-saved-card.combo-saved-skin-only.current {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .07);
+
+  box-shadow: none;
+}
+
+
+/* The skin button itself is visually frameless. */
+.combo-saved-skin-only .combo-saved-select,
+.combo-saved-skin-only .combo-saved-select:hover,
+.combo-saved-skin-only .combo-saved-select:focus-visible,
+.combo-saved-card.current .combo-saved-select {
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+
+/* Sprite preview also stays completely frameless. */
+.combo-saved-skin-only .combo-saved-preview {
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+
+/* Delete remains inside the same outer combo box. */
+.combo-saved-skin-only .combo-delete-compact {
+  position: static;
+
+  border: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+/* -------------------------------------------------------------------------
+ * Saved combos — FINAL single-tile model.
+ *
+ *      ┌──────────────────────┐
+ *      │   64px skin       ×  │
+ *      └──────────────────────┘
+ *
+ * One surface, one outline. No separate delete column, no inner tile.
+ * ---------------------------------------------------------------------- */
+
+.combo-workbench-top .combo-shelf {
+  min-height: 78px;
+  gap: 8px;
+}
+
+
+/* Wrapper has ZERO visual styling. */
+.combo-saved-card.combo-saved-skin-only,
+.combo-saved-card.combo-saved-skin-only:hover,
+.combo-saved-card.combo-saved-skin-only.current {
+  position: relative;
+
+  flex: 0 0 86px;
+
+  width: 86px;
+  min-width: 86px;
+  height: 76px;
+  min-height: 76px;
+
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+  transform: none;
+
+  cursor: default;
+}
+
+
+/*
+ * This button IS the complete visible combo.
+ * It owns the only outline.
+ */
+.combo-saved-skin-only .combo-saved-select {
+  box-sizing: border-box;
+
+  width: 86px;
+  min-width: 86px;
+  height: 76px;
+  min-height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  margin: 0;
+
+  /*
+   * 5px left + 64px sprite + 17px reserved right gutter = 86px.
+   * The × therefore never sits over the sprite.
+   */
+  padding: 5px 17px 5px 5px;
+
+  border: 1px solid var(--sk-line);
+  border-radius: 8px;
+
+  outline: 0;
+
+  color: inherit;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .018);
+
+  box-shadow: none;
+  transform: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color 90ms ease,
+    background 90ms ease;
+}
+
+
+/* One outline on hover. */
+.combo-saved-skin-only .combo-saved-select:hover {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .055);
+
+  box-shadow: none;
+  transform: none;
+}
+
+
+/* Same outline for keyboard navigation. */
+.combo-saved-skin-only .combo-saved-select:focus-visible {
+  border-color: var(--sk-accent);
+
+  outline: 0;
+
+  background:
+    rgba(121, 197, 232, .07);
+
+  box-shadow: none;
+}
+
+
+/* Active combo uses the SAME border. */
+.combo-saved-card.current .combo-saved-select {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .065);
+
+  box-shadow: none;
+}
+
+
+/*
+ * If the pointer goes onto ×, keep the same outer card highlighted rather
+ * than making the frame blink off.
+ */
+.combo-saved-card:has(.combo-delete-compact:hover) .combo-saved-select,
+.combo-saved-card:has(.combo-delete-compact:focus-visible) .combo-saved-select {
+  border-color: var(--sk-accent);
+
+  background:
+    rgba(121, 197, 232, .055);
+}
+
+
+/* Absolutely no visual sub-card around the sprite. */
+.combo-saved-skin-only .combo-saved-preview {
+  flex: 0 0 64px;
+
+  width: 64px;
+  height: 64px;
+
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  outline: 0;
+
+  overflow: visible;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+.combo-saved-skin-only .combo-saved-preview canvas {
+  display: block;
+
+  width: 64px;
+  height: 64px;
+
+  margin: 0;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+
+/*
+ * Delete is text only.
+ *
+ * It occupies the reserved right gutter but draws no box of its own.
+ */
+.combo-saved-skin-only .combo-delete-compact,
+.combo-saved-skin-only .combo-delete-compact:hover,
+.combo-saved-skin-only .combo-delete-compact:focus-visible {
+  position: absolute;
+
+  top: 5px;
+  right: 4px;
+
+  width: 13px;
+  min-width: 13px;
+  height: 16px;
+  min-height: 16px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0 !important;
+
+  border: 0;
+  border-radius: 0;
+
+  outline: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+
+  transform: none;
+}
+
+.combo-saved-skin-only .combo-delete-compact {
+  color: var(--sk-dim);
+  opacity: .55;
+}
+
+.combo-saved-skin-only .combo-delete-compact:hover,
+.combo-saved-skin-only .combo-delete-compact:focus-visible {
+  color: var(--sk-bad);
+  opacity: 1;
+}
+
+/* -------------------------------------------------------------------------
+ * FINAL_COMBO_SINGLE_OUTER_FRAME
+ *
+ * ONE frame around the complete saved combo: skin + delete.
+ * The skin/select element itself is completely frameless.
+ * ---------------------------------------------------------------------- */
+
+.combo-workbench-top .combo-saved-card.combo-saved-skin-only {
+  box-sizing: border-box !important;
+  position: relative !important;
+
+  flex: 0 0 92px !important;
+
+  width: 92px !important;
+  min-width: 92px !important;
+  height: 76px !important;
+  min-height: 76px !important;
+
+  display: block !important;
+
+  margin: 0 !important;
+  padding: 5px 22px 5px 5px !important;
+
+  border: 1px solid var(--sk-line) !important;
+  border-radius: 8px !important;
+
+  background:
+    rgb(var(--hi-rgb, 255 255 255) / .025) !important;
+
+  outline: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+
+  transition:
+    border-color 90ms ease,
+    background 90ms ease !important;
+}
+
+
+/* THIS is the hover frame. */
+.combo-workbench-top .combo-saved-card.combo-saved-skin-only:hover {
+  border-color: var(--sk-accent) !important;
+
+  background:
+    rgba(121, 197, 232, .055) !important;
+
+  box-shadow: none !important;
+}
+
+
+/* Current combo uses that exact same outer frame. */
+.combo-workbench-top .combo-saved-card.combo-saved-skin-only.current {
+  border-color: var(--sk-accent) !important;
+
+  background:
+    rgba(121, 197, 232, .065) !important;
+
+  box-shadow: none !important;
+}
+
+
+/*
+ * Inner skin button:
+ * absolutely NO frame, NO background, NO hover styling.
+ */
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-saved-select,
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-saved-select:hover,
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-saved-select:focus-visible,
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only.current
+.combo-saved-select {
+  box-sizing: border-box !important;
+
+  width: 64px !important;
+  min-width: 64px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+
+  display: block !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+
+/* Sprite itself is equally frameless. */
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-saved-preview {
+  width: 64px !important;
+  height: 64px !important;
+
+  display: block !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  outline: 0 !important;
+
+  overflow: visible !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-saved-preview canvas {
+  display: block !important;
+
+  width: 64px !important;
+  height: 64px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+
+/*
+ * × lives INSIDE the outer frame.
+ * It has no box of its own.
+ */
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-delete-compact,
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-delete-compact:hover,
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-delete-compact:focus-visible {
+  position: absolute !important;
+
+  top: 4px !important;
+  right: 4px !important;
+
+  width: 14px !important;
+  min-width: 14px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+  transform: none !important;
+
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-delete-compact {
+  color: var(--sk-dim) !important;
+  opacity: .55 !important;
+}
+
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-delete-compact:hover,
+.combo-workbench-top
+.combo-saved-card.combo-saved-skin-only
+.combo-delete-compact:focus-visible {
+  color: var(--sk-bad) !important;
+  opacity: 1 !important;
+}

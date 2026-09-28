@@ -14,6 +14,7 @@ const i18nSource = read('web/i18n.js');
 const realm = read('web/realm-map.js');
 const newsSource = read('web/whats-new.js');
 const skinsSource = read('web/skins/app.js');
+const skinsStyle = read('web/skins/style.css');
 const fichesSource = read('web/fiches-c.js');
 const atlasSource = read('tools/atlas-viewer.html');
 
@@ -140,6 +141,307 @@ assert(
 
 
 /*
+ * -------------------------------------------------------------------------
+ * Skin Viewer performance regression registry
+ * -------------------------------------------------------------------------
+ *
+ * These guards describe the execution-path optimizations confirmed during
+ * the Skin Viewer performance pass. They intentionally fail loudly if a
+ * future refactor brings one of the expensive paths back.
+ */
+
+
+/*
+ * SKIN-PERF-001
+ *
+ * There must never be a display-refresh RAF left running after the viewer
+ * becomes inactive.
+ */
+assert(
+  skinsSource.includes(
+    'let previous=performance.now(),animationFrame=0;'
+  )
+    && skinsSource.includes(
+      'if(!active)return;'
+    )
+    && skinsSource.includes(
+      'if(active&&!animationFrame)'
+    )
+    && skinsSource.includes(
+      'cancelAnimationFrame(animationFrame)'
+    ),
+  'SKIN-PERF-001 inactive Skin Viewer must own no running RAF'
+);
+
+
+/*
+ * SKIN-PERF-002
+ *
+ * Stage resize storms are coalesced. ResizeObserver provides geometry and a
+ * side-panel drag does not continuously perform the expensive stage fit.
+ */
+assert(
+  skinsSource.includes(
+    'let fitStageFrame=0;'
+  )
+    && skinsSource.includes(
+      'function scheduleFitStage()'
+    )
+    && skinsSource.includes(
+      'let pendingStageSize=null;'
+    )
+    && skinsSource.includes(
+      'const onStageResize=entries=>'
+    )
+    && skinsSource.includes(
+      'pendingStageSize||box.getBoundingClientRect()'
+    )
+    && skinsSource.includes(
+      'if(!panelResizeActive)'
+    )
+    && skinsSource.includes(
+      'new ResizeObserver(onStageResize)'
+    ),
+  'SKIN-PERF-002 stage fitting must stay coalesced and reuse ResizeObserver geometry'
+);
+
+
+/*
+ * SKIN-PERF-003
+ *
+ * A panel separator measures its expensive limits once at pointerdown.
+ * Pointermove reuses those bounds instead of forcing layout for every pixel.
+ */
+{
+  const start=skinsSource.indexOf(
+    'function setPanelWidth('
+  );
+
+  const end=skinsSource.indexOf(
+    '\nfunction resetPanelWidth(',
+    start
+  );
+
+  const setPanelSource=skinsSource.slice(
+    start,
+    end
+  );
+
+  assert(
+    start>=0
+      && /function\s+setPanelWidth\s*\(\s*kind\s*,\s*value\s*,\s*persist\s*=\s*true\s*,\s*bounds\s*=\s*null\s*\)/.test(
+        setPanelSource
+      )
+      && /bounds\s*=\s*bounds\s*\|\|\s*panelWidthBounds\s*\(\s*kind\s*\)/.test(
+        setPanelSource
+      )
+      && !setPanelSource.includes(
+        'scheduleFitStage'
+      )
+      && /from\s*=\s*\{[\s\S]{0,240}?\bbounds\b[\s\S]{0,80}?\}/.test(
+        skinsSource
+      )
+      && /setPanelWidth\s*\(\s*kind\s*,\s*pendingWidth\s*,\s*true\s*,\s*from\?\.\s*bounds\s*\|\|\s*null\s*\)/.test(
+        skinsSource
+      ),
+    'SKIN-PERF-003 panel drag must reuse bounds measured on pointerdown'
+  );
+}
+
+
+/*
+ * SKIN-PERF-004
+ *
+ * Pointer movement over the sandbox must never synchronously measure canvas
+ * geometry. offsetX/offsetY are sufficient for the hot path.
+ */
+{
+  const start=skinsSource.indexOf(
+    'function point(e){'
+  );
+
+  const end=skinsSource.indexOf(
+    '\nfunction rememberPointer',
+    start
+  );
+
+  const pointSource=skinsSource.slice(
+    start,
+    end>start ? end : start+1200
+  );
+
+  assert(
+    start>=0
+      && pointSource.includes(
+        'e.offsetX'
+      )
+      && pointSource.includes(
+        'e.offsetY'
+      )
+      && !/\.\s*getBoundingClientRect\s*\(/.test(
+        pointSource
+      ),
+    'SKIN-PERF-004 pointer movement must not force canvas layout'
+  );
+}
+
+
+/*
+ * SKIN-PERF-005
+ *
+ * The catalogues are genuinely windowed. Scrolling through all 1,475 skins
+ * must not eventually leave all 1,475 cards mounted.
+ */
+assert(
+  skinsSource.includes(
+    'const CATALOGUE_WINDOW_SAMPLE=96;'
+  )
+    && skinsSource.includes(
+      'const CATALOGUE_WINDOW_OVERSCAN_ROWS=8;'
+    )
+    && skinsSource.includes(
+      'const catalogueWindows=new WeakMap();'
+    )
+    && skinsSource.includes(
+      'function catalogueWindowSpacer('
+    )
+    && skinsSource.includes(
+      'function renderCatalogueWindowNow('
+    )
+    && skinsSource.includes(
+      'function renderCatalogueWindow('
+    )
+    && skinsSource.includes(
+      'state.startRow=startRow;'
+    )
+    && skinsSource.includes(
+      'state.endRow=endRow;'
+    ),
+  'SKIN-PERF-005 large skin and dye catalogues must remain capped by V4 windowing'
+);
+
+
+/*
+ * SKIN-PERF-006
+ *
+ * Never restore either of the two failed approaches:
+ *
+ *   - cumulative batches, which eventually remounted the whole catalogue;
+ *   - scrollHeight reads in the scroll hot path, which forced layout.
+ */
+assert(
+  !skinsSource.includes(
+    'CATALOGUE_RENDER_BATCH'
+  )
+    && !skinsSource.includes(
+      'appendCatalogueBatch('
+    )
+    && !skinsSource.includes(
+      'renderCatalogueBatches('
+    )
+    && !skinsSource.includes(
+      'box.scrollHeight'
+    ),
+  'SKIN-PERF-006 cumulative catalogue batching and forced scrollHeight layout must stay removed'
+);
+
+
+/*
+ * SKIN-PERF-007
+ *
+ * Selecting a skin changes the selected state only. It must not reconstruct
+ * hundreds of catalogue cards.
+ */
+{
+  const start=skinsSource.indexOf(
+    'function select(s){'
+  );
+
+  const end=skinsSource.indexOf(
+    '\nfunction current(){',
+    start
+  );
+
+  const selectSource=skinsSource.slice(
+    start,
+    end
+  );
+
+  assert(
+    start>=0
+      && selectSource.includes(
+        'syncSkinCatalogueSelection();'
+      )
+      && !selectSource.includes(
+        'renderCatalogueUI();'
+      )
+      && !selectSource.includes(
+        'renderCatalogueWindow('
+      ),
+    'SKIN-PERF-007 selecting one skin must not rebuild the skin catalogue'
+  );
+}
+
+
+/*
+ * SKIN-PERF-008
+ *
+ * Same rule for dyes: choosing one dye updates existing card state and the
+ * slot summaries rather than recreating the complete dye catalogue.
+ */
+{
+  const start=skinsSource.indexOf(
+    'function makeDyeCatalogueCard('
+  );
+
+  const end=skinsSource.indexOf(
+    '\nfunction renderDyePanel(){',
+    start
+  );
+
+  const cardSource=skinsSource.slice(
+    start,
+    end
+  );
+
+  assert(
+    start>=0
+      && cardSource.includes(
+        'syncDyeCatalogueSelection(target);'
+      )
+      && cardSource.includes(
+        'renderDyeSlots();'
+      )
+      && !cardSource.includes(
+        'renderDyePanel();'
+      ),
+    'SKIN-PERF-008 selecting one dye must not rebuild the dye catalogue'
+  );
+}
+
+
+/*
+ * SKIN-PERF-009
+ *
+ * We measured per-card content-visibility/paint containment and it created a
+ * large IntersectionObserver/layerization cost. Containment belongs to the two
+ * scrolling lists only.
+ */
+assert(
+  /#skins\s*,\s*#dyeList\s*\{[^}]*contain\s*:\s*layout\s*;[^}]*\}/s.test(
+    skinsStyle
+  )
+    && !/#skins\s+\.skin\.card\s*,\s*#dyeList\s+\.dye\.card\s*\{[^}]*content-visibility\s*:\s*auto/s.test(
+      skinsStyle
+    )
+    && !/#skins\s+\.skin\.card\s*,\s*#dyeList\s+\.dye\.card\s*\{[^}]*contain\s*:\s*layout\s+paint\s+style/s.test(
+      skinsStyle
+    ),
+  'SKIN-PERF-009 catalogue containment must stay on the lists, not every card'
+);
+
+
+/*
  * MEM/PERF:
  * fiche projectile simulations cache geometry instead of forcing layout on
  * every animation frame, and the RAF disappears while the canvas is offscreen.
@@ -231,8 +533,11 @@ assert(
 assert(
   skinsSource.includes('let fitStageFrame=0;')
     && skinsSource.includes('function scheduleFitStage()')
-    && skinsSource.includes('new ResizeObserver(scheduleFitStage)'),
-  'PERF: Skin Viewer stage fitting must be coalesced'
+    && skinsSource.includes('const onStageResize=entries=>')
+    && skinsSource.includes('new ResizeObserver(onStageResize)')
+    && skinsSource.includes('pendingStageSize||box.getBoundingClientRect()')
+    && skinsSource.includes('if(!panelResizeActive)'),
+  'PERF: Skin Viewer stage fitting must be coalesced and reuse ResizeObserver geometry'
 );
 
 
@@ -358,7 +663,43 @@ async function checkWhatsNewRetry() {
 
 checkWhatsNewRetry()
   .then(() => {
-    console.log('runtime lifecycle: ok');
+
+assert(
+  (() => {
+    const start=skinsSource.indexOf(
+      'function point(e){'
+    );
+
+    if(start<0)return false;
+
+    const next=skinsSource.indexOf(
+      '\nfunction rememberPointer',
+      start
+    );
+
+    const pointSource=skinsSource.slice(
+      start,
+      next>start ? next : start+1200
+    );
+
+    return pointSource.includes('e.offsetX')
+      &&pointSource.includes('e.offsetY')
+      &&!/\.\s*getBoundingClientRect\s*\(/.test(
+        pointSource
+      );
+  })(),
+  'PERF: Skin Viewer pointer movement must avoid forced canvas layout'
+);
+
+assert(
+  skinsSource.includes('function setPanelWidth(kind,value,persist=true,bounds=null)')
+    && skinsSource.includes('from?.bounds||null')
+    && skinsSource.includes('panelResizeActive=true')
+    && skinsSource.includes('panelResizeActive=false'),
+  'PERF: Skin Viewer panel drag must reuse bounds measured on pointerdown'
+);
+
+console.log('runtime lifecycle: ok');
   })
   .catch(error => {
     console.error(error);

@@ -15,17 +15,38 @@
 <main>
 
   <section class="panel catalogue" aria-label="Skins">
+    <div id="skinResizeGrip"
+      class="panel-resize-grip panel-resize-grip-skins"
+      role="separator"
+      aria-orientation="vertical"
+      tabindex="0"
+      title="Drag to resize · double-click to reset"></div>
     <header class="panel-title">
       <b>Skins</b>
       <span id="count"></span>
     </header>
-    <div class="panel-body">
+<div class="panel-body">
       <input id="search" class="panel-search" placeholder="Search skins">
-      <div class="section-label">Class</div>
-      <div id="classes" class="class-grid"></div>
-      <div class="section-label">Family</div>
-      <div id="families" class="filter-chips"></div>
-      <div id="skins" class="card-list"></div>
+
+      <div class="filter-box skin-browse-box">
+        <div class="filter-box-head">
+          <span>Browse by</span>
+          <div class="browse-mode-switch" role="group" aria-label="Browse skins by">
+            <button type="button" data-skin-filter-mode="class">Class</button>
+            <button type="button" data-skin-filter-mode="family">Family</button>
+          </div>
+        </div>
+
+        <div id="skinClassFilter" class="skin-filter-panel">
+          <div id="classes" class="class-grid"></div>
+        </div>
+
+        <div id="skinFamilyFilter" class="skin-filter-panel" hidden>
+          <div id="families" class="filter-chips"></div>
+        </div>
+      </div>
+
+      <div id="skins" class="card-list browse-grid"></div>
     </div>
   </section>
 
@@ -47,6 +68,17 @@
       </span>
     </header>
 
+    <!-- What the index holds about the three things chosen right now. -->
+    <div id="selectedIndex" class="selected-index selected-index-top" aria-label="Selected objects in the Index"></div>
+
+    <section class="combo-workbench combo-workbench-top" aria-label="Saved skin combinations">
+      <span class="combo-workbench-title">
+        <strong>Saved combos</strong>
+        <small id="comboCount">0 saved</small>
+      </span>
+      <div id="comboShelf" class="combo-shelf"></div>
+    </section>
+
     <!--
       The stage takes whatever room is left and the canvases are sized to it,
       rather than being 640 by 420 whatever the window is. app.js watches this
@@ -62,37 +94,54 @@
     </div>
 
     <div class="sandbox-bar" id="sandboxBar">
-      <p class="sandbox-help"><b>WASD</b> move · <b>mouse</b> aim · <b>hold click</b> attack · <b>wheel</b> zoom</p>
+      <div class="sandbox-help">
+        <span><b>WASD</b> move · <b>mouse</b> aim · <b>hold click</b> attack · <b>wheel</b> zoom</span>
+        <button type="button" id="saveCombo" class="save-combo sandbox-save-combo">
+          ☆ Save combo
+        </button>
+      </div>
+
       <label class="sandbox-speed">
         <strong>Attack speed</strong>
         <input id="attackSpeed" type="range" min="0.25" max="4" step="0.05" value="1" aria-label="Attack speed">
         <output id="attackSpeedValue"></output>
       </label>
-      <span class="sandbox-modes">
-        <button type="button" data-catalog-mode="skins">Skins</button>
-        <button type="button" data-catalog-mode="favorites">★ Favorites <span id="favoriteCount" class="mode-count">0</span></button>
-        <button type="button" id="saveCombo" class="save-combo">☆ Save combo</button>
-      </span>
     </div>
 
-    <!-- What the index holds about the three things chosen right now. -->
-    <div id="selectedIndex" class="selected-index" aria-label="Selected objects in the Index"></div>
   </section>
 
   <section class="panel dyes" aria-label="Dyes">
+    <div id="dyeResizeGrip"
+      class="panel-resize-grip panel-resize-grip-dyes"
+      role="separator"
+      aria-orientation="vertical"
+      tabindex="0"
+      title="Drag to resize · double-click to reset"></div>
     <header class="panel-title">
       <b>Dyes</b>
       <span id="dyeCount"></span>
     </header>
-    <div class="panel-body">
-      <div id="dyeSlots" class="dye-slots"></div>
+<div class="panel-body">
+      <div class="filter-box dye-target-box">
+        <div class="filter-box-head">
+          <span>Apply to</span>
+        </div>
+        <div id="dyeSlots" class="dye-target-switch"></div>
+      </div>
+
       <div class="dye-tools">
         <input id="dyeSearch" placeholder="Search dyes">
-        <button type="button" id="clearDye">Clear selected slot</button>
+        <button type="button" id="clearDye">Clear</button>
       </div>
-      <div class="section-label">Category</div>
-      <div id="dyeCategories" class="filter-chips"></div>
-      <div id="dyeList" class="card-list"></div>
+
+      <div class="filter-box dye-type-box">
+        <div class="filter-box-head">
+          <span>Type</span>
+        </div>
+        <div id="dyeCategories" class="filter-chips"></div>
+      </div>
+
+      <div id="dyeList" class="card-list browse-grid"></div>
     </div>
   </section>
 

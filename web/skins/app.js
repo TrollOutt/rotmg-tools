@@ -203,7 +203,7 @@ for(const one of skins){
 }
 const canvas=$('canvas'),worldBg=$('worldBg'),fxCanvas=$('fxCanvas'),renderer=new Renderer(canvas),bg=worldBg.getContext('2d'),fx=fxCanvas.getContext('2d'),CLASS_ORDER=['Wizard','Priest','Archer','Rogue','Warrior','Knight','Paladin','Assassin','Necromancer','Huntress','Mystic','Trickster','Sorcerer','Ninja','Samurai','Bard','Summoner','Kensei'];
 classes.sort((a,b)=>{const ai=CLASS_ORDER.indexOf(a.name),bi=CLASS_ORDER.indexOf(b.name);return(ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name)});
-const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',dyeTarget:'clothing',dyeCategory:'all',classOpen:true};
+const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',skinFilterMode:storageGet('skinViewerSkinFilterMode')==='family'?'family':'class',dyeTarget:'clothing',dyeCategory:'all',classOpen:true,familyOpen:true,dyeCategoryOpen:true};
 S.attackSpeed=Math.max(.25,Math.min(4,Number(storageGet('skinViewerAttackSpeed'))||1));
 /* V312_COMBO_FAVORITES: exact local skin + dye combinations, user-named. */
 const COMBO_FAVORITES_KEY='skinViewerComboFavoritesV1';
@@ -223,7 +223,6 @@ function normalizeComboFavorite(favorite){
 }
 function readComboFavorites(){try{const value=JSON.parse(storageGet(COMBO_FAVORITES_KEY)||'[]');return Array.isArray(value)?value.map(normalizeComboFavorite).filter(Boolean):[]}catch{return[]}}
 let comboFavorites=readComboFavorites();
-S.catalogMode=storageGet('skinViewerCatalogMode')==='favorites'?'favorites':'skins';
 
 /* V311B_STUDIO_THEME */
 S.studioTheme=storageGet('skinViewerStudioTheme')==='light'?'light':'dark';
@@ -336,6 +335,38 @@ function v314SelectedCard(kind,label,item){
   sub.textContent=item?(kind==='skin'?[item.className,item.family].filter(Boolean).join(' · '):(kind==='clothing'?'Clothing dye':'Accessory dye')):'None';copy.append(sub);
   const actions=document.createElement('div');actions.className='chosen-actions';card.append(actions);
   if(!item){const empty=document.createElement('span');empty.className='chosen-missing';empty.textContent='Nothing selected';actions.append(empty);return card}
+
+  /*
+   * Clothing and Accessory can be removed directly from the selected summary.
+   * This changes only the chosen dye state; the catalogue itself stays mounted.
+   */
+  if(kind==='clothing'||kind==='accessory'){
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.className='chosen-remove';
+    remove.textContent='Remove';
+    remove.title=`Remove ${kind} dye`;
+
+    remove.onclick=event=>{
+      event.stopPropagation();
+
+      S.dyes[kind]=null;
+
+      renderDyeSlots?.();
+
+      if(S.dyeTarget===kind){
+        syncDyeCatalogueSelection?.();
+        const clear=$('clearDye');
+        if(clear)clear.disabled=true;
+      }
+
+      renderComboShelf?.();
+      scheduleSelectedIndexPanel();
+    };
+
+    actions.append(remove);
+  }
+
   const info=v314BridgeEntry(kind,item);
   if(info?.match){v314AddOpen(actions,info.match.id,'Open in Index')}
   else if(kind==='skin'&&info?.targetKind==='set'&&info?.target){
@@ -376,14 +407,6 @@ setTimeout(scheduleSelectedIndexPanel,0);
 
 /* One line of whatever somebody typed. */
 function oneLine(value){return String(value==null?'':value).replace(/\s+/g,' ').trim()}
-function setCatalogMode(mode){
-  S.catalogMode=mode==='favorites'?'favorites':'skins';
-  try{storageSet('skinViewerCatalogMode',S.catalogMode)}catch{}
-  /* While the shortlist is what the panel shows, the two ways of narrowing
-     the whole catalogue have nothing to narrow. */
-  host.classList.toggle('favorites-mode',S.catalogMode==='favorites');
-  renderSandboxBar();renderCatalogueUI();
-}
 function closeSaveComboDialog(){$('saveComboDialogBackdrop')?.remove()}
 function openSaveComboDialog(){
   if(!S.skin)return;
@@ -416,20 +439,29 @@ function openSaveComboDialog(){
  * It is in view.html now, with ids, and this only keeps it current.
  */
 function attackSpeedLabel(){
-  const speed=Math.max(.25,Math.min(4,Number(S.attackSpeed)||1));
-  let rate='';
-  try{if(typeof baseAttackRate==='function')rate=' · '+RealmI18n.number(speed*baseAttackRate(),{maximumFractionDigits:2})+'/s'}catch{}
-  return RealmI18n.number(speed,{maximumFractionDigits:2})+'×'+rate;
+  return RealmI18n.number(
+    attackSpeedMultiplier(),
+    {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    }
+  )+'× · '+RealmI18n.number(
+    attackShotsPerSecond(),
+    {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    }
+  )+'/s';
 }
 function renderSandboxBar(){
   const slider=$('attackSpeed'),out=$('attackSpeedValue');
   if(slider&&root.activeElement!==slider)slider.value=String(S.attackSpeed);
   if(out)out.textContent=attackSpeedLabel();
-  for(const button of root.querySelectorAll('[data-catalog-mode]')){
-    button.classList.toggle('is-on',button.dataset.catalogMode===S.catalogMode);
+
+  const count=$('comboCount');
+  if(count){
+    count.textContent=`${comboFavorites.length} saved`;
   }
-  const count=$('favoriteCount');
-  if(count)count.textContent=String(comboFavorites.length);
 }
 $('attackSpeed').addEventListener('input',event=>{
   S.attackSpeed=Math.max(.25,Math.min(4,Number(event.target.value)||1));
@@ -438,9 +470,6 @@ $('attackSpeed').addEventListener('input',event=>{
   if(S.shooting){S.attackStart=now;S.nextShotAt=now}
   renderSandboxBar();
 });
-for(const button of root.querySelectorAll('[data-catalog-mode]')){
-  button.addEventListener('click',()=>setCatalogMode(button.dataset.catalogMode));
-}
 $('saveCombo').addEventListener('click',openSaveComboDialog);
 /* V315_SANDBOX_CONTROLS_FAVORITES_END */
 function isMoving(){return['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','KeyW','KeyA','KeyS','KeyD'].some(k=>S.keys.has(k))}
@@ -448,32 +477,89 @@ function activityRaw(now=performance.now()){if(S.shooting||(S.attackUntil&&now<S
 function classKit(){return realmAtlas.folk?.find(one=>one.name===S.skin?.className)||null}
 function setWeaponShots(){const id=S.skin?.sets?.[0],set=(Number.isFinite(S.skin?.type)&&fcProjectiles?.skins?.['0x'+S.skin.type.toString(16)])||(id&&fcProjectiles?.sets?.[id]),weapon=set?.weapon&&fcProjectiles.items[set.weapon];if(!weapon?.shots?.length)return[];const shot=weapon.shots[0],key=set.bullet||shot.pic,pic=fcProjectiles.pics[key];if(!pic)return[];return[{fast:shot.speed,life:shot.life,reach:shot.speed*shot.life,many:weapon.many||1,fan:weapon.arc!==undefined?weapon.arc:(weapon.many>1?11.25:0),rate:weapon.rate||1,motion:{size:set.bullet&&!shot.sizeDeclared?set.bulletSize:shot.size},behave:{amp:shot.amp||0,freq:shot.freq||1,wavy:!!shot.wavy,param:!!shot.param,boom:!!shot.boom,mag:shot.mag||3,accel:shot.accel||0,accelDelay:shot.accelDelay||0,speedClamp:shot.speedClamp||0},visual:{sheet:'assets/index/projectiles.png',x:pic.x,y:pic.y,width:pic.w,height:pic.h,frames:pic.frames,fps:pic.fps,cell:pic.cell||8,angle:pic.tilt||0,rotation:pic.spin||0}}]}
 function combatWeaponShots(){const fromSet=setWeaponShots();if(fromSet.length)return fromSet;const exact=realmCombat?.folk?.[S.skin?.className]?.weapon;if(Array.isArray(exact)&&exact.length)return exact;const shot=classKit()?.weapon?.shot;return shot?[shot]:[]}
-function baseAttackRate(){return Math.max(.1,Number(combatWeaponShots()[0]?.rate||classKit()?.weapon?.shot?.rate||1))}
-function attackPeriod(){return ATTACK_PERIOD_MS/(S.attackSpeed*baseAttackRate())}
+function attackSpeedMultiplier(){
+  return Math.max(
+    .25,
+    Math.min(
+      4,
+      Number(S.attackSpeed)||1
+    )
+  );
+}
+
+function attackPeriod(){
+  /*
+   * Sandbox timing is independent from skin/class/set weapon rate.
+   *
+   * ATTACK_PERIOD_MS = 600:
+   *   1x -> 600 ms -> 1.67 shots/s
+   *   4x -> 150 ms -> 6.67 shots/s
+   */
+  return ATTACK_PERIOD_MS/attackSpeedMultiplier();
+}
+
+function attackShotsPerSecond(){
+  return 1000/attackPeriod();
+}
 function attackFrame(now){if(S.seq?.actionRaw!==2)return;const playable=[];for(let i=0;i<S.seq.frames.length;i++)if(S.seq.frames[i].spriteAvailable)playable.push(i);if(!playable.length)return;const period=attackPeriod(),elapsed=Math.max(0,now-S.attackStart),phase=(elapsed%period)/period,next=playable[Math.min(playable.length-1,Math.floor(phase*playable.length))];if(next!==S.index)S.index=next}
 function sequence(actionRaw=activityRaw(),directionRaw=S.facingRaw,set=S.seq?.set??0){const pool=S.skin?.sequences||[];return pool.find(q=>q.set===set&&q.actionRaw===actionRaw&&q.directionRaw===directionRaw&&q.frames.some(f=>f.spriteAvailable))||pool.find(q=>q.set===set&&q.actionRaw===actionRaw&&q.frames.some(f=>f.spriteAvailable))||pool.find(q=>q.set===set&&q.actionRaw===0&&q.directionRaw===directionRaw&&q.frames.some(f=>f.spriteAvailable))||pool.find(q=>q.set===set&&q.frames.some(f=>f.spriteAvailable))||pool[0]}
 function useSequence(q,reset=true){if(!q)return;if(S.seq!==q){S.seq=q;if(reset){S.index=0;S.last=performance.now()}renderFrameState()}else if(reset){S.index=0;S.last=performance.now();renderFrameState()}}
 function syncActivity(now=performance.now(),reset=true){const q=sequence(activityRaw(now),S.facingRaw,S.seq?.set??0);useSequence(q,reset)}
-function select(s){if(!s)return;S.skin=s;const q=initialSequence(s.sequences);S.seq=q;S.facingRaw=q?.directionRaw??FACE_YOU;S.left=false;S.index=0;S.attackUntil=0;S.shooting=false;S.attackStart=0;S.nextShotAt=0;S.projectiles.length=0;syncRenderScale();syncActivity(performance.now(),true);renderFrameState();renderCatalogueUI();scheduleSelectedIndexPanel();try{renderAttackSpeed()}catch{}}
+function select(s){if(!s)return;S.skin=s;const q=initialSequence(s.sequences);S.seq=q;S.facingRaw=q?.directionRaw??FACE_YOU;S.left=false;S.index=0;S.attackUntil=0;S.shooting=false;S.attackStart=0;S.nextShotAt=0;S.projectiles.length=0;syncRenderScale();syncActivity(performance.now(),true);renderFrameState();syncSkinCatalogueSelection();scheduleSelectedIndexPanel();try{renderAttackSpeed()}catch{}}
 function current(){return S.seq?.frames[S.index%Math.max(1,S.seq.frames.length)]}
 function visibleSkins(){
   const q=$('search').value.toLowerCase();
+
   return skins.filter(s=>{
-    const family=s.family||'Other';
     if(q&&!s.id.toLowerCase().includes(q))return false;
-    if(S.className&&s.className!==S.className)return false;
+
+    /*
+     * Class and Family are alternate ways of browsing, never an accidental
+     * intersection of two remembered filters.
+     */
+    if(S.skinFilterMode==='class'){
+      return !S.className||s.className===S.className;
+    }
+
+    const family=s.family||'Other';
+
     if(!S.family)return true;
-    if(S.family===GLOBAL_OTHER_FAMILY)return !S.className&&!GLOBAL_FAMILY_WHITELIST.has(family);
+
+    if(S.family===SET_FAMILY){
+      return Array.isArray(s.sets)&&s.sets.length>0;
+    }
+
+    if(S.family===GLOBAL_OTHER_FAMILY){
+      return !GLOBAL_FAMILY_WHITELIST.has(family);
+    }
+
     return family===S.family;
   });
 }
-function ensureVisibleSelection(){const list=visibleSkins();if(list.length&&(!S.skin||!list.includes(S.skin)))select(list[0]);else renderCatalogueUI()}
+function ensureVisibleSelection(){
+  const list=visibleSkins();
+
+  /*
+   * Filters/search rebuild the catalogue. Merely selecting a card does not.
+   */
+  renderCatalogueUI();
+
+  if(
+    list.length
+    &&(!S.skin||!list.includes(S.skin))
+  ){
+    select(list[0]);
+    return;
+  }
+
+  syncSkinCatalogueSelection();
+}
 /* V38_BEACH_POCKET: one real Beach/shore slice around its recorded beacon. */
 const realmLevels=new Map((realmAtlas.levels||[]).map(level=>[level.z,level]));
 const realmHave=new Map((realmAtlas.levels||[]).map(level=>[level.z,new Set(level.chunks||[])]));
 const realmImages=new Map(),projectileImages=new Map(),MAX_REALM_IMAGES=72,MAX_PROJECTILES=160;
 const thingArt=new Image();if(realmThings){thingArt.decoding='async';thingArt.onload=()=>{S.mapDirty=true};thingArt.src='assets/atlas/things.png'}
-const BEACH_WIDTH=52,BEACH_HEIGHT=36,BEACH_OFFSET_X=12,BEACH_VIEW_BIAS_X=4;
+const BEACH_WIDTH=52,BEACH_HEIGHT=36,BEACH_OFFSET_X=12,BEACH_VIEW_BIAS_X=0;
 function beachBiome(){return (realmAtlas.biomes||[]).find(one=>String(one.name||'').toLowerCase()==='beach')||null}
 function beachZones(){const biome=beachBiome();return (realmAtlas.zones||[]).filter(zone=>String(zone.name||'').toLowerCase()==='beach'||(biome&&zone.biome===biome.index))}
 function beachBeacon(){const all=realmAtlas.beacons||[],zones=beachZones(),ids=new Set(zones.map(zone=>zone.id)),exact=all.filter(beacon=>ids.has(beacon.zone));if(exact.length)return exact.find(beacon=>beacon.state==='captured')||exact[0];const at=beachBiome()?.at;if(!at||!all.length)return all[0]||null;return [...all].sort((a,b)=>Math.hypot(a.x-at[0],a.y-at[1])-Math.hypot(b.x-at[0],b.y-at[1]))[0]}
@@ -565,6 +651,301 @@ function renderProjectiles(){fx.clearRect(0,0,fxCanvas.width,fxCanvas.height);fx
  * Choosing "All" folds it too: it is a choice like any other, and the reader
  * who wants the whole catalogue wants the room for it most of all.
  */
+/*
+ * Resizable Skin / Sandbox / Dye rails.
+ *
+ * Same interaction as the Atlas panel: the separator itself is the control.
+ * Drag it to choose a width; double-click it to return to the default.
+ * Both side panels are independent and their chosen widths survive reloads.
+ */
+const SKIN_PANEL_WIDTH_KEY='skinViewerSkinsPanelWidthV2';
+const DYE_PANEL_WIDTH_KEY='skinViewerDyesPanelWidthV2';
+
+const SKIN_PANEL_MIN=210;
+const DYE_PANEL_MIN=230;
+const STAGE_PANEL_MIN=300;
+const SIDE_PANEL_MAX=720;
+
+const viewerMain=root.querySelector('main');
+const skinPanel=root.querySelector('.catalogue');
+const dyePanel=root.querySelector('.dyes');
+
+function panelWidthKey(kind){
+  return kind==='skins'
+    ? SKIN_PANEL_WIDTH_KEY
+    : DYE_PANEL_WIDTH_KEY;
+}
+
+function panelMinWidth(kind){
+  return kind==='skins'
+    ? SKIN_PANEL_MIN
+    : DYE_PANEL_MIN;
+}
+
+function panelCssProperty(kind){
+  return kind==='skins'
+    ? '--skin-browser-width'
+    : '--dye-browser-width';
+}
+
+function panelElement(kind){
+  return kind==='skins'
+    ? skinPanel
+    : dyePanel;
+}
+
+function oppositePanel(kind){
+  return kind==='skins'
+    ? dyePanel
+    : skinPanel;
+}
+
+function panelWidthBounds(kind){
+  const minimum=panelMinWidth(kind);
+
+  if(!viewerMain||!oppositePanel(kind)){
+    return{min:minimum,max:SIDE_PANEL_MAX};
+  }
+
+  const mainBox=viewerMain.getBoundingClientRect();
+  const otherWidth=oppositePanel(kind).getBoundingClientRect().width;
+  const style=getComputedStyle(viewerMain);
+  const gap=Number.parseFloat(style.columnGap)||0;
+
+  /*
+   * Whatever the side panels do, the character sandbox keeps enough room
+   * to remain an actual preview instead of becoming a thin strip.
+   */
+  const available=
+    mainBox.width
+    - otherWidth
+    - STAGE_PANEL_MIN
+    - gap*2;
+
+  return{
+    min:minimum,
+    max:Math.max(
+      minimum,
+      Math.min(SIDE_PANEL_MAX,available)
+    )
+  };
+}
+
+let panelResizeActive=false;
+let pendingStageSize=null;
+
+function setPanelWidth(kind,value,persist=true,bounds=null){
+  if(!viewerMain)return;
+
+  bounds=bounds||panelWidthBounds(kind);
+  const wide=Math.round(
+    Math.max(bounds.min,Math.min(bounds.max,Number(value)||bounds.min))
+  );
+
+  viewerMain.style.setProperty(
+    panelCssProperty(kind),
+    wide+'px'
+  );
+
+  if(persist){
+    storageSet(panelWidthKey(kind),String(wide));
+  }
+
+  const grip=kind==='skins'
+    ? $('skinResizeGrip')
+    : $('dyeResizeGrip');
+
+  if(grip){
+    grip.setAttribute('aria-valuemin',String(bounds.min));
+    grip.setAttribute('aria-valuemax',String(Math.round(bounds.max)));
+    grip.setAttribute('aria-valuenow',String(wide));
+  }
+
+}
+
+function resetPanelWidth(kind){
+  if(!viewerMain)return;
+
+  viewerMain.style.removeProperty(panelCssProperty(kind));
+
+  try{
+    localStorage.removeItem(panelWidthKey(kind));
+  }catch{}
+
+  const grip=kind==='skins'
+    ? $('skinResizeGrip')
+    : $('dyeResizeGrip');
+
+  if(grip){
+    grip.removeAttribute('aria-valuenow');
+  }
+
+  scheduleFitStage?.();
+}
+
+function bindPanelResize(grip,kind,direction){
+  if(!grip)return;
+
+  let from=null;
+  let resizeFrame=0;
+  let pendingWidth=null;
+
+  const applyPendingWidth=()=>{
+    resizeFrame=0;
+    if(pendingWidth===null)return;
+    setPanelWidth(
+      kind,
+      pendingWidth,
+      true,
+      from?.bounds||null
+    );
+    pendingWidth=null;
+  };
+
+  const queueWidth=wide=>{
+    pendingWidth=wide;
+    if(resizeFrame)return;
+    resizeFrame=requestAnimationFrame(applyPendingWidth);
+  };
+
+  const finish=event=>{
+    if(!from)return;
+
+    if(resizeFrame){
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame=0;
+    }
+
+    applyPendingWidth();
+
+    panelResizeActive=false;
+    scheduleFitStage();
+    requestAnimationFrame(refreshCatalogueWindows);
+
+    if(
+      event?.pointerId!==undefined
+      && grip.hasPointerCapture?.(event.pointerId)
+    ){
+      grip.releasePointerCapture?.(event.pointerId);
+    }
+
+    from=null;
+    grip.classList.remove('is-sizing');
+  };
+
+  grip.addEventListener('pointerdown',event=>{
+    if(event.button!==0)return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const bounds=panelWidthBounds(kind);
+
+    from={
+      x:event.clientX,
+      wide:panelElement(kind).getBoundingClientRect().width,
+      bounds
+    };
+
+    panelResizeActive=true;
+
+    grip.setPointerCapture(event.pointerId);
+    grip.classList.add('is-sizing');
+  });
+
+  grip.addEventListener('pointermove',event=>{
+    if(!from)return;
+
+    const dx=(event.clientX-from.x)*direction;
+    queueWidth(from.wide+dx);
+  });
+
+  grip.addEventListener('pointerup',finish);
+  grip.addEventListener('pointercancel',finish);
+
+  grip.addEventListener('dblclick',event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    resetPanelWidth(kind);
+  });
+
+  /*
+   * Keyboard equivalent for the separator:
+   * left/right move the physical boundary by 20 pixels.
+   */
+  grip.addEventListener('keydown',event=>{
+    if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+
+    event.preventDefault();
+
+    const current=panelElement(kind).getBoundingClientRect().width;
+    const physicalDelta=event.key==='ArrowRight'?20:-20;
+
+    setPanelWidth(
+      kind,
+      current+physicalDelta*direction
+    );
+  });
+}
+
+/*
+ * Left rail grows when its right edge moves right.
+ * Right rail grows when its left edge moves left.
+ */
+bindPanelResize($('skinResizeGrip'),'skins',1);
+bindPanelResize($('dyeResizeGrip'),'dyes',-1);
+
+/* Restore the user's previous widths after the first layout exists. */
+requestAnimationFrame(()=>{
+  const skinWidth=Number(storageGet(SKIN_PANEL_WIDTH_KEY));
+  const dyeWidth=Number(storageGet(DYE_PANEL_WIDTH_KEY));
+
+  if(Number.isFinite(skinWidth)&&skinWidth>0){
+    setPanelWidth('skins',skinWidth,false);
+  }
+
+  if(Number.isFinite(dyeWidth)&&dyeWidth>0){
+    setPanelWidth('dyes',dyeWidth,false);
+  }
+});
+
+function renderSkinFilterMode(){
+  const mode=S.skinFilterMode==='family'?'family':'class';
+  const classPanel=$('skinClassFilter'),familyPanel=$('skinFamilyFilter');
+  if(classPanel)classPanel.hidden=mode!=='class';
+  if(familyPanel)familyPanel.hidden=mode!=='family';
+  for(const button of root.querySelectorAll('[data-skin-filter-mode]')){
+    button.classList.toggle('selected',button.dataset.skinFilterMode===mode);
+  }
+}
+
+function setSkinFilterMode(mode){
+  const next=mode==='family'?'family':'class';
+
+  S.skinFilterMode=next;
+  storageSet('skinViewerSkinFilterMode',next);
+
+  /*
+   * Class and Family remember their own last selection.
+   *
+   * Switching browsing mode changes which filter is active; it does not
+   * erase the selection belonging to the other mode.
+   */
+  if(next==='class'){
+    S.classOpen=true;
+  }else{
+    S.familyOpen=true;
+  }
+
+  renderSkinFilterMode();
+  renderClassPicker();
+  renderFamilies();
+  ensureVisibleSelection();
+}
+for(const button of root.querySelectorAll('[data-skin-filter-mode]')){
+  button.addEventListener('click',()=>setSkinFilterMode(button.dataset.skinFilterMode));
+}
+
 function renderClassPicker(){
   const box=$('classes');
   box.classList.toggle('is-folded',!S.classOpen);
@@ -578,14 +959,18 @@ function renderClassPicker(){
     const name=document.createElement('span');name.textContent=S.className||'All classes';
     const back=document.createElement('em');back.textContent='change';
     b.append(name,back);
-    b.onclick=()=>{S.classOpen=true;renderClassPicker()};
+    b.onclick=()=>{
+      S.className='';
+      S.classOpen=true;
+      renderClassPicker();
+      ensureVisibleSelection();
+    };
     box.replaceChildren(b);
     return;
   }
   const frag=document.createDocumentFragment();
   const pick=name=>{
     S.className=name;
-    if(name&&S.family&&!familyAvailableInClass(S.family,name))S.family='';
     S.classOpen=false;
     renderSandboxBar();renderClassPicker();renderFamilies();ensureVisibleSelection();
   };
@@ -608,50 +993,161 @@ function renderClassPicker(){
 }
 /* V310_GLOBAL_FAMILIES: family is a first-class filter even when Class = All. */
 /* V311B_GLOBAL_FAMILIES */
-const GLOBAL_FAMILY_ORDER=['2-Bit','Antinomy','Classic','Construction','Cozy','Exalted','Insight','Kogbold','Legion','Mystery','Oryxmas','Stone','Syndicate Henchman','Set skins'];
+const GLOBAL_FAMILY_ORDER=['2-Bit','Antinomy','Classic','Construction','Cozy','Exalted','Insight','Kogbold','Legion','Mystery','Oryxmas','Stone','Syndicate Henchman'];
 const GLOBAL_FAMILY_WHITELIST=new Set(GLOBAL_FAMILY_ORDER);
+const SET_FAMILY='__set__';
 const GLOBAL_OTHER_FAMILY='__other_families__';
 function globalFamilyRank(name){const i=GLOBAL_FAMILY_ORDER.indexOf(name);return i<0?9999:i}
 function familyRows(){
-  const pool=skins.filter(s=>!S.className||s.className===S.className),count=new Map();
+  /*
+   * Family mode owns its own catalogue. A remembered Class selection must
+   * not silently change Family counts while Class mode is inactive.
+   */
+  const pool=skins;
+  const count=new Map();
   let other=0;
+
   for(const s of pool){
     const name=s.family||'Other';
-    if(!S.className&&!GLOBAL_FAMILY_WHITELIST.has(name)){other++;continue}
+
+    if(!GLOBAL_FAMILY_WHITELIST.has(name)){
+      other++;
+      continue;
+    }
+
     count.set(name,(count.get(name)||0)+1);
   }
+
   const rows=[...count];
-  if(!S.className&&other)rows.push([GLOBAL_OTHER_FAMILY,other]);
+
+  const setCount=pool.filter(s=>
+    Array.isArray(s.sets)&&s.sets.length
+  ).length;
+
+  if(setCount){
+    rows.unshift([SET_FAMILY,setCount]);
+  }
+
+  if(other){
+    rows.push([GLOBAL_OTHER_FAMILY,other]);
+  }
+
   return rows.sort((a,b)=>{
-    if(!S.className){
-      if(a[0]===GLOBAL_OTHER_FAMILY)return 1;
-      if(b[0]===GLOBAL_OTHER_FAMILY)return-1;
-      const d=globalFamilyRank(a[0])-globalFamilyRank(b[0]);
-      if(d)return d;
-    }
+    if(a[0]===SET_FAMILY)return-1;
+    if(b[0]===SET_FAMILY)return 1;
+
+    if(a[0]===GLOBAL_OTHER_FAMILY)return 1;
+    if(b[0]===GLOBAL_OTHER_FAMILY)return-1;
+
+    const d=globalFamilyRank(a[0])-globalFamilyRank(b[0]);
+    if(d)return d;
+
     return familyOrder(a[0],b[0]);
   });
 }
 function familyAvailableInClass(name,className){
   if(name===GLOBAL_OTHER_FAMILY)return false;
+  if(name===SET_FAMILY)return skins.some(s=>
+    (!className||s.className===className)
+    && Array.isArray(s.sets)
+    && s.sets.length
+  );
   return skins.some(s=>(!className||s.className===className)&&(s.family||'Other')===name);
 }
+function familyDisplayName(name){
+  if(name===SET_FAMILY)return'SET';
+  if(name===GLOBAL_OTHER_FAMILY)return'Other families';
+  return name||'All families';
+}
+
 function renderFamilies(){
-  const box=$('families'),rows=familyRows(),frag=document.createDocumentFragment();
-  if(!S.className&&S.family!==GLOBAL_OTHER_FAMILY&&S.family&&!GLOBAL_FAMILY_WHITELIST.has(S.family))S.family='';
-  const total=skins.filter(s=>!S.className||s.className===S.className).length;
+  const box=$('families');
+  const rows=familyRows();
+
+  if(
+    S.family!==SET_FAMILY
+    && S.family!==GLOBAL_OTHER_FAMILY
+    && S.family
+    && !GLOBAL_FAMILY_WHITELIST.has(S.family)
+  ){
+    S.family='';
+  }
+
+  const total=skins.length;
+
+  if(!S.familyOpen){
+    const count=S.family
+      ? (rows.find(([name])=>name===S.family)?.[1]||0)
+      : total;
+
+    const chosen=document.createElement('button');
+    chosen.type='button';
+    chosen.className='filter-choice-folded chosen';
+
+    const copy=document.createElement('span');
+    copy.className='filter-choice-copy';
+
+    const name=document.createElement('strong');
+    name.textContent=familyDisplayName(S.family);
+
+    const amount=document.createElement('small');
+    amount.textContent=`${count} skin${count===1?'':'s'}`;
+
+    copy.append(name,amount);
+
+    const change=document.createElement('em');
+    change.textContent='change';
+
+    chosen.append(copy,change);
+
+    /*
+     * Opening the chooser does not change the active Family.
+     * The current value remains highlighted until another one is chosen.
+     */
+    chosen.onclick=()=>{
+      S.family='';
+      S.familyOpen=true;
+      renderFamilies();
+      ensureVisibleSelection();
+    };
+
+    box.classList.add('is-folded');
+    box.replaceChildren(chosen);
+    return;
+  }
+
+  box.classList.remove('is-folded');
+
+  const frag=document.createDocumentFragment();
+
   const all=document.createElement('button');
+  all.type='button';
   all.className='filter-chip'+(!S.family?' chosen':'');
   all.textContent=`All ${total}`;
-  all.onclick=()=>{S.family='';renderFamilies();ensureVisibleSelection()};
+  all.onclick=()=>{
+    S.family='';
+    S.familyOpen=false;
+    renderFamilies();
+    ensureVisibleSelection();
+  };
   frag.append(all);
-  for(const [name,count]of rows){
+
+  for(const [name,count] of rows){
     const b=document.createElement('button');
+    b.type='button';
     b.className='filter-chip'+(S.family===name?' chosen':'');
-    b.textContent=`${name===GLOBAL_OTHER_FAMILY?'Other families':name} ${count}`;
-    b.onclick=()=>{S.family=S.family===name?'':name;renderFamilies();ensureVisibleSelection()};
+    b.textContent=`${familyDisplayName(name)} ${count}`;
+
+    b.onclick=()=>{
+      S.family=name;
+      S.familyOpen=false;
+      renderFamilies();
+      ensureVisibleSelection();
+    };
+
     frag.append(b);
   }
+
   box.replaceChildren(frag);
 }
 
@@ -682,23 +1178,28 @@ function saveCurrentComboFavorite(name){
   };
   if(same)Object.assign(same,entry);else comboFavorites.unshift(entry);
   saveComboFavorites();
-  S.catalogMode='favorites';
-  try{storageSet('skinViewerCatalogMode','favorites')}catch{}
-  renderSandboxBar();renderCatalogueUI();
+  renderSandboxBar();
+  renderComboShelf();
+  renderCatalogueUI();
 }
 function removeComboFavorite(id){
   comboFavorites=comboFavorites.filter(f=>f.id!==id);
-  saveComboFavorites();renderSandboxBar();if(S.catalogMode==='favorites')renderCatalogueUI();
+  saveComboFavorites();
+  renderSandboxBar();
+  renderComboShelf();
 }
 function applyComboFavorite(fav){
   const skin=skins.find(s=>s.id===fav.skinId);if(!skin)return;
   select(skin);
   S.dyes.clothing=resolveComboDye(fav.clothing);
   S.dyes.accessory=resolveComboDye(fav.accessory);
-  renderDyePanel();renderFrameState();
+  renderDyePanel();
+  renderFrameState();
+  renderComboShelf();
 }
 function makeFavoriteSkinThumb(s,size=44){
-  const frame=s?.frames?.find(f=>f.spriteAvailable&&f.rect);
+  /* The same pose as the catalogue's picture - standing, facing you - not whichever frame happens to come first. */
+  const frame=(s&&thumbFrame(s))||s?.frames?.find(f=>f.spriteAvailable&&f.rect);
   const c=document.createElement('canvas');c.width=c.height=size;c.className='favorite-skin-thumb';
   if(!frame)return c;
   const img=atlas(frame.atlas);
@@ -711,6 +1212,92 @@ function favoriteDyeSummary(dye,label){
   if(dye){row.append(makeDyeThumb(dye,24));const text=document.createElement('span');text.textContent=dye.id||label;row.append(text)}
   else row.textContent=`${label}: none`;
   return row;
+}
+function renderComboShelf(){
+  const shelf=$('comboShelf');
+  if(!shelf)return;
+
+  const frag=document.createDocumentFragment();
+  const currentSignature=currentComboSignature();
+
+  if(!comboFavorites.length){
+    const empty=document.createElement('div');
+    empty.className='combo-shelf-empty';
+    empty.textContent='No saved combos';
+    frag.append(empty);
+    shelf.replaceChildren(frag);
+    return;
+  }
+
+  for(const fav of comboFavorites){
+    const skin=skins.find(s=>s.id===fav.skinId);
+    const active=fav.signature===currentSignature;
+
+    /*
+     * One visual tile.
+     *
+     * The select button owns the complete visible card and its one border.
+     * Delete is only a quiet text control sitting in the reserved right
+     * gutter: no second box, no second background and no overlapping sprite.
+     */
+    const card=document.createElement('article');
+
+    card.className=
+      'combo-saved-card combo-saved-skin-only'
+      +(active?' current':'');
+
+    const select=document.createElement('button');
+    select.type='button';
+    select.className='combo-saved-select';
+
+    select.setAttribute(
+      'aria-pressed',
+      String(active)
+    );
+
+    select.setAttribute(
+      'aria-label',
+      `${active?'Selected':'Select'} saved combo ${fav.name}`
+    );
+
+    select.title=
+      `${fav.name} · ${skin?.id||fav.skinId}`;
+
+    const preview=document.createElement('span');
+    preview.className='combo-saved-preview';
+
+    preview.append(
+      makeFavoriteSkinThumb(skin,64)
+    );
+
+    select.append(preview);
+
+    select.onclick=()=>{
+      applyComboFavorite(fav);
+    };
+
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.className='combo-delete combo-delete-compact';
+
+    remove.textContent='×';
+    remove.title='Delete saved combo';
+
+    remove.setAttribute(
+      'aria-label',
+      `Delete saved combo ${fav.name}`
+    );
+
+    remove.onclick=event=>{
+      event.stopPropagation();
+      removeComboFavorite(fav.id);
+    };
+
+    card.append(select,remove);
+    frag.append(card);
+  }
+
+  shelf.replaceChildren(frag);
 }
 function renderFavoritesCatalogueUI(){
   const query=$('search').value.trim().toLowerCase();
@@ -741,13 +1328,688 @@ function renderFavoritesCatalogueUI(){
   }
   $('skins').replaceChildren(frag);
 }
-function renderCatalogueUI(){return S.catalogMode==='favorites'?renderFavoritesCatalogueUI():renderBrowseCatalogueUI()}
+/*
+ * PERF_V4_WINDOWED_CATALOGUES
+ *
+ * Keep only the rows around the scroll viewport mounted.
+ *
+ * Unlike the previous progressive renderer, scrolling through all 1,475
+ * skins does not eventually leave all 1,475 cards in the DOM. The scrollbar
+ * keeps representing the whole catalogue through two lightweight grid
+ * spacers while only visible rows plus an overscan remain real cards.
+ *
+ * Selection stays completely outside this system: mounted cards remain normal
+ * buttons, and makeSkinCatalogueCard / makeDyeCatalogueCard continue to read
+ * the current selected state when a row comes back into the window.
+ */
+const CATALOGUE_WINDOW_SAMPLE=96;
+const CATALOGUE_WINDOW_OVERSCAN_ROWS=8;
 
-function renderBrowseCatalogueUI(){const a=visibleSkins();$('count').textContent=`${a.length} skin${a.length===1?'':'s'}`;const frag=document.createDocumentFragment();for(const s of a){const b=document.createElement('button');b.className='skin card'+(s===S.skin?' chosen':'');b.append(makeSpriteThumb(s));const text=document.createElement('span');text.className='card-copy';const name=document.createElement('b');name.textContent=s.id;const meta=document.createElement('small');meta.textContent=`${s.className||'Unassigned'} · ${s.family||'Other'}`;text.append(name,meta);b.append(text);b.onclick=()=>select(s);frag.append(b)}$('skins').replaceChildren(frag)}
-function selectedDyeSlot(target){const d=S.dyes[target],b=document.createElement('button');b.className='dye-slot'+(S.dyeTarget===target?' active':'');b.dataset.target=target;if(d)b.append(makeDyeThumb(d,32));else{const blank=document.createElement('span');blank.className='empty-dye';blank.textContent='∅';b.append(blank)}const copy=document.createElement('span');copy.className='slot-copy';const title=document.createElement('b');title.textContent=target==='clothing'?'Clothing':'Accessory';const name=document.createElement('small');name.textContent=d?.id||'No dye';copy.append(title,name);b.append(copy);b.onclick=()=>{S.dyeTarget=target;S.dyeCategory='all';renderDyePanel()};return b}
-function categoryRows(){const target=S.dyeTarget,rows=[['all','All'],['colors','Colors'],['textiles','Textiles'],['animated','Animated']];return rows.map(([key,label])=>[key,label,filterDyes(dyes,target,'',key).length])}
-function renderDyePanel(){const slots=$('dyeSlots');slots.replaceChildren(selectedDyeSlot('clothing'),selectedDyeSlot('accessory'));const cats=$('dyeCategories'),frag=document.createDocumentFragment();for(const[key,label,count]of categoryRows()){const b=document.createElement('button');b.className='filter-chip'+(S.dyeCategory===key?' chosen':'');b.textContent=`${label} ${count}`;b.onclick=()=>{S.dyeCategory=key;renderDyePanel()};frag.append(b)}cats.replaceChildren(frag);const target=S.dyeTarget,a=filterDyes(dyes,target,$('dyeSearch').value,S.dyeCategory);$('dyeCount').textContent=`${a.length} ${target==='clothing'?'clothing':'accessory'} dyes`;const list=document.createDocumentFragment();for(const d of a){const b=document.createElement('button');b.className='dye card'+(S.dyes[target]===d?' chosen':'');b.append(makeDyeThumb(d));const text=document.createElement('span');text.className='card-copy';const name=document.createElement('b');name.textContent=d.id;const meta=document.createElement('small');meta.textContent=d.animation?`Animated · ${d.animation.type}`:d.kind==='textile'?'Textile':'Color';text.append(name,meta);b.append(text);if(d.color){const sw=document.createElement('span');sw.className='color-dot';sw.style.background=d.color;b.append(sw)}b.onclick=()=>{S.dyes[target]=S.dyes[target]===d?null:d;renderDyePanel();scheduleSelectedIndexPanel();};list.append(b)}$('dyeList').replaceChildren(list);$('clearDye').disabled=!S.dyes[target]}
+const catalogueWindows=new WeakMap();
+const catalogueWindowBoxes=new Set();
 
+function catalogueWindowSpacer(rows,state){
+  if(rows<=0)return null;
+
+  const spacer=document.createElement('div');
+
+  spacer.className='catalogue-window-spacer';
+  spacer.setAttribute('aria-hidden','true');
+
+  spacer.style.gridColumn='1 / -1';
+
+  /*
+   * A grid has no row-gap after its final row. Because this spacer represents
+   * N omitted real rows, remove one gap from its own height; the grid supplies
+   * the remaining gap between the spacer and the first/last mounted row.
+   */
+  spacer.style.height=
+    Math.max(
+      0,
+      rows*state.rowStep-state.rowGap
+    )+'px';
+
+  spacer.style.pointerEvents='none';
+
+  return spacer;
+}
+
+function measureCatalogueWindow(box,state){
+  const cards=[
+    ...box.children
+  ].filter(node=>node.classList?.contains('card'));
+
+  if(!cards.length){
+    state.columns=1;
+    state.rowGap=0;
+    state.rowStep=72;
+    return;
+  }
+
+  const style=getComputedStyle(box);
+  const rowGap=Math.max(
+    0,
+    Number.parseFloat(style.rowGap)
+      ||Number.parseFloat(style.gap)
+      ||0
+  );
+
+  /*
+   * Count the cards in the first real grid row. offsetTop reads layout here,
+   * but this measurement happens with at most a small window mounted rather
+   * than with the complete 1,475-card catalogue.
+   */
+  const firstTop=cards[0].offsetTop;
+
+  let columns=1;
+
+  while(
+    columns<cards.length
+    &&Math.abs(cards[columns].offsetTop-firstTop)<1
+  ){
+    columns++;
+  }
+
+  let rowStep=0;
+
+  if(cards.length>columns){
+    rowStep=
+      cards[columns].offsetTop
+      -firstTop;
+  }
+
+  if(!(rowStep>0)){
+    rowStep=
+      cards[0].offsetHeight
+      +rowGap;
+  }
+
+  state.columns=Math.max(1,columns);
+  state.rowGap=rowGap;
+  state.rowStep=Math.max(1,rowStep);
+}
+
+function renderCatalogueWindowNow(box,state,force=false){
+  if(
+    !state.ready
+    ||!state.items.length
+  )return;
+
+  const totalRows=Math.ceil(
+    state.items.length/state.columns
+  );
+
+  const viewportHeight=Math.max(
+    1,
+    state.viewportHeight
+      ||box.clientHeight
+      ||1
+  );
+
+  const firstVisibleRow=Math.max(
+    0,
+    Math.min(
+      totalRows-1,
+      Math.floor(box.scrollTop/state.rowStep)
+    )
+  );
+
+  const lastVisibleRow=Math.min(
+    totalRows,
+    Math.ceil(
+      (box.scrollTop+viewportHeight)
+      /state.rowStep
+    )
+  );
+
+  /*
+   * Do not rebuild the window for every single row of scrolling.
+   * As long as the visible area remains comfortably inside the mounted
+   * overscan, all existing DOM nodes stay exactly where they are.
+   */
+  const safe=Math.max(
+    2,
+    Math.floor(CATALOGUE_WINDOW_OVERSCAN_ROWS/2)
+  );
+
+  if(
+    !force
+    &&state.startRow>=0
+    &&firstVisibleRow>=state.startRow+safe
+    &&lastVisibleRow<=state.endRow-safe
+  ){
+    return;
+  }
+
+  const startRow=Math.max(
+    0,
+    firstVisibleRow-CATALOGUE_WINDOW_OVERSCAN_ROWS
+  );
+
+  const endRow=Math.min(
+    totalRows,
+    lastVisibleRow+CATALOGUE_WINDOW_OVERSCAN_ROWS
+  );
+
+  const startIndex=
+    startRow*state.columns;
+
+  const endIndex=Math.min(
+    state.items.length,
+    endRow*state.columns
+  );
+
+  if(
+    !force
+    &&startRow===state.startRow
+    &&endRow===state.endRow
+  )return;
+
+  const oldScroll=box.scrollTop;
+  const frag=document.createDocumentFragment();
+
+  const before=catalogueWindowSpacer(
+    startRow,
+    state
+  );
+
+  if(before)frag.append(before);
+
+  for(let i=startIndex;i<endIndex;i++){
+    frag.append(
+      state.makeCard(state.items[i],i)
+    );
+  }
+
+  const after=catalogueWindowSpacer(
+    totalRows-endRow,
+    state
+  );
+
+  if(after)frag.append(after);
+
+  box.replaceChildren(frag);
+
+  /*
+   * Browser scroll anchoring would otherwise try to compensate for us
+   * replacing omitted rows with the exact-height spacer.
+   */
+  box.scrollTop=oldScroll;
+
+  state.startRow=startRow;
+  state.endRow=endRow;
+
+  box.dataset.rendered=
+    `${startIndex}-${endIndex}`;
+
+  box.dataset.total=
+    String(state.items.length);
+}
+
+function scheduleCatalogueWindow(box){
+  const state=catalogueWindows.get(box);
+
+  if(
+    !state
+    ||!state.ready
+    ||state.scrollFrame
+  )return;
+
+  state.scrollFrame=requestAnimationFrame(()=>{
+    state.scrollFrame=0;
+    renderCatalogueWindowNow(box,state);
+  });
+}
+
+function refreshCatalogueWindow(box){
+  const state=catalogueWindows.get(box);
+
+  if(
+    !state
+    ||!state.ready
+    ||!state.items.length
+  )return;
+
+  const oldColumns=Math.max(1,state.columns);
+  const oldStep=Math.max(1,state.rowStep);
+
+  /*
+   * Preserve roughly the same first visible item if a draggable side panel
+   * changes the number of grid columns.
+   */
+  const anchorIndex=
+    Math.floor(box.scrollTop/oldStep)
+    *oldColumns;
+
+  const insideRow=
+    box.scrollTop%oldStep;
+
+  measureCatalogueWindow(box,state);
+
+  box.scrollTop=
+    Math.floor(anchorIndex/state.columns)
+    *state.rowStep
+    +Math.min(
+      insideRow,
+      Math.max(0,state.rowStep-1)
+    );
+
+  state.startRow=-1;
+  state.endRow=-1;
+  state.needsMeasure=false;
+
+  renderCatalogueWindowNow(
+    box,
+    state,
+    true
+  );
+}
+
+function scheduleCatalogueRefresh(box){
+  const state=catalogueWindows.get(box);
+
+  if(
+    !state
+    ||!state.ready
+    ||state.measureFrame
+  )return;
+
+  state.measureFrame=requestAnimationFrame(()=>{
+    state.measureFrame=0;
+
+    if(panelResizeActive){
+      state.needsMeasure=true;
+      return;
+    }
+
+    refreshCatalogueWindow(box);
+  });
+}
+
+function catalogueWindowState(box){
+  let state=catalogueWindows.get(box);
+
+  if(state)return state;
+
+  state={
+    items:[],
+    makeCard:null,
+
+    columns:1,
+    rowGap:0,
+    rowStep:72,
+
+    viewportHeight:0,
+    lastWidth:0,
+
+    startRow:-1,
+    endRow:-1,
+
+    scrollFrame:0,
+    measureFrame:0,
+
+    ready:false,
+    needsMeasure:false
+  };
+
+  catalogueWindows.set(box,state);
+  catalogueWindowBoxes.add(box);
+
+  box.style.overflowAnchor='none';
+
+  box.addEventListener(
+    'scroll',
+    ()=>{
+      scheduleCatalogueWindow(box);
+    },
+    {passive:true}
+  );
+
+  if(typeof ResizeObserver==='function'){
+    new ResizeObserver(entries=>{
+      const rect=entries?.[0]?.contentRect;
+
+      if(!rect)return;
+
+      state.viewportHeight=rect.height;
+
+      const changedWidth=
+        !state.lastWidth
+        ||Math.abs(rect.width-state.lastWidth)>=1;
+
+      state.lastWidth=rect.width;
+
+      if(!changedWidth)return;
+
+      if(panelResizeActive){
+        state.needsMeasure=true;
+        return;
+      }
+
+      scheduleCatalogueRefresh(box);
+    }).observe(box);
+  }
+
+  return state;
+}
+
+function refreshCatalogueWindows(){
+  for(const box of catalogueWindowBoxes){
+    const state=catalogueWindows.get(box);
+
+    if(!state?.ready)continue;
+
+    scheduleCatalogueRefresh(box);
+  }
+}
+
+function renderCatalogueWindow(box,items,makeCard){
+  const state=catalogueWindowState(box);
+
+  state.items=items;
+  state.makeCard=makeCard;
+
+  state.ready=false;
+  state.startRow=-1;
+  state.endRow=-1;
+
+  if(state.scrollFrame){
+    cancelAnimationFrame(state.scrollFrame);
+    state.scrollFrame=0;
+  }
+
+  box.scrollTop=0;
+  box.replaceChildren();
+
+  if(!items.length){
+    state.ready=true;
+    box.dataset.rendered='0-0';
+    box.dataset.total='0';
+    return;
+  }
+
+  /*
+   * Mount a small sample first solely to measure the real CSS grid geometry.
+   * No guessed card dimensions are used.
+   */
+  const sampleEnd=Math.min(
+    items.length,
+    CATALOGUE_WINDOW_SAMPLE
+  );
+
+  const sample=document.createDocumentFragment();
+
+  for(let i=0;i<sampleEnd;i++){
+    sample.append(
+      makeCard(items[i],i)
+    );
+  }
+
+  box.append(sample);
+
+  state.viewportHeight=
+    state.viewportHeight
+    ||box.clientHeight;
+
+  measureCatalogueWindow(box,state);
+
+  state.ready=true;
+
+  renderCatalogueWindowNow(
+    box,
+    state,
+    true
+  );
+}
+
+function makeSkinCatalogueCard(s){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='skin card'+(s===S.skin?' chosen':'');
+  b.dataset.skinId=s.id;
+
+  b.append(makeSpriteThumb(s,52));
+
+  const text=document.createElement('span');
+  text.className='card-copy';
+
+  const name=document.createElement('b');
+  name.textContent=s.id;
+
+  const meta=document.createElement('small');
+  meta.textContent=`${s.className||'Unassigned'} · ${s.family||'Other'}`;
+
+  text.append(name,meta);
+  b.append(text);
+
+  b.onclick=()=>select(s);
+
+  return b;
+}
+
+function syncSkinCatalogueSelection(){
+  const selected=S.skin?.id||'';
+
+  for(const card of root.querySelectorAll('#skins .skin.card')){
+    card.classList.toggle(
+      'chosen',
+      card.dataset.skinId===selected
+    );
+  }
+}
+
+function renderBrowseCatalogueUI(){
+  const list=visibleSkins();
+
+  $('count').textContent=
+    `${list.length} skin${list.length===1?'':'s'}`;
+
+  renderCatalogueWindow(
+    $('skins'),
+    list,
+    makeSkinCatalogueCard
+  );
+}
+
+function renderCatalogueUI(){
+  return renderBrowseCatalogueUI();
+}
+
+function selectedDyeSlot(target){
+  const d=S.dyes[target],b=document.createElement('button');
+  b.type='button';
+  b.className='dye-target-tab'+(S.dyeTarget===target?' active':'');
+  b.dataset.target=target;
+
+  const title=document.createElement('strong');
+  title.textContent=target==='clothing'?'Clothing':'Accessory';
+
+  const name=document.createElement('small');
+  name.textContent=d?.id||'None';
+
+  b.append(title,name);
+  b.onclick=()=>{
+    S.dyeTarget=target;
+    S.dyeCategory='all';
+    S.dyeCategoryOpen=true;
+    renderDyePanel();
+  };
+  return b;
+}
+function categoryRows(){
+  const target=S.dyeTarget;
+
+  return[
+    ['all','All',filterDyes(dyes,target,'','all').length],
+    ['colors','Colors',filterDyes(dyes,target,'','colors').length],
+    ['textiles','Textiles',filterDyes(dyes,target,'','textiles').length],
+    ['animated','Animated',filterDyes(dyes,target,'','animated').length]
+  ];
+}
+
+function renderDyeCategories(){
+  const cats=$('dyeCategories');
+  const rows=categoryRows();
+
+  if(!S.dyeCategoryOpen){
+    const selected=
+      rows.find(([key])=>key===S.dyeCategory)
+      ||rows[0];
+
+    const [,label,count]=selected;
+
+    const chosen=document.createElement('button');
+    chosen.type='button';
+    chosen.className='filter-choice-folded chosen';
+
+    const copy=document.createElement('span');
+    copy.className='filter-choice-copy';
+
+    const name=document.createElement('strong');
+    name.textContent=label;
+
+    const amount=document.createElement('small');
+    amount.textContent=`${count} dye${count===1?'':'s'}`;
+
+    copy.append(name,amount);
+
+    const change=document.createElement('em');
+    change.textContent='change';
+
+    chosen.append(copy,change);
+
+    /*
+     * Reopening never changes the current filter.
+     * It only reveals All / Colors / Textiles / Animated again.
+     */
+    chosen.onclick=()=>{
+      S.dyeCategory='all';
+      S.dyeCategoryOpen=true;
+      renderDyePanel();
+    };
+
+    cats.classList.add('is-folded');
+    cats.replaceChildren(chosen);
+    return;
+  }
+
+  cats.classList.remove('is-folded');
+
+  const frag=document.createDocumentFragment();
+
+  for(const [key,label,count] of rows){
+    const button=document.createElement('button');
+    button.type='button';
+    button.dataset.dyeCategory=key;
+
+    button.className=
+      'filter-chip'
+      +(S.dyeCategory===key?' chosen':'');
+
+    button.textContent=`${label} ${count}`;
+
+    button.onclick=()=>{
+      S.dyeCategory=key;
+      S.dyeCategoryOpen=false;
+      renderDyePanel();
+    };
+
+    frag.append(button);
+  }
+
+  cats.replaceChildren(frag);
+}
+function syncDyeCatalogueSelection(target=S.dyeTarget){
+  const selected=S.dyes[target]?.id||'';
+
+  for(const card of root.querySelectorAll('#dyeList .dye.card')){
+    card.classList.toggle(
+      'chosen',
+      card.dataset.dyeId===selected
+    );
+  }
+}
+
+function renderDyeSlots(){
+  const slots=$('dyeSlots');
+
+  slots.replaceChildren(
+    selectedDyeSlot('clothing'),
+    selectedDyeSlot('accessory')
+  );
+}
+
+function makeDyeCatalogueCard(d,target){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className=
+    'dye card'
+    +(S.dyes[target]===d?' chosen':'');
+
+  b.dataset.dyeId=d.id;
+
+  b.append(makeDyeThumb(d,46));
+
+  const text=document.createElement('span');
+  text.className='card-copy';
+
+  const name=document.createElement('b');
+  name.textContent=d.id;
+
+  const meta=document.createElement('small');
+  meta.textContent=d.animation
+    ?`Animated · ${d.animation.type}`
+    :d.kind==='textile'
+      ?'Textile'
+      :'Color';
+
+  text.append(name,meta);
+  b.append(text);
+  /* The colour is already the swatch beside the dye's picture: no second dot in the corner. */
+
+  b.onclick=()=>{
+    S.dyes[target]=S.dyes[target]===d
+      ?null
+      :d;
+
+    /*
+     * Selection changes only the selected state and the two slot summaries.
+     * The hundreds of dye cards stay exactly where they are.
+     */
+    renderDyeSlots();
+    syncDyeCatalogueSelection(target);
+    scheduleSelectedIndexPanel();
+    renderComboShelf?.();
+  };
+
+  return b;
+}
+
+function renderDyePanel(){
+  renderDyeSlots();
+  renderDyeCategories();
+
+  const target=S.dyeTarget;
+
+  const list=filterDyes(
+    dyes,
+    target,
+    $('dyeSearch').value,
+    S.dyeCategory
+  );
+
+  $('dyeCount').textContent=
+    `${list.length} ${target==='clothing'?'clothing':'accessory'} dyes`;
+
+  renderCatalogueWindow(
+    $('dyeList'),
+    list,
+    dye=>makeDyeCatalogueCard(dye,target)
+  );
+
+  $('clearDye').disabled=
+    !S.dyes[target];
+}
 /* V314_SELECTED_INDEX_SHORTCUTS: only the current skin + chosen dyes. */
 /*
  * What the index holds about the three things chosen right now.
@@ -760,7 +2022,31 @@ function renderDyePanel(){const slots=$('dyeSlots');slots.replaceChildren(select
  * record in the index - and it renders into a container view.html gives it.
  */
 function renderFrameState(){const f=current();$('missing').hidden=!!f?.spriteAvailable;$('name').textContent=S.skin?.id||'No skin';$('meta').textContent=S.skin&&f?`${S.skin.className||'Unassigned'} · ${S.skin.family||'Other'} · ${f.rect.w}×${f.rect.h}px${!f.maskAvailable?' · dye mask unavailable':''}`:'';scheduleSelectedIndexPanel();}
-function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
+function point(e){
+  /*
+   * Pointer events already give coordinates relative to the canvas target.
+   * During a separator drag ResizeObserver also gives us the live CSS size,
+   * so no getBoundingClientRect() / forced layout is necessary here.
+   */
+  const cssWide=Math.max(
+    1,
+    pendingStageSize?.width
+      ||canvas.width
+      ||1
+  );
+
+  const cssTall=Math.max(
+    1,
+    pendingStageSize?.height
+      ||canvas.height
+      ||1
+  );
+
+  return{
+    x:e.offsetX*canvas.width/cssWide,
+    y:e.offsetY*canvas.height/cssTall
+  };
+}
 function rememberPointer(e){const p=point(e);S.pointer=p;return p}
 function movementDirection(){let x=0,y=0;if(S.keys.has('ArrowLeft')||S.keys.has('KeyA'))x--;if(S.keys.has('ArrowRight')||S.keys.has('KeyD'))x++;if(S.keys.has('ArrowUp')||S.keys.has('KeyW'))y--;if(S.keys.has('ArrowDown')||S.keys.has('KeyS'))y++;if(x)return{raw:FACE_SIDE,left:x<0};if(y)return{raw:y<0?FACE_AWAY:FACE_YOU,left:false};return null}
 function applyFacing(d){if(!d)return false;const left=d.raw===FACE_SIDE?!!d.left:false,changed=d.raw!==S.facingRaw||left!==S.left;S.facingRaw=d.raw;S.left=left;return changed}
@@ -799,7 +2085,9 @@ function defaultScale(){
 function fitStage(){
   const box=$('stageBody');
   if(!box)return;
-  const r=box.getBoundingClientRect();
+  const r=pendingStageSize||box.getBoundingClientRect();
+  pendingStageSize=null;
+
   const wide=Math.max(200,Math.round(r.width)),tall=Math.max(160,Math.round(r.height));
   if(worldBg.width===wide&&worldBg.height===tall)return;
   /* However much ground was on screen, the same amount stays on screen. */
@@ -826,13 +2114,61 @@ function scheduleFitStage(){
     fitStage();
   });
 }
-if(typeof ResizeObserver==='function'){
-  new ResizeObserver(scheduleFitStage).observe($('stageBody'));
-}else window.addEventListener('resize',scheduleFitStage);
+const onStageResize=entries=>{
+  const r=entries?.[0]?.contentRect;
 
-renderClassPicker();renderFamilies();loadBeachArea();select(skins.find(s=>s.frames.some(f=>f.spriteAvailable))||skins[0]);renderDyePanel();renderSandboxBar();root.querySelectorAll('[data-world-mode]').forEach(button=>button.onclick=()=>setWorldMode(button.dataset.worldMode));setWorldMode(S.worldMode,true);fitStage();
-const attackSpeed=$('attackSpeed'),attackSpeedValue=$('attackSpeedValue');function renderAttackSpeed(){const period=attackPeriod();attackSpeed.value=String(S.attackSpeed);attackSpeedValue.textContent=`${RealmI18n.number(S.attackSpeed,{minimumFractionDigits:2,maximumFractionDigits:2})}× · ${RealmI18n.number(1000/period,{minimumFractionDigits:2,maximumFractionDigits:2})}/s`}renderAttackSpeed();attackSpeed.oninput=()=>{S.attackSpeed=Math.max(.25,Math.min(4,Number(attackSpeed.value)||1));storageSet('skinViewerAttackSpeed',String(S.attackSpeed));const now=performance.now();if(S.shooting){S.attackStart=now;S.nextShotAt=now}renderAttackSpeed()};
-$('search').oninput=()=>{renderCatalogueUI()};$('dyeSearch').oninput=renderDyePanel;$('clearDye').onclick=()=>{S.dyes[S.dyeTarget]=null;renderDyePanel();scheduleSelectedIndexPanel();};$('resetWorld').onclick=()=>{resetWorldMode();renderZoom()};
+  if(r){
+    pendingStageSize={
+      width:r.width,
+      height:r.height
+    };
+  }else{
+    pendingStageSize=null;
+  }
+
+
+  /*
+   * During a separator drag the browser already stretches the canvases
+   * visually. Their real pixel size is synchronized once at the end.
+   */
+  if(!panelResizeActive){
+    scheduleFitStage();
+  }
+};
+
+if(typeof ResizeObserver==='function'){
+  new ResizeObserver(onStageResize).observe($('stageBody'));
+}else{
+  window.addEventListener('resize',()=>{
+    pendingStageSize=null;
+    scheduleFitStage();
+  });
+}
+
+renderSkinFilterMode();renderClassPicker();renderFamilies();loadBeachArea();select(skins.find(s=>s.frames.some(f=>f.spriteAvailable))||skins[0]);renderCatalogueUI();renderDyePanel();renderSandboxBar();renderComboShelf();root.querySelectorAll('[data-world-mode]').forEach(button=>button.onclick=()=>setWorldMode(button.dataset.worldMode));setWorldMode(S.worldMode,true);fitStage();
+const attackSpeed=$('attackSpeed'),attackSpeedValue=$('attackSpeedValue');function renderAttackSpeed(){
+  if(
+    attackSpeed
+    &&root.activeElement!==attackSpeed
+  ){
+    attackSpeed.value=String(
+      S.attackSpeed
+    );
+  }
+
+  if(attackSpeedValue){
+    attackSpeedValue.textContent=
+      attackSpeedLabel();
+  }
+}renderAttackSpeed();attackSpeed.oninput=()=>{S.attackSpeed=Math.max(.25,Math.min(4,Number(attackSpeed.value)||1));storageSet('skinViewerAttackSpeed',String(S.attackSpeed));const now=performance.now();if(S.shooting){S.attackStart=now;S.nextShotAt=now}renderAttackSpeed()};
+$('search').oninput=()=>{renderCatalogueUI()};$('dyeSearch').oninput=renderDyePanel;$('clearDye').onclick=()=>{
+  S.dyes[S.dyeTarget]=null;
+  renderDyeSlots();
+  syncDyeCatalogueSelection();
+  $('clearDye').disabled=true;
+  scheduleSelectedIndexPanel();
+  renderComboShelf?.();
+};$('resetWorld').onclick=()=>{resetWorldMode();renderZoom()};
 canvas.addEventListener('pointermove',e=>{const p=point(e);if(S.shooting)aimAttackPoint(p);else S.pointer=p});canvas.addEventListener('pointerdown',e=>{canvas.focus();attack(e)});canvas.addEventListener('pointerup',releaseAttack);canvas.addEventListener('pointercancel',releaseAttack);canvas.addEventListener('wheel',zoomWheel,{passive:false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>setKey(e,true));window.addEventListener('keyup',e=>setKey(e,false));window.addEventListener('blur',()=>{S.keys.clear();S.shooting=false;S.attackUntil=0;applyMovementFacing();syncActivity(performance.now(),true)});
 function referenceBodyWidth(){const f=current();if(!f)return 8;const set=S.seq?.set??0,dir=S.seq?.directionRaw??S.facingRaw,pool=S.skin?.sequences||[];for(const actionRaw of[0,1]){const q=pool.find(q=>q.set===set&&q.actionRaw===actionRaw&&q.directionRaw===dir&&q.frames.some(f=>f.spriteAvailable));const widths=q?.frames.filter(f=>f.spriteAvailable&&f.rect?.w).map(f=>f.rect.w)||[];if(widths.length)return Math.min(...widths)}return Math.min(f.rect.w,f.rect.h)||f.rect.w||8}
@@ -857,7 +2193,7 @@ function tick(now){
   previous=now;
   if(!host.closest('[hidden]')){
     updateMovement(dt);
-    if(S.skin!==S.rateSkin){S.rateSkin=S.skin;try{renderAttackSpeed()}catch{}}
+
     updateProjectiles(dt,now);
     drawRealmWorld(now);
     if(!S.shooting&&S.attackUntil&&now>=S.attackUntil){

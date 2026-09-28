@@ -253,6 +253,602 @@ assert(/y<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
     'the viewer must list only what it has frames for');
 }
 
+/*
+ * The reworked browser gives the catalogue room instead of permanently
+ * stacking both ways of filtering it.
+ */
+{
+  const markup = fs.readFileSync(path.join(root, 'web/skins/view.html'), 'utf8');
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  assert(markup.includes('data-skin-filter-mode="class"')
+    && markup.includes('data-skin-filter-mode="family"'),
+  'the skin browser must explicitly choose Class or Family');
+
+  assert(viewerSource.includes("skinViewerSkinFilterMode")
+    && viewerSource.includes("function setSkinFilterMode(mode)"),
+  'the chosen skin browsing mode must be stateful');
+
+  assert(markup.includes('id="dyeSlots" class="dye-target-switch"')
+    && viewerSource.includes("className='dye-target-tab'"),
+  'Clothing and Accessory must be explicit alternate dye targets');
+
+  assert(style.includes('#skins.browse-grid')
+    && style.includes('#dyeList.browse-grid'),
+  'skins and dyes must keep the gallery layout that gives choices more room');
+}
+
+/*
+ * Rework V2: browse choices collapse after selection, SET comes from the
+ * client's actual equipment-set relation, and either browser can temporarily
+ * borrow width from the sandbox.
+ */
+{
+  const markup = fs.readFileSync(path.join(root, 'web/skins/view.html'), 'utf8');
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  const setSkins = catalogue.skins.filter(one =>
+    Array.isArray(one.sets) && one.sets.length
+  );
+
+  assert(setSkins.length > 0,
+    'the catalogue must contain skins granted by complete equipment sets');
+
+  assert(viewerSource.includes("const SET_FAMILY='__set__'")
+    && viewerSource.includes("familyDisplayName(name)")
+    && viewerSource.includes("if(name===SET_FAMILY)return'SET'"),
+  'SET must be a dedicated family backed by set relations');
+
+  assert(viewerSource.includes('familyOpen:true')
+    && viewerSource.includes('dyeCategoryOpen:true')
+    && style.includes('.filter-choice-folded'),
+  'Family and Dye Type choices must collapse after selection');
+
+}
+
+/*
+ * Rework V3: Saved combos are a permanent shelf, not an alternate catalogue.
+ */
+{
+  const markup = fs.readFileSync(path.join(root, 'web/skins/view.html'), 'utf8');
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  assert(!markup.includes('data-catalog-mode="favorites"')
+    && !markup.includes('id="favoriteCount"'),
+  'Saved combos must not replace the skin catalogue');
+
+  assert(markup.includes('id="comboShelf"')
+    && markup.includes('id="comboCount"')
+    && /function\s+renderComboShelf\s*\(\s*\)/.test(viewerSource)
+    && /function\s+renderCatalogueUI\s*\(\s*\)\s*\{\s*return\s+renderBrowseCatalogueUI\s*\(\s*\)\s*;?\s*\}/s.test(viewerSource),
+  'saved combos must live in their own permanent shelf');
+
+  }
+
+/*
+ * Expansion is sticky and explicit: only its own handle closes a browser.
+ */
+{
+}
+
+/*
+ * Side browsers use the same interaction as Atlas: their shared boundary is
+ * draggable, both widths are independent, and double-click restores default.
+ */
+{
+  const markup = fs.readFileSync(path.join(root, 'web/skins/view.html'), 'utf8');
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  assert(markup.includes('id="skinResizeGrip"')
+    && markup.includes('id="dyeResizeGrip"')
+    && !markup.includes('id="expandSkins"')
+    && !markup.includes('id="expandDyes"'),
+  'skin and dye browsers must use draggable borders, not arrow buttons');
+
+  assert(viewerSource.includes("bindPanelResize($('skinResizeGrip'),'skins',1)")
+    && viewerSource.includes("bindPanelResize($('dyeResizeGrip'),'dyes',-1)")
+    && viewerSource.includes('setPointerCapture(event.pointerId)')
+    && viewerSource.includes("addEventListener('pointermove'")
+    && viewerSource.includes("addEventListener('dblclick'"),
+  'both browser boundaries must drag independently and reset on double-click');
+
+  assert(viewerSource.includes('skinViewerSkinsPanelWidth')
+    && viewerSource.includes('skinViewerDyesPanelWidth'),
+  'chosen browser widths must survive a reload');
+
+  assert(style.includes('.panel-resize-grip')
+    && style.includes('cursor: col-resize')
+    && style.includes('--skin-browser-width')
+    && style.includes('--dye-browser-width'),
+  'the resize boundary must expose the Atlas-style resize interaction');
+}
+
+/*
+ * Saved combos are direct choices: clicking the card applies it. Selection is
+ * visual only; Use / Current buttons are deliberately absent.
+ */
+{
+  {
+  const comboClickStart=viewerSource.indexOf(
+    'function renderComboShelf(){'
+  );
+
+  const comboClickEnd=viewerSource.indexOf(
+    '\nfunction renderFavoritesCatalogueUI(){',
+    comboClickStart
+  );
+
+  const comboShelfSource=viewerSource.slice(
+    comboClickStart,
+    comboClickEnd
+  );
+
+  assert(
+    comboClickStart>=0
+      &&comboShelfSource.includes(
+        "select.className='combo-saved-select'"
+      )
+      &&comboShelfSource.includes(
+        'select.onclick=()=>{'
+      )
+      &&comboShelfSource.includes(
+        'applyComboFavorite(fav);'
+      ),
+    'clicking a saved combo skin must apply that combo'
+  );
+}
+
+  const comboStart = viewerSource.indexOf('function renderComboShelf(){');
+  const comboEnd = viewerSource.indexOf('\nfunction renderFavoritesCatalogueUI(){', comboStart);
+  const comboSource = viewerSource.slice(comboStart, comboEnd);
+
+  assert(!comboSource.includes("textContent=active?'Current':'Use'")
+    && !comboSource.includes("textContent='Use'")
+    && !comboSource.includes("textContent='Current'"),
+  'saved combos must not expose Use or Current buttons');
+}
+
+/*
+ * Class and Family are independent browse memories.
+ * Switching mode must not reset either to All; only the active mode filters.
+ */
+{
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  const modeStart = viewerSource.indexOf('function setSkinFilterMode(mode){');
+  const modeEnd = viewerSource.indexOf(
+    "\nfor(const button of root.querySelectorAll('[data-skin-filter-mode]'))",
+    modeStart
+  );
+  const modeSource = viewerSource.slice(modeStart, modeEnd);
+
+  assert(modeStart >= 0
+    && !modeSource.includes("S.className=''")
+    && !modeSource.includes("S.family=''"),
+  'switching Class / Family must preserve the previous selection of each mode');
+
+  const visibleStart = viewerSource.indexOf('function visibleSkins(){');
+  const visibleEnd = viewerSource.indexOf(
+    '\nfunction ensureVisibleSelection()',
+    visibleStart
+  );
+  const visibleSource = viewerSource.slice(visibleStart, visibleEnd);
+
+  assert(visibleSource.includes("if(S.skinFilterMode==='class')")
+    && visibleSource.includes("if(!S.family)return true"),
+  'only the active Class or Family browse mode may filter skins');
+
+  assert(viewerSource.includes('const pool=skins;'),
+  'Family counts must not be narrowed by an inactive remembered Class');
+
+  assert(style.includes(
+    'var(--skin-browser-width, clamp(260px, 28.5vw, 620px))'
+  ) && style.includes(
+    'var(--dye-browser-width, clamp(260px, 28.5vw, 620px))'
+  ),
+  'fullscreen default must give both catalogues roughly 29% of the viewer');
+
+  assert(viewerSource.includes('skinViewerSkinsPanelWidthV2')
+    && viewerSource.includes('skinViewerDyesPanelWidthV2'),
+  'the new default widths must not be hidden by widths saved by the old prototype');
+}
+
+/*
+ * Filter controls use full-width themed boxes. Dye Type always exposes All
+ * when reopened and consumes the complete width of its rail.
+ */
+{
+  const markup = fs.readFileSync(path.join(root, 'web/skins/view.html'), 'utf8');
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  assert(markup.includes('class="filter-box skin-browse-box"')
+    && markup.includes('class="filter-box dye-target-box"')
+    && markup.includes('class="filter-box dye-type-box"'),
+  'browse filters must use the viewer theme box hierarchy');
+
+  assert(viewerSource.includes("['all','All'")
+    && viewerSource.includes("['colors','Colors'")
+    && viewerSource.includes("['textiles','Textiles'")
+    && viewerSource.includes("['animated','Animated'"),
+  'reopening Dye Type must always expose All and every subtype');
+
+  assert(style.includes(
+    '.dye-type-box #dyeCategories:not(.is-folded)'
+  ) && style.includes(
+    'repeat(4, minmax(0, 1fr))'
+  ),
+  'Dye Type choices must use the complete available row');
+}
+
+/*
+ * Opening a folded chooser means choosing again from All.
+ */
+{
+  assert(viewerSource.includes("S.className='';")
+    && viewerSource.includes("S.family='';")
+    && viewerSource.includes("S.dyeCategory='all';"),
+  'Change controls must return Class, Family and Dye Type to All');
+}
+
+/*
+ * Catalogue rendering stays on the normal DOM path.
+ *
+ * Selecting a skin or dye must update state without rebuilding hundreds of
+ * catalogue cards. Filter/search changes are what rebuild a catalogue.
+ */
+{
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  assert(!viewerSource.includes('renderVirtualGrid(')
+    && !viewerSource.includes('renderProgressiveGrid(')
+    && !viewerSource.includes('CATALOGUE_BATCH_SIZE'),
+  'experimental virtual/progressive catalogue engines must stay out of the mount path');
+
+  assert(viewerSource.includes('function syncSkinCatalogueSelection()')
+    && viewerSource.includes('function syncDyeCatalogueSelection('),
+  'skin and dye selection must update existing cards');
+
+  const selectStart=viewerSource.indexOf('function select(s){');
+  const selectEnd=viewerSource.indexOf('\nfunction current(){',selectStart);
+  const selectSource=viewerSource.slice(selectStart,selectEnd);
+
+  assert(selectSource.includes('syncSkinCatalogueSelection()')
+    && !selectSource.includes('renderCatalogueUI()'),
+  'selecting one skin must not rebuild the complete skin catalogue');
+
+  assert(
+  /renderCatalogueWindow\s*\(\s*\$\(['"]skins['"]\)/s.test(viewerSource)
+    && /renderCatalogueWindow\s*\(\s*\$\(['"]dyeList['"]\)/s.test(viewerSource),
+  'both catalogues must use the capped windowed DOM rendering path'
+);
+
+  assert(
+  !style.includes('content-visibility: auto')
+    && /#skins\s*,\s*#dyeList\s*\{\s*contain\s*:\s*layout\s*;\s*\}/s.test(style),
+  'catalogues should use one layout containment boundary per list'
+);
+}
+
+/*
+ * Clothing and Accessory can be cleared directly from Index · Selected.
+ */
+{
+  const style = fs.readFileSync(path.join(root, 'web/skins/style.css'), 'utf8');
+
+  const selectedStart = viewerSource.indexOf('function v314SelectedCard(');
+  const selectedEnd = viewerSource.indexOf(
+    '\nfunction renderSelectedIndexPanel()',
+    selectedStart
+  );
+  const selectedSource = viewerSource.slice(selectedStart, selectedEnd);
+
+  assert(selectedSource.includes(
+      "if(kind==='clothing'||kind==='accessory')"
+    )
+    && selectedSource.includes("S.dyes[kind]=null")
+    && selectedSource.includes("remove.className='chosen-remove'")
+    && selectedSource.includes("remove.textContent='Remove'"),
+  'Index selected Clothing and Accessory cards must expose Remove');
+
+  assert(selectedSource.includes('renderDyeSlots?.()')
+    && selectedSource.includes('syncDyeCatalogueSelection?.()')
+    && selectedSource.includes('renderComboShelf?.()'),
+  'removing a selected dye must update the viewer state without rebuilding the catalogue');
+
+  assert(style.includes('.chosen-remove'),
+  'the selected dye remove action must use the viewer theme');
+}
+
+/*
+ * PERF V3: large catalogues are appended in stable groups of 96.
+ *
+ * Cards already on screen are never virtualized away. Selection therefore
+ * stays independent from catalogue loading.
+ */
+{
+
+
+  const selectStart=viewerSource.indexOf('function select(s){');
+  const selectEnd=viewerSource.indexOf(
+    '\nfunction current(){',
+    selectStart
+  );
+  const selectSource=viewerSource.slice(selectStart,selectEnd);
+
+  }
+
+/*
+ * The Remove action styling must never leak onto skin catalogue cards.
+ */
+{
+  const style = fs.readFileSync(
+    path.join(root, 'web/skins/style.css'),
+    'utf8'
+  );
+
+  assert(
+    !/#skins\s+\.skin\.card\s*,\s*#dyeList\s+\.dye\.card[\s\S]{0,180}\.chosen-remove\s*\{/s.test(style),
+    'chosen-remove styling must not leak onto skin cards'
+  );
+
+  assert(
+    /\/\*\s*Remove a selected Clothing \/ Accessory dye directly from Index · Selected\.\s*\*\/\s*\.chosen-remove\s*\{/s.test(style),
+    'chosen-remove must remain a standalone control style'
+  );
+}
+
+
+/*
+ * The remove-dye button style must never leak onto the skin/dye catalogue cards.
+ */
+{
+  const style = fs.readFileSync(
+    path.join(root, 'web/skins/style.css'),
+    'utf8'
+  );
+
+  assert(
+    !/#skins\s+\.skin\.card\s*,\s*#dyeList\s+\.dye\.card[\s\S]{0,220}\.chosen-remove\s*\{/s.test(style),
+    'chosen-remove styling must not leak onto catalogue cards'
+  );
+
+  assert(
+    /\/\*\s*Remove a selected Clothing \/ Accessory dye directly from Index · Selected\.\s*\*\/\s*\.chosen-remove\s*\{/s.test(style),
+    'chosen-remove must stay a standalone control style'
+  );
+}
+
+
+/*
+ * Centre column hierarchy:
+ * selected Index first, Saved combos second, sandbox third.
+ */
+{
+  const markup = fs.readFileSync(
+    path.join(root, 'web/skins/view.html'),
+    'utf8'
+  );
+
+  const selectedAt=markup.indexOf(
+    'id="selectedIndex"'
+  );
+
+  const comboAt=markup.indexOf(
+    'class="combo-workbench combo-workbench-top"'
+  );
+
+  const stageAt=markup.indexOf(
+    'class="stage-body"'
+  );
+
+  assert(
+    selectedAt>=0
+      &&comboAt>=0
+      &&stageAt>=0
+      &&selectedAt<comboAt
+      &&comboAt<stageAt,
+    'Index selected must appear above Saved combos and the sandbox'
+  );
+
+  assert(
+    viewerSource.includes(
+      'makeFavoriteSkinThumb(skin,64)'
+    ),
+    'Saved combo skins must use a large recognizable thumbnail'
+  );
+}
+
+/*
+ * Saved combo controls must not overlap: the skin selection button and
+ * deletion action occupy separate grid columns.
+ */
+{
+  const style = fs.readFileSync(
+    path.join(root, 'web/skins/style.css'),
+    'utf8'
+  );
+
+  const comboStart=viewerSource.indexOf(
+    'function renderComboShelf(){'
+  );
+
+  const comboEnd=viewerSource.indexOf(
+    '\nfunction renderFavoritesCatalogueUI(){',
+    comboStart
+  );
+
+  const comboSource=viewerSource.slice(
+    comboStart,
+    comboEnd
+  );
+
+  assert(
+    comboSource.includes(
+      "select.className='combo-saved-select'"
+    )
+      &&comboSource.includes(
+        "remove.className='combo-delete combo-delete-compact'"
+      )
+      &&comboSource.includes(
+        'card.append(select,remove)'
+      ),
+    'Saved combo select and delete controls must be separate elements'
+  );
+
+  }
+
+/*
+ * Saved combos have exactly one interaction frame: the skin-select button.
+ * The article wrapper and sprite preview must not add competing outlines.
+ */
+{
+  const style = fs.readFileSync(
+    path.join(root, 'web/skins/style.css'),
+    'utf8'
+  );
+
+
+  }
+
+/*
+ * Saved combo final visual model: one complete selectable tile.
+ */
+{
+  const style=fs.readFileSync(
+    path.join(root,'web/skins/style.css'),
+    'utf8'
+  );
+
+  const comboStart=viewerSource.indexOf(
+    'function renderComboShelf(){'
+  );
+
+  const comboEnd=viewerSource.indexOf(
+    '\nfunction renderFavoritesCatalogueUI(){',
+    comboStart
+  );
+
+  const comboSource=viewerSource.slice(
+    comboStart,
+    comboEnd
+  );
+
+  assert(
+    comboSource.includes(
+      "select.className='combo-saved-select'"
+    )
+      &&comboSource.includes(
+        "remove.className='combo-delete combo-delete-compact'"
+      )
+      &&comboSource.includes(
+        'card.append(select,remove)'
+      ),
+    'Saved combo tile must keep select and delete as sibling controls'
+  );
+
+  assert(
+    style.includes(
+      'padding: 5px 17px 5px 5px'
+    )
+      &&style.includes(
+        '.combo-saved-card.current .combo-saved-select'
+      )
+      &&style.includes(
+        '.combo-saved-card:has(.combo-delete-compact:hover) .combo-saved-select'
+      ),
+    'Saved combo must use one complete selectable outline'
+  );
+}
+
+/*
+ * Saved combo has one visual interaction frame, on the outer article.
+ */
+{
+  const style = fs.readFileSync(
+    path.join(root, 'web/skins/style.css'),
+    'utf8'
+  );
+
+  assert(
+    style.includes('FINAL_COMBO_SINGLE_OUTER_FRAME')
+      && style.includes(
+        '.combo-workbench-top .combo-saved-card.combo-saved-skin-only:hover'
+      ),
+    'Saved combo hover frame must belong to the outer combo'
+  );
+
+  assert(
+    style.includes('border: 0 !important;')
+      && style.includes('background: transparent !important;'),
+    'Saved combo inner skin must remain frameless'
+  );
+}
+
+/*
+ * Current catalogue implementation is V4 capped windowing.
+ */
+{
+  assert(
+    viewerSource.includes(
+      'const CATALOGUE_WINDOW_OVERSCAN_ROWS=8'
+    )
+      && viewerSource.includes(
+        'function renderCatalogueWindow('
+      ),
+    'large catalogues must use V4 capped windowing'
+  );
+}
+
+/*
+ * Attack speed is a viewer-wide multiplier. Changing skins/classes/sets may
+ * change projectile visuals, but never the firing period represented by the
+ * slider.
+ */
+{
+  const periodStart=viewerSource.indexOf(
+    'function attackPeriod(){'
+  );
+
+  const periodEnd=viewerSource.indexOf(
+    '\nfunction attackShotsPerSecond(){',
+    periodStart
+  );
+
+  const periodSource=viewerSource.slice(
+    periodStart,
+    periodEnd
+  );
+
+  assert(
+    periodStart>=0
+      &&periodSource.includes(
+        'ATTACK_PERIOD_MS/attackSpeedMultiplier()'
+      )
+      &&!periodSource.includes(
+        'combatWeaponShots'
+      )
+      &&!periodSource.includes(
+        'baseAttackRate'
+      ),
+    'Attack period must be independent from selected skin weapon rate'
+  );
+
+  assert(
+    !viewerSource.includes(
+      'function baseAttackRate()'
+    )
+      &&!viewerSource.includes(
+        'S.rateSkin'
+      ),
+    'Skin changes must not alter or refresh attack cadence'
+  );
+
+  assert(
+  /attackSpeedValue\.textContent\s*=\s*attackSpeedLabel\s*\(\s*\)\s*;?/s.test(viewerSource),
+  'Attack speed UI must use the same cadence calculation as shooting'
+);
+}
+
 console.log('Skin Viewer: ' + catalogue.skins.length + ' skins and '
   + dyeCatalogue.dyes.length + ' dyes projected from the index, of which '
   + catalogue.skins.filter(one => one.drawn).length
