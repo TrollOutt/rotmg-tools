@@ -299,6 +299,48 @@
     tint.setAttribute('fill', 'rgb(' + color.hi + ')');
     tint.setAttribute('fill-opacity', String(chosen.tint / 100));
     tint.style.mixBlendMode = 'color';
+    /*
+     * Once the picture has been made with its veil and colour already in it,
+     * the pattern is that one picture and nothing else. The bands are painted
+     * again on every frame a module is opening or closing, and a colour
+     * blended in there was an extra layer composed for each of the six on
+     * every one of those frames.
+     */
+    const ready = baked(picture, color);
+    image.setAttribute('href', ready || pictureUrl(picture.key));
+    for (const rect of [ringParts.veil, tint]) rect.style.display = ready ? 'none' : '';
+  }
+  /* The ring's picture with its veil and colour painted in, made once per choice (the same blending, done by a canvas). */
+  let bake = { key: '', url: '' }, baking = 0;
+  function baked(picture, color) {
+    const key = picture.key + '|' + color.hi + '|' + chosen.tint;
+    if (bake.key === key) return bake.url;
+    clearTimeout(baking);
+    baking = setTimeout(() => {
+      const source = new Image();
+      source.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = source.naturalWidth;
+          canvas.height = source.naturalHeight;
+          const pen = canvas.getContext('2d');
+          pen.drawImage(source, 0, 0);
+          pen.fillStyle = 'rgb(0 0 0 / .22)';
+          pen.fillRect(0, 0, canvas.width, canvas.height);
+          pen.globalCompositeOperation = 'color';
+          pen.fillStyle = 'rgb(' + color.hi + ' / ' + (chosen.tint / 100) + ')';
+          pen.fillRect(0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => {
+            if (!blob) return;
+            if (bake.url) URL.revokeObjectURL(bake.url);
+            bake = { key, url: URL.createObjectURL(blob) };
+            ringFit();
+          }, 'image/png');
+        } catch (_) { /* a picture the canvas may not read (a file opened from disk): the blended layers stay */ }
+      };
+      source.src = pictureUrl(picture.key);
+    }, 150);
+    return null;
   }
 
   /* ---------------- applying a choice ---------------- */

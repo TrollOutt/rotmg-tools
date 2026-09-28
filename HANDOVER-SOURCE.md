@@ -30,6 +30,14 @@ overwrite Theory Crafting independently. A build without `--sprites` retains
 existing rectangles for matching record ids. No picture means a fallback icon,
 not a missing item. No installed client is needed to project data or build the site.
 
+The Index card's extras are the one step of `npm run scrape` that needs the
+installed client as well as `client-data/`: `npm run index-extras`
+(`tools/build-index-extras.js`) writes the forge data, the projectiles each item
+fires, the loot bag, forge and family icons into `web/assets/index/`. It runs
+after the Index is published and before the projections, so it is never left
+out of a client update. `tests/index-extras.test.js` fails when those files and
+the Index disagree, for example a new weapon with no projectile.
+
 The index holds `records`, ordered record-id lists in `views.theory`, and the
 four text tools' structured `catalogues`. The latter preserve their existing
 folding, spelling and ordering rules. `index-model.js` translates the distinct

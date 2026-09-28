@@ -7,6 +7,7 @@
     font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; color: #7b8496; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
   canvas.drag { cursor: grabbing; }
+  #sky { pointer-events: none; }
   #seen { color: #8b96ab; }
   #seen i { font-style: normal; opacity: .6; }
   #seen b { font-size: 14px; font-weight: 650; color: #e8eef8;
@@ -25,7 +26,7 @@
      hidden from the first frame of a document that may be in a background tab
      for the next ten minutes. What is switched on is already the right size,
      so there is nothing anybody would have wanted to ease. */
-  body.unheard #map { opacity: 0; }
+  body.unheard #map, body.unheard #sky { opacity: 0; }
   body.bare #chat, body.bare #knobs, body.bare #panel,
   body.bare #bench { display: none !important; }
   /*
@@ -306,6 +307,8 @@
   @media (prefers-reduced-motion: reduce) { .art.runs { animation: none; } }
 </style>
 <canvas id="map"></canvas>
+<!-- The weather, on its own glass over the map: see "frontResting" in frame(). -->
+<canvas id="sky" aria-hidden="true"></canvas>
 <aside id="panel"><div id="panelGrip" title="drag to widen · double-click to reset"></div><button class="shut" id="shut" title="close">×</button><div id="panelBody"></div></aside>
 <div id="chat"></div>
 <button id="skyKnob" type="button" aria-pressed="false" aria-label="Hide the clouds" title="Hide the clouds" hidden><span class="cloud-art struck" aria-hidden="true"></span></button>
@@ -415,6 +418,8 @@ function ensureCombat() {
 
 const canvas = document.getElementById('map');
 let ctx = canvas.getContext('2d', { alpha: false });
+const skyCanvas = document.getElementById('sky');
+const skyCtx = skyCanvas.getContext('2d');
 const whereAt = document.getElementById('where');
 const zoneAt = document.getElementById('zone');
 const countAt = document.getElementById('count');
@@ -503,7 +508,12 @@ function size() {
     canvas.width = wide;
     canvas.height = tall;
   }
+  if (skyCanvas.width !== wide || skyCanvas.height !== tall) {
+    skyCanvas.width = wide;
+    skyCanvas.height = tall;
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  skyCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return atlasSizeObserver
     ? {
         w: atlasCssSize.w,
@@ -7075,6 +7085,21 @@ window.addEventListener('message', event => {
  * frame that is not due is dropped before anything is drawn.
  */
 let pace = 0;                            // milliseconds between frames
+/*
+ * frontResting: the world standing on the front page, neither chosen nor moving.
+ *
+ * All that moves there is the weather - the clouds going over, a few birds,
+ * the hands - and the rest of the picture (space, the ball, its names) holds
+ * still. So resting, the map is painted only when what it shows has changed
+ * (where the camera is, how close, the window's size, what is lit), and once a
+ * second besides for whatever has arrived since; the weather is painted on
+ * every frame, on a glass of its own over it. Painting the whole ball again on
+ * every frame to move the clouds across it was most of what the front page
+ * cost a slow graphics card. Anything else - chosen, opening out, zooming -
+ * paints everything on every frame, the way it always has.
+ */
+let frontResting = false;
+let baseKey = '', baseAt = -1e9, baseKept = null, skyOnGlass = false;
 let drawnAt = -1e9;
 let frameClock = 0;
 
@@ -7136,9 +7161,37 @@ window.addEventListener('message', event => {
   pace = said.pace === 'still'
     ? Infinity
     : 12;
+  /* 'slow' is the world on the front page, not chosen and not moving. */
+  frontResting = said.pace === 'slow';
   if (frameWanted()) startFrame();
   else stopFrame();
 });
+
+/*
+ * The weather: the clouds, the birds under them and the hands over them, in
+ * that order. On the map itself when everything is painted each frame; on
+ * the glass over it while resting, the glass cleared first. The glass is
+ * cleared once more when it stops being used, so no cloud is left on it.
+ */
+function paintWeather(box, now, delta, onGlass) {
+  if (onGlass || skyOnGlass) {
+    skyCtx.save();
+    skyCtx.setTransform(1, 0, 0, 1, 0, 0);
+    skyCtx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
+    skyCtx.restore();
+    skyOnGlass = onGlass;
+  }
+  const real = ctx;
+  if (onGlass) ctx = skyCtx;
+  const weatherOn = skyShown();
+  tellSky();
+  if (weatherOn) stepSky(delta, box);
+  stepBirds(delta);
+  drawBirds(box);
+  if (weatherOn) drawSky(box, now);
+  drawOryxHands(box, now);
+  ctx = real;
+}
 
 function frame(now) {
   frameClock = 0;
@@ -7198,6 +7251,17 @@ function frame(now) {
   keepInSight(box, delta);
   unwindTurn(delta);
   warmAhead(box);
+  const glass = frontResting && !tilting();
+  const key = glass ? [Math.round(view.x * 8), Math.round(view.y * 8), Math.round(view.scale * 4096),
+    box.w, box.h, screenDpr(), hovered, chosen, hoveredBeacon ? 1 : 0, TUNE.turn, tripFor > 0 ? 1 : 0, settleFor].join() : '';
+  if (glass && key === baseKey && now - baseAt < 1000 && baseKept) {
+    stepWorld(delta);
+    stepChat(delta);
+    paintWeather(box, now, delta, true);
+    return;
+  }
+  baseKey = key;
+  baseAt = now;
   ctx.fillStyle = '#070a10';
   ctx.fillRect(0, 0, box.w, box.h);
   drawSpace(box, now);
@@ -7226,13 +7290,8 @@ function frame(now) {
   const marks = drawLandmarks(box);
   drawBeacons(box, now);
   drawNames(box);
-  const weatherOn = skyShown();
-  tellSky();
-  if (weatherOn) stepSky(delta, box);
-  stepBirds(delta);
-  drawBirds(box);
-  if (weatherOn) drawSky(box, now);
-  drawOryxHands(box, now);
+  baseKept = { ground, living, marks };
+  paintWeather(box, now, delta, glass);
 
   if (pointer) {
     const t = toTile(pointer.x, pointer.y, box);
