@@ -776,6 +776,8 @@ carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'sk
 fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));
 fs.copyFileSync(path.join(web, 'i18n.js'), path.join(pagesDir, 'i18n.js'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
+// The creatures' walking loops, which an Index card fetches by their index.json.
+carryAcross(path.join(web, 'assets', 'realm-monster-animations'), path.join(pagesDir, 'assets', 'realm-monster-animations'));
 // The stone the boxes are laid on by default: five small pictures, one per shape of box.
 carryAcross(path.join(web, 'assets', 'ui'), path.join(pagesDir, 'assets', 'ui'));
 fs.mkdirSync(path.join(pagesDir, 'assets', 'theory'), { recursive: true });
