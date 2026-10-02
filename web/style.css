@@ -1973,6 +1973,17 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   background: rgb(var(--chip-rgb) / .8); border: 1px solid var(--line); border-radius: var(--radius-sm);
 }
 
+/* The characters being swept: the calculator's tabs, renamable in place. */
+.fame-tab.is-renaming { padding: 4px 6px; cursor: text; }
+.fame-tab-name {
+  width: 15ch; font: inherit; font-size: 12.5px; color: var(--text); padding: 3px 6px;
+  background: rgb(var(--bg-2-rgb) / .85); border: 1px solid var(--accent); border-radius: 4px;
+}
+.fame-tab-name:focus { outline: none; box-shadow: 0 0 0 2px rgb(121 197 232 / .25); }
+.fame-tab-note { color: var(--muted); }
+.fame-tab-note .fame-undo { color: var(--accent); font-weight: 650; }
+.fame-tab-note .fame-undo:hover { color: var(--text); }
+
 .fame-summary .note { margin-top: 8px; }
 .fame-next { display: grid; gap: 4px; }
 /* A row is the dungeon and, beside it, the small refusal. */

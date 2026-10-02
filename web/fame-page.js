@@ -106,9 +106,12 @@ var FamePage = (function () {
    */
   const reachable = entry => entry.done || entry.needs.every(kind => state.avail.has(kind));
 
+  // One character's sweep, from before there could be several. Read once, to
+  // become the first character, and left where it is.
   const TICKS_KEY = 'rotmg-enchant-calculator/fame/done';
   const BASE_KEY = 'rotmg-enchant-calculator/fame/base';
   const SKIP_KEY = 'rotmg-enchant-calculator/fame/skipped';
+  const CHARACTERS_KEY = 'rotmg-enchant-calculator/fame/characters';
 
   // Where the portal pictures live. Three of the seventy-six are not drawn on
   // the page they come from, and those tiles carry the name alone.
@@ -130,7 +133,16 @@ var FamePage = (function () {
     // the event ones are in no collection at all.
     avail: new Set(['standard']),
     assets: null,         // the standalone build's inlined pictures, if any
-    info: new Map()       // difficulty and picture format, per dungeon
+    info: new Map(),      // difficulty and picture format, per dungeon
+    /*
+     * Every character being swept, one tab each. Fame is earned per
+     * character, so each keeps its own ticks, base fame and dungeons set
+     * aside; done, base and skipped above are the one on screen. The search,
+     * the order and the availability chips are the page's, not a character's.
+     */
+    characters: [],
+    active: null,
+    renaming: null        // the tab whose name is being typed, if any
   };
 
   // The portal is a GIF where the game draws it moving, a PNG otherwise; which
@@ -150,22 +162,95 @@ var FamePage = (function () {
   const dungeonKey = name => String(name || '').toLowerCase().replace(/[’]/g, "'")
     .replace(/\s+/g, ' ').trim();
 
+  /* ---------------------------------------------------------------- *
+   * The characters                                                    *
+   * ---------------------------------------------------------------- */
+  const NAME_MAX = 24;
+  const character = (name, from = {}) => ({
+    id: typeof from.id === 'string' && from.id ? from.id
+      : 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: String(from.name || name || '').trim().slice(0, NAME_MAX) || 'Character',
+    done: Array.isArray(from.done) ? from.done.filter(one => typeof one === 'string') : [],
+    base: Number(from.base) || 0,
+    skipped: Array.isArray(from.skipped) ? from.skipped.filter(one => typeof one === 'string') : [],
+    // The collections being gone for. Kept while the page is open, as they
+    // always were, but per character: two characters rarely chase the same.
+    focus: []
+  });
+
+  // "Character 3", the lowest number nobody is using.
+  function freshName() {
+    const taken = new Set(state.characters.map(one => one.name));
+    let n = 1;
+    while (taken.has('Character ' + n)) n++;
+    return 'Character ' + n;
+  }
+
+  const activeCharacter = () =>
+    state.characters.find(one => one.id === state.active) || state.characters[0] || null;
+
+  // What is on screen, written back into the character it belongs to.
+  function bank() {
+    if (!state.characters.length) {
+      const first = character('Character 1');
+      state.characters.push(first);
+      state.active = first.id;
+    }
+    const here = activeCharacter();
+    state.active = here.id;
+    here.done = [...state.done];
+    here.base = state.base;
+    here.skipped = [...state.skipped];
+    here.focus = [...state.focus];
+  }
+
+  // And the other way: a character's sweep put on screen.
+  function wear(one) {
+    state.active = one.id;
+    state.done = new Set(one.done);
+    state.base = Number(one.base) || 0;
+    state.skipped = new Set(one.skipped);
+    state.focus = new Set(one.focus);
+    const field = $('fameBase');
+    if (field) field.value = state.base || '';
+  }
+
   function save() {
+    bank();
     try {
-      localStorage.setItem(TICKS_KEY, JSON.stringify([...state.done]));
-      localStorage.setItem(BASE_KEY, String(state.base));
-      localStorage.setItem(SKIP_KEY, JSON.stringify([...state.skipped]));
+      localStorage.setItem(CHARACTERS_KEY, JSON.stringify({
+        active: state.active,
+        characters: state.characters.map(one => ({
+          id: one.id, name: one.name, done: one.done, base: one.base, skipped: one.skipped
+        }))
+      }));
     } catch (error) { /* private mode; the page works, it just forgets */ }
   }
 
-  function load() {
+  // The single sweep kept before characters existed, as the first of them.
+  function legacy() {
+    const first = character('Character 1');
     try {
       const ticks = JSON.parse(localStorage.getItem(TICKS_KEY) || '[]');
-      if (Array.isArray(ticks)) state.done = new Set(ticks);
       const skipped = JSON.parse(localStorage.getItem(SKIP_KEY) || '[]');
-      if (Array.isArray(skipped)) state.skipped = new Set(skipped);
-      state.base = Number(localStorage.getItem(BASE_KEY)) || 0;
-    } catch (error) { state.done = new Set(); state.skipped = new Set(); state.base = 0; }
+      return character('Character 1', {
+        id: first.id,
+        done: ticks,
+        skipped,
+        base: Number(localStorage.getItem(BASE_KEY)) || 0
+      });
+    } catch (error) { return first; }
+  }
+
+  function load() {
+    let kept = null;
+    try { kept = JSON.parse(localStorage.getItem(CHARACTERS_KEY) || 'null'); } catch (error) { kept = null; }
+    const list = kept && Array.isArray(kept.characters)
+      ? kept.characters.filter(one => one && typeof one === 'object').map(one => character('', one))
+      : [];
+    if (!list.length) list.push(legacy());
+    state.characters = list;
+    wear(list.find(one => one.id === (kept && kept.active)) || list[0]);
   }
 
   /* ---------------------------------------------------------------- *
@@ -446,8 +531,188 @@ var FamePage = (function () {
     fitGrid();
   }
 
+  /* ---------------------------------------------------------------- *
+   * The tab strip, one character each                                 *
+   * ---------------------------------------------------------------- */
+  /*
+   * The Enchant Calculator's tabs, worn by characters.
+   *
+   * A tab being renamed is an input rather than a button - an input inside
+   * a button is not allowed - and the strip is not rebuilt under it while
+   * the name is being typed.
+   */
+  // The tab a switch is heading for, lit before its sweep has arrived.
+  let heading = null;
+
+  function tabMarkup(one, showing, many) {
+    const on = one.id === showing;
+    if (one.id === state.renaming) {
+      return `<span class="tab fame-tab is-renaming${on ? ' active' : ''}" role="presentation">`
+        + `<input class="fame-tab-name" data-rename="${html(one.id)}" value="${html(one.name)}"`
+        + ` maxlength="${NAME_MAX}" aria-label="Character name" autocomplete="off" spellcheck="false"></span>`;
+    }
+    return `<button type="button" class="tab fame-tab${on ? ' active' : ''}" role="tab"`
+      + ` aria-selected="${on}" data-character="${html(one.id)}"`
+      + ` title="${html(one.name)} - double-click to rename">`
+      + `<span class="tab-label">${html(one.name)}</span>`
+      + (many ? `<span class="tab-close" data-close="${html(one.id)}" role="button"`
+        + ` aria-label="Close ${html(one.name)}">×</span>` : '')
+      + '</button>';
+  }
+
+  function renderTabs() {
+    const bar = $('fameTabs');
+    if (!bar) return;
+    if (state.renaming && bar.querySelector('.fame-tab-name')) return;
+    const showing = heading || state.active;
+    const many = state.characters.length > 1;
+    const markup = state.characters.map(one => tabMarkup(one, showing, many)).join('')
+      + '<button type="button" class="tab-add" data-add title="Sweep another character"'
+      + ' aria-label="New character">New</button>';
+    if (bar.innerHTML === markup) return;
+    bar.innerHTML = markup;
+    const field = bar.querySelector('.fame-tab-name');
+    if (field) { field.focus(); field.select(); }
+  }
+
+  /*
+   * Changing character replaces every tick on the page at once, so it moves
+   * the way the calculator's tabs do: the page steps aside in the direction
+   * of travel and the other character arrives from the far side. The swap
+   * waits until the old one has gone - two sweeps on screen at once reads as
+   * a glitch, not a transition.
+   */
+  const SWAP_MS = 190;
+  let swapTimer = 0;
+  function switchCharacter(id) {
+    const target = state.characters.find(one => one.id === id);
+    commitRename();
+    if (!target || id === (heading || state.active)) return;
+    save();
+    const layout = $('pageFame') && $('pageFame').querySelector('.layout');
+    const from = state.characters.findIndex(one => one.id === state.active);
+    const to = state.characters.indexOf(target);
+    // The tab lights up at once; the sweep it stands for follows.
+    heading = id;
+    renderTabs();
+    clearTimeout(swapTimer);
+    const arrive = () => {
+      heading = null;
+      wear(target);
+      save();
+      render();
+    };
+    if (!layout) { arrive(); return; }
+    layout.style.setProperty('--dir', to > from ? '1' : '-1');
+    layout.classList.remove('tab-entering');
+    layout.classList.add('tab-leaving');
+    swapTimer = setTimeout(() => {
+      arrive();
+      layout.classList.remove('tab-leaving');
+      layout.classList.add('tab-entering');
+      swapTimer = setTimeout(() => layout.classList.remove('tab-entering'), 30);
+    }, SWAP_MS);
+  }
+
+  // A new character starts empty and is named straight away.
+  function addCharacter() {
+    commitRename();
+    save();
+    const one = character(freshName());
+    state.characters.push(one);
+    wear(one);
+    state.renaming = one.id;
+    save();
+    render();
+  }
+
+  /*
+   * Only the tab being named is swapped back into a button. Rebuilding the
+   * strip here would replace the tab someone is pressing on: the name is
+   * committed when the field loses focus, which is between the press and the
+   * release of a click on another tab, and the click would land on nothing.
+   */
+  function rename(id, value) {
+    const one = state.characters.find(each => each.id === id);
+    if (state.renaming !== id) return;
+    state.renaming = null;
+    const name = String(value || '').trim().slice(0, NAME_MAX);
+    if (one && name) one.name = name;
+    save();
+    const bar = $('fameTabs');
+    const field = bar && bar.querySelector('.fame-tab-name');
+    if (!one || !field) { renderTabs(); return; }
+    const typing = document.activeElement === field;
+    field.parentElement.outerHTML = tabMarkup(one, heading || state.active, state.characters.length > 1);
+    // Named from the keyboard, the keyboard stays on the tab.
+    if (typing) {
+      const tab = bar.querySelector(`[data-character="${CSS.escape(id)}"]`);
+      if (tab) tab.focus();
+    }
+  }
+
+  // A name half typed is kept before anything else happens to the strip.
+  function commitRename() {
+    const field = $('fameTabs') && $('fameTabs').querySelector('.fame-tab-name');
+    if (field) rename(field.dataset.rename, field.value);
+  }
+
+  function startRename(id) {
+    if (!state.characters.some(one => one.id === id)) return;
+    state.renaming = id;
+    renderTabs();
+  }
+
+  /*
+   * Closing a character throws away its ticks, which a stray click should not
+   * be able to do for good. So it goes at once, and the note under the strip
+   * offers it back for a few seconds.
+   */
+  let undoTimer = 0;
+  function closeCharacter(id) {
+    const index = state.characters.findIndex(one => one.id === id);
+    if (index < 0 || state.characters.length < 2) return;
+    commitRename();
+    save();
+    const [gone] = state.characters.splice(index, 1);
+    if (gone.id === state.active) wear(state.characters[Math.min(index, state.characters.length - 1)]);
+    if (state.renaming === gone.id) state.renaming = null;
+    save();
+    render();
+    offerBack(gone, index);
+  }
+
+  function offerBack(gone, index) {
+    const note = $('fameTabNote');
+    if (!note) return;
+    clearTimeout(undoTimer);
+    note.innerHTML = `Closed ${html(gone.name)}. `
+      + '<button type="button" class="link-button fame-undo" data-undo>Undo</button>';
+    note.hidden = false;
+    note.onclick = event => {
+      if (!event.target.closest('[data-undo]')) return;
+      hideNote();
+      save();
+      state.characters.splice(Math.min(index, state.characters.length), 0, gone);
+      wear(gone);
+      save();
+      render();
+    };
+    undoTimer = setTimeout(hideNote, 8000);
+  }
+
+  function hideNote() {
+    clearTimeout(undoTimer);
+    const note = $('fameTabNote');
+    if (!note) return;
+    note.hidden = true;
+    note.replaceChildren();
+    note.onclick = null;
+  }
+
   function render() {
     if (!state.data) return;
+    renderTabs();
     const view = EnchantFame.summarise(state.data, state.done, state.base);
     renderTotals(view);
     renderCollections(view);
@@ -474,6 +739,38 @@ var FamePage = (function () {
     }
     load();
     $('fameBase').value = state.base || '';
+
+    const bar = $('fameTabs');
+    bar.setAttribute('aria-label', 'Characters');
+    bar.addEventListener('click', event => {
+      if (event.target.closest('.fame-tab-name')) return;
+      const shut = event.target.closest('[data-close]');
+      if (shut) { closeCharacter(shut.dataset.close); return; }
+      if (event.target.closest('[data-add]')) { addCharacter(); return; }
+      const tab = event.target.closest('[data-character]');
+      if (tab) switchCharacter(tab.dataset.character);
+    });
+    bar.addEventListener('dblclick', event => {
+      if (event.target.closest('[data-close]')) return;
+      const tab = event.target.closest('[data-character]');
+      if (tab) startRename(tab.dataset.character);
+    });
+    bar.addEventListener('keydown', event => {
+      const field = event.target.closest('.fame-tab-name');
+      if (field) {
+        if (event.key === 'Enter') { event.preventDefault(); rename(field.dataset.rename, field.value); }
+        // An empty name keeps the old one, which is what Escape wants.
+        if (event.key === 'Escape') { event.preventDefault(); rename(field.dataset.rename, ''); }
+        return;
+      }
+      // F2 names the focused tab, the way a file is renamed.
+      const tab = event.target.closest('[data-character]');
+      if (tab && event.key === 'F2') { event.preventDefault(); startRename(tab.dataset.character); }
+    });
+    bar.addEventListener('focusout', event => {
+      const field = event.target.closest && event.target.closest('.fame-tab-name');
+      if (field) rename(field.dataset.rename, field.value);
+    });
 
     $('fameBase').addEventListener('input', event => {
       state.base = Number(event.target.value) || 0;
