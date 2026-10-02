@@ -405,6 +405,32 @@ const RealmIndex = (function () {
         realmeyeArchive.page.set(page.slug, list);
       }
     }
+
+    /*
+     * Where a creature lives, read the other way round.
+     *
+     * RealmEye writes a creature's whereabouts on the place, not on the
+     * creature: a biome lists its encounters and a dungeon its population.
+     * So the place record carries the link and the creature's own card had
+     * nothing to say about where to find it - even an encounter the wiki
+     * files under a biome by name. Every roster link is turned round once
+     * here, so the creature can name the places that list it.
+     */
+    realmeyeArchive.livesIn = new Map();
+    for (const [record, data] of Object.entries(said.records || {})) {
+      // A dungeon's full roster is a page of its own, "<dungeon> Enemies";
+      // the place it names is the dungeon itself.
+      const base = record.replace(/ Enemies$/, '');
+      const id = base !== record && all.has(base) ? base : record;
+      for (const relation of data.relations || []) {
+        if (!ROSTER_RELATIONS.has(relation.type)) continue;
+        const target = realmRelationTarget(relation);
+        if (!target || target.kind !== 'enemy' || target.id === id) continue;
+        const places = realmeyeArchive.livesIn.get(target.id) || new Set();
+        places.add(id);
+        realmeyeArchive.livesIn.set(target.id, places);
+      }
+    }
   }
 
   /*
@@ -1704,8 +1730,15 @@ const RealmIndex = (function () {
     biome_hero_minion: 'heroMinions', biome_encounter: 'encounters',
     biome_encounter_minion: 'encounterMinions', biome_beacon_guardian: 'beaconGuardian',
     biome_beacon_minion: 'beaconMinions', biome_drop_interest: 'dropsOfInterest',
-    contains_biome: 'subBiomes', part_of_biome: 'partOfBiome'
+    contains_biome: 'subBiomes', part_of_biome: 'partOfBiome', found_in: 'foundIn'
   };
+  // The links by which a place names the creatures that live in it.
+  const ROSTER_RELATIONS = new Set([
+    'dungeon_boss', 'dungeon_miniboss', 'dungeon_enemy', 'dungeon_minion',
+    'dungeon_boss_minion', 'dungeon_treasure_boss', 'dungeon_hazard',
+    'biome_regular_enemy', 'biome_minion', 'biome_hero', 'biome_hero_minion',
+    'biome_encounter', 'biome_encounter_minion', 'biome_beacon_guardian', 'biome_beacon_minion'
+  ]);
   const realmFactSay = key => String(key || '').replace(/_/g, ' ')
     .replace(/\b\w/g, letter => letter.toUpperCase());
 
@@ -1762,6 +1795,9 @@ const RealmIndex = (function () {
 
     for (const relation of (one.realmeyeArchive && one.realmeyeArchive.relations) || []) {
       add(relation.type || 'related', relation);
+    }
+    if (one.kind === 'enemy' && realmeyeArchive && realmeyeArchive.livesIn) {
+      for (const place of realmeyeArchive.livesIn.get(one.id) || []) add('found_in', { to: place });
     }
 
     /* A walked-realm observation and an archive roster answer the same reader
@@ -2219,7 +2255,10 @@ const RealmIndex = (function () {
       say('index.relation.tierDropLocations',
         [...new Set(wiki.tierDropBy.get(one.hand + ':' + one.tier + ':' + alternate) || [])]);
     }
-    say('index.relation.foundIn', wiki.dungeonBy.get(mine));
+    // The archive's rosters say the same thing for most creatures; a place
+    // both name is shown once, by the archive row.
+    const listed = (realmeyeArchive && realmeyeArchive.livesIn && realmeyeArchive.livesIn.get(one.id)) || new Set();
+    say('index.relation.foundIn', wiki.dungeonBy.get(mine), item => !item.target || !listed.has(item.target.id));
     say('index.relation.enemiesFoundHere', wiki.dungeon.get(mine));
     const tiers = wiki.tierDrop.get(mine) || [];
     if (tiers.length) {

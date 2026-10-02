@@ -48,6 +48,13 @@ def sprite_records(data: dict) -> dict[str, dict]:
     for terrain in data.get("terrains", []):
         for monster in terrain.get("monsters", []):
             records[monster["id"]] = monster
+    # The encounters, heroes and guardians a zone is visited for are client
+    # records too, matched by generate-realm.js; they move like the rest.
+    for zone in data.get("zones", []):
+        for entries in (zone.get("wikiGroups") or {}).values():
+            for monster in entries or []:
+                if monster.get("id") and monster.get("sprite"):
+                    records.setdefault(monster["id"], monster)
     return records
 
 

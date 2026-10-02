@@ -139,9 +139,15 @@ async function main() {
     const key = entry.path; const found = creatures.get(key) || { ...entry, groups: [] };
     found.groups.push({ biome: biome.id, role: group }); creatures.set(key, found);
   }
+  // A creature this run does not read again keeps what an earlier run found:
+  // with --only, an update reads its new creatures and nothing else.
+  const rereads = creature => !only || only.has(creature.path.replace(/^\/wiki\//, '').toLowerCase());
   for (const creature of creatures.values()) {
     const earlier = previous.creatures && previous.creatures[creature.path];
-    data.creatures[creature.path] = { name: creature.name, groups: creature.groups, ...(earlier && earlier.detail && !wantsDetails ? { detail: earlier.detail } : {}) };
+    const keepDetail = earlier && earlier.detail && !(wantsDetails && rereads(creature));
+    const keepArt = earlier && earlier.art && !(wantsAssets && rereads(creature));
+    data.creatures[creature.path] = { name: creature.name, groups: creature.groups,
+      ...(keepDetail ? { detail: earlier.detail } : {}), ...(keepArt ? { art: earlier.art } : {}) };
   }
   if (wantsDetails) {
     const list = [...creatures.values()].filter(creature => !only || only.has(creature.path.replace(/^\/wiki\//, '').toLowerCase()));

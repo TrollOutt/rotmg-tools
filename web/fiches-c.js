@@ -18,7 +18,7 @@
   /* Un seul affichage : la fiche harmonisée. */
   const mode = 'c2';
   /* La fiche attend toutes ses données : aucun second rendu visible quand l'une d'elles arrive. */
-  let pending = 5;
+  let pending = 6;
   const settled = () => {
     if (--pending > 0) return;
     for (const box of hosts()) box.style.visibility = '';
@@ -40,6 +40,19 @@
     return s.__fcMap;
   }
   const rec = id => (recs() || new Map()).get(id);
+  /* Les monstres qui bougent : la boucle de marche que le client leur dessine, découpée pour l'Atlas
+     (tools/generate-realm-animations.py) et rangée sous leur identifiant client. */
+  let moving = {};
+  fetch('assets/realm-monster-animations/index.json').then(r => r.json())
+    .then(j => { moving = j || {}; }).catch(() => {}).finally(settled);
+  function walk(r, side) {
+    if (!r || r.kind !== 'enemy') return '';
+    const id = [r.clientId, r.alias, r.name].find(one => one && moving[one]);
+    if (!id) return '';
+    const bundled = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.realmMonsterAnimations;
+    const src = (bundled && bundled[id]) || 'assets/realm-monster-animations/' + encodeURIComponent(moving[id]);
+    return '<img class="ix-art fc2-walk" src="' + esc(src) + '" alt="" style="width:' + side + 'px;height:' + side + 'px">';
+  }
 
   function art(r, side) {
     const s = index();
@@ -531,7 +544,7 @@
       sub = by ? namesIn(by.html).join(', ') : '';
     }
     if (r.kind === 'item' && r.sb) sub = 'Soulbound';
-    const head = '<div class="ix-part fc2-head">' + (card.cell || art(r, 44))
+    const head = '<div class="ix-part fc2-head">' + (walk(r, 44) || card.cell || art(r, 44))
       + '<div class="fc2-name">' + kindTag + '<h3>' + esc(card.name || r.said || r.name) + '</h3>'
       + (sub ? '<div class="fc2-sub">' + esc(sub) + '</div>' : '') + card.guardian + '</div>'
       + marks(r, r.tier !== undefined && r.kind === 'item' && !r.use ? '<b class="fc2-tier">T' + r.tier + '</b>' : '') + '</div>';

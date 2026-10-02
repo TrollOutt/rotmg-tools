@@ -2431,6 +2431,41 @@
       "file": "c874339e424b598b417aba48.png",
       "source": "https://www.realmeye.com/s/a/img/wiki/d/Environment/Portals/Vault Portal.png",
       "name": "Vault"
+    },
+    "item:Bracer of the Guardian (Retro)": {
+      "file": "a2464c6aaf16af74c7ab4d80.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/2SqqiFH.png",
+      "name": "Bracer of the Guardian (Retro)"
+    },
+    "item:Cloak of the Planewalker (Retro)": {
+      "file": "0620c66b0c043c78ac5e5267.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Hfytm5D.png",
+      "name": "Cloak of the Planewalker (Retro)"
+    },
+    "item:Snake Eye Ring (Retro)": {
+      "file": "0f5fdada35fc186af846602c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/LwQeesY.png",
+      "name": "Snake Eye Ring (Retro)"
+    },
+    "item:Spider's Eye Ring (Retro)": {
+      "file": "ec0a712ad6e59ef2ec5f66d1.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/N1rlVhI.png",
+      "name": "Spider's Eye Ring (Retro)"
+    },
+    "item:The Forgotten Crown (Retro)": {
+      "file": "1ddda1377d6f4bc80f6395be.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/KwfasJs.png",
+      "name": "The Forgotten Crown (Retro)"
+    },
+    "item:The Twilight Gemstone (Retro)": {
+      "file": "4f6066cc3cef2696cdd05b5e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/29wpqWs.png",
+      "name": "The Twilight Gemstone (Retro)"
+    },
+    "portal:Time Chamber": {
+      "file": "740eaaa090056b77ad9fbaec.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/3pU1Tps.png",
+      "name": "Time Chamber"
     }
   }
 }

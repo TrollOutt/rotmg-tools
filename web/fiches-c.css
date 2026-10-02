@@ -116,6 +116,12 @@
   background: rgb(var(--shade) / calc(.28 * var(--shade-k))); border: 1px solid var(--line);
   border-radius: var(--radius-sm); padding: 5px; box-sizing: content-box;
 }
+/* A creature that moves is framed like any other portrait, and keeps its pixels. */
+.fc2-head .fc2-walk {
+  background: rgb(var(--shade) / calc(.28 * var(--shade-k))); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 5px; box-sizing: content-box;
+  object-fit: contain; image-rendering: pixelated;
+}
 .fc2-name { min-width: 0; }
 .fc2-name h3 { margin: 2px 0 2px; font-size: calc(var(--ix-fs) * 1.45); font-weight: 650; line-height: 1.15; }
 .fc2-sub { color: var(--muted); font-size: calc(var(--ix-fs) * .86); }

@@ -396,15 +396,63 @@ def index_name_candidates(con: sqlite3.Connection):
             continue
         name = legacy.split(":", 1)[1].split("#", 1)[0]
         out[(kind, name_key(name))].add(entity_uid)
+    # The name a common entry is shown by: a stack folded under its first
+    # size ("Forgotten Relics x1") is shown, and written up, as "Forgotten
+    # Relics". Still the record's own exact name, never a guess.
+    shown = defaultdict(set)
+    for entity_uid, kind, value in con.execute(
+        "SELECT e.entity_uid, e.kind, f.value_json FROM facts f JOIN entities e ON e.entity_uid=f.entity_uid "
+        "WHERE f.field_path='said' AND e.legacy_index_id IS NOT NULL"
+    ):
+        try:
+            said = json.loads(value)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(said, str) and said.strip():
+            shown[(kind, name_key(said))].add(entity_uid)
+    out["shown"] = shown
     return out
 
 
+ORIGINAL_TITLE = re.compile(r"^(.*\S)\s*\(Original\)$", re.I)
+
+
 def exact_title_candidates(name_map, page_type: str, title: str):
-    found = set()
+    """Exact names only, tried in order; the first rule that finds anything wins.
+
+    1. The page title is the record's name.
+    2. It is the name the record is shown by (a folded stack's common name).
+    3. A dungeon page names its portal: "Time Chamber" is "Time Chamber Portal".
+    4. "X (Original)" is the client's copy of the original version, which the
+       Time Chamber brought back: the dungeon "Legacy X Portal", the creature
+       "Retro X". RealmEye links each Legacy dungeon to that "(Original)" page.
+    """
+    kinds = INDEX_KIND_FOR_PAGE.get(page_type, set())
+    shown = name_map.get("shown", {})
+
+    def lookup(table, key):
+        found = set()
+        for kind in kinds:
+            found.update(table.get((kind, key), set()))
+        return found
+
     key = name_key(title)
-    for kind in INDEX_KIND_FOR_PAGE.get(page_type, set()):
-        found.update(name_map.get((kind, key), set()))
-    return found
+    for table, wanted in ((name_map, key), (shown, key)):
+        found = lookup(table, wanted)
+        if found:
+            return found
+    if page_type == "dungeon":
+        found = lookup(name_map, key + "portal")
+        if found:
+            return found
+    original = ORIGINAL_TITLE.match(str(title or ""))
+    if original:
+        base = name_key(original.group(1))
+        if page_type == "dungeon":
+            return lookup(name_map, "legacy" + base + "portal")
+        if page_type == "enemy":
+            return lookup(name_map, "retro" + base)
+    return set()
 
 
 def companion_base_slug(slug: str, page_type: str, known_slugs: set[str]):
