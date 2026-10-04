@@ -2809,7 +2809,17 @@ const TINT = {
           if (gun.reach) bits.push(gun.reach + ' tiles');
           if (gun.pierce) bits.push('pierces');
         }
-        if (item.many > 1) bits.push(item.many + ' shots');
+        /*
+         * How many it fires: a cycle as the cycle (the Phantom Sickle's
+         * 1 / 3 / 5), several Subattacks as what they fire together (the
+         * Shortbow's three arrows), and otherwise the weapon's own count.
+         */
+        const channels = (item.shots || []).filter(one => one.subattack);
+        const volley = (channels.find(one => one.volley) || {}).volley;
+        const together = channels.reduce((sum, one) => sum + (one.many || 1), 0);
+        if (volley) bits.push(volley.map(n => n || 'pause').join(' / ') + ' shots in turn');
+        else if (together > 1) bits.push(together + ' shots');
+        else if (item.many > 1) bits.push(item.many + ' shots');
         if (item.rate !== undefined && item.rate !== 1) {
           bits.push(Math.round(item.rate * 100) + '% rate');
         }

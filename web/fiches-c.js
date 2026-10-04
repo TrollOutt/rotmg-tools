@@ -263,8 +263,8 @@
     }
     if (s) {
       if (s.reach !== undefined) mid += '<div class="ln">Range: <span class="v">' + s.reach + '</span></div>';
-      const many = r.shots || s.many || 1;
-      if (many > 1) mid += '<div class="ln">Shots: <span class="v">' + many + '</span></div>';
+      const many = r.volley ? r.volley.map(n => n || 'pause').join(' / ') : r.shots || s.many || 1;
+      if (r.volley || many > 1) mid += '<div class="ln">Shots: <span class="v">' + many + '</span></div>';
       if (s.through) mid += '<div class="ln flag">Shots hit multiple targets</div>';
       if (s.pierce) mid += '<div class="ln flag">Ignores defense of target</div>';
       const rate = r.rate !== undefined ? r.rate : s.rate;
@@ -631,8 +631,8 @@
     if (s || r.mp) {
       const rows = [];
       if (s && s.reach !== undefined) rows.push(['Range', s.reach + ' tiles']);
-      const many = s ? (r.shots || s.many || 1) : 1;
-      if (many > 1) rows.push(['Shots', String(many)]);
+      const many = s ? (r.volley ? r.volley.map(n => n || 'pause').join(' / ') : r.shots || s.many || 1) : 1;
+      if ((s && r.volley) || many > 1) rows.push(['Shots', String(many)]);
       const rate = s ? (r.rate !== undefined ? r.rate : s.rate) : undefined;
       if (rate !== undefined) rows.push(['Rate of fire', Math.round(rate * 100) + '%']);
       if (r.mp) rows.push(['MP cost', String(r.mp)]);
@@ -844,7 +844,15 @@
   function shotBehaviour(r, p) {
     const s = p.shots[0];
     const out = [];
-    if (p.many > 1) out.push(p.many + ' projectiles' + (p.arc ? ' · ' + p.arc + '° apart' : ' in parallel'));
+    /* Un cycle se dit comme un cycle ; plusieurs Subattacks, par le total de ce qu'elles tirent. */
+    if (r.volley) out.push('Volleys of ' + r.volley.map(n => n || 'pause').join(' / ') + ', in turn');
+    else if (p.attacks && p.attacks.length > 1) {
+      const total = p.attacks.reduce((sum, a) => sum + (a.many || 1), 0);
+      if (total > 1) out.push(total + ' projectiles');
+    } else {
+      const one = (p.attacks && p.attacks[0]) || p;
+      if (one.many > 1) out.push(one.many + ' projectiles' + (one.arc ? ' · ' + one.arc + '° apart' : ' in parallel'));
+    }
     if (s.amp) out.push('Waves: ' + s.amp + ' tile, ' + s.freq + ' cycle' + (s.freq > 1 ? 's' : '') + ' per shot');
     if (s.wavy) out.push('Wobbles');
     if (s.param) out.push('Figure-eight path');
@@ -913,10 +921,21 @@
       const canvas = host.querySelector('canvas'), pen = canvas.getContext('2d');
       const holder = [...recs().values()].find(c => c.kind === 'class' && (c.slots || []).includes(r.slot));
       const classPic = holder && ts.pics['c:' + holder.name];
-      const range = base.speed * base.life;
-      const arc = (p.arc !== undefined ? p.arc : (p.many > 1 ? 11.25 : 0)) * Math.PI / 180;
-      const every = 1 / ((1.5 + 6.5 * 50 / 75) * (p.rate || 1));
-      const state = { speed: 1, withSet: false, shots: [], cool: 0, fired: 0, clock: 0, swing: 0, hit: 0 };
+      /* Chaque Subattack tire à sa propre cadence ; avec des motifs, chaque attaque tire le motif suivant. */
+      const byPid = new Map(p.shots.map(s => [s.pid, s]));
+      const specOf = pid => byPid.get(pid) || base;
+      const volleys = (p.attacks && p.attacks.length ? p.attacks : [{ pid: base.pid, many: p.many, arc: p.arc, rate: p.rate }])
+        .map(v => ({ ...v, cool: 0, at: 0 }));
+      const gapOf = (a, v) => ((a.arc !== undefined ? a.arc : v.arc !== undefined ? v.arc : ((a.many || 1) > 1 ? 11.25 : 0)) * Math.PI / 180);
+      const turnOf = (a, v) => (((a.angle !== undefined ? a.angle : v.angle) || 0) * Math.PI / 180);
+      const everyOf = v => 1 / ((1.5 + 6.5 * 50 / 75) * (v.rate || p.rate || 1));
+      const used = [...new Set(volleys.flatMap(v => (v.patterns || [v]).map(a => specOf(a.pid || v.pid))))]
+        .filter(s => s.speed > 0 && s.life > 0);
+      /* La portée de l'Index, qui suit l'accélération et le retour d'un boomerang ; le trajet brut sinon. */
+      const range = Math.max(0, ...(r.fires || []).map(f => f.reach || 0))
+        || Math.max(0, ...used.map(s => s.speed * s.life)) || base.speed * base.life;
+      const fan = Math.max(0, ...volleys.flatMap(v => (v.patterns || [v]).map(a => (a.many || 1) * gapOf(a, v) + 2 * Math.abs(turnOf(a, v)))));
+      const state = { speed: 1, withSet: false, shots: [], fired: 0, clock: 0, swing: 0, hit: 0 };
       host.addEventListener('click', e => {
         const sp = e.target.closest('[data-speed]'), sm = e.target.closest('[data-setmode]');
         if (sp) { state.speed = Number(sp.dataset.speed); host.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === sp))); }
@@ -1110,10 +1129,8 @@
           )
         );
 
-        const reachY =
-          base.param
-            ? base.mag
-            : base.amp || 0;
+        const reachY = Math.max(0, ...(used.length ? used : [base]).map(s => (s.param ? s.mag : Math.abs(s.amp || 0))))
+          + Math.max(0, ...volleys.map(v => Math.abs((v.offset && v.offset[0]) || 0)));
 
         const H = Math.max(
           96,
@@ -1125,7 +1142,7 @@
                 + 2 * reachY
                 + Math.max(
                   1,
-                  p.many * arc * range / 2
+                  fan * range / 2
                 )
               )
             )
@@ -1286,10 +1303,8 @@
             state.hit - dt
           );
 
-        /* Ce que tire l'arme : son projectile, ou celui que le set complet lui donne. */
-        const pic = projData.pics[state.withSet && setData && setData.bullet ? setData.bullet : base.pic];
-        const size = state.withSet && setData && setData.bullet && !base.sizeDeclared ? setData.bulletSize : base.size;
-        const tilt = pic.tilt || 0;
+        /* Ce que tire l'arme : ses projectiles, ou celui que le set complet lui donne. */
+        const bullet = state.withSet && setData && setData.bullet;
 
         const {
           W,
@@ -1365,33 +1380,48 @@
           pen.drawImage(theory, classPic.x + f * classPic.w, classPic.y, classPic.w, classPic.h, x0 - T / 2, floor - classPic.h * T / 8, classPic.w * T / 8, classPic.h * T / 8);
         }
 
-        state.cool -= dt;
-        if (state.cool <= 0) {
-          state.cool += every; state.swing = Math.min(every, 0.25);
-          for (let n = 0; n < p.many; n++) {
-            state.shots.push({ n: state.fired++, age: 0, dist: 0, full: range, angle: p.many > 1 ? (n - (p.many - 1) / 2) * arc : 0,
-              phase: n % 2 ? Math.PI : 0, v: base.speed, px: 0, py: 0 });
+        for (const v of volleys) {
+          v.cool -= dt;
+          if (v.cool > 0) continue;
+          const every = everyOf(v);
+          v.cool += every; state.swing = Math.min(every, 0.25);
+          const a = v.patterns ? v.patterns[v.at++ % v.patterns.length] : v;
+          const spec = specOf(a.pid || v.pid);
+          // Un motif qui ne tire rien (la pause de la Razorthorn) compte quand même son tour.
+          if (!(spec.speed > 0 && spec.life > 0)) continue;
+          const many = a.many || 1, gap = gapOf(a, v), turn = turnOf(a, v);
+          const side = (v.offset && v.offset[0]) || 0;
+          for (let n = 0; n < many; n++) {
+            state.shots.push({ spec, side, n: state.fired++, age: 0, dist: 0, full: spec.speed * spec.life,
+              angle: turn + (many > 1 ? (n - (many - 1) / 2) * gap : 0),
+              phase: n % 2 ? Math.PI : 0, v: spec.speed, px: 0, py: 0 });
           }
         }
         for (let i = state.shots.length - 1; i >= 0; i--) {
           const o = state.shots[i];
           o.age += dt;
-          if (o.age >= base.life) {
+          const spec = o.spec;
+          if (o.age >= spec.life) {
             state.shots.splice(i, 1); continue;
           }
-          if (base.accel && o.age * 1000 >= (base.accelDelay || 0)) {
-            o.v = Math.max(0, o.v + base.accel / 10 * dt);
-            if (base.speedClamp) o.v = base.accel > 0 ? Math.min(o.v, base.speedClamp / 10) : Math.max(o.v, base.speedClamp / 10);
+          if (spec.accel && o.age * 1000 >= (spec.accelDelay || 0)) {
+            // Sans plafond, un tir freiné s'arrête puis revient (la Steam Pipe).
+            o.v += spec.accel / 10 * dt;
+            if (spec.speedClamp) o.v = spec.accel > 0 ? Math.min(o.v, spec.speedClamp / 10) : Math.max(o.v, spec.speedClamp / 10);
           }
           o.dist += o.v * dt;
-          const at = shotAt(base, o);
+          const pic = projData.pics[bullet ? setData.bullet : spec.pic];
+          if (!pic) continue;
+          const size = bullet && !spec.sizeDeclared ? setData.bulletSize : spec.size;
+          const tilt = pic.tilt || 0;
+          const at = shotAt(spec, o);
           const heading = Math.atan2(at.y - o.py, at.x - o.px) || o.angle;
           o.px = at.x; o.py = at.y;
           const z = T / (pic.cell || 8) * (size || 100) / 100;
           const w = pic.w * z, h = pic.h * z;
           const f = pic.frames > 1 ? Math.floor(o.age * (pic.fps || 12)) % pic.frames : 0;
           pen.save();
-          pen.translate(x0 + T * 0.4 + at.x * T, y0 + at.y * T);
+          pen.translate(x0 + T * 0.4 + at.x * T, y0 + (at.y + o.side) * T);
           pen.rotate(heading + tilt * Math.PI / 4 + (pic.spin ? o.age * 1000 / pic.spin : 0));
           if (bolts.complete) pen.drawImage(bolts, pic.x + f * pic.w, pic.y, pic.w, pic.h, -w / 2, -h / 2, w, h);
           pen.restore();

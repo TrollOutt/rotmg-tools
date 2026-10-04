@@ -63,6 +63,66 @@ function withoutSubattacks(body) {
 }
 
 /*
+ * How far a shot gets, in tiles.
+ *
+ * Speed times lifetime only for a shot that keeps its speed. Speed, the
+ * acceleration and the clamp are all in tenths of a tile: a shot slows (or
+ * speeds up) from AccelerationDelay on until it reaches SpeedClamp, and
+ * keeps that speed after. A shot slowed with no clamp may stop and come back,
+ * and then its reach is where it turned. A boomerang turns at half its life.
+ * Checked against RealmEye's stated ranges: 486 weapons agree, among them
+ * General's Arsenal's 4.25 tiles (15 tiles/s for 0.2 s, then 5 tiles/s),
+ * where speed times life said 6.75.
+ */
+function reachOf(inner) {
+  const speed = num(inner, 'Speed');
+  const lives = num(inner, 'LifetimeMS');
+  if (speed === undefined || lives === undefined) return undefined;
+  const v0 = speed / 10, life = lives / 1000;
+  const acc = num(inner, 'Acceleration');
+  const boomerang = /<Boomerang\s*\/>/.test(inner);
+  // Worked in tenths of a tile, as the client states it, so 18 tiles/s for
+  // 0.475 s stays 8.6 rather than becoming 8.549999.
+  if (!acc) return Math.round(speed * lives / 1000 / (boomerang ? 2 : 1)) / 10;
+  let far;
+  {
+    const a = acc / 10;
+    const delay = Math.min(life, (num(inner, 'AccelerationDelay') || 0) / 1000);
+    const clamp = num(inner, 'SpeedClamp');
+    const limit = clamp === undefined ? undefined : clamp / 10;
+    const rest = life - delay;
+    // When the speed reaches its clamp, or nought for a slowing shot that has none.
+    const until = limit !== undefined ? (limit - v0) / a : a < 0 ? -v0 / a : Infinity;
+    const free = until >= 0 ? Math.min(rest, until) : rest;
+    far = v0 * delay + v0 * free + a * free * free / 2;
+    if (rest > free && limit !== undefined) far += limit * (rest - free);
+  }
+  if (boomerang) far /= 2;
+  return Math.round(far * 10 + 1e-9) / 10;
+}
+
+/*
+ * The patterns of a Subattack, in the order it fires them.
+ *
+ * Most Subattacks fire the same volley every time. A few list several
+ * ProjectilePatterns instead, and those are a cycle: each attack fires the
+ * next one. The Phantom Sickle swings one, then three, then five; the
+ * Razorthorn Branch alternates one and two and makes every seventh a burst
+ * of five, then waits out a pattern that fires nothing - which RealmEye
+ * reads the same way ("Shots 1 / 3 / 5", "every 7th shot is a 5 shot
+ * burst"). Reading only the first NumProjectiles counted one shot an attack
+ * where the Sickle averages three.
+ */
+function patternsOf(inner, fallback) {
+  const out = [];
+  for (const m of inner.matchAll(/<ProjectilePattern\b([^>]*)>([\s\S]*?)<\/ProjectilePattern>/g)) {
+    const ref = /\bprojectileId="([^"]+)"/.exec(m[1]);
+    out.push({ projectile: ref ? ref[1] : fallback, many: num(m[2], 'NumProjectiles') ?? 1 });
+  }
+  return out;
+}
+
+/*
  * Read projectiles and preserve the relation between every Subattack and
  * the projectileId it actually fires.
  */
@@ -109,9 +169,7 @@ function shotOf(body) {
         ? undefined
         : fast / 10,
 
-      reach: fast !== undefined && lives !== undefined
-        ? Math.round(fast * lives / 1000) / 10
-        : undefined,
+      reach: reachOf(inner),
 
       pierce: /<ArmorPiercing\s*\/>/.test(inner) || undefined,
       through: /<MultiHit\s*\/>/.test(inner) || undefined,
@@ -162,6 +220,37 @@ function shotOf(body) {
 
     const ref = /\bprojectileId="([^"]+)"/.exec(attrs);
     if (!ref) continue;
+
+    const patterns = patternsOf(inner, ref[1]);
+    if (patterns.length) {
+      /*
+       * One channel per projectile, firing on average what the cycle fires
+       * of it per attack, so the rate and the damage stay those of the
+       * client. The cycle itself is kept as said, a nought for a pattern
+       * whose shot does no damage (the Razorthorn's wait).
+       */
+      const harmless = id => {
+        const one = projectiles.get(id);
+        return !one || (!Number(one.low || 0) && !Number(one.high || 0));
+      };
+      const volley = patterns.map(one => (harmless(one.projectile) ? 0 : one.many));
+      const fired = new Map();
+      for (const one of patterns) fired.set(one.projectile, (fired.get(one.projectile) || 0) + one.many);
+      for (const [id, many] of fired) {
+        const projectile = projectiles.get(id);
+        if (!projectile) continue;
+        subattacks.push({
+          ...projectile,
+          subattack: true,
+          projectile: id,
+          many: Math.round(many / patterns.length * 1000) / 1000,
+          volley,
+          rate: num(inner, 'RateOfFire') ?? baseRate,
+          burst: burstOf(inner) || baseBurst
+        });
+      }
+      continue;
+    }
 
     const projectile = projectiles.get(ref[1]);
     if (!projectile) continue;

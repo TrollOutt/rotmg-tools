@@ -1416,7 +1416,9 @@ const RealmIndex = (function () {
     if (one.sb) bits.push([fact('soulbound'), t('index.answer.yes')]);
     if (one.mp) bits.push([fact('mana'), one.mp]);
     if (one.rate !== undefined) bits.push([fact('rateOfFire'), Math.round(one.rate * 100) + '%']);
-    if (one.shots > 1) bits.push([fact('shots'), one.shots]);
+    // A weapon that cycles through volleys says the cycle, as the game plays it.
+    if (one.volley) bits.push([fact('shots'), one.volley.map(n => n || '–').join(' / ')]);
+    else if (one.shots > 1) bits.push([fact('shots'), one.shots]);
     /*
      * What the thing actually does when you swing it. A card that says only
      * "ability (29), soulbound, 100 mana" has told the reader nothing they

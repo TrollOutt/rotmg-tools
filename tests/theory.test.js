@@ -44,16 +44,16 @@ const targetHelpers = (() => {
 {
   const checks = {
     Archer: {
-      backgroundPosition: '-4200px -4037.25px',
-      backgroundSize: '5376px 4441.5px'
+      backgroundPosition: '-504px -4089.75px',
+      backgroundSize: '5376px 4452px'
     },
     Assassin: {
-      backgroundPosition: '-1008px -4079.25px',
-      backgroundSize: '5376px 4441.5px'
+      backgroundPosition: '-1764px -4089.75px',
+      backgroundSize: '5376px 4452px'
     },
     Bard: {
-      backgroundPosition: '-2016px -4079.25px',
-      backgroundSize: '5376px 4441.5px'
+      backgroundPosition: '-2772px -4089.75px',
+      backgroundSize: '5376px 4452px'
     }
   };
 

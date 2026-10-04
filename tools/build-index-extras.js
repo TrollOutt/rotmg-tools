@@ -214,7 +214,33 @@ function buildProjectiles() {
       });
     }
     if (!shots.length) continue;
-    items[id] = { many: num(body, 'NumProjectiles') || 1, arc: num(body, 'ArcGap'), rate: num(body, 'RateOfFire') || 1, tilt: num(body, 'AngleCorrection'), shots };
+    /*
+     * How it fires them. A weapon with Subattacks fires each one at its own
+     * rate - the Shortbow's big arrow and its two small ones, the Hama Yumi's
+     * four offset arrows - and a Subattack with ProjectilePatterns fires the
+     * next pattern on each attack (the Phantom Sickle's 1, 3, 5). Reading the
+     * first NumProjectiles in the body showed one arrow for all of them.
+     */
+    const attacks = [];
+    for (const m of body.matchAll(/<Subattack\b([^>]*)>([\s\S]*?)<\/Subattack>/g)) {
+      const pid = (/\bprojectileId="([^"]+)"/.exec(m[1]) || [])[1] || '0';
+      const patternRx = /<ProjectilePattern\b([^>]*)>([\s\S]*?)<\/ProjectilePattern>/g;
+      const own = m[2].replace(patternRx, '');
+      const offset = tag(own, 'PosOffset');
+      const patterns = [...m[2].matchAll(patternRx)].map(x => ({
+        pid: (/\bprojectileId="([^"]+)"/.exec(x[1]) || [])[1] || pid,
+        many: num(x[2], 'NumProjectiles') || 1, arc: num(x[2], 'ArcGap'), angle: num(x[2], 'DefaultAngle')
+      }));
+      attacks.push({
+        pid, many: num(own, 'NumProjectiles') || 1, arc: num(own, 'ArcGap'), angle: num(own, 'DefaultAngle'),
+        rate: num(own, 'RateOfFire'),
+        offset: offset ? offset.split(',').map(Number) : undefined,
+        patterns: patterns.length ? patterns : undefined
+      });
+    }
+    const direct = body.replace(/<Subattack\b[^>]*>[\s\S]*?<\/Subattack>/g, '');
+    items[id] = { many: num(direct, 'NumProjectiles') || 1, arc: num(direct, 'ArcGap'), rate: num(direct, 'RateOfFire') || 1, tilt: num(body, 'AngleCorrection'), shots,
+      attacks: attacks.length ? attacks : undefined };
   }
 
   /*

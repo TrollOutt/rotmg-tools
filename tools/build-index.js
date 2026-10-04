@@ -427,11 +427,14 @@ for (const one of objects) {
   const attackChannels = effectiveFires.filter(shot => shot.subattack);
 
   const effectiveShotCount = attackChannels.length
-    ? attackChannels.reduce(
+    ? Math.round(attackChannels.reduce(
         (sum, shot) => sum + (shot.many || 1),
         0
-      )
+      ) * 100) / 100
     : num(directBody, 'NumProjectiles');
+  // A weapon that cycles through patterns says so: the Phantom Sickle's
+  // volleys are 1, 3 and 5, an average of three an attack.
+  const volley = (attackChannels.find(shot => shot.volley) || {}).volley;
 
   const record = put('item', nameOf(one), one, {
     slot, hand,
@@ -442,6 +445,7 @@ for (const one of objects) {
     mp: num(one.body, 'MpCost'),
     rate: num(directBody, 'RateOfFire'),
     shots: effectiveShotCount,
+    volley,
     use: drunk ? 1 : undefined,
     family,
     /*
