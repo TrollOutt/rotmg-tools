@@ -148,10 +148,14 @@
   .fc2-right .ix-link-row, .fc2-right .ix-facts > div { grid-template-columns: var(--ix-label) minmax(0, 1fr); }
   .fc2-right .ix-link-row > i, .fc2-right .ix-facts dt { text-align: right; }
 }
-.fc2-sheet .ix-facts { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 5px 18px; }
+/* A cell as wide as its label and a short figure need at the card's own text size, so a figure never runs out of it. */
+.fc2-sheet .ix-facts { grid-template-columns: repeat(auto-fill, minmax(min(100%, max(200px, calc(var(--ix-fs, 15px) * 13))), 1fr)); gap: 5px 18px; }
 .fc2-sheet .ix-facts > div { grid-template-columns: 8.5em minmax(0, 1fr); }
 .fc2-sheet .ix-facts dt { text-align: left; }
 .fc2-sheet .ix-facts dd { white-space: nowrap; }
+/* A sentence rather than a figure: the whole line, and it wraps instead of running out of the box. */
+.ix-facts > .is-wide { grid-column: 1 / -1; }
+.fc2-sheet .ix-facts > .is-wide dd { white-space: normal; }
 .fc2 .ix-realm-table { overflow-x: auto; margin: 0; }
 .fc2 .ix-realm-table table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: calc(var(--ix-fs) * .82); }
 .fc2 .ix-realm-table th, .fc2 .ix-realm-table td { padding: 4px 3px; text-align: center; font-variant-numeric: tabular-nums; }

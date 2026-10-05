@@ -355,12 +355,10 @@
     <section id="itemOptimizer" class="card enchant-optimizer" hidden>
       <header>
         <h2>Optimize Build For</h2>
-        <span class="header-aside">this item only</span>
       </header>
 
       <div id="itemOptimizeGoals" class="tc-goals">
         <div class="tc-goal-row">
-          <i>Others</i>
           <span>
             <button type="button" class="tc-goal is-on"
               data-item-goal="dps" style="--tint:#e08a3c">
@@ -370,7 +368,6 @@
         </div>
 
         <div class="tc-goal-row">
-          <i>Stats</i>
           <span>
             <button type="button" class="tc-goal"
               data-item-goal="stat:hp" style="--tint:#58cfda">
@@ -493,13 +490,7 @@
         <header>
           <span class="step-badge">2</span>
           <h2>The Slots</h2>
-          <span id="slotSummary" class="header-aside"></span>
         </header>
-
-        <div class="legend">
-          <span class="legend-item locked"><i>🔒</i> On the item — kept, costs a slot, doubles every reroll</span>
-          <span class="legend-item wanted"><i>🎯</i> Wanted — still to be rolled</span>
-        </div>
 
         <div id="slotList" class="slot-list"></div>
         <p id="slotHint" class="note" hidden></p>
@@ -536,11 +527,10 @@
             <tbody><tr><td colspan="6" class="empty">Choose an item, a rarity, and what you want on it.</td></tr></tbody>
           </table>
         </div>
-        <p id="artifactHidden" class="note" hidden></p>
       </section>
 
       <section id="planCard" class="card" hidden>
-        <header><h2>Build Plan</h2><span class="header-aside">the cheapest order to roll them in</span></header>
+        <header><h2>Build Plan</h2></header>
         <!-- What is asked for, which artifacts may be used and Explain these odds:
              part of the answer rather than a card above it. app.js carries it
              to the Artifacts card when there is only one target. -->
@@ -688,8 +678,7 @@
         <header><span class="step-badge">3</span><h2>The Gear</h2>
           <span class="header-aside">
             <button type="button" id="tcShare" class="link-button"
-              title="Put this build in the address, so it can be sent to somebody or opened in another tool">copy a link</button>
-            click the padlock to keep one</span></header>
+              title="Put this build in the address, so it can be sent to somebody or opened in another tool">copy a link</button></span></header>
         <div id="tcGear" class="tc-gear"></div>
         <div class="tc-gear-foot">
           <!-- The other whole builds the last search found; drawn only when there are some. -->
@@ -703,12 +692,6 @@
       <section class="card tc-fight">
         <header><h2>The Fight</h2>
           <span class="header-aside">
-            <!--
-              What the frame is, said where the frame is named rather than
-              underneath it: the shots are the weapon's own, the rate is the
-              weapon's own, but how they fly is an approximation.
-            -->
-            <span class="tc-flight">shots do not fly exactly as they do in the game</span>
             <button type="button" id="tcPause" class="link-button">pause</button>
             <button type="button" id="tcAgain" class="link-button">again</button>
           </span></header>

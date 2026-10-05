@@ -927,8 +927,7 @@ function renderItemOptimizer(config) {
     }
 
   } else if (!state.theory) {
-    hint.textContent =
-      'Build mechanics load only when you press Optimize.';
+    hint.textContent = '';
 
   } else if (!config.slots) {
     hint.textContent =
@@ -1363,10 +1362,6 @@ function renderSlots() {
       </div>`;
     list.append(card);
   }
-
-  const locked = config.locks.length;
-  const wanted = (config.desired ? 1 : 0) + config.goals.length;
-  $('slotSummary').textContent = visible ? `${plural(visible, 'slot')} · ${locked} locked · ${wanted} wanted · ${Math.max(0, visible - locked)} random` : '';
 }
 
 function renderSubtypes() {
@@ -1488,9 +1483,9 @@ function renderItemCard(config) {
     <div class="item-facts">
       <b>${html(resolved.name)}</b>
       <span class="fact-row">${facts.join('')}</span>
-      <span class="item-awoken">${awoken.length
-        ? `Unlocks ${awoken.map(name => `${enchantIconHtml(state.data.byName.get(name), 'awoken-icon')}<b>${html(name)}</b>`).join(', ')} — and no other Awoken enchantment.`
-        : 'No Awoken enchantment on this item.'}</span>
+      ${awoken.length
+        ? `<span class="item-awoken">Unlocks ${awoken.map(name => `${enchantIconHtml(state.data.byName.get(name), 'awoken-icon')}<b>${html(name)}</b>`).join(', ')} — and no other Awoken enchantment.</span>`
+        : ''}
       ${resolved.note ? `<span class="muted">${html(resolved.note)}</span>` : ''}
     </div>
     <div class="item-actions">
@@ -2244,24 +2239,11 @@ function artifactFilterHtml() {
   </div>`;
 }
 
-// What the ten-row cut left out, and whether anything better is among it.
-function renderHiddenNote(all, shown) {
-  const note = $('artifactHidden');
-  const hidden = all.filter(row => !shown.includes(row));
-  if (!hidden.length) { note.hidden = true; return; }
-  const best = hidden.reduce((a, b) => b.odds > a.odds ? b : a);
-  note.hidden = false;
-  note.className = 'note';
-  note.textContent = `${hidden.length} not listed. Best of them: ${best.artifact.name} at ${percent(best.odds)} per reroll`
-    + (isAllowedRow(best) ? '.' : ` — a ${KIND_LABEL[artifactKind(best.artifact)]} artifact you have not selected.`);
-}
-
 function renderResults(allRows, config) {
   const body = $('results').tBodies[0];
   if (!allRows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No artifact can roll this target.</td></tr>'; return; }
 
   const { rows, off, cheapest, cheapestMine } = tableRows(allRows);
-  renderHiddenNote(allRows, rows);
 
   body.replaceChildren(...rows.map(row => {
     const kind = artifactKind(row.artifact);
@@ -2640,7 +2622,6 @@ async function renderBuildPlan(config) {
 
         <div class="plan-head">
           <div class="plan-goal">
-            <small>Roll with</small>
             <div class="plan-target">
               <img src="${icon}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
               <span>${html(step.artifact.name)}</span>
@@ -2652,7 +2633,6 @@ async function renderBuildPlan(config) {
           <div class="plan-finish">
             <b>${dust(stepDust)}</b>
             <small>expected ${html(config.dust)} for this step · ~${count(stepRerolls)} reroll${Math.round(stepRerolls) === 1 ? '' : 's'}</small>
-            <small class="plan-left">${count(step.expectedDustFromHere)} left until the end</small>
           </div>
         </div>
 
@@ -4501,7 +4481,6 @@ function wireAtlasIndexSelection() {
           ) !important;
 
         box-shadow:
-          inset 3px 0 0 #c98947,
           inset 0 0 20px rgba(140, 69, 29, .14),
           0 0 0 1px rgba(201, 137, 71, .30)
           !important;

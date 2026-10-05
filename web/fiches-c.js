@@ -305,8 +305,8 @@
       else mid += '<div class="ln">' + esc(said[0]) + ': <span class="v">' + esc(said[1]) + '</span></div>';
     }
     for (const x of r.share || []) {
-      mid += '<div class="ln">Bonus <span class="v">' + STAT_NAME[x.stat] + '</span>: Equal to <span class="v">'
-        + signed(x.pct) + '%</span> of <span class="v">' + STAT_NAME[x.of] + '</span> Stat.</div>';
+      mid += '<div class="ln">Bonus ' + statWord(x.stat) + ': Equal to <span class="v">'
+        + signed(x.pct) + '%</span> of ' + statWord(x.of) + ' Stat.</div>';
     }
     if (r.mp) mid += '<div class="ln">MP Cost: <span class="v">' + r.mp + '</span></div>';
     /* L'effet écrit par RealmEye, moins ce que le client dit déjà ligne par ligne. */
@@ -340,7 +340,7 @@
     const worn = STAT_ORDER.filter(k => w[k] !== undefined);
     if (worn.length && r.kind === 'item') {
       mid += '<div class="oe">On Equip:</div><div class="grid">' + worn.map(k =>
-        '<span class="' + (w[k] < 0 ? 'neg' : '') + '">' + signed(w[k]) + ' ' + STAT_NAME[k] + '</span>').join('') + '</div>';
+        '<span class="' + (w[k] < 0 ? 'neg' : '') + '">' + signed(w[k]) + ' ' + statWord(k) + '</span>').join('') + '</div>';
     }
     if (r.kind === 'class' && r.stats) {
       mid += '<div class="oe">Base → Max:</div><div class="grid two">' + CLASS_STAT.map(([k, n]) =>
@@ -352,7 +352,7 @@
     if (set && set.steps && Object.keys(set.steps).length) {
       h += '<hr><div class="set"><h5>' + esc(set.name) + '</h5><div class="cols">' + Object.keys(set.steps).map(n =>
         '<div><i>' + (n === '4' ? 'Full Set' : n + ' Pieces') + '</i>' + STAT_ORDER.filter(k => set.steps[n][k] !== undefined)
-          .map(k => '<div>' + signed(set.steps[n][k]) + ' ' + STAT_NAME[k] + '</div>').join('') + '</div>').join('') + '</div></div>';
+          .map(k => '<div>' + signed(set.steps[n][k]) + ' ' + statWord(k) + '</div>').join('') + '</div>').join('') + '</div></div>';
     }
     h += '</div>';
     const foot = [];
@@ -476,13 +476,16 @@
     const body = parts.filter(Boolean).join('');
     return body ? '<div class="ix-block' + (cls ? ' ' + cls : '') + '"' + (style ? ' style="' + style + '"' : '') + '>' + body + '</div>' : '';
   };
-  const factsDl = rows => rows.length ? '<dl class="ix-facts">' + rows.map(([k, v]) =>
-    '<div><dt>' + esc(k) + '</dt><dd>' + v + '</dd></div>').join('') + '</dl>' : '';
+  // A third entry names a row's class: 'is-wide' for a sentence that needs the whole line.
+  const factsDl = rows => rows.length ? '<dl class="ix-facts">' + rows.map(([k, v, cls]) =>
+    '<div' + (cls ? ' class="' + cls + '"' : '') + '><dt>' + esc(k) + '</dt><dd>' + v + '</dd></div>').join('') + '</dl>' : '';
   const linkRows = rows => rows.length ? '<div class="ix-links">' + rows.map(([k, v]) =>
     '<div class="ix-link-row"><i>' + esc(k) + '</i><span>' + v + '</span></div>').join('') + '</div>' : '';
   const chip = (text, cls) => '<span class="ix-data-chip' + (cls ? ' ' + cls : '') + '">' + text + '</span>';
   const TINT = { MAXHP: '#58cfda', MAXMP: '#f4d24c', ATT: '#ca46dd', DEF: '#8b9cb3',
     SPD: '#58da6e', DEX: '#ff5f2a', VIT: '#dd0c32', WIS: '#4b9be7' };
+  /* A stat named in a sentence wears its own colour, as it does everywhere else on the site. */
+  const statWord = (k, text) => '<b class="fc2-statword" style="color:' + TINT[k] + '">' + (text === undefined ? STAT_NAME[k] : text) + '</b>';
   /* Les icônes d'interface de la Forge, prises dans le GUI Atlas du client. */
   const UI = { common: 0, rare: 1, legendary: 2, mythical: 3, redDust: 4, purpleDust: 5, greenDust: 6, forgefire: 7 };
   const uiIcon = (key, say) => '<span class="fc2-ui" style="--i:' + UI[key] + '" role="img" aria-label="' + esc(say) + '"></span>';
@@ -695,6 +698,12 @@
       const rate = s ? (r.rate !== undefined ? r.rate : s.rate) : undefined;
       if (rate !== undefined) rows.push(['Rate of fire', Math.round(rate * 100) + '%']);
       if (r.mp) rows.push(['MP cost', String(r.mp)]);
+      /* What a stat over a floor adds to each use: the client's own figures, for the stat it names. */
+      const grow = r.cast && r.cast.from !== undefined ? [
+        r.cast.dmg ? '+' + r.cast.dmg + ' damage' : '',
+        r.cast.more >= 0.001 ? '+' + r.cast.more + ' shot' + (r.cast.more === 1 ? '' : 's') : ''
+      ].filter(Boolean) : [];
+      if (grow.length) rows.push(['Scales with', statWord(r.cast.stat || 'WIS') + ' above ' + r.cast.from + ': ' + grow.join(', ') + ' per point', 'is-wide']);
       const proj = projOf(r);
       const flags = (proj && proj.shots.length ? shotBehaviour(r, proj)
         : [s && s.through && 'Hits multiple targets', s && s.pierce && 'Ignores defense'].filter(Boolean).map(x => chip(esc(x))).join(''))
@@ -716,7 +725,7 @@
         .replace('</li>', ' <em>· recharge ' + esc(said[1].replace(/\.$/, '').replace(' seconds', ' s')) + '</em></li>');
       else items.push('<li><b>' + esc(said[0]) + '</b> ' + esc(said[1]) + '</li>');
     }
-    for (const x of r.share || []) items.push('<li><b>Bonus ' + STAT_NAME[x.stat] + '</b> equal to ' + signed(x.pct) + '% of ' + STAT_NAME[x.of] + '</li>');
+    for (const x of r.share || []) items.push('<li><b>Bonus</b> ' + statWord(x.stat) + ' equal to ' + signed(x.pct) + '% of ' + statWord(x.of) + '</li>');
     const reEffect = String(com.facts.effect || '')
       .replace(/Shots hit multiple targets|Shots pass through obstacles|Ignores defense of target/g, '')
       .replace(new RegExp((r.conditions || []).filter(c => c.on === 'hit').map(c => c.effect + ' for ' + c.duration + ' seconds?').join('|') || '$^', 'g'), '')

@@ -464,29 +464,41 @@ function itemOf(one, hand, slot, labels) {
      * where the game throws sixteen, which understated every nova on the
      * page by a factor of sixteen.
      *
-     * The same line says how wisdom improves it: above a stated floor, each
-     * point adds a fraction of a shot and a fraction of the damage. Both are
-     * the client's own numbers.
+     * An Activate also says how a stat improves it: above a stated floor,
+     * each point adds a fraction of a shot and a fraction of the damage. The
+     * stat is the client's too - wisdom for most, but the Mad Javelin grows
+     * with attack, the Tablet of the King's Avatar with dexterity. And it is
+     * not always the first Activate that says so: the Javelin's first is its
+     * boost to attack, its second the throw that scales. So the shots come
+     * from the first, as they always have, and the scaling from the one that
+     * scales a hit.
      */
     cast: (() => {
-      const m = /<Activate\s+([^>]*)>/.exec(one.body);
-      if (!m) return undefined;
-      const attr = name => {
-        const got = new RegExp(name + '="([^"]+)"').exec(m[1]);
+      const all = [...one.body.matchAll(/<Activate\s+([^>]*)>/g)].map(m => m[1]);
+      if (!all.length) return undefined;
+      const attr = (raw, name) => {
+        const got = new RegExp('\\b' + name + '="([^"]+)"').exec(raw);
         const n = got ? Number(got[1]) : undefined;
         return Number.isFinite(n) ? n : undefined;
       };
-      const shots = attr('numShots');
-      const from = attr('statModScalingMin');
-      const dmg = attr('statModDamage');
-      const more = attr('statModNumShots');
+      const grows = all.find(a => /\bstatModScalingMin=/.test(a) && /\bstatMod(Damage|NumShots)=/.test(a))
+        || all.find(a => /\bstatModScalingMin=/.test(a));
+      const shots = attr(all[0], 'numShots');
+      const from = grows && attr(grows, 'statModScalingMin');
       if (shots === undefined && from === undefined) return undefined;
       const out = {};
       if (shots !== undefined) out.shots = shots;
-      if (from !== undefined) out.from = from;
-      if (dmg !== undefined) out.dmg = dmg;
-      if (more !== undefined) out.more = more;
-      return Object.keys(out).length ? out : undefined;
+      if (from !== undefined) {
+        out.from = from;
+        const dmg = attr(grows, 'statModDamage');
+        const more = attr(grows, 'statModNumShots');
+        if (dmg !== undefined) out.dmg = dmg;
+        if (more !== undefined) out.more = more;
+        const stat = /\bscalingStat="([^"]+)"/.exec(grows);
+        // One item spells it MAHMP; it means MAXMP.
+        if (stat && stat[1] !== 'WIS') out.stat = stat[1] === 'MAHMP' ? 'MAXMP' : stat[1];
+      }
+      return out;
     })(),
     set: text(one.body, 'SetName'),
     /*

@@ -380,10 +380,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const draft = profileDraft;
     if (!draft) return;
     const dungeons = selectedDungeons(draft);
-    el('tcWelcome').innerHTML = '<div class="tc-welcome-intro"><span class="tc-eyebrow">BUILD CRAFTER · WELCOME</span>'
-      + '<h2 id="tcWelcomeTitle" tabindex="-1">What’s the highest dungeon difficulty you’ve completed?</h2></div>'
-      + '<section class="tc-biome-picker" aria-labelledby="tcBiomeTitle"><div><h3 id="tcBiomeTitle">Realm Zones</h3>'
-      + '<span>Include loot found directly in these zones</span></div><div class="tc-biome-ranks">'
+    el('tcWelcome').innerHTML = '<div class="tc-welcome-intro"><h2 id="tcWelcomeTitle" tabindex="-1">What’s the highest dungeon difficulty you’ve completed?</h2></div>'
+      + '<section class="tc-biome-picker" aria-label="Realm zones"><div class="tc-biome-ranks">'
       + biomeRankCards(draft) + '</div></section>'
       + '<div class="tc-slider-block"><div class="tc-slider-value">' + difficultyIcon + '<output id="tcDifficultyValue" for="tcDifficultySlider">'
         + (draft.difficulty || 1) + '</output><span>/ 10</span></div>'
@@ -391,8 +389,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         + (draft.difficulty || 1) + '" aria-label="Highest dungeon difficulty"'
       + (!access ? ' disabled' : '') + ' style="--difficulty-progress:' + (((draft.difficulty || 1) - 1) / 9 * 100) + '%">'
       + '<div class="tc-difficulty-ticks" aria-hidden="true">'
-        + Array.from({ length: 10 }, (_, i) => '<span style="left:' + (i / 9 * 100) + '%">' + (i + 1) + '</span>').join('') + '</div></div>'
-      + '<div class="tc-difficulty-caption"><span>First adventures</span><span>Hardest challenges</span></div></div>'
+        + Array.from({ length: 10 }, (_, i) => '<span style="left:' + (i / 9 * 100) + '%">' + (i + 1) + '</span>').join('') + '</div></div>' + '</div>'
       + (!access ? '<p class="tc-access-note">Dungeon data could not be loaded.</p><button type="button" class="tc-undo" id="tcRetryAccess">Retry loading sources</button>' : '')
       + '<section id="tcZoneEditor" aria-labelledby="tcSelectedDungeons"><div class="tc-zone-heading"><div><h3 id="tcSelectedDungeons">Selected Dungeons</h3>'
       + '<span id="tcZoneCount-dungeon"></span></div><div class="tc-zone-toolbar"><input id="tcZoneSearch" type="search" aria-label="Find a selected dungeon" placeholder="Search selected dungeons…" autocomplete="off">'
@@ -401,7 +398,6 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + dungeonCards(dungeons)
       + '</div><p class="tc-zone-empty" id="tcZoneEmpty-dungeon"' + (dungeons.length ? ' hidden' : '')
       + '>No selected dungeons match this search.</p></section>'
-      + '<p class="tc-onboarding-note">Click a dungeon to remove it. Moving the slider restores the automatic selection for the new difficulty.</p>'
       + '<div class="tc-welcome-footer"><span id="tcProfilePreview"></span><div>'
       + (profile ? '<button type="button" id="tcProfileCancel" class="tc-undo">Cancel</button>' : '')
       + '<button type="button" id="tcProfileSave" class="tc-run">' + (profile ? 'Save progression' : 'Start crafting') + '</button></div></div>';
@@ -437,7 +433,6 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (editing) return;
     const personal = profile.mode === 'personal';
     const allowed = data.items.filter(item => accessible(item.name)).length;
-    const outside = HANDS.filter(([hand]) => build.gear[hand].name && !accessible(build.gear[hand].name));
     /*
      * Three controls in the page's own header: which of the two pools the
      * search draws from, and the way back into the questions that decide the
@@ -461,7 +456,6 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       + '<button type="button" data-access-mode="personal" aria-pressed="' + personal + '">Personalized</button>'
       + '<button type="button" data-access-mode="best" aria-pressed="' + !personal + '">Best possible</button></span>';
     const notes = [
-      outside.length ? 'Outside your progression: ' + outside.map(([hand]) => esc(build.gear[hand].name) + (build.locked[hand] ? ' (kept — locked)' : ' (replaced on the next search)')).join(', ') + '.' : '',
       !access && personal ? 'Loot sources are unavailable. Edit progression to retry.' : '',
       !profileSaved ? 'Browser storage is unavailable. This profile lasts for this visit only.' : ''
     ].filter(Boolean);
@@ -1161,7 +1155,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     const shot = item.shots[0];
     const cast = item.cast || {};
-    const over = cast.from === undefined ? 0 : Math.max(0, stats.wis - cast.from);
+    // Over the floor of the stat it grows with: wisdom unless the client names another.
+    const over = cast.from === undefined ? 0 : Math.max(0, stats[OF_STAT[cast.stat] || 'wis'] - cast.from);
     const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
       + over * (cast.dmg || 0);
     const each = landed(roll, stats.att, def, shot.pierce, fx);
@@ -2883,6 +2878,9 @@ const TINT = {
    * weighed against it at a glance; the rule that produced it follows, and
    * the whole sentence is on the chip's tooltip either way.
    */
+  // Every statistic named in a line wears its own colour, as it does in the stat bar.
+  const tintStats = said => said.replace(/\b(MAXHP|MAXMP|HP|MP|ATT|DEF|SPD|DEX|VIT|WIS)\b/g,
+    (tag, key) => '<b style="color:' + TINT[OF_STAT[key]] + '">' + tag + '</b>');
   const saysRel = (part, bonus) => {
     const much = relWorth(part, bonus);
     const rule = plus(part.pct) + '% of bonus ' + part.of;
@@ -2948,6 +2946,7 @@ const TINT = {
 
       /* What the thing is, in the fewest words that still say it. */
       const bits = [];
+      let grows = '';
       if (item) {
         const gun = item.shots && item.shots[0];
         if (gun) {
@@ -2981,6 +2980,21 @@ const TINT = {
             + (part.of === part.stat ? '' : ' as ' + part.stat));
         }
         for (const part of item.rel || []) bits.push(saysRel(part, bonus));
+        /*
+         * What a stat over a floor adds to each use, and what it adds with
+         * this build's own stats - the reason one more point of it can be
+         * worth more on this item than on any other.
+         */
+        const cast = item.cast;
+        if (cast && cast.from !== undefined && (cast.dmg || cast.more >= 0.001)) {
+          const tag = cast.stat === 'MAXHP' ? 'HP' : cast.stat === 'MAXMP' ? 'MP' : cast.stat || 'WIS';
+          const over = kit ? Math.max(0, kit.now[OF_STAT[tag]] - cast.from) : 0;
+          const gain = [cast.dmg ? plus(cast.dmg) + ' dmg' : '', cast.more >= 0.001 ? plus(cast.more) + ' shots' : '']
+            .filter(Boolean).join(', ');
+          const now = [cast.dmg && over ? plus(over * cast.dmg) + ' dmg' : '', cast.more >= 0.001 && over ? plus(over * cast.more) + ' shots' : '']
+            .filter(Boolean).join(', ');
+          grows = gain + ' per ' + tag + ' over ' + cast.from + (kit ? ' · ' + (now || 'nothing') + ' with this build' : '');
+        }
         if (item.sb) bits.push('soulbound');
       }
 
@@ -3022,12 +3036,12 @@ const TINT = {
           one.heal.partMP ? '+' + round(one.heal.partMP * 100) + '% MP/s' : '',
           one.heal.soak ? '-' + round((1 - one.heal.soak) * 100) + '% damage taken' : ''
         ].filter(Boolean).join(' ') : '';
-        const said = one && one.worn
+        const said = tintStats(one && one.worn
           ? '<u>' + Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ') + '</u>'
           : swaps ? '<u>' + esc(swaps) + '</u>'
           : shares ? '<u>' + esc(shares) + '</u>'
           : heals ? '<u>' + esc(heals) + '</u>'
-          : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : '');
+          : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : ''));
         // The whole sentence, for the one that has been cut short on the card.
         const whole = one && (swaps || shares || heals
           || (one.worn && Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ')));
@@ -3095,7 +3109,9 @@ const TINT = {
          * off mid-sentence while the width beneath those buttons sat empty.
          * On its own line it has the whole card and says all of it.
          */
-        + (bits.length ? '<span class="tc-bits" title="' + esc(bits.join(' · ')) + '">' + esc(bits.join(' · ')) + '</span>' : '')
+        + (bits.length ? '<span class="tc-bits" title="' + esc(bits.join(' · ')) + '">' + tintStats(esc(bits.join(' · '))) + '</span>' : '')
+        // On a line of its own, so it is never the part an ellipsis takes.
+        + (grows ? '<span class="tc-bits tc-grows" title="' + esc(grows) + '">' + tintStats(esc(grows)) + '</span>' : '')
         + lootRow(worn.name)
         + '</div>'
         + '<div class="tc-ench-strip">' + chips.join('') + '</div>'
@@ -3257,7 +3273,7 @@ const TINT = {
       const many = Object.values(build.locked).filter(Boolean).length;
       kept.textContent = many
         ? many + (many === 1 ? ' thing kept' : ' things kept')
-        : 'nothing kept - it may change anything';
+        : '';
     }
     const undo = el('tcUndo');
     if (undo) undo.hidden = !before;
@@ -3324,7 +3340,7 @@ const TINT = {
           + (assume[name] ? 'true' : 'false') + '">party</button>' : '')
         + '</span>';
     }).join('');
-    box.innerHTML = '<div class="tc-fx-head">Status effects <small>in the figures above</small></div><div class="tc-fx-row">' + rows + '</div>';
+    box.innerHTML = '<div class="tc-fx-row">' + rows + '</div>';
   }
 
   function drawNumbers() {
@@ -4498,10 +4514,6 @@ const TINT = {
     for (const group of el('tcBosses').querySelectorAll('.tc-target-group')) {
       group.classList.toggle('has-on', Boolean(group.querySelector('.tc-boss.is-on')));
     }
-    const chosenBoss = data.byBoss[build.boss];
-    el('tcBossSay').textContent = chosenBoss
-      ? chosenBoss.name + ' · ' + commas(chosenBoss.hp) + ' life, '
-        + chosenBoss.def + ' armour' : '';
     el('tcName').value = build.name;
     drawTabs();
     drawMix();

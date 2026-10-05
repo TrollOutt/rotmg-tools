@@ -92,7 +92,6 @@
 }
 #tcWelcome[open] { display: flex; flex-direction: column; }
 #tcWelcome::backdrop { background: #08070dcc; backdrop-filter: blur(5px); }
-.tc-eyebrow { color: var(--accent); font: 11px/1.6 var(--mono); letter-spacing: .12em; }
 .tc-welcome-intro { margin-bottom: clamp(12px, 2vh, 20px); flex: none; }
 #tcWelcome h2 { font-size: clamp(23px, 3vw, 29px); line-height: 1.25; margin: 10px 0 12px; max-width: 620px; }
 #tcWelcomeTitle:focus { outline: none; }
@@ -106,9 +105,6 @@
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 12px 18px; margin: 0 0 14px; flex: none;
 }
-.tc-biome-picker h3 { margin: 0 0 2px; font-size: 15px; }
-.tc-biome-picker > div:first-child { flex: 1 1 200px; min-width: 0; }
-.tc-biome-picker > div:first-child > span { color: var(--muted); font-size: 11px; }
 .tc-biome-ranks {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(132px, 13vw, 180px), 1fr));
   gap: 8px; flex: 2 1 min(590px, 100%);
@@ -123,7 +119,7 @@
 .tc-biome-rank small { margin-top: 2px; color: inherit; font-size: 9px; }
 .tc-biome-rank[aria-pressed="true"] { color: var(--text); border-color: var(--accent); background: rgba(22, 140, 199, .1); }
 .tc-biome-rank[aria-pressed="true"] .tc-biome-art { filter: none; opacity: 1; }
-.tc-slider-block { flex: none; }
+.tc-slider-block { flex: none; margin-bottom: 16px; }
 .tc-slider-value { display: flex; align-items: baseline; justify-content: center; gap: 7px; color: var(--accent); margin: 0 0 8px; }
 .tc-slider-value svg { align-self: center; margin-right: 3px; }
 .tc-slider-value output { font: 700 34px/1 var(--mono); color: var(--text); min-width: 48px; text-align: right; }
@@ -140,7 +136,6 @@
 .tc-difficulty-slider:disabled { opacity: .35; cursor: not-allowed; }
 .tc-difficulty-ticks { position: relative; height: 13px; margin: -1px 12px 0; color: var(--dim); font: 10px var(--mono); }
 .tc-difficulty-ticks span { position: absolute; top: 0; transform: translateX(-50%); text-align: center; }
-.tc-difficulty-caption { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 8px; }
 /* It holds its heading and its list, and is as tall as the two of them. */
 #tcZoneEditor { min-height: 0; flex: 0 1 auto; display: flex; flex-direction: column; overflow: hidden; }
 .tc-zone-heading { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 10px; flex: none; }
@@ -175,7 +170,6 @@
 .tc-zone-rating { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; font: 10px var(--mono); color: var(--dim); }
 .tc-zone-rating svg { width: 13px; height: 13px; }
 .tc-zone-empty { margin: auto !important; padding: 12px; text-align: center; }
-#tcWelcome .tc-onboarding-note { font-size: 11px; margin: 6px 0 0; }
 .tc-access-note { color: var(--muted); }
 .tc-welcome-footer { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: none; }
 .tc-welcome-footer > span { font-size: 12px; color: var(--muted); }
@@ -225,7 +219,6 @@
   #tcWelcome h2 { font-size: 20px; margin: 6px 0; }
   .tc-welcome-intro { margin-bottom: 8px; }
   .tc-biome-picker { display: block; margin-bottom: 9px; }
-  .tc-biome-picker > div:first-child > span { display: none; }
   .tc-biome-ranks { width: 100%; margin-top: 6px; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .tc-biome-rank { min-height: 48px; padding: 4px 6px; gap: 5px; }
   .tc-biome-rank .tc-biome-art { width: 36px; height: 36px; flex-basis: 36px; }
@@ -705,12 +698,11 @@ select option { background: var(--panel); color: var(--text); }
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: center;
   background: rgb(var(--bg-rgb) / .55);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
   padding: 8px 11px;
 }
-.item-card.partial { border-left-color: var(--locked); }
-.item-card.unknown { border-left-color: var(--bad); }
+.item-card.partial { border-color: var(--locked); }
+.item-card.unknown { border-color: var(--bad); }
 
 .item-art {
   width: 46px; height: 46px; flex: none;
@@ -806,13 +798,12 @@ select option { background: var(--panel); color: var(--text); }
 .slot-card {
   display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center;
   background: var(--bg); border: 1px solid var(--line);
-  border-left: 3px solid var(--line);
   border-radius: var(--radius-sm); padding: 10px 12px;
   transition: border-color .12s, background .12s;
 }
 .slot-card.is-empty { border-style: dashed; border-left-style: dashed; opacity: .8; }
-.slot-card.is-locked { border-left-color: var(--locked); background: linear-gradient(90deg, var(--locked-soft), transparent 55%), var(--bg); }
-.slot-card.is-wanted { border-left-color: var(--wanted); background: linear-gradient(90deg, var(--wanted-soft), transparent 55%), var(--bg); }
+.slot-card.is-locked { border-color: var(--locked); background: linear-gradient(var(--locked-soft), var(--locked-soft)), var(--bg); }
+.slot-card.is-wanted { border-color: var(--wanted); background: linear-gradient(var(--wanted-soft), var(--wanted-soft)), var(--bg); }
 
 .slot-index {
   width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center;
@@ -973,7 +964,6 @@ td.empty { text-align: center; color: var(--dim); padding: 30px 12px; }
 .dust-icon { width: 14px; height: 14px; object-fit: contain; vertical-align: -2px; margin-right: 4px; }
 
 tr.best-cost td { background: rgba(110, 231, 160, .07); }
-tr.best-cost td:first-child { box-shadow: inset 3px 0 0 var(--good); }
 tr.dead td { color: var(--dim); }
 
 /*
@@ -982,7 +972,6 @@ tr.dead td { color: var(--dim); }
  * of your selection, and clickable to make it part of it.
  */
 tr.off-group td { color: var(--dim); background: rgb(var(--hi-rgb) / .015); cursor: pointer; }
-tr.off-group td:first-child { box-shadow: inset 3px 0 0 var(--line); }
 tr.off-group:hover td { background: rgba(121, 197, 232, .07); color: var(--muted); }
 tr.off-group .artifact-icon { filter: grayscale(1); opacity: .65; }
 tr.off-group:hover .artifact-icon { filter: none; opacity: 1; }
@@ -1107,7 +1096,7 @@ table.mini td { padding: 3px 8px; border: 0; }
 .plan-then b { color: var(--text); }
 .plan-then.warn {
   color: var(--text); background: rgba(240, 180, 41, .09);
-  border-left: 2px solid var(--locked); border-radius: 0 6px 6px 0; padding: 7px 10px;
+  border: 1px solid rgba(240, 180, 41, .35); border-radius: 6px; padding: 7px 10px;
 }
 
 /* The answer to the player's real question: keep it, or throw it back?
@@ -1211,7 +1200,7 @@ table.mini td { padding: 3px 8px; border: 0; }
   line-height: 1.5;
   color: var(--muted);
   background: rgba(255, 208, 38, .06);
-  border-left: 2px solid var(--locked);
+  border: 1px solid rgba(255, 208, 38, .3);
 }
 .picker-hint b { color: var(--text); font-weight: 600; }
 
@@ -2834,12 +2823,12 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   * the item you are working on.
   */
 .tc-slot {
-  border: 1px solid var(--line); border-left: 3px solid rgb(var(--hi-rgb) / .1);
+  border: 1px solid var(--line);
   border-radius: var(--radius-sm); background: rgb(var(--bg-rgb) / .5); min-width: 0;
 }
-.tc-slot:hover { border-left-color: rgb(var(--hi-rgb) / .22); }
+.tc-slot:hover { border-color: rgb(var(--hi-rgb) / .22); }
 .tc-slot.is-held {
-  border-color: var(--accent); border-left-color: var(--accent);
+  border-color: var(--accent);
   background: rgba(121, 197, 232, .06);
 }
 
@@ -2926,6 +2915,8 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   color: var(--muted); font-size: 11.5px; margin: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* What a stat over a floor adds: wrapped rather than cut. */
+.tc-bits.tc-grows { white-space: normal; }
 /*
  * A chip is one line and holds its parts apart. They were overlapping because
  * the name was allowed to be any width and the effect beside it was not given
@@ -3136,12 +3127,6 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 #pageTheory .tc-fight .tc-facts .figure > b { font-size: calc(var(--tc-text) + 7px); }
 #pageTheory .tc-fight .tc-facts .figure > small { font-size: calc(var(--tc-text) - 1px); }
 .tc-facts .figure.is-loud > b { color: var(--accent); }
-
-/* What the bench draws straight that the game does not. */
-.tc-flight {
-  color: var(--dim); font-size: 11px; font-weight: 400; letter-spacing: 0;
-  text-transform: none; margin-right: 4px;
-}
 
 .tc-graph { width: 100%; height: 200px; display: block; }
 #tcKey { display: inline-flex; gap: 11px; }
@@ -3518,7 +3503,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 .ix-group-head { flex-wrap: wrap; }
 .ix-group.is-primary {
   background: rgb(var(--hi-rgb) / .045);
-  border: 1px solid var(--ix-hue); border-left-width: 3px;
+  border: 1px solid var(--ix-hue);
   border-radius: var(--radius-sm);
 }
 .ix-group.is-primary > .ix-group-head b { letter-spacing: .5px; font-weight: 750; }
@@ -3536,7 +3521,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
   border-radius: 0; padding: 0 2px 3px; text-align: left;
 }
 /* A choice, but not the one holding the others up. */
-.ix-group.is-chosen { border-left: 3px solid var(--ix-hue); border-radius: var(--radius-sm); }
+.ix-group.is-chosen { border: 1px solid var(--ix-hue); border-radius: var(--radius-sm); }
 .ix-group:not(.is-primary) > .ix-group-head b { font-weight: 550; }
 .ix-group.is-chosen .ix-facet.is-on {
   background: transparent; border-color: var(--ix-hue); color: var(--ix-hue);
@@ -3738,7 +3723,7 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 
 .ix-said-block {
   margin-top: 14px; padding: 11px 13px 4px;
-  border: 1px solid var(--line-soft); border-left: 2px solid var(--legendary);
+  border: 1px solid rgba(202, 122, 255, .35);
   border-radius: var(--radius-sm); background: rgba(202, 122, 255, .05);
 }
 .ix-said-block h4 {
@@ -4012,8 +3997,6 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 /* A status effect's icon comes off its own small sheet, set inline. */
 .ix-status-art { display: inline-block; background-repeat: no-repeat; image-rendering: pixelated; }
 /* A status chip says by its edge whether it helps or harms. */
-.ix-jump.fc2-status.is-good { box-shadow: inset 2px 0 0 #6fcf7a; }
-.ix-jump.fc2-status.is-bad { box-shadow: inset 2px 0 0 #e0624a; }
 .ix-jump.fc2-status small { color: var(--dim); font-size: .86em; }
 .fc2-status-cell { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; }
 
@@ -5407,6 +5390,8 @@ body[data-ring="list"] .ring-copy .d { margin-top: 6px; }
   flex: 1 1 55%; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-size: calc(var(--tc-text) - 1px); line-height: 1.35;
 }
+/* What a stat over a floor adds takes the whole width under them, and wraps rather than be cut. */
+.tc-gear-card .tc-slot-head > .tc-bits.tc-grows { flex: 1 1 100%; order: 1; white-space: normal; }
 /* Where it falls: the places as their own pictures, each opening the Index. */
 .tc-loot { display: inline-flex; align-items: center; gap: 3px; flex: 0 1 auto; min-width: 0; }
 .tc-loot > i {
@@ -6161,8 +6146,6 @@ body.globe-wide #atlasIndex:not([hidden]) {
 /* ---------------- Theory Crafting: status effects in the figures ---------------- */
 .tc-status:empty { display: none; }
 .tc-status { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
-.tc-fx-head { font-size: 12px; font-weight: 650; color: var(--muted); margin-bottom: 6px; }
-.tc-fx-head small { font-weight: 400; color: var(--dim); margin-left: 4px; }
 .tc-fx-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .tc-fx {
   display: inline-grid; grid-template-columns: auto auto auto; grid-template-rows: auto auto; column-gap: 6px; align-items: center;
