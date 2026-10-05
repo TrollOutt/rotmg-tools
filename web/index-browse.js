@@ -369,10 +369,26 @@
       section('pool', 'Pools', visible(r => r.kind === 'pool'))
     ]);
     for (const d of out) d.pic = pick(d.groups.map(g => g.pic).filter(Boolean)) || (d.groups[0] && d.groups[0].pic);
+    /*
+     * Nineteen kinds of ability, most of them one class's, made nineteen
+     * headings over a line or two each. They are one section: each line says
+     * its kind and the class that holds it, and a menu narrows to one.
+     */
+    const gd = out.find(d => d.id === 'gear');
+    const kinds = gd ? gd.groups.filter(g => (IX.records.get(g.ids[0]) || {}).hand === 'ability') : [];
+    if (gd && kinds.length) {
+      gd.abilities = { id: 'abilities', title: 'Abilities', ids: kinds.flatMap(g => g.ids), pic: kinds[0].pic, kinds };
+      gd.kindOf = new Map(kinds.flatMap(g => g.ids.map(id => [id, g])));
+    }
+    IX.holderOf = new Map();
+    for (const id of classes) for (const s of IX.records.get(id).slots || []) if (!IX.holderOf.has(s)) IX.holderOf.set(s, IX.records.get(id));
     IX.domains = out;
     familyOf = null;
   }
   IX.domain = id => IX.domains.find(d => d.id === id);
+  // A family's section by its id, the gear's abilities taken together included.
+  IX.groupOf = (d, s) => !s ? null : s === 'abilities' && d.abilities ? d.abilities : d.groups.find(x => x.id === s) || null;
+  const isKind = (d, g) => Boolean(d && d.abilities && g && d.abilities.kinds.includes(g));
 
   /* ---------------- search ---------------- */
   /* What players type for the places they go most. */
@@ -391,12 +407,56 @@
     if (r.kind === 'skin' || r.kind === 'enchant') return 2;
     return 3;
   };
+  /*
+   * Forgiving matching. A name is read as plain words - no apostrophes, no
+   * punctuation - so "oryxs castle" finds Oryx's Castle; a plural finds the
+   * singular ("mads" finds Mad Lab); and a word of four letters or more may
+   * be one letter off (two from seven), so "javlin" still finds the Mad
+   * Javelin. It only speaks when the plain matches are few: a typo should
+   * rescue a search, not bury a good one under near misses.
+   */
+  const plain = s => String(s).toLowerCase().replace(/['’`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const STOP = new Set(['of', 'the', 'a']);
+  // A name's plain words, worked out once per record rather than on every key.
+  const wordsOf = new WeakMap();
+  const plainWords = r => {
+    let got = wordsOf.get(r);
+    if (!got) wordsOf.set(r, got = plain(r.said || r.name).split(' ').filter(w => w && !STOP.has(w)));
+    return got;
+  };
+  // Edits between two words, two letters swapped counting as one ("sheild"); gives up past the most allowed.
+  function near(a, b, most) {
+    if (Math.abs(a.length - b.length) > most) return false;
+    let before = null, prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const row = [i];
+      let low = i;
+      for (let j = 1; j <= b.length; j++) {
+        row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (before && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) row[j] = Math.min(row[j], before[j - 2] + 1);
+        if (row[j] < low) low = row[j];
+      }
+      if (low > most) return false;
+      before = prev; prev = row;
+    }
+    return prev[b.length] <= most;
+  }
+  // One typed word against one word of a name: the start of it, its singular, or nearly it.
+  function wordFits(w, nw) {
+    if (nw.startsWith(w)) return true;
+    const one = w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : '';
+    if (one && nw.startsWith(one)) return true;
+    if (w.length < 4) return false;
+    const most = w.length >= 7 ? 2 : 1;
+    return near(w, nw, most) || (nw.length > w.length && near(w, nw.slice(0, w.length), most));
+  }
   IX.search = (term, limit = 60) => {
     const t = term.trim().toLowerCase();
     if (!t) return [];
-    const words = t.split(/\s+/).filter(w => w && !['of', 'the', 'a'].includes(w));
+    const words = t.split(/\s+/).filter(w => w && !STOP.has(w));
+    const loose = plain(t).split(' ').filter(w => w && !STOP.has(w));
     const meant = SHORT[t] && SHORT[t].toLowerCase();
-    const hits = [];
+    const hits = [], maybe = [];
     for (const r of IX.list) {
       if (r.hidden || (r.communityOnly && r.kind !== 'place')) continue;
       const n = String(r.said || r.name).toLowerCase();
@@ -407,8 +467,19 @@
       else if (bare.startsWith(t) || n.startsWith(t)) rank = 1;
       else if (words.length && words.every(w => new RegExp('(^|[\\s\'(-])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(n))) rank = 2;
       else if (words.length && words.every(w => n.includes(w))) rank = 3;
-      else continue;
+      // The client's own name for it, which is what a reader holding a data mine types.
+      else if (r.clientId && r.clientId.toLowerCase() !== n && r.clientId.toLowerCase().includes(t)) rank = 3;
+      else {
+        if (loose.length) maybe.push(r);
+        continue;
+      }
       hits.push([rank * 10 + weight(r), n.length, r]);
+    }
+    if (hits.length < 20 && loose.length) {
+      for (const r of maybe) {
+        const nws = plainWords(r);
+        if (loose.every(w => nws.some(nw => wordFits(w, nw)))) hits.push([40 + weight(r), String(r.said || r.name).length, r]);
+      }
     }
     hits.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     return hits.slice(0, limit).map(h => h[2]);
@@ -422,7 +493,7 @@
   const VISUAL = new Set(['classes', 'dungeons', 'biomes', 'status', 'sets', 'skins']);
 
   /* ---------------- state, kept in the address ---------------- */
-  const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'home', 'open', 'wide'];
+  const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'scl', 'home', 'open', 'wide'];
   const S = { tags: new Set(), tech: false };
   function readHash() {
     const hash = location.hash.replace(/^#\/?/, '');
@@ -445,7 +516,7 @@
     if (lastStep !== null && step !== lastStep) history.pushState(null, '', url); else history.replaceState(null, '', url);
     lastStep = step;
   }
-  const FILTERS = ['tier', 'inf', 'gra', 'cls', 'home'];
+  const FILTERS = ['tier', 'inf', 'gra', 'cls', 'scl', 'home'];
   const clearFilters = () => { for (const k of FILTERS) S[k] = ''; S.tags.clear(); };
 
   /* ---------------- what a line shows, given where it is ---------------- */
@@ -483,6 +554,32 @@
     quest: { say: 'Quest', test: r => L(r).includes('QUEST'), fams: ['enemies'] }
   };
   const TIERS = ['UT', 'ST', ...Array.from({ length: 15 }, (_, i) => String(14 - i))];
+  /*
+   * The stats an item grows with, as the client says: a hit or a count over
+   * a floor of a stat, a status that lasts longer with it, a bonus measured
+   * as a share of it. A share of the same stat ("half your life off") is a
+   * cost, not a scaling, and is left out.
+   */
+  const STAT_ORDER = ['MAXHP', 'MAXMP', 'ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS'];
+  const STAT_SAY = { MAXHP: 'Life', MAXMP: 'Mana', ATT: 'Attack', DEF: 'Defense', SPD: 'Speed', DEX: 'Dexterity', VIT: 'Vitality', WIS: 'Wisdom' };
+  const STAT_TINT = { MAXHP: '#58cfda', MAXMP: '#f4d24c', ATT: '#ca46dd', DEF: '#8b9cb3', SPD: '#58da6e', DEX: '#ff5f2a', VIT: '#dd0c32', WIS: '#4b9be7' };
+  const statTag = s => s === 'HP' ? 'MAXHP' : s === 'MP' || s === 'MAHMP' ? 'MAXMP' : s;
+  const scaledMemo = new WeakMap();
+  function scalesOf(r) {
+    let got = scaledMemo.get(r);
+    if (got) return got;
+    const s = new Set(), c = r.cast;
+    if (c && c.from !== undefined && (c.dmg || c.more >= 0.001)) s.add(statTag(c.stat || 'WIS'));
+    for (const x of r.share || []) if (x.of && x.of !== x.stat) s.add(statTag(x.of));
+    for (const x of r.rel || []) if (x.of && x.of !== x.stat) s.add(statTag(x.of));
+    for (const x of r.conditions || []) {
+      if (x.scalingStat) s.add(statTag(x.scalingStat));
+      else if (x.wisMin || x.wisPerDuration) s.add('WIS');
+    }
+    got = STAT_ORDER.filter(k => s.has(k));
+    scaledMemo.set(r, got);
+    return got;
+  }
   const placeRank = new Map();
   const rankOfPlace = p => p.kind === 'place' ? IX.BIOME_LEVELS.indexOf(IX.biomeLevel(p)) : 10 + (IX.difficultyOf(p) || 11);
   const GROUP = {
@@ -539,7 +636,8 @@
    * fold, so the other families stay in sight; the chosen slot's hand is open.
    */
   function subsOf(d) {
-    const sub = g => '<button type="button" class="ixb-sub' + (S.s === g.id ? ' is-on' : '') + '" data-f="' + d.id + '" data-s="' + esc(g.id) + '" title="' + esc(g.title + ' · ' + g.ids.length) + '">'
+    const on = g => S.s === g.id || (g === d.abilities && d.abilities.kinds.some(k => k.id === S.s));
+    const sub = g => '<button type="button" class="ixb-sub' + (on(g) ? ' is-on' : '') + '" data-f="' + d.id + '" data-s="' + esc(g.id) + '" title="' + esc(g.title + ' · ' + g.ids.length) + '">'
       + (g.pic ? IX.art(IX.records.get(g.pic), 14) : '') + '<span>' + esc(g.title) + '</span><small>' + g.ids.length + '</small></button>';
     if (d.id !== 'gear') {
       const two = d.groups.length > 8 && d.groups.every(g => g.title.length <= 11);
@@ -552,6 +650,9 @@
     }
     return '<div class="ixb-subs">' + ['weapon', 'ability', 'armor', 'ring', 'other'].filter(h => byHand.has(h)).map(h => {
       const list = byHand.get(h), open = hands.has(h) || list.some(g => g.id === S.s);
+      // The abilities are one list, so their heading is the link to it rather than a fold.
+      if (h === 'ability' && d.abilities) return '<button type="button" class="ixb-hand is-link' + (on(d.abilities) ? ' is-on' : '') + '" data-f="' + d.id + '" data-s="abilities" title="Every ability · ' + d.abilities.ids.length + '">'
+        + esc(HAND_SAY.ability) + '<small>' + n0(d.abilities.ids.length) + '</small></button>';
       if (list.length === 1) return list.map(sub).join('');
       return '<button type="button" class="ixb-hand' + (open ? ' is-open' : '') + '" data-hand="' + h + '">' + esc(HAND_SAY[h] || 'Other') + '<small>' + list.length + ' kinds</small></button>'
         + (open ? '<div class="ixb-hand-body">' + list.map(sub).join('') + '</div>' : '');
@@ -564,7 +665,7 @@
     const box = $('ixbMid');
     if (S.q.trim()) return search(box);
     if (!S.f || !IX.domain(S.f)) return landing(box);
-    const d = IX.domain(S.f), g = d.groups.find(x => x.id === S.s);
+    const d = IX.domain(S.f), g = IX.groupOf(d, S.s);
     let ids = g ? g.ids : d.ids;
     // The other portals belong to no section: they are offered on the whole family only.
     if (S.tech && !g && d.id === 'dungeons') ids = ids.concat(IX.sidePortals);
@@ -574,6 +675,7 @@
     if (S.inf) rows = rows.filter(r => statusesOf(r, ['inflicts', 'inflicts on players']).includes(S.inf));
     if (S.gra) rows = rows.filter(r => statusesOf(r, ['grants']).includes(S.gra));
     if (S.cls) rows = rows.filter(r => setClass(r) === S.cls);
+    if (S.scl) rows = rows.filter(r => scalesOf(r).includes(S.scl));
     if (S.home) rows = rows.filter(r => { const p = placeOf(r); return p && p.id === S.home; });
     for (const t of S.tags) if (TAGS[t]) rows = rows.filter(TAGS[t].test);
     results(box, { d, g, all, rows });
@@ -592,18 +694,45 @@
     const granted = count(all.flatMap(r => statusesOf(r, ['grants'])));
     const tiers = count(all.map(tierOf).filter(Boolean));
     const classes = d.id === 'sets' ? count(all.map(setClass).filter(Boolean)) : new Map();
+    const scaled = d.id === 'gear' ? count(all.flatMap(scalesOf)) : new Map();
     // Where the creatures live, biomes first, rookie to seasonal, then the dungeons from the easiest.
     const homes = d.id === 'enemies' ? count(all.map(placeOf).filter(Boolean).map(p => p.id)) : new Map();
     const homesOrdered = [...homes].sort((a, b) => rankOfPlace(IX.records.get(a[0])) - rankOfPlace(IX.records.get(b[0])) || IX.records.get(a[0]).name.localeCompare(IX.records.get(b[0]).name));
     const tags = Object.entries(TAGS).filter(([k, t]) => t.fams.includes(d.id) && (S.tags.has(k) || all.some(t.test)));
     const technical = !g && d.id === 'dungeons' ? IX.sidePortals.length : 0;
     // The first option names the filter, so no label is needed beside it.
-    const select = (key, any, map, label = x => x, ordered) => map.size < 2 && !S[key] ? '' : '<select data-sel="' + key + '" class="' + (S[key] ? 'is-set' : '') + '" title="' + esc(any) + '"><option value="">' + esc(any) + '</option>'
-      + (ordered || [...map].sort((a, b) => b[1] - a[1])).map(([v, n]) => '<option value="' + esc(v) + '"' + (S[key] === v ? ' selected' : '') + '>' + esc(label(v)) + ' · ' + n + '</option>').join('') + '</select>';
-    const filters = (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
+    // A tint gives each option, and the chosen select, the colour of what it names.
+    const select = (key, any, map, label = x => x, ordered, tint) => map.size < 2 && !S[key] ? '' : '<select data-sel="' + key + '" class="' + (S[key] ? 'is-set' : '') + '" title="' + esc(any) + '"'
+      + (tint && S[key] ? ' style="color:' + tint(S[key]) + ';border-color:' + tint(S[key]) + '"' : '') + '><option value="" style="color:var(--text)">' + esc(any) + '</option>'
+      + (ordered || [...map].sort((a, b) => b[1] - a[1])).map(([v, n]) => '<option value="' + esc(v) + '"' + (tint ? ' style="color:' + tint(v) + '"' : '') + (S[key] === v ? ' selected' : '') + '>' + esc(label(v)) + ' · ' + n + '</option>').join('') + '</select>';
+    /*
+     * A menu that shows what it names: a status with its picture, a stat in
+     * its colour, an ability's kind with the class that holds it. Offered as
+     * soon as one choice would narrow the list, in a section as in the family.
+     */
+    const menu = (key, any, entries, say) => !entries.length && !S[key] ? '' : '<span class="ixb-dd' + (S[key] ? ' is-set' : '') + '" data-dd="' + key + '">'
+      + '<button type="button" class="ixb-dd-btn" data-dd-open="' + key + '" aria-haspopup="listbox" aria-expanded="false">' + (S[key] ? say(S[key]) : esc(any)) + '<i aria-hidden="true">▾</i></button>'
+      + '<span class="ixb-dd-menu" role="listbox" hidden><button type="button" data-ddv="" data-ddk="' + key + '">' + esc(any) + '</button>'
+      + entries.map(([v, n]) => '<button type="button" role="option" aria-selected="' + (S[key] === v) + '" class="' + (S[key] === v ? 'is-on' : '') + '" data-ddv="' + esc(v) + '" data-ddk="' + key + '">' + say(v) + '<small>' + n0(n) + '</small></button>').join('')
+      + '</span></span>';
+    const byCount = map => [...map].sort((a, b) => b[1] - a[1]);
+    const statusSay = v => IX.art(IX.records.get('status:' + v), 16) + '<span>' + esc(v) + '</span>';
+    const statSay = v => '<span><b style="color:' + STAT_TINT[v] + '">' + esc(STAT_SAY[v] || v) + '</b></span>';
+    // The kinds of ability, offered on the abilities and on any one kind of them.
+    const kindMenu = d.abilities && g && (g === d.abilities || isKind(d, g)) ? (() => {
+      const kindSay = id => { const k = d.abilities.kinds.find(x => x.id === id); const h = k && IX.holderOf.get((IX.records.get(k.ids[0]) || {}).slot); return '<span>' + esc(k ? k.title : id) + (h ? ' <em>' + esc(h.name) + '</em>' : '') + '</span>'; };
+      const cur = g === d.abilities ? '' : g.id;
+      return '<span class="ixb-dd' + (cur ? ' is-set' : '') + '" data-dd="kind">'
+        + '<button type="button" class="ixb-dd-btn" data-dd-open="kind" aria-haspopup="listbox" aria-expanded="false">' + (cur ? kindSay(cur) : 'Any kind') + '<i aria-hidden="true">▾</i></button>'
+        + '<span class="ixb-dd-menu" role="listbox" hidden><button type="button" data-ddk="s" data-ddv="abilities">Any kind</button>'
+        + d.abilities.kinds.map(k => '<button type="button" role="option" class="' + (k.id === cur ? 'is-on' : '') + '" data-ddk="s" data-ddv="' + esc(k.id) + '">' + kindSay(k.id) + '<small>' + n0(k.ids.length) + '</small></button>').join('')
+        + '</span></span>';
+    })() : '';
+    const filters = kindMenu + (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
       + (d.id === 'sets' ? select('cls', 'Any class', classes, v => (IX.records.get(v) || {}).name || v) : '')
-      + (d.id === 'enemies' ? select('home', 'Any biome or dungeon', homes, v => (IX.records.get(v) || {}).name || v, homesOrdered) : select('inf', 'Inflicts…', inflicted))
-      + (d.id === 'gear' || d.id === 'bag' ? select('gra', 'Grants…', granted) : '')
+      + (d.id === 'enemies' ? select('home', 'Any biome or dungeon', homes, v => (IX.records.get(v) || {}).name || v, homesOrdered) : menu('inf', 'Inflicts…', byCount(inflicted), statusSay))
+      + (d.id === 'gear' || d.id === 'bag' ? menu('gra', 'Grants…', byCount(granted), statusSay) : '')
+      + (d.id === 'gear' ? menu('scl', 'Scales with…', STAT_ORDER.filter(k => scaled.has(k)).map(k => [k, scaled.get(k)]), statSay) : '')
       + tags.map(([k, t]) => '<button type="button" class="ixb-chip' + (S.tags.has(k) ? ' is-on' : '') + '" data-tag="' + k + '">' + esc(t.say) + '</button>').join('')
       + (technical ? '<button type="button" class="ixb-chip' + (S.tech ? ' is-on' : '') + '" data-tech title="Teleporters, hubs, the inner doors and old versions of dungeons">Other portals <small>' + technical + '</small></button>' : '');
     const anySet = FILTERS.some(k => S[k]) || S.tags.size;
@@ -647,7 +776,9 @@
     const pack = list => d.id === 'enchants' ? bundleRows(list) : list;
     if (by === 'section') {
       const keep = new Set(rows.map(r => r.id));
-      const parts = (ctx.g ? [ctx.g] : d.groups).map(p => ({ title: p.title, g: p, rows: pack(p.ids.filter(id => keep.has(id)).map(id => IX.records.get(id)).sort(sorter)) }));
+      const sections = ctx.g ? [ctx.g] : d.abilities
+        ? d.groups.flatMap(x => x === d.abilities.kinds[0] ? [d.abilities] : d.abilities.kinds.includes(x) ? [] : [x]) : d.groups;
+      const parts = sections.map(p => ({ title: p.title, g: p, rows: pack(p.ids.filter(id => keep.has(id)).map(id => IX.records.get(id)).sort(sorter)) }));
       const side = rows.filter(r => IX.isSidePortal(r));
       if (side.length && d.id === 'dungeons') parts.push({ title: 'Other portals', rows: side.sort(sorter) });
       return parts.filter(p => p.rows.length);
@@ -713,6 +844,10 @@
       const p = byPlace ? null : placeOf(r);
       sub = (p || showRole) ? '<span class="ixb-sub-l">' + esc([showRole ? role : '', p ? p.name : ''].filter(Boolean).join(' · ')) + '</span>' : '';
     }
+    if (d && d.id === 'gear' && d.kindOf && d.kindOf.has(r.id) && !isKind(d, ctx.g)) {
+      const holder = IX.holderOf.get(r.slot);
+      sub = '<span class="ixb-sub-l">' + esc(d.kindOf.get(r.id).title) + (holder ? ' · ' + esc(holder.name) : '') + '</span>';
+    }
     if (d && (d.id === 'gear' || d.id === 'skins')) { const t = tierOf(r); if (t && t !== ctx.heading) end += '<span class="ixb-tier is-' + t.toLowerCase() + '">' + tierSay(t) + '</span>'; }
     // What a creature inflicts is on its card; its line says where it lives.
     if (!d || d.id !== 'enemies') end = fxIcons(r) + end;
@@ -741,7 +876,7 @@
     const shownHits = S.qf ? hits.filter(r => fam(r) === S.qf) : hits;
     const title = id => id === 'tech' ? 'Technical objects' : id === 'other' ? 'Other' : IX.domain(id).title;
     const fams = [...per.keys()];
-    box.innerHTML = '<div class="ixb-head"><div><h2>“' + esc(S.q.trim()) + '”</h2><p>' + (hits.length ? (hits.length >= 800 ? 'The first 800 matches' : n0(hits.length) + ' matches') + '. Enter opens the first.' : 'Nothing has that name.') + '</p></div></div>'
+    box.innerHTML = '<div class="ixb-head"><div><h2>“' + esc(S.q.trim()) + '”</h2><p>' + (hits.length ? (hits.length >= 800 ? 'The first 800 matches' : n0(hits.length) + (hits.length === 1 ? ' match' : ' matches')) + '. Enter opens the first.' : 'Nothing has that name.') + '</p></div></div>'
       + (fams.length > 1 ? '<div class="ixb-tools"><button type="button" class="ixb-chip' + (S.qf ? '' : ' is-on') + '" data-qf="">All <small>' + hits.length + '</small></button>'
         + fams.map(id => '<button type="button" class="ixb-chip' + (S.qf === id ? ' is-on' : '') + '" data-qf="' + id + '">' + esc(title(id)) + ' <small>' + per.get(id) + '</small></button>').join('') + '</div>' : '')
       + '<div id="ixbList"></div><div class="ixb-sentinel" id="ixbSentinel"></div>';
@@ -768,7 +903,9 @@
   }
   // A family's sections as links; gear's twenty-nine read as its four hands.
   function hubSections(d) {
-    if (d.id === 'gear') return Object.entries(HAND_SAY).map(([h, say]) => '<button type="button" data-f="gear" data-unfold="' + h + '">' + say + '</button>').join('');
+    if (d.id === 'gear') return Object.entries(HAND_SAY).map(([h, say]) => h === 'ability' && d.abilities
+      ? '<button type="button" data-f="gear" data-s="abilities">' + say + '</button>'
+      : '<button type="button" data-f="gear" data-unfold="' + h + '">' + say + '</button>').join('');
     const some = d.groups.slice(0, 7);
     return some.map(g => '<button type="button" data-f="' + d.id + '" data-s="' + esc(g.id) + '">' + esc(g.title) + '</button>').join('')
       + (d.groups.length > some.length ? '<button type="button" data-f="' + d.id + '">+' + (d.groups.length - some.length) + ' more</button>' : '');
@@ -880,11 +1017,27 @@
     $('ixbMid').scrollTop = 0; all();
   }
   const onIndex = () => document.body.dataset.page === 'index';
+  function shutMenu(dd) {
+    dd.classList.remove('is-open');
+    const m = dd.querySelector('.ixb-dd-menu'), b = dd.querySelector('.ixb-dd-btn');
+    if (m) m.hidden = true;
+    if (b) b.setAttribute('aria-expanded', 'false');
+  }
   function wire() {
     const page = $('pageIndex');
     page.addEventListener('click', e => {
-      const t = e.target.closest('[data-home],[data-f],[data-pick],[data-tag],[data-tech],[data-view],[data-clear],[data-close],[data-wide],[data-hand],[data-qf]');
+      const t = e.target.closest('[data-home],[data-f],[data-pick],[data-tag],[data-tech],[data-view],[data-clear],[data-close],[data-wide],[data-hand],[data-qf],[data-dd-open],[data-ddk]');
+      // One menu open at a time; its own button toggles it, a click anywhere else shuts it.
+      const openOne = document.querySelector('#ixbMid .ixb-dd.is-open');
+      if (t && t.dataset.ddOpen) {
+        const dd = t.closest('.ixb-dd'), was = dd.classList.contains('is-open');
+        if (openOne) shutMenu(openOne);
+        if (!was) { dd.classList.add('is-open'); dd.querySelector('.ixb-dd-menu').hidden = false; t.setAttribute('aria-expanded', 'true'); }
+        return;
+      }
+      if (openOne) shutMenu(openOne);
       if (!t || !t.closest('#ixBody')) return;
+      if (t.dataset.ddk !== undefined) { S[t.dataset.ddk] = t.dataset.ddv; mid(); writeHash(); return; }
       if (t.dataset.home !== undefined) { openFamily(''); return; }
       if (t.dataset.close !== undefined) { closeCard(); return; }
       if (t.dataset.wide !== undefined) { S.wide = S.wide ? '' : '1'; card(); writeHash(); return; }
@@ -912,6 +1065,8 @@
       if (e.key === '/' && !typing) { e.preventDefault(); $('ixbSearch').focus(); $('ixbSearch').select(); return; }
       if (e.target.id === 'ixbSearch' && e.key === 'Enter' && searchFirst) { openCard(searchFirst); return; }
       if (e.key === 'Escape') {
+        const open = document.querySelector('#ixbMid .ixb-dd.is-open');
+        if (open) { shutMenu(open); open.querySelector('.ixb-dd-btn').focus(); return; }
         if (e.target.id === 'ixbSearch' && S.q) { S.q = ''; e.target.value = ''; writeHash(); mid(); railFams(); return; }
         if (S.open && !typing) closeCard();
       }

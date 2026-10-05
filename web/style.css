@@ -6218,6 +6218,9 @@ body.globe-wide #atlasIndex:not([hidden]) {
 .ixb-hand:hover { color: var(--text); }
 .ixb-hand::before { content: "\25B8"; font-size: 10px; width: 9px; }
 .ixb-hand.is-open::before { content: "\25BE"; }
+/* A heading that opens a list rather than folding one. */
+.ixb-hand.is-link::before { content: "\2022"; }
+.ixb-hand.is-link.is-on { color: var(--accent); }
 .ixb-hand small { margin-left: auto; font: 10.5px var(--mono); text-transform: none; letter-spacing: 0; }
 .ixb-hand-body { display: grid; gap: 1px; margin-bottom: 3px; }
 .ixb-foot { margin-top: 12px; border-top: 1px solid var(--line-soft); padding-top: 10px; }
@@ -6236,6 +6239,28 @@ body.globe-wide #atlasIndex:not([hidden]) {
 .ixb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 8px; }
 .ixb-tools select { width: auto; min-width: 0; max-width: 220px; display: inline-block; flex: none; background: rgb(var(--panel-rgb) / .9); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; font: inherit; font-size: 12.5px; }
 .ixb-tools select.is-set { border-color: var(--accent); color: var(--accent); }
+/* Menus that show what they name: a status's picture, a stat's colour. */
+.ixb-dd { position: relative; display: inline-flex; flex: none; }
+.ixb-dd-btn { display: inline-flex; align-items: center; gap: 6px; background: rgb(var(--panel-rgb) / .9); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 12.5px; cursor: pointer; max-width: 240px; }
+.ixb-dd-btn > i { font-style: normal; font-size: 10px; color: var(--dim); }
+.ixb-dd-btn:hover, .ixb-dd.is-open .ixb-dd-btn { border-color: rgb(var(--s-hi, 121 197 232) / .7); }
+.ixb-dd.is-set .ixb-dd-btn { border-color: var(--accent); }
+.ixb-dd-btn span, .ixb-dd-menu span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ixb-dd-btn em, .ixb-dd-menu em { font-style: normal; color: var(--dim); }
+.ixb-dd-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; min-width: 230px; max-height: min(360px, 60vh); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1px; padding: 5px;
+  background: rgb(var(--bg-2-rgb) / .98); border: 1px solid rgb(var(--s-lo, 63 127 163) / .7); border-radius: 10px;
+  box-shadow: 0 10px 28px rgb(0 0 0 / .5); scrollbar-width: thin;
+}
+.ixb-dd-menu[hidden] { display: none; }
+.ixb-dd-menu > button {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 0; border-radius: 7px; background: none;
+  color: var(--text); font: inherit; font-size: 13px; padding: 5px 8px; cursor: pointer;
+}
+.ixb-dd-menu > button:hover, .ixb-dd-menu > button:focus-visible { background: rgb(var(--s-hi, 121 197 232) / .12); outline: none; }
+.ixb-dd-menu > button.is-on { background: rgb(var(--s-hi, 121 197 232) / .18); }
+.ixb-dd-menu > button small { margin-left: auto; color: var(--dim); font: 11px var(--mono); padding-left: 10px; }
 .ixb-push { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .ixb-lbl { font: 700 10px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .07em; }
 .ixb-clear { color: var(--muted); background: none; border: 0; cursor: pointer; text-decoration: underline; font: inherit; font-size: 12px; }
