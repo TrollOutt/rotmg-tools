@@ -2802,7 +2802,7 @@ const RealmIndex = (function () {
     /* What you can browse: the copies folded into another thing are its rows. */
     el('ixBuilt').textContent = t('index.built.summary', {
       count: RealmI18n.number(light.filter(one => !one[6]).length),
-      client: all.built,
+      client: String(all.built || '').slice(0, 10),
       wiki: wiki ? t('index.built.wiki', { count: RealmI18n.number(wiki.page.size) }) : ''
     });
     drawCard('');

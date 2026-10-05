@@ -6185,19 +6185,24 @@ body.globe-wide #atlasIndex:not([hidden]) {
  * list in the middle, the card on the right. Its own class names (ixb-),   *
  * so nothing here reaches the rest of the site.                            *
  * ======================================================================= */
-#pageIndex { --ixb-gold: #e0a24a; --ixb-pixel: "Jersey 10", var(--mono); }
+#pageIndex { --ixb-gold: #e0a24a; --ixb-pixel: "Jersey 10", var(--mono); --ixb-rail: clamp(264px, 15vw, 360px); }
 /* Two columns until a card is open; the card takes a third only then, most of the room when made wide. */
-.ixb-layout { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 14px; height: calc(100vh - 118px); min-height: 420px; }
-.ixb-layout.has-card { grid-template-columns: 264px minmax(0, 1fr) minmax(420px, 42%); }
-.ixb-layout.has-card.is-wide { grid-template-columns: 264px minmax(260px, 24%) minmax(0, 1fr); }
+.ixb-layout { display: grid; grid-template-columns: var(--ixb-rail) minmax(0, 1fr); gap: 14px; height: calc(100vh - 118px); min-height: 420px; }
+.ixb-layout.has-card { grid-template-columns: var(--ixb-rail) minmax(0, 1fr) minmax(420px, 42%); }
+.ixb-layout.has-card.is-wide { grid-template-columns: var(--ixb-rail) minmax(260px, 24%) minmax(0, 1fr); }
 .ixb-layout > .card { min-height: 0; overflow: auto; padding: 12px; margin: 0; }
-.ixb-layout > .ixb-cardcol { display: none; padding: 0; flex-direction: column; overflow: hidden; }
-.ixb-layout.has-card > .ixb-cardcol { display: flex; }
-.ixb-bar { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 10px 0; flex: none; }
+.ixb-layout > .ixb-cardcol { display: none; position: relative; min-height: 0; }
+.ixb-layout.has-card > .ixb-cardcol { display: flex; flex-direction: column; }
+/* Widen and close, on the card's own first line rather than a line of their own. */
+.ixb-bar { position: absolute; top: 12px; right: 14px; z-index: 3; display: flex; gap: 6px; }
+#ixbCard .fc-bar { padding-right: 76px; }
 .ixb-bar button { border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--dim); cursor: pointer; padding: 1px 8px; font: inherit; font-size: 13px; line-height: 1.5; }
 .ixb-bar button:hover { color: var(--text); border-color: var(--muted); }
 .ixb-bar button.is-on { color: var(--accent); border-color: var(--accent); }
-.ixb-layout .ix-card { flex: 1; min-height: 0; max-height: none; overflow-y: auto; padding: 8px 14px 14px; }
+.ixb-layout .ix-card { flex: 1; min-height: 0; max-height: none; overflow-y: auto; margin: 0; }
+/* The panes scroll with the wheel and the finger; no scrollbar beside them. */
+.ixb-layout > .card, .ixb-layout .ix-card { scrollbar-width: none; }
+.ixb-layout > .card::-webkit-scrollbar, .ixb-layout .ix-card::-webkit-scrollbar { display: none; }
 .ixb-h { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 700 10.5px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
 .ixb-h small { margin-left: auto; font-weight: 400; text-transform: none; letter-spacing: 0; }
 /* Pictures */
@@ -6207,25 +6212,26 @@ body.globe-wide #atlasIndex:not([hidden]) {
 .ixb-glyph { display: inline-flex; flex: none; align-items: center; justify-content: center; border-radius: 6px; font-family: var(--ixb-pixel); color: #fff; background: #3a3448; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12); vertical-align: middle; }
 .ixb-glyph.is-good { background: #2d5a33; } .ixb-glyph.is-bad { background: #6a2a2a; }
 /* Rail */
-.ixb-find { width: 100%; padding: 8px 11px; border-radius: 9px; border: 1px solid var(--line); background: rgb(var(--bg-2-rgb) / .8); color: var(--text); font: inherit; font-size: 13.5px; margin-bottom: 10px; box-sizing: border-box; }
+.ixb-find { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: rgb(var(--bg-2-rgb) / .8); color: var(--text); font: inherit; font-size: clamp(13.5px, .5vw + 5px, 15.5px); margin-bottom: 10px; box-sizing: border-box; }
 .ixb-find:focus { outline: none; border-color: var(--accent); }
 .ixb-fams { display: grid; gap: 1px; }
-.ixb-fam { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; width: 100%; text-align: left; padding: 4px 7px; border-radius: 9px; border: 1px solid transparent; background: none; cursor: pointer; font: inherit; color: var(--text); }
+.ixb-fam { display: grid; grid-template-columns: 28px 1fr auto; gap: 9px; align-items: center; width: 100%; text-align: left; padding: 5px 8px; border-radius: 9px; border: 1px solid transparent; background: none; cursor: pointer; font: inherit; color: var(--text); }
 .ixb-fam:hover { background: rgb(var(--text-rgb) / .05); }
 .ixb-fam.is-on { border-color: var(--accent); background: rgb(var(--text-rgb) / .06); }
 .ixb-fam.is-in { background: rgb(var(--text-rgb) / .04); }
-.ixb-fam b { font-weight: 650; font-size: 14px; }
-.ixb-fam small { color: var(--dim); font: 11px var(--mono); }
+.ixb-fam b { font-weight: 650; font-size: clamp(14px, .62vw + 4px, 17px); }
+.ixb-fam small { color: var(--dim); font: clamp(11px, .4vw + 4px, 13px) var(--mono); }
 .ixb-subs { margin: 1px 0 6px 33px; display: grid; gap: 1px; border-left: 1px solid var(--line-soft); padding-left: 6px; }
 .ixb-subs.is-two { grid-template-columns: 1fr 1fr; column-gap: 2px; }
 .ixb-subs.is-two .ixb-sub small { display: none; }
-.ixb-sub { display: flex; align-items: center; gap: 6px; text-align: left; padding: 3px 6px; border-radius: 7px; border: 0; background: none; cursor: pointer; font: inherit; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.ixb-sub { display: flex; align-items: center; gap: 6px; text-align: left; padding: 4px 6px; border-radius: 7px; border: 0; background: none; cursor: pointer; font: inherit; font-size: clamp(13px, .55vw + 4px, 15.5px); color: var(--text); opacity: .86; min-width: 0; }
+.ixb-sub:hover, .ixb-sub.is-on { opacity: 1; }
 .ixb-sub span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ixb-sub:hover { color: var(--text); background: rgb(var(--text-rgb) / .05); }
 .ixb-sub.is-on { color: var(--text); background: rgb(121 197 232 / .15); }
-.ixb-sub small { margin-left: auto; color: var(--dim); font: 10.5px var(--mono); }
+.ixb-sub small { margin-left: auto; color: var(--dim); font: clamp(10.5px, .38vw + 4px, 12.5px) var(--mono); }
 /* Gear's hands fold; the hand of the chosen slot stays open. */
-.ixb-hand { display: flex; align-items: center; gap: 6px; width: 100%; border: 0; background: none; cursor: pointer; text-align: left; padding: 4px 6px 2px; font: 700 10px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
+.ixb-hand { display: flex; align-items: center; gap: 6px; width: 100%; border: 0; background: none; cursor: pointer; text-align: left; padding: 5px 6px 3px; font: 700 clamp(10.5px, .4vw + 4px, 12.5px) var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
 .ixb-hand:hover { color: var(--text); }
 .ixb-hand::before { content: "\25B8"; font-size: 10px; width: 9px; }
 .ixb-hand.is-open::before { content: "\25BE"; }
@@ -6290,23 +6296,62 @@ body.globe-wide #atlasIndex:not([hidden]) {
 #ixbMid :is(.ixb-tile, .ixb-row) :is(.ixb-art, .ixb-pic, .ixb-glyph) { zoom: var(--k, 1); }
 .ixb-sentinel { height: 1px; }
 .ixb-none { color: var(--dim); padding: 24px 6px; }
-/* Landing */
-.ixb-hub { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
-.ixb-famcard { border: 1px solid var(--line-soft); border-radius: 12px; padding: 9px 12px 10px; background: rgb(var(--bg-2-rgb) / .55); display: grid; gap: 6px; align-content: start; }
-.ixb-famcard:hover { border-color: var(--accent); }
-.ixb-t { display: flex; align-items: baseline; gap: 8px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: var(--text); text-align: left; }
-.ixb-t b { font-family: var(--ixb-pixel); font-weight: 400; font-size: 23px; line-height: 1; }
+/* Landing: the families alone, as cards sharing out the whole box. */
+.ixb-landing { display: flex; flex-direction: column; height: 100%; min-height: 0; container-type: inline-size; }
+.ixb-landing .ixb-head { flex: none; }
+/* Ten families: five by two when there is the width, else two across - never a last row of two under eight. */
+.ixb-hub { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(min-content, 1fr); gap: 12px; }
+@container (min-width: 1150px) { .ixb-hub { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@container (max-width: 520px) { .ixb-hub { grid-template-columns: minmax(0, 1fr); } }
+/*
+ * The cards inside a dressed box wear its look, lighter: no second picture
+ * under them (texture on texture is noise), but the box's own colour for
+ * their rail, its glow along their top, and - in the ornate frame - its
+ * studs at their corners. The variables are the box's (web/ui-style.js),
+ * inherited; the site's blue stands in where nothing is dressed.
+ */
+.ixb-famcard {
+  --c-hi: var(--ui-hi, 121 197 232); --c-lo: var(--ui-lo, 63 127 163); --c-glow: var(--ui-glow, 96 170 214);
+  position: relative; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden;
+  border: 1px solid rgb(var(--c-lo) / .55);
+  background:
+    radial-gradient(ellipse 70% 60px at 50% 0%, rgb(var(--c-glow) / .10), transparent 75%),
+    linear-gradient(rgb(0 0 0 / .28), rgb(0 0 0 / .38));
+  box-shadow: inset 0 0 0 1px rgb(20 20 22 / .6), inset 0 1px 0 rgb(var(--c-hi) / .14), 0 2px 10px rgb(0 0 0 / .35);
+  transition: border-color .15s, box-shadow .15s;
+}
+.ui-ornate .ixb-famcard::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    radial-gradient(circle at 4px 4px, rgb(var(--c-hi) / .55) 0 1px, rgb(var(--c-lo) / .5) 1px 2px, transparent 2.5px) top left / 12px 12px no-repeat,
+    radial-gradient(circle at calc(100% - 4px) 4px, rgb(var(--c-hi) / .55) 0 1px, rgb(var(--c-lo) / .5) 1px 2px, transparent 2.5px) top right / 12px 12px no-repeat,
+    radial-gradient(circle at 4px calc(100% - 4px), rgb(var(--c-hi) / .55) 0 1px, rgb(var(--c-lo) / .5) 1px 2px, transparent 2.5px) bottom left / 12px 12px no-repeat,
+    radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), rgb(var(--c-hi) / .55) 0 1px, rgb(var(--c-lo) / .5) 1px 2px, transparent 2.5px) bottom right / 12px 12px no-repeat;
+}
+.ixb-famcard:hover { border-color: rgb(var(--c-hi) / .85); box-shadow: inset 0 0 0 1px rgb(20 20 22 / .6), inset 0 1px 0 rgb(var(--c-hi) / .2), 0 0 16px rgb(var(--c-glow) / .28); }
+/* The title sits on a rule of the same colour, so each card reads as a panel with a head. */
+.ixb-famcard .ixb-t { padding-bottom: 8px; border-bottom: 1px solid rgb(var(--c-lo) / .35); }
+.ixb-famcard .ixb-tpic { border-color: rgb(var(--c-lo) / .6); background: rgb(0 0 0 / .3); }
+.ixb-famcard .ixb-strip button { background: rgb(0 0 0 / .25); }
+.ixb-famcard .ixb-strip button:hover { border-color: rgb(var(--c-hi) / .8); }
+.ixb-famcard .ixb-secs { padding-top: 8px; border-top: 1px solid rgb(var(--c-lo) / .25); }
+.ixb-famcard .ixb-secs button:hover { color: rgb(var(--c-hi)); }
+.ixb-t { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: var(--text); text-align: left; flex: none; }
+.ixb-tpic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgb(var(--bg-2-rgb) / .8); border: 1px solid var(--line); }
+.ixb-t b { font-family: var(--ixb-pixel); font-weight: 400; font-size: clamp(20px, 1.9cqw, 28px); line-height: 1; }
 .ixb-t:hover b { color: var(--accent); }
-.ixb-t small { margin-left: auto; font: 11px var(--mono); color: var(--dim); }
-.ixb-strip { display: flex; gap: 5px; height: 26px; overflow: hidden; flex-wrap: wrap; }
-.ixb-famcard p { margin: 0; color: var(--dim); font-size: 12px; }
-.ixb-secs { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 12px; }
+.ixb-t small { margin-left: auto; font: 12px var(--mono); color: var(--dim); }
+.ixb-famcard p { margin: 0; color: var(--dim); font-size: 13px; flex: none; }
+/* As many members as the card has room for: the strip takes what is left and hides the rest. */
+.ixb-strip { flex: 1; min-height: 46px; contain: size; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; overflow: hidden; position: relative; }
+.ixb-strip button { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; border: 1px solid transparent; background: rgb(var(--bg-2-rgb) / .5); cursor: pointer; padding: 0; }
+.ixb-strip button:hover { border-color: var(--accent); }
+.ixb-secs { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; flex: none; }
 .ixb-secs button { border: 0; background: none; padding: 0; color: var(--muted); cursor: pointer; font: inherit; }
 .ixb-secs button:hover { color: var(--accent); text-decoration: underline; }
-.ixb-way { margin-top: 18px; }
-.ixb-way h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-family: var(--ixb-pixel); font-weight: 400; font-size: 24px; }
-.ixb-way h3 small { font-family: system-ui, sans-serif; font-size: 12px; color: var(--dim); }
-.ixb-more { margin-left: auto; font: 12px system-ui, sans-serif; color: var(--accent); background: none; border: 0; cursor: pointer; }
+/* The way back to the overview, first in the rail. */
+.ixb-homeglyph { width: 24px; height: 24px; display: grid; place-items: center; font-size: 18px; line-height: 1; color: var(--muted); }
+.ixb-fam.is-home.is-on .ixb-homeglyph { color: var(--accent); }
 /* Keyboard travel shows where it is. */
 #ixBody :is(.ixb-row, .ixb-tile, .ixb-fam, .ixb-sub, .ixb-hand, .ixb-chip, .ixb-vars button, .ixb-secs button, .ixb-mini button):focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Narrower: the card comes over the list, and goes with the close button or Escape. */
@@ -6332,4 +6377,98 @@ body.globe-wide #atlasIndex:not([hidden]) {
   .ixb-layout.has-card > .ixb-cardcol { position: fixed; inset: 0; width: auto; margin: 0; border-radius: 0; z-index: 40; }
   .ixb-push { margin-left: 0; }
   .ixb-rows { grid-template-columns: 1fr; }
+}
+
+/* ======================================================================= *
+ * The tools' own controls wear the chosen look (web/ui-style.js).         *
+ *                                                                         *
+ * The big boxes are dressed by ui-style itself. What sits in and around   *
+ * them - tabs, chips, the small cards in a grid - takes the same colour   *
+ * from the variables it sets on the page's root, lighter: a rail of that  *
+ * colour, its glow, and in the ornate frame its studs at the corners. No  *
+ * second picture under them: texture on texture is noise. Where nothing   *
+ * is chosen the site's own blue stands in.                                *
+ * ======================================================================= */
+body { --s-hi: var(--ui-hi, 121 197 232); --s-lo: var(--ui-lo, 63 127 163); --s-glow: var(--ui-glow, 96 170 214); }
+
+/* ---- tabs: the Enchant Calculator's items, Theory Crafting's builds, Fame Sweep's characters ---- */
+.tab {
+  border-color: rgb(var(--s-lo) / .5); border-bottom-color: transparent;
+  background: linear-gradient(rgb(var(--s-glow) / .05), transparent 70%), rgb(0 0 0 / .32);
+}
+.tab:hover { border-color: rgb(var(--s-hi) / .6); border-bottom-color: transparent; background: linear-gradient(rgb(var(--s-glow) / .1), transparent 70%), rgb(0 0 0 / .32); }
+.tab.active, .tab.is-active {
+  color: var(--text); border-color: rgb(var(--s-lo) / .85); border-bottom-color: transparent;
+  background: linear-gradient(rgb(var(--s-glow) / .16), transparent 80%), rgb(0 0 0 / .4);
+  box-shadow: inset 0 2px 0 rgb(var(--s-hi)), 0 -4px 14px rgb(var(--s-glow) / .12);
+}
+.tab-add, .tab-new {
+  color: rgb(var(--s-hi)); background: rgb(var(--s-hi) / .1); border: 1px solid rgb(var(--s-hi) / .45);
+}
+.tab-add:hover, .tab-new:hover { color: rgb(var(--s-hi)); background: rgb(var(--s-hi) / .2); border-color: rgb(var(--s-hi)); }
+
+/* ---- chips and buttons: filters, a sort, Clear the ticks ---- */
+.filter-chip { border-color: rgb(var(--s-lo) / .45); }
+.filter-chip:hover { border-color: rgb(var(--s-hi) / .6); }
+.filter-chip.on { color: rgb(var(--s-hi)); border-color: rgb(var(--s-hi) / .55); background: rgb(var(--s-hi) / .12); }
+.fame-avail .filter-chip { border-color: rgb(var(--s-lo) / .5); background: rgb(0 0 0 / .32); }
+.fame-avail .filter-chip:hover { border-color: rgb(var(--s-hi) / .7); }
+.fame-avail .filter-chip.on {
+  color: #10141c; background: rgb(var(--s-hi)); border-color: rgb(var(--s-hi));
+  box-shadow: 0 0 12px rgb(var(--s-glow) / .35);
+}
+.act-button { border-color: rgb(var(--s-lo) / .6); background: linear-gradient(rgb(var(--s-glow) / .08), transparent), rgb(0 0 0 / .4); }
+.act-button:hover { border-color: rgb(var(--s-hi)); }
+.base-fame input { color: rgb(var(--s-hi)); border-color: rgb(var(--s-hi) / .45); background: rgb(0 0 0 / .4); }
+.base-fame input:focus { border-color: rgb(var(--s-hi)); box-shadow: 0 0 12px rgb(var(--s-glow) / .3); }
+
+/* ---- small cards in a grid: Fame Sweep's dungeons, What's New's groups and rows ---- */
+.fame-tile, .wn-group, .wn-row {
+  border: 1px solid rgb(var(--s-lo) / .5);
+  background: radial-gradient(ellipse 80% 44px at 50% 0%, rgb(var(--s-glow) / .09), transparent 75%), rgb(0 0 0 / .32);
+  box-shadow: inset 0 0 0 1px rgb(20 20 22 / .55), inset 0 1px 0 rgb(var(--s-hi) / .12);
+}
+.fame-tile:hover, .wn-group:hover {
+  border-color: rgb(var(--s-hi) / .85); background: radial-gradient(ellipse 80% 44px at 50% 0%, rgb(var(--s-glow) / .14), transparent 75%), rgb(0 0 0 / .32);
+  box-shadow: inset 0 0 0 1px rgb(20 20 22 / .55), 0 0 16px rgb(var(--s-glow) / .26);
+}
+.fame-tile.is-wanted {
+  border-color: rgb(var(--s-hi)); background: radial-gradient(ellipse 90% 60px at 50% 0%, rgb(var(--s-glow) / .22), transparent 80%), rgb(0 0 0 / .32);
+  box-shadow: inset 0 0 0 1px rgb(var(--s-hi) / .6), 0 0 14px rgb(var(--s-glow) / .3);
+}
+.wn-group.is-open { border-color: rgb(var(--s-hi) / .6); }
+.wn-four-one { background: rgb(0 0 0 / .28); border: 1px solid rgb(var(--s-lo) / .3); }
+.wn-tally { color: rgb(var(--s-hi)); }
+/* The ornate frame's studs, on the cards large enough to carry them. */
+html[data-ui-frame="ornate"] .wn-group { position: relative; }
+html[data-ui-frame="ornate"] .wn-group::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    radial-gradient(circle at 4px 4px, rgb(var(--s-hi) / .55) 0 1px, rgb(var(--s-lo) / .5) 1px 2px, transparent 2.5px) top left / 12px 12px no-repeat,
+    radial-gradient(circle at calc(100% - 4px) 4px, rgb(var(--s-hi) / .55) 0 1px, rgb(var(--s-lo) / .5) 1px 2px, transparent 2.5px) top right / 12px 12px no-repeat,
+    radial-gradient(circle at 4px calc(100% - 4px), rgb(var(--s-hi) / .55) 0 1px, rgb(var(--s-lo) / .5) 1px 2px, transparent 2.5px) bottom left / 12px 12px no-repeat,
+    radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), rgb(var(--s-hi) / .55) 0 1px, rgb(var(--s-lo) / .5) 1px 2px, transparent 2.5px) bottom right / 12px 12px no-repeat;
+}
+
+/* ---- the Enchant Calculator's item: the empty slot to fill, and the item once chosen ---- */
+.item-empty { background: rgb(var(--s-hi) / .06); border-color: rgb(var(--s-hi) / .45); }
+.item-empty:hover { background: rgb(var(--s-hi) / .12); border-color: rgb(var(--s-hi)); }
+.item-empty-icon { color: rgb(var(--s-hi)); background: rgb(var(--s-hi) / .12); }
+/* A full rail of the look's colour rather than a thick bar down one side. */
+.item-card {
+  border: 1px solid rgb(var(--s-lo) / .6);
+  background: radial-gradient(ellipse 80% 40px at 50% 0%, rgb(var(--s-glow) / .08), transparent 75%), rgb(0 0 0 / .32);
+  box-shadow: inset 0 1px 0 rgb(var(--s-hi) / .12);
+}
+
+/* ---- a build's tabs, grouped: they wear the group's own colour (--g, picked in its menu), not the look's ---- */
+.tab-group .tab {
+  border-color: color-mix(in srgb, var(--g) 45%, transparent); border-bottom-color: transparent;
+  background: linear-gradient(color-mix(in srgb, var(--g) 8%, transparent), transparent 70%), rgb(0 0 0 / .32);
+}
+.tab-group .tab:hover { border-color: color-mix(in srgb, var(--g) 75%, transparent); border-bottom-color: transparent; }
+.tab-group .tab.active {
+  border-color: color-mix(in srgb, var(--g) 80%, transparent); border-bottom-color: transparent;
+  background: linear-gradient(color-mix(in srgb, var(--g) 18%, transparent), transparent 80%), rgb(0 0 0 / .4);
+  box-shadow: inset 0 2px 0 var(--g), 0 -4px 14px color-mix(in srgb, var(--g) 15%, transparent);
 }

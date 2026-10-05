@@ -20,12 +20,13 @@
   --sk-bg:        var(--bg, #0d0c13);
   --sk-panel:     var(--panel, #1a1824);
   --sk-raised:    var(--panel-2, #262233);
-  --sk-line:      var(--line, #3a334b);
+  /* The chosen look's colour (web/ui-style.js sets it on the page's root, and it is inherited in here). */
+  --sk-line:      rgb(var(--ui-lo, 58 51 75) / .55);
   --sk-line-soft: var(--line-soft, #292436);
   --sk-text:      var(--text, #ece7dc);
   --sk-muted:     var(--muted, #a59db2);
   --sk-dim:       var(--dim, #6f6881);
-  --sk-accent:    var(--accent, #79c5e8);
+  --sk-accent:    rgb(var(--ui-hi, 121 197 232));
   --sk-gold:      var(--locked, #ffd026);
   --sk-bad:       var(--bad, #ff4542);
   --sk-radius:    var(--radius, 12px);
@@ -3128,4 +3129,32 @@ main {
 .combo-delete-compact:focus-visible {
   color: var(--sk-bad) !important;
   opacity: 1 !important;
+}
+
+/*
+ * The small cards wear the chosen look, lighter than the panels round them:
+ * a rail of its colour, its glow along their top, no second picture.
+ * The colour is the page's (web/ui-style.js), inherited through the host.
+ */
+.class-pick,
+#skins .skin.card,
+#dyeList .dye.card {
+  border-color: rgb(var(--ui-lo, 58 51 75) / .45);
+  background: radial-gradient(ellipse 80% 30px at 50% 0%, rgb(var(--ui-glow, 96 170 214) / .08), transparent 75%), rgb(0 0 0 / .28);
+  box-shadow: inset 0 1px 0 rgb(var(--ui-hi, 121 197 232) / .1);
+}
+.class-pick:hover,
+#skins .skin.card:hover,
+#dyeList .dye.card:hover {
+  border-color: rgb(var(--ui-hi, 121 197 232) / .85);
+  box-shadow: inset 0 1px 0 rgb(var(--ui-hi, 121 197 232) / .16), 0 0 12px rgb(var(--ui-glow, 96 170 214) / .25);
+}
+/* Chosen: lit in the same colour, so what the list is showing still stands out. */
+.class-pick.chosen,
+#skins .skin.card.chosen,
+#dyeList .dye.card.chosen,
+.dye-slot.active {
+  border-color: rgb(var(--ui-hi, 121 197 232));
+  background: radial-gradient(ellipse 90% 40px at 50% 0%, rgb(var(--ui-glow, 96 170 214) / .2), transparent 80%), rgb(var(--ui-hi, 121 197 232) / .1);
+  box-shadow: inset 0 0 0 1px rgb(var(--ui-hi, 121 197 232) / .5);
 }

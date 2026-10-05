@@ -94,7 +94,9 @@
 
   /* The surfaces dressed, per kind of root: only the big ones, never the rows inside them. */
   const TARGETS = {
-    page: 'section.card, #tcWelcome, .home-card, .ix-card, .ix-ways, .wn-part, .realm-details, #itemOptimizer, #atlasIndex',
+    /* And the buttons above them: back, Style, Feedback, the page's own status line. */
+    page: 'section.card, #tcWelcome, .home-card, .ix-card, .ix-ways, .wn-part, .realm-details, #itemOptimizer, #atlasIndex, '
+      + '.corner-button, .masthead .back, .masthead .status',
     skins: 'section.panel.stage-panel, section.panel.catalogue, section.panel.dyes',
     /* The panel itself, not its scrolling body: its own dark background would otherwise stay under the picture. */
     atlas: '#panel'

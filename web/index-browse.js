@@ -514,9 +514,11 @@
     const searching = Boolean(S.q.trim());
     const fav = [...loved()].filter(id => IX.records.has(id));
     box.innerHTML = '<input class="ixb-find" id="ixbSearch" type="search" placeholder="Search everything…  ( / )" value="' + esc(S.q) + '" autocomplete="off">'
-      + '<div class="ixb-fams">' + ORDER.map(id => IX.domain(id)).map(d => {
+      + '<div class="ixb-fams"><button type="button" class="ixb-fam is-home' + (!S.f && !searching ? ' is-on' : '') + '" data-home title="Every family at a glance">'
+      + '<span class="ixb-homeglyph">⌂</span><b>Overview</b><small></small></button>'
+      + ORDER.map(id => IX.domain(id)).map(d => {
         const on = S.f === d.id && !searching;
-        return '<button type="button" class="ixb-fam' + (on ? (S.s ? ' is-in' : ' is-on') : '') + '" data-f="' + d.id + '">' + IX.art(IX.records.get(d.pic), 24)
+        return '<button type="button" class="ixb-fam' + (on ? (S.s ? ' is-in' : ' is-on') : '') + '" data-f="' + d.id + '">' + IX.art(IX.records.get(d.pic), 26)
           + '<b>' + esc(d.title) + '</b><small>' + n0(d.ids.length) + '</small></button>'
           + (on && d.groups.length > 1 ? subsOf(d) : '');
       }).join('') + '</div>'
@@ -529,7 +531,7 @@
   // While typing, only the family highlight changes: the box keeps its focus.
   function railFams() {
     const searching = Boolean(S.q.trim());
-    document.querySelectorAll('#ixbRail .ixb-fam').forEach(b => b.classList.toggle('is-on', !searching && b.dataset.f === S.f && !S.s));
+    document.querySelectorAll('#ixbRail .ixb-fam').forEach(b => b.classList.toggle('is-on', !searching && (b.dataset.home !== undefined ? !S.f : b.dataset.f === S.f && !S.s)));
     document.querySelectorAll('#ixbRail .ixb-subs').forEach(x => { x.hidden = searching; });
   }
   /*
@@ -771,18 +773,27 @@
     return some.map(g => '<button type="button" data-f="' + d.id + '" data-s="' + esc(g.id) + '">' + esc(g.title) + '</button>').join('')
       + (d.groups.length > some.length ? '<button type="button" data-f="' + d.id + '">+' + (d.groups.length - some.length) + ' more</button>' : '');
   }
-  /* The page before a family is chosen: every family, and three ways straight in. */
+  /*
+   * The page before a family is chosen: every family as a card that fills
+   * the room it has - what it holds, a strip of its members, its sections
+   * one click away. Nothing under them, so the page never needs to scroll.
+   */
   function landing(box) {
-    box.dataset.fam = '';
-    const wall = ids => '<div class="ixb-walls">' + ids.map(id => tileOf(IX.records.get(id), null)).join('') + '</div>';
-    const ends = IX.domain('dungeons').groups.find(g => g.id === 'end');
-    box.innerHTML = '<div class="ixb-head"><div><h2>Index</h2><p>Pick a family, search with <b>/</b>, or go straight to a status, an endgame dungeon or a class.</p></div></div>'
-      + '<div class="ixb-hub">' + ORDER.map(id => IX.domain(id)).map(d => '<div class="ixb-famcard"><button type="button" class="ixb-t" data-f="' + d.id + '"><b>' + esc(d.title) + '</b><small>' + n0(d.ids.length) + '</small></button>'
-        + '<div class="ixb-strip">' + sampleOf(d, 12).map(id => IX.art(IX.records.get(id), 22)).join('') + '</div>'
-        + (d.groups.length > 1 ? '<div class="ixb-secs">' + hubSections(d) + '</div>' : '<p>' + esc(d.blurb) + '</p>') + '</div>').join('') + '</div>'
-      + '<div class="ixb-way"><h3>Status effects<small>what each does, what inflicts it, who resists it</small><button type="button" class="ixb-more" data-f="status">All ›</button></h3>' + wall(IX.domain('status').ids) + '</div>'
-      + (ends ? '<div class="ixb-way"><h3>Endgame dungeons<small>difficulty 9 and 10</small><button type="button" class="ixb-more" data-f="dungeons">All dungeons ›</button></h3>' + wall(ends.ids) + '</div>' : '')
-      + '<div class="ixb-way"><h3>Classes<button type="button" class="ixb-more" data-f="classes">All ›</button></h3>' + wall(IX.domain('classes').ids) + '</div>';
+    box.dataset.fam = 'overview';
+    box.innerHTML = '<div class="ixb-landing"><div class="ixb-head"><div><h2>Index</h2><p>Pick a family, or search with <b>/</b>.</p></div></div>'
+      + '<div class="ixb-hub">' + ORDER.map(id => IX.domain(id)).map(d => '<div class="ixb-famcard"><button type="button" class="ixb-t" data-f="' + d.id + '">'
+        + '<span class="ixb-tpic">' + IX.art(IX.records.get(d.pic), 30) + '</span><b>' + esc(d.title) + '</b><small>' + n0(d.ids.length) + '</small></button>'
+        + '<p>' + esc(d.blurb) + '</p>'
+        + '<div class="ixb-strip">' + sampleOf(d, 90).map(id => '<button type="button" data-pick="' + esc(id) + '" title="' + esc(IX.records.get(id).said || IX.records.get(id).name) + '">' + IX.art(IX.records.get(id), 34) + '</button>').join('') + '</div>'
+        + (d.groups.length > 1 ? '<div class="ixb-secs">' + hubSections(d) + '</div>' : '') + '</div>').join('') + '</div></div>';
+    fitStrips();
+  }
+  // A strip shows whole rows only: a picture the card would cut in half is left out.
+  function fitStrips() {
+    for (const strip of document.querySelectorAll('#ixbMid .ixb-strip')) {
+      const room = strip.clientHeight;
+      for (const one of strip.children) one.style.visibility = one.offsetTop + one.offsetHeight > room + 1 ? 'hidden' : '';
+    }
   }
 
   /* ---------------- card ---------------- */
@@ -810,6 +821,24 @@
     if (!box) return;
     const px = Math.max(13, Math.min(19, box.clientWidth / 42));
     box.style.setProperty('--ix-fs', px.toFixed(2) + 'px');
+    fitCardArt();
+  }
+  /*
+   * The card's small pictures - a link's sprite, a dust's or a material's
+   * icon - are cut at a size set by the window, and its type now follows the
+   * column: in a wide column the words outgrew them. Each is brought up to a
+   * little more than the type beside it; a larger picture is left as it is.
+   */
+  function fitCardArt() {
+    const box = $('ixCard');
+    if (!box) return;
+    const want = (parseFloat(box.style.getPropertyValue('--ix-fs')) || 0) * 1.25;
+    if (!want) return;
+    for (const one of box.querySelectorAll('.ix-jump .ix-art, .fc2-ui')) {
+      one.style.zoom = '';
+      const tall = one.getBoundingClientRect().height;
+      if (tall > 2 && tall < want) one.style.zoom = (want / tall).toFixed(3);
+    }
   }
   function openCard(id, from) {
     S.open = id;
@@ -825,6 +854,9 @@
   // A link followed inside the card, or the card shut there: the list and the address follow it.
   function followCard(id) {
     if (id === S.open) return;
+    // Back, Forward or a link from another tool: the address already says it, and is read whole on hashchange.
+    const hash = location.hash, at = hash.indexOf('?');
+    if (/^#\/?index\b/.test(hash) && (new URLSearchParams(at < 0 ? '' : hash.slice(at + 1)).get('open') || '') === id) return;
     S.open = id;
     document.querySelectorAll('#ixbMid .is-on[data-pick]').forEach(x => x.classList.remove('is-on'));
     if (id) document.querySelectorAll('#ixbMid [data-pick="' + CSS.escape(id) + '"]').forEach(x => (x.closest('.ixb-row,.ixb-tile') || x).classList.add('is-on'));
@@ -841,18 +873,19 @@
     const it = document.querySelector(sel);
     if (it) it.scrollIntoView({ block: 'center' });
   }
+  // Going somewhere in the families (the overview, a family, a section) shuts the card that was open.
   function openFamily(f, s) {
     S.f = f; S.s = s || ''; S.q = ''; S.qf = ''; S.by = ''; S.view = ''; clearFilters(); S.tech = false;
-    // A section that is a thing in its own right opens its card too.
-    if (S.s && IX.records.has(S.s)) S.open = S.s;
+    S.open = '';
     $('ixbMid').scrollTop = 0; all();
   }
   const onIndex = () => document.body.dataset.page === 'index';
   function wire() {
     const page = $('pageIndex');
     page.addEventListener('click', e => {
-      const t = e.target.closest('[data-f],[data-pick],[data-tag],[data-tech],[data-view],[data-clear],[data-close],[data-wide],[data-hand],[data-qf]');
+      const t = e.target.closest('[data-home],[data-f],[data-pick],[data-tag],[data-tech],[data-view],[data-clear],[data-close],[data-wide],[data-hand],[data-qf]');
       if (!t || !t.closest('#ixBody')) return;
+      if (t.dataset.home !== undefined) { openFamily(''); return; }
       if (t.dataset.close !== undefined) { closeCard(); return; }
       if (t.dataset.wide !== undefined) { S.wide = S.wide ? '' : '1'; card(); writeHash(); return; }
       if (t.dataset.hand) { const h = t.dataset.hand; if (hands.has(h)) hands.delete(h); else hands.add(h); store(HANDS, [...hands]); rail(); return; }
@@ -904,11 +937,16 @@
     });
     // The list's room decides its scale: 1 up to 900px wide, then larger, to half again on a wide screen.
     new ResizeObserver(([e]) => {
+      if (!S.f && !S.q.trim()) fitStrips();
       const k = Math.max(1, Math.min(1.5, e.contentRect.width / 900));
       $('ixbMid').style.setProperty('--k', k.toFixed(3));
       $('ixbMid').style.setProperty('--kt', (1 + (k - 1) * 0.5).toFixed(3));
     }).observe($('ixbMid'));
     new ResizeObserver(sizeCard).observe($('ixCard'));
+    // The card is drawn and redrawn by its own module: its pictures are fitted once it has settled.
+    let fitting = 0;
+    new MutationObserver(() => { cancelAnimationFrame(fitting); fitting = requestAnimationFrame(fitCardArt); })
+      .observe($('ixCard'), { childList: true });
   }
 
   /* ---------------- start ---------------- */
