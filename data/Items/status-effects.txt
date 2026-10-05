@@ -1,70 +1,95 @@
-## What a status effect actually does.
+## What a status effect is, and what it does.
 ##
-## The client says which effects an item or an enchantment grants, and for how
-## long. It never says what they are worth: Berserk is implemented in the
-## game's code, not declared in its files, so no amount of reading the client
-## will produce the number. That makes this file the same kind of thing as
-## data/Fame/availability-overrides.txt — knowledge of the live game written
-## down where it can be seen and corrected, rather than buried in a source
-## file as a magic constant.
+## The client says which effects a thing grants or inflicts, on whom and for
+## how long. It never says what they are worth - Curse is implemented in the
+## game's code, not declared in its files - nor which picture the game draws
+## for them. This file is that knowledge, written down where it can be read and
+## corrected, like data/Fame/availability-overrides.txt, instead of buried in a
+## source file as magic numbers. tools/build-status-effects.js joins it with
+## the client (who inflicts what, who is immune) and cuts the icons.
 ##
-## Taken from the RotMG wiki's Status Effects page:
+## The mechanics are taken from the RotMG wiki's Status Effects page and put in
+## our own words:
 ##   https://www.realmeye.com/wiki/status-effects
 ##
-## effect|what it multiplies or adds|value|note
+## effect|tone|icon|model|on a player|on an enemy
 ##
-## The "what" column is the name the page's own model uses, so that a reader
-## can follow a number from here to the figure it changes:
-##
-##   rate    shots a second, before anything else scales it
-##   damage  the damage of a weapon shot, after armour is taken off
-##   def     defence, in the armour calculation
-##   hpregen life a second
-##   mpregen magic a second
-##   range   how far a shot travels
-##   speed   how fast the character walks
-##
-## A multiplier is written as a factor; an addition is written in the unit of
-## the thing it adds to.
+##   effect   the name the client uses
+##   tone     good or bad, for whoever carries it
+##   icon     the client's own picture: atlas#index in client-data/spritesheet.bin.
+##            The game draws these from code, so which one goes with which effect
+##            was found by matching RealmEye's icons pixel for pixel against the
+##            client's lofiInterface sheets (2026-10-04).
+##   model    what the damage model applies, as "quantity op value" pairs:
+##              rate     shots a second           (x factor)
+##              damage   a weapon shot's damage   (x factor, before armour)
+##              def      the target's defence     (x factor, + or - flat, "zero")
+##              taken    damage after armour      (x factor)
+##              bleed    life lost a second       (default when the source says no figure)
+##              range    how far a shot travels   (x factor)
+##              speed    walking speed            (x factor)
+##              shots    an enemy's shots a volley (x factor)
+##              dealt    an enemy's damage        (x factor)
+##              hpregen / mpregen  + a second
+##   last two what it does, said once for each side; blank where it does nothing
+##            or the wiki says nothing.
 
-## --- the five that appear on this game's enchantments ---
-Berserk|rate|x1.25|attack speed, not DEX. Dazed negates it and takes priority.
-Damaging|damage|x1.25|weapon damage, not ATT. Weak negates it and takes priority.
-Armored|def|x1.5|rounded down. Armor Broken negates it and takes priority.
-Healing|hpregen|+20|the default where the source states no figure of its own. Several do not stack: the strongest wins. Sick negates it.
-Energized|mpregen|+10|
+## --- good ---
+Armored|good|lofiInterface2#16|def x1.5|Defence counts half again, rounded down. Armor Broken cancels it.|The same: its defence counts half again.
+Berserk|good|lofiInterface2#50|rate x1.25|Attacks a quarter faster - the rate, not the DEX stat. Dazed cancels it.|Only a sign that it is boosted.
+Damaging|good|lofiInterface2#49|damage x1.25|Weapon damage a quarter higher - the damage, not the ATT stat. Weak cancels it.|Its shots ignore armour.
+Energized|good|lofiInterface2#60|mpregen +10|Ten more magic a second.|Only a sign that it is empowered.
+Healing|good|lofiInterface2#47|hpregen +20|Life comes back faster, twenty a second unless the source says otherwise; the strongest of several wins. Sick cancels it.|
+Inspired|good|lofiInterface2#62|range x1.25|Shots fly a quarter further (the Lullaby shortens them instead).|No effect.
+Invulnerable|good|lofiInterface2#17|taken x0|Takes no damage from attacks, though still from hazards and statuses.|Takes no damage; used between boss phases.
+Invincible|good||taken x0|Cannot be hit at all: shots pass through. Given briefly on arriving somewhere.|Cannot be hit; used between boss phases.
+Invisible|good|||Enemies cannot aim at you, though their shots still hurt. Quiet ends it.|
+Lethal Strike|good|lofiInterface2#257||After leaving a cloak's sneak, two extra shots a volley for a short while.|
+Speedy|good|lofiInterface2#0|speed x1.5|Walks half again as fast. Slowed cancels it.|Only a sign that it moves faster.
+Stasis Immune|good|||Cannot be put in stasis.|Cannot be put in stasis.
 
-## --- the rest of the positive ones, for when they turn up ---
-##
-## Not reached by anything the page models today. Written down now because the
-## reading was done now, and because the next person to need one of them
-## should not have to do it again.
-Inspired|range|x1.25|every inspiring item grants this except Lullaby, which is x0.25 instead.
-Speedy|speed|x1.5|movement, which the fight does not model.
-Invulnerable|damage|x0|takes no damage from attacks; still takes hazards and effects.
-Invincible|damage|x0|cannot be hit at all; attacks pass through.
+## --- bad ---
+Armor Broken|bad|lofiInterface2#55|def zero|Defence counts as nought; a defence already below nought is left as it is.|The same: its defence counts as nought, so every shot lands in full.
+Bleeding|bad|lofiInterface2#46|bleed 20|Loses twenty life a second and stops regenerating; cannot kill.|Loses life every second, the figure set by the shot that caused it (twenty if it says none).
+Blind|bad|lofiInterface2#41||The screen goes almost black.|
+Blizzard|bad|lofiInterface2#258||The Ice Citadel's frostbite: a slow that grows, then drains life, unless you stay near warmth.|
+Confused|bad|lofiInterface2#2||Directions and rotation are swapped.|Only a sign that its AI is disrupted.
+Curse|bad|lofiInterface2#58|taken x1.25|Takes a quarter more damage, counted after armour.|Takes a quarter more damage, counted after armour.
+Darkness|bad|lofiInterface2#57||Sight shrinks to a small circle around you.|
+Dazed|bad|lofiInterface2#44|shots x0.5|Fires as if DEX were nought.|Fires half its shots a volley, never fewer than one.
+Dead|bad||||
+Drought|bad|lofiInterface2#256||No consumable can be used.|
+Drunk|bad|lofiInterface2#43||The screen blurs or warps.|
+Exposed|bad|lofiInterface2#59|def -20|Defence counts twenty lower, and may go below nought.|Defence counts twenty lower and may go below nought, so even shots that ignore armour, or hit an Armor Broken target, do twenty more.
+Hallucinating|bad|lofiInterface2#42||Things on screen are drawn as other things.|
+Hex|bad|||Not a player status.|A mark the newer orbs pile up with each hit; enough of it set off turns into Petrify.
+Hexed|bad|lofiInterface2#42||Your sprite is replaced by a random pet's.|
+In Combat|bad|||Held in combat, whatever the damage taken.|
+Paralyzed|bad|lofiInterface2#53||Cannot move.|Cannot move.
+Petrify|bad||taken x0.9|Cannot move or use the weapon, but takes a tenth less damage; abilities still work.|
+Pet Stasis|bad|lofiInterfaceBig#27||Your pet turns into a chicken and does nothing.|
+Quiet|bad|lofiInterface2#32||No magic comes back.|
+Sick|bad|lofiInterface2#39||No life comes back by any means.|
+Silenced|bad|lofiInterface2#33||Cannot use the ability.|
+Slowed|bad|lofiInterface2#1|speed x0.5|Walks as if SPD were nought. Cancels Speedy.|Moves at half speed.
+Stasis|bad||taken x0||Frozen grey: cannot move, fire or be damaged, then immune to stasis for three seconds.
+Stunned|bad|lofiInterface2#45||Cannot use the weapon; abilities still work.|Cannot fire, though bombs, areas and summons may still come.
+Unstable|bad|lofiInterface2#56||Shots and aimed abilities stray from where you aim.|
+Weak|bad|lofiInterface2#34|dealt x0.9|Weapon damage as if ATT were nought.|Its attacks deal a tenth less.
 
-## --- the one whose size is not written here ---
+## --- stat changes ---
 ##
-## Stat Increase is the ordinary temporary buff, and it is on a great deal of
-## common gear: every tiered Seal, every Sheath, most of the Bard's lutes.
-## There is no value for it in this file because there is no single value —
-## the amount is declared by the item granting it, so it comes out of the
-## client with the item and not out of the wiki.
-##
-## Two rules that do belong here, because they are the effect's and not the
-## item's. Several buffs from different sources do not add: the strongest
-## overrides. Several from the same source do not add either: each one after
-## the first is worth half the one before it. A model that simply totals them
-## will overstate a build wearing two of them.
-StatIncrease||from the item|the size comes with the item. Strongest wins across sources; halves on each repeat from one source.
+## Not one effect but eight, one a stat, and the size comes from the item that
+## grants it, not from here. Two rules belong to the effect: buffs from
+## different sources do not add, the strongest wins; repeats from one source
+## are each worth half the one before. The icons are the client's own, one a
+## stat, drawn red when the change is a loss.
+Stat Increase|good|lofiInterfaceBig#296||A stat raised for a while; the strongest of several sources wins, and repeats from one source are each worth half the last.|
+Stat Reduction|bad|lofiInterfaceBig#296||A stat lowered for a while, by the same rules.|
 
-## --- things that are not a number ---
+## --- immunities the client does not declare ---
 ##
-## Left out rather than guessed at. Invisible, Purify, Immune, Stasis, Petrify
-## and Lethal Strike change what happens rather than scaling a figure, and a
-## model that has no notion of being targeted, of being cured, or of leaving
-## sneak has nothing for them to multiply. Lethal Strike in particular is two
-## extra projectiles for 2.4 seconds after a cloak ends, which is real damage
-## and is worth having one day — but it needs the fight to know about sneak
-## first.
+## immune|enemy|effect,effect. Bosses declare stun, stasis, paralyze, petrify,
+## daze and slow immunity themselves; armour break and curse immunity are in
+## the game's code.
+immune|Void Entity|Armor Broken,Curse

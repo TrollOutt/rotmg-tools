@@ -315,25 +315,18 @@
     <h1>Index</h1>
     <div class="masthead-row"><div id="ixBuilt" class="status"></div></div>
   </header>
-  <main id="ixBody" class="ix-layout">
-    <section class="card ix-ways">
-      <header><h2>Category</h2>
-        <button type="button" id="ixClear" class="link-button header-aside" hidden>clear</button>
-      </header>
-      <input id="ixSearch" type="search"
-        placeholder="Search a bow, a boss, a dungeon…"
-        title="Anything the game has. The name the game shows you, or the working name it goes by in the files."
-        autocomplete="off">
-      <div id="ixChosen" class="ix-chosen-row" hidden></div>
-      <div id="ixFacets" class="ix-facets"></div>
+  <!--
+    Families on the left, the list in the middle (web/index-browse.js), the
+    card on the right (web/index-page.js). Every word in them is drawn by
+    those scripts.
+  -->
+  <main id="ixBody" class="ixb-layout">
+    <section class="card ixb-rail" id="ixbRail"></section>
+    <section class="card ixb-mid" id="ixbMid"><p class="ixb-none">Loading</p></section>
+    <section class="card ixb-cardcol" id="ixbCard">
+      <div class="ixb-bar"><button type="button" id="ixbWide" data-wide>⤢</button><button type="button" id="ixbClose" data-close>×</button></div>
+      <div class="ix-card" id="ixCard"></div>
     </section>
-    <section class="card ix-find">
-      <header><h2>Sub Category</h2><span id="ixCount" class="header-aside"></span></header>
-      <div id="ixKinds" class="ix-kinds"></div>
-      <div id="ixTypes" class="ix-kinds ix-types" hidden></div>
-      <div id="ixList" class="ix-list"></div>
-    </section>
-    <section class="card ix-card" id="ixCard"></section>
   </main>
 </div>
 
@@ -721,6 +714,7 @@
           </span></header>
         <canvas id="tcDuel" class="tc-duel"></canvas>
         <div id="tcNumbers" class="tc-facts"></div>
+        <div id="tcStatus" class="tc-status"></div>
       </section>
 
 
@@ -827,6 +821,7 @@
 <script src="progression.js"></script>
 <script data-lazy-src="theorycraft.js"></script>
 <script data-lazy-src="index-page.js"></script>
+<script data-lazy-src="index-browse.js"></script>
 <script src="router-contract.js"></script>
 <script src="app.js"></script>
 <script src="fiches-c.js"></script>

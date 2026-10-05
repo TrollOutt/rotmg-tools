@@ -5403,22 +5403,26 @@ function ensureIndexPage(open) {
     // Both APIs expose the whole first-start promise. Keep that promise
     // attached to the navigation so the black cover stays down through
     // parsing, facet construction and the first Index render.
-    if (open) return RealmIndex.open(open);
-    return RealmIndex.start();
+    const ready = open ? RealmIndex.open(open) : RealmIndex.start();
+    // The families, the list and their filters (web/index-browse.js) are drawn once the records are read.
+    if (typeof RealmIndexBrowse === 'undefined') return ready;
+    return Promise.resolve(ready).then(ok => RealmIndexBrowse.mount().then(() => ok));
   };
 
-  if (typeof RealmIndex !== 'undefined') return Promise.resolve(run());
+  if (typeof RealmIndex !== 'undefined' && typeof RealmIndexBrowse !== 'undefined') return Promise.resolve(run());
 
   if (!indexScriptLoading) {
-    const placeholder = document.querySelector('script[data-lazy-src="index-page.js"]');
-    if (!placeholder) {
-      return Promise.reject(new Error('Index script placeholder is missing.'));
-    }
-
+    const late = name => new Promise((resolve, reject) => {
+      if (name === 'index-page.js' ? typeof RealmIndex !== 'undefined' : typeof RealmIndexBrowse !== 'undefined') { resolve(); return; }
+      const placeholder = document.querySelector('script[data-lazy-src="' + name + '"]');
+      if (!placeholder) { reject(new Error('Index script placeholder is missing: ' + name)); return; }
+      loadLateScript(placeholder, resolve, () => reject(new Error('Could not load ' + name + '.')));
+    });
+    // The card's module first: the browser beside it reads what that one has read.
     indexScriptLoading = new Promise((resolve, reject) => {
-      loadLateScript(placeholder, resolve, () => {
+      late('index-page.js').then(() => late('index-browse.js')).then(resolve, error => {
         indexScriptLoading = null;
-        reject(new Error('Could not load Index.'));
+        reject(error);
       });
     });
   }

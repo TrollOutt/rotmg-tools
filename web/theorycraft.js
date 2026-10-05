@@ -798,10 +798,148 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /* What a shot lands for, against a given armour. */
-  function landed(roll, att, def, pierce) {
+  function landed(roll, att, def, pierce, fx) {
+    if (fx && fx.onShot) return fx.onShot(roll, att, def, pierce);
     const dealt = roll * (0.5 + att / 50);
     if (pierce) return dealt;
     return Math.max(dealt * 0.15, dealt - def);
+  }
+
+  /* ---------------- status effects ---------------- */
+  /*
+   * What a status does to the arithmetic, read from the catalogue
+   * (data/Items/status-effects.txt through tools/build-status-effects.js)
+   * rather than written here: Damaging multiplies the shot before armour,
+   * Armor Broken takes the target's positive defence away, Exposed then
+   * takes twenty more and may go below nought - so even a shot that ignores
+   * armour does twenty more - and Curse multiplies what lands, after armour.
+   * Berserk speeds the weapon up; Bleeding takes life a second outside all of
+   * that.
+   *
+   * Each effect is on for a share of the fight, its uptime: a weapon that
+   * inflicts it on every hit keeps it up whenever it fires faster than it
+   * wears off; an ability keeps it up for its duration out of every cast; a
+   * party member's is up all the time, when the reader says there is one. The
+   * damage of a shot is the exact expectation over which of them are on.
+   */
+  let statusInfo = null;
+  const DPS_EFFECTS = ['Damaging', 'Berserk', 'Armor Broken', 'Exposed', 'Curse', 'Bleeding'];
+  async function loadStatusInfo() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.statusText;
+    if (!raw) raw = await fetch('assets/index/status-effects.json').then(r => (r.ok ? r.text() : '')).catch(() => '');
+    if (!raw) return null;
+    try {
+      const said = JSON.parse(raw);
+      const byName = new Map();
+      const immune = new Map();
+      for (const e of said.effects || []) {
+        byName.set(e.name, e);
+        for (const id of e.immune || []) {
+          const name = id.replace(/^enemy:/, '');
+          (immune.get(name) || immune.set(name, new Set()).get(name)).add(e.name);
+        }
+      }
+      return { byName, immune, sheet: said.sheet };
+    } catch (err) { return null; }
+  }
+  // A number off the catalogue: Curse's "taken x1.25" is { what: 'taken', op: 'x', value: 1.25 }.
+  function modelOf(name, what) {
+    const e = statusInfo && statusInfo.byName.get(name);
+    return e && (e.model || []).find(m => m.what === what);
+  }
+  /*
+   * How long a status lasts for this build. Several grow with a stat: the
+   * tiered orbs' Curse lasts a second more for every twenty WIS over fifty
+   * (wisPerDuration), traps and auras add a fraction of a second a point of
+   * their scaling stat over a floor (statModDuration and its kin).
+   */
+  function durationOf(c, stats) {
+    let d = Number(c.duration || 0);
+    const stat = key => stats[String(key || '').toLowerCase()] || 0;
+    if (Number(c.wisPerDuration) > 0) d += Math.max(0, stat('WIS') - Number(c.wisMin || 50)) / Number(c.wisPerDuration);
+    const per = Number(c.statModDuration || c.statModCondDuration || c.statModTrapCondDuration || 0);
+    if (per && c.scalingStat) d += Math.max(0, stat(c.scalingStat) - Number(c.statModScalingMin || 0)) * per;
+    return d;
+  }
+  function bleedOf(c) {
+    const said = Number(c.bleedDamage || c.amount);
+    if (said > 0) return said;
+    const m = modelOf('Bleeding', 'bleed');
+    return m ? m.value : 20;
+  }
+  /*
+   * The effects on a build's side of a fight: which are up, how much of the
+   * time, and why. `stats` are the build's own, for how fast its weapon fires
+   * and how fast its magic comes back.
+   */
+  function effectsFor(state, stats) {
+    if (!statusInfo || !state || !stats) return null;
+    const up = {}, from = {};
+    const boss = data.byBoss[state.boss];
+    const immune = (boss && statusInfo.immune.get(boss.name)) || new Set();
+    const take = (name, share, why) => {
+      if (!DPS_EFFECTS.includes(name) || !(share > 0)) return;
+      const p = Math.min(1, share);
+      if ((up[name] || 0) >= p) return;
+      up[name] = p; from[name] = why;
+    };
+    let bleed = 0;
+    const weapon = data.byItem[(state.gear.weapon || {}).name];
+    const ability = data.byItem[(state.gear.ability || {}).name];
+    const fires = weapon ? SHOTS_AT(stats.dex) * (weapon.rate === undefined ? 1 : weapon.rate) : 0;
+    for (const c of (weapon && weapon.conditions) || []) {
+      if (c.target !== 'enemy' || c.on !== 'hit') continue;
+      const share = durationOf(c, stats) * fires;
+      if (c.effect === 'Bleeding') bleed = Math.max(bleed, bleedOf(c) * Math.min(1, share));
+      else take(c.effect, share, 'weapon');
+    }
+    if (ability && ability.mp) {
+      const every = Math.max(ability.mp / MANA_AT(stats.wis), ability.cool || 0);
+      for (const c of ability.conditions || []) {
+        if (c.target === 'player') continue;
+        // On you and the party, only what casting it gives - not what a hit on you sets off.
+        if ((c.target === 'self' || c.target === 'allies') && c.trigger && c.trigger !== 'Activate') continue;
+        const chance = c.proc && Number(c.proc) < 1 ? Number(c.proc) : 1;
+        const share = durationOf(c, stats) / every * chance;
+        if (c.effect === 'Bleeding') { if (c.target === 'enemy') bleed += bleedOf(c) * Math.min(1, share); }
+        else take(c.effect, share, 'ability');
+      }
+    }
+    for (const [name, on] of Object.entries(state.assume || {})) if (on) take(name, 1, 'party');
+    for (const name of immune) { delete up[name]; if (DPS_EFFECTS.includes(name)) from[name] = 'immune'; }
+    if (immune.has('Bleeding')) bleed = 0;
+    return { up, from, bleed, immune };
+  }
+  /*
+   * The damage of one shot with the effects that are up, as an expectation
+   * over the sixteen ways the four of them can be on or off.
+   */
+  function shotWith(effects) {
+    const p = effects.up;
+    const dmg = modelOf('Damaging', 'damage'), cu = modelOf('Curse', 'taken'), ex = modelOf('Exposed', 'def');
+    const four = [p['Damaging'] || 0, p['Armor Broken'] || 0, p['Exposed'] || 0, p['Curse'] || 0];
+    if (!four.some(Boolean)) return null;
+    return (roll, att, def, pierce) => {
+      let sum = 0;
+      for (let mask = 0; mask < 16; mask++) {
+        let w = 1;
+        for (let i = 0; i < 4; i++) w *= mask & (1 << i) ? four[i] : 1 - four[i];
+        if (!w) continue;
+        const dealt = roll * (0.5 + att / 50) * (mask & 1 && dmg ? dmg.value : 1);
+        let d = pierce ? 0 : def;
+        if (mask & 2) d = Math.min(d, 0);
+        if (mask & 4 && ex && ex.op === '+') d += ex.value;
+        sum += w * Math.max(dealt * 0.15, dealt - d) * (mask & 8 && cu ? cu.value : 1);
+      }
+      return sum;
+    };
+  }
+  // What the effects do to a weapon: its shots, and how fast it fires.
+  function fxOf(effects) {
+    if (!effects) return null;
+    const ber = modelOf('Berserk', 'rate');
+    return { onShot: shotWith(effects), haste: 1 + (effects.up['Berserk'] || 0) * ((ber ? ber.value : 1) - 1) };
   }
 
   /*
@@ -856,9 +994,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     };
   }
 
-  function weaponRate(item, stats, def, scale, extra) {
+  function weaponRate(item, stats, def, scale, extra, fx) {
     if (!item || !item.shots || !item.shots.length) return { each: 0, rate: 0, dps: 0 };
     const by = scale || { dmg: 1, rate: 1, life: 1, fast: 1 };
+    // Berserk, when it is up: the weapon fires that much faster.
+    const haste = (fx && fx.haste) || 1;
     /*
      * A sub-attack that says "set" is the shot now; the weapon's own is gone.
      */
@@ -885,14 +1025,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       for (const shot of channels) {
         const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
           * by.dmg;
-        const each = landed(roll, stats.att, def, shot.pierce);
+        const each = landed(roll, stats.att, def, shot.pierce, fx);
         const ownRate = shot.rate === undefined
           ? (item.rate === undefined ? 1 : item.rate)
           : shot.rate;
 
         const rate = SHOTS_AT(stats.dex)
           * ownRate
-          * by.rate;
+          * by.rate * haste;
 
         const many = shot.many || item.many || 1;
         const cycle = burstCycle(
@@ -924,7 +1064,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         const its = one.shots[0];
         const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2
           * by.dmg;
-        along += landed(mid, stats.att, def, its.pierce) * (one.many || 1);
+        along += landed(mid, stats.att, def, its.pierce, fx) * (one.many || 1);
       }
 
       if (along && channels.length) {
@@ -935,7 +1075,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
 
         const triggerRate = SHOTS_AT(stats.dex)
           * triggerOwnRate
-          * by.rate;
+          * by.rate * haste;
 
         if (burst) dps += along * burst.shots / burst.every;
         else dps += along * triggerRate;
@@ -956,9 +1096,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const shot = swaps.length ? swaps[swaps.length - 1].shots[0] : item.shots[0];
     const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
       * by.dmg;
-    const each = landed(roll, stats.att, def, shot.pierce);
+    const each = landed(roll, stats.att, def, shot.pierce, fx);
     const rate = SHOTS_AT(stats.dex) * (item.rate === undefined ? 1 : item.rate)
-      * by.rate;
+      * by.rate * haste;
     const many = (swaps.length ? swaps[swaps.length - 1].many : item.many) || 1;
     /*
      * A burst weapon does not fire steadily.
@@ -982,7 +1122,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (one.how !== 'add') continue;
       const its = one.shots[0];
       const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2 * by.dmg;
-      along += landed(mid, stats.att, def, its.pierce) * (one.many || 1);
+      along += landed(mid, stats.att, def, its.pierce, fx) * (one.many || 1);
     }
     const perShot = each * many + along;
     const dps = cycle
@@ -1015,7 +1155,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * And how often is not a choice: it is what the magic pays for, at the rate
    * wisdom brings the magic back.
    */
-  function abilityRate(item, stats, def) {
+  function abilityRate(item, stats, def, fx) {
     if (!item || !item.shots || !item.shots.length || !item.mp) {
       return { each: 0, every: 0, dps: 0 };
     }
@@ -1024,7 +1164,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const over = cast.from === undefined ? 0 : Math.max(0, stats.wis - cast.from);
     const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
       + over * (cast.dmg || 0);
-    const each = landed(roll, stats.att, def, shot.pierce);
+    const each = landed(roll, stats.att, def, shot.pierce, fx);
     const many = Math.max(1, Math.round((cast.shots || item.many || 1)
       + over * (cast.more || 0)));
     /*
@@ -1076,10 +1216,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const weapon = data.byItem[(state.gear.weapon || {}).name];
     const ability = data.byItem[(state.gear.ability || {}).name];
     const scale = scaleOf(state);
+    // The status effects the build keeps up, its own and the party's it assumes.
+    const effects = effectsFor(state, stats.now);
+    const fx = fxOf(effects);
     const gun = using === 'spell' ? NONE
-      : weaponRate(weapon, stats.now, def, scale, subOf(state));
-    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def);
-    return { stats, gun, spell, total: gun.dps + spell.dps };
+      : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
+    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
+    const bleed = effects ? effects.bleed : 0;
+    return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
   }
 
   /* ---------------- the state of a build ---------------- */
@@ -1140,6 +1284,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       // Aimed at whatever is being fought, not at a bare target: a build is
       // read against the thing it is meant to kill.
       against: null,
+      // Status effects a party member keeps up, by name, when the reader says so.
+      assume: {},
       /*
        * Something worth timing. The list is sorted by hit points and the top
        * of it is a training dummy with ten million of them, which tells you
@@ -3136,6 +3282,51 @@ const TINT = {
    * The bench draws a straight line, which is honest arithmetic for the
    * damage and a lie about the flight, so it says which.
    */
+  /*
+   * The status effects in the figures above: which are up and why, and a
+   * switch for each one a party member could keep up instead. An effect the
+   * target is immune to says so; one the build already keeps up all the time
+   * has nothing to switch.
+   */
+  const FX_SAY = { weapon: 'your weapon', ability: 'your ability', party: 'assumed from the party', immune: 'the target is immune' };
+  function statusIconTc(name, side) {
+    const e = statusInfo && statusInfo.byName.get(name);
+    if (!e || !e.icon) return '';
+    const [x, y, w, h] = e.icon, z = side / Math.max(w, h, 8);
+    const url = (window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.statusSheet) || 'assets/index/status-icons.png';
+    return '<i class="tc-fx-icon" style="width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(' + url
+      + ');background-size:' + statusInfo.sheet.wide * z + 'px ' + statusInfo.sheet.tall * z + 'px;background-position:'
+      + (-x * z) + 'px ' + (-y * z) + 'px"></i>';
+  }
+  function drawEffects(numbers) {
+    const box = el('tcStatus');
+    if (!box) return;
+    if (!statusInfo || !numbers) { box.innerHTML = ''; return; }
+    const effects = numbers.effects || { up: {}, from: {}, bleed: 0, immune: new Set() };
+    const assume = build.assume || {};
+    const rows = DPS_EFFECTS.map(name => {
+      const e = statusInfo.byName.get(name);
+      if (!e) return '';
+      const p = name === 'Bleeding' ? (effects.bleed > 0 ? 1 : 0) : (effects.up[name] || 0);
+      const why = effects.from[name];
+      const immune = effects.immune && effects.immune.has(name);
+      const own = why === 'weapon' || why === 'ability';
+      const state = immune ? FX_SAY.immune
+        : name === 'Bleeding' ? (effects.bleed > 0 ? commas(effects.bleed) + ' a second' : 'nothing inflicts it')
+        : p ? (FX_SAY[why] || why) + (p < 1 ? ' · ' + Math.round(p * 100) + '% of the time' : '')
+        : 'not up';
+      // A switch for what a party could bring, unless your own gear already keeps it up all the time.
+      const can = name !== 'Bleeding' && !immune && !(own && p >= 1);
+      return '<span class="tc-fx' + (p ? ' is-up' : '') + (immune ? ' is-immune' : '') + ' is-' + e.tone + '"'
+        + ' title="' + esc(e.enemy || e.player || name) + '">'
+        + statusIconTc(name, 16) + '<b>' + esc(name) + '</b><small>' + esc(state) + '</small>'
+        + (can ? '<button type="button" class="tc-fx-assume" data-assume="' + esc(name) + '" aria-pressed="'
+          + (assume[name] ? 'true' : 'false') + '">party</button>' : '')
+        + '</span>';
+    }).join('');
+    box.innerHTML = '<div class="tc-fx-head">Status effects <small>in the figures above</small></div><div class="tc-fx-row">' + rows + '</div>';
+  }
+
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -3190,6 +3381,7 @@ const TINT = {
     box.innerHTML = rows.map(([say, was, loud]) =>
       '<span class="figure' + (loud ? ' is-loud' : '') + '"><b>' + was
       + '</b><small>' + say + '</small></span>').join('');
+    drawEffects(numbers);
   }
 
   /*
@@ -3398,8 +3590,10 @@ const TINT = {
     const stats = statsOf(build).now;
     const weapon = data.byItem[(build.gear.weapon || {}).name];
     const ability = data.byItem[(build.gear.ability || {}).name];
-    const gun = weaponRate(weapon, stats, boss.def, scaleOf(build), subOf(build));
-    const spell = abilityRate(ability, stats, boss.def);
+    const effects = effectsFor(build, stats);
+    const fx = fxOf(effects);
+    const gun = weaponRate(weapon, stats, boss.def, scaleOf(build), subOf(build), fx);
+    const spell = abilityRate(ability, stats, boss.def, fx);
 
     stepBits(delta);
     if (duel.hp <= 0) return;                 // it is over; nothing else moves
@@ -3410,7 +3604,7 @@ const TINT = {
      * the visualisation of the weapon; their range and speed must not make a
      * target live longer simply because its sprite is drawn farther away.
      */
-    const dps = Math.max(0, gun.dps || 0);
+    const dps = Math.max(0, (gun.dps || 0) + (effects ? effects.bleed : 0));
     if (dps > 0) {
       const before = duel.hp;
       const hurt = dps * delta;
@@ -4715,6 +4909,15 @@ const TINT = {
       el('tcPause').textContent = duel.on ? 'pause' : 'play';
     });
     el('tcAgain').addEventListener('click', resetDuel);
+    /* The party's status effects: a switch each, kept with the build. */
+    el('tcStatus')?.addEventListener('click', event => {
+      const sw = event.target.closest('[data-assume]');
+      if (!sw) return;
+      const name = sw.dataset.assume;
+      build.assume = { ...(build.assume || {}), [name]: !(build.assume && build.assume[name]) };
+      if (!build.assume[name]) delete build.assume[name];
+      keep(); paint();
+    });
     const link = el('tcShare');
     if (link) {
       link.addEventListener('click', () => {
@@ -5031,6 +5234,7 @@ const TINT = {
     for (const one of data.items) data.byItem[one.name] = one;
     for (const one of data.enchants) data.byEnch[one.id] = one;
     for (const one of data.bosses) data.byBoss[one.name] = one;
+    statusInfo = await loadStatusInfo();
     await loadAccess();
     try { profile = BuildProgression.normalize(JSON.parse(localStorage.getItem(PROFILE_STORE)), access); }
     catch (_) { profile = null; }

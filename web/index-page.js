@@ -101,6 +101,16 @@ const RealmIndex = (function () {
     side = Math.round(side * zoomed());
     if (one.icon) return '<img class="ix-art ix-art-file" width="' + side + '" height="' + side
       + '" src="' + esc(one.icon) + '" alt="">';
+    // A status effect's picture is on its own small sheet, cut from the client's interface atlas.
+    if (one.statusArt && all.statusSheet) {
+      const [x, y, w, h] = one.statusArt;
+      const zoom = side / Math.max(w, h, 8);
+      const bundle = window.ROTMG_BUNDLE;
+      return '<span class="ix-art ix-status-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
+        + 'px;background-image:url(' + ((bundle && bundle.statusSheet) || 'assets/index/status-icons.png')
+        + ');background-size:' + (all.statusSheet.wide * zoom) + 'px ' + (all.statusSheet.tall * zoom)
+        + 'px;background-position:' + (-x * zoom) + 'px ' + (-y * zoom) + 'px"></span>';
+    }
     if (!one.art || !all.sheet) return '';
     const [x, y, w, h] = one.art;
     const zoom = side / Math.max(w, h);
@@ -135,7 +145,7 @@ const RealmIndex = (function () {
     ['item', 'Gear'], ['use', 'Consumables'], ['class', 'Classes'], ['skin', 'Skins'],
     ['enemy', 'Enemies'],
     ['portal', 'Dungeons'], ['place', 'Biomes'], ['set', 'Sets'],
-    ['enchant', 'Enchantments'], ['pool', 'Pools']
+    ['enchant', 'Enchantments'], ['pool', 'Pools'], ['status', 'Status effects']
   ];
   const KIND_SAY = Object.fromEntries(KINDS);
 
@@ -247,6 +257,59 @@ const RealmIndex = (function () {
     all.built = (said.from && said.from.date) || said.built;
     all.count = said.records.length;
     return true;
+  }
+
+  /*
+   * The status effects: what each one does, its picture, and who inflicts,
+   * grants or shrugs it off (tools/build-status-effects.js, from the client
+   * and data/Items/status-effects.txt).
+   *
+   * Each becomes a record of its own, filed as a status effect, and the
+   * things that touch it are linked to it both ways: an orb "inflicts" Curse
+   * and Curse is "inflicted by" the orb. Two links rather than one read
+   * backwards, so neither card has to say "<- inflicts".
+   */
+  let statuses = null;
+  async function loadStatuses() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.statusText;
+    if (!raw) {
+      raw = await fetch('assets/index/status-effects.json').then(r => (r.ok ? r.text() : '')).catch(() => '');
+    }
+    if (!raw) return;
+    let said;
+    try { said = JSON.parse(raw); } catch (err) { return; }
+    statuses = said;
+    all.statusSheet = said.sheet;
+    const link = (from, how, to) => {
+      const one = all.get(from);
+      if (!one) return false;
+      // The index's own link list is shared with every reader of it; add to a copy.
+      if (one.outLinks === one.out) one.outLinks = (one.out || []).slice();
+      one.outLinks.push([how, to]);
+      (one.statuses || (one.statuses = new Set())).add(to);
+      return true;
+    };
+    for (const effect of said.effects || []) {
+      const id = 'status:' + effect.name;
+      const one = {
+        id, kind: 'status', name: effect.name, said: effect.name, tone: effect.tone,
+        statusArt: effect.icon, status: effect, outLinks: [], inLinks: [],
+        hidden: effect.player || effect.enemy ? undefined : ['an effect the game uses internally']
+      };
+      all.set(id, one);
+      light.push([id, effect.name, 'status', '', one.hidden ? 1 : 0, 0, '']);
+      const both = (list, there, back) => {
+        for (const x of list || []) {
+          const from = typeof x === 'string' ? x : x.id;
+          if (link(from, there, id)) one.outLinks.push([back, from]);
+        }
+      };
+      both(effect.inflicts, 'inflicts', 'inflicted by');
+      both(effect.grants, 'grants', 'granted by');
+      both(effect.inflictedBy, 'inflicts on players', 'inflicted by creatures');
+      both(effect.immune, 'immune to', 'creatures immune');
+    }
   }
 
   /*
@@ -417,6 +480,7 @@ const RealmIndex = (function () {
      * here, so the creature can name the places that list it.
      */
     realmeyeArchive.livesIn = new Map();
+    realmeyeArchive.roles = new Map();               // creature -> the roster roles it is listed under
     for (const [record, data] of Object.entries(said.records || {})) {
       // A dungeon's full roster is a page of its own, "<dungeon> Enemies";
       // the place it names is the dungeon itself.
@@ -429,6 +493,9 @@ const RealmIndex = (function () {
         const places = realmeyeArchive.livesIn.get(target.id) || new Set();
         places.add(id);
         realmeyeArchive.livesIn.set(target.id, places);
+        const roles = realmeyeArchive.roles.get(target.id) || new Set();
+        roles.add(relation.type.replace(/^(dungeon|biome)_/, ''));
+        realmeyeArchive.roles.set(target.id, roles);
       }
     }
   }
@@ -645,6 +712,23 @@ const RealmIndex = (function () {
         if (one && one.art && !one.hidden && !one.spawns) { shown = one; break; }
       }
       chip(byFoe, key, say, ids, shown && shown.id);
+    }
+
+    /*
+     * By status effect: everything that inflicts, grants or resists one, so a
+     * reader after "what Curses" or "what is immune to stun" has a way in.
+     * Within the group the choices add up; with Gear or Enemies they narrow.
+     */
+    if (statuses) {
+      const byStatus = group('Status effects', 'Status effects', 'client',
+        'What gear and creatures inflict, grant or are immune to, read off the client.');
+      for (const effect of statuses.effects || []) {
+        const id = 'status:' + effect.name;
+        // The status's own card belongs in its chip too: chosen first, it heads the list.
+        const ids = gather(x => Boolean(x.statuses && x.statuses.has(id)));
+        if (all.has(id)) ids.add(id);
+        chip(byStatus, effect.anchor, effect.name, ids, id);
+      }
     }
 
     /*
@@ -1105,6 +1189,7 @@ const RealmIndex = (function () {
   }
 
   function repaint() {
+    if (!classic()) return;
     narrow();
     /*
      * A card left open on something the new category cannot contain is the
@@ -1112,6 +1197,14 @@ const RealmIndex = (function () {
      * on the right. It closes itself.
      */
     if (showing && !stillAllowed(showing.id)) drawCard('');
+    /*
+     * A status effect chosen first is a question about that effect: its own
+     * card opens beside what inflicts it, unless the reader has another open.
+     */
+    {
+      const lead = asked.find(chip => chip.on);
+      if (!showing && lead && lead.groupId === 'Status effects' && all.has(lead.pic)) drawCard(lead.pic);
+    }
     /*
      * One step at a time. Nothing chosen and the rail is the page; something
      * chosen and it folds down to what was chosen, and the list has the room.
@@ -1619,6 +1712,7 @@ const RealmIndex = (function () {
      * two columns that do have something to show would rather have the room.
      */
     const body = el('ixBody');
+    sayCard(one ? one.id : '');
     if (!one) {
       box.innerHTML = '';
       /*
@@ -2392,6 +2486,19 @@ const RealmIndex = (function () {
    * worked, nothing else did, and nothing said why. Each hook is attached on
    * its own now, the delegated one first because it carries the rest.
    */
+  /*
+   * The page browses through web/index-browse.js now: families on the left,
+   * the list in the middle, this module's card on the right. The rail of
+   * facets and the result list this module used to draw are only drawn where
+   * their markup is still on a page; without it, the card, the data and the
+   * links are all this module does.
+   */
+  const classic = () => Boolean(el('ixFacets'));
+  /* Every card shown or shut is said, so the browser beside it can follow a link taken inside it. */
+  function sayCard(id) {
+    document.dispatchEvent(new CustomEvent('realmindex:card', { detail: { id: id || '' } }));
+  }
+
   function hook(id, kind, run) {
     const node = id === 'pageIndex' ? document.getElementById(id) : el(id);
     if (!node) { console.warn('index: no ' + id + ' to listen on'); return; }
@@ -2399,6 +2506,10 @@ const RealmIndex = (function () {
   }
 
   function wire() {
+    if (classic()) wireClassic();
+    wireCard();
+  }
+  function wireClassic() {
     hook('ixSearch', 'input', () => {
       const body = el('ixBody');
       if (body) {
@@ -2429,6 +2540,8 @@ const RealmIndex = (function () {
       drawCard('');
       repaint();
     });
+  }
+  function wireCard() {
     hook('pageIndex', 'click', event => {
       /*
        * One listener for every chip, because they are drawn in two places now
@@ -2440,6 +2553,8 @@ const RealmIndex = (function () {
         const id = loves.dataset.love;
         if (loved.has(id)) loved.delete(id); else loved.add(id);
         writeLoved();
+        document.dispatchEvent(new CustomEvent('realmindex:loved', { detail: { id } }));
+        if (!classic()) { if (showing) drawCard(showing.id); return; }
         /*
          * The Favourites way in is made out of the list itself, so it has to
          * be rebuilt when the list changes - and the chips that were down stay
@@ -2580,6 +2695,8 @@ const RealmIndex = (function () {
   }
 
   function refreshAfterRealmEye() {
+    document.dispatchEvent(new CustomEvent('realmindex:realmeye'));
+    if (!classic()) { if (showing) drawCard(showing.id); return; }
     const down = new Set();
     const opened = new Set();
 
@@ -2667,8 +2784,8 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge()]);
-    buildFacets();
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses()]);
+    if (classic()) buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special
        case that forgets to unfold anything. */
@@ -2801,7 +2918,22 @@ const RealmIndex = (function () {
     if (one) walkThrough(where, one);
   }
 
-  return { start, show, open, card, door, __test: { createOpenController } };
+  /* Shut the card, as the browser's × does. */
+  function close() { if (started) drawCard(''); }
+  /*
+   * The records and what was read beside them, for web/index-browse.js:
+   * every record by id (status effects and RealmEye's own records included),
+   * the sprite sheets, dungeon difficulty, and RealmEye's archive once read.
+   */
+  function data() {
+    if (!started) return null;
+    return {
+      all, sheet: all.sheet, statusSheet: all.statusSheet, slots: all.slots, built: all.built,
+      difficulty: dungeonDifficultyOf, archive: () => realmeyeArchive, loved: () => loved
+    };
+  }
+
+  return { start, show, open, card, door, close, data, __test: { createOpenController } };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = RealmIndex;

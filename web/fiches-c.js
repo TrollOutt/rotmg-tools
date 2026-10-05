@@ -18,7 +18,7 @@
   /* Un seul affichage : la fiche harmonisée. */
   const mode = 'c2';
   /* La fiche attend toutes ses données : aucun second rendu visible quand l'une d'elles arrive. */
-  let pending = 6;
+  let pending = 7;
   const settled = () => {
     if (--pending > 0) return;
     for (const box of hosts()) box.style.visibility = '';
@@ -52,6 +52,63 @@
     const bundled = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.realmMonsterAnimations;
     const src = (bundled && bundled[id]) || 'assets/realm-monster-animations/' + encodeURIComponent(moving[id]);
     return '<img class="ix-art fc2-walk" src="' + esc(src) + '" alt="" style="width:' + side + 'px;height:' + side + 'px">';
+  }
+
+  /* ---------- les statuts (tools/build-status-effects.js) ---------- */
+  let statusData = null;
+  {
+    const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.statusText;
+    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/status-effects.json').then(r => r.json()))
+      .then(j => { statusData = { sheet: j.sheet, wiki: j.wiki, byName: new Map((j.effects || []).map(e => [e.name, e])) }; })
+      .catch(() => {}).finally(settled);
+  }
+  function statusIcon(name, side) {
+    const e = statusData && statusData.byName.get(name);
+    if (!e || !e.icon) return '';
+    const [x, y, w, h] = e.icon, z = side / Math.max(w, h, 8);
+    const url = (window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.statusSheet) || 'assets/index/status-icons.png';
+    return '<span class="ix-art ix-status-art" style="width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(' + url
+      + ');background-size:' + statusData.sheet.wide * z + 'px ' + statusData.sheet.tall * z + 'px;background-position:'
+      + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
+  }
+  /* Une pastille de statut : son icône, son nom, ce qui la qualifie ; elle ouvre la fiche du statut. */
+  function statusChip(name, extra) {
+    const e = statusData && statusData.byName.get(name);
+    return '<button type="button" class="ix-jump fc2-status is-' + (e ? e.tone : 'bad') + '" data-open="status:' + esc(name) + '"'
+      + (e && (e.enemy || e.player) ? ' title="' + esc(e.enemy || e.player) + '"' : '') + '>'
+      + statusIcon(name, 14) + esc(name) + (extra ? ' <small>' + esc(extra) + '</small>' : '') + '</button>';
+  }
+  /* Ce que dit une condition : sa durée, sa chance, sa saignée. */
+  const conditionSays = c => [c.duration && Number(c.duration) < 3600 ? Number(c.duration) + ' s' : '',
+    c.proc && Number(c.proc) < 1 ? Math.round(Number(c.proc) * 100) + '%' : '',
+    c.bleedDamage || c.amount ? (c.bleedDamage || c.amount) + '/s' : ''].filter(Boolean).join(' · ');
+  /* Une fois chaque statut, avec la plus longue durée annoncée. */
+  function conditionChips(list) {
+    const best = new Map();
+    for (const c of list) {
+      const had = best.get(c.effect);
+      if (!had || Number(c.duration || 0) > Number(had.duration || 0)) best.set(c.effect, c);
+    }
+    return [...best.values()].map(c => statusChip(c.effect, conditionSays(c))).join('');
+  }
+  /*
+   * Les statuts d'une fiche, hors effets de tir déjà dits sous « Shot » :
+   * ce qu'une capacité ou un déclencheur inflige, ce qu'un objet confère, et
+   * pour une créature ce qu'elle inflige aux joueurs et ce à quoi elle résiste.
+   */
+  function statusPart(r) {
+    const all = r.conditions || [];
+    const rows = [];
+    const onEnemy = all.filter(c => c.target === 'enemy' && c.on !== 'hit');
+    const self = all.filter(c => c.target === 'self');
+    const party = all.filter(c => c.target === 'allies');
+    const onPlayers = all.filter(c => c.target === 'player');
+    if (onEnemy.length) rows.push(['Inflicts', conditionChips(onEnemy)]);
+    if (self.length) rows.push(['Grants you', conditionChips(self)]);
+    if (party.length) rows.push(['Grants the party', conditionChips(party)]);
+    if (onPlayers.length) rows.push(['Inflicts on players', conditionChips(onPlayers)]);
+    if ((r.immune || []).length) rows.push(['Immune to', r.immune.map(x => statusChip(x)).join('')]);
+    return rows.length ? part('Status effects', linkRows(rows.map(([k, v]) => [k, '<span class="fc2-chips">' + v + '</span>'])), { tag: 'client' }) : '';
   }
 
   function art(r, side) {
@@ -142,7 +199,8 @@
     out.factRows = [];
     out.warns = [...box.querySelectorAll(':scope > .ix-warn')].map(x => x.outerHTML).join('');
     const diff = box.querySelector('.ix-dungeon-difficulty');
-    out.difficulty = diff ? Number((/(\d+)\s*\/\s*10/.exec(diff.textContent) || [])[1]) || 0 : 0;
+    // Half points too: "8.5/10" is eight and a half, not five.
+    out.difficulty = diff ? Number((/(\d+(?:\.\d+)?)\s*\/\s*10/.exec(diff.textContent) || [])[1]) || 0 : 0;
     box.querySelectorAll(':scope > .ix-said-block').forEach(x => out.others.push(x.outerHTML));
     box.querySelectorAll(':scope > .ix-block').forEach(block => {
       const sum = block.querySelector('summary');
@@ -555,6 +613,7 @@
       parts.push(part('Combat', '<div class="fc2-dmg">' + Number(r.hp).toLocaleString('en-US') + '<small>HP</small></div>'
         + factsDl([['Defense', String(r.def || 0)]]) + (tags ? '<div class="fc2-chips">' + tags + '</div>' : '')));
     }
+    if (r.kind === 'enemy' || r.kind === 'item') parts.push(statusPart(r));
     if (r.kind === 'portal' && card.difficulty) {
       parts.push(part('Difficulty', '<div class="fc2-dmg">' + card.difficulty + '<small>/ 10</small></div><div class="fc2-pips">'
         + Array.from({ length: 10 }, (_, i) => '<i class="' + (i < card.difficulty ? 'on' : '') + '"></i>').join('') + '</div>', { tag: 'RealmEye' }));
@@ -639,7 +698,7 @@
       const proj = projOf(r);
       const flags = (proj && proj.shots.length ? shotBehaviour(r, proj)
         : [s && s.through && 'Hits multiple targets', s && s.pierce && 'Ignores defense'].filter(Boolean).map(x => chip(esc(x))).join(''))
-        + (r.conditions || []).filter(c => c.on === 'hit').map(c => chip(esc(c.effect + ' ' + c.duration + ' s'))).join('');
+        + conditionChips((r.conditions || []).filter(c => c.on === 'hit'));
       /* Comme l'infobulle du jeu : les dégâts sous le nom, la portée et la cadence après la description. */
       damage = s ? '<div class="ix-part"><div class="fc2-dmg">' + s.low + (s.high !== s.low ? '–' + s.high : '') + '<small>damage</small></div></div>' : '';
       attack = part(s ? 'Shot' : 'Ability',
@@ -663,7 +722,7 @@
       .replace(new RegExp((r.conditions || []).filter(c => c.on === 'hit').map(c => c.effect + ' for ' + c.duration + ' seconds?').join('|') || '$^', 'g'), '')
       .replace(/\s+/g, ' ').trim();
     if (!(r.does || []).length && reEffect) items.push('<li>' + esc(reEffect) + ' <em>· RealmEye</em></li>');
-    const effects = part('Effects', items.length ? '<ul class="ix-does">' + items.join('') + '</ul>' : '');
+    const effects = part('Effects', items.length ? '<ul class="ix-does">' + items.join('') + '</ul>' : '') + statusPart(r);
 
     /* Une fois équipé : la grille du jeu, en puces du site. */
     const w = r.worn || {};
@@ -1659,6 +1718,54 @@
     }
   }
 
+  /* ---------- la fiche d'un statut ---------- */
+  const MODEL_SAY = { def: 'Defence', taken: 'Damage taken', damage: 'Weapon damage', rate: 'Attack speed', bleed: 'Life lost a second',
+    range: 'Shot range', speed: 'Walking speed', shots: 'Shots a volley', dealt: 'Damage dealt', hpregen: 'Life a second', mpregen: 'Magic a second' };
+  const modelSays = m => (MODEL_SAY[m.what] || m.what) + (m.op === 'zero' ? ' counts as 0' : m.op === 'x' ? ' ×' + m.value : ' ' + (m.value > 0 ? '+' : '') + m.value);
+  // What Theory Crafting's damage figures take into account.
+  const COUNTED = new Set(['def', 'taken', 'damage', 'rate', 'bleed']);
+  function sheetStatus(name) {
+    const e = statusData.byName.get(name);
+    const head = '<div class="ix-part fc2-head"><span class="ix-cell fc2-status-cell">' + statusIcon(name, 40) + '</span>'
+      + '<div class="fc2-name"><span class="ix-kind is-status">Status effect</span><h3>' + esc(name) + '</h3>'
+      + '<div class="fc2-sub">' + (e.tone === 'good' ? 'Helpful to whoever carries it' : 'Harmful to whoever carries it') + '</div></div></div>';
+    // Sentences, not values: each side in a paragraph of its own.
+    const what = '<div class="ix-prose">' + [e.player && ['On a player', e.player], e.enemy && ['On an enemy', e.enemy]].filter(Boolean)
+      .map(([k, v]) => '<p><b>' + esc(k) + '</b> ' + esc(v) + '</p>').join('') + '</div>';
+    const wiki = '<p class="fc-note"><a href="' + esc(statusData.wiki + '#' + e.anchor) + '" target="_blank" rel="noopener">RealmEye: Status Effects ↗</a></p>';
+    const model = (e.model || []).length
+      ? '<div class="fc2-chips">' + e.model.map(m => chip(esc(modelSays(m)))).join('') + '</div>'
+        + (e.model.some(m => COUNTED.has(m.what)) ? '<p class="fc-note">Theory Crafting counts it in damage a second.</p>' : '')
+      : '';
+    return blockOf([head, part('What it does', what + wiki, { tag: 'RealmEye' }), part('In the numbers', model)], 'fc2-sheet');
+  }
+  function statusDossier(name) {
+    const e = statusData.byName.get(name);
+    /* Ce qui est rangé hors des catégories (les procs, les objets techniques) est compté, pas montré. */
+    const list = (entries, title, max = 60) => {
+      const shown = [], quiet = [];
+      for (const x of entries) {
+        const o = rec(typeof x === 'string' ? x : x.id);
+        if (!o) continue;
+        (o.hidden ? quiet : shown).push([o, typeof x === 'string' ? '' : conditionSays(x)]);
+      }
+      if (!shown.length && !quiet.length) return '';
+      shown.sort((a, b) => (a[0].said || a[0].name).localeCompare(b[0].said || b[0].name));
+      const chips = shown.slice(0, max).map(([o, say]) => '<button type="button" class="ix-jump" data-open="' + esc(o.id) + '">'
+        + art(o, 14) + esc(o.said || o.name) + (say ? ' <small>' + esc(say) + '</small>' : '') + '</button>').join('');
+      const more = [shown.length > max ? (shown.length - max) + ' more' : '', quiet.length ? quiet.length + ' technical' : ''].filter(Boolean).join(', ');
+      return part(title + ' · ' + shown.length, '<div class="fc2-chips">' + chips + '</div>' + (more ? '<p class="fc-note">and ' + esc(more) + '</p>' : ''), { tag: 'client' });
+    };
+    const blocks = [
+      list(e.inflicts, 'Gear that inflicts it'),
+      list(e.grants, 'Gear that grants it'),
+      list(e.inflictedBy, 'Creatures that inflict it', 40),
+      list(e.immune, 'Creatures immune to it', 40)
+    ].filter(Boolean);
+    return blocks.length ? blocks.map(b => blockOf([b])).join('')
+      : emptyBox('Who uses it', 'Nothing in the client declares it: the game applies it from its own code.');
+  }
+
   /* ---------- branchement ---------- */
   const isGear = r => Boolean(r && r.kind === 'item' && !r.use && !r.family && r.slot !== undefined && r.slot !== 10);
   /* The card the site drew, per host: the Index page, and the atlas's drawer on the left of the map. */
@@ -1676,6 +1783,13 @@
     const com = communityOf(r);
     card.__used = new Set();
     const bar = '<div class="fc-bar"><div class="fc-tools">' + card.doors + card.away + card.love + '</div>' + modeBar() + '</div>';
+    /* Un statut a sa propre fiche, tirée du catalogue des statuts. */
+    if (card.id.startsWith('status:') && statusData && statusData.byName.has(card.id.slice(7))) {
+      const name = card.id.slice(7);
+      return '<div class="fc-root fc2">' + bar + card.warns
+        + '<div class="fc-cols"><div class="fc-left">' + sheetStatus(name) + '</div>'
+        + '<div class="fc-right fc2-right">' + statusDossier(name) + '</div></div></div>';
+    }
     if (mode === 'c2' && gear) {
       const sheet = sheet2(r, card, com);
       return '<div class="fc-root fc2 fc2-gear">' + bar + card.warns

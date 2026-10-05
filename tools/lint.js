@@ -6,7 +6,7 @@ const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const classic = [
-  'web/i18n.js', 'web/app.js', 'web/fame-page.js', 'web/index-page.js',
+  'web/i18n.js', 'web/app.js', 'web/fame-page.js', 'web/index-page.js', 'web/index-browse.js',
   'web/theorycraft.js', 'tools/build-i18n.js', 'tools/check-i18n.js', 'tests/i18n.test.js'
 ];
 for (const file of classic) new vm.Script(fs.readFileSync(path.join(root, file), 'utf8'), { filename: file });

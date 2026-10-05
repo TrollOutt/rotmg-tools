@@ -158,6 +158,8 @@ const sources = {
    * served one - because it is only ever wanted on the same page.
    */
   wikiText: readText('Index', 'wiki.json'),
+  statusText: fs.existsSync(path.join(web, 'assets', 'index', 'status-effects.json'))
+    ? fs.readFileSync(path.join(web, 'assets', 'index', 'status-effects.json'), 'utf8') : '',
   realmeyeEnrichmentText: fs.existsSync(path.join(dataRoot, 'Index', 'realmeye-enrichment.json'))
     ? readText('Index', 'realmeye-enrichment.json') : '',
   // Compact, existing Atlas evidence for biome populations and tiered loot.
@@ -283,6 +285,16 @@ let indexSheet = '';
   if (fs.existsSync(at)) {
     indexSheet = 'data:image/png;base64,' + fs.readFileSync(at).toString('base64');
   }
+}
+
+/*
+ * The status effects' catalogue and their icons: carried by the kept copy,
+ * fetched by the served page from assets/index like the index they join.
+ */
+let statusSheet = '';
+{
+  const at = path.join(web, 'assets', 'index', 'status-icons.png');
+  if (fs.existsSync(at)) statusSheet = 'data:image/png;base64,' + fs.readFileSync(at).toString('base64');
 }
 
 const realmMonsterSprites = {};
@@ -416,6 +428,7 @@ const famePageSource = readWeb('fame-page.js');
 const theorySource = readWeb('theorycraft.js');
 const progressionSource = readWeb('progression.js');
 const indexSource = readWeb('index-page.js');
+const browseSource = readWeb('index-browse.js');
 const routerSource = readWeb('router-contract.js');
 const whatsNewSource = readWeb('whats-new.js');
 const localesSource = readWeb('locales.js');
@@ -512,7 +525,7 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
   || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
@@ -557,6 +570,7 @@ const changes = fs.existsSync(changesPath)
 const served = Object.assign({}, sources);
 delete served.indexText;
 delete served.wikiText;
+delete served.statusText;
 delete served.realmeyeEnrichmentText;
 // The refreshed bench catalogue is paid for when the bench is opened.
 // The downloadable copy still embeds it, together with its sheet.
@@ -619,7 +633,8 @@ const dress = (bundleSources, { skins = true } = {}) =>
   .replace(lookScriptTag, () => `<script>\n${safe(lookSource)}\n</script>`)
   .replace(scriptTags, () => [
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
-      theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '' })};</script>`,
+      theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '',
+      statusSheet: bundleSources.statusText ? statusSheet : '' })};</script>`,
     `<script>\n${safe(localesSource)}\n</script>`,
     `<script>\n${safe(i18nSource)}\n</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
@@ -630,6 +645,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(progressionSource)}\n</script>`,
     `<script>\n${safe(theorySource)}\n</script>`,
     `<script>\n${safe(indexSource)}\n</script>`,
+    `<script>\n${safe(browseSource)}\n</script>`,
     `<script>\n${safe(routerSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))

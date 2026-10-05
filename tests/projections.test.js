@@ -54,9 +54,15 @@ try {
   fs.rmSync(join);
   const conditions = require('../tools/item-conditions');
   assert.deepEqual(conditions('<Projectile id="2"><ConditionEffect duration="2.5">Weak</ConditionEffect></Projectile>'),
-    [{ on: 'hit', projectile: '2', effect: 'Weak', duration: '2.5' }]);
+    [{ on: 'hit', projectile: '2', effect: 'Weak', target: 'enemy', duration: '2.5' }]);
   assert.deepEqual(conditions('<Activate effect="Invincible" duration="86400">ConditionEffectSelf</Activate>'),
-    [{ on: 'ConditionEffectSelf', trigger: 'Activate', effect: 'Invincible', duration: '86400' }]);
+    [{ on: 'ConditionEffectSelf', trigger: 'Activate', effect: 'Invincible', duration: '86400', target: 'self' }]);
+  // The shapes that used to be missed: a blast with two effects, and a trap.
+  assert.deepEqual(conditions('<Activate condDuration="4" condEffect="Paralyzed,Curse" wisMin="50" wisPerDuration="20" radius="2">EffectBlast</Activate>'),
+    [{ on: 'EffectBlast', trigger: 'Activate', effect: 'Paralyzed', duration: '4', target: 'enemy', wisMin: '50', wisPerDuration: '20' },
+      { on: 'EffectBlast', trigger: 'Activate', effect: 'Curse', duration: '4', target: 'enemy', wisMin: '50', wisPerDuration: '20' }]);
+  assert.deepEqual(conditions('<Projectile id="1"><ConditionEffect effect="3">Sick</ConditionEffect></Projectile>'),
+    [{ on: 'hit', projectile: '1', effect: 'Sick', target: 'enemy' }]);
   console.log('Provenance mismatch, missing header, and observed condition shapes verified.');
 } finally {
   // mkdtemp created this directory; never remove a caller-supplied path.

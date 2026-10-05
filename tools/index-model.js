@@ -3,7 +3,7 @@
 // The index and bench use different names for a few fields. Keep those
 // translations here so the index card can retain its existing public shape.
 const fields = {
-  items: 'name id hand slot sb tier bag mp rate many fan worn share rel burst shots does cast set cool labels art pic icon',
+  items: 'name id hand slot sb tier bag mp rate many fan worn share rel burst shots does cast set cool labels art pic icon conditions',
   classes: 'name about hp hpTop mp mpTop att attTop def defTop spd spdTop dex dexTop vit vitTop wis wisTop grow slots kit art pic',
   enchants: 'id name says labels fits notFits notWith notOn weight worn mul sub rel heal alters pic',
   sets: 'name pieces steps',
@@ -28,8 +28,9 @@ function key(group, field) {
 }
 function assign(record, group, value) {
   for (const field of fields[group].split(' ')) {
-    // `icon` is read off the record on the way out; nothing puts it there.
-    if (field === 'name' || field === 'icon') continue;
+    // `icon` and `conditions` are read off the record on the way out; the
+    // mechanics do not carry them, so nothing here may overwrite them.
+    if (field === 'name' || field === 'icon' || field === 'conditions') continue;
     let v = value[field];
     if (group === 'classes' && /^(hp|mp|att|def|spd|dex|vit|wis)(Top)?$/.test(field)) {
       (record.stats ||= {})[field] = v; continue;
@@ -52,6 +53,27 @@ function attach(records, mechanics, objects) {
     assign(r, 'items', mechanics.itemOf(one, r.hand, r.slot, (r.labels || []).join(',')));
     const conditions = require('./item-conditions')(one.body);
     if (conditions.length) r.conditions = conditions;
+  }
+  /*
+   * And the creatures: what their shots put on a player, and what the client
+   * says they shrug off - <StunImmune/> and its siblings, and the STASISIMMUNE
+   * label. Their shots are aimed at players, so that is the target.
+   */
+  const IMMUNE = { StasisImmune: 'Stasis', StunImmune: 'Stunned', ParalyzeImmune: 'Paralyzed',
+    PetrifyImmune: 'Petrify', DazedImmune: 'Dazed', SlowImmune: 'Slowed' };
+  for (const one of objects) {
+    if (!/<Class>Character<\/Class>/.test(one.body)) continue;
+    const r = lookup.get('enemy|' + one.id);
+    if (!r) continue;
+    const conditions = require('./item-conditions')(one.body)
+      .filter(c => c.on === 'hit').map(c => ({ ...c, target: 'player' }));
+    if (conditions.length) r.conditions = conditions;
+    const immune = new Set();
+    for (const [tag, effect] of Object.entries(IMMUNE)) {
+      if (new RegExp('<' + tag + '\\s*/>').test(one.body)) immune.add(effect);
+    }
+    if (/\bSTASISIMMUNE\b/.test((/<Labels>([^<]*)/.exec(one.body) || [])[1] || '')) immune.add('Stasis');
+    if (immune.size) r.immune = [...immune].sort();
   }
   const view = {};
   for (const group of Object.keys(fields)) {
