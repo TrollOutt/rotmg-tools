@@ -818,18 +818,23 @@ var WhatsNew = (function () {
     return skinFor(target);
   }
   /*
-   * On the cover, the card takes the place of the pictures it was opened from:
-   * the title, the lede and the season's modes stay in view beside it.
+   * The card sits inside the page it was opened from, over the part of it that
+   * can be spared: the pictures on the cover, the story being read in the
+   * Summary, the figures of a table. The title, the list of stories and the
+   * names in a table stay in view beside it.
    */
   function dock() {
-    const drawer = drawerEl(), right = app && app.querySelector('.pm-right'), card = right && right.closest('.pm-card');
+    const drawer = drawerEl(), card = app && app.querySelector('.pm-card');
     if (!drawer) return;
-    const docked = page() === 'overview' && card && innerWidth > 1040;
-    drawer.classList.toggle('is-docked', !!docked);
-    if (docked) {
-      const c = card.getBoundingClientRect(), r = right.getBoundingClientRect();
-      Object.assign(drawer.style, { top: c.top + 'px', left: (r.left - 14) + 'px', width: (c.right - r.left + 14) + 'px', height: c.height + 'px', right: 'auto', bottom: 'auto' });
-    } else for (const k of ['top', 'left', 'width', 'height', 'right', 'bottom']) drawer.style[k] = '';
+    let left = null;
+    if (card && innerWidth > 1040) {
+      const c = card.getBoundingClientRect(), p = page();
+      const over = p === 'overview' ? app.querySelector('.pm-right') : p === 'summary' ? app.querySelector('.pl-read') : null;
+      left = over ? over.getBoundingClientRect().left - 14 : c.left + Math.max(340, c.width * 0.36);
+      Object.assign(drawer.style, { top: c.top + 'px', left: left + 'px', width: (c.right - left) + 'px', height: c.height + 'px', right: 'auto', bottom: 'auto' });
+    }
+    drawer.classList.toggle('is-docked', left !== null);
+    if (left === null) for (const k of ['top', 'left', 'width', 'height', 'right', 'bottom']) drawer.style[k] = '';
   }
   if (typeof window !== 'undefined') window.addEventListener('resize', () => { const d = drawerEl(); if (d && !d.hidden) dock(); });
   async function showCard(id) {
