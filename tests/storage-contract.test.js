@@ -53,7 +53,7 @@ const throwingStorage = {
   );
 
   const start = source.indexOf('function storageGet(key)');
-  const end = source.indexOf('let mountedInstance', start);
+  const end = source.indexOf('const viewers=new Map()', start);
 
   assert(start >= 0 && end > start,
     'STORAGE-001 Skin Viewer storage helpers remain extractable');

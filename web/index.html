@@ -291,16 +291,21 @@
 
 <!-- What's New -------------------------------------------------------- -->
 <div id="pageNews" class="app page" hidden>
-  <header class="masthead news-head">
+  <header class="masthead news-head" id="newsTop">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1 id="newsTitle">What's New</h1>
     <p id="newsHead"></p>
-    <p id="newsScale" class="news-scale"></p>
+    <span class="pm-updwrap" id="newsUpd" hidden></span>
   </header>
-  <main class="news-layout">
-    <div class="news-groups" id="newsGroups"></div>
-    <div id="newsNotes"></div>
-  </main>
+  <div class="pn pm" id="newsApp"></div>
+  <!-- A thing's Index card, in a window over the page, and the one skin to try beside it. -->
+  <section class="card pm-drawer" id="newsDrawer" hidden>
+    <header class="pm-dhead"><button type="button" id="newsDBack" hidden>←</button><b id="newsDTitle"></b><button type="button" id="newsDClose">×</button></header>
+    <div class="pm-dbody pn-hide" id="newsDBody">
+      <div id="newsIndexCard" class="ix-card"></div>
+      <section class="pm-skin" id="newsSkin" hidden><h3 id="newsSkinHead"></h3><div id="newsSkinRoot"></div></section>
+    </div>
+  </section>
 </div>
 
 <!-- The index -------------------------------------------------------- -->

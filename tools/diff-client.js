@@ -619,13 +619,27 @@ function main() {
     return out.parts.length ? out : null;
   })();
 
+  /*
+   * The seasonal modes, kept beside the account: the Crucible's every season
+   * (RealmEye's own table, one period per update) and the Blood Ritual's
+   * facts per season, both written by hand because the client carries neither.
+   */
+  const readJson = name => {
+    const file = path.join(root, 'data', 'Updates', name);
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  };
+  const crucible = readJson('crucible.json');
+  const ritual = readJson('ritual.json');
+
   const index = {
     made: new Date().toISOString().slice(0, 10),
     notes,
     before: buildOf(BEFORE),
     counts: { added: added.length, changed: changed.length, gone: gone.length },
     tally,
-    drawers
+    drawers,
+    crucible: crucible ? crucible.seasons : [],
+    ritual
   };
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1) + '\n');
 

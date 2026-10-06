@@ -1,0 +1,7 @@
+{
+  "name": "Blood Ritual",
+  "source": "The client's own text for the ritual switcher and its gear. Rules, stats and rewards are written per season, by hand, when a season has them.",
+  "client": "Power demands sacrifice. Offer your life essence in the Blood Ritual to gain strength and greater rewards. The more you give, the more you receive. Such rituals are not always performed, so make the most of them while you can.",
+  "gear": ["Blood Ritual Tools", "Blood Ritual Shard", "Blood Ritual"],
+  "seasons": []
+}

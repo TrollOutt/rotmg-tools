@@ -5553,5 +5553,723 @@
    ],
    "gone": []
   }
+ },
+ "crucible": [
+  {
+   "season": 30,
+   "from": "2026-09-01",
+   "to": "2026-10-06",
+   "stats": [
+    {
+     "stat": "DEF",
+     "value": 10,
+     "pct": false
+    },
+    {
+     "stat": "ATT",
+     "value": 5,
+     "pct": false
+    },
+    {
+     "stat": "DEX",
+     "value": 5,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 20,
+    "bxp": 15,
+    "xp": 20
+   },
+   "rules": [
+    "Shots over 15 damage have a 30% chance to inflict you with Exposed for 3 seconds · Cooldown: 4 seconds"
+   ],
+   "part": 2
+  },
+  {
+   "season": 30,
+   "from": "2026-08-04",
+   "to": "2026-09-01",
+   "stats": [
+    {
+     "stat": "DEF",
+     "value": 10,
+     "pct": false
+    },
+    {
+     "stat": "ATT",
+     "value": 5,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 15,
+    "xp": 10
+   },
+   "rules": [
+    "Shots over 15 damage have a 30% chance to inflict you with Exposed for 3 seconds · Cooldown: 4 seconds"
+   ],
+   "part": 1
+  },
+  {
+   "season": 29,
+   "from": "2026-06-02",
+   "to": "2026-08-04",
+   "stats": [
+    {
+     "stat": "DEX",
+     "value": 50,
+     "pct": true
+    },
+    {
+     "stat": "ATT",
+     "value": -25,
+     "pct": true
+    },
+    {
+     "stat": "MP",
+     "value": -20,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 15,
+    "xp": 10
+   },
+   "rules": [],
+   "part": null
+  },
+  {
+   "season": 28,
+   "from": "2026-04-14",
+   "to": "2026-06-02",
+   "stats": [
+    {
+     "stat": "MP",
+     "value": 20,
+     "pct": true
+    },
+    {
+     "stat": "SPD",
+     "value": 12,
+     "pct": false
+    },
+    {
+     "stat": "WIS",
+     "value": 12,
+     "pct": false
+    },
+    {
+     "stat": "ATT",
+     "value": -5,
+     "pct": false
+    },
+    {
+     "stat": "DEX",
+     "value": -5,
+     "pct": false
+    },
+    {
+     "stat": "VIT",
+     "value": -25,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 15,
+    "xp": 10
+   },
+   "rules": [],
+   "part": null
+  },
+  {
+   "season": 27,
+   "from": "2026-02-24",
+   "to": "2026-04-14",
+   "stats": [
+    {
+     "stat": "ATT",
+     "value": 15,
+     "pct": true
+    },
+    {
+     "stat": "DEX",
+     "value": 15,
+     "pct": true
+    },
+    {
+     "stat": "HP",
+     "value": -15,
+     "pct": true
+    },
+    {
+     "stat": "DEF",
+     "value": -10,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 15,
+    "xp": 15
+   },
+   "rules": [
+    "10% chance to get Berserk on hit for 3 seconds · Cooldown: 5 seconds",
+    "-30% HP Healing from external sources"
+   ],
+   "part": null
+  },
+  {
+   "season": 26,
+   "from": "2026-01-13",
+   "to": "2026-02-24",
+   "stats": [
+    {
+     "stat": "SPD",
+     "value": 10,
+     "pct": false
+    },
+    {
+     "stat": "DEF",
+     "value": -5,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 15,
+    "xp": 15
+   },
+   "rules": [
+    "Get Quiet on hit for 2 seconds · Cooldown: 1 second",
+    "-25% HP Healing from all sources",
+    "+33% MP Healing from all sources"
+   ],
+   "part": null
+  },
+  {
+   "season": 25,
+   "from": "2025-11-18",
+   "to": "2026-01-13",
+   "stats": [
+    {
+     "stat": "VIT",
+     "value": 25,
+     "pct": true
+    },
+    {
+     "stat": "DEF",
+     "value": -8,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 15,
+    "xp": 15
+   },
+   "rules": [
+    "-25% Healing from all sources except base regenaration"
+   ],
+   "part": null
+  },
+  {
+   "season": 24,
+   "from": "2025-09-30",
+   "to": "2025-11-18",
+   "stats": [
+    {
+     "stat": "ATT",
+     "value": -8,
+     "pct": false
+    },
+    {
+     "stat": "WIS",
+     "value": 30,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "+15% Damage Taken"
+   ],
+   "part": null
+  },
+  {
+   "season": 23,
+   "from": "2025-08-05",
+   "to": "2025-09-30",
+   "stats": [
+    {
+     "stat": "DEX",
+     "value": 15,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "+15% MP Healing from all sources",
+    "+20% Damage Taken"
+   ],
+   "part": null
+  },
+  {
+   "season": 22,
+   "from": "2025-06-24",
+   "to": "2025-08-05",
+   "stats": [
+    {
+     "stat": "ATT",
+     "value": 100,
+     "pct": true
+    },
+    {
+     "stat": "DEX",
+     "value": -50,
+     "pct": true
+    },
+    {
+     "stat": "MP",
+     "value": -50,
+     "pct": true
+    },
+    {
+     "stat": "SPD",
+     "value": -15,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [],
+   "part": null
+  },
+  {
+   "season": 21,
+   "from": "2025-05-06",
+   "to": "2025-06-24",
+   "stats": [
+    {
+     "stat": "DEF",
+     "value": 5,
+     "pct": false
+    },
+    {
+     "stat": "VIT",
+     "value": 5,
+     "pct": false
+    },
+    {
+     "stat": "WIS",
+     "value": 5,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "-50% Healing from all sources except consumables"
+   ],
+   "part": null
+  },
+  {
+   "season": 20,
+   "from": "2025-03-11",
+   "to": "2025-05-06",
+   "stats": [
+    {
+     "stat": "HP",
+     "value": 25,
+     "pct": true
+    },
+    {
+     "stat": "ATT",
+     "value": 5,
+     "pct": false
+    },
+    {
+     "stat": "DEX",
+     "value": 5,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 15,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "All projectiles deal an extra 2.5% of your current health as damage"
+   ],
+   "part": null
+  },
+  {
+   "season": 19,
+   "from": "2025-01-14",
+   "to": "2025-03-11",
+   "stats": [
+    {
+     "stat": "ATT",
+     "value": 4,
+     "pct": false
+    },
+    {
+     "stat": "DEX",
+     "value": 4,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "Shots above 15 damage have a 30% chance to inflict you with Exposed for 3 seconds"
+   ],
+   "part": null
+  },
+  {
+   "season": 18,
+   "from": "2024-11-26",
+   "to": "2025-01-14",
+   "stats": [
+    {
+     "stat": "DEF",
+     "value": -5,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "loot": 20,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "-25% Healing from pets and consumables"
+   ],
+   "part": null
+  },
+  {
+   "season": 17,
+   "from": "2024-10-01",
+   "to": "2024-11-26",
+   "stats": [],
+   "bonuses": {
+    "loot": 20,
+    "bxp": 10,
+    "xp": 10
+   },
+   "rules": [
+    "Projectiles deal an extra 3% of your current health as damage"
+   ],
+   "part": null
+  },
+  {
+   "season": 16,
+   "from": "2024-07-30",
+   "to": "2024-10-01",
+   "stats": [
+    {
+     "stat": "DEF",
+     "value": 8,
+     "pct": false
+    },
+    {
+     "stat": "VIT",
+     "value": 8,
+     "pct": false
+    },
+    {
+     "stat": "WIS",
+     "value": 8,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "xp": 5
+   },
+   "rules": [
+    "-25% HP and MP Healing from pets"
+   ],
+   "part": null
+  },
+  {
+   "season": 15,
+   "from": "2024-06-04",
+   "to": "2024-07-30",
+   "stats": [
+    {
+     "stat": "DEF",
+     "value": 5,
+     "pct": false
+    },
+    {
+     "stat": "SPD",
+     "value": -5,
+     "pct": false
+    },
+    {
+     "stat": "VIT",
+     "value": -3,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "bxp": 5
+   },
+   "rules": [
+    "Masked Party God can drop Beachzone (emote)"
+   ],
+   "part": null
+  },
+  {
+   "season": 14,
+   "from": "2024-04-09",
+   "to": "2024-06-04",
+   "stats": [],
+   "bonuses": {},
+   "rules": [
+    "Shots have an 8% chance to inflict you with Bleeding for 5 seconds",
+    "The shot that inflicts you with Bleeding deals +25% damage and makes you retaliate with 3 projectiles towards the enemy"
+   ],
+   "part": null
+  },
+  {
+   "season": 13,
+   "from": "2024-03-12",
+   "to": "2024-04-09",
+   "stats": [
+    {
+     "stat": "HP",
+     "value": 30,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "xp": 20
+   },
+   "rules": [
+    "Shots over 15 damage inflict you with Bleeding and have a 5% chance to inflict you with Sick",
+    "+30% MP Healing from all sources"
+   ],
+   "part": null
+  },
+  {
+   "season": 12,
+   "from": "2024-02-05",
+   "to": "2024-03-12",
+   "stats": [
+    {
+     "stat": "HP",
+     "value": 30,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "xp": 20
+   },
+   "rules": [
+    "Shots over 15 damage inflict you with Bleeding and have a 5% chance to inflict you with Sick",
+    "+30% MP Healing from all sources"
+   ],
+   "part": null
+  },
+  {
+   "season": 11,
+   "from": "2024-01-09",
+   "to": "2024-02-05",
+   "stats": [
+    {
+     "stat": "HP",
+     "value": 50,
+     "pct": false
+    },
+    {
+     "stat": "MP",
+     "value": 50,
+     "pct": false
+    },
+    {
+     "stat": "ATT",
+     "value": 4,
+     "pct": false
+    },
+    {
+     "stat": "DEF",
+     "value": 4,
+     "pct": false
+    },
+    {
+     "stat": "SPD",
+     "value": 4,
+     "pct": false
+    },
+    {
+     "stat": "VIT",
+     "value": 4,
+     "pct": false
+    },
+    {
+     "stat": "WIS",
+     "value": 4,
+     "pct": false
+    },
+    {
+     "stat": "DEX",
+     "value": 4,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "bxp": 20,
+    "xp": 20
+   },
+   "rules": [
+    "Pet Rock: Replaces your pet with a useless Pet Rock"
+   ],
+   "part": null
+  },
+  {
+   "season": 10,
+   "from": "2023-12-12",
+   "to": "2024-01-09",
+   "stats": [
+    {
+     "stat": "MP",
+     "value": 200,
+     "pct": true
+    },
+    {
+     "stat": "ATT",
+     "value": 8,
+     "pct": false
+    }
+   ],
+   "bonuses": {
+    "bxp": 20,
+    "xp": 20
+   },
+   "rules": [
+    "Hits have a 100% chance to apply Energized",
+    "+10% Healing from Pets and Potions",
+    "-50% Healing from External",
+    "-50% MP Healing from Regeneration, Pets, External and Self"
+   ],
+   "part": null
+  },
+  {
+   "season": 9,
+   "from": "2023-11-07",
+   "to": "2023-12-12",
+   "stats": [
+    {
+     "stat": "DEX",
+     "value": 8,
+     "pct": false
+    },
+    {
+     "stat": "VIT",
+     "value": 25,
+     "pct": true
+    },
+    {
+     "stat": "SPD",
+     "value": -15,
+     "pct": true
+    },
+    {
+     "stat": "DEF",
+     "value": -10,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "xp": 20
+   },
+   "rules": [
+    "Thessal the Mermaid Goddess, Bes, Nut, Geb and Malus can drop Hekate Charm"
+   ],
+   "part": null
+  },
+  {
+   "season": 8,
+   "from": "2023-09-26",
+   "to": "2023-11-07",
+   "stats": [
+    {
+     "stat": "WIS",
+     "value": 8,
+     "pct": false
+    },
+    {
+     "stat": "DEX",
+     "value": 8,
+     "pct": false
+    },
+    {
+     "stat": "DEF",
+     "value": -25,
+     "pct": true
+    },
+    {
+     "stat": "HP",
+     "value": -25,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "bxp": 20
+   },
+   "rules": [
+    "Bradley the Barkeep, Crystal Entity, Factory Control Core and The Forgotten King can drop Shard of the Savior and Crucible Mystery Chest"
+   ],
+   "part": null
+  },
+  {
+   "season": 7,
+   "from": "2023-09-05",
+   "to": "2023-09-26",
+   "stats": [],
+   "bonuses": {
+    "bxp": 20,
+    "loot": 50
+   },
+   "rules": [
+    "Pet Rock: Replaces your pet with a useless Pet Rock",
+    "Week 1-3: Marble Colossus can drop Crown of the Marble Colossus x1-2, Void Entity can drop Crown of the Void x1-2",
+    "Week 2-3: Factory Control Core can drop Crown of the Control Core x1-2, The Forgotten King can drop Crown of the Forgotten King x1-2",
+    "Week 3: Oryx the Mad God 3 can drop Crown of the Exalted God x2-3"
+   ],
+   "part": null
+  }
+ ],
+ "ritual": {
+  "name": "Blood Ritual",
+  "source": "The client's own text for the ritual switcher and its gear. Rules, stats and rewards are written per season, by hand, when a season has them.",
+  "client": "Power demands sacrifice. Offer your life essence in the Blood Ritual to gain strength and greater rewards. The more you give, the more you receive. Such rituals are not always performed, so make the most of them while you can.",
+  "gear": [
+   "Blood Ritual Tools",
+   "Blood Ritual Shard",
+   "Blood Ritual"
+  ],
+  "seasons": []
  }
 }

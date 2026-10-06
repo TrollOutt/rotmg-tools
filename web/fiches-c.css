@@ -1,5 +1,5 @@
 /* Proposition C — infobulle du jeu + dossier de l'Index (maquette) */
-#ixCard, #atlasIndexCard { container: fccard / inline-size; }
+#ixCard, #atlasIndexCard, #newsIndexCard { container: fccard / inline-size; }
 .fc-root { display: grid; gap: 12px; }
 .fc-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .fc-bar .fc-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }

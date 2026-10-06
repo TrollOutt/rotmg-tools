@@ -5432,7 +5432,9 @@ function ensureEnchantPage() {
 function ensureNewsPage() {
   if (typeof WhatsNew === 'undefined') return Promise.resolve(false);
   if (document.body.dataset.page !== 'news') return Promise.resolve(true);
-  return Promise.resolve(WhatsNew.init(BUNDLE && BUNDLE.whatsNew));
+  // The Index first: the page reads what every thing is from it, and its card opens in a window of the page.
+  return ensureIndexPage().catch(() => false)
+    .then(() => WhatsNew.init(BUNDLE && BUNDLE.whatsNew));
 }
 
 let skinPageLoading = null;

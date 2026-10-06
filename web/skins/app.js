@@ -43,17 +43,32 @@ export function familyOrder(a,b){if(a==='Other')return 1;if(b==='Other')return-1
 function storageGet(key){try{return localStorage.getItem(key)}catch{return null}}
 function storageSet(key,value){try{localStorage.setItem(key,value);return true}catch{return false}}
 
-let mountedInstance=null,mountPromise=null;
+/*
+ * One viewer per container. Every viewer listens to the keyboard of the whole
+ * window, so only one of them is awake at a time: mounting or selecting in a
+ * container puts the others to sleep.
+ */
+const viewers=new Map();
+let lastMount=null;
+
+function wake(host){
+  for(const [other,entry] of viewers){if(other!==host)entry.instance?.setActive(false)}
+}
 
 export function mount(container=document.getElementById('skinViewerRoot'),options={}){
   if(!container)return Promise.reject(new Error('Skin Viewer mount container is missing'));
-  if(mountPromise){mountedInstance?.setActive(true);return mountPromise}
-  mountPromise=createViewer(container,options).then(instance=>{mountedInstance=instance;return instance}).catch(error=>{mountPromise=null;throw error});
-  return mountPromise;
+  wake(container);
+  const known=viewers.get(container);
+  if(known){known.instance?.setActive(true);lastMount=known.promise;return known.promise}
+  const entry={instance:null,promise:null};
+  entry.promise=createViewer(container,options).then(instance=>{entry.instance=instance;return instance}).catch(error=>{viewers.delete(container);if(lastMount===entry.promise)lastMount=null;throw error});
+  viewers.set(container,entry);
+  lastMount=entry.promise;
+  return entry.promise;
 }
-export function unmount(){if(!mountedInstance)return false;mountedInstance.setActive(false);return true}
-export async function selectTarget(target){const instance=await (mountPromise||mount());return instance.select(target)}
-export async function getState(){const instance=await (mountPromise||mount());return instance.getState()}
+export function unmount(){let any=false;for(const entry of viewers.values()){if(entry.instance){entry.instance.setActive(false);any=true}}return any}
+export async function selectTarget(target){const instance=await (lastMount||mount());return instance.select(target)}
+export async function getState(){const instance=await (lastMount||mount());return instance.getState()}
 
 async function createViewer(host,options={}){
 const root=host.shadowRoot||host.attachShadow({mode:'open'});
@@ -61,6 +76,7 @@ const [markup]=await Promise.all([
   fetch(new URL('./view.html',import.meta.url)).then(r=>{if(!r.ok)throw Error(`view.html: ${r.status}`);return r.text()})
 ]);
 host.dataset.integrated=String(Boolean(options.integrated??host.dataset.integrated==='true'));
+if(options.stageOnly)host.dataset.stageOnly='true';
 root.innerHTML=`<link rel="stylesheet" href="${new URL('./style.css',import.meta.url).href}">${markup}`;
 window.RealmI18n?.observe(root);
 let active=true;

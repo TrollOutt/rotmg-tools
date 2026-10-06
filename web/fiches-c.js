@@ -1778,7 +1778,7 @@
   /* ---------- branchement ---------- */
   const isGear = r => Boolean(r && r.kind === 'item' && !r.use && !r.family && r.slot !== undefined && r.slot !== 10);
   /* The card the site drew, per host: the Index page, and the atlas's drawer on the left of the map. */
-  const HOSTS = ['ixCard', 'atlasIndexCard'];
+  const HOSTS = ['ixCard', 'atlasIndexCard', 'newsIndexCard'];
   const hosts = () => HOSTS.map(id => document.getElementById(id)).filter(Boolean);
   const drawn = new WeakMap();
   const widths = new WeakMap();
@@ -1866,7 +1866,7 @@
   function settle(box) {
     bootSims(box); bootViewers(box); bootSkins(box);
     /* The atlas drawer keeps one text size and scrolls, like the atlas panel beside it; only the Index page grows into its room. */
-    if (box.id === 'atlasIndexCard') balance(box); else fitText(box);
+    if (box.id !== 'ixCard') balance(box); else fitText(box);
     /* The width it was laid out for: only a later change lays it out again. */
     const was = widths.get(box) || {};
     clearTimeout(was.timer);

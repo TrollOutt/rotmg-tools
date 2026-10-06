@@ -616,14 +616,14 @@ async function checkWhatsNewRetry() {
   const oldFetch = global.fetch;
 
   const listeners = new Map();
-  const newsScale = { innerHTML: '' };
+  const newsApp = { innerHTML: '' };
 
   global.document = {
     addEventListener(type) {
       listeners.set(type, (listeners.get(type) || 0) + 1);
     },
     getElementById(id) {
-      if (id === 'newsScale') return newsScale;
+      if (id === 'newsApp') return newsApp;
       return null;
     }
   };

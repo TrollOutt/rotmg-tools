@@ -154,7 +154,7 @@ assert.equal(registry.sayAction(2), 'attack', 'SPRITE-004 action 2 is attack');
     'utf8'
   );
 
-  const pureEnd = appSource.indexOf('let mountedInstance');
+  const pureEnd = appSource.indexOf('const viewers=new Map()');
   assert(pureEnd > 0, 'SPRITE-020 Skin Viewer pure-helper boundary exists');
 
   const pureApp = appSource

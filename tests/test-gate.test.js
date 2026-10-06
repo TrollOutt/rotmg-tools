@@ -30,7 +30,8 @@ const deployCritical = [
   'test-gate.test.js',
   'theory-optimization.test.js',
   'theory.test.js',
-  'ui-cache.test.js'
+  'ui-cache.test.js',
+  'whats-new.test.js'
 ];
 
 const buildCritical = [
