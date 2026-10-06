@@ -293,6 +293,43 @@ check('an Agents of Oryx weapon is offered its awakened enchantment, and only th
   return mods.length === 1 && mods[0] === "Night's Strength";
 })(), (data.awakenings.get('Legion Elite Bow') || []).join(', '));
 
+// The Retrowinds enchantments are awakened but not ROLLABLE: they enter only
+// through the Retrowinds Engraving's pool, and were once left off every item.
+check('a Retrowinds item takes its own enchantment through the Retrowinds Engraving', (() => {
+  const engraving = data.artifacts.find(a => a.name === 'Retrowinds Engraving');
+  const pool = (item, type) => engine.eligiblePool(data, { item, type, locks: [], subtypes: new Set() }, engraving)
+    .map(mod => mod.name).filter(name => name.startsWith('Retrowinds'));
+  const bare = engine.rollablePool(data, { item: 'Retrowinds Bow', type: 'WEAPON', locks: [], subtypes: new Set() })
+    .some(mod => mod.name.startsWith('Retrowinds'));
+  return (data.awakenings.get('Retrowinds Bow') || []).join() === 'Retrowinds Weapon'
+    && (data.awakenings.get('Retrowinds Robe') || []).join() === 'Retrowinds Armor'
+    && pool('Retrowinds Bow', 'WEAPON').join() === 'Retrowinds Weapon'
+    && pool('Retrowinds Heavy Armor', 'ARMOR').join() === 'Retrowinds Armor'
+    && pool('Doom Bow', 'WEAPON').length === 0 && !bare;
+})(), (data.awakenings.get('Retrowinds Bow') || []).join(', '));
+
+// What only an engraving gives can be asked for, on the items the client
+// allows and nowhere else, and says which engraving it takes.
+check('an engraving-only enchantment is offered on its own items, with its engraving named', (() => {
+  const offer = (item, type) => engine.obtainablePool(data, { item, type, locks: [], subtypes: engine.subtypesForItem(data, item) })
+    .map(mod => mod.name);
+  const via = name => engine.engravingsFor(data, data.byName.get(name))[0];
+  const retro = engine.eligibleForItem(data, { item: 'Retrowinds Bow', type: 'WEAPON', locks: [], subtypes: new Set() },
+    data.byName.get('Retrowinds Weapon'));
+  return data.engravedBy.size === 25 && retro
+    && via('Retrowinds Weapon') === 'Retrowinds Engraving' && via('Ice Rush') === 'Ice Rush Engraving'
+    && offer('Retrowinds Bow', 'WEAPON').includes('Retrowinds Weapon')
+    && offer('Frost Citadel Armor', 'ARMOR').includes('Snowstorm')
+    && !offer('Hippogriff Hide Armor', 'ARMOR').includes('Snowstorm')
+    && !offer('Doom Bow', 'WEAPON').some(name => /Retrowinds|Naughty|Adonis|Path of/.test(name))
+    && offer("Aspirant's Bow", 'WEAPON').includes('Path of the Magus')
+    && !offer('Doom Bow', 'WEAPON').includes('Damage Resistance');
+})(), [...data.engravedBy.keys()].length + ' engraving-only');
+
+check('a plain roll still never gives an engraving-only enchantment',
+  !engine.rollablePool(data, { item: 'Frost Citadel Armor', type: 'ARMOR', locks: [], subtypes: new Set() })
+    .some(mod => data.engravedBy.has(mod.name)));
+
 check('no group heading survives as if it were an item',
   !data.awakenings.has('AoO Rings') && !data.awakenings.has('Matrix Armors'));
 

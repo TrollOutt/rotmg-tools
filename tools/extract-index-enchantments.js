@@ -127,6 +127,14 @@ for (const [key, members] of groups) {
     // An equipment family the item itself must be of, which the client states
     // as an item label the enchantment is compatible with.
     families: first.compatible.filter(label => FAMILIES.includes(label)),
+    /*
+     * Every other label the item must carry. The client asks for all of
+     * them: Snowstorm says EQUIPMENT,ARMOR,UT,TAB_UT,FROST_ENCHANTABLE and
+     * goes on no armour without the frost label. Ordinary enchantments ask
+     * for nothing here; the ones an engraving gives mostly do.
+     */
+    needs: first.compatible.filter(label => label !== 'EQUIPMENT' && !SLOTS.includes(label)
+      && !FAMILIES.includes(label)),
     incompatibleIds: [...new Set(members.flatMap(m => m.incompatibleIds))],
     description: first.description
   });

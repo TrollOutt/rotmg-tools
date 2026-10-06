@@ -101,6 +101,12 @@ function attach(records, mechanics, objects) {
         ? article(r.family) + ', not gear anybody wears'
         : r.family === 'other' ? 'not gear anybody wears'
         : r.use ? 'consumable; not worn on the bench'
+        /*
+         * Gear with a shot and no tooltip is what another item fires - a
+         * sigil's bolt, the Overwhelming Axehead's second axe - and it is
+         * not a copy of anything either.
+         */
+        : r.fires && !r.about ? 'what another item fires, not gear anybody wears'
         : 'another copy of a name offered on the bench';
     }
   }

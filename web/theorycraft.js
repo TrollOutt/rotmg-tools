@@ -1533,7 +1533,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         locks,
         subtypes: EnchantEngine.subtypesForItem(held, itemName)
       };
-      return EnchantEngine.rollablePool(held, cfg);
+      return EnchantEngine.obtainablePool(held, cfg);
     }
 
     throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
@@ -1551,11 +1551,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
        * wider than what a player can roll. The retired ones - Kogbold
        * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
        * item already carrying one still reads, and are given a weight of
-       * nought to say they can never come out again. The seasonal ones -
-       * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
-       * at the time, not out of enchanting, and the client marks the
-       * difference with a ROLLABLE label. This page has no artifact in it,
-       * so it plans with what a plain enchanting can roll and nothing else.
+       * nought to say they can never come out again. The ones only an
+       * engraving gives - Retrowinds Weapon, Hydroshock, Snowstorm - are
+       * kept: a player holding the engraving wears them, and the picker
+       * and the gear card name the engraving each one takes.
        */
       if (seen.has(mod.name)) continue;
       seen.add(mod.name);
@@ -3045,8 +3044,11 @@ const TINT = {
         // The whole sentence, for the one that has been cut short on the card.
         const whole = one && (swaps || shares || heals
           || (one.worn && Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ')));
+        // A plain roll never gives it: say which engraving it takes.
+        const book = one && rulesFor();
+        const via = book ? EnchantEngine.engravingsFor(book, { name: one.name })[0] : '';
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
-          + (one ? '' : ' is-empty') + '"'
+          + (one ? '' : ' is-empty') + (via ? ' has-via' : '') + '"'
           + (whole ? ' title="' + esc(one.name + ' — ' + whole) + '"' : '') + '>'
           + (one ? sheetIcon(one.pic, 18) : '')
           // Its whole name on hover: a gear column is narrow enough to cut it.
@@ -3054,6 +3056,7 @@ const TINT = {
           + (one ? ' title="' + esc(one.name) + '"' : '') + '>'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
           + said
+          + (via ? '<i class="tc-via" title="Only through the ' + esc(via) + '">engraving</i>' : '')
           + '<button type="button" class="tc-hold tc-lock" data-hold="'
           + hand + ':' + at + '" aria-pressed="' + (held ? 'true' : 'false')
           + '" title="' + lockSays(held) + ' while the calculator works"'
@@ -4211,7 +4214,7 @@ const TINT = {
     if (held && typeof window.openEnchantPicker === 'function') {
       const item = data.byItem[worn.name];
       const locks = locksOn(held, worn.ench, at);
-      const pool = EnchantEngine.rollablePool(held, {
+      const pool = EnchantEngine.obtainablePool(held, {
         item: worn.name,
         type: OF_HAND[item.hand] || 'WEAPON',
         slots: worn.slots,
@@ -4255,6 +4258,10 @@ const TINT = {
       says: one.worn
         ? Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' · ')
         : shortly(one.says),
+      note: (() => {
+        const via = held && EnchantEngine.engravingsFor(held, one)[0];
+        return via ? 'only through the ' + via : undefined;
+      })(),
       counted: !!one.worn
     })), 'empty slot');
   }

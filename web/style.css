@@ -1184,6 +1184,8 @@ table.mini td { padding: 3px 8px; border: 0; }
 .picker-text { flex: 1; min-width: 0; }
 .picker-text b { display: block; font-size: 13px; }
 .picker-text small { display: block; color: var(--dim); font-size: 11.5px; }
+/* An enchantment a plain roll never gives: which engraving it takes. */
+.picker-text small.picker-via { color: var(--accent); margin-top: 2px; }
 .picker-weight { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 3px; }
 .picker-section {
   font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--dim);
@@ -3331,6 +3333,11 @@ button.pn-open { background: none; color: var(--accent); cursor: pointer; font: 
   border: 1px solid rgb(var(--hi-rgb) / .08);
   border-radius: 4px; padding: 3px 6px 3px 4px;
   box-shadow: inset 0 1px 0 rgb(var(--hi-rgb) / .05);
+}
+/* An enchantment only an engraving gives; the tooltip names which one. */
+.tc-ench .tc-via {
+  flex: none; font-style: normal; font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .6px; cursor: help;
 }
 .tc-ench.is-empty { opacity: .55; }
 .tc-ench.is-held { border-color: var(--accent); opacity: 1; }
@@ -5786,6 +5793,13 @@ button.tc-loot-place:hover, button.tc-loot-place:focus-visible { border-color: v
   flex: 0 1 auto; max-width: 45%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: calc(var(--tc-text) - 1.5px);
 }
+/*
+ * The engraving tag takes its room from what the enchantment does, not from
+ * its name: the effect is cut short with the whole sentence in the tooltip,
+ * and the name - which is what a player looks for - stays whole.
+ */
+.tc-gear-card .tc-ench.has-via .tc-ench-pick { flex: 0 1 auto; }
+.tc-gear-card .tc-ench.has-via u { flex: 1 1 0; }
 /* The fight is drawn at the size its frame is given, and follows the density. */
 #pageTheory .tc-duel { height: var(--tc-duel); }
 

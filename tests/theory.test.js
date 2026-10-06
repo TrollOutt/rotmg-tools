@@ -123,7 +123,7 @@ for (const [label, item] of samples) {
   assert(item, `No ${label} item is shared by the client catalogue and TheoryCraft projection`);
   const cfg = { item: item.name, type: item.type, slots: 4, locks: [],
     subtypes: engine.subtypesForItem(shared, item.name) };
-  const expected = engine.rollablePool(shared, cfg).map(mod => ruleName(mod.name)).sort();
+  const expected = engine.obtainablePool(shared, cfg).map(mod => ruleName(mod.name)).sort();
   const actual = [...ruled.enchantsFor(item.name, [], 0)].map(mod => ruleName(mod.name)).sort();
   assert.equal(actual.length, expected.length,
     `${label} TheoryCraft pool size diverges from EnchantEngine for ${item.name}`);
@@ -771,6 +771,35 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     'no empty placeholder stands in for alternatives that do not exist');
   assert.ok(!/#tcBody\.tc-layout \{[^}]*overflow-y: auto/.test(css),
     'the theory page must not be a box that scrolls inside the page');
+}
+
+/*
+ * What a sigil or an ability fires is not gear. The client files those shots
+ * as Equipment - the SpecPen shots as rings, the Sigil projectiles as heavy
+ * armour, the Wedding Dress Explosion as a quiver - and every one of them
+ * reached the manual picker of every class it fits until the bench dropped
+ * PROC-labelled and tooltip-less records. They stay in the Index with a
+ * reason that says what they are.
+ */
+{
+  const helper = /^(SpecPen (OA|Quiver) Shot|Sigil .*Projectile|Wedding Dress Explosion$)/;
+  assert.deepEqual(raw.items.filter(one => helper.test(one.name)
+    || (one.labels || '').split(',').includes('PROC')).map(one => one.name), [],
+    'no shot another item fires may be on the bench');
+  for (const klass of raw.classes.map(one => one.name)) {
+    for (const hand of ['weapon', 'ability', 'armor', 'ring']) {
+      const offered = [...t.compatibleItemsFor(hand, klass, {})].map(one => one.name).filter(name => helper.test(name));
+      assert.deepEqual(offered, [], klass + ' ' + hand + ' picker offers what another item fires');
+    }
+  }
+  const index = JSON.parse(fs.readFileSync(path.join(root, 'data/Index/index.json'), 'utf8')).records;
+  for (const name of ['SpecPen OA Shot 1', 'SpecPen OA Shot 2', 'SpecPen Quiver Shot',
+    'Sigil Wolf Sub Projectile', 'Sigil UT1 Projectile - Shark', 'Wedding Dress Explosion']) {
+    const record = index.find(one => one.id === 'item:' + name);
+    assert.ok(record, name + ' must stay in the Index');
+    assert.ok(!record.bench, name + ' must not be on the bench');
+    assert.equal(record.benchWhy, 'what another item fires, not gear anybody wears', name + ': bench reason');
+  }
 }
 
 console.log('TheoryCraft: target windows, fitting, frame stride and real targets check out.');

@@ -92,10 +92,24 @@ const TYPOS = {
  * slots. Matching on the specific label alone put all four on every AoO item.
  */
 const GENERIC = new Set([...SLOTS, 'EQUIPMENT', 'UT', 'ST', 'SUPER']);
+/*
+ * Which enchantments some pool lets in. An awakened enchantment is real when
+ * the enchanter can produce it, and ROLLABLE is only the usual way: the two
+ * Retrowinds ones carry RETROWINDS instead and enter through the Retrowinds
+ * Engraving's pool alone. Asking for ROLLABLE left every Retrowinds item
+ * without its own enchantment, in the calculator and on the bench.
+ */
+const admitted = [];
+for (const m of (documents.get('EnchantmentLists.xml') || '').matchAll(/<EnchantmentEntryLabel\b([^>]*)\/>/g)) {
+  const split = name => (attr(m[1], name) || '').split(',').filter(Boolean);
+  admitted.push({ include: split('includeLabelsOR'), exclude: split('excludeLabelsOR') });
+}
+const reachable = labels => labels.includes('ROLLABLE') || admitted.some(entry =>
+  entry.include.some(label => labels.includes(label)) && !entry.exclude.some(label => labels.includes(label)));
 const awakened = [];
 for (const m of enchXml.matchAll(/<Enchantment[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/Enchantment>/g)) {
   const labels = (tag(m[2], 'EnchantmentLabels') || '').split(',').filter(Boolean);
-  if (!labels.includes('AWAKENED') || !labels.includes('ROLLABLE')) continue;
+  if (!labels.includes('AWAKENED') || !reachable(labels)) continue;
   const shown = tag(m[2], 'DisplayId');
   const compatible = (tag(m[2], 'CompatibleWithItemLabels') || '').split(',').filter(Boolean);
   const refused = (tag(m[2], 'IncompatibleWithItemLabels') || '').split(',').filter(Boolean);
