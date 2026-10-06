@@ -86,7 +86,11 @@ var WhatsNew = (function () {
     }
     const anyName = new Map();
     for (const r of index.all.values()) if (!KINDS.has(r.kind) && (r.kind === 'enemy' || r.kind === 'set') && !r.twin && !anyName.has(r.said || r.name)) anyName.set(r.said || r.name, r);
-    const find = name => {
+    // The client's own id first: a Shiny carries its piece's name, and by name alone it would be read as the piece.
+    const byClient = new Map();
+    for (const r of index.all.values()) if (KINDS.has(r.kind) && r.clientId && !byClient.has(r.clientId)) byClient.set(r.clientId, r);
+    const find = (name, client) => {
+      if (client && byClient.has(client)) return byClient.get(client);
       const base = name.replace(/ x\d+$/, '');
       let r = byName.get(name) || byName.get(base);
       for (let k = 1; k <= 14 && !r; k++) r = byName.get(base + ' x' + k);
@@ -145,7 +149,7 @@ var WhatsNew = (function () {
         const cls = (t.facts || {}).class;
         // A pet and its skin's definition are the client's plumbing; what a player gets is the pet skin item, a consumable.
         if (cls === 'Pet' || cls === 'PetSkin' || drawerName === 'pets') continue;
-        const name = nameOf(t), r = look && look.find(name);
+        const name = nameOf(t), r = look && look.find(name, t.clientId);
         let g = r && look.groupOf(r), view = t;
         if (r && g) view = look.viewOf(t, r);
         else {
@@ -233,7 +237,8 @@ var WhatsNew = (function () {
     if (f.class === 'Skin') return 'Skin' + (f.for ? ' · ' + f.for : '');
     if (f.class === 'Portal') return 'Portal';
     const type = (t.labels || []).find(l => !GENERIC.test(l));
-    return [type && title(type), tierOf(t)].filter(Boolean).join(' · ') || f.class || '';
+    // The Index names a Shiny after the piece it shines, so the badge is what tells the two apart.
+    return [type && title(type), tierOf(t), (t.labels || []).includes('SHINY') && 'Shiny'].filter(Boolean).join(' · ') || f.class || '';
   };
   const worn = t => {
     const f = t.facts || {}, out = [];
@@ -264,10 +269,14 @@ var WhatsNew = (function () {
         const a = new Set(String(m.was || '').split(',')), b = new Set(String(m.now || '').split(','));
         const tier = x => (String(x).split(',').find(l => /^POWERTIER_/.test(l)) || '').replace('POWERTIER_', '');
         if (tier(m.was) !== tier(m.now)) out.push(['Power tier', tier(m.was) || '—', tier(m.now) || '—']);
-        for (const l of b) if (!a.has(l) && !/^POWERTIER_/.test(l)) out.push(['Now', null, title(l)]);
-        for (const l of a) if (!b.has(l) && !/^POWERTIER_/.test(l)) out.push(['No longer', null, title(l)]);
+        // ORG_ names the dungeon the client files a piece under: a change of origin, not a label to read out.
+        const origin = x => String(x).split(',').filter(l => /^ORG_/.test(l)).map(l => title(l.slice(4))).join(', ');
+        if (origin(m.was) !== origin(m.now)) out.push(['Origin', origin(m.was) || '—', origin(m.now) || '—']);
+        const told = l => /^(POWERTIER|ORG)_/.test(l);
+        for (const l of b) if (!a.has(l) && !told(l)) out.push(['Now', null, title(l)]);
+        for (const l of a) if (!b.has(l) && !told(l)) out.push(['No longer', null, title(l)]);
       } else if (m.fact === 'soulbound' && m.now === null) out.push(['No longer', null, 'soulbound']);
-      else out.push([m.fact, m.was === null ? '—' : String(m.was), m.now === null ? '—' : String(m.now)]);
+      else out.push([m.fact.charAt(0).toUpperCase() + m.fact.slice(1), m.was === null ? '—' : String(m.was), m.now === null ? '—' : String(m.now)]);
     }
     return out;
   };

@@ -656,31 +656,31 @@
   }
  },
  "upcoming": [],
- "before": "35b35f4a4feb47f98290e2f7628e90d8",
+ "before": "15a3ce058fe946c792c23558bdb10e2c",
  "counts": {
-  "added": 137,
-  "changed": 0,
-  "gone": 0
+  "added": 223,
+  "changed": 5,
+  "gone": 3
  },
  "tally": {
   "pets": {
-   "added": 4,
+   "added": 6,
    "changed": 0,
    "gone": 0
   },
   "abilities": {
-   "added": 5,
+   "added": 7,
    "changed": 0,
    "gone": 0
   },
   "consumables": {
    "added": 21,
-   "changed": 0,
+   "changed": 1,
    "gone": 0
   },
   "armour": {
    "added": 7,
-   "changed": 0,
+   "changed": 1,
    "gone": 0
   },
   "skins": {
@@ -689,29 +689,29 @@
    "gone": 0
   },
   "backstage": {
-   "added": 8,
-   "changed": 0,
-   "gone": 0
-  },
-  "rings": {
-   "added": 5,
+   "added": 82,
    "changed": 0,
    "gone": 0
   },
   "equipment": {
-   "added": 40,
+   "added": 47,
    "changed": 0,
    "gone": 0
   },
   "weapons": {
    "added": 9,
-   "changed": 0,
+   "changed": 1,
+   "gone": 0
+  },
+  "rings": {
+   "added": 4,
+   "changed": 2,
    "gone": 0
   },
   "creatures": {
-   "added": 17,
+   "added": 19,
    "changed": 0,
-   "gone": 0
+   "gone": 3
   },
   "places": {
    "added": 2,
@@ -722,6 +722,31 @@
  "drawers": {
   "pets": {
    "added": [
+    {
+     "id": "Grave Bell Poltergeist",
+     "type": "0x9E0A",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 50
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Pet"
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "grave-bell-poltergeist.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
     {
      "id": "Grave Bell Poltergeist Pet Skin",
      "type": "0x9E0B",
@@ -800,6 +825,31 @@
         "tile": 32,
         "height": 16,
         "frames": 4
+       }
+      }
+     }
+    },
+    {
+     "id": "Hollow Key Keeper",
+     "type": "0x9E0F",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 50
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Pet"
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "hollow-key-keeper.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
        }
       }
      }
@@ -918,7 +968,8 @@
       "feed power": 800,
       "bag": 8,
       "XP bonus": 6,
-      "mp cost": 0
+      "mp cost": 0,
+      "slot odds": "50% · 37.5% · 25% · 12.5%"
      },
      "sprite": {
       "moving": false,
@@ -962,6 +1013,7 @@
       "shots": 2,
       "arc gap": 15,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "275-350",
       "range": 11.2,
       "pierces": true,
@@ -1006,6 +1058,7 @@
       "shots": 1,
       "arc gap": 0,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "1100-1300",
       "range": 8.3,
       "pierces": true,
@@ -1041,6 +1094,7 @@
       "XP bonus": 7,
       "mp cost": 100,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "115-135",
       "range": 0,
       "pierces": true,
@@ -1054,6 +1108,57 @@
       "clips": {
        "stand": {
         "file": "3druidst1.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Overwhelming Axehead",
+     "type": "0x1674",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1027
+     },
+     "description": "An extremely heavy axehead salvaged from Griefkeeper Zole's rather bulky choice of weaponry. Throwing it takes a tremendous amount of effort, but it has the capacity to obliterate everything in its path.",
+     "labels": [
+      "EQUIPMENT",
+      "ABILITY",
+      "SHURIKEN",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_SS",
+      "XPBONUS",
+      "MPCOST",
+      "ORG_SPECTRAL",
+      "STATMOD",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 25,
+      "feed power": 1000,
+      "bag": 6,
+      "XP bonus": 7,
+      "mp cost": 150,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "damage": "325-525",
+      "range": 14.9,
+      "pierces": true,
+      "passes cover": true,
+      "on equip ATT": 5,
+      "on equip VIT": 5
+     },
+     "clientId": "Overwhelming Axehead Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "overwhelming-axehead-shiny.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -1092,6 +1197,7 @@
       "shots": 1,
       "arc gap": 15,
       "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
       "damage": "1050-1450",
       "range": 9,
       "pierces": true,
@@ -1105,6 +1211,58 @@
       "clips": {
        "stand": {
         "file": "draconic-insignia-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Irradiance Sheath",
+     "type": "0x1676",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1023
+     },
+     "description": "Believed to be some kind of artificial organ, this sheath embeds the weapon in a solid crystal coating before violently fracturing into shrapnel when drawn.",
+     "labels": [
+      "EQUIPMENT",
+      "ABILITY",
+      "SHEATH",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_S",
+      "XPBONUS",
+      "MPCOST",
+      "COOLDOWN",
+      "ORG_CRYSTAL",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 30,
+      "feed power": 1000,
+      "bag": 6,
+      "XP bonus": 8,
+      "mp cost": 130,
+      "cooldown": 3,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "damage": "500-500",
+      "range": 0,
+      "pierces": true,
+      "passes cover": true,
+      "on equip MAXHP": 40,
+      "on equip ATT": 5
+     },
+     "clientId": "Irradiance Sheath Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "irradiance-sheath-shiny.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -1144,6 +1302,7 @@
       "bag": 6,
       "XP bonus": 6,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "on equip DEF": 12,
       "on equip ATT": 25,
       "on equip DEX": -15
@@ -1187,6 +1346,7 @@
       "bag": 8,
       "XP bonus": 6,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "on equip MAXHP": 80,
       "on equip DEF": 7,
       "on equip SPD": 5,
@@ -1232,6 +1392,7 @@
       "bag": 8,
       "XP bonus": 6,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "on equip DEF": 15,
       "on equip VIT": 4,
       "on equip DEX": 4
@@ -1276,6 +1437,7 @@
       "bag": 8,
       "XP bonus": 6,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "on equip DEF": 12,
       "on equip MAXMP": 100,
       "on equip SPD": 6
@@ -1321,6 +1483,7 @@
       "bag": 6,
       "XP bonus": 7,
       "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
       "on equip DEF": 10,
       "on equip MAXMP": 120,
       "on equip WIS": 12,
@@ -1367,6 +1530,7 @@
       "bag": 6,
       "XP bonus": 7,
       "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
       "on equip DEF": 15,
       "on equip SPD": 15,
       "on equip DEX": 10
@@ -1411,6 +1575,7 @@
       "bag": 6,
       "XP bonus": 7,
       "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
       "on equip DEF": 20,
       "on equip VIT": 15,
       "on equip WIS": 15,
@@ -1430,7 +1595,60 @@
      }
     }
    ],
-   "changed": [],
+   "changed": [
+    {
+     "id": "Mechpilot's Jerkin",
+     "type": "0x74ca",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj6",
+      "index": 541
+     },
+     "description": "A well fitting electrically resistant suit perfect for operating heavy machinery.",
+     "labels": [
+      "EQUIPMENT",
+      "ARMOR",
+      "LEATHER",
+      "ST",
+      "TAB_ST",
+      "POWERTIER_B",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 6,
+      "power": 62,
+      "feed power": 700,
+      "bag": 8,
+      "XP bonus": 6,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 80,
+      "on equip DEF": 7,
+      "on equip SPD": 5,
+      "on equip DEX": 4
+     },
+     "moved": [
+      {
+       "fact": "labels",
+       "was": "EQUIPMENT,ARMOR,LEATHER,ST,TAB_ST,POWERTIER_B,XPBONUS,ORG_KOGBOLD",
+       "now": "EQUIPMENT,ARMOR,LEATHER,ST,TAB_ST,POWERTIER_B,XPBONUS"
+      }
+     ],
+     "clientId": "DruidST2",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "druidst2.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    }
+   ],
    "gone": []
   },
   "skins": {
@@ -2195,206 +2413,294 @@
    "changed": [],
    "gone": []
   },
-  "rings": {
-   "added": [
-    {
-     "id": "SpecPen OA Shot 1 Shiny",
-     "type": "0x1683",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1027
-     },
-     "description": null,
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "UT"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "soulbound": true,
-      "damage": "325-525",
-      "range": 14.9,
-      "pierces": true,
-      "passes cover": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "specpen-oa-shot-1-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sweettreats Ring",
-     "type": "0xF92E",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1009
-     },
-     "description": "A sweet reward for those who always come back for another helping.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_A",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 32,
-      "feed power": 700,
-      "bag": 6,
-      "XP bonus": 7,
-      "soulbound": true,
-      "on equip MAXHP": 90,
-      "on equip ATT": 4,
-      "on equip DEX": 4,
-      "on equip VIT": 2,
-      "on equip WIS": 2
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-ring.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Storied Fossil",
-     "type": "0xF98F",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1093
-     },
-     "description": "A fossilized footprint that still carries the strength of an ancient predator.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "RESKIN",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "on equip MAXHP": 100,
-      "on equip WIS": 10,
-      "on equip DEF": 5
-     },
-     "clientId": "HDruidST3",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "hdruidst3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Willow Sprout",
-     "type": "0xbebd",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 487
-     },
-     "description": "A humble sapling left untouched by the curse that pervades the Wetlands. Perhaps there is hope after all.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "XPBONUS",
-      "STGEN_2"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "on equip MAXHP": 260,
-      "on equip VIT": 6,
-      "on equip SPD": 6
-     },
-     "clientId": "2DruidST3",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidst3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Infinite Bands",
-     "type": "0xbec1",
-     "art": null,
-     "description": "Infinite loops of infinite squares.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "XPBONUS",
-      "STGEN_3"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "on equip ATT": 5,
-      "on equip MAXHP": 25,
-      "on equip DEF": 3
-     },
-     "clientId": "3DruidST3"
-    }
-   ],
-   "changed": [],
-   "gone": []
-  },
   "equipment": {
    "added": [
+    {
+     "id": "Masquerade of the Departed Gravestone 1",
+     "type": "0x9E20",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone8x8",
+      "index": 258
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 0
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-1.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 2",
+     "type": "0x9E21",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone8x8",
+      "index": 259
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 1
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-2.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 3",
+     "type": "0x9E22",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone8x8",
+      "index": 260
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 2
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-3.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 4",
+     "type": "0x9E23",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone8x8",
+      "index": 261
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 3
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-4.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 5",
+     "type": "0x9E24",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 162
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 4
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-5.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 6",
+     "type": "0x9E25",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 163
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 5
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-6.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 7",
+     "type": "0x9E26",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 164
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 6
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-7.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 8",
+     "type": "0x9E27",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 165
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 7
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-8.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 9",
+     "type": "0x9E28",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 166
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 8
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-9.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 10",
+     "type": "0x9E29",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 167
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 9
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-10.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Masquerade of the Departed Gravestone 11",
+     "type": "0x9E2A",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiGravestone16x16",
+      "index": 168
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Gravestone",
+      "tier": 10
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "masquerade-of-the-departed-gravestone-11.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       }
+      }
+     }
+    },
     {
      "id": "Swamp Hermit Druid 2ST Shard x1",
      "type": "0x9E2F",
@@ -3250,171 +3556,6 @@
      }
     },
     {
-     "id": "Sweettreats Projectile Object",
-     "type": "0xF92A",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 993
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 7,
-      "damage": "600-800",
-      "range": 8.4,
-      "pierces": true,
-      "passes cover": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-projectile-object.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Overwhelming Axehead",
-     "type": "0x1674",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1027
-     },
-     "description": "An extremely heavy axehead salvaged from Griefkeeper Zole's rather bulky choice of weaponry. Throwing it takes a tremendous amount of effort, but it has the capacity to obliterate everything in its path.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SHURIKEN",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_SS",
-      "XPBONUS",
-      "MPCOST",
-      "ORG_SPECTRAL",
-      "STATMOD",
-      "SHINY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 25,
-      "feed power": 1000,
-      "bag": 6,
-      "XP bonus": 7,
-      "mp cost": 150,
-      "soulbound": true,
-      "damage": "325-525",
-      "range": 14.9,
-      "pierces": true,
-      "passes cover": true,
-      "on equip ATT": 5,
-      "on equip VIT": 5
-     },
-     "clientId": "Overwhelming Axehead Shiny",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "overwhelming-axehead-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Irradiance Sheath",
-     "type": "0x1676",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1023
-     },
-     "description": "Believed to be some kind of artificial organ, this sheath embeds the weapon in a solid crystal coating before violently fracturing into shrapnel when drawn.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SHEATH",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_S",
-      "XPBONUS",
-      "MPCOST",
-      "COOLDOWN",
-      "ORG_CRYSTAL",
-      "SHINY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 30,
-      "feed power": 1000,
-      "bag": 6,
-      "XP bonus": 8,
-      "mp cost": 130,
-      "cooldown": 3,
-      "soulbound": true,
-      "damage": "500-500",
-      "range": 0,
-      "pierces": true,
-      "passes cover": true,
-      "on equip MAXHP": 40,
-      "on equip ATT": 5
-     },
-     "clientId": "Irradiance Sheath Shiny",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "irradiance-sheath-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sigil UT3 Projectile - Dragon Shiny",
-     "type": "0x1681",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1025
-     },
-     "description": null,
-     "labels": [
-      "EQUIPMENT",
-      "PROC"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 7,
-      "power": 0,
-      "soulbound": true,
-      "damage": "15-15",
-      "range": 6.4,
-      "pierces": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sigil-ut3-projectile-dragon-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
      "id": "Assimilation",
      "type": "0xbed5",
      "art": {
@@ -3718,6 +3859,7 @@
       "rate of fire": 1.3,
       "shots": 1,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "180-230",
       "range": 3.3,
       "on equip SPD": 3
@@ -3765,6 +3907,7 @@
       "shots": 2,
       "arc gap": 20,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "85-100",
       "range": 5.6
      },
@@ -3810,6 +3953,7 @@
       "shots": 1,
       "arc gap": 14,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "180-290",
       "range": 7.2,
       "pierces": true,
@@ -3859,6 +4003,7 @@
       "shots": 1,
       "arc gap": 0,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "70-105",
       "range": 8.4,
       "pierces": true,
@@ -3908,6 +4053,7 @@
       "rate of fire": 0.85,
       "shots": 1,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "205-240",
       "range": 6.6
      },
@@ -3952,6 +4098,7 @@
       "XP bonus": 6,
       "rate of fire": 1,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "205-225",
       "range": 5.2
      },
@@ -3996,6 +4143,7 @@
       "rate of fire": 1.1,
       "shots": 1,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "80-110",
       "range": 8.9,
       "subattacks": 5,
@@ -4043,6 +4191,7 @@
       "rate of fire": 1.5,
       "shots": 1,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "65-95",
       "range": 9,
       "pierces": true,
@@ -4089,6 +4238,7 @@
       "XP bonus": 7,
       "rate of fire": 1,
       "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
       "damage": "55-95",
       "range": 9,
       "pierces": true,
@@ -4108,7 +4258,317 @@
      }
     }
    ],
-   "changed": [],
+   "changed": [
+    {
+     "id": "Gearhawk Morning Star",
+     "type": "0x74c9",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj6",
+      "index": 534
+     },
+     "description": "A precision-engineered morning star mimicking a raptor’s strike.",
+     "labels": [
+      "EQUIPMENT",
+      "WEAPON",
+      "WAND",
+      "ST",
+      "TAB_ST",
+      "ST_WEAPON",
+      "STGEN_1",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 8,
+      "feed power": 800,
+      "bag": 8,
+      "XP bonus": 7,
+      "rate of fire": 1.1,
+      "shots": 1,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "damage": "80-110",
+      "range": 8.9,
+      "subattacks": 5,
+      "on equip ATT": 4,
+      "on equip DEX": 4
+     },
+     "moved": [
+      {
+       "fact": "labels",
+       "was": "EQUIPMENT,WEAPON,WAND,ST,TAB_ST,ST_WEAPON,STGEN_1,XPBONUS,ORG_KOGBOLD",
+       "now": "EQUIPMENT,WEAPON,WAND,ST,TAB_ST,ST_WEAPON,STGEN_1,XPBONUS"
+      }
+     ],
+     "clientId": "DruidST0",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "druidst0.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    }
+   ],
+   "gone": []
+  },
+  "rings": {
+   "added": [
+    {
+     "id": "Sweettreats Ring",
+     "type": "0xF92E",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj6",
+      "index": 1009
+     },
+     "description": "A sweet reward for those who always come back for another helping.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_A",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 32,
+      "feed power": 700,
+      "bag": 6,
+      "XP bonus": 7,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 90,
+      "on equip ATT": 4,
+      "on equip DEX": 4,
+      "on equip VIT": 2,
+      "on equip WIS": 2
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "sweettreats-ring.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Storied Fossil",
+     "type": "0xF98F",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj6",
+      "index": 1093
+     },
+     "description": "A fossilized footprint that still carries the strength of an ancient predator.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "ST",
+      "TAB_ST",
+      "ST_RING",
+      "RESKIN",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 59,
+      "feed power": 600,
+      "bag": 8,
+      "XP bonus": 4,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 100,
+      "on equip WIS": 10,
+      "on equip DEF": 5
+     },
+     "clientId": "HDruidST3",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "hdruidst3.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Willow Sprout",
+     "type": "0xbebd",
+     "art": {
+      "kind": "still",
+      "atlas": "sorcEncountersObjects8x8",
+      "index": 487
+     },
+     "description": "A humble sapling left untouched by the curse that pervades the Wetlands. Perhaps there is hope after all.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "ST",
+      "TAB_ST",
+      "ST_RING",
+      "XPBONUS",
+      "STGEN_2"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 59,
+      "feed power": 600,
+      "bag": 8,
+      "XP bonus": 4,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 260,
+      "on equip VIT": 6,
+      "on equip SPD": 6
+     },
+     "clientId": "2DruidST3",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "2druidst3.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Infinite Bands",
+     "type": "0xbec1",
+     "art": null,
+     "description": "Infinite loops of infinite squares.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "ST",
+      "TAB_ST",
+      "ST_RING",
+      "XPBONUS",
+      "STGEN_3"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 59,
+      "feed power": 600,
+      "bag": 8,
+      "XP bonus": 4,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip ATT": 5,
+      "on equip MAXHP": 25,
+      "on equip DEF": 3
+     },
+     "clientId": "3DruidST3"
+    }
+   ],
+   "changed": [
+    {
+     "id": "Pressure Gauge Band",
+     "type": "0x74cb",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj6",
+      "index": 700
+     },
+     "description": "Sturdy brass gauge ring that allows for monitoring its users status while boosting power and protection.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "ST",
+      "TAB_ST",
+      "ST_RING",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 59,
+      "feed power": 600,
+      "bag": 8,
+      "XP bonus": 4,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 100,
+      "on equip WIS": 10,
+      "on equip DEF": 5
+     },
+     "moved": [
+      {
+       "fact": "labels",
+       "was": "EQUIPMENT,RING,ST,TAB_ST,ST_RING,XPBONUS,ORG_KOGBOLD",
+       "now": "EQUIPMENT,RING,ST,TAB_ST,ST_RING,XPBONUS"
+      }
+     ],
+     "clientId": "DruidST3",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "druidst3.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Venerable Ring of the Sphinx",
+     "type": "0x96bf",
+     "art": null,
+     "description": "The malachite stone makes you feel at peace with the land.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS",
+      "VENERABLE"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 45,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "soulbound": true,
+      "slot odds": "100% · 37.5% · 25% · 12.5%",
+      "on equip ATT": 5,
+      "on equip DEX": 5,
+      "on equip MAXMP": 110
+     },
+     "moved": [
+      {
+       "fact": "slot odds",
+       "was": "50% · 37.5% · 25% · 12.5%",
+       "now": "100% · 37.5% · 25% · 12.5%"
+      }
+     ]
+    }
+   ],
    "gone": []
   },
   "places": {

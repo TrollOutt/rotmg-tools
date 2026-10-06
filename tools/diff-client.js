@@ -267,6 +267,9 @@ function factsOf(body) {
   put('arc gap', num(tag(body, 'ArcGap')));
   if (/<Soulbound\s*\/>/.test(body)) put('soulbound', true);
   if (/<Consumable\s*\/>/.test(body)) put('consumable', true);
+  // The odds of each enchantment slot opening, first to last: an update can move them and nothing else.
+  const odds = /<EnchantmentSlots\b[^>]*\bslotChance="([^"]*)"/.exec(body);
+  if (odds) put('slot odds', odds[1].split(',').map(x => Math.round(Number(x) * 1000) / 10 + '%').join(' · '));
 
   // A creature's own numbers.
   put('hp', num(tag(body, 'MaxHitPoints')));
@@ -387,8 +390,8 @@ function cutter() {
 /* ------------------------------------------------------------------ *
  * Which drawer a thing belongs in                                     *
  * ------------------------------------------------------------------ */
-const WEAPON = /^(BOW|STAFF|WAND|SWORD|DAGGER|KATANA|TACHI)$/;
-const ABILITY = /^(SPELL|TOME|CLOAK|QUIVER|HELM|SHIELD|SEAL|POISON|SKULL|TRAP|ORB|PRISM|SCEPTER|STAR|WAKIZASHI|LUTE|MASK|SIGIL|MACE)$/;
+const WEAPON = /^(BOW|STAFF|WAND|SWORD|DAGGER|KATANA|TACHI|FLAIL|SPELLBLADE|LONGBOW|DUALBLADE|MORNINGSTAR|AXE)$/;
+const ABILITY = /^(SPELL|TOME|CLOAK|QUIVER|HELM|SHIELD|SEAL|POISON|SKULL|TRAP|ORB|PRISM|SCEPTER|STAR|WAKIZASHI|LUTE|MASK|SIGIL|MACE|SHURIKEN|SHEATH)$/;
 /*
  * The machinery behind the game, which is not news.
  *
@@ -424,6 +427,8 @@ function drawerOf(thing) {
     if (/Skin$/.test(id)) return 'skins';
     // A "Proc" is the invisible thing an item fires, not an item.
     if (/Proc/.test(id)) return 'backstage';
+    // Nor is gear the client never describes: the shot an ability lends a slot to, a test piece, an enchantment's holder.
+    if (kind === 'Equipment' && !thing.description) return 'backstage';
     for (const label of thing.labels) {
       if (WEAPON.test(label)) return 'weapons';
       if (ABILITY.test(label)) return 'abilities';
@@ -635,10 +640,10 @@ function main() {
   }
   for (const name of Object.keys(drawers)) if (!SHOWN.includes(name)) delete drawers[name];
 
+  // The build an extraction was read from, as its own provenance says; not the snapshot's, which is always the newest.
   const buildOf = dir => {
-    const snap = path.join(root, 'data', 'client-snapshot.txt');
-    const m = fs.existsSync(snap) ? /^build\|(.+)$/m.exec(fs.readFileSync(snap, 'utf8')) : null;
-    return m ? m[1] : null;
+    const file = path.join(dir, 'provenance.json');
+    try { return JSON.parse(fs.readFileSync(file, 'utf8')).from.build || null; } catch { return null; }
   };
   /*
    * And why any of it happened, which no client will ever say. The one
