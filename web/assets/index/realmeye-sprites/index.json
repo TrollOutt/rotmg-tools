@@ -2466,6 +2466,11 @@
       "file": "740eaaa090056b77ad9fbaec.png",
       "source": "https://www.realmeye.com/s/a/img/wiki/i/3pU1Tps.png",
       "name": "Time Chamber"
+    },
+    "enemy:Loot Elf": {
+      "file": "f045566df2d455cd75fa6a1b.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/lRg5c3U.png",
+      "name": "Loot Elf"
     }
   }
 }
