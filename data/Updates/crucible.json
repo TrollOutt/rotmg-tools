@@ -1,4 +1,11 @@
 {
+ "built": "2026-10-06T00:00:00+00:00",
+ "tool": "data/Updates (kept by hand)",
+ "from": {
+  "kind": "community",
+  "source": "RealmEye",
+  "home": "https://www.realmeye.com/wiki/"
+ },
  "source": "RealmEye wiki, The Crucible - Crucible Seasons",
  "read": "2026-10-06",
  "seasons": [

@@ -24,8 +24,11 @@ assert.deepStrictEqual(
   JSON.parse(read('data/Updates/crucible.json')).seasons, index.crucible,
   'the Crucible\'s seasons in the page are the ones in data/Updates'
 );
-assert.deepStrictEqual(JSON.parse(read('data/Updates/ritual.json')), index.ritual,
-  'the Blood Ritual in the page is the one in data/Updates');
+{
+  const { built, tool, from, ...kept } = JSON.parse(read('data/Updates/ritual.json'));
+  assert(built && tool && from, 'the ritual file carries its provenance');
+  assert.deepStrictEqual(kept, index.ritual, 'the Blood Ritual in the page is the one in data/Updates');
+}
 
 for (const [i, season] of index.crucible.entries()) {
   const at = 'Crucible period ' + i;

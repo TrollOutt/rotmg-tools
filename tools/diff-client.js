@@ -629,7 +629,8 @@ function main() {
     return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
   };
   const crucible = readJson('crucible.json');
-  const ritual = readJson('ritual.json');
+  // What the page reads of it: the provenance that every data file carries stays in the file.
+  const ritual = (({ built, tool, from, ...rest }) => rest)(readJson('ritual.json') || {});
 
   const index = {
     made: new Date().toISOString().slice(0, 10),
@@ -639,7 +640,7 @@ function main() {
     tally,
     drawers,
     crucible: crucible ? crucible.seasons : [],
-    ritual
+    ritual: Object.keys(ritual).length ? ritual : null
   };
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1) + '\n');
 
