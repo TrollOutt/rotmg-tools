@@ -639,8 +639,8 @@
         + (fits ? linkRows([['Goes on', fits]]) : '') + (never ? linkRows([['Never on', never]]) : '')));
     }
     if (r.kind === 'set') {
-      parts.push(part('Full set skin', setSkin(r, true)));
-      parts.push(part('Set bonus', setTable(r)));
+      if (!penaltyOf(r)) parts.push(part('Full set skin', setSkin(r, true)));
+      parts.push(part(penaltyOf(r) ? 'Worn together' : 'Set bonus', setTable(r)));
       parts.push(part('Pieces', setPieces(r, null, false)));
     }
     const about = r.kind !== 'enchant' && r.about ? r.about.replace(/\\n\\n[\s\S]*$/, '').replace(/\n\n[\s\S]*$/, '') : '';
@@ -744,7 +744,7 @@
     const set = r.set ? rec('set:' + r.set) : null;
     let setPart = '';
     if (set && set.steps && Object.keys(set.steps).length) {
-      setPart = part('Set · ' + set.name, setTable(set) + setPieces(set, r, false) + setSkin(set));
+      setPart = part((penaltyOf(set) ? 'Worn together · ' : 'Set · ') + set.name, setTable(set) + setPieces(set, r, false) + setSkin(set));
     }
 
     const [community, forgePart] = ecoForge(r, com);
@@ -837,20 +837,32 @@
   const addStats = (into, w) => { for (const [k, v] of Object.entries(w || {})) into[k] = (into[k] || 0) + v; return into; };
   const jump = (o, side = 14) => '<button type="button" class="ix-jump" data-open="' + esc(o.id) + '">' + art(o, side) + esc(o.said || o.name) + '</button>';
 
+  /*
+   * A "set" whose every step takes stats away is no set: the client uses one to make
+   * pieces costly to wear together (the Heirlooms). Its steps are a price, they add up,
+   * and a total with the pieces' own stats would mean nothing.
+   */
+  const penaltyOf = set => {
+    const steps = Object.values((set && set.steps) || {});
+    return steps.length > 0 && steps.every(w => Object.values(w).length && Object.values(w).every(v => v < 0));
+  };
+
   /* Les bonus du set palier par palier, puis ce que le set complet donne avec les stats de ses pièces. */
   function setTable(set) {
     const ks = Object.keys(set.steps || {});
     if (!ks.length) return '';
+    const penalty = penaltyOf(set);
     const pieces = (set.pieces || []).map(n => rec('item:' + n)).filter(Boolean);
-    const withPieces = pieces.length && pieces.length <= 6;
+    const withPieces = !penalty && pieces.length && pieces.length <= 6;
     const total = {};
     if (withPieces) { pieces.forEach(o => addStats(total, o.worn)); ks.forEach(n => addStats(total, set.steps[n])); }
     const used = STAT_ORDER.filter(k => ks.some(n => set.steps[n][k] !== undefined) || (withPieces && total[k]));
     const cell = (k, v) => '<td style="--tint:' + TINT[k] + '">' + (v ? signed(v) : '') + '</td>';
     return '<div class="ix-realm-table"><table><thead><tr><th></th>' + used.map(k => '<th style="--tint:' + TINT[k] + '">' + STAT_SHORT_FR[k] + '</th>').join('')
-      + '</tr></thead><tbody>' + ks.map(n => '<tr><td>' + (n === '4' ? 'Full set' : n + ' pieces') + '</td>' + used.map(k => cell(k, set.steps[n][k])).join('') + '</tr>').join('')
+      + '</tr></thead><tbody>' + ks.map(n => '<tr><td>' + (penalty ? (n === '4' ? 'Four worn' : (n === '2' ? 'Two' : 'Three') + ' worn') : n === '4' ? 'Full set' : n + ' pieces') + '</td>' + used.map(k => cell(k, set.steps[n][k])).join('') + '</tr>').join('')
       + (withPieces ? '<tr class="fc2-settotal"><td>Full set + pieces</td>' + used.map(k => cell(k, total[k])).join('') + '</tr>' : '')
-      + '</tbody></table></div>';
+      + '</tbody></table></div>'
+      + (penalty ? '<p class="fc2-note">Not a bonus: wearing more than one costs these stats, and each line adds to the one above it.</p>' : '');
   }
 
   /* Le skin du set complet, animé, et la porte vers le Skin Viewer (remplie après coup, depuis la fiche du set). */
@@ -904,8 +916,20 @@
   }
 
   /* ---------- le projectile, tel qu'il part de l'arme ---------- */
-  let projData = null;
-  fetch('assets/index/projectiles.json').then(r => r.json()).then(j => { projData = j; }).catch(() => {}).finally(settled);
+  /*
+   * A sheet and its rectangles are one artifact: a rebuild repacks the sheet, and a
+   * browser-cached old PNG under new coordinates draws the wrong sprite at the wrong
+   * size. The rectangles are revalidated on every load and the sheet is asked for by
+   * a mark of the rectangles it belongs to.
+   */
+  const markOf = text => {
+    let h = 0;
+    for (let i = 0; i < text.length; i += 5) h = (h * 31 + text.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36) + text.length.toString(36);
+  };
+  const marked = (url, mark) => url + (mark ? '?v=' + encodeURIComponent(mark) : '');
+  let projData = null, projMark = '';
+  fetch('assets/index/projectiles.json', { cache: 'no-cache' }).then(r => r.text()).then(t => { projData = JSON.parse(t); projMark = markOf(t); }).catch(() => {}).finally(settled);
   const projOf = r => projData && projData.items[r.clientId || r.name];
 
   /* Ce que fait le tir, dit une fois, sous l'animation. */
@@ -985,7 +1009,8 @@
       const r = rec(host.dataset.sim), p = projOf(r), base = p.shots[0];
       const setData = r.set ? projData.sets['set:' + r.set] : null;
       const ts = index().theorySheet || { pics: {} };
-      const theory = image((window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.theorySheet) || 'assets/theory/sheet.png'), bolts = image('assets/index/projectiles.png'), skins = image('assets/skins/textures/looks.png');
+      const theory = image((window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.theorySheet) || marked('assets/theory/sheet.png', index() && (index().built || (index().from && index().from.build))));
+      const bolts = image(marked('assets/index/projectiles.png', projMark)), skins = image(marked('assets/skins/textures/looks.png', looks && looks.built));
       const canvas = host.querySelector('canvas'), pen = canvas.getContext('2d');
       const holder = [...recs().values()].find(c => c.kind === 'class' && (c.slots || []).includes(r.slot));
       const classPic = holder && ts.pics['c:' + holder.name];
@@ -1558,12 +1583,12 @@
 
   /* ---------- le skin, animé depuis les images du Skin Viewer ---------- */
   let looks = null, skinTypes = null;
-  Promise.all([fetch('assets/skins/generated/looks.json').then(r => r.json()), fetch('assets/skins/generated/skins.json').then(r => r.json())])
+  Promise.all([fetch('assets/skins/generated/looks.json', { cache: 'no-cache' }).then(r => r.json()), fetch('assets/skins/generated/skins.json', { cache: 'no-cache' }).then(r => r.json())])
     .then(([l, s]) => { looks = l; skinTypes = new Map((s.skins || []).map(x => [x.id, x.type])); }).catch(() => {}).finally(settled);
   const skinCanvas = (skinId, big) => '<canvas class="fc2-skin' + (big ? ' is-big' : '') + '" data-skin="' + esc(skinId) + '" width="96" height="96"></canvas>';
   function bootSkins(box) {
     if (!looks) return;
-    const sheet = image('assets/skins/textures/looks.png');
+    const sheet = image(marked('assets/skins/textures/looks.png', looks.built));
     for (const c of box.querySelectorAll('canvas.fc2-skin:not([data-on])')) {
       const type = skinTypes.get(c.dataset.skin);
       const look = type && looks.skins[type];

@@ -10,6 +10,33 @@
  "read": "2026-10-06",
  "seasons": [
   {
+   "season": 31,
+   "from": "2026-10-06",
+   "to": "2026-11-03",
+   "stats": [
+    {
+     "stat": "VIT",
+     "value": 30,
+     "pct": true
+    },
+    {
+     "stat": "WIS",
+     "value": 10,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 15,
+    "xp": 10
+   },
+   "rules": [
+    "−30% healing from pets, consumables and external sources"
+   ],
+   "part": 1,
+   "source": "Season 31 Part 1 patch notes, 2026-10-06 (hub.realmofthemadgod.com/news0/updates0/s31notes1); the end date is that of the Halloween Battle Pass and the Blood Ritual"
+  },
+  {
    "season": 30,
    "from": "2026-09-01",
    "to": "2026-10-06",

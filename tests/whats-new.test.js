@@ -45,8 +45,10 @@ for (const [i, season] of index.crucible.entries()) {
     assert(season.from <= later.from, at + ' is older than the one before it in the list');
   }
 }
-assert.strictEqual(index.crucible[0].from, index.notes.date,
-  'the newest Crucible period is the update the account tells, so its full record attaches to it');
+const told = index.crucible.findIndex(c => c.from === index.notes.date);
+assert(told >= 0, 'the update the account tells is a Crucible period, so its full record attaches to it');
+assert(index.crucible.slice(0, told).every(c => c.from > index.notes.date),
+  'a Crucible period newer than the account is one whose client has not been read yet');
 
 assert.strictEqual(index.ritual.name, 'Blood Ritual');
 assert(Array.isArray(index.ritual.gear) && Array.isArray(index.ritual.seasons), 'the ritual lists its gear and its seasons');
@@ -59,10 +61,10 @@ for (const season of index.ritual.seasons) {
 function element(id) {
   return { id, innerHTML: '', textContent: '', hidden: false, dataset: {}, listeners: {},
     addEventListener(type, fn) { (this.listeners[type] = this.listeners[type] || []).push(fn); },
-    querySelector() { return null; }, querySelectorAll() { return []; } };
+    contains() { return true; }, querySelector() { return null; }, querySelectorAll() { return []; } };
 }
 
-async function drawn() {
+async function drawn(pick, tab) {
   const els = {};
   for (const id of ['newsApp', 'newsTitle', 'newsHead', 'newsUpd', 'pageNews']) els[id] = element(id);
   const oldDocument = global.document;
@@ -76,6 +78,14 @@ async function drawn() {
   try {
     const news = require(modulePath);
     assert.strictEqual(await news.init({ index, art: null }), true, 'the page starts from the file alone');
+    if (pick !== undefined) {
+      const choose = { dataset: { upd: String(pick) }, matches: () => false };
+      els.newsApp.listeners.click[0]({ target: { closest: () => choose }, preventDefault() {} });
+    }
+    if (tab !== undefined) {
+      const choose = { dataset: { page: tab }, matches: () => false };
+      els.newsApp.listeners.click[0]({ target: { closest: () => choose }, preventDefault() {} });
+    }
     return els;
   } finally {
     delete require.cache[modulePath];
@@ -84,18 +94,47 @@ async function drawn() {
   }
 }
 
+const latest = index.crucible[0];
+/* The notes the newest update is told by: the account of its client, or what was written ahead of a client not read yet. */
+const ahead = (index.upcoming || []).find(n => n.date === latest.from);
+const notes = ahead || (latest.from === index.notes.date ? index.notes : null);
+const ritualOf = c => index.ritual.seasons.some(r => r.season === c.season && (r.part || null) === (c.part || null));
+const quiet = index.crucible.findIndex(c => !ritualOf(c));
+
 drawn().then(els => {
+  /* The newest update, by default: whatever its client has or has not yet given. */
   const page = els.newsApp.innerHTML;
-  assert(page.includes('Overview') && page.includes('Summary'), 'the tabs open with the Overview and the Summary');
-  for (const word of ['Weapons', 'Abilities', 'Armour', 'Rings', 'Skins', 'Consumables', 'Places']) {
-    assert(page.includes('data-page="' + (word === 'Armour' ? 'armour' : word.toLowerCase()) + '"'), 'a tab for ' + word);
+  assert(page.includes('Overview') && page.includes('Crucible'), "the newest update opens on its overview, with the Crucible");
+  assert(els.newsTitle.innerHTML.includes(notes ? notes.title : 'Season ' + latest.season), "the title names the newest update");
+  assert.strictEqual(page.includes('Blood Ritual'), ritualOf(latest), "the Blood Ritual is drawn as written, and only for a season that had one");
+  assert(els.newsUpd.innerHTML.includes('Latest'), "the selector says which update is the latest");
+  if (ahead) assert(page.includes('data-page="summary"') && !page.includes('data-page="weapons"'),
+    "an update ahead of its client tells its notes, and has no tables of things it has not read");
+  else if (notes) {
+    assert(page.includes('Summary'), "the tabs open with the Overview and the Summary");
+    for (const word of ['Weapons', 'Abilities', 'Armour', 'Rings', 'Skins', 'Consumables', 'Places']) {
+      assert(page.includes('data-page="' + (word === 'Armour' ? 'armour' : word.toLowerCase()) + '"'), 'a tab for ' + word);
+    }
+    assert(!/data-page="pets"|data-page="equipment"/.test(page), 'pets and "other gear" are not kinds of their own');
   }
-  assert(!/data-page="pets"|data-page="equipment"/.test(page), 'pets and "other gear" are not kinds of their own');
-  assert(page.includes('Crucible') && page.includes('Blood Ritual'), 'the overview holds both seasonal modes');
-  assert(page.includes('Not active this season'), 'a season without a Blood Ritual says so, and nothing more');
-  assert(!/next season/i.test(page), 'the page never speaks of a season that has not come');
-  assert(els.newsTitle.innerHTML.includes(index.notes.title), 'the title is the update\'s');
-  assert(els.newsUpd.innerHTML.includes('Latest'), 'the selector says which update is the latest');
-  assert.strictEqual(els.newsApp.listeners.click.length, 1, 'one click listener on the page');
-  console.log('What\'s New: ' + index.crucible.length + ' Crucible periods, the Blood Ritual per season, drawn from the update alone.');
+  assert(!/next season/i.test(page), "the page never speaks of a season that has not come");
+  return drawn(0, 'summary');
+}).then(els => {
+  /* The notes, read in the Summary. */
+  const page = els.newsApp.innerHTML;
+  if (notes) assert(page.includes(notes.parts[0].title), "the Summary tells the notes");
+  for (const n of index.upcoming || []) for (const file of [].concat(n.images || [], ...n.parts.map(p => p.images || [])).map(i => i.file)) {
+    assert(fs.existsSync(path.join(root, 'web/assets/whats-new/upcoming', file)), 'the picture ' + file + ' is kept beside the index');
+    assert(fs.existsSync(path.join(root, 'data/Updates/upcoming/images', file)), 'the picture ' + file + ' is kept in data/Updates');
+  }
+  assert.strictEqual(els.newsApp.listeners.click.length, 1, "one click listener on the page");
+  return quiet > 0 ? drawn(quiet) : els;
+}).then(els => {
+  /* An older update, picked from the selector: a season without a Blood Ritual says nothing about one. */
+  const page = els.newsApp.innerHTML;
+  if (quiet > 0) {
+    assert(!page.includes('Blood Ritual'), "a season without a Blood Ritual says nothing about one");
+    assert(!els.newsUpd.innerHTML.includes('Latest'), "an older update is not called the latest");
+  }
+  console.log("What's New: " + index.crucible.length + ' Crucible periods, the Blood Ritual per season, drawn from the update alone.');
 }).catch(error => { console.error(error); process.exit(1); });

@@ -13,5 +13,76 @@
   "Blood Ritual Shard",
   "Blood Ritual"
  ],
- "seasons": []
+ "seasons": [
+  {
+   "season": 31,
+   "part": 1,
+   "stats": [],
+   "bonuses": {},
+   "rules": [
+    "Trade health for damage, or damage for health: from −20% HP and +24% damage to +20% HP and −22% damage",
+    "Loot is a multiplier and only the health-sacrificing side earns it: ×1.25 at −20% HP, ×1.15 at −15%, ×1.1 at −10%, ×1 beyond",
+    "Stacks with the Crucible; available until 3 November"
+   ],
+   "note": "Stacks with the Crucible · until 3 November",
+   "choices": [
+    {
+     "hp": -20,
+     "damage": 24,
+     "loot": 25
+    },
+    {
+     "hp": -15,
+     "damage": 18,
+     "loot": 15
+    },
+    {
+     "hp": -10,
+     "damage": 14,
+     "loot": 10
+    },
+    {
+     "hp": -5,
+     "damage": 8,
+     "loot": 0
+    },
+    {
+     "hp": -2,
+     "damage": 5,
+     "loot": 0
+    },
+    {
+     "hp": 0,
+     "damage": 0,
+     "loot": 0
+    },
+    {
+     "hp": 2,
+     "damage": -4,
+     "loot": 0
+    },
+    {
+     "hp": 5,
+     "damage": -8,
+     "loot": 0
+    },
+    {
+     "hp": 10,
+     "damage": -12,
+     "loot": 0
+    },
+    {
+     "hp": 15,
+     "damage": -18,
+     "loot": 0
+    },
+    {
+     "hp": 20,
+     "damage": -22,
+     "loot": 0
+    }
+   ],
+   "source": "Season 31 Part 1 patch notes, 2026-10-06 (hub.realmofthemadgod.com/news0/updates0/s31notes1); the end date is that of the Halloween Battle Pass and the Blood Ritual"
+  }
+ ]
 }

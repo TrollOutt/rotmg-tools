@@ -54,7 +54,8 @@
   async function readSheet() {
     try {
       const b = bundle();
-      const blob = await fetch((b && b.indexSheet) || 'assets/index/sheet.png').then(r => r.blob());
+      const ix = window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index, mark = ix && (ix.built || (ix.from && ix.from.build));
+      const blob = await fetch((b && b.indexSheet) || 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')).then(r => r.blob());
       const img = await createImageBitmap(blob);
       const c = document.createElement('canvas');
       c.width = img.width; c.height = img.height;

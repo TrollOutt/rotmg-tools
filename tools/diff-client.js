@@ -11,7 +11,9 @@
  *     node tools/diff-client.js
  *
  * The "before" is a copy of client-data taken while the old client was still
- * installed, kept in local/client-before. There is no way to make one after
+ * installed, kept in local/client-before. Without it, --before-index <an earlier
+ * Index file> says only what is new: whatever that Index did not know, with
+ * nothing said to have changed or gone. There is no way to make one after
  * the fact: the update overwrites the client in place, and nothing on disk
  * remembers what it replaced. So the copy is made before running the scrape,
  * and this reads it.
@@ -296,6 +298,27 @@ function factsOf(body) {
   return out;
 }
 
+/*
+ * What plays when it is used: an emote's animation or an entrance's, frame by
+ * frame. Most emotes have one picture and nothing to play; those that have
+ * more are drawn moving, as the game draws them.
+ */
+const between = (s, a, b) => { const i = s.indexOf(a); if (i < 0) return null; const j = s.indexOf(b, i + a.length); return j < 0 ? null : s.slice(i + a.length, j); };
+function playOf(body) {
+  for (const kind of ['EmoteAnimation', 'AnimatedEntrance']) {
+    const at = body.indexOf('<' + kind);
+    if (at < 0) continue;
+    const end = body.indexOf('</' + kind + '>', at);
+    const out = [];
+    for (const frame of body.slice(at, end < 0 ? body.length : end).split('<Frame').slice(1)) {
+      const file = between(frame, '<File>', '</File>'), index = between(frame, '<Index>', '</Index>');
+      if (file !== null && index !== null) out.push({ atlas: file.trim(), index: Number(index) });
+    }
+    if (out.length > 1) return out;
+  }
+  return null;
+}
+
 function readObjects(dir) {
   const out = new Map();
   if (!fs.existsSync(dir)) return out;
@@ -310,6 +333,7 @@ function readObjects(dir) {
         id: id[1],
         type: type ? type[1] : null,
         art: artOf(m[2]),
+        play: playOf(m[2]),
         description: tag(m[2], 'Description'),
         labels: (tag(m[2], 'Labels') || '').split(',').filter(Boolean),
         facts: factsOf(m[2]),
@@ -409,6 +433,8 @@ function drawerOf(thing) {
     if (labels.has('CONSUMABLE') || thing.facts['consumable']) return 'consumables';
     return 'equipment';
   }
+  // What a player unlocks for show - an emote, an entrance, a gravestone - is something new to have.
+  if (kind === 'Emote' || kind === 'Entrance' || kind === 'Gravestone') return 'equipment';
   if (kind === 'Portal') return 'places';
   if (kind === 'Pet') return 'pets';
   if (BACKSTAGE.test(kind)) return 'backstage';
@@ -420,7 +446,8 @@ function drawerOf(thing) {
  * Do it                                                               *
  * ------------------------------------------------------------------ */
 function main() {
-  if (!fs.existsSync(BEFORE)) {
+  const fromIndex = process.argv.indexOf('--before-index') > 0 ? process.argv[process.argv.indexOf('--before-index') + 1] : null;
+  if (!fs.existsSync(BEFORE) && !fromIndex) {
     console.error('\n  No "before" to compare against. ' + path.relative(root, BEFORE) + ' is missing.'
       + '\n  It is a copy of client-data taken while the previous client was still installed,'
       + '\n  and there is no making one after the update has overwritten it.\n');
@@ -428,6 +455,19 @@ function main() {
   }
   const before = readObjects(BEFORE);
   const after = readObjects(AFTER);
+  if (!fs.existsSync(BEFORE)) {
+    // New is what the Index knows now and the older one did not: an object neither knows is no record, and stands in for itself.
+    const keysOf = file => {
+      const out = new Set();
+      for (const record of JSON.parse(fs.readFileSync(file, 'utf8')).records || []) {
+        for (const key of [record.name, record.alias, record.clientId]) if (key) out.add(key);
+        for (const key of record.clientIds || []) out.add(key);
+      }
+      return out;
+    };
+    const known = keysOf(fromIndex), now = keysOf(path.join(root, 'data', 'Index', 'index.json'));
+    for (const [id, thing] of after) if (known.has(id) || !now.has(id)) before.set(id, { ...thing, facts: { ...thing.facts }, labels: thing.labels.slice() });
+  }
 
   /*
    * Type numbers to names, so a skin can say it is for a Knight rather
@@ -526,11 +566,17 @@ function main() {
       out.id = shownName;
     }
     delete out.from;
+    delete out.play;
     if (!thing.art) return out;
     let name = slug(thing.id);
     while (seen.has(name)) name += 'x';
     seen.add(name);
 
+    if (thing.play) {
+      const rects = thing.play.map(f => (sprites.still.get(f.atlas) || new Map()).get(f.index)).filter(Boolean);
+      const made = rects.length > 1 && cut(rects, name + '-walk.png');
+      if (made) { out.sprite = { moving: true, clips: { walk: made } }; drew++; animated++; return out; }
+    }
     const key = thing.art.atlas + '#' + thing.art.index;
     const moving = sprites.moving.get(key);
     if (moving && moving.length) {
@@ -598,14 +644,10 @@ function main() {
    * And why any of it happened, which no client will ever say. The one
    * hand-written part of the page, kept as its own dated file.
    */
-  const notes = (() => {
-    const dir = path.join(root, 'data', 'Updates');
-    if (!fs.existsSync(dir)) return null;
-    const files = fs.readdirSync(dir).filter(n => /\.txt$/.test(n)).sort();
-    if (!files.length) return null;
+  /* One notes file, read: a "part" opens a section, "image" belongs to the part it follows (or to the whole update before any). */
+  const readNotes = text => {
     const out = { parts: [] };
     let part = null;
-    const text = fs.readFileSync(path.join(dir, files[files.length - 1]), 'utf8');
     for (const line of text.split(/\r?\n/)) {
       if (!line || line.startsWith('#')) continue;
       const cut = line.indexOf('|');
@@ -613,10 +655,50 @@ function main() {
       const kind = line.slice(0, cut), body = line.slice(cut + 1);
       if (kind === 'part') { part = { title: body, points: [] }; out.parts.push(part); }
       else if (kind === 'blurb') { if (part) part.blurb = body; }
-      else if (kind === 'point') { if (part) part.points.push(body); }
+      else if (kind === 'point') { if (part) { part.points.push(body); if (part.shows) part.flow.push({ point: body }); } }
+      else if (kind === 'show') {
+        // A block the page draws the part with: show|kind|what it shows.
+        const cut = body.indexOf('|');
+        if (part) {
+          const show = { kind: (cut < 0 ? body : body.slice(0, cut)).trim(), args: cut < 0 ? '' : body.slice(cut + 1) };
+          // A part told with blocks keeps its prose and its blocks in the order they were written.
+          if (!part.shows) { part.shows = []; part.flow = part.points.map(point => ({ point })); }
+          part.shows.push(show);
+          part.flow.push({ show });
+        }
+      }
+      else if (kind === 'place') {
+        const [name, inside, loot] = body.split('|');
+        (out.places = out.places || {})[name] = { inside: inside || '', loot: loot || '' };
+      }
+      else if (kind === 'image') {
+        const [file, ...say] = body.split('|');
+        (part ? (part.images = part.images || []) : (out.images = out.images || [])).push({ file, say: say.join('|') });
+      }
       else out[kind] = body;
     }
     return out.parts.length ? out : null;
+  };
+  const notes = (() => {
+    const dir = path.join(root, 'data', 'Updates');
+    if (!fs.existsSync(dir)) return null;
+    const files = fs.readdirSync(dir).filter(n => /\.txt$/.test(n)).sort();
+    if (!files.length) return null;
+    return readNotes(fs.readFileSync(path.join(dir, files[files.length - 1]), 'utf8'));
+  })();
+  /*
+   * Notes for an update whose client is not here yet: data/Updates/upcoming. The page
+   * tells them with the pictures the announcement carried (data/Updates/upcoming/images,
+   * copied beside the index) until the client gives the real ones. When the client has
+   * been read, the notes file moves up to data/Updates and leaves this folder.
+   */
+  const upcoming = (() => {
+    const dir = path.join(root, 'data', 'Updates', 'upcoming');
+    if (!fs.existsSync(dir)) return [];
+    const list = fs.readdirSync(dir).filter(n => /\.txt$/.test(n)).sort().reverse()
+      .map(n => readNotes(fs.readFileSync(path.join(dir, n), 'utf8'))).filter(Boolean);
+    if (list.length && fs.existsSync(path.join(dir, 'images'))) fs.cpSync(path.join(dir, 'images'), path.join(OUT, 'upcoming'), { recursive: true });
+    return list;
   })();
 
   /*
@@ -635,6 +717,7 @@ function main() {
   const index = {
     made: new Date().toISOString().slice(0, 10),
     notes,
+    upcoming,
     before: buildOf(BEFORE),
     counts: { added: added.length, changed: changed.length, gone: gone.length },
     tally,

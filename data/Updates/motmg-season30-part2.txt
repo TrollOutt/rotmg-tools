@@ -13,6 +13,7 @@ title|Month of the Mad God
 subtitle|Season 30, Part 2 — Time Chamber
 date|2026-09-01
 lede|Ten years since Oryx took the realm, and the anniversary is the update. A hub of twelve portals leads to classic dungeons rebuilt as they were; six new encounters fill the biomes that had none; and an event runs five weeks on top of it.
+face|abilities|Entrancing Hourglass
 
 part|The Time Chamber
 blurb|Twelve portals to dungeons rebuilt as they used to be.

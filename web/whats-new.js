@@ -84,15 +84,19 @@ var WhatsNew = (function () {
       const had = byName.get(n);
       if (!had || (had.hidden && !r.hidden)) byName.set(n, r);
     }
+    const anyName = new Map();
+    for (const r of index.all.values()) if (!KINDS.has(r.kind) && (r.kind === 'enemy' || r.kind === 'set') && !r.twin && !anyName.has(r.said || r.name)) anyName.set(r.said || r.name, r);
     const find = name => {
       const base = name.replace(/ x\d+$/, '');
       let r = byName.get(name) || byName.get(base);
       for (let k = 1; k <= 14 && !r; k++) r = byName.get(base + ' x' + k);
-      return r || null;
+      return r || anyName.get(name) || null;
     };
     const kindOf = r => {
       if (r.kind === 'skin') return 'Skin' + (classOf(r) ? ' · ' + classOf(r) : '');
       if (r.kind === 'portal') return 'Dungeon';
+      if (r.kind === 'enemy') return 'Creature';
+      if (r.kind === 'set') return 'Set';
       if (r.hand) {
         const slot = ((index.slots || {})[r.slot] || [])[0] || ({ weapon: 'Weapon', ability: 'Ability', armor: 'Armour', ring: 'Ring' })[r.hand];
         const labels = r.labels || [];
@@ -134,6 +138,8 @@ var WhatsNew = (function () {
     items = [];
     const folded = new Map();
     let n = 0;
+    walks = new Map();
+    for (const t of ((data.drawers || {}).pets || {}).added || []) if (t.sprite && t.sprite.clips && t.sprite.clips.walk && t.sprite.clips.walk.frames > 1) walks.set(nameOf(t), t.sprite);
     for (const [drawerName, drawer] of Object.entries(data.drawers || {})) {
       for (const why of ['added', 'changed', 'gone']) for (const t of drawer[why] || []) {
         const cls = (t.facts || {}).class;
@@ -147,6 +153,7 @@ var WhatsNew = (function () {
           view = Object.assign({}, t, { description: cut(t.description) });
           if (look) view.__kind = g === 'places' ? 'Dungeon' : g === 'consumables' ? 'Consumable' : undefined;
         }
+        if (walks.has(name) && !(view.sprite && view.sprite.moving)) view = Object.assign({}, view, { sprite: walks.get(name), sheet: null });
         const stack = /^(.*\S) x(\d+)$/.exec(name);
         if (g === 'consumables' && stack) {
           // Fourteen sizes of one shard are one shard.
@@ -165,6 +172,7 @@ var WhatsNew = (function () {
       if (s.length > 1) one.t.__kind = (one.t.__kind || 'Consumable') + ' · in stacks of ' + s[0] + ' to ' + s[s.length - 1];
     }
     let extra = 0;
+    memo = new Map();
     byN = new Map(items.map(i => [i.n, i]));
     thing = (name, tag) => {
       const r = look && look.find(name);
@@ -206,7 +214,9 @@ var WhatsNew = (function () {
       const side = Math.max(24, Math.round((aim || 56) * 0.6));
       return '<span class="pn-blank" style="width:' + side + 'px;height:' + side + 'px" aria-hidden="true">' + esc(nameOf(t).charAt(0)) + '</span>';
     }
-    const scale = Math.max(1, Math.min(max || 12, Math.floor((aim || 56) / rest.height)));
+    // Whole steps keep the pixels square; a thing taller than the box it is given (an entrance's column of fire) is shrunk to fit it instead.
+    const fit = Math.max(rest.height, rest.tile), whole = Math.floor((aim || 56) / fit);
+    const scale = whole >= 1 ? Math.min(max || 12, whole) : (aim || 56) / fit;
     const style = ['width:' + (rest.tile * scale) + 'px', 'height:' + (rest.height * scale) + 'px',
       '--wn-rest:url(\'' + stripUrl(rest.file) + '\')', '--wn-rest-w:' + (rest.tile * rest.frames * scale) + 'px',
       '--wn-rest-steps:' + rest.frames, '--wn-rest-time:' + (rest.frames * 0.22).toFixed(2) + 's'];
@@ -339,6 +349,12 @@ var WhatsNew = (function () {
     return first.concat(rest).slice(0, k || 4);
   }
 
+  /* A kind's tab wears the picture the notes name (face|kind|Name), when that thing is in the update; otherwise its lead. */
+  function faceOf(g) {
+    const [kind, name] = String((data.notes && data.notes.face) || '').split('|').map(x => x.trim());
+    return kind === g && name ? inGroup(g).find(i => i.why !== 'gone' && nameOf(i.t) === name) || null : null;
+  }
+
   /* The numbers of the update. */
   function numbers() {
     const c = data.counts || { added: 0, changed: 0, gone: 0 };
@@ -389,8 +405,10 @@ var WhatsNew = (function () {
     return MONTH[x.m - 1] + ' ' + x.d + (x.y !== y.y ? ', ' + x.y : '') + ' – ' + MONTH[y.m - 1] + ' ' + y.d + ', ' + y.y;
   };
   const label = u => u.season ? 'Season ' + u.season + (u.part ? ' · Part ' + u.part : '') : (data.notes && data.notes.title) || "What's New";
-  const titleOf = u => u.archived ? (data.notes && data.notes.title) || label(u) : label(u);
-  const pagesFor = u => u.archived ? ['overview', 'summary'].concat(groups.map(g => g[0])) : ['overview'];
+  /* The notes of an update: the account of the one the client was read for, or what was written ahead of a client not read yet. */
+  const notesOf = u => u.archived ? data.notes || null : (data.upcoming || []).find(n => n.date === u.from) || null;
+  const titleOf = u => (notesOf(u) && notesOf(u).title) || label(u);
+  const pagesFor = u => u.archived ? ['overview', 'summary'].concat(groups.map(g => g[0])) : notesOf(u) ? ['overview', 'summary'] : ['overview'];
   const saidPage = p => p === 'overview' ? 'Overview' : p === 'summary' ? 'Summary' : (GROUPS.find(x => x[0] === p) || [])[1];
   /* What the Blood Ritual did in a season: nothing is assumed, only what was written down for that season. */
   const ritualOf = u => ((data.ritual && data.ritual.seasons) || []).find(s => s.season === u.season && (s.part || null) === (u.part || null)) || null;
@@ -409,6 +427,8 @@ var WhatsNew = (function () {
   const fact = (t, k) => (t.facts || {})[k];
   const avg = v => { const m = String(v).split('-').map(Number); return m.length === 2 ? (m[0] + m[1]) / 2 : Number(v); };
   const stat = tag => t => fact(t, 'on equip ' + (tag === 'HP' ? 'MAXHP' : tag === 'MP' ? 'MAXMP' : tag));
+  /* What the notes say a portal opens on, by its name. */
+  const placeOf = t => ((data.notes && data.notes.places) || {})[nameOf(t)] || null;
   const COL = {
     dmg: { say: 'Damage', get: t => fact(t, 'damage'), num: t => avg(fact(t, 'damage')), fmt: dmg },
     rate: { say: 'Rate', get: t => fact(t, 'rate of fire'), num: t => fact(t, 'rate of fire'), fmt: v => Math.round(v * 100) + '%' },
@@ -418,12 +438,14 @@ var WhatsNew = (function () {
     cd: { say: 'Cooldown', get: t => fact(t, 'cooldown'), num: t => fact(t, 'cooldown'), fmt: v => v + ' s' },
     cls: { say: 'Class', get: t => fact(t, 'for'), num: t => fact(t, 'for'), fmt: v => esc(v), left: true },
     tier: { say: 'Tier', get: t => fact(t, 'tier'), num: t => fact(t, 'tier'), fmt: v => v },
+    inside: { say: 'Inside', get: t => (placeOf(t) || {}).inside, num: () => 0, fmt: v => esc(v), left: true, about: true },
+    pays: { say: 'Pays', get: t => (placeOf(t) || {}).loot, num: () => 0, fmt: v => esc(v), left: true, about: true },
     about: { say: 'About', get: t => t.description, num: () => 0, fmt: v => esc(cut(v)), left: true, about: true }
   };
   for (const s of STATS) COL[s] = { say: s, get: stat(s), num: stat(s), fmt: v => (v > 0 ? '+' : '') + v, tint: s, stat: true };
   const SETS = {
     weapons: ['dmg', 'rate', 'range', 'shots', ...STATS], abilities: ['mp', 'cd', 'dmg', 'range', ...STATS],
-    armour: STATS, rings: STATS, skins: ['cls', 'tier'], consumables: ['about'], places: []
+    armour: STATS, rings: STATS, skins: ['cls', 'tier'], consumables: ['about'], places: ['inside', 'pays']
   };
   const rank = { changed: 0, added: 1, gone: 2 };
 
@@ -431,14 +453,14 @@ var WhatsNew = (function () {
   function menuHtml() {
     return '<span class="pm-menu pn-hide" role="listbox">' + updates.map((x, i) =>
       '<button type="button" role="option" data-upd="' + i + '" class="' + (i === uAt ? 'is-on' : '') + '"><span><b>' + esc(label(x)) + '</b>'
-      + (x.archived && x.season ? ' <span class="nm">' + esc(data.notes.title) + '</span>' : '') + '</span>'
+      + (x.season && notesOf(x) ? ' <span class="nm">' + esc(notesOf(x).title) + '</span>' : '') + '</span>'
       + (x.latest ? '<em>Latest</em>' : x.archived ? '<em class="is-soft">Notes</em>' : '') + '<small>' + esc(x.from ? fmt(x.from, x.to) : '') + '</small></button>').join('') + '</span>';
   }
   function headerDraw() {
-    const u = upd(), notes = data.notes || {};
+    const u = upd(), notes = notesOf(u) || {};
     const h1 = $('newsTitle'), sub = $('newsHead'), sel = $('newsUpd');
     if (h1) h1.innerHTML = '<a class="title" href="#news" data-at="0">' + esc(titleOf(u)) + '</a>';
-    if (sub) sub.innerHTML = u.archived ? esc(notes.subtitle || '') + ' <span class="wn-dim">· ' + esc(notes.date || '') + '</span>' : esc(fmt(u.from, u.to));
+    if (sub) sub.innerHTML = notesOf(u) ? esc(notes.subtitle || '') + ' <span class="wn-dim">· ' + esc(notes.date || '') + '</span>' : esc(fmt(u.from, u.to));
     if (sel) {
       sel.hidden = updates.length < 2;
       sel.innerHTML = '<button type="button" class="pm-upd" data-menu aria-haspopup="listbox" aria-expanded="' + menuOpen + '">' + esc(label(u))
@@ -448,70 +470,207 @@ var WhatsNew = (function () {
   function tabsHtml() {
     const u = upd(), tab = (p, icon, say, count, cls) => '<button type="button" data-page="' + p + '" class="' + (cls || '') + (page() === p ? ' is-on' : '') + '">'
       + (icon ? '<span class="pic">' + icon + '</span>' : '') + esc(say) + (count !== undefined ? ' <small>' + count + '</small>' : '') + '</button>';
+    const worn = new Set();
     return '<div class="pm-tabs">' + tab('overview', '⌂', 'Overview', undefined, 'home')
-      + (u.archived ? tab('summary', '', 'Summary', undefined, 'story') + groups.map(([g, say]) => {
-        const first = lead(g, 1)[0];
+      + (notesOf(u) ? tab('summary', '', 'Summary', undefined, 'story') : '') + (u.archived ? groups.map(([g, say]) => {
+        const first = faceOf(g) || lead(g, 24).find(i => !worn.has(fileOf(i.t))) || lead(g, 1)[0];
+        if (first) worn.add(fileOf(first.t));
         return tab(g, first ? picture(first.t, 24, 3) : '', say, inGroup(g).length);
       }).join('') : '') + '</div>';
   }
 
-  /* ---------------- the bar for what the pointer is on ---------------- */
-  const capHtml = i => {
-    if (!i) return '<span class="mute">Point at one</span>';
-    const t = i.t, kept = pinned === i.n, table = pages.includes(i.g);
-    return '<span class="pn-stage">' + picture(t, 56, 7) + '</span><div class="body"><div class="top"><p class="pn-kind">' + esc(kindOf(t)) + ' · ' + esc(i.label) + '</p>'
-      + '<span class="go"><span class="hint">' + (kept ? 'Kept · click again to let go' : 'Click to keep') + '</span>' + (table ? '<button type="button" data-find="' + i.n + '">In the table</button>' : '')
-      + (t.__id ? '<button type="button" data-card="' + i.n + '">Index card</button>' : '') + '</span></div>'
-      + '<h3>' + esc(nameOf(t)) + (i.why === 'added' ? '' : whyBadge(i.why)) + '</h3>' + (t.description ? '<p class="d">' + esc(t.description) + '</p>' : '')
-      + '<p class="pn-line">' + (i.why === 'changed' ? diffHtml(t) : '') + figureHtml(t) + pills(t) + '</p></div>';
-  };
-  const capBox = () => '<div class="pm-cap' + (pinned !== null ? ' is-pinned' : '') + '" id="newsCap">' + capHtml(pinned !== null ? byN.get(pinned) : null) + '</div>';
-  const showCap = i => { const c = $('newsCap'); if (c) c.innerHTML = capHtml(i); };
-
-  /* ---------------- the Crucible and the Blood Ritual, in the overview ---------------- */
-  const statsHtml = u => u.stats && u.stats.length ? '<div class="pc-chips">' + u.stats.map(statChip).join('') + '</div>' : '';
+  /* ---------------- the Crucible and the Blood Ritual ---------------- */
   const bonusHtml = u => ['loot', 'bxp', 'xp'].filter(k => (u.bonuses || {})[k] !== undefined).map(k => '<span class="pc-fig"><b>+' + u.bonuses[k] + '%</b><i>' + BONUS[k] + '</i></span>').join('');
-  const rulesHtml = u => (u.rules || []).map(r => '<p>' + rule(r) + '</p>').join('');
-  const key = s => s.stat + (s.pct ? '%' : '');
-  /* What this Crucible changed from the one before it, in a line. */
-  function sinceHtml(u, prev) {
-    if (!prev) return '';
-    const out = [], pm = new Map(prev.stats.map(s => [key(s), s])), cm = new Map(u.stats.map(s => [key(s), s]));
-    for (const [k, s] of cm) { const p = pm.get(k); if (!p) out.push(statChip(s)); else if (p.value !== s.value) out.push(statChip(p) + '<i>→</i>' + statChip(s)); }
-    for (const [k, p] of pm) if (!cm.has(k)) out.push('<s>' + statChip(p) + '</s>');
-    for (const k of ['loot', 'bxp', 'xp']) {
-      const a = prev.bonuses[k], b = u.bonuses[k];
-      if (a !== b) out.push('<span class="pc-bonus-change"><i>' + BONUS[k] + '</i> <s>' + (a === undefined ? '—' : '+' + a + '%') + '</s>→<b>' + (b === undefined ? '—' : '+' + b + '%') + '</b></span>');
-    }
-    const rules = u.rules.filter(r => !prev.rules.includes(r)).length + prev.rules.filter(r => !u.rules.includes(r)).length;
-    if (rules) out.push('<span class="pc-bonus-change">rules changed</span>');
-    return '<div class="pc-since"><h4>Since ' + esc(label(prev)) + '</h4>' + (out.length ? out.join('') : '<span class="pc-none">nothing changed</span>') + '</div>';
-  }
-  let crGear = [], riGear = [];
-  const gearRow = list => '<span class="pc-gearrow">' + list.map(i => '<span class="pn-stage' + (pinned === i.n ? ' is-on' : '') + '" data-n="' + i.n + '">' + picture(i.t, 24, 3) + '</span>').join('') + '</span>';
+  const signed = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
+  /* What a mode gives, in chips; what it takes, beside them in its own colour; what it pays, in figures. */
   function crucibleBlock(u) {
     if (!u.season) return '';
-    const prev = updates[updates.indexOf(u) + 1] || null;
-    return '<section class="pc-block pc-crucible"><header><h3>Crucible</h3>' + gearRow(crGear) + '</header>'
-      + statsHtml(u) + '<div class="pc-figs is-inline">' + bonusHtml(u) + '</div>'
-      + (u.rules.length ? '<div class="pc-rules">' + rulesHtml(u) + '</div>' : '') + sinceHtml(u, prev) + '</section>';
+    return '<section class="pc-mode pc-crucible"><h3>Crucible</h3>'
+      + '<div class="pc-line">' + (u.stats || []).map(statChip).join('') + (u.rules || []).map(r => '<span class="pc-cost">' + rule(r) + '</span>').join('') + '</div>'
+      + '<div class="pc-figs">' + bonusHtml(u) + '</div></section>';
+  }
+  /*
+   * The Blood Ritual's trade, as one strip of eleven choices: the health each
+   * one costs or gives, the damage it gives or costs, the loot it pays where
+   * it pays any - each cell as strong as its number, so the trade reads at a
+   * glance and the figures are still there to be read.
+   */
+  function ritualChart(r) {
+    const rows = r.choices || [];
+    if (!rows.length) return (r.rules || []).map(x => '<p class="pc-say">' + rule(x) + '</p>').join('');
+    const most = k => Math.max(...rows.map(c => Math.abs(c[k]))) || 1;
+    const hpTop = most('hp'), dmgTop = most('damage'), lootTop = most('loot');
+    const cell = (v, top, good, text) => '<span class="rc-c' + (v === 0 ? ' is-zero' : v > 0 === good ? ' is-good' : ' is-bad') + '" style="--a:' + (Math.abs(v) / top).toFixed(2) + '">' + text + '</span>';
+    const line = (say, cls, cells) => '<span class="rc-say ' + cls + '">' + say + '</span>' + cells.join('');
+    return '<div class="rc-strip">'
+      + line('Health', 'is-hp', rows.map(c => cell(c.hp, hpTop, true, signed(c.hp))))
+      + line('Damage', 'is-dmg', rows.map(c => cell(c.damage, dmgTop, true, signed(c.damage))))
+      + line('Loot', 'is-loot', rows.map(c => cell(c.loot, lootTop, true, c.loot ? '×' + (1 + c.loot / 100) : '·')))
+      + '</div>' + (r.note ? '<p class="rc-key">' + esc(r.note) + '</p>' : '');
   }
   function ritualBlock(u) {
-    if (!u.season || !data.ritual) return '';
-    const r = ritualOf(u);
-    if (!r) return '<section class="pc-block pc-ritual is-off"><header><h3>Blood Ritual</h3></header><p class="pc-off">Not active this season</p></section>';
-    return '<section class="pc-block pc-ritual"><header><h3>Blood Ritual</h3>' + gearRow(riGear) + '</header>' + statsHtml(r) + '<div class="pc-figs is-inline">' + bonusHtml(r) + '</div>'
-      + ((r.rules || []).length ? '<div class="pc-rules">' + rulesHtml(r) + '</div>' : '') + '</section>';
+    const r = u.season && data.ritual ? ritualOf(u) : null;
+    return r ? '<section class="pc-mode pc-ritual"><h3>Blood Ritual</h3>' + ritualChart(r) + '</section>' : '';
+  }
+
+  /* The announcement's own pictures stand in for the game's until the client has been read. */
+  const shot = i => '<img src="' + esc(stripUrl('upcoming/' + i.file)) + '" alt="' + esc(i.say || '') + '"' + (i.say ? ' title="' + esc(i.say) + '"' : '') + ' loading="lazy" draggable="false">';
+  const shotsOf = n => [].concat(...(n.parts || []).map(p => p.images || []));
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const dateSay = iso => { if (!iso) return ''; const d = ymd(iso); return d.d + ' ' + MONTHS[d.m - 1] + ' ' + d.y; };
+
+  /* ---------------- what the pointer is on: a card that follows it ---------------- */
+  const tipHtml = i => '<span class="pn-stage">' + picture(i.t, 64, 8) + '</span><div><p class="pn-kind">' + esc(i.t.__kind || i.label || '') + '</p><b>' + esc(nameOf(i.t)) + '</b>'
+    + (i.t.description ? '<p class="d">' + esc(i.t.description) + '</p>' : '') + '<p class="pn-line">' + figureHtml(i.t) + pills(i.t) + '</p></div>';
+  let tipOn = null;
+  function tipEl() {
+    let el = document.getElementById('newsTip');
+    if (!el) { el = document.createElement('div'); el.id = 'newsTip'; el.className = 'wn-tip'; el.hidden = true; document.body.appendChild(el); }
+    return el;
+  }
+  function showTip(el) {
+    const i = byN.get(+el.dataset.n);
+    if (!i) return;
+    const tip = tipEl();
+    tipOn = el;
+    tip.innerHTML = tipHtml(i);
+    tip.hidden = false;
+    const at = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    const right = at.right + 12 + w < innerWidth;
+    tip.style.left = Math.max(8, right ? at.right + 12 : at.left - 12 - w) + 'px';
+    tip.style.top = Math.max(8, Math.min(innerHeight - h - 8, at.top + at.height / 2 - h / 2)) + 'px';
+  }
+  function hideTip() { tipOn = null; const tip = document.getElementById('newsTip'); if (tip) tip.hidden = true; }
+
+  /* ---------------- a story, told with the blocks its notes ask for ---------------- */
+  const split = (s, by) => String(s || '').split(by).map(x => x.trim()).filter(Boolean);
+  /* A thing by name: from the update first, else from the Index (a creature, a set's skin). */
+  let memo = new Map(), walks = new Map();
+  const named = name => {
+    if (memo.has(name)) return memo.get(name);
+    let i = items.find(x => nameOf(x.t) === name && x.why !== 'gone') || thing(name, 'Index') || null;
+    // A pet skin read from the Index stands still; the pet it dresses walks.
+    if (i && walks.has(name) && !moves(i.t)) { i = Object.assign({}, i, { t: Object.assign({}, i.t, { sprite: walks.get(name), sheet: null }) }); byN.set(i.n, i); }
+    memo.set(name, i);
+    return i;
+  };
+  const tile = (name, cap, aim) => {
+    const i = named(name);
+    return '<span class="st-tile' + (i ? '' : ' is-bare') + '"' + (i ? ' data-n="' + i.n + '"' : '') + '>' + (i ? '<span class="st-pic">' + picture(i.t, aim || 48, 6) + '</span>' : '')
+      + '<b>' + esc(name) + '</b>' + (cap ? '<small>' + tint(cap) + '</small>' : '') + '</span>';
+  };
+  const statKey = s => s === 'HP' ? 'MAXHP' : s === 'MP' ? 'MAXMP' : s;
+  function setBlock(name, bonusOnly) {
+    const r = ix && ix.all.get('set:' + name);
+    if (!r) return '';
+    const skinId = ((r.out || []).find(x => x[0] === 'dresses you as') || [])[1];
+    const skin = !bonusOnly && skinId && ix.all.get(skinId);
+    const steps = Object.entries(r.steps || {});
+    const used = STATS.filter(s => steps.some(([, w]) => w[statKey(s)] !== undefined));
+    // Steps that only take away are a price for wearing the pieces together, and they add up.
+    const price = steps.length > 0 && steps.every(([, w]) => Object.values(w).every(v => v < 0));
+    const say = n => price ? ({ 2: 'Two worn', 3: 'Three worn', 4: 'Four worn' })[n] || n + ' worn' : n === '4' ? 'Full set' : n + ' pieces';
+    const cell = (w, s) => { const v = w[statKey(s)]; return '<td style="color:' + TINT[s] + '">' + (v ? signed(v) : '') + '</td>'; };
+    // Once the story has a stage, the sets in it leave their skin to the stage.
+    const skinI = !staged && skin && named(skin.said || skin.name);
+    return '<article class="st-set' + (price ? ' is-price' : '') + (skin ? '' : ' is-bare') + '">' + (skinI ? '<div class="st-setskin"><span class="st-tile"><span class="st-pic">' + picture(skinI.t, 96, 6) + '</span><b>' + esc(nameOf(skinI.t)) + '</b><small>the full set</small></span></div>' : '')
+      + '<div class="st-setbody"><h4>' + esc(r.said || r.name) + '</h4>' + (price || bonusOnly ? '' : '<div class="st-things is-small">' + (r.pieces || []).map(n => tile(n)).join('') + '</div>')
+      + '<table class="st-bonus"><tr><th></th>' + used.map(s => '<th style="color:' + TINT[s] + '">' + s + '</th>').join('') + '</tr>'
+      + steps.map(([n, w]) => '<tr><td>' + say(n) + '</td>' + used.map(s => cell(w, s)).join('') + '</tr>').join('') + '</table>'
+      + (price ? '<p class="st-note">Each line adds to the one above it.</p>' : '') + '</div></article>';
+  }
+  const BLOCKS = {
+    /* Things by name, each with a caption if the notes give one: "Name::caption; Name". */
+    things: a => {
+      // Three things or fewer are the story's subject, and are shown as such.
+      const list = split(a, ';'), few = list.length <= 3;
+      return '<div class="st-things' + (few ? ' is-few' : '') + '">' + list.map(x => { const [n, c] = x.split('::'); return tile(n.trim(), c && c.trim(), few ? 96 : 48); }).join('') + '</div>';
+    },
+    /* What became what: "Before>After; Before>After". */
+    pairs: a => '<div class="st-pairs">' + split(a, ';').map(x => { const [from, to] = x.split('>').map(s => s.trim()); return '<span class="st-pair">' + tile(from) + '<i>→</i>' + tile(to) + '</span>'; }).join('') + '</div>',
+    /* Side by side: "figure::heading::text;; …"; the figure may be left empty. */
+    cards: a => '<div class="st-cards">' + split(a, ';;').map(x => { const [fig, head, text] = x.split('::').map(s => (s || '').trim()); return '<article class="st-card">' + (fig ? '<em>' + esc(fig) + '</em>' : '') + '<b>' + esc(head) + '</b><p>' + tint(text) + '</p></article>'; }).join('') + '</div>',
+    /* One thing after another: "first;; then;; last". */
+    steps: a => '<ol class="st-steps">' + split(a, ';;').map(x => '<li>' + tint(x) + '</li>').join('') + '</ol>',
+    /* Where in a realm's run something turns up: "Name:15,50,85; Name:40,60,80". */
+    scores: a => '<div class="st-scores">' + split(a, ';').map(x => {
+      const cut = x.lastIndexOf(':'), n = x.slice(0, cut).trim(), i = named(n);
+      return '<div class="st-score"><span class="st-who"' + (i ? ' data-n="' + i.n + '"' : '') + '>' + (i ? '<span class="st-pic">' + picture(i.t, 32, 4) + '</span>' : '') + '<b>' + esc(n) + '</b></span>'
+        + '<span class="st-track">' + split(x.slice(cut + 1), ',').map(p => '<i style="--at:' + parseFloat(p) + '%"><span>' + esc(p) + '%</span></i>').join('') + '</span></div>';
+    }).join('') + '<div class="st-score is-axis"><span></span><span class="st-axis"><span>realm score 0%</span><span>100%</span></span></div></div>',
+    /* A week of the rotation: "dates|Dungeon::modifier::shinies|Dungeon::modifier::shinies". */
+    week: a => {
+      const [when, ...runs] = split(a, '|');
+      return '<div class="st-week"><h4>' + esc(when) + '</h4>' + runs.map(x => {
+        const [where, mod, shinies] = x.split('::').map(s => (s || '').trim());
+        // The dungeon's own portal beside its name; "A & B" for a week that pairs two.
+        const pics = where.split(' & ').map(n => named(n.trim())).filter(Boolean).map(i => '<span class="st-pic" data-n="' + i.n + '">' + picture(i.t, 40, 5) + '</span>').join('');
+        return '<div class="st-run"><div class="st-runhead">' + pics + '<b>' + esc(where) + '</b></div>' + (mod ? '<span class="st-mod">' + tint(mod) + '</span>' : '') + (shinies ? '<small>Shinies · ' + esc(shinies) + '</small>' : '') + '</div>';
+      }).join('') + '</div>';
+    },
+    /* Names to read, not to look at: "heading|a; b; c". A heading saying they are gone strikes them. */
+    list: a => {
+      const cut = a.indexOf('|'), head = a.slice(0, cut).trim();
+      return '<div class="st-list' + (/^(gone|over|removed)/i.test(head) ? ' is-gone' : '') + '"><h4>' + esc(head) + '</h4><p>' + split(a.slice(cut + 1), ';').map(x => '<span>' + esc(x) + '</span>').join('') + '</p></div>';
+    },
+    checks: a => '<ul class="st-checks">' + split(a, ';;').map(x => '<li>' + tint(x) + '</li>').join('') + '</ul>',
+    crucible: () => crucibleBlock(upd()),
+    ritual: () => ritualBlock(upd()),
+    /* The portals the notes say something about: who is inside, what it pays. */
+    places: () => '<div class="st-places">' + Object.entries((notesOf(upd()) || {}).places || {}).map(([n, p]) => {
+      const i = named(n);
+      return '<article class="st-place"' + (i ? ' data-n="' + i.n + '"' : '') + '>' + (i ? '<span class="st-pic">' + picture(i.t, 64, 8) + '</span>' : '')
+        + '<div><b>' + esc(n.replace(/ Portal$/, '')) + '</b><p>' + tint(p.inside) + '</p>' + (p.loot ? '<p class="st-pays">' + tint(p.loot) + '</p>' : '') + '</div></article>';
+    }).join('') + '</div>',
+    /* "Set name", or "Set name|bonus" for its bonus alone when the story has shown its pieces already. */
+    /* Skins to try, not to open: "Name::caption; Name". The first is on the stage; the others wait beside it. */
+    skins: a => {
+      const list = split(a, ';').map(x => { const [n, c] = x.split('::'); return { n: n.trim(), c: c && c.trim() }; });
+      const on = Math.min(skinAt, list.length - 1);
+      staged = true;
+      return '<div class="st-skins"><div class="st-skinpick">' + list.map((s, k) => {
+        const i = named(s.n);
+        return '<button type="button" class="st-skinbtn' + (k === on ? ' is-on' : '') + '" data-skin-pick="' + k + '" data-skin-id="' + esc((i && i.t.__id) || '') + '">'
+          + (i ? '<span class="st-pic">' + picture(i.t, 48, 6) + '</span>' : '') + '<span><b>' + esc(s.n) + '</b>' + (s.c ? '<small>' + tint(s.c) + '</small>' : '') + '</span></button>';
+      }).join('') + '</div><div class="st-viewer" id="newsStoryViewer">' + (stageOn ? '<p class="pm-wait">Loading the stage</p>' : launchHtml(named(list[on].n))) + '</div></div>';
+    },
+    /* A heading and the things under it, smaller: "Heading|Name::caption; Name". */
+    group: a => {
+      const cut = a.indexOf('|');
+      return '<div class="st-group"><h4>' + esc(a.slice(0, cut).trim()) + '</h4><div class="st-things is-small">'
+        + split(a.slice(cut + 1), ';').map(x => { const [n, c] = x.split('::'); return tile(n.trim(), c && c.trim(), 40); }).join('') + '</div></div>';
+    },
+    set: a => { const [name, only] = split(a, '|'); return setBlock(name, only === 'bonus'); }
+  };
+  /* The things a story's blocks name, for its line in the list. */
+  function storyThings(p) {
+    const out = [], seen = new Set();
+    const add = n => { const i = named(n); if (i && !seen.has(i.n) && hasArt(i.t)) { seen.add(i.n); out.push(i); } };
+    for (const s of p.shows || []) {
+      if (s.kind === 'things' || s.kind === 'skins') split(s.args, ';').forEach(x => add(x.split('::')[0].trim()));
+      else if (s.kind === 'group') split(s.args.slice(s.args.indexOf('|') + 1), ';').forEach(x => add(x.split('::')[0].trim()));
+      else if (s.kind === 'week') split(s.args, '|').slice(1).forEach(x => x.split('::')[0].split(' & ').forEach(n => add(n.trim())));
+      else if (s.kind === 'pairs') split(s.args, ';').forEach(x => add(x.split('>').pop().trim()));
+      else if (s.kind === 'scores') split(s.args, ';').forEach(x => add(x.slice(0, x.lastIndexOf(':')).trim()));
+      else if (s.kind === 'places') Object.keys((notesOf(upd()) || {}).places || {}).forEach(add);
+      else if (s.kind === 'set') { const r = ix && ix.all.get('set:' + s.args.trim()); if (r) (r.pieces || []).forEach(add); }
+    }
+    return out;
   }
 
   /* ---------------- the overview ---------------- */
   function overviewHtml() {
     const u = upd(), notes = data.notes || {};
-    const modes = (crucibleBlock(u) + ritualBlock(u)) ? '<div class="pc-stack">' + crucibleBlock(u) + ritualBlock(u) + '</div>' : '';
+    const modes = crucibleBlock(u) + ritualBlock(u);
+    const told = !u.archived && notesOf(u);
+    if (told) {
+      return '<section class="card pm-card"><div class="pm-cover pm-over"><div class="text pn-hide"><p class="pm-kick">' + esc(told.subtitle || '') + ' · ' + esc(dateSay(told.date)) + '</p><h2 class="pm-title">' + esc(told.title) + '</h2>'
+        + '<p class="pm-lede">' + tint(told.lede || '') + '</p>' + modes + '</div>'
+        + '<div class="pm-right"><p class="pm-count">From the announcement, until the game\'s own pictures are read</p><div class="pm-mosaic is-shots">' + shotsOf(told).map(i => '<span class="wn-shot">' + shot(i) + '</span>').join('') + '</div></div></div></section>';
+    }
     if (!u.archived) {
-      return '<section class="card pm-card"><div class="pm-cover pm-over"><div class="text pn-hide"><h2 class="pm-title">' + esc(label(u)) + '</h2><p class="pm-blurb">' + esc(fmt(u.from, u.to)) + '</p>'
-        + '<p class="pm-lede">No record of what this update brought was kept.</p></div>'
-        + '<div class="pm-right is-full">' + modes + capBox() + '</div></div></section>';
+      return '<section class="card pm-card"><div class="pm-cover pm-over"><div class="text pn-hide"><p class="pm-kick">' + esc(fmt(u.from, u.to)) + '</p><h2 class="pm-title">' + esc(label(u)) + '</h2>'
+        + '<p class="pm-lede">' + (u.latest ? 'What this update brings has not been read from the game yet.' : 'No record of what this update brought was kept.') + '</p>' + modes + '</div></div></section>';
     }
     // A taste of every kind in turn, things that move first, no picture twice.
     const lists = groups.map(([g]) => inGroup(g).filter(i => i.why !== 'gone' && hasArt(i.t)).sort((x, y) => moves(y.t) - moves(x.t)));
@@ -523,27 +682,32 @@ var WhatsNew = (function () {
         if (pos[k] < list.length && shown.length < 72) { const i = list[pos[k]++]; seen.add(fileOf(i.t)); shown.push(i); more = true; }
       });
     }
-    return '<section class="card pm-card"><div class="pm-cover pm-over"><div class="text pn-hide"><h2 class="pm-title">' + esc(notes.title) + '</h2><p class="pm-blurb">' + esc(notes.subtitle || '')
-      + ' <span class="wn-dim">· ' + esc(notes.date || '') + '</span></p>'
-      + '<p class="pm-lede">' + tint(notes.lede || '') + '</p>' + numbers() + modes + '</div>'
-      + '<div class="pm-right"><div class="pm-mosaic">' + shown.map(i => '<span class="pn-stage' + (pinned === i.n ? ' is-on' : '') + '" data-n="' + i.n + '">' + picture(i.t, 56) + '</span>').join('')
-      + '</div>' + capBox() + '</div></div></section>';
+    const by = w => items.filter(i => i.why === w && i.g !== 'extra').length;
+    const count = '<b>' + by('added') + '</b> new' + (by('changed') ? ' · <b>' + by('changed') + '</b> changed' : '') + (by('gone') ? ' · <b>' + by('gone') + '</b> gone' : '');
+    return '<section class="card pm-card"><div class="pm-cover pm-over"><div class="text pn-hide"><p class="pm-kick">' + esc(notes.subtitle || '') + ' · ' + esc(dateSay(notes.date)) + '</p>'
+      + '<h2 class="pm-title">' + esc(notes.title) + '</h2><p class="pm-lede">' + tint(notes.lede || '') + '</p>' + modes + '</div>'
+      + '<div class="pm-right"><p class="pm-count">' + count + '</p><div class="pm-mosaic">' + shown.map(i => '<span class="pn-stage" data-n="' + i.n + '">' + picture(i.t, 56) + '</span>').join('')
+      + '</div></div></div></section>';
   }
 
   function summaryHtml() {
-    const all = parts();
+    const told = !upd().archived && notesOf(upd());
+    const all = told ? told.parts : parts();
     if (!all.length) return '<section class="card pm-card"><p class="pm-wait">No account of this update was written.</p></section>';
-    const p = all[Math.min(story, all.length - 1)], found = partThings(p, 30);
+    const p = all[Math.min(story, all.length - 1)], shows = p.shows || [];
+    staged = false;
+    const found = told || shows.length ? [] : partThings(p, 30);
     return '<section class="card pm-card"><div class="pl-story"><nav class="pn-hide">' + all.map((x, i) => {
-      const own = partThings(x, 60);
+      const own = told ? [] : (x.shows || []).length ? storyThings(x) : partThings(x, 60), shots = x.images || [];
       return '<button type="button" data-story="' + i + '" class="' + (i === story ? 'is-on' : '') + '">'
-        + '<span class="sp">' + own.slice(0, 5).map(t => '<span class="pn-stage">' + picture(t.t, 36, 4) + '</span>').join('') + (own.length > 5 ? '<span class="more">+' + (own.length - 5) + '</span>' : '') + '</span>'
-        + '<span><b>' + esc(x.title) + '</b><small>' + esc(x.blurb || '') + '</small></span>'
-        + '<em>' + (own.length ? esc(holds(own)) : x.points.length + ' notes') + '</em></button>';
+        + '<span class="sp">' + shots.slice(0, 5).map(m => '<span class="wn-thumb">' + shot(m) + '</span>').join('') + own.slice(0, 5).map(t => '<span class="pn-stage">' + picture(t.t, 32, 4) + '</span>').join('') + (own.length > 5 ? '<span class="more">+' + (own.length - 5) + '</span>' : '') + '</span>'
+        + '<span><b>' + esc(x.title) + '</b><small>' + esc(x.blurb || '') + '</small></span></button>';
     }).join('') + '</nav>'
-      + '<div class="pl-read"><div class="pl-text pn-hide"><h2>' + esc(p.title) + '</h2><p class="pj">' + esc(p.blurb || '') + '</p><div class="pts">' + p.points.map(x => '<p>' + point(x) + '</p>').join('') + '</div></div>'
-      + '<div class="pl-side figs pn-hide">' + found.map(i => '<button type="button" class="pn-tile' + (pinned === i.n ? ' is-on' : '') + '" data-n="' + i.n + '"><span class="pn-stage">'
-        + picture(i.t, 64) + '</span><span class="t">' + esc(nameOf(i.t)) + '</span></button>').join('') + '</div>' + capBox() + '</div></div></section>';
+      + '<div class="pl-read' + (shows.length ? ' is-told' : '') + '"><div class="pl-text pn-hide"><header class="st-head"><h2>' + esc(p.title) + '</h2><p class="pj">' + esc(p.blurb || '') + '</p></header>'
+      + (p.flow ? p.flow.map(f => f.show ? (BLOCKS[f.show.kind] || (() => ''))(f.show.args || '') : '<p class="st-prose">' + point(f.point) + '</p>').join('')
+        : p.points.length ? '<div class="pts">' + p.points.map(x => '<p>' + point(x) + '</p>').join('') + '</div>' : '') + '</div>'
+      + (found.length || (p.images || []).length ? '<div class="pl-side figs pn-hide">' + (p.images || []).map(m => '<figure class="wn-fig">' + shot(m) + (m.say ? '<figcaption>' + esc(m.say) + '</figcaption>' : '') + '</figure>').join('') + found.map(i => '<button type="button" class="pn-tile" data-n="' + i.n + '"><span class="pn-stage">'
+        + picture(i.t, 64) + '</span><span class="t">' + esc(nameOf(i.t)) + '</span></button>').join('') + '</div>' : '') + '</div></div></section>';
   }
 
   function tableHtml(g) {
@@ -571,14 +735,13 @@ var WhatsNew = (function () {
       return '<td class="' + (c.left ? 'l' : '') + (c.stat && v < 0 ? ' pl-cut' : '') + (c.about ? ' pl-about' : '') + '">' + c.fmt(v) + '</td>';
     };
     const rows = list.map(i => {
-      const isOpen = open.has(i.n);
-      return '<tr class="pl-row pn-row' + (isOpen ? ' is-open' : '') + (i.why === 'gone' ? ' is-gone' : '') + '" data-n="' + i.n + '"><td class="art"><span class="cellart">' + picture(i.t, 40, 5) + '</span></td>'
+      return '<tr class="pl-row pn-row' + (i.t.__id ? ' has-card' : '') + (i.why === 'gone' ? ' is-gone' : '') + '" data-n="' + i.n + '"><td class="art"><span class="cellart">' + picture(i.t, 40, 5) + '</span></td>'
         + '<td class="l"><span class="pl-name"><b class="nm">' + esc(nameOf(i.t)) + (i.why === 'added' ? '' : whyBadge(i.why)) + '</b><span class="pn-kind">' + esc(kindOf(i.t)) + '</span>'
         + (i.why === 'changed' ? '<span>' + diffHtml(i.t) + '</span>' : '') + '</span></td>' + cols.map(k => cell(k, i.t)).join('') + '</tr>'
-        + (isOpen ? '<tr class="pl-more"><td colspan="' + (cols.length + 2) + '"><div class="wrap"><span class="pn-stage">' + picture(i.t, 96, 12) + '</span>' + detail(i) + '</div></td></tr>' : '');
+        ;
     }).join('');
-    return '<section class="card pm-card"><div class="pl-tools"><span class="pn-seg">' + [['all', 'All'], ['added', 'New'], ['changed', 'Changed'], ['gone', 'Gone']].filter(([k]) => k === 'all' || count[k]).map(([k, say]) =>
-      '<button type="button" data-why="' + k + '" class="' + (why === k ? 'is-on' : '') + '">' + say + '<small>' + count[k] + '</small></button>').join('') + '</span>'
+    return '<section class="card pm-card"><div class="pl-tools">' + (['added', 'changed', 'gone'].filter(k => count[k]).length > 1 ? '<span class="pn-seg">' + [['all', 'All'], ['added', 'New'], ['changed', 'Changed'], ['gone', 'Gone']].filter(([k]) => k === 'all' || count[k]).map(([k, say]) =>
+      '<button type="button" data-why="' + k + '" class="' + (why === k ? 'is-on' : '') + '">' + say + '<small>' + count[k] + '</small></button>').join('') + '</span>' : '')
       + '<input class="pn-find" id="newsFind" type="search" placeholder="Search" value="' + esc(q) + '" autocomplete="off"><span class="grow"></span><span class="pl-count">' + list.length + ' of ' + list0.length + '</span></div>'
       + '<div class="pl-scroll pn-hide" id="newsScroll"><table class="pl-table"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div></section>';
   }
@@ -604,13 +767,20 @@ var WhatsNew = (function () {
     const scroller = $('newsScroll');
     const sc = keep && scroller ? scroller.scrollTop : 0;
     const field = document.activeElement && document.activeElement.id === 'newsFind' ? document.activeElement.selectionStart : -1;
+    const nav = app.querySelector('.pl-story > nav'), navAt = keep && nav ? nav.scrollTop : 0;
     const p = page();
     const body = p === 'overview' ? overviewHtml() : p === 'summary' ? summaryHtml() : tableHtml(p);
     headerDraw();
+    hideTip();
+    const staged = !!$('newsStoryViewer');
+    if (staged && window.SkinViewer && drawerEl() && drawerEl().hidden) window.SkinViewer.unmount();
     app.innerHTML = tabsHtml() + body + navHtml();
+    if ($('newsStoryViewer') && stageOn) stageSkin();
     if (fresh) { const c = app.querySelector('.pm-card'); if (c) c.classList.add('is-in'); fresh = false; }
     const s = $('newsScroll');
     if (s && keep) s.scrollTop = sc;
+    const nav2 = app.querySelector('.pl-story > nav');
+    if (nav2 && navAt) nav2.scrollTop = navAt;
     if (field >= 0) { const f = $('newsFind'); if (f) { f.focus(); f.setSelectionRange(field, field); } }
     if (typeof requestAnimationFrame === 'function') requestAnimationFrame(fitMosaic);
   }
@@ -647,11 +817,27 @@ var WhatsNew = (function () {
     try { target = JSON.parse(decodeURIComponent(door.dataset.skinTarget)); } catch (e) { return noSkin(); }
     return skinFor(target);
   }
+  /*
+   * On the cover, the card takes the place of the pictures it was opened from:
+   * the title, the lede and the season's modes stay in view beside it.
+   */
+  function dock() {
+    const drawer = drawerEl(), right = app && app.querySelector('.pm-right'), card = right && right.closest('.pm-card');
+    if (!drawer) return;
+    const docked = page() === 'overview' && card && innerWidth > 1040;
+    drawer.classList.toggle('is-docked', !!docked);
+    if (docked) {
+      const c = card.getBoundingClientRect(), r = right.getBoundingClientRect();
+      Object.assign(drawer.style, { top: c.top + 'px', left: (r.left - 14) + 'px', width: (c.right - r.left + 14) + 'px', height: c.height + 'px', right: 'auto', bottom: 'auto' });
+    } else for (const k of ['top', 'left', 'width', 'height', 'right', 'bottom']) drawer.style[k] = '';
+  }
+  if (typeof window !== 'undefined') window.addEventListener('resize', () => { const d = drawerEl(); if (d && !d.hidden) dock(); });
   async function showCard(id) {
     const drawer = drawerEl(), host = $('newsIndexCard');
     if (!drawer || !host) return;
     const mine = ++ask;
     drawer.hidden = false;
+    dock();
     host.innerHTML = '<p class="pm-wait">Loading</p>';
     noSkin();
     let got = null;
@@ -674,37 +860,83 @@ var WhatsNew = (function () {
     if (drawer) drawer.hidden = true;
     noSkin();
     if (window.SkinViewer) window.SkinViewer.unmount();
+    // The story's own stage gave the viewer to the card; it takes it back.
+    if ($('newsStoryViewer') && stageOn) stageSkin();
+  }
+
+  /*
+   * A story that shows skins shows them on the Skin Viewer's own stage, in the
+   * story itself: walk with it, shoot with it. The Index card adds nothing a
+   * reader of a skin wants, so a skin there is tried, never opened.
+   */
+  let skinAt = 0, storyStage = 0, staged = false, stageOn = false;
+  /* The stage is heavy: until it is asked for, the skin waits on a poster that says it can be tried. */
+  const launchHtml = i => '<button type="button" class="st-launch" data-skin-launch>' + (i ? '<span class="st-pic">' + picture(i.t, 144, 9) + '</span>' : '')
+    + '<b>Try it on the stage</b><small>walk about with it, and shoot</small></button>';
+  const targets = new Map();
+  async function targetOf(id) {
+    if (targets.has(id)) return targets.get(id);
+    let target = null;
+    try {
+      const got = typeof RealmIndex !== 'undefined' ? await RealmIndex.card(id) : null;
+      const door = got && new DOMParser().parseFromString(got.html, 'text/html').querySelector('[data-skin-target]');
+      if (door) target = JSON.parse(decodeURIComponent(door.dataset.skinTarget));
+    } catch (e) { target = null; }
+    targets.set(id, target);
+    return target;
+  }
+  async function stageSkin() {
+    const root = $('newsStoryViewer'), on = app && app.querySelector('.st-skinbtn.is-on');
+    if (!root || !on || !window.SkinViewer) { if (root) root.innerHTML = '<p class="pm-wait">The Skin Viewer is not available here</p>'; return; }
+    const mine = ++storyStage;
+    const target = await targetOf(on.dataset.skinId);
+    if (mine !== storyStage || !root.isConnected) return;
+    if (!target) { root.innerHTML = '<p class="pm-wait">No skin to try for this one</p>'; return; }
+    try {
+      root.innerHTML = '';
+      const viewer = await window.SkinViewer.mount(root, { integrated: true, stageOnly: true });
+      if (mine !== storyStage) return;
+      viewer.setActive(true);
+      // The viewer opens on a skin of its own; for a few seconds the one asked for is put back whenever it is not the one shown.
+      const until = Date.now() + 6000;
+      while (Date.now() < until && mine === storyStage && root.isConnected) {
+        const now = viewer.getState ? viewer.getState() : null;
+        if (!now || String(now.skin || '') !== target.id) viewer.select(target);
+        await new Promise(done => setTimeout(done, 300));
+      }
+    } catch (e) { console.error(e); root.innerHTML = '<p class="pm-wait">The skin could not be shown</p>'; }
+  }
+  function pickSkin(k) {
+    skinAt = k;
+    if (!stageOn) return draw(true);
+    app.querySelectorAll('.st-skinbtn').forEach(b => b.classList.toggle('is-on', +b.dataset.skinPick === k));
+    stageSkin();
   }
 
   /* ---------------- what the pointer and the keys do ---------------- */
-  const POINT = '.pm-mosaic [data-n], .pl-read .pn-tile, .pc-gearrow [data-n]';
-  const target = e => { const el = e.target.closest(POINT); return el ? { el, i: byN.get(+el.dataset.n) } : null; };
-
-  function onOver(e) { const t = target(e); if (t && !t.el.contains(e.relatedTarget)) showCap(t.i); }
-  function onOut(e) { const t = target(e); if (t && !t.el.contains(e.relatedTarget)) showCap(pinned !== null ? byN.get(pinned) : null); }
+  const POINT = '.pm-mosaic [data-n], .pl-read [data-n]';
+  function onOver(e) { const el = e.target.closest(POINT); if (el && el !== tipOn && app.contains(el)) showTip(el); }
+  function onOut(e) { const el = e.target.closest(POINT); if (el && !el.contains(e.relatedTarget)) hideTip(); }
   function onInput(e) { if (e.target.id === 'newsFind') { q = e.target.value; draw(true); } }
   function onClick(e) {
-    const el = e.target.closest('[data-menu],[data-upd],[data-card],[data-page],[data-at],[data-step],[data-story],[data-why],[data-sort],[data-find],tr.pl-row,' + POINT);
-    if (!el) return;
+    const el = e.target.closest('[data-skin-launch],[data-skin-pick],[data-menu],[data-upd],[data-card],[data-page],[data-at],[data-step],[data-story],[data-why],[data-sort],tr.pl-row,' + POINT);
+    // The page's own body carries a data-page: only what is inside the module counts.
+    if (!el || !app.contains(el)) return;
+    if (el.dataset.skinLaunch !== undefined) { stageOn = true; const v = $('newsStoryViewer'); if (v) v.innerHTML = '<p class="pm-wait">Loading the stage</p>'; stageSkin(); return; }
+    if (el.dataset.skinPick !== undefined) { pickSkin(+el.dataset.skinPick); return; }
     if (el.dataset.menu !== undefined) { menuOpen = !menuOpen; draw(true); return; }
     if (el.dataset.upd !== undefined) return pick(+el.dataset.upd);
     if (el.dataset.card !== undefined) { const i = byN.get(+el.dataset.card); if (i && i.t.__id) { trail = []; showCard(i.t.__id); } return; }
-    if (el.dataset.find !== undefined) {
-      const i = byN.get(+el.dataset.find);
-      go(pages.indexOf(i.g)); open = new Set([i.n]); draw(false);
-      const r = app.querySelector('.pl-row.is-open'); if (r) r.scrollIntoView({ block: 'center' });
-      return;
-    }
-    if (el.matches(POINT)) {
-      pinned = pinned === +el.dataset.n ? null : +el.dataset.n;
-      app.querySelectorAll(POINT).forEach(x => x.classList.toggle('is-on', +x.dataset.n === pinned));
-      const c = $('newsCap'); if (c) { c.classList.toggle('is-pinned', pinned !== null); c.innerHTML = capHtml(pinned !== null ? byN.get(pinned) : byN.get(+el.dataset.n)); }
+    // A thing in the update opens its own Index card: the page itself has nothing more to say about it.
+    if (el.matches(POINT) || el.matches('tr.pl-row')) {
+      const i = byN.get(+el.dataset.n);
+      if (i && i.t.__id) { hideTip(); trail = []; showCard(i.t.__id); }
       return;
     }
     if (el.dataset.at !== undefined) { e.preventDefault(); return go(+el.dataset.at); }
     if (el.dataset.page) return go(pages.indexOf(el.dataset.page));
     if (el.dataset.step) return go(at + +el.dataset.step);
-    if (el.dataset.story !== undefined) { story = +el.dataset.story; pinned = null; draw(false); return; }
+    if (el.dataset.story !== undefined) { story = +el.dataset.story; skinAt = 0; stageOn = false; pinned = null; draw(true); return; }
     if (el.dataset.why) { why = el.dataset.why; draw(false); return; }
     if (el.dataset.sort) {
       const k = el.dataset.sort;
@@ -712,7 +944,6 @@ var WhatsNew = (function () {
       else sort = sort && sort.col === k ? (sort.dir === 'desc' ? { col: k, dir: 'asc' } : null) : { col: k, dir: 'desc' };
       draw(true); return;
     }
-    if (el.matches('tr.pl-row')) { const n = +el.dataset.n; if (open.has(n)) open.delete(n); else open.add(n); draw(true); }
   }
   /* The window of the Index card: a link inside it opens that record in it, a set's skin door tries the skin. */
   function onCard(e) {
@@ -731,10 +962,10 @@ var WhatsNew = (function () {
   function bind() {
     if (bound) return;
     bound = true;
-    app.addEventListener('mouseover', onOver);
-    app.addEventListener('mouseout', onOut);
     app.addEventListener('input', onInput);
     app.addEventListener('click', onClick);
+    app.addEventListener('mouseover', onOver);
+    app.addEventListener('mouseout', onOut);
     const top = $('newsTop');
     if (top) top.addEventListener('click', onClick);
     const host = $('newsIndexCard');
@@ -803,8 +1034,6 @@ var WhatsNew = (function () {
     ix = await readIndex();
     build();
     groups = GROUPS.filter(([g]) => inGroup(g).length);
-    crGear = ['Robotic Ring of the Crucible', 'Shattered Ring of the Crucible', 'Colossal Ring of the Crucible', 'Corrupted Ring of the Crucible'].map(n => thing(n, 'Crucible')).filter(Boolean);
-    riGear = ((data.ritual && data.ritual.gear) || []).map(n => thing(n, 'Blood Ritual')).filter(Boolean);
     setUpdates();
     draw(false);
     bind();

@@ -214,7 +214,7 @@ const RealmIndex = (function () {
     if (!said) {
       let raw = bundle && bundle.sources && bundle.sources.indexText;
       if (!raw) {
-        raw = await fetch('assets/index/index.json').then(r => r.text())
+        raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.text())
           .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
       }
       if (!raw) return false;
@@ -2781,8 +2781,10 @@ const RealmIndex = (function () {
     // The sheet's address, once, for every picture on the page to point at.
     {
       const bundle = window.ROTMG_BUNDLE;
+      // Asked for by the Index's own build, so a cached sheet from another build never lends its pictures.
+      const ix = window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index, mark = ix && (ix.built || (ix.from && ix.from.build));
       el('ixBody').style.setProperty('--ix-sheet', 'url('
-        + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
+        + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')) + ')');
     }
     await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses()]);
     if (classic()) buildFacets();

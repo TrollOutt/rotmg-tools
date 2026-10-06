@@ -3592,14 +3592,29 @@ function newsMadeOn(index) {
   return (index.notes && index.notes.date) || index.made || null;
 }
 
+/*
+ * The way into What's New says which update it opens on, in the update's own
+ * words - so it is never last season's title on this season's page.
+ */
+function dressNewsBell(index) {
+  const bell = document.querySelector('.news-bell');
+  const notes = index && index.notes;
+  if (!bell || !notes) return;
+  const text = bell.querySelector('.news-bell-text'), kick = bell.querySelector('.news-bell-kick');
+  if (text && notes.title) text.textContent = notes.title;
+  if (kick && notes.subtitle) kick.textContent = notes.subtitle.split(' — ')[0];
+}
+
 async function loadUpdateMade() {
   if (BUNDLE) {
     state.updateMade = newsMadeOn((BUNDLE.whatsNew || {}).index);
+    dressNewsBell((BUNDLE.whatsNew || {}).index);
     return;
   }
   try {
-    const news = await fetch('assets/whats-new/index.json').then(response => response.json());
+    const news = await fetch('assets/whats-new/index.json', { cache: 'no-cache' }).then(response => response.json());
     state.updateMade = newsMadeOn(news);
+    dressNewsBell(news);
   } catch (error) {
     /* only the date line loses, and it says nothing rather than a wrong one */
   }
@@ -3619,10 +3634,13 @@ function ensureItemArt() {
     return Promise.resolve(state.itemArt);
   }
 
-  itemArtLoading = fetch('assets/index/item-art.json')
+  itemArtLoading = fetch('assets/index/item-art.json', { cache: 'no-cache' })
     .then(response => response.json())
     .then(art => {
       state.itemArt = art;
+      // The sheet these rectangles were cut for, never a cached one from another build.
+      const mark = !(BUNDLE && BUNDLE.indexSheet) && (art.from && art.from.build ? art.from.build + '-' : '') + (art.built || '');
+      if (mark) document.documentElement.style.setProperty('--sheet', 'url(assets/index/sheet.png?v=' + encodeURIComponent(mark) + ')');
       return art;
     })
     .catch(() => null);
@@ -5996,7 +6014,8 @@ const MODULES = [
     line: 'What feeding a pet really costs.',
     detail: 'Work out what a feed is worth at each rank, what carrying a pet '
           + 'to the next one takes, and which food is the cheapest way there.',
-    art: 'assets/whats-new/fancy-turtle-pet-skin-stand.png' }
+    // Kept with the other cards' pictures: What's New is rebuilt every update and this turtle was last season's.
+    art: 'Page Art/Pet Fame.png' }
 ];
 
 const NS = 'http://www.w3.org/2000/svg';
