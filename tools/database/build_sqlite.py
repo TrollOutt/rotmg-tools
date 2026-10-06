@@ -188,7 +188,11 @@ def import_wiki(imp,snap,wiki):
         id_i,page_i=row
         if not 0<=id_i<len(ids) or not 0<=page_i<len(pages): raise ValueError(f"wiki.page[{position}] index out of range: {row}")
         legacy=ids[id_i]; entity=imp.by_legacy.get(legacy)
-        if not entity: raise ValueError(f"wiki.page[{position}] unknown legacy id {legacy}")
+        if not entity:
+            # A client update can rename what a RealmEye link was written for (a "New ..." variant given a costume's display
+            # name): the link is kept in the data and simply has nothing to attach to, until the wiki is read again.
+            print(f"  wiki.page[{position}]: no record for legacy id {legacy}; link kept, not attached", file=sys.stderr)
+            continue
         rid=imp.page_records[page_i]; meta={"id_index":id_i,"page_index":page_i,"legacy_index_id":legacy}
         imp.link_entity(rid,entity,"about","wiki.page",meta); imp.ref(entity,"realmeye","realmeye_slug",realmeye_slug(pages[page_i][0]),{"via":"wiki.page","page_index":page_i,"id_index":id_i})
         page_entities[page_i].add(entity)

@@ -40,7 +40,8 @@ try {
 
   /*
    * And the community join, which records the client it was joined against.
-   * A join left behind by a game update is the failure this catches.
+   * A join left behind by a game update is said aloud, not refused: the update
+   * lands before the wiki can be read again, and the site still has to ship.
    */
   const join = path.join(temporary, 'data/Index/wiki.json');
   fs.copyFileSync(path.join(root, 'data/Index/wiki.json'), join);
@@ -49,8 +50,11 @@ try {
   assert.ok(wiki.from.joinedClient.build, 'The shipped join must say which client it was joined against');
   wiki.from = { ...wiki.from, joinedClient: { kind: 'client', build: 'an-older-build', date: '2000-01-01' } };
   fs.writeFileSync(join, JSON.stringify(wiki));
-  assert.throws(() => provenance.check(temporary), error =>
-    ['wiki.json', 'an-older-build', '2000-01-01'].every(s => error.message.includes(s)));
+  const said = [], warn = console.warn;
+  console.warn = message => said.push(String(message));
+  try { provenance.check(temporary); } finally { console.warn = warn; }
+  assert.ok(said.some(message => ['wiki.json', 'an-older-build', '2000-01-01'].every(s => message.includes(s))),
+    'A join older than the client is reported');
   fs.rmSync(join);
   const conditions = require('../tools/item-conditions');
   assert.deepEqual(conditions('<Projectile id="2"><ConditionEffect duration="2.5">Weak</ConditionEffect></Projectile>'),

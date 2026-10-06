@@ -1,4 +1,4 @@
-## provenance: {"built":"2026-09-09T16:51:54.387Z","from":{"kind":"client","build":"15a3ce058fe946c792c23558bdb10e2c","date":"2026-09-09"},"tool":"tools/read-client.js"}
+## provenance: {"built":"2026-10-06T14:05:04.384Z","from":{"kind":"client","build":"35b35f4a4feb47f98290e2f7628e90d8","date":"2026-10-06"},"tool":"tools/read-client.js"}
 ## What an installed RotMG client says about enchanting, as of the build below.
 ##
 ## Written by tools/read-client.js --snapshot. Its only purpose is to be
@@ -8,7 +8,7 @@
 ## One sorted line per fact, so git can diff it as well.
 ## Format: kind|name|fields…
 
-build|15a3ce058fe946c792c23558bdb10e2c
+build|35b35f4a4feb47f98290e2f7628e90d8
 ench|ALIEN_NEO_ONSHOOT_ATTACK|Neo Alien OnShoot Attack Boost|7500||ALIEN,ARMOR,ATTACK,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCATTACK,RING,STATBOOST,WEAPON|ONSHOOTSTAT,PROCATTACK|EQUIPMENT|ABILITY,NEO_ALIEN
 ench|ALIEN_NEO_ONSHOOT_ATTACK_ROLLABLE|Neo Alien OnShoot Attack Boost|10000||ALIEN,ARMOR,ATTACK,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCATTACK,RING,ROLLABLE,STATBOOST,WEAPON|ONSHOOTSTAT,PROCATTACK|EQUIPMENT,NEO_ALIEN|ABILITY
 ench|ALIEN_NEO_ONSHOOT_DEFENSE|Neo Alien OnShoot Defense Boost|7500||ALIEN,ARMOR,DEFENSE,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCDEFENSE,RING,STATBOOST,WEAPON|ONSHOOTSTAT,PROCDEFENSE|EQUIPMENT|ABILITY,NEO_ALIEN
@@ -680,6 +680,10 @@ item|2BardST0|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|2BardST1|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|2BardST2|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|2BardST3|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|2DruidST0|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|2DruidST1|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|2DruidST2|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|2DruidST3|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|2HKnightST0|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|2HKnightST1|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|2HKnightST2|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -764,6 +768,10 @@ item|3BardST0|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment P
 item|3BardST1|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|3BardST2|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|3BardST3|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|3DruidST0|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|3DruidST1|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|3DruidST2|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|3DruidST3|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|3HuntressST0|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|3HuntressST1|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|3HuntressST2|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1292,6 +1300,7 @@ item|Doom's Emblem Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment
 item|Double Vision Darts|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Double Vision Darts Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Draconic Insignia|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Draconic Insignia Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Dragon Mace|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Dragon Slayer|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Dragonbone Tachi|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1391,6 +1400,7 @@ item|Eternal Graved Great Sword|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Defaul
 item|Eternal Snowflake Wand|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Eternal Star|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Ethereal Happi|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Ethereal Happi Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Ever Green Skull|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Evergreen Dagger|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Evergreen Dagger Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1424,6 +1434,7 @@ item|Flame Burst Spell|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Encha
 item|Flip-Flops|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Floral Corset|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Flowering Kimono|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Flowering Kimono Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Fool's Prism|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Fooled Prism|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Foramite Staff|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1528,6 +1539,10 @@ item|HBardST0|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment P
 item|HBardST1|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|HBardST2|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|HBardST3|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|HDruidST0|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|HDruidST1|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|HDruidST2|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|HDruidST3|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Heart Jewel Blades|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Heart of Gold Prism|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Heart of the Eternal Pyre|purpleDust|1,1,1,0.125|50,65,80,100|Default Enchantment Pool
@@ -1676,6 +1691,7 @@ item|Iron Quiver|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment
 item|Iron Shield|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Ironwood Bow|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Irradiance Sheath|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Irradiance Sheath Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Jade Beetle|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Jade Storm|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Jade Storm Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1968,6 +1984,7 @@ item|Oryxmas Ornament: Weak|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default En
 item|Overclocking Amulet|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Overclocking Amulet Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Overwhelming Axehead|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Overwhelming Axehead Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Painbow|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|PaladinST0|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|PaladinST1|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2263,6 +2280,7 @@ item|Sacramental Crossbow|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Ench
 item|Sadamune|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sadamune (SB)|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sage's Wakibiki|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sage's Wakibiki Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Saint Nicolas' Blade|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sakura Wakizashi|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Salju|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2495,6 +2513,7 @@ item|Steel Shield|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantmen
 item|Steel Wakizashi|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Stingray Poison|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Stingray Poison (SB)|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Stoneborn Husk|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Studded Leather Armor|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sulfuric Stone|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sulfuric Stone Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2522,6 +2541,13 @@ item|Swarmlord's Sigil Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Ench
 item|Sweetcut Wakizashi|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sweetener Ring|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sweetheart Taichi|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Bow|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Dagger|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Katana|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Ring|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Staff|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Sword|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Sweettreats Wand|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Swim Tube|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sword of Acclaim|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Sword of Acclaim (SB)|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2546,6 +2572,7 @@ item|tD Seal Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|tD Waki|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|tD Waki Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Tectonus|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Teratoma|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Tezcacoatl's Tail|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Tezcacoatl's Tail Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Tezutsu Hanabi|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2643,7 +2670,7 @@ item|Venerable Doom Bow|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantm
 item|Venerable Resurrected Warrior's Armor|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Venerable Ring of the Nile|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Venerable Ring of the Pyramid|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
-item|Venerable Ring of the Sphinx|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Venerable Ring of the Sphinx|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Venerable Robe of the Mad Scientist|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Venerable Spirit Dagger|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Venerable Staff of the Crystal Serpent|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool

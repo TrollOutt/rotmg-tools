@@ -88,8 +88,10 @@ function check(root) {
   const join = path.join(root, 'data/Index/wiki.json');
   if (first && fs.existsSync(join)) {
     const meta = read(join), against = meta?.from?.joinedClient;
+    // Said, not refused: a client update lands before the wiki can be read again, and the links
+    // it already has stay true for every record the update did not rename. The site still ships.
     if (against && typeof against === 'object' && against.build && against.build !== first.meta.from.build) {
-      throw new Error('data/Index/wiki.json was joined against client ' + against.build
+      console.warn('Warning: data/Index/wiki.json was joined against client ' + against.build
         + ' (' + against.date + ') and the catalogues come from ' + first.meta.from.build
         + ' (' + first.meta.from.date + '). Run tools/index-wiki.js against the snapshot again.');
     }

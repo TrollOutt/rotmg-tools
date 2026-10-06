@@ -1,4 +1,34 @@
-## provenance: {"built":"2026-09-09T16:51:54.387Z","from":{"kind":"client","build":"15a3ce058fe946c792c23558bdb10e2c","date":"2026-09-09"},"tool":"tools/read-client.js"}
+## provenance: {"built":"2026-10-06T14:05:04.384Z","from":{"kind":"client","build":"35b35f4a4feb47f98290e2f7628e90d8","date":"2026-10-06"},"tool":"tools/read-client.js"}
+## 2026-10-06 — build 35b35f4a4feb47f98290e2f7628e90d8
+~ item: Venerable Ring of the Sphinx: slot chances 0.5,0.375,0.25,0.125 -> 1,0.375,0.25,0.125
++ item: 2DruidST0
++ item: 2DruidST1
++ item: 2DruidST2
++ item: 2DruidST3
++ item: 3DruidST0
++ item: 3DruidST1
++ item: 3DruidST2
++ item: 3DruidST3
++ item: Draconic Insignia Shiny
++ item: Ethereal Happi Shiny
++ item: Flowering Kimono Shiny
++ item: HDruidST0
++ item: HDruidST1
++ item: HDruidST2
++ item: HDruidST3
++ item: Irradiance Sheath Shiny
++ item: Overwhelming Axehead Shiny
++ item: Sage's Wakibiki Shiny
++ item: Stoneborn Husk
++ item: Sweettreats Bow
++ item: Sweettreats Dagger
++ item: Sweettreats Katana
++ item: Sweettreats Ring
++ item: Sweettreats Staff
++ item: Sweettreats Sword
++ item: Sweettreats Wand
++ item: Teratoma
+
 ## 2026-09-09 — build 15a3ce058fe946c792c23558bdb10e2c
 = nothing moved
 
