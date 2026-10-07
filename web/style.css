@@ -6615,6 +6615,25 @@ body.globe-wide #atlasIndex:not([hidden]) {
 .ixb-tile.is-on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .ixb-tile > span:not(.ixb-art):not(.ixb-glyph):not(.ixb-vars) { font-size: calc(11.5px * var(--kt, 1)); line-height: 1.15; }
 .ixb-tile .ixb-vars { justify-content: center; flex-wrap: wrap; }
+/* What a class-and-gear filter found in a dungeon: its best pieces, small. */
+.ixb-loot { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px; }
+.ixb-loot > span { display: inline-flex; }
+.ixb-loot small { font: 10px var(--mono); color: var(--dim); padding-left: 2px; }
+.ixb-tile > .ixb-loot { margin-top: 2px; }
+/* The hover list beside a dungeon: what the filter found there, each piece clickable. */
+.ixb-tip { position: fixed; z-index: 70; width: 330px; max-height: min(72vh, 540px); overflow-y: auto; padding: 8px 6px 6px; border-radius: 12px; border: 1px solid var(--line); background: rgb(var(--panel-rgb) / .98); box-shadow: 0 12px 34px rgb(0 0 0 / .6); }
+.ixb-tip[hidden] { display: none; }
+.ixb-tip-h { display: flex; flex-direction: column; gap: 1px; padding: 0 6px 6px; border-bottom: 1px solid var(--line-soft); margin-bottom: 4px; }
+.ixb-tip-h b { font-size: 14px; }
+.ixb-tip-h span { font-size: 11.5px; color: var(--dim); }
+.ixb-tip-g { display: flex; gap: 6px; align-items: baseline; padding: 6px 6px 2px; font: 700 10.5px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.ixb-tip-g small { color: var(--dim); font-weight: 400; }
+.ixb-tip-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; padding: 3px 6px 3px 3px; border-radius: 9px; border: 1px solid transparent; background: none; cursor: pointer; text-align: left; font: inherit; color: var(--text); }
+.ixb-tip-row:hover, .ixb-tip-row:focus-visible { background: rgb(var(--text-rgb) / .07); border-color: var(--accent); outline: none; }
+.ixb-tip-row b { display: block; font-weight: 600; font-size: 13px; line-height: 1.2; }
+.ixb-tip-row .ixb-cell { width: 34px; height: 34px; }
+.ixb-tip-l { display: flex; flex-wrap: wrap; gap: 2px 8px; margin-top: 1px; font-size: 11.5px; line-height: 1.25; color: var(--muted); }
+.ixb-tip-l b { display: inline; font-size: inherit; font-weight: 600; }
 .ixb-pip { position: absolute; top: 4px; right: 5px; font: 700 10px var(--mono); color: var(--ixb-gold); font-style: normal; }
 #ixbMid :is(.ixb-tile, .ixb-row) :is(.ixb-art, .ixb-pic, .ixb-glyph) { zoom: var(--k, 1); }
 .ixb-sentinel { height: 1px; }

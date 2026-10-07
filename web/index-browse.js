@@ -385,6 +385,7 @@
     for (const id of classes) for (const s of IX.records.get(id).slots || []) if (!IX.holderOf.has(s)) IX.holderOf.set(s, IX.records.get(id));
     IX.domains = out;
     familyOf = null;
+    givesMemo = null;
   }
   IX.domain = id => IX.domains.find(d => d.id === id);
   // A family's section by its id, the gear's abilities taken together included.
@@ -494,7 +495,7 @@
   const VISUAL = new Set(['classes', 'dungeons', 'biomes', 'status', 'sets', 'skins']);
 
   /* ---------------- state, kept in the address ---------------- */
-  const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'scl', 'home', 'open', 'wide'];
+  const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'scl', 'home', 'dcls', 'dh', 'open', 'wide'];
   const S = { tags: new Set(), tech: false };
   function readHash() {
     const hash = location.hash.replace(/^#\/?/, '');
@@ -517,7 +518,7 @@
     if (lastStep !== null && step !== lastStep) history.pushState(null, '', url); else history.replaceState(null, '', url);
     lastStep = step;
   }
-  const FILTERS = ['tier', 'inf', 'gra', 'cls', 'scl', 'home'];
+  const FILTERS = ['tier', 'inf', 'gra', 'cls', 'scl', 'home', 'dcls', 'dh'];
   const clearFilters = () => { for (const k of FILTERS) S[k] = ''; S.tags.clear(); };
 
   /* ---------------- what a line shows, given where it is ---------------- */
@@ -606,7 +607,132 @@
   const hands = new Set(store(HANDS));
 
   /* ---------------- rail ---------------- */
-  const HAND_SAY = { weapon: 'Weapons', ability: 'Abilities', armor: 'Armour', ring: 'Rings' };
+  const HAND_SAY ={ weapon: 'Weapons', ability: 'Abilities', armor: 'Armour', ring: 'Rings' };
+  /*
+   * What a dungeon gives, by class and by hand. RealmEye's word, like every
+   * drop here: the gear its page lists among the notable drops, and the gear
+   * that lists a boss living in that dungeon (or the dungeon itself) as its
+   * source. A part of a dungeon (a boss room, an old version) gives to its
+   * main one. Best first: ST and UT, then the highest tier.
+   */
+  let givesMemo = null;
+  function dungeonGives() {
+    if (givesMemo) return givesMemo;
+    const gear = new Set(IX.domain('gear').ids), by = new Map();
+    const give = (portal, id) => {
+      const home = IX.difficultyOf(portal) ? portal : IX.portalHome(portal) || portal;
+      (by.get(home.id) || by.set(home.id, new Set()).get(home.id)).add(id);
+    };
+    for (const p of IX.list) {
+      if (p.kind !== 'portal') continue;
+      for (const x of (archiveOf(p) || {}).relations || []) if (x.type === 'dungeon_drop_interest' && gear.has(x.to)) give(p, x.to);
+    }
+    for (const id of gear) {
+      for (const x of (archiveOf(IX.records.get(id)) || {}).relations || []) {
+        const from = x.type === 'dropped_by' && x.to && IX.records.get(x.to);
+        if (!from) continue;
+        if (from.kind === 'portal') give(from, id);
+        else if (from.kind === 'enemy') for (const at of (IX.foundIn && IX.foundIn.get(from.id)) || []) { const p = IX.records.get(at); if (p && p.kind === 'portal') give(p, id); }
+      }
+    }
+    givesMemo = new Map([...by].map(([k, ids]) => [k, [...ids].map(id => IX.records.get(id))
+      .sort((a, b) => tierScore(b) - tierScore(a) || String(a.name).localeCompare(b.name))]));
+    return givesMemo;
+  }
+  // The gear a dungeon gives that a class can hold, of one hand or any.
+  const classHolds = (cls, g) => ((IX.records.get(cls) || {}).slots || []).includes(g.slot);
+  const gaveTo = (r, cls, hand) => (dungeonGives().get(r.id) || []).filter(g => (!hand || g.hand === hand) && (!cls || classHolds(cls, g)));
+  // One slot a hand is drawn by: the sword for weapons, the spell for abilities, the leather armour, the ring.
+  const HAND_PIC = { weapon: 1, ability: 11, armor: 6, ring: 9 };
+  // What the filter found in a dungeon, as small pictures, best first.
+  function lootStrip(r, max) {
+    if (r.kind !== 'portal' || !(S.dcls || S.dh)) return '';
+    const found = gaveTo(r, S.dcls, S.dh);
+    if (!found.length) return '';
+    // The hover list names them; a browser tooltip on top of it would only be a second window.
+    return '<span class="ixb-loot">'
+      + found.slice(0, max).map(g => '<span>' + IX.art(g, 16) + '</span>').join('')
+      + (found.length > max ? '<small>+' + (found.length - max) + '</small>' : '') + '</span>';
+  }
+
+  /*
+   * The same list, on hover: a small window beside the dungeon naming what the
+   * filter found, each piece with what it does, to be reached with the pointer
+   * and clicked. It is only ever a preview; a click on the dungeon opens its card.
+   */
+  const num = v => Number.isInteger(v) ? String(v) : String(+Number(v).toFixed(1));
+  const statWord = (k, text) => '<b style="color:' + (STAT_TINT[k] || 'inherit') + '">' + esc(text) + '</b>';
+  // What a piece of gear does, in a line: the shot of a weapon, the cost of an ability, the stats worn.
+  function gearLine(g) {
+    const bits = [], f = (g.fires || [])[0];
+    if ((g.hand === 'weapon' || g.hand === 'ability') && f && f.high) {
+      const shots = g.shots > 1 ? ' ×' + g.shots : '';
+      bits.push('<span>' + num(f.low) + (f.low !== f.high ? '–' + num(f.high) : '') + ' damage' + shots + (g.hand === 'weapon' && f.reach ? ' · range ' + num(f.reach) : '') + '</span>');
+    }
+    if (g.hand === 'ability' && g.mp) bits.push('<span>' + statWord('MAXMP', g.mp + ' mana') + '</span>');
+    const worn = g.worn || {};
+    const stats = STAT_ORDER.filter(k => worn[k]).map(k => statWord(k, (worn[k] > 0 ? '+' : '') + worn[k] + ' ' + STAT_SAY[k]));
+    if (stats.length) bits.push('<span>' + stats.join(' ') + '</span>');
+    if (!bits.length && g.does && g.does[0]) bits.push('<span>' + esc(g.does[0][0]) + '</span>');
+    return bits.join('');
+  }
+  let tipBox = null, tipFrom = null, tipTimer = 0, tipShut = 0;
+  const tipOn = r => r && r.kind === 'portal' && (S.dcls || S.dh);
+  function hideTip() {
+    clearTimeout(tipTimer); clearTimeout(tipShut);
+    tipFrom = null;
+    if (tipBox) tipBox.hidden = true;
+  }
+  function showTip(from) {
+    const r = IX.records.get(from.dataset.pick);
+    const found = tipOn(r) ? gaveTo(r, S.dcls, S.dh) : [];
+    if (!found.length || !from.isConnected) return hideTip();
+    if (!tipBox) {
+      tipBox = document.createElement('div');
+      tipBox.className = 'ixb-tip';
+      tipBox.addEventListener('mouseenter', () => clearTimeout(tipShut));
+      tipBox.addEventListener('mouseleave', () => { clearTimeout(tipShut); tipShut = setTimeout(hideTip, 200); });
+      tipBox.addEventListener('click', e => { const b = e.target.closest('[data-tip-pick]'); if (b) openCard(b.dataset.tipPick); });
+      $('pageIndex').append(tipBox);
+    }
+    const cls = IX.records.get(S.dcls), say = [cls && cls.name, S.dh && HAND_SAY[S.dh]].filter(Boolean).join(' · ');
+    let html = '<div class="ixb-tip-h"><b>' + esc(r.said || r.name) + '</b><span>' + found.length + (found.length === 1 ? ' piece' : ' pieces') + ' · ' + esc(say) + '</span></div>';
+    for (const h of Object.keys(HAND_SAY)) {
+      const list = found.filter(g => g.hand === h);
+      if (!list.length) continue;
+      if (!S.dh) html += '<div class="ixb-tip-g">' + esc(HAND_SAY[h]) + ' <small>' + list.length + '</small></div>';
+      html += list.map(g => { const t = tierOf(g);
+        return '<button type="button" class="ixb-tip-row" data-tip-pick="' + esc(g.id) + '"><span class="ixb-cell">' + IX.art(g, 28) + '</span><span><b>' + esc(g.said || g.name) + '</b>'
+          + '<span class="ixb-tip-l">' + gearLine(g) + '</span></span>' + (t ? '<span class="ixb-tier is-' + t.toLowerCase() + '">' + tierSay(t) + '</span>' : '') + '</button>'; }).join('');
+    }
+    tipBox.innerHTML = html;
+    tipBox.scrollTop = 0;
+    tipBox.hidden = false;
+    tipFrom = from;
+    // Beside the dungeon, on the right where there is room; never cut by the window.
+    const a = from.getBoundingClientRect(), w = tipBox.offsetWidth, h = tipBox.offsetHeight;
+    const left = a.right + w + 12 <= innerWidth ? a.right + 4 : Math.max(8, a.left - w - 4);
+    tipBox.style.left = left + 'px';
+    tipBox.style.top = Math.max(8, Math.min(a.top, innerHeight - h - 8)) + 'px';
+  }
+  const tipTarget = e => e.target.closest('#ixbList .ixb-tile[data-pick], #ixbList .ixb-row[data-pick]');
+  function wireTip() {
+    const mid = $('ixbMid');
+    mid.addEventListener('mouseover', e => {
+      const t = tipTarget(e);
+      if (!t || t === tipFrom) { if (t) clearTimeout(tipShut); return; }
+      if (!tipOn(IX.records.get(t.dataset.pick))) return;
+      clearTimeout(tipTimer); clearTimeout(tipShut);
+      tipTimer = setTimeout(() => showTip(t), tipFrom ? 40 : 180);
+    });
+    mid.addEventListener('mouseout', e => {
+      const t = tipTarget(e);
+      if (!t || t.contains(e.relatedTarget)) return;
+      clearTimeout(tipTimer); clearTimeout(tipShut);
+      tipShut = setTimeout(hideTip, 220);
+    });
+    mid.addEventListener('scroll', hideTip, { passive: true });
+  }
   function rail() {
     const box = $('ixbRail');
     const searching = Boolean(S.q.trim());
@@ -664,6 +790,7 @@
   let pending = [], ctxNow = { d: null }, viewNow = 'rows', familyOf = null, searchFirst = '';
   function mid() {
     const box = $('ixbMid');
+    hideTip();
     if (S.q.trim()) return search(box);
     if (!S.f || !IX.domain(S.f)) return landing(box);
     const d = IX.domain(S.f), g = IX.groupOf(d, S.s);
@@ -678,6 +805,7 @@
     if (S.cls) rows = rows.filter(r => setClass(r) === S.cls);
     if (S.scl) rows = rows.filter(r => scalesOf(r).includes(S.scl));
     if (S.home) rows = rows.filter(r => { const p = placeOf(r); return p && p.id === S.home; });
+    if (d.id === 'dungeons' && (S.dcls || S.dh)) rows = rows.filter(r => gaveTo(r, S.dcls, S.dh).length);
     for (const t of S.tags) if (TAGS[t]) rows = rows.filter(TAGS[t].test);
     results(box, { d, g, all, rows });
   }
@@ -700,7 +828,6 @@
     const homes = d.id === 'enemies' ? count(all.map(placeOf).filter(Boolean).map(p => p.id)) : new Map();
     const homesOrdered = [...homes].sort((a, b) => rankOfPlace(IX.records.get(a[0])) - rankOfPlace(IX.records.get(b[0])) || IX.records.get(a[0]).name.localeCompare(IX.records.get(b[0]).name));
     const tags = Object.entries(TAGS).filter(([k, t]) => t.fams.includes(d.id) && (S.tags.has(k) || all.some(t.test)));
-    const technical = !g && d.id === 'dungeons' ? IX.sidePortals.length : 0;
     // The first option names the filter, so no label is needed beside it.
     // A tint gives each option, and the chosen select, the colour of what it names.
     const select = (key, any, map, label = x => x, ordered, tint) => map.size < 2 && !S[key] ? '' : '<select data-sel="' + key + '" class="' + (S[key] ? 'is-set' : '') + '" title="' + esc(any) + '"'
@@ -729,13 +856,21 @@
         + d.abilities.kinds.map(k => '<button type="button" role="option" class="' + (k.id === cur ? 'is-on' : '') + '" data-ddk="s" data-ddv="' + esc(k.id) + '">' + kindSay(k.id) + '<small>' + n0(k.ids.length) + '</small></button>').join('')
         + '</span></span>';
     })() : '';
-    const filters = kindMenu + (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
+    // Dungeons by what they give: a class, and the kind of gear it holds. Each menu counts the dungeons that would be left.
+    const giving = d.id === 'dungeons' ? (() => {
+      const ofClass = IX.domain('classes').ids.map(id => IX.records.get(id));
+      const classes = ofClass.map(c => [c.id, all.filter(r => gaveTo(r, c.id, S.dh).length).length]).filter(([, n]) => n);
+      const handsLeft = Object.keys(HAND_SAY).map(h => [h, all.filter(r => gaveTo(r, S.dcls, h).length).length]).filter(([, n]) => n);
+      const classSay = v => { const c = IX.records.get(v); return IX.art(c, 16) + '<span>' + esc(c ? c.name : v) + '</span>'; };
+      const handSay = v => { const p = IX.records.get((IX.slots[HAND_PIC[v]] || [])[1]); return (p ? IX.art(p, 16) : '') + '<span>' + esc(HAND_SAY[v] || v) + '</span>'; };
+      return menu('dcls', 'Any class', classes, classSay) + menu('dh', 'Any gear', handsLeft, handSay);
+    })() : '';
+    const filters = giving + kindMenu + (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
       + (d.id === 'sets' ? select('cls', 'Any class', classes, v => (IX.records.get(v) || {}).name || v) : '')
       + (d.id === 'enemies' ? select('home', 'Any biome or dungeon', homes, v => (IX.records.get(v) || {}).name || v, homesOrdered) : menu('inf', 'Inflicts…', byCount(inflicted), statusSay))
       + (d.id === 'gear' || d.id === 'bag' ? menu('gra', 'Grants…', byCount(granted), statusSay) : '')
       + (d.id === 'gear' ? menu('scl', 'Scales with…', STAT_ORDER.filter(k => scaled.has(k)).map(k => [k, scaled.get(k)]), statSay) : '')
-      + tags.map(([k, t]) => '<button type="button" class="ixb-chip' + (S.tags.has(k) ? ' is-on' : '') + '" data-tag="' + k + '">' + esc(t.say) + '</button>').join('')
-      + (technical ? '<button type="button" class="ixb-chip' + (S.tech ? ' is-on' : '') + '" data-tech title="Teleporters, hubs, the inner doors and old versions of dungeons">Other portals <small>' + technical + '</small></button>' : '');
+      + tags.map(([k, t]) => '<button type="button" class="ixb-chip' + (S.tags.has(k) ? ' is-on' : '') + '" data-tag="' + k + '">' + esc(t.say) + '</button>').join('');
     const anySet = FILTERS.some(k => S[k]) || S.tags.size;
     const grouping = bys.length > 1 ? '<span class="ixb-lbl">Group</span><select data-by>' + bys.map(k => '<option value="' + k + '"' + (by === k ? ' selected' : '') + '>' + GROUP[k].say + '</option>').join('') + '</select>' : '';
     const toggle = '<span class="ixb-tog" title="List or portraits"><button type="button" class="' + (view === 'rows' ? 'is-on' : '') + '" data-view="rows" title="List">☰</button><button type="button" class="' + (view === 'wall' ? 'is-on' : '') + '" data-view="wall" title="Portraits">▦</button></span>';
@@ -852,7 +987,8 @@
     if (d && (d.id === 'gear' || d.id === 'skins')) { const t = tierOf(r); if (t && t !== ctx.heading) end += '<span class="ixb-tier is-' + t.toLowerCase() + '">' + tierSay(t) + '</span>'; }
     // What a creature inflicts is on its card; its line says where it lives.
     if (!d || d.id !== 'enemies') end = fxIcons(r) + end;
-    return '<button type="button" class="ixb-row' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" title="' + esc(r.said || r.name) + '"><span class="ixb-cell">' + IX.art(r, 28) + '</span><span>'
+    if (d && d.id === 'dungeons') end = lootStrip(r, 8) + end;
+    return '<button type="button" class="ixb-row' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" ' + (tipOn(r) ? 'aria-label' : 'title') + '="' + esc(r.said || r.name) + '"><span class="ixb-cell">' + IX.art(r, 28) + '</span><span>'
       + (sub && !d ? sub : '') + '<b>' + esc(shortName(r, ctx)) + '</b>' + (sub && d ? sub : '') + '</span><span class="ixb-end">' + end + '</span></button>';
   }
   function tileOf(r, ctx) {
@@ -862,8 +998,10 @@
         + r.members.map(([n, m]) => '<button type="button" data-pick="' + esc(m.id) + '" title="' + esc(m.said || m.name) + '">' + n + '</button>').join('') + '</span></div>';
     }
     const dif = r.kind === 'portal' && IX.difficultyOf(r);
-    return '<button type="button" class="ixb-tile' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" title="' + esc((r.said || r.name) + (dif ? ' · difficulty ' + dif + '/10' : '')) + '">'
-      + (dif ? '<i class="ixb-pip">' + dif + '</i>' : '') + IX.art(r, 40) + '<span>' + esc(shortName(r, ctx)) + '</span></button>';
+    const said = esc((r.said || r.name) + (dif ? ' · difficulty ' + dif + '/10' : ''));
+    // With the hover list to read, the browser's own tooltip would open beside it: the name stays for screen readers only.
+    return '<button type="button" class="ixb-tile' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" ' + (tipOn(r) ? 'aria-label="' + said + '"' : 'title="' + said + '"') + '>'
+      + (dif ? '<i class="ixb-pip">' + dif + '</i>' : '') + IX.art(r, 40) + '<span>' + esc(shortName(r, ctx)) + '</span>' + lootStrip(r, 4) + '</button>';
   }
 
   /* ---------------- search ---------------- */
@@ -979,6 +1117,7 @@
     }
   }
   function openCard(id, from) {
+    hideTip();
     S.open = id;
     document.querySelectorAll('#ixbMid .is-on[data-pick]').forEach(x => x.classList.remove('is-on'));
     if (from && from.closest('#ixbMid')) (from.closest('.ixb-row,.ixb-tile') || from).classList.add('is-on');
@@ -1066,6 +1205,7 @@
       if (e.key === '/' && !typing) { e.preventDefault(); $('ixbSearch').focus(); $('ixbSearch').select(); return; }
       if (e.target.id === 'ixbSearch' && e.key === 'Enter' && searchFirst) { openCard(searchFirst); return; }
       if (e.key === 'Escape') {
+        hideTip();
         const open = document.querySelector('#ixbMid .ixb-dd.is-open');
         if (open) { shutMenu(open); open.querySelector('.ixb-dd-btn').focus(); return; }
         if (e.target.id === 'ixbSearch' && S.q) { S.q = ''; e.target.value = ''; writeHash(); mid(); railFams(); return; }
@@ -1074,6 +1214,7 @@
       // A bundled line is a div: Enter opens it like a button.
       if (e.key === 'Enter' && e.target.matches('div[data-pick]')) openCard(e.target.dataset.pick, e.target);
     });
+    wireTip();
     document.addEventListener('realmindex:card', e => followCard(e.detail.id));
     document.addEventListener('realmindex:loved', () => rail());
     // RealmEye's archive arrives after the page: places, roles, biomes, dungeon events.
