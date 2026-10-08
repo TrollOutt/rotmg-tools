@@ -35,12 +35,15 @@ const typeOf = one => (one.from && one.from[1]) || '';
      renderer's shader applies to alpha, without requiring WebGL in CI. */
   const rendererSource = fs.readFileSync(path.join(root, 'web/skins/renderer.js'), 'utf8');
   const renderer = 'data:text/javascript;base64,' + Buffer.from(rendererSource).toString('base64');
-  const check = `import { OUTLINE_PIXELS, isOutlinePixel, quadAt, frameTexel } from ${JSON.stringify(renderer)};
-    if(OUTLINE_PIXELS!==.5)throw Error('Atlas SS=2 outline must stay half a source pixel wide');
+  const check = `import { OUTLINE_RATIO, outlinePixels, isOutlinePixel, quadAt, frameTexel } from ${JSON.stringify(renderer)};
+    if(OUTLINE_RATIO!==2/15)throw Error('the outline is two fifteenths of a sprite pixel, as the original viewer draws it');
+    if(outlinePixels(30)!==2/15||outlinePixels(8)!==2/15)throw Error('a large character keeps the proportional outline');
+    if(outlinePixels(6)!==1/6||outlinePixels(3)!==1/3)throw Error('a small character keeps an outline of at least one screen pixel');
+    if(outlinePixels(8)*8>1.07)throw Error('the outline must stay about one screen pixel at the default zoom');
     if([isOutlinePixel(0,1,0,0,0),isOutlinePixel(0,0,1,0,0),isOutlinePixel(0,0,0,1,0),isOutlinePixel(0,0,0,0,1)].some(value=>!value))throw Error('each cardinal neighbour outlines');
     if(isOutlinePixel(0,0,0,0,0)||isOutlinePixel(1,1,1,1,1))throw Error('clear-only rule');
-    const plain=quadAt({w:8,h:8},100,100,50,60,4),outlined=quadAt({w:8,h:8},100,100,50,60,4,OUTLINE_PIXELS);
-    const band=OUTLINE_PIXELS*4/100*2,originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+band,outlined[2]-band,outlined[5]-band,outlined[1]+band];
+    const plain=quadAt({w:8,h:8},100,100,50,60,4),outlined=quadAt({w:8,h:8},100,100,50,60,4,outlinePixels(4));
+    const band=outlinePixels(4)*4/100*2,originalEdges=[plain[0],plain[2],plain[5],plain[1]],outlinedEdges=[outlined[0]+band,outlined[2]-band,outlined[5]-band,outlined[1]+band];
     if(!outlinedEdges.every((value,index)=>Math.abs(value-originalEdges[index])<1e-9))throw Error('outline quad keeps source position anchored');
     const rect={x:19,y:23,w:3,h:2};
     for(const [local,expected] of [[{x:0,y:0},{x:19,y:23}],[{x:2.99,y:1.99},{x:21,y:24}]]){const got=frameTexel(rect,local);if(got.x!==expected.x||got.y!==expected.y)throw Error('frame texel escaped its source rectangle');}
@@ -58,15 +61,15 @@ const typeOf = one => (one.from && one.from[1]) || '';
     if(![{x:-.25,y:.75},{x:3.25,y:.75},{x:1.25,y:-.25},{x:1.25,y:2.25}].every(outlineAt))throw Error('each half-texel frame edge must receive its cardinal outline');
     if(outlineAt({x:-.25,y:-.25}))throw Error('a diagonal outside a frame cannot become outline');`;
   execFileSync(process.execPath, ['--input-type=module', '--eval', check], { stdio: 'pipe' });
-  assert(rendererSource.includes('local+vec2(-.5,0.)') && rendererSource.includes('local+vec2(.5,0.)')
-    && rendererSource.includes('local+vec2(0.,-.5)') && rendererSource.includes('local+vec2(0.,.5)'),
+  assert(rendererSource.includes('local+vec2(-ol,0.)') && rendererSource.includes('local+vec2(ol,0.)')
+    && rendererSource.includes('local+vec2(0.,-ol)') && rendererSource.includes('local+vec2(0.,ol)'),
   'the shader must use cardinal neighbours, not diagonal or rectangular borders');
   assert(rendererSource.includes('if(any(lessThan(local,vec2(0.)))||any(greaterThanEqual(local,r.zw)))return vec4(0.);'),
     'out-of-frame samples must be transparent so packed frames cannot bleed');
   assert(rendererSource.includes('floor(local)+vec2(.5)'),
     'WebGL must sample the centre of an integer source texel');
-  assert(rendererSource.includes('baseRect.zw+vec2(1.))-vec2(.5)'),
-    'the UV mapping must expose only Atlas\' half-source-texel outline band');
+  assert(rendererSource.includes('baseRect.zw+vec2(2.*ol))-vec2(ol)'),
+    'the UV mapping must expose only the outline band, as wide as the probes reach');
   assert(rendererSource.includes('vec2 q=5.*local*baseRect.zw/max(r.zw,vec2(1.));'),
     'a cloth is laid down five cloth pixels to a sprite pixel, as the original viewer reads it');
   assert(rendererSource.includes('if(m.a<=.003)m=vec4(0.);'),
