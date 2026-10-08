@@ -69,6 +69,8 @@ const typeOf = one => (one.from && one.from[1]) || '';
     'the UV mapping must expose only Atlas\' half-source-texel outline band');
   assert(rendererSource.includes('vec2 q=5.*local*baseRect.zw/max(r.zw,vec2(1.));'),
     'a cloth is laid down five cloth pixels to a sprite pixel, as the original viewer reads it');
+  assert(rendererSource.includes('if(m.a<=.003)m=vec4(0.);'),
+    'a mask pixel that is clear carries no dye, whatever colour the client left under it');
 }
 
 /* ---------------- the guessed bridge is gone ---------------- */
