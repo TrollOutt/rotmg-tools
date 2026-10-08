@@ -3581,17 +3581,17 @@ const TINT = {
     if (!piece || !img.complete || !img.naturalWidth) return false;
     if (fit) {
       const box = targetFit(piece, tall, Array.isArray(fit) ? fit : null);
-      put(pen, img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
+      inkedDraw(pen, img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
         box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height, inked);
       return true;
     }
     const wide = tall * (piece.w / piece.h);
-    put(pen, img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
+    inkedDraw(pen, img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
       x, y - tall, wide, tall, inked);
     return true;
   }
   // A character or a creature wears the one outline every page lays on one (web/outline.js); a bolt does not.
-  function put(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked) {
+  function inkedDraw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked) {
     if (inked && window.RealmOutline) window.RealmOutline.draw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh);
     else pen.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
   }

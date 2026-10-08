@@ -66,7 +66,9 @@ assert(fiches.includes("r.kind === 'skin' || r.kind === 'class' || r.kind === 'e
   'the fiche\'s pictures of skins, classes and creatures wear the line by kind');
 
 const theory = read('web/theorycraft.js');
-assert(/function put\(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked\)/.test(theory)
+// A second function of the same name later in the file takes over silently: the simulation drew nothing for it once.
+assert((theory.match(/function inkedDraw\(/g) || []).length === 1, 'web/theorycraft.js: inkedDraw is declared more than once');
+assert(/function inkedDraw\(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked\)/.test(theory)
   && theory.includes('drawPiece(pen, bolt, frame, -wide / 2, high / 2, high, false, false)'),
 'the duel draws the class and the target inked and a bolt bare');
 assert(theory.includes('face.style.filter = window.RealmOutline.filter(portrait.zoom)')
