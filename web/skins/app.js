@@ -287,13 +287,14 @@ function queueAtlasDraw(img,draw){
   return true;
 }
 
-function fitDraw(ctx,img,rect,size){if(!img||!img.complete||!img.naturalWidth||!rect)return false;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,size,size);const scale=Math.max(1,Math.floor(Math.min((size-4)/rect.w,(size-4)/rect.h))),w=rect.w*scale,h=rect.h*scale;ctx.drawImage(img,rect.x,rect.y,rect.w,rect.h,Math.floor((size-w)/2),Math.floor((size-h)/2),w,h);return true}
-function makeThumb(source,size=40,extra=''){const c=document.createElement('canvas');c.width=c.height=size;c.className=`thumb ${extra}`.trim();const img=atlas(source?.sheet),draw=()=>fitDraw(c.getContext('2d'),img,source?.rect,size);if(!draw()&&img)queueAtlasDraw(img,draw);return c}
+/* A picture of someone (a skin, a class) is drawn with the one outline every page lays on a character: web/outline.js. */
+function fitDraw(ctx,img,rect,size,inked=false){if(!img||!img.complete||!img.naturalWidth||!rect)return false;ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,size,size);const scale=Math.max(1,Math.floor(Math.min((size-4)/rect.w,(size-4)/rect.h))),w=rect.w*scale,h=rect.h*scale;const dx=Math.floor((size-w)/2),dy=Math.floor((size-h)/2);if(inked&&window.RealmOutline)window.RealmOutline.draw(ctx,img,rect.x,rect.y,rect.w,rect.h,dx,dy,w,h,scale);else ctx.drawImage(img,rect.x,rect.y,rect.w,rect.h,dx,dy,w,h);return true}
+function makeThumb(source,size=40,extra='',inked=false){const c=document.createElement('canvas');c.width=c.height=size;c.className=`thumb ${extra}`.trim();const img=atlas(source?.sheet),draw=()=>fitDraw(c.getContext('2d'),img,source?.rect,size,inked);if(!draw()&&img)queueAtlasDraw(img,draw);return c}
 function thumbFrame(s){return s.sequences.find(q=>q.set===0&&q.action==='idle'&&q.direction==='front')?.frames.find(f=>f.spriteAvailable)||s.sequences.find(q=>q.set===0&&q.action==='idle'&&q.direction==='side')?.frames.find(f=>f.spriteAvailable)||s.sequences.find(q=>q.set===0&&q.action==='walk'&&q.direction==='front')?.frames.find(f=>f.spriteAvailable)||s.frames.find(f=>f.spriteAvailable)}
-function makeSpriteThumb(s,size=40){const f=thumbFrame(s);return makeThumb(f?{sheet:f.atlas,rect:f.rect}:null,size)}
+function makeSpriteThumb(s,size=40){const f=thumbFrame(s);return makeThumb(f?{sheet:f.atlas,rect:f.rect}:null,size,'',true)}
 /* V36_DYE_PREVIEW: color dyes keep their real client item sprite as the main preview, with a color swatch overlay. */
 function makeDyeThumb(d,size=38){const wrap=document.createElement('span');wrap.className='dye-preview';let effect;if(d?.kind==='color'&&d?.icon){effect=makeThumb(d.icon,size,'dye-effect dye-item-icon')}else if(d?.textile){effect=makeThumb(d.textile,size,'dye-effect')}else if(d?.icon){effect=makeThumb(d.icon,size,'dye-effect dye-item-icon')}else{effect=document.createElement('span');effect.className='thumb dye-effect'}wrap.append(effect);if(d?.kind==='color'){const sw=document.createElement('span');sw.className='color-preview-swatch';sw.style.background=d.color||'#3c4352';sw.title=d.color||'Color dye';wrap.append(sw)}else if(d?.icon){const badge=makeThumb(d.icon,18,'dye-icon-badge');badge.title='Client dye item sprite';wrap.append(badge)}if(d?.animation){const mark=document.createElement('span');mark.className='anim-mark';mark.textContent='↻';mark.title=d.animation.type;wrap.append(mark)}return wrap}
-function makeClassThumb(c,size=34){return makeThumb(c?.icon,size,'class-thumb')}
+function makeClassThumb(c,size=34){return makeThumb(c?.icon,size,'class-thumb',true)}
 /* V314_SELECTED_INDEX_START */
 let v314SelectedIndexQueued=false;
 
@@ -1223,7 +1224,7 @@ function makeFavoriteSkinThumb(s,size=44){
   const c=document.createElement('canvas');c.width=c.height=size;c.className='favorite-skin-thumb';
   if(!frame)return c;
   const img=atlas(frame.atlas);
-  const draw=()=>fitDraw(c.getContext('2d'),img,frame.rect,size);
+  const draw=()=>fitDraw(c.getContext('2d'),img,frame.rect,size,true);
   if(img)queueAtlasDraw(img,draw);
   return c;
 }

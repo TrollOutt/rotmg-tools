@@ -2685,6 +2685,9 @@ const TINT = {
     return { bounds, scale, width: bounds.w * scale, height: bounds.h * scale };
   }
 
+  // A target, a boss, is someone: it wears the one outline every page lays on a character (web/outline.js).
+  const inkOf = scale => window.RealmOutline ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
+
   function sheetIcon(key, side, extra) {
     const piece = data.sheet && data.sheet.pics[key];
     if (!piece) return '';
@@ -2789,7 +2792,7 @@ const TINT = {
     const at = frame => (-(piece.x + frame * piece.w + fit.bounds.x) * zoom) + 'px '
       + (-(piece.y + fit.bounds.y) * zoom) + 'px';
     return '<span class="tc-charm"'
-      + ' style="width:' + fit.width + 'px;height:' + fit.height + 'px'
+      + ' style="' + inkOf(zoom) + 'width:' + fit.width + 'px;height:' + fit.height + 'px'
       + ';background-size:' + (data.sheet.wide * zoom) + 'px '
       + (data.sheet.tall * zoom) + 'px'
       + ';background-position:' + at(run[0]) + '"></span>';
@@ -3573,19 +3576,24 @@ const TINT = {
    * steps by the rectangle's own width, because that is how the frames are
    * packed.
    */
-  function drawPiece(pen, piece, frame, x, y, tall, fit) {
+  function drawPiece(pen, piece, frame, x, y, tall, fit, inked = true) {
     const img = theSheet();
     if (!piece || !img.complete || !img.naturalWidth) return false;
     if (fit) {
       const box = targetFit(piece, tall, Array.isArray(fit) ? fit : null);
-      pen.drawImage(img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
-        box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height);
+      put(pen, img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
+        box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height, inked);
       return true;
     }
     const wide = tall * (piece.w / piece.h);
-    pen.drawImage(img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
-      x, y - tall, wide, tall);
+    put(pen, img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
+      x, y - tall, wide, tall, inked);
     return true;
+  }
+  // A character or a creature wears the one outline every page lays on one (web/outline.js); a bolt does not.
+  function put(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked) {
+    if (inked && window.RealmOutline) window.RealmOutline.draw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh);
+    else pen.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
   }
 
   function resetDuel() {
@@ -4021,7 +4029,7 @@ const TINT = {
         pen.save();
         pen.translate(x, y);
         pen.rotate(facing);
-        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high);
+        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high, false, false);
         pen.restore();
         if (drew) continue;
       }
@@ -4490,6 +4498,8 @@ const TINT = {
       const style = faceStyle(portrait, data.sheet);
       if (style) {
         Object.assign(face.style, style);
+        // The class is someone: it wears the one outline every page lays on a character (web/outline.js).
+        if (window.RealmOutline) face.style.filter = window.RealmOutline.filter(portrait.zoom);
         face.hidden = false;
       } else { face.hidden = true; }
     }

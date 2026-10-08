@@ -152,11 +152,18 @@
     if (beacon) return '<img class="ixb-pic is-beacon" src="assets/realm-biomes/' + encodeURIComponent(beacon.file) + '" alt="" style="width:' + px + 'px;height:' + px + 'px">';
     // A creature that moves is drawn moving: its walking loop, cut for the atlas.
     const loop = r.kind === 'enemy' && IX.loopOf(r);
-    if (loop) return '<img class="ixb-pic" src="' + esc(loop) + '" alt="" loading="lazy" style="width:' + px + 'px;height:' + px + 'px">';
+    if (loop) return '<img class="ixb-pic" src="' + esc(loop) + '" alt="" loading="lazy" style="width:' + px + 'px;height:' + px + 'px;' + inkOf(r, px / 16) + '">';
     const pic = picFor(r);
-    if (pic && D.sheet) return slice((bundle() && bundle().indexSheet) || 'assets/index/sheet.png', D.sheet, pic, px);
+    if (pic && D.sheet) return slice((bundle() && bundle().indexSheet) || 'assets/index/sheet.png', D.sheet, pic, px, inkOf(r, px / Math.max(pic[2], pic[3], 8)));
     return glyph(initials(r.name), r.kind === 'status' ? r.tone : 'none', px);
   };
+  /*
+   * A picture of someone - a skin, a class, a creature - wears the one outline
+   * every page lays on a character (web/outline.js). It is laid on here, by
+   * kind, so whatever the next client update brings of those kinds has it.
+   */
+  const inkOf = (r, scale) => (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy') && window.RealmOutline
+    ? 'filter:' + window.RealmOutline.filter(scale) : '';
   function slice(url, sheet, [x, y, w, h], px, extra = '') {
     const z = px / Math.max(w, h, 8);
     return '<span class="ixb-art" style="' + extra + ';width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(' + url

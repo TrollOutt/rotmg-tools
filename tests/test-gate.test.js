@@ -22,6 +22,7 @@ const deployCritical = [
   'realm-contract.test.js',
   'router-contract.test.js',
   'module-links.test.js',
+  'outline.test.js',
   'runtime-lifecycle.test.js',
   'skins.test.js',
   'sprite-contract.test.js',

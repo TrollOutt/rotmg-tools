@@ -45,13 +45,16 @@
   let moving = {};
   fetch('assets/realm-monster-animations/index.json').then(r => r.json())
     .then(j => { moving = j || {}; }).catch(() => {}).finally(settled);
+  /* A picture of someone - a skin, a class, a creature - wears the one outline every page lays on a character (web/outline.js). */
+  const inkOf = (r, scale) => r && (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy') && window.RealmOutline
+    ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
   function walk(r, side) {
     if (!r || r.kind !== 'enemy') return '';
     const id = [r.clientId, r.alias, r.name].find(one => one && moving[one]);
     if (!id) return '';
     const bundled = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.realmMonsterAnimations;
     const src = (bundled && bundled[id]) || 'assets/realm-monster-animations/' + encodeURIComponent(moving[id]);
-    return '<img class="ix-art fc2-walk" src="' + esc(src) + '" alt="" style="width:' + side + 'px;height:' + side + 'px">';
+    return '<img class="ix-art fc2-walk" src="' + esc(src) + '" alt="" style="' + inkOf(r, side / 16) + 'width:' + side + 'px;height:' + side + 'px">';
   }
 
   /* ---------- les statuts (tools/build-status-effects.js) ---------- */
@@ -115,7 +118,7 @@
     const s = index();
     if (!r || !r.art || !s || !s.sheet) return '';
     const [x, y, w, h] = r.art, z = side / Math.max(w, h);
-    return '<span class="ix-art" style="display:inline-block;width:' + w * z + 'px;height:' + h * z
+    return '<span class="ix-art" style="' + inkOf(r, z) + 'display:inline-block;width:' + w * z + 'px;height:' + h * z
       + 'px;background-size:' + s.sheet.wide * z + 'px ' + s.sheet.tall * z + 'px;background-position:'
       + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
   }
@@ -1465,12 +1468,12 @@
           const f = list[Math.floor(state.clock * 8) % list.length];
           if (f) {
             const z = T / 8 * (setData.skinSize || 100) / 100;
-            pen.drawImage(skins, f.x, f.y, f.w, f.h, x0 - T / 2, floor - f.h * z, f.w * z, f.h * z);
+            RealmOutline.draw(pen, skins, f.x, f.y, f.w, f.h, x0 - T / 2, floor - f.h * z, f.w * z, f.h * z);
           }
         } else if (classPic && theory.complete) {
           const list = poseFrames(classPic, doing);
           const f = list[Math.floor(state.clock * 8) % list.length];
-          pen.drawImage(theory, classPic.x + f * classPic.w, classPic.y, classPic.w, classPic.h, x0 - T / 2, floor - classPic.h * T / 8, classPic.w * T / 8, classPic.h * T / 8);
+          RealmOutline.draw(pen, theory, classPic.x + f * classPic.w, classPic.y, classPic.w, classPic.h, x0 - T / 2, floor - classPic.h * T / 8, classPic.w * T / 8, classPic.h * T / 8);
         }
 
         for (const v of volleys) {
@@ -1634,7 +1637,8 @@
         );
 
         if (sheet.complete) {
-          pen.drawImage(
+          RealmOutline.draw(
+            pen,
             sheet,
             f.x,
             f.y,

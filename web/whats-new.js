@@ -205,12 +205,15 @@ var WhatsNew = (function () {
    * it. (The attack strips are not laid out the way the data says - frames of
    * the walk's size in a grid - so only the walk is played.)
    */
+  // A skin or a creature is someone: it wears the one outline every page lays on a character (web/outline.js).
+  const inked = (t, scale) => ((t.facts && t.facts.class === 'Skin') || t.__kind === 'Creature' || /^Skin/.test(t.__kind || '')) && typeof window !== 'undefined' && window.RealmOutline
+    ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
   function picture(t, aim, max) {
     const clips = clipsOf(t);
     // The Index's own picture, unless the thing moves and the update has cut its walk.
     if (t.sheet && ix && ix.sheet && !moves(t)) {
       const [x, y, w, h] = t.sheet, z = Math.max(1, Math.min(max || 12, Math.floor((aim || 56) / Math.max(w, h, 8))));
-      return '<span class="wn-art pn-sheet" style="width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(\'' + sheetUrl() + '\');background-size:'
+      return '<span class="wn-art pn-sheet" style="' + inked(t, z) + 'width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(\'' + sheetUrl() + '\');background-size:'
         + ix.sheet.wide * z + 'px ' + ix.sheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
     }
     const rest = clips && (clips.walk || clips.stand || clips.attack);
@@ -221,10 +224,10 @@ var WhatsNew = (function () {
     // Whole steps keep the pixels square; a thing taller than the box it is given (an entrance's column of fire) is shrunk to fit it instead.
     const fit = Math.max(rest.height, rest.tile), whole = Math.floor((aim || 56) / fit);
     const scale = whole >= 1 ? Math.min(max || 12, whole) : (aim || 56) / fit;
-    const style = ['width:' + (rest.tile * scale) + 'px', 'height:' + (rest.height * scale) + 'px',
+    const style = [inked(t, scale).replace(/;$/, ''), 'width:' + (rest.tile * scale) + 'px', 'height:' + (rest.height * scale) + 'px',
       '--wn-rest:url(\'' + stripUrl(rest.file) + '\')', '--wn-rest-w:' + (rest.tile * rest.frames * scale) + 'px',
       '--wn-rest-steps:' + rest.frames, '--wn-rest-time:' + (rest.frames * 0.22).toFixed(2) + 's'];
-    return '<span class="wn-art' + (rest.frames > 1 ? ' is-moving' : '') + '" style="' + style.join(';') + '"></span>';
+    return '<span class="wn-art' + (rest.frames > 1 ? ' is-moving' : '') + '" style="' + style.filter(Boolean).join(';') + '"></span>';
   }
 
   /* ---------------- facts ---------------- */

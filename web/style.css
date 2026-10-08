@@ -6801,3 +6801,28 @@ body { --s-hi: var(--ui-hi, 121 197 232); --s-lo: var(--ui-lo, 63 127 163); --s-
   background: linear-gradient(color-mix(in srgb, var(--g) 18%, transparent), transparent 80%), rgb(0 0 0 / .4);
   box-shadow: inset 0 2px 0 var(--g), 0 -4px 14px color-mix(in srgb, var(--g) 15%, transparent);
 }
+
+/*
+ * The characters on the home page - the parade of skins and the nine on the
+ * Skin Viewer's card - wear the one outline every page lays on a character
+ * (web/outline.js). It goes first in the filter, so the glow is drawn round
+ * the outlined figure and not under it.
+ */
+.ring-art-pic.is-walk, .ring-art-pic[data-art="Page Art/Skins.png"] { filter: url(#rt-ink-1); }
+body[data-ring="wheel"] .ring-art-pic.is-walk, body[data-ring="wheel"] .ring-art-pic[data-art="Page Art/Skins.png"] {
+  filter:
+    url(#rt-ink-1)
+    drop-shadow(0 0 4px rgb(var(--ui-glow, 96 168 236) / .55))
+    drop-shadow(0 0 10px rgb(var(--ui-hi, 126 196 255) / .35))
+    drop-shadow(0 2px 8px #000);
+}
+:root[data-theme="light"] body[data-ring="wheel"] .ring-art-pic.is-walk,
+:root[data-theme="light"] body[data-ring="wheel"] .ring-art-pic[data-art="Page Art/Skins.png"] {
+  filter: url(#rt-ink-1) drop-shadow(0 1px 3px rgb(70 56 90 / .35));
+}
+.home-card-art[data-art="Page Art/Skins.png"] {
+  filter:
+    url(#rt-ink-1)
+    drop-shadow(0 0 4px rgba(96, 168, 236, .55))
+    drop-shadow(0 0 10px rgba(126, 196, 255, .38));
+}

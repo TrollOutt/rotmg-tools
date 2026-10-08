@@ -96,11 +96,19 @@ const RealmIndex = (function () {
    */
   const zoomed = () => Math.min(1.7, Math.max(1, (window.innerWidth || 1400) / 1400));
 
+  /*
+   * A picture of someone - a skin, a class, a creature - wears the one outline
+   * every page lays on a character (web/outline.js), laid on by kind so what a
+   * client update brings of those kinds has it too.
+   */
+  const inked = (one, scale) => (one.kind === 'skin' || one.kind === 'class' || one.kind === 'enemy') && window.RealmOutline
+    ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
+
   function art(one, side) {
     if (!one) return '';
     side = Math.round(side * zoomed());
     if (one.icon) return '<img class="ix-art ix-art-file" width="' + side + '" height="' + side
-      + '" src="' + esc(one.icon) + '" alt="">';
+      + '" style="' + inked(one, side / 16) + '" src="' + esc(one.icon) + '" alt="">';
     // A status effect's picture is on its own small sheet, cut from the client's interface atlas.
     if (one.statusArt && all.statusSheet) {
       const [x, y, w, h] = one.statusArt;
@@ -114,7 +122,7 @@ const RealmIndex = (function () {
     if (!one.art || !all.sheet) return '';
     const [x, y, w, h] = one.art;
     const zoom = side / Math.max(w, h);
-    return '<span class="ix-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
+    return '<span class="ix-art" style="' + inked(one, zoom) + 'width:' + (w * zoom) + 'px;height:' + (h * zoom)
       + 'px;background-size:' + (all.sheet.wide * zoom) + 'px ' + (all.sheet.tall * zoom)
       + 'px;background-position:' + (-x * zoom) + 'px ' + (-y * zoom) + 'px"></span>';
   }
