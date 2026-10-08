@@ -86,12 +86,16 @@ function normalizedPublishedAtlas(source) {
     out = out.replace(cut, '');
   }
 
-  return out.replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
+  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
 }
+
+// The one line every page lays round a character (web/outline.js), carried inside the page.
+const outlineSource = fs.readFileSync(path.join(__dirname, '..', 'web', 'outline.js'), 'utf8').replace(/\r\n/g, '\n');
 
 function normalizedBuiltAtlas(source) {
   return source
     .replace(/\r\n/g, '\n')
+    .replace(outlineSource, '__OUTLINE__')
     .replace(
       /^const A = \{.*\};$/m,
       'const A = __ATLAS__;'

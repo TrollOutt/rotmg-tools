@@ -1519,7 +1519,7 @@
           pen.save();
           pen.translate(x0 + T * 0.4 + at.x * T, y0 + (at.y + o.side) * T);
           pen.rotate(heading + tilt * Math.PI / 4 + (pic.spin ? o.age * 1000 / pic.spin : 0));
-          if (bolts.complete) pen.drawImage(bolts, pic.x + f * pic.w, pic.y, pic.w, pic.h, -w / 2, -h / 2, w, h);
+          if (bolts.complete) RealmOutline.draw(pen, bolts, pic.x + f * pic.w, pic.y, pic.w, pic.h, -w / 2, -h / 2, w, h);
           pen.restore();
         }
       };

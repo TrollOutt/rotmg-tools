@@ -282,3 +282,5 @@ console.log('  combat: ' + Object.keys(enemies).length + ' creatures, '
   + Object.keys(clips).length + ' observed, ' + spriteFiles.size + ' projectile sprites');
 console.log('  -> ' + path.relative(root, path.join(out, 'combat.json')) + ' ('
   + Math.round(Buffer.byteLength(json) / 1024) + ' KiB, loaded only while watching life)');
+// The pictures arrive with a line of their own; the page lays one itself (web/outline.js), so it is taken off them.
+console.log('  next: node tools/recover-bare.js --write   (the pictures bare, the line left to the page)');

@@ -32,6 +32,18 @@
   const screenPixels = scale => Math.max(1, Math.round(RATIO * Math.max(scale || 1, 1e-6)));
 
   /* ---- a 2D canvas ---- */
+  /*
+   * Not laid on again every frame. A sprite, drawn at a size, is given its line
+   * once - the sprite and its four shifted shadows composed on a card - and
+   * the card is what every later frame draws: one drawImage, as if there were
+   * no line. The card is made at a whole number of pixels to a pixel of art
+   * (the zoom rounded), so what is cached is a handful of sizes per sprite, not
+   * one per fractional zoom, and it is drawn at the exact size asked.
+   */
+  let cards = new WeakMap();
+  let held = 0;                // pixels of cards kept
+  const LIMIT = 12e6;          // pixels of cards kept (about fifty megabytes) before the lot are let go and made again as they are asked for
+  const BIGGEST = 4e5;         // a card of more pixels than this is drawn live instead of kept
   // The silhouette of one rectangle of a picture, in black, made once.
   const silhouettes = new WeakMap();
   function silhouette(img, sx, sy, sw, sh) {
@@ -52,19 +64,53 @@
     }
     return one;
   }
-  /*
-   * drawImage's nine arguments, with the line laid under the sprite. `scale`
-   * is what the picture is drawn at; left out, it is the width ratio of the
-   * two rectangles, which is right wherever a sheet pixel is a sprite pixel.
-   */
-  function draw(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh, scale) {
-    const t = screenPixels(scale || dw / Math.max(sw, 1));
+  function card(img, sx, sy, sw, sh, k, t) {
+    const key = sx + ',' + sy + ',' + sw + ',' + sh + ',' + k + ',' + t;
+    let per = cards.get(img);
+    let one = per && per.get(key);
+    if (one) return one;
+    // Too many kept: let them all go; the ones still on screen are made again on the next frame.
+    if (held >= LIMIT) { cards = new WeakMap(); held = 0; per = null; }
+    if (!per) cards.set(img, per = new Map());
+    const w = sw * k + t * 2, h = sh * k + t * 2;
+    one = root.document.createElement('canvas');
+    one.width = w; one.height = h;
+    const g = one.getContext('2d');
+    g.imageSmoothingEnabled = false;
     const ink = silhouette(img, sx, sy, sw, sh);
-    ctx.drawImage(ink, dx - t, dy, dw, dh);
-    ctx.drawImage(ink, dx + t, dy, dw, dh);
-    ctx.drawImage(ink, dx, dy - t, dw, dh);
-    ctx.drawImage(ink, dx, dy + t, dw, dh);
-    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+    g.drawImage(ink, 0, t, sw * k, sh * k); g.drawImage(ink, t * 2, t, sw * k, sh * k);
+    g.drawImage(ink, t, 0, sw * k, sh * k); g.drawImage(ink, t, t * 2, sw * k, sh * k);
+    g.drawImage(img, sx, sy, sw, sh, t, t, sw * k, sh * k);
+    per.set(key, one);
+    held += w * h;
+    return one;
+  }
+  /*
+   * drawImage's nine arguments, with the line round the picture. `artPixel` is
+   * how many pixels of the picture are one pixel of the art it was cut from -
+   * one for the client's own sheets, two for the atlas's doubled ones, the
+   * enlargement for a picture the wiki enlarged - so the line is two fifteenths
+   * of the art's pixel whatever the picture is made of.
+   */
+  function draw(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh, artPixel) {
+    const per = dw / Math.max(sw, 1);                    // screen pixels to a pixel of the picture
+    const a = artPixel || 1;
+    // Smaller than a screen pixel to a pixel of art, a line would be all there is of the picture: left off.
+    if (!(sw > 0 && sh > 0 && dw > 0 && dh > 0) || per * a < 1) { ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh); return; }
+    const k = Math.max(1, Math.round(per));              // the card's pixels to a pixel of the picture
+    // The line, in the card's pixels: two fifteenths of a pixel of art, and a screen pixel at the least.
+    const t = Math.max(1, Math.round(Math.max(RATIO * a * k, k / per)));
+    if ((sw * k + t * 2) * (sh * k + t * 2) > BIGGEST) {
+      const live = Math.max(1, Math.round(Math.max(RATIO * a * per, 1))), ink = silhouette(img, sx, sy, sw, sh);
+      ctx.drawImage(ink, dx - live, dy, dw, dh); ctx.drawImage(ink, dx + live, dy, dw, dh);
+      ctx.drawImage(ink, dx, dy - live, dw, dh); ctx.drawImage(ink, dx, dy + live, dw, dh);
+      ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+      return;
+    }
+    const one = card(img, sx, sy, sw, sh, k, t);
+    // The card is k pixels to a pixel of the picture; it is drawn at the size asked, the line with it.
+    const fx = dw / (sw * k), fy = dh / (sh * k);
+    ctx.drawImage(one, 0, 0, one.width, one.height, dx - t * fx, dy - t * fy, one.width * fx, one.height * fy);
   }
 
   /* ---- an element ---- */

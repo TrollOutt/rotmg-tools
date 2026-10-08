@@ -3590,7 +3590,7 @@ const TINT = {
       x, y - tall, wide, tall, inked);
     return true;
   }
-  // A character or a creature wears the one outline every page lays on one (web/outline.js); a bolt does not.
+  // Everyone and everything that flies wears the one outline every page lays on a character (web/outline.js).
   function inkedDraw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked) {
     if (inked && window.RealmOutline) window.RealmOutline.draw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh);
     else pen.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
@@ -4029,7 +4029,7 @@ const TINT = {
         pen.save();
         pen.translate(x, y);
         pen.rotate(facing);
-        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high, false, false);
+        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high, false);
         pen.restore();
         if (drew) continue;
       }

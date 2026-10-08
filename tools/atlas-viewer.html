@@ -350,6 +350,7 @@
     <b id="seenNow">&ndash;</b> <i>here now</i></span>
   <span id="hint">drag to pan · wheel to zoom · a/e to turn · double-click to fit</span>
 </div>
+<script>/*OUTLINE*/</script>
 <script>
 const A = /*ATLAS*/null;
 
@@ -364,62 +365,14 @@ const A = /*ATLAS*/null;
 const SS = A.ss || 1;
 
 /*
- * The black line round a creature, laid on as it is drawn.
- *
- * It used to be baked into the sheets, half a pixel of art wide whatever the
- * zoom. It is two fifteenths of a pixel of art now, never under one screen
- * pixel, which is the width every other page lays on a character
- * (web/outline.js - tests/outline.test.js holds the two numbers together).
- * What stays baked is the scenery in things.png and the combat pictures, which
- * arrive with their own line; they are not creatures drawn here.
+ * The black line round everyone, laid on as they are drawn: web/outline.js,
+ * put into this page when it is built (tools/realm-atlas-build.js), so that
+ * every page lays the same line. It is made once for a picture at a size and
+ * kept; a frame draws it as one picture. `artPixel` is how many pixels of the
+ * sheet are one pixel of the art: two for these doubled sheets.
  */
-const INK_RATIO = 2 / 15;
-const inkPixels = scale => Math.max(1, Math.round(INK_RATIO * Math.max(scale, 1e-6)));
-const inkShapes = new WeakMap();
-// The silhouette of one rectangle of a picture, black, made once.
-function inkShape(img, sx, sy, sw, sh) {
-  const key = sx + ',' + sy + ',' + sw + ',' + sh;
-  let per = inkShapes.get(img);
-  if (!per) inkShapes.set(img, per = new Map());
-  let one = per.get(key);
-  if (!one) {
-    one = document.createElement('canvas');
-    one.width = Math.max(1, sw); one.height = Math.max(1, sh);
-    const g = one.getContext('2d');
-    g.imageSmoothingEnabled = false;
-    g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-    g.globalCompositeOperation = 'source-in';
-    g.fillStyle = '#000';
-    g.fillRect(0, 0, one.width, one.height);
-    per.set(key, one);
-  }
-  return one;
-}
-let inkScratch = null;
-/*
- * drawImage with the line under the picture. `scale` is screen pixels to a
- * pixel of art. While a creature fades in the whole is drawn on a card first
- * and the card is faded, so the line does not show through a half-clear body.
- */
-function drawInked(img, sx, sy, sw, sh, dx, dy, dw, dh, scale) {
-  const t = inkPixels(scale), ink = inkShape(img, sx, sy, sw, sh);
-  if (ctx.globalAlpha < 1) {
-    const w = Math.ceil(dw + t * 2), h = Math.ceil(dh + t * 2);
-    if (!inkScratch) inkScratch = document.createElement('canvas');
-    if (inkScratch.width < w || inkScratch.height < h) { inkScratch.width = Math.max(w, inkScratch.width); inkScratch.height = Math.max(h, inkScratch.height); }
-    const pen = inkScratch.getContext('2d');
-    pen.setTransform(1, 0, 0, 1, 0, 0);
-    pen.clearRect(0, 0, inkScratch.width, inkScratch.height);
-    pen.globalAlpha = 1; pen.imageSmoothingEnabled = false;
-    pen.drawImage(ink, 0, t, dw, dh); pen.drawImage(ink, t * 2, t, dw, dh);
-    pen.drawImage(ink, t, 0, dw, dh); pen.drawImage(ink, t, t * 2, dw, dh);
-    pen.drawImage(img, sx, sy, sw, sh, t, t, dw, dh);
-    ctx.drawImage(inkScratch, 0, 0, w, h, dx - t, dy - t, w, h);
-    return;
-  }
-  ctx.drawImage(ink, dx - t, dy, dw, dh); ctx.drawImage(ink, dx + t, dy, dw, dh);
-  ctx.drawImage(ink, dx, dy - t, dw, dh); ctx.drawImage(ink, dx, dy + t, dw, dh);
-  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+function drawInked(img, sx, sy, sw, sh, dx, dy, dw, dh, artPixel) {
+  RealmOutline.draw(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh, artPixel);
 }
 
 /*
@@ -463,6 +416,7 @@ const observedCombat = new Map();
 const lootItems = new Map();
 function installCombat(data) {
   combatData = data;
+  carriesLine = new Set(data.carriesLine || []);
   lootItems.clear();
   for (const [name, item] of Object.entries(data.items || {})) lootItems.set(name, item);
   for (const zone of A.zones) for (const kind of zone.lives || []) {
@@ -490,6 +444,8 @@ function installCombat(data) {
   installLiveLandmarks();
   installAlienReactors();
 }
+// The few combat pictures that still carry a line of their own (tools/recover-bare.js); every other one is given the line as it is drawn.
+let carriesLine = new Set();
 function ensureCombat() {
   if (combatData || combatLoading) return combatLoading;
   combatLoading = fetch(asset('combat.json')).then(reply => {
@@ -2783,8 +2739,11 @@ const seen = seenRange(box, 80);
       const run = pic[8] || 800;
       sx += (Math.floor(time / (run / frames)) % frames) * pic[2];
     }
-    ctx.drawImage(thingArt, sx, pic[1], pic[2], pic[3],
+    // A picture the client could not account for keeps the line it carries (pic[9]); the rest are given the line as they are drawn.
+    if (pic[9]) ctx.drawImage(thingArt, sx, pic[1], pic[2], pic[3],
       on.x - w2 / 2, on.y - h2 + foot * on.k - (pic[5] / 100) * view.scale * on.k, w2, h2);
+    else drawInked(thingArt, sx, pic[1], pic[2], pic[3],
+      on.x - w2 / 2, on.y - h2 + foot * on.k - (pic[5] / 100) * view.scale * on.k, w2, h2, SS);
     drawn++;
   }
   while (m < mob.length) living += drawOneLife(mob[m++], box);
@@ -5315,7 +5274,8 @@ function drawFolk(box) {
         const spin = s.visual.rotation ? s.age * 1000 / s.visual.rotation : 0;
         ctx.rotate(Math.atan2(s.vy, s.vx) + (s.visual.angle || 0) * Math.PI / 4 + spin);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall);
+        if (carriesLine.has(s.visual.file)) ctx.drawImage(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall);
+        else drawInked(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall, 1);
         ctx.restore();
         continue;
       }
@@ -5390,7 +5350,7 @@ function drawLandmarks(box) {
     ctx.imageSmoothingEnabled = tall < held.box.h;
     ctx.globalAlpha = Math.min(1, (view.scale - from) / (from * 0.9));
     drawInked(held.img, held.box.x, held.box.y, held.box.w, held.box.h,
-      at.x - wide / 2, at.y - tall, wide, tall, (tall / held.box.h) * enlargementOf(held));
+      at.x - wide / 2, at.y - tall, wide, tall, enlargementOf(held));
     drawn++;
   }
   ctx.globalAlpha = 1;
@@ -5456,20 +5416,21 @@ function drawOneLife(one, box) {
   const w2 = wide * at.k, h2 = tall * at.k;
   const top = at.y - h2 + (foot + view.scale / 2) * at.k;
   // A combat picture arrives with its own line; every other creature is given one as it is drawn.
-  const inked = !sprite.combat;
-  const perPixel = (w2 / tile) * SS;
+  const inked = !(sprite.combat && carriesLine.has(sprite.file));
+  // The doubled sheets are two pictures pixels to a pixel of art; a boss's picture is the enlargement it was cut at.
+  const artPixel = sprite.boss ? enlargementOf(bossFor(sprite.file)) : (sprite.combat ? 1 : SS);
   if (pose.flip) {
     // The client has no eastward picture; it keeps west and turns it over.
     ctx.save();
     ctx.translate(at.x, 0);
     ctx.scale(-1, 1);
-    if (inked) drawInked(img, frame * sprite.tile, 0, sprite.tile, sprite.height, -w2 / 2, top, w2, h2, perPixel);
+    if (inked) drawInked(img, frame * sprite.tile, 0, sprite.tile, sprite.height, -w2 / 2, top, w2, h2, artPixel);
     else ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
       -w2 / 2, top, w2, h2);
     ctx.restore();
     return 1;
   }
-  if (inked) drawInked(img, frame * tile, 0, tile, height, at.x - w2 / 2, top, w2, h2, perPixel);
+  if (inked) drawInked(img, frame * tile, 0, tile, height, at.x - w2 / 2, top, w2, h2, artPixel);
   else ctx.drawImage(img, frame * tile, 0, tile, height,
     at.x - w2 / 2, top, w2, h2);
   return 1;
