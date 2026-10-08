@@ -3567,6 +3567,23 @@ const TINT = {
   }
 
   /*
+   * The frame of a swing at a given moment of it, 0 at the shot and 1 when it is over.
+   *
+   * The attack pose used to be picked from the clock the whole fight runs on, so
+   * a swing that lasts a fifth of a second showed whichever of its frames the
+   * clock happened to be on - not the first at the shot, and sometimes not the
+   * second at all. The frames are spread over the swing itself instead: the
+   * first as the shot leaves, the last as it ends.
+   */
+  function swingFrame(piece, progress) {
+    if (!piece) return 0;
+    const poses = piece.poses;
+    if (!poses) return 0;
+    const list = poses['0/2'] || poses['3/2'] || poses['0/0'] || poses[Object.keys(poses)[0]];
+    return list[Math.max(0, Math.min(list.length - 1, Math.floor(progress * list.length)))];
+  }
+
+  /*
    * One frame of a piece, stood on the floor at x.
    *
    * `tall` is the height it is drawn at - unless `fit` is set, when it is the
@@ -3599,7 +3616,7 @@ const TINT = {
   function resetDuel() {
     const boss = data.byBoss[build.boss];
     duel.at = 0; duel.dealt = 0; duel.shots.length = 0;
-    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.over = 0; duel.left = 0;
+    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.swingFor = 0; duel.over = 0; duel.left = 0;
     duel.full = boss ? boss.hp : 0;
     duel.hp = duel.full;
     duel.bits.length = 0;
@@ -3664,7 +3681,7 @@ const TINT = {
         } else {
           duel.cool += 1 / gun.rate;
         }
-        duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
+        duel.swingFor = duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
         loose(weapon, gun, true);
       }
     }
@@ -3797,6 +3814,50 @@ const TINT = {
   let duelMeasureObserver = null;
   let duelMeasure = null;
 
+  /*
+   * The ground the two of them stand on: a band of floor under their feet, tiled
+   * as the game's own ground is, with the line where it starts and a few stones.
+   * Drawn once for a size and kept; the frame blits it.
+   */
+  const duelGround = { key: '', canvas: null };
+  function groundOf(wide, tall, dpr, k, floor) {
+    const key = [wide, tall, dpr, k, floor].join('|');
+    if (duelGround.key === key && duelGround.canvas) return duelGround.canvas;
+    const c = duelGround.canvas || (duelGround.canvas = document.createElement('canvas'));
+    c.width = Math.round(wide * dpr); c.height = Math.round(tall * dpr);
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, wide, tall);
+    g.imageSmoothingEnabled = false;
+    const tile = 30 * k, y0 = Math.round(floor);
+    const shade = g.createLinearGradient(0, y0, 0, tall);
+    shade.addColorStop(0, 'rgba(98, 82, 60, .34)');
+    shade.addColorStop(1, 'rgba(34, 28, 22, .5)');
+    g.fillStyle = shade;
+    g.fillRect(0, y0, wide, tall - y0);
+    // The tiles, in the two shades the client's ground alternates between.
+    g.fillStyle = 'rgba(255, 255, 255, .035)';
+    for (let row = 0; y0 + row * tile < tall; row++) {
+      for (let col = -1; col * tile < wide; col++) {
+        if ((row + col) % 2) g.fillRect(col * tile + (row % 2 ? tile / 2 : 0), y0 + row * tile, tile, tile);
+      }
+    }
+    g.fillStyle = 'rgba(255, 255, 255, .16)';
+    g.fillRect(0, y0, wide, Math.max(1, Math.round(k)));
+    // A few stones, always in the same places.
+    let seed = 2463534242;
+    const next = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return (seed >>> 0) / 4294967296; };
+    for (let i = 0; i < Math.round(wide / (46 * k)); i++) {
+      const x = Math.round(next() * wide), y = y0 + Math.round((0.15 + next() * 0.8) * (tall - y0)), size = Math.max(2, Math.round((2 + next() * 3) * k));
+      g.fillStyle = 'rgba(190, 170, 140, .22)';
+      g.fillRect(x, y, size * 1.5, size);
+      g.fillStyle = 'rgba(0, 0, 0, .3)';
+      g.fillRect(x, y + size, size * 1.5, Math.max(1, Math.round(k * 0.7)));
+    }
+    duelGround.key = key;
+    return c;
+  }
+
   function drawDuel() {
     const canvas = el('tcDuel');
     if (!canvas) return;
@@ -3894,6 +3955,7 @@ const TINT = {
      */
     const k = Math.max(1, Math.min(2.4, tall / 170, wide / 480));
     const floor = tall - 30 * k;
+    pen.drawImage(groundOf(wide, tall, dpr, k, floor), 0, 0, wide, tall);
 
     /*
      * How far apart they stand: the range of the weapon in your hand.
@@ -3929,7 +3991,8 @@ const TINT = {
 
     /* The one on the left, in whichever pose it is in. */
     if (me) {
-      drawPiece(pen, me, frameOf(me, duel.swing > 0 ? 2 : 0, duel.at),
+      drawPiece(pen, me, duel.swing > 0 && duel.swingFor > 0
+        ? swingFrame(me, 1 - duel.swing / duel.swingFor) : frameOf(me, 0, duel.at),
         left, floor, side);
     } else {
       pen.fillStyle = '#6f8fbf';
