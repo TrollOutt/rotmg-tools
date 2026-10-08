@@ -67,6 +67,8 @@ const typeOf = one => (one.from && one.from[1]) || '';
     'WebGL must sample the centre of an integer source texel');
   assert(rendererSource.includes('baseRect.zw+vec2(1.))-vec2(.5)'),
     'the UV mapping must expose only Atlas\' half-source-texel outline band');
+  assert(rendererSource.includes('vec2 q=5.*local*baseRect.zw/max(r.zw,vec2(1.));'),
+    'a cloth is laid down five cloth pixels to a sprite pixel, as the original viewer reads it');
 }
 
 /* ---------------- the guessed bridge is gone ---------------- */

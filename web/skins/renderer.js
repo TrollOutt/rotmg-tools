@@ -22,8 +22,10 @@ export function isOutlinePixel(centre,left,right,above,below){return !centre&&Bo
 /* Grow the drawn quad, but keep the original sprite's feet and centre anchored. */
 export function quadAt(rect,width,height,x=width/2,y=height*.72,pixelScale=6,padding=0){const w=(rect.w+padding*2)*pixelScale,h=(rect.h+padding*2)*pixelScale,l=(x-w/2)/width*2-1,r=(x+w/2)/width*2-1,top=1-(y-rect.h*pixelScale-padding*pixelScale)/height*2,bottom=1-(y+padding*pixelScale)/height*2;return[l,bottom,r,bottom,l,top,r,top]}
 const V=`attribute vec2 p;attribute vec2 t;varying vec2 uv;void main(){uv=t;gl_Position=vec4(p,0,1);}`;
+/* A cloth is laid down at the scale the client draws a character: one pixel of the sprite is five pixels of cloth
+   (the original Haizor viewer reads it as mod(5 * spritePixel, clothSize)), so a 5x5 bee stripe repeats on every sprite pixel. */
 const F=`precision mediump float;varying vec2 uv;uniform sampler2D base,mask,mainTex,accTex;uniform vec4 baseRect,maskRect,mainRect,accRect;uniform vec2 baseSize,maskSize,mainSize,accSize,mainPivot,accPivot;uniform vec4 mainColor,accColor;uniform float mainMode,accMode,mainPhase,accPhase;
-vec2 textile(vec2 local,vec4 r,vec2 size,float mode,float ph,vec2 pivot){vec2 q=local*baseRect.zw/max(r.zw,vec2(1.));if(mode==2.)q+=vec2(ph,0.);else if(mode==3.)q+=vec2(0.,ph);else if(mode==4.){q-=pivot;q=mat2(cos(ph),-sin(ph),sin(ph),cos(ph))*q+pivot;}return(r.xy+fract(q)*r.zw)/size;}
+vec2 textile(vec2 local,vec4 r,vec2 size,float mode,float ph,vec2 pivot){vec2 q=5.*local*baseRect.zw/max(r.zw,vec2(1.));if(mode==2.)q+=vec2(ph,0.);else if(mode==3.)q+=vec2(0.,ph);else if(mode==4.){q-=pivot;q=mat2(cos(ph),-sin(ph),sin(ph),cos(ph))*q+pivot;}return(r.xy+fract(q)*r.zw)/size;}
 vec3 dye(sampler2D t,vec2 local,vec4 r,vec2 z,vec4 color,float mode,float ph,vec2 pivot){return mode==0.?color.rgb:texture2D(t,textile(local,r,z,mode,ph,pivot)).rgb;}
 /* Sampling outside this frame is transparent, never the next packed frame. */
 vec4 frameSample(sampler2D t,vec2 local,vec4 r,vec2 size){if(any(lessThan(local,vec2(0.)))||any(greaterThanEqual(local,r.zw)))return vec4(0.);return texture2D(t,(r.xy+floor(local)+vec2(.5))/size);}
