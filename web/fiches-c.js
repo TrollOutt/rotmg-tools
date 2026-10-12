@@ -1955,3 +1955,1068 @@
     if (hosts().length === HOSTS.length) clearInterval(wait);
   }, 100);
 })();
+
+/*
+ * The Index card, laid out again once fiches-c.js has drawn it.
+ *
+ * The site draws its card as it always has (index-page.js, then the code
+ * above); this takes the finished card and lays it out in the Index's own
+ * frame: who the thing is, the few figures that decide it said large and read
+ * against the rest of its kind, then what there is to know about it in
+ * columns that end level. The blocks the card already had (simulation, set,
+ * enchantment, preview...) are moved, not redrawn, so nothing they do is lost.
+ * A dungeon is drawn as the run through it, from the door to the last boss.
+ */
+(function () {
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const TINT = { MAXHP: '#58cfda', MAXMP: '#f4d24c', ATT: '#ca46dd', DEF: '#8b9cb3', SPD: '#58da6e', DEX: '#ff5f2a', VIT: '#dd0c32', WIS: '#4b9be7' };
+  const STAT_SHORT = { MAXHP: 'HP', MAXMP: 'MP', ATT: 'ATT', DEF: 'DEF', SPD: 'SPD', DEX: 'DEX', VIT: 'VIT', WIS: 'WIS' };
+  const STAT_ORDER = ['MAXHP', 'MAXMP', 'ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS'];
+  const BAG_SAY = ['Brown', 'Pink', 'Purple', 'Egg', 'Cyan', 'Blue', 'White', 'Gold', 'Orange', 'Red'];
+
+  /* ---------------- what is read ---------------- */
+  let D = null, projectiles = null, forge = {}, moving = {};
+  fetch('assets/index/projectiles.json').then(r => r.json()).then(j => { projectiles = j; }).catch(() => {});
+  fetch('assets/index/client-forge.json').then(r => r.json()).then(j => { forge = j || {}; }).catch(() => {});
+  fetch('assets/realm-monster-animations/index.json').then(r => r.json()).then(j => { moving = j || {}; }).catch(() => {});
+  const rec = id => D && D.all.get(id);
+  const isSomeone = r => r && (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy');
+  const extra = r => forge[r.clientId] || forge[r.name] || {};
+  /*
+   * A picture cut to what is drawn in it.
+   *
+   * A rectangle of the sheet is often far larger than its drawing - a boss
+   * declared in a 32-pixel cell with a 12-pixel body - so drawn whole it is a
+   * speck in the middle of its box, and drawn beside an 8-pixel creature the
+   * two are nothing alike in size. The sheet's own pixels say where the
+   * drawing is: it is cut to that, and grown by whole steps to fill the box.
+   * A drawing that is a line or a dot (the invisible summoner the client puts
+   * where a boss will appear) is no picture; the initials stand in for it.
+   */
+  let alpha = null;
+  (async () => {
+    try {
+      const img = new Image();
+      img.src = 'assets/index/sheet.png';
+      await img.decode();
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(img, 0, 0);
+      alpha = { w: c.width, data: g.getImageData(0, 0, c.width, c.height).data };
+    } catch (e) { alpha = null; }
+  })();
+  const drawnMemo = new Map();
+  function drawnIn(rect) {
+    if (!alpha) return null;
+    const key = rect.join(',');
+    if (drawnMemo.has(key)) return drawnMemo.get(key);
+    const [x, y, w, h] = rect;
+    let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1, many = 0;
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      if (alpha.data[((y + j) * alpha.w + x + i) * 4 + 3] < 24) continue;
+      many++;
+      if (i < x0) x0 = i; if (i > x1) x1 = i; if (j < y0) y0 = j; if (j > y1) y1 = j;
+    }
+    const out = x1 < 0 ? { blank: true } : { x: x + x0, y: y + y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+    // A one-pixel line or a few dots is no picture; a small drawing (a coal, a carrot, a fragment) is.
+    if (!out.blank && (out.w === 1 || out.h === 1 || many <= 4)) out.blank = true;
+    drawnMemo.set(key, out);
+    return out;
+  }
+  const initials = (r, px) => '<span class="pc-noart" style="width:' + px + 'px;height:' + px + 'px;font-size:' + Math.max(9, px * .36) + 'px">'
+    + esc(String((r && r.name) || '?').split(/\s+/).filter(w => /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join('')) + '</span>';
+  /*
+   * The picture of a thing the client files under several objects. A record
+   * of the Index is one name over several client objects (the boss, its
+   * summoner, its anchor); the one the record happens to be headed by may be
+   * the invisible summoner. The others are looked at too, and the one that is
+   * really drawn - the one with the most life when several are - is the face.
+   */
+  let variants = null;
+  // Every record by its name: a RealmEye-only record ("Prismimic (Boss)", "The Third Dimension (Original)") is drawn as the client's own of that name.
+  let byName = null;
+  const recNamed = name => {
+    if (!byName) { byName = new Map(); for (const x of D.all.values()) { if (!x.art || x.folded) continue; const k = String(x.name).toLowerCase(); if (!byName.has(k)) byName.set(k, x); } }
+    return byName.get(String(name).toLowerCase()) || null;
+  };
+  // "Stromwell's Rift Enemies" is RealmEye's page for the creatures of the Rift: the Rift's first portal stands for it.
+  const namesake = r => {
+    const seen = x => x && x !== r && x.art && drawnIn(x.art) && !drawnIn(x.art).blank;
+    const base = String(r.name).replace(/\s*\([^)]*\)\s*$/, '').replace(/\s+(Enemies|Guide|Deux)$/, '');
+    if (seen(recNamed(base))) return recNamed(base);
+    // A heroic or legacy copy the client draws nothing for is drawn as the dungeon it copies.
+    const plainBase = base.replace(/^(Heroic|Legacy|Infernal)\s+/, '').replace(/\s+Portal$/, '');
+    if (plainBase !== base && seen(recNamed(plainBase))) return recNamed(plainBase);
+    for (const x of D.all.values()) if (x.kind === r.kind && seen(x) && !x.folded && String(x.name).indexOf(base + ' ') === 0) return x;
+    // A portal drawn as nothing (The Inner Workings) is shown by its key.
+    if (r.kind === 'portal' && seen(recNamed(base + ' Key'))) return recNamed(base + ' Key');
+    // An event dungeon the client draws nothing for (Oryxmania) is shown by its first boss that is drawn.
+    if (r.kind === 'portal') for (const l of (r.realmeyeArchive && r.realmeyeArchive.relations) || []) { const x = l.type === 'dungeon_boss' && l.to && D.all.get(l.to); if (seen(x)) return x; }
+    // "Gumballs", "Pails": RealmEye's page for a family, drawn as the client's first one of it ("Red Gumball", "Sand Pail").
+    const one = /s$/.test(base) && base.slice(0, -1);
+    if (one) for (const x of D.all.values()) if (x.kind === r.kind && x.art && !x.folded && (x.name === one || String(x.name).endsWith(' ' + one))) return x;
+    // A set's page ("Crystal Necromancer Set") links its pieces: the first one drawn stands for the set.
+    for (const l of (r.realmeyeArchive && r.realmeyeArchive.relations) || []) { const x = l.to && /^item:/.test(l.to) && D.all.get(l.to); if (x && x.art && /Set$/.test(r.name)) return x; }
+    return null;
+  };
+  function faceOf(r) {
+    if (!r) return r;
+    const own = r.art && drawnIn(r.art);
+    if (own && !own.blank) return r;
+    if (r.kind !== 'enemy') return namesake(r) || r;
+    if (!variants) { variants = new Map(); for (const [id, x] of D.all) { const at = id.indexOf('#'); if (at > 0) { const k = id.slice(0, at); (variants.get(k) || variants.set(k, []).get(k)).push(x); } } }
+    const drawn = (variants.get(r.id) || []).filter(x => x.art && drawnIn(x.art) && !drawnIn(x.art).blank).sort((a, b) => (b.hp || 0) - (a.hp || 0));
+    return drawn[0] || namesake(r) || r;
+  }
+  const hasFace = r => { const f = faceOf(r); return Boolean(f && ((f.art && (!drawnIn(f.art) || !drawnIn(f.art).blank)) || f.icon)); };
+  const lifeOf = r => r.hp || (faceOf(r) || {}).hp || 0;
+  function art(r, px, cls = '') {
+    if (r && D && alpha) { const f = faceOf(r); if (f !== r) r = Object.assign({}, r, { art: f.art }); }
+    if (!r || !r.art || !D || !D.sheet) return r && r.icon ? '<img class="pc-art" src="' + esc(r.icon) + '" alt="" style="width:' + px + 'px;height:' + px + 'px;object-fit:contain">' : initials(r, px);
+    const cut = drawnIn(r.art);
+    if (cut && cut.blank) return r.icon ? '<img class="pc-art" src="' + esc(r.icon) + '" alt="" style="width:' + px + 'px;height:' + px + 'px;object-fit:contain">' : initials(r, px);
+    const [x, y, w, h] = cut ? [cut.x, cut.y, cut.w, cut.h] : r.art;
+    const big = Math.max(w, h);
+    const z = big <= px ? Math.max(1, Math.floor(px / big)) : px / big;
+    const ink = isSomeone(r) && window.RealmOutline ? 'filter:' + RealmOutline.filter(z) + ';' : '';
+    return '<span class="pc-art ' + cls + '" style="' + ink + 'width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(assets/index/sheet.png);background-size:'
+      + D.sheet.wide * z + 'px ' + D.sheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
+  }
+  // The moving loops are kept for the small pictures; a large one is the still, cut to its drawing, which never fails to load.
+  function alive(r, px) {
+    const key = px <= 32 && [r.clientId, r.alias, r.name].find(k => k && moving[k]);
+    if (!key) return art(r, px);
+    const ink = window.RealmOutline ? 'filter:' + RealmOutline.filter(px / 16) + ';' : '';
+    return '<img class="pc-art" src="assets/realm-monster-animations/' + encodeURIComponent(moving[key]) + '" alt="" style="' + ink + 'width:' + px + 'px;height:' + px + 'px;object-fit:contain" onerror="this.style.visibility=\'hidden\'">';
+  }
+  function statusArt(name, px) {
+    const s = rec('status:' + name);
+    if (!s || !s.statusArt || !D.statusSheet) return '';
+    const [x, y, w, h] = s.statusArt, z = px / Math.max(w, h, 8);
+    return '<span class="pc-art" style="width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(assets/index/status-icons.png);background-size:'
+      + D.statusSheet.wide * z + 'px ' + D.statusSheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
+  }
+  const bagArt = (i, px = 24) => i >= 0 && i <= 9 ? '<span class="pc-bag" style="--i:' + i + ';--px:' + px + 'px" title="' + BAG_SAY[i] + ' bag"></span>' : '';
+  function shotOf(r) {
+    const it = projectiles && projectiles.items && (projectiles.items[r.clientId] || projectiles.items[r.name]);
+    return it ? { many: it.many, rate: it.rate, shot: (it.shots || [])[0] || null } : null;
+  }
+  function shotArt(r, px) {
+    const s = shotOf(r), pic = s && s.shot && projectiles.pics[s.shot.pic];
+    if (!pic) return '';
+    const z = Math.max(1, Math.floor(px / Math.max(pic.w, pic.h, 8)));
+    return '<span class="pc-art" style="width:' + pic.w * z + 'px;height:' + pic.h * z + 'px;background-image:url(assets/index/projectiles.png);background-size:'
+      + projectiles.wide * z + 'px ' + projectiles.tall * z + 'px;background-position:' + (-pic.x * z) + 'px ' + (-pic.y * z) + 'px"></span>';
+  }
+  const tierOf = r => {
+    const L = r.labels || [];
+    if (L.includes('ST')) return { say: 'ST', cls: 'st' };
+    if (L.includes('UT')) return { say: 'UT', cls: 'ut' };
+    if (r.tier !== undefined) return { say: 'T' + r.tier, cls: 't' };
+    return { say: '', cls: 't' };
+  };
+  const facts = r => (r.realmeyeArchive && r.realmeyeArchive.facts) || {};
+  const relations = r => (r.realmeyeArchive && r.realmeyeArchive.relations) || [];
+  const n = v => Number.isInteger(v) ? v.toLocaleString('en-US') : String(+Number(v).toFixed(2));
+  const slotSay = r => D && D.slots && D.slots[r.slot] ? D.slots[r.slot][0] : (r.hand || '');
+  const open = (r, inner, cls = '') => '<button type="button" class="ix-jump ' + cls + '" data-open="' + esc(r.id) + '" title="' + esc(r.said || r.name) + '">' + inner + '</button>';
+
+  /* ---------------- the card the site drew ---------------- */
+  function blocksOf(root) {
+    const out = new Map();
+    root.querySelectorAll('.ix-block').forEach(b => {
+      const t = b.querySelector('summary, h4');
+      const title = t ? t.childNodes[0].textContent.trim() : '';
+      if (title && !out.has(title)) out.set(title, b);
+    });
+    return out;
+  }
+  // The rows of a block: label, the records its chips open, and the words of the chips that open nothing.
+  function rowsOf(block) {
+    if (!block) return [];
+    return [...block.querySelectorAll('.ix-link-row')].map(row => {
+      const label = (row.querySelector('i') || {}).textContent || '';
+      const ids = [...row.querySelectorAll('[data-open]')].map(b => b.dataset.open);
+      const words = [...row.querySelectorAll('.ix-data-chip, a.ix-jump')].filter(x => !x.dataset.open).map(x => x.textContent.trim()).filter(Boolean);
+      return { label: label.trim(), ids: [...new Set(ids)], words };
+    });
+  }
+  function rowIds(root, rx) {
+    const ids = [];
+    root.querySelectorAll('.ix-link-row').forEach(row => {
+      const l = row.querySelector('i');
+      if (!l || !rx.test(l.textContent)) return;
+      row.querySelectorAll('[data-open]').forEach(b => { if (!ids.includes(b.dataset.open)) ids.push(b.dataset.open); });
+    });
+    return ids;
+  }
+
+  /* ================================================================ *
+   * Gear                                                               *
+   * ================================================================ */
+  /*
+   * A weapon's damage a second with the stats at their cap and nothing in the
+   * way: the one number that ranks weapons against each other. The client's
+   * own rules - shots a second 1.5 + 6.5 x DEX/75 times the rate of fire,
+   * damage x (0.5 + ATT/50) - at 75 and 75.
+   */
+  /*
+   * The figures, done as Theory does them (weaponRate, web/theorycraft.js) at
+   * 75 ATT and 75 DEX against no armour: a weapon made of several channels
+   * (Damnation's ball and its two chains) fires them together, each at its
+   * own rate, and their damage is added; a burst (a longbow) is counted over
+   * its whole cycle, the pause included.
+   */
+  const AT_DEX = 1.5 + 6.5 * (75 / 75), AT_ATT = 0.5 + 75 / 50;
+  const channelsOf = r => { const f = r.fires || []; const sub = f.filter(x => x.subattack); return sub.length ? sub : f.slice(0, 1); };
+  const ownRate = (r, f) => f.rate === undefined ? (r.rate === undefined ? 1 : r.rate) : f.rate;
+  const manyOf = (r, f, ch) => (ch.length > 1 || f.subattack ? f.many || r.many : r.many || f.many) || 1;
+  function cycleOf(burst, rate) {
+    if (!burst || !(burst.many > 1) || !(rate > 0)) return null;
+    const wait = burst.wait + (burst.rush - burst.wait) * 1;
+    return { every: Math.max(burst.many / rate, wait), shots: burst.many };
+  }
+  const dpsOf = r => {
+    const ch = channelsOf(r);
+    let dps = 0;
+    for (const f of ch) {
+      if (!f.high && !f.low) continue;
+      const each = ((f.low + (f.high === undefined ? f.low : f.high)) / 2) * AT_ATT;
+      const rate = AT_DEX * ownRate(r, f), many = manyOf(r, f, ch);
+      const cycle = cycleOf(f.burst || r.burst, rate);
+      dps += cycle ? each * many * cycle.shots / cycle.every : each * many * rate;
+    }
+    return dps;
+  };
+  // How many shots one press fires, and at what rate: every channel's shots, the first channel's rate.
+  const shotsOf = r => { const ch = channelsOf(r); return ch.length ? ch.reduce((s, f) => s + manyOf(r, f, ch), 0) : Math.max(r.shots || 0, 1); };
+  const rateOf = r => { const f = channelsOf(r)[0]; return f ? ownRate(r, f) : (parseFloat(facts(r).rate_of_fire) / 100) || 1; };
+  const peersMemo = new Map();
+  function peers(r) {
+    if (peersMemo.has(r.slot)) return peersMemo.get(r.slot);
+    const list = [...D.all.values()].filter(x => x.kind === 'item' && x.slot === r.slot && !x.hidden && !x.folded && !x.use && x.hand);
+    peersMemo.set(r.slot, list);
+    return list;
+  }
+  // Where a number stands among the same kind of item: its place, and how far along the range it is.
+  function standing(r, value, of) {
+    const all = peers(r).map(of).filter(v => v > 0).sort((a, b) => b - a);
+    if (!all.length || !(value > 0)) return null;
+    const place = all.findIndex(v => v <= value) + 1 || all.length;
+    return { place, of: all.length, part: (value - all[all.length - 1]) / Math.max(1e-9, all[0] - all[all.length - 1]) };
+  }
+  const ordinal = k => k + ((k % 100 >= 11 && k % 100 <= 13) ? 'th' : ['th', 'st', 'nd', 'rd'][k % 10] || 'th');
+  const rangeWord = t => t < 4.6 ? 'close' : t < 7 ? 'mid range' : 'long range';
+  function figure(label, value, sub, stand, color) {
+    return '<div class="pg-fig"><span class="pg-fig-l">' + label + '</span><b' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</b>'
+      + (sub ? '<span class="pg-fig-s">' + sub + '</span>' : '')
+      + (stand ? '<span class="pg-rank" title="' + stand.place + ' of ' + stand.of + '"><i style="width:' + Math.round(8 + stand.part * 92) + '%"></i></span><span class="pg-fig-r">'
+        + (stand.place === 1 ? 'The best of ' + stand.of : ordinal(stand.place) + ' of ' + stand.of) + '</span>' : '')
+      + '</div>';
+  }
+  function gearFigures(r) {
+    const f = (r.fires || [])[0], s = shotOf(r), kind = slotSay(r).toLowerCase() + 's';
+    const out = [];
+    if (r.hand === 'weapon' && f && f.high) {
+      const dps = dpsOf(r);
+      out.push(figure('Damage a second', n(Math.round(dps)), 'with 75 <b style="color:' + TINT.ATT + '">ATT</b> and 75 <b style="color:' + TINT.DEX + '">DEX</b>', standing(r, dps, dpsOf)));
+      out.push(figure('Each shot', n(f.low) + (f.low !== f.high ? '–' + n(f.high) : ''), (shotsOf(r) > 1 ? shotsOf(r) + ' shots · ' : '1 shot · ') + Math.round(rateOf(r) * 100) + '% rate',
+        standing(r, (f.low + f.high) / 2, x => { const y = (x.fires || [])[0]; return y && y.high ? (y.low + y.high) / 2 : 0; })));
+      out.push(figure('Range', n(f.reach) + '<small> tiles</small>', rangeWord(f.reach), standing(r, f.reach, x => ((x.fires || [])[0] || {}).reach || 0)));
+    } else if (r.hand === 'ability') {
+      if (r.mp) out.push(figure('Costs', r.mp + '<small> MP</small>', r.cool ? n(r.cool) + 's cooldown' : '', null, TINT.MAXMP));
+      if (f && f.high) out.push(figure('Damage', n(f.low) + (f.low !== f.high ? '–' + n(f.high) : ''), shotsOf(r) > 1 ? shotsOf(r) + ' shots' : ''));
+      const heal = (r.conditions || []).find(c => c.effect === 'Healing' && c.amount);
+      if (heal) out.push(figure('Heals', String(+heal.amount), 'over ' + heal.duration + 's · ' + (heal.range ? heal.range + ' tiles' : 'the party'), null, TINT.MAXHP));
+    }
+    const worn = r.worn || {};
+    const stats = STAT_ORDER.filter(k => worn[k]);
+    if (stats.length && out.length < 4) {
+      out.push('<div class="pg-fig pg-stats"><span class="pg-fig-l">On equip</span><div>' + stats.map(k => '<b style="color:' + TINT[k] + '">' + (worn[k] > 0 ? '+' : '') + worn[k] + ' <small>' + STAT_SHORT[k] + '</small></b>').join('') + '</div></div>');
+    }
+    return out.length ? '<div class="pg-figs">' + out.join('') + '</div>' : '';
+  }
+  /*
+   * What makes it more than its numbers, each thing said as a line with a
+   * picture: an effect the client names, a status it deals or gives (its own
+   * icon), the way its shot flies (a sign), the set it belongs to, and the
+   * note players wrote about it.
+   */
+  function shotTraits(r) {
+    const p = shotOf(r), sh = p && p.shot;
+    if (!sh) return [];
+    const out = [];
+    const many = shotsOf(r), kinds = channelsOf(r).length;
+    if (kinds > 1) out.push(['⋔', kinds + ' different shots together', 'each with its own damage and reach, see its simulation']);
+    else if (many > 1) out.push(['⋔', many + ' shots at once', 'fanned out in front of you']);
+    if (sh.pierce) out.push(['⛨', 'Ignores defense', 'every hit lands in full, whatever the armour']);
+    if (sh.multi) out.push(['⇶', 'Goes through enemies', 'one shot can hit several of them']);
+    if (sh.cover) out.push(['▦', 'Goes through walls', 'and through anything else in its way']);
+    if (sh.boom) out.push(['↺', 'Comes back', 'like a boomerang, hitting on the way back too']);
+    if (sh.amp || sh.wavy || sh.param) out.push(['∿', 'Weaves', sh.param ? 'in a figure of eight' : 'from side to side as it flies']);
+    if (sh.accel) out.push([sh.accel > 0 ? '»' : '«', sh.accel > 0 ? 'Speeds up' : 'Slows down', sh.accel > 0 ? 'and reaches further than it starts' : 'and lingers where it stops']);
+    return out;
+  }
+  function gearSpecial(r, root, blocks) {
+    const rows = [];
+    const row = (pic, title, text, cls = '') => rows.push('<li class="pg-row ' + cls + '"><span class="pg-ico">' + pic + '</span><div><b>' + title + '</b>' + (text ? '<span>' + text + '</span>' : '') + '</div></li>');
+    for (const d of r.does || []) row('✦', esc(d[0]), d[1] ? esc(d[1]) : '');
+    const seen = new Set();
+    for (const c of r.conditions || []) {
+      if (!c.effect || c.effect === 'Healing' || seen.has(c.effect)) continue;
+      seen.add(c.effect);
+      const verb = c.target === 'enemy' ? 'Inflicts' : 'Gives';
+      const who = c.target === 'enemy' ? (c.on === 'hit' ? 'to what it hits' : 'to enemies around') : c.target === 'self' ? 'to you' : c.target === 'allies' ? 'to the party' : '';
+      row(statusArt(c.effect, 28) || '✦', verb + ' ' + esc(c.effect), [who, c.duration ? 'for ' + c.duration + ' seconds' : ''].filter(Boolean).join(' '), 'is-status');
+    }
+    if (!rows.length && facts(r).effect_s) row('✦', esc(facts(r).effect_s), '');
+    for (const [sign, title, text] of shotTraits(r)) row(sign, title, text, 'is-shot');
+    const note = blocks.get('Notes');
+    const said = note ? (note.querySelector('.ix-prose, p') || note).textContent.replace(/^\s*Notes\s*RealmEye\s*/, '').trim() : '';
+    const set = r.set && rec('set:' + r.set);
+    if (set) row(art(set, 28), 'Part of the ' + esc(set.name), 'the full set changes its shot and adds to your stats', 'is-set');
+    if (!rows.length && !said) return '';
+    return '<section class="pg-sec pg-special">' + (rows.length ? '<ul class="pg-rows">' + rows.join('') + '</ul>' : '')
+      + (said && !/^Part of the .* Set\.?$/.test(said) ? '<blockquote class="pg-note">' + esc(said) + '<cite>RealmEye</cite></blockquote>' : '') + '</section>';
+  }
+  /*
+   * Where it comes from, read from RealmEye's own links rather than from the
+   * card's chips: who drops it and where they live, what it is bought or
+   * opened from, and its blueprint apart. Each source a card with its picture.
+   */
+  const pretty = slug => String(slug).replace(/^[a-z]+:/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  let portalByName = null;
+  // A dungeon whose bosses come from more than three of the client's files borrows them from elsewhere.
+  const gatherMemo = new Map();
+  const gathers = p => {
+    if (gatherMemo.has(p.id)) return gatherMemo.get(p.id);
+    const files = new Set();
+    for (const x of relations(p)) if (/^dungeon_(boss|miniboss|treasure)/.test(x.type) && x.to && rec(x.to) && rec(x.to).from) files.add(rec(x.to).from[0]);
+    gatherMemo.set(p.id, files.size > 3);
+    return files.size > 3;
+  };
+  function homeOf(enemy) {
+    const lives = D.archive && D.archive() && D.archive().livesIn;
+    const at = lives && lives.get(enemy.id);
+    const places = at ? [...at].map(rec).filter(Boolean) : [];
+    if (places.length) {
+      const score = p => (p.kind === 'portal' ? 0 : 4) + (gathers(p) ? 2 : 0) + (/^Legacy /.test(p.name) ? 1 : 0);
+      return places.slice().sort((a, b) => score(a) - score(b))[0];
+    }
+    // RealmEye's sidebar says it in words ("… EXP: 4,000 Location: Lost Halls") when no link does.
+    const said = (Object.values(facts(enemy)).filter(v => typeof v === 'string').join(' ').split('Location: ')[1] || '').split(' ');
+    // The words after it run on into the next field: the longest run that names a dungeon is the place.
+    for (let k = Math.min(said.length, 8); k > 0; k--) {
+      const name = said.slice(0, k).join(' ').replace(/[.,;]$/, '');
+      if (!portalByName) { portalByName = new Map(); for (const x of D.all.values()) if (x.kind === 'portal' && !x.folded && !portalByName.has(x.name)) portalByName.set(x.name, x); }
+      if (portalByName.has(name)) return portalByName.get(name);
+    }
+    return null;
+  }
+  const STANDS = [
+    [/experience|fame/i, 'item:XP Booster', 'earned by playing'],
+    [/^shop$/i, 'item:Realm Gold', 'bought with Realm Gold'],
+    [/crucible/i, 'item:Crucible Mystery Chest', 'a reward of the Crucible'],
+    [/mystery box/i, 'item:Wooden Zodiac Mystery Chest', 'from the shop’s mystery boxes'],
+    [/tinkerer/i, 'item:Cured Tinkerer Pet Skin', 'a reward for his quests in the Nexus'],
+    [/^forge$/i, 'item:Forge Chest Unlocker', 'made at the Forge'],
+    [/exaltation/i, 'item:Exaltation Banner of Attack', 'a reward for exalting a class'],
+  ];
+  function gearSource(r) {
+    const rel = relations(r), f = facts(r), cx = extra(r);
+    const cards = [], blue = [];
+    const card = (into, pic, title, sub, id) => into.push((id ? '<button type="button" class="ix-jump pg-src" data-open="' + esc(id) + '">' : '<div class="pg-src is-plain">')
+      + '<span class="pg-src-pic">' + pic + '</span><span class="pg-src-t"><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (id ? '</button>' : '</div>'));
+    const seenNames = new Set();
+    const places = new Map();
+    for (const x of rel) {
+      const blueprint = x.type.startsWith('blueprint_');
+      const kind = x.type.replace(/^blueprint_/, '');
+      if (kind !== 'dropped_by' && kind !== 'obtained_through') continue;
+      const into = blueprint ? blue : cards;
+      const o = x.to && rec(x.to);
+      if (o) {
+        const base = String(o.name).replace(/^Heroic /, '');
+        if (seenNames.has(base + blueprint)) continue;
+        seenNames.add(base + blueprint);
+        if (o.kind === 'enemy') {
+          // Gathered by the place they live in: a player farms a dungeon, not a creature.
+          const home = homeOf(o), key = (home ? home.id : o.id) + '|' + blueprint;
+          const at = places.get(key) || places.set(key, { home, into, who: [] }).get(key);
+          at.who.push(o);
+        } else if (o.kind === 'portal' && /Nexus/.test(o.name) && f.obtained_through) {
+          // "Nexus Portal" stands for the Nexus's shop: RealmEye's sentence says what is bought there.
+          const box = [...D.all.values()].find(it => it.kind === 'item' && f.obtained_through.indexOf(it.name) === 0);
+          if (box) card(into, art(box, 40), esc(box.name), 'bought in the Nexus, it can hold this', box.id);
+          else card(into, art(o, 40), 'The Nexus', esc(f.obtained_through), o.id);
+        } else card(into, art(o, 40), esc(o.said || o.name), kind === 'dropped_by' ? 'drops it' : 'gives it', o.id);
+      } else if (x.toRealmEye && recNamed(pretty(x.toRealmEye))) {
+        // A page RealmEye links by name only: the client's own record of that name, with its picture.
+        const o2 = recNamed(pretty(x.toRealmEye));
+        if (seenNames.has(o2.name + blueprint)) continue;
+        seenNames.add(o2.name + blueprint);
+        card(into, art(o2, 40), esc(o2.said || o2.name), /chest/i.test(o2.name) ? 'a reward chest that can hold it' : kind === 'dropped_by' ? 'drops it' : 'gives it', o2.id);
+      } else if (x.toRealmEye) {
+        const word = pretty(x.toRealmEye);
+        if (seenNames.has(word + blueprint)) continue;
+        seenNames.add(word + blueprint);
+        // A part of the game rather than a thing in it: the client's own picture that players know it by.
+        const said = STANDS.find(([rx]) => rx.test(word));
+        const stand = said && rec(said[1]);
+        card(into, stand ? art(stand, 40) : '<span class="pg-src-glyph">' + (/chest/i.test(word) ? '▣' : '✦') + '</span>', esc(word.replace(/ And /, ' and ')), stand ? said[2] : /chest/i.test(word) ? 'a reward chest' : '', null);
+      }
+    }
+    for (const { home, into, who } of places.values()) {
+      const names = who.map(e => e.name);
+      const sub = '<span class="pg-src-who">' + who.filter(hasFace).slice(0, 4).map(e => alive(e, 20)).join('') + '</span>' + esc(names.slice(0, 2).join(', ') + (names.length > 2 ? ' +' + (names.length - 2) : ''));
+      if (home) card(into, art(home, 40), esc(home.said || home.name), sub, home.id);
+      else card(into, alive(who[0], 40), esc(who[0].name), 'drops it', who[0].id);
+    }
+    // Places first, the creatures with no known home after, chests last.
+    if (!cards.length) return '';
+    const MAX = 8, more = cards.length - MAX;
+    const bagName = cx.bag === undefined ? '' : BAG_SAY[cx.bag] === 'Egg' ? 'an egg basket' : ('a' + (/^[AEIOU]/.test(BAG_SAY[cx.bag]) ? 'n ' : ' ') + BAG_SAY[cx.bag].toLowerCase() + ' bag');
+    return '<section class="pg-sec pg-source"><h3>Where it comes from</h3>'
+      + (bagName ? '<p class="pg-bagsay">' + bagArt(cx.bag, 32) + '<span>Drops in <b>' + bagName + '</b></span></p>' : '')
+      + '<div class="pg-srcs">' + cards.slice(0, MAX).join('') + (more > 0 ? '<span class="pg-src is-more">+' + more + ' more</span>' : '') + '</div>'
+      + '</section>';
+  }
+  /* The rest of what the client says about it, each a figure of its own at a size that can be read. */
+  const DUST_TINT = { red: '#ff6b6b', blue: '#6aa8ff', green: '#6ee07a', purple: '#c084ff' };
+  /*
+   * What it is worth and what can be done with it, said as the game shows it
+   * rather than as a list: its worth on one line of figures, the forge as a
+   * recipe (what goes in, what comes out), the enchanting as its slots.
+   */
+  function gearCraft(r, root, ench) {
+    const cx = extra(r), parts = [];
+    const fig = (value, label, tint) => '<span class="pc-fig"><b' + (tint ? ' style="color:' + tint + '"' : '') + '>' + value + '</b><small>' + label + '</small></span>';
+    const figs = [fig(r.sb ? 'Soulbound' : 'Tradeable', r.sb ? 'stays with the character' : 'can be traded')];
+    if (cx.feed) figs.push(fig(n(cx.feed), 'feed power'));
+    if (cx.xp) figs.push(fig('+' + cx.xp + '%', 'XP while worn'));
+    if (cx.power !== undefined) figs.push(fig(String(cx.power), 'power level'));
+    parts.push('<div class="pc-figs">' + figs.join('') + '</div>');
+    // The forge, read from the site's own rows.
+    const rows = new Map();
+    const links = root.querySelector('.fc2-forge .ix-links');
+    if (links) links.querySelectorAll('.ix-link-row').forEach(row => { const l = row.querySelector('i'), v = row.querySelector('span'); if (l && v) rows.set(l.textContent.trim().toLowerCase(), v); });
+    const pick = rx => { for (const [k, v] of rows) if (rx.test(k)) return v; return null; };
+    const mats = v => [...v.querySelectorAll('.fc2-matchip')].map(c => '<span class="pc-mat" title="' + esc(c.title || '') + '">' + c.innerHTML + '</span>').join('');
+    const thing = (id, px = 36) => { const x = rec(id); return x ? open(x, '<span class="pc-thing-pic">' + art(x, px) + '</span>', 'pc-thing') : ''; };
+    const plus = '<i class="pc-op">+</i>', gives = '<i class="pc-op">→</i>';
+    const cost = pick(/forging cost/), fam = pick(/sacrific/), dis = pick(/dismantl/);
+    const recipes = [];
+    if (cost) {
+      const bp = [...cost.querySelectorAll('.ix-jump[data-open]')].map(b => thing(b.dataset.open)).join('');
+      recipes.push('<div class="pc-recipe"><span class="pc-recipe-say">Forged from</span><div class="pc-recipe-line">' + mats(cost) + (bp ? '<span class="pc-keep">' + plus + bp + '</span>' : '') + '<span class="pc-keep">' + gives + thing(r.id, 40) + '</span></div></div>');
+    }
+    if (fam) {
+      const many = (/(\d+)/.exec([...rows.keys()].find(k => /sacrific/.test(k)) || '') || [])[1] || '2';
+      const kin = [...fam.querySelectorAll('.ix-jump[data-open]')].filter(b => b.dataset.open !== r.id).map(b => thing(b.dataset.open, 32)).join('');
+      recipes.push('<div class="pc-recipe"><span class="pc-recipe-say">or by sacrificing ' + many + ' of its family</span><div class="pc-recipe-line is-kin">' + kin + '</div></div>');
+    }
+    if (dis) recipes.push('<div class="pc-recipe"><span class="pc-recipe-say">Dismantled</span><div class="pc-recipe-line">' + '<span class="pc-keep">' + thing(r.id, 40) + gives + '</span>' + mats(dis) + '</div></div>');
+    if (recipes.length) parts.push('<div class="pc-forge"><h4 class="pc-h">At the forge</h4>' + recipes.join('') + '</div>');
+    // The enchanting, read from the site's block: a slot drawn for each, with what it costs.
+    if (ench) {
+      const er = new Map();
+      ench.querySelectorAll('.ix-link-row').forEach(row => { const l = row.querySelector('i'), v = row.querySelector('span'); if (l && v) er.set(l.textContent.trim().toLowerCase(), v); });
+      const status = er.get('status'), dust = er.get('dust per slot');
+      const slots = +((/(\d+) slots/.exec(status ? status.textContent : '') || [])[1] || 0);
+      const costs = dust ? [...dust.querySelectorAll('.fc2-matchip')] : [];
+      let h = '<div class="pc-ench"><h4 class="pc-h">Enchanting</h4>';
+      if (slots) h += '<div class="pc-slots">' + Array.from({ length: slots }, (_, i) => '<span class="pc-slot">' + (costs[i] ? '<span class="pc-mat">' + costs[i].innerHTML + '</span>' : '') + '<i>slot ' + (i + 1) + '</i></span>').join('') + '</div>';
+      else if (status) h += '<p class="pc-line">' + esc(status.textContent.trim()) + '</p>';
+      const line = (key, say) => { const v = er.get(key); return v ? '<p class="pc-line"><span>' + say + '</span>' + v.innerHTML + '</p>' : ''; };
+      h += line('rolls from', 'Rolls from') + line('can awaken', 'Can awaken') + '</div>';
+      parts.push(h);
+    }
+    return '<section class="pg-sec pc-craft">' + parts.join('') + '</section>';
+  }
+  /* ---------------- the three gear cards ---------------- */
+  function gearHero(r, root, compact) {
+    const t = tierOf(r), f = facts(r);
+    const set = r.set && rec('set:' + r.set);
+    const classes = [...D.all.values()].filter(c => c.kind === 'class' && (c.slots || []).includes(r.slot));
+    const prose = root.querySelector('.fc2-sheet .ix-prose');
+    const shot = shotArt(r, compact ? 32 : 40);
+    return '<header class="pg-hero' + (compact ? ' is-compact' : '') + '">'
+      + '<div class="pg-stage">' + art(r, compact ? 64 : 96) + (shot ? '<span class="pg-shot" title="Its shot">' + shot + '</span>' : '') + '</div>'
+      + '<div class="pg-id"><p class="pg-eyebrow"><span>' + esc(slotSay(r)) + '</span>' + (t.say ? '<span class="pg-tier is-' + t.cls + '">' + esc(f.tier || t.say) + '</span>' : '') + '</p>'
+      + '<h2 class="pg-name is-' + t.cls + '">' + esc(r.said || r.name) + '</h2>'
+      + '<div class="pg-who">' + classes.map(c => open(c, art(c, 24), 'pg-class')).join('')
+      + (set ? open(set, art(set, 20) + '<span>' + esc(set.name) + '</span>', 'pg-set') : '') + '</div>'
+      + (prose && !compact ? '<p class="pg-desc">' + esc(prose.textContent) + '</p>' : '') + '</div></header>';
+  }
+  // The site's own blocks, the ones a reader opens first first, an empty one ("Not part of a set") left out.
+  function siteBlocks(blocks) {
+    const ORDER = ['Simulation', 'Set', 'Enchantment', 'Variants', 'Other data', 'Tags'];
+    const weight = b => { const t = (b.querySelector('summary, h4') || {}).textContent || ''; const k = ORDER.findIndex(o => t.trim().startsWith(o)); return k < 0 ? 9 : k; };
+    return [...blocks].filter(([title, b]) => !b.classList.contains('fc2-sheet') && !b.classList.contains('fc2-empty') && !/Not part of a set/.test(b.textContent)
+      && !['Where to get it', 'Effects', 'Notes'].includes(title)).map(([, b]) => b).sort((a, b) => weight(a) - weight(b));
+  }
+  const blockTitled = (list, rx) => list.find(b => rx.test(((b.querySelector('summary, h4') || {}).textContent || '').trim()));
+
+  /* What is under the head and its figures: the simulation, what makes it special, where it comes from, what it is worth. */
+  function lowerParts(r, root, blocks) {
+    const list = siteBlocks(blocks);
+    const take = rx => { const b = blockTitled(list, rx); if (b) list.splice(list.indexOf(b), 1); return b; };
+    const sim = take(/^Simulation/), set = take(/^Set/), ench = take(/^Enchantment/);
+    const special = gearSpecial(r, root, blocks), source = gearSource(r);
+    return { sim, set, ench, rest: list, special, source, craft: gearCraft(r, root, ench) };
+  }
+  // A section's own heading is said by the tab or the question that holds it.
+  const bare = html => html.replace(/<h3>[\s\S]*?<\/h3>/, '');
+  const node = html => { const b = document.createElement('div'); b.className = 'pq-body'; b.innerHTML = html; return b; };
+
+  function lowerColumns(host, p) {
+    const parts = [p.sim, p.source && node(p.source).firstElementChild, p.special && node(p.special).firstElementChild, p.craft && node(p.craft).firstElementChild, p.set];
+    host.appendChild(columnsOf(parts));
+    if (p.rest.length) {
+      const more = document.createElement('details'); more.className = 'pg-sec pk-more';
+      more.innerHTML = '<summary>More about it</summary>';
+      p.rest.forEach(b => more.appendChild(b));
+      host.appendChild(more);
+    }
+  }
+  // The parts of a card's lower half, waiting in the first column until the card is on the page and they can be measured (balanceColumns).
+  function columnsOf(parts) {
+    const grid = document.createElement('div'); grid.className = 'pk-grid';
+    for (let i = 0; i < 3; i++) { const col = document.createElement('div'); col.className = 'pk-col'; grid.appendChild(col); }
+    parts.filter(Boolean).forEach(x => { x.dataset.pk = ''; grid.firstElementChild.appendChild(x); });
+    return grid;
+  }
+  /*
+   * Columns that end level: two in a half window, three when the card has the
+   * whole screen. Every part is measured at a column's width, then laid out the
+   * way whose tallest column is the shortest, keeping their order within each
+   * column; the first part (the simulation, the combat) opens the first column.
+   * Columns left empty are not drawn, so a card with little to say is narrower.
+   */
+  function balanceColumns(card) {
+    for (const grid of card.querySelectorAll('.pk-grid')) {
+      const cols = [...grid.children];
+      const parts = [...grid.querySelectorAll('[data-pk]')];
+      cols.forEach(c => { c.hidden = false; });
+      grid.style.removeProperty('grid-template-columns');
+      const many = Math.min(getComputedStyle(grid).gridTemplateColumns.split(' ').length, 3, parts.length);
+      if (many < 2) { parts.forEach(x => cols[0].appendChild(x)); cols.slice(1).forEach(c => { c.hidden = true; }); grid.style.gridTemplateColumns = 'minmax(0, 1fr)'; continue; }
+      parts.forEach(x => cols[0].appendChild(x));
+      const tall = parts.map(x => x.offsetHeight + 12);
+      let best = null;
+      const ways = Math.pow(many, parts.length);
+      for (let w = 0; w < ways; w++) {
+        let rest = w; const into = [], sums = new Array(many).fill(0);
+        for (let i = 0; i < parts.length; i++) { into.push(rest % many); rest = Math.floor(rest / many); }
+        if (into[0] !== 0) continue;
+        into.forEach((c, i) => { sums[c] += tall[i]; });
+        if (sums.some(x => !x)) continue;
+        const score = Math.max(...sums) * 1000 + (Math.max(...sums) - Math.min(...sums));
+        if (!best || score < best.score) best = { into, score };
+      }
+      if (!best) best = { into: parts.map(() => 0) };
+      parts.forEach((x, i) => cols[best.into[i]].appendChild(x));
+      const used = cols.filter(c => c.children.length).length;
+      cols.forEach(c => { c.hidden = !c.children.length; });
+      grid.style.gridTemplateColumns = 'repeat(' + used + ', minmax(0, 1fr))';
+    }
+  }
+
+  function gear(root, r) {
+    const blocks = blocksOf(root);
+    const host = document.createElement('div');
+    host.innerHTML = '<div class="pc pg pg-columns">' + gearHero(r, root) + gearFigures(r) + '<div data-pclow class="pg-low"></div></div>';
+    lowerColumns(host.querySelector('[data-pclow]'), lowerParts(r, root, blocks));
+    const card = host.firstElementChild;
+    root.querySelector('.fc-cols').replaceWith(card);
+    requestAnimationFrame(() => balanceColumns(card));
+  }
+
+  /* ================================================================ *
+   * Dungeons                                                           *
+   * ================================================================ */
+  const ROLE = { dungeon_boss: 'Boss', dungeon_miniboss: 'Miniboss', dungeon_treasure_boss: 'Treasure room', dungeon_enemy: 'Enemy', dungeon_boss_minion: 'Minion', dungeon_minion: 'Minion', dungeon_hazard: 'Hazard' };
+  const everywhere = it => relations(it).filter(x => x.type === 'dropped_by' && /^enemy:/.test(x.to || '')).length >= 15;
+  const notable = it => { if (everywhere(it)) return false; const L = it.labels || []; return (it.hand && (L.includes('UT') || L.includes('ST'))) || /Engraving/i.test(it.name) || L.includes('ENGRAVING') || L.includes('FORGESTORE') || ['mark', 'shard', 'artifact'].includes(it.family); };
+  function dungeonData(r, root) {
+    const rel = relations(r);
+    const roster = new Map();
+    for (const x of rel) if (ROLE[x.type] && x.to && rec(x.to) && !/^Test |\((Rehearsal|Test)\)$/.test(rec(x.to).name) && !roster.has(x.to)) roster.set(x.to, ROLE[x.type]);
+    const interest = rel.filter(x => x.type === 'dungeon_drop_interest' && x.to && rec(x.to)).map(x => rec(x.to));
+    const givers = new Map();
+    for (const it of D.all.values()) {
+      if (it.kind !== 'item') continue;
+      for (const x of relations(it)) if (x.type === 'dropped_by' && x.to && roster.has(x.to)) (givers.get(it.id) || givers.set(it.id, []).get(it.id)).push(x.to);
+    }
+    // Rehearsal copies are the same thing again for the test server: shown once, as the real one.
+    // "Marks", "Themed Sets", "Mystery Items" are RealmEye's pages about a kind of thing, not things that drop; their own pieces are listed.
+    const family = it => !it.art && /^(Marks|Themed Sets|Mystery Items)$/.test(it.name);
+    const items = [...new Map([...interest, ...[...givers.keys()].map(rec)].filter(it => it && !it.hidden && !family(it) && !/\((Rehearsal|Test)\)$/.test(it.name)).map(it => [it.id, it])).values()];
+    const doors = rowIds(root, /Dropped by/i).map(rec).filter(Boolean);
+    const esc2 = String(r.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const key = [...D.all.values()].find(it => it.kind === 'item' && new RegExp('^' + esc2 + ' Key$', 'i').test(it.name));
+    const byGiver = new Map();
+    for (const it of items) for (const g of givers.get(it.id) || []) (byGiver.get(g) || byGiver.set(g, []).get(g)).push(it);
+    /*
+     * Who drops a thing RealmEye lists here without linking its dropper to the dungeon. The client
+     * keeps a dungeon's creatures together in one of its files (the Shatters' Pyro Warlock beside its
+     * Forgotten King): a dropper from the file of this dungeon's bosses lives here, unless RealmEye
+     * places it in another dungeon (Esben the Neurotic shares the Ice Cave's file but lives in the Ice
+     * Citadel). A dungeon whose bosses come from many files (the Trials of Cronus borrows them) is
+     * not judged by file. RealmEye's own words ("Location: Lost Halls") count as well.
+     */
+    const marks = new Set([...D.all.values()].filter(x => x.kind === 'item' && x.family === 'mark').flatMap(x => relations(x).filter(l => l.type === 'dropped_by' && l.to).map(l => l.to)));
+    // One that gives a Mark is a boss, one that drops an untiered item a miniboss (the Interregnum's four), the rest the crowd.
+    const roleFound = (e, it, how) => marks.has(e.id) ? 'Boss' : how === 'dropped_by' && notable(it) && tierOf(it).cls === 'ut' ? 'Miniboss' : 'Enemy';
+    const found = new Set();
+    const files = new Set();
+    for (const [id, role] of roster) { const e = rec(id); if (e && e.from && role !== 'Enemy' && role !== 'Minion' && role !== 'Hazard') files.add(e.from[0]); }
+    const byFile = files.size > 0 && files.size <= 3;
+    const plain = n => String(n).replace(/^Legacy\s+/i, '').replace(/\s+Portal$/, '').replace(/\s*\([^)]*\)$/, '').trim();
+    const livesHere = e => {
+      if (roster.has(e.id)) return true;
+      const home = homeOf(e);
+      if (home) return home.id === r.id || plain(home.name) === plain(r.name);
+      return byFile ? Boolean(e.from && files.has(e.from[0])) : true;
+    };
+    for (const it of items) {
+      if (givers.has(it.id)) continue;
+      for (const x of relations(it)) {
+        const e = (x.type === 'dropped_by' || x.type === 'obtained_through') && x.to && rec(x.to);
+        if (!e || e.kind !== 'enemy' || !livesHere(e)) continue;
+        const role = roleFound(e, it, x.type);
+        if (!roster.has(e.id)) { roster.set(e.id, role); found.add(e.id); }
+        else if (found.has(e.id) && rank[role] < rank[roster.get(e.id)]) roster.set(e.id, role);
+        (givers.get(it.id) || givers.set(it.id, []).get(it.id)).push(e.id);
+        (byGiver.get(e.id) || byGiver.set(e.id, []).get(e.id)).push(it);
+      }
+    }
+    const loose = items.filter(it => !givers.has(it.id));
+    return { r, roster, items, givers, byGiver, loose, doors, key, diff: D.difficulty ? D.difficulty(r) : 0 };
+  }
+  const roleOf = (d, id) => d.roster.get(id) || '';
+  const rank = { Boss: 0, 'Treasure room': 1, Miniboss: 2, Enemy: 3, Minion: 4, Hazard: 5 };
+  // RealmEye's summary starts with the page's sidebar (version, music, dust drops): the prose begins where the dungeon is named in a sentence.
+  const desc = (root, r) => {
+    const p = root.querySelector('.ix-prose');
+    if (!p) return '';
+    const text = p.textContent, name = String(r.name);
+    const at = [name + ' is ', name + ' was ', name + ' are '].map(x => text.indexOf(x)).filter(i => i >= 0).sort((a, b) => a - b)[0];
+    const from = at === undefined ? 0 : (text.slice(Math.max(0, at - 4), at) === 'The ' ? at - 4 : at);
+    return text.slice(from).trim();
+  };
+  function doorsHtml(d, px = 40) {
+    const list = d.doors.map(x => open(x, alive(x, px) + '<span><b>' + esc(x.said || x.name) + '</b><small>drops the portal</small></span>', 'pd-door'));
+    if (d.key) list.push(open(d.key, art(d.key, px) + '<span><b>' + esc(d.key.name) + '</b><small>opens it from the Nexus</small></span>', 'pd-door'));
+    return list.length ? list.join('') : '<span class="pd-none">Nobody is written down as dropping it.</span>';
+  }
+
+  /*
+   * The run, from the door to the last boss.
+   *
+   * One line down the card, a stop for each part of the dungeon a player
+   * actually goes through: how to get in, the creatures on the way (who they
+   * are, what they drop), each miniboss, the treasure room, the boss. A stop
+   * shows who is there, large and moving, with its life and armour, and what it
+   * drops worth the trip as pictures with their names, so the card reads as
+   * "what do I get for going". What nobody comes for is at the end, folded.
+   */
+  const itemTile = (it, px = 48, from = '') => {
+    const t = tierOf(it);
+    return open(it, '<span class="pd-tile-pic is-' + t.cls + '">' + art(it, px) + (t.cls !== 't' ? '<i class="pd-t is-' + t.cls + '">' + t.say + '</i>' : '') + '</span><span class="pd-tile-name">' + esc(it.said || it.name) + '</span>' + (from ? '<small class="pd-tile-from">' + from + '</small>' : ''), 'pd-tile');
+  };
+  const vitals = e => (lifeOf(e) ? '<span class="pd-vital"><b style="color:' + TINT.MAXHP + '">' + n(lifeOf(e)) + '</b> HP</span>' : '')
+    + (e.def ? '<span class="pd-vital"><b style="color:' + TINT.DEF + '">' + e.def + '</b> DEF</span>' : '');
+  function runHtml(d, root) {
+    /*
+     * A creature earns a stop of its own only for what it drops that is worth the trip; the rest,
+     * minibosses included, are the crowd you go through. Creatures that drop the very same things
+     * share one stop (the three golems and their cuffs), weakest first, the last boss last.
+     */
+    const big = role => role === 'Boss' || role === 'Miniboss' || role === 'Treasure room';
+    const worthOf = g => (d.byGiver.get(g) || []).filter(notable);
+    const groups = new Map();
+    for (const [g, role] of d.roster) {
+      const w = worthOf(g);
+      if (!big(role) || !w.length) continue;
+      const k = w.map(x => x.id).sort().join('|');
+      (groups.get(k) || groups.set(k, []).get(k)).push(g);
+    }
+    const topRole = gs => gs.map(g => roleOf(d, g)).sort((a, b) => rank[a] - rank[b])[0];
+    const order = [...groups.values()].map(gs => gs.sort((a, b) => lifeOf(rec(a)) - lifeOf(rec(b))))
+      .sort((a, b) => (rank[topRole(b)] - rank[topRole(a)]) || (lifeOf(rec(a[a.length - 1])) - lifeOf(rec(b[b.length - 1]))));
+    const staged = new Set(order.flat());
+    const crowd = [...d.roster].filter(([id, role]) => !staged.has(id) && role !== 'Hazard').map(([id]) => rec(id))
+      .sort((a, b) => (rank[roleOf(d, a.id)] - rank[roleOf(d, b.id)]) || (lifeOf(b) - lifeOf(a)));
+    // What the crowd drops that is worth having, together under it.
+    const along = [...new Map(crowd.flatMap(e => worthOf(e.id)).map(x => [x.id, x])).values()];
+    const stop = (node, title, sub, body, cls = '') => '<li class="pd-stop ' + cls + '"><span class="pd-node">' + node + '</span><div class="pd-stop-body">'
+      + '<div class="pd-stop-h"><b>' + title + '</b>' + (sub ? '<span class="pd-stop-sub">' + sub + '</span>' : '') + '</div>' + body + '</div></li>';
+    const text = desc(root, d.r);
+    let h = '<div class="pc pd pd-run"><header class="pd-head"><span class="pd-portal">' + art(d.r, 72) + '</span><div><p class="pd-eyebrow">Dungeon</p><h2>' + esc(d.r.said || d.r.name) + '</h2>'
+      + (text ? '<p class="pd-desc is-clamped" title="Click to read it all" onclick="this.classList.toggle(\'is-clamped\')">' + esc(text) + '</p>' : '') + '</div>' + '</header>';
+    const worth = d.items.filter(notable).length;
+    // The difficulty, said once, where the summary was: a figure and a bar of ten, as RealmEye rates it.
+    if (d.diff) h += '<p class="pd-sum" title="Difficulty, as RealmEye rates it"><span class="pd-sum-l">Difficulty</span><b>' + d.diff + '</b><small>/ 10</small><span class="pd-diffbar">' + Array.from({ length: 10 }, (_, i) => '<i class="' + (i < Math.floor(d.diff) ? 'is-on' : i < d.diff ? 'is-half' : '') + '"></i>').join('') + '</span></p>';
+    h += '<ol class="pd-line">';
+    h += stop('<span class="pd-node-icon">⟶</span>', 'Getting in', '', '<div class="pd-doors">' + doorsHtml(d, 44) + '</div>', 'is-start');
+    if (crowd.length) {
+      // Creatures the client draws nothing for are counted, not drawn: initials in a row of pictures read as noise.
+      const seen = crowd.filter(hasFace), shown = seen.slice(0, 16), unseen = crowd.length - shown.length;
+      const body = '<div class="pd-crowdline">' + shown.map(e => open(e, alive(e, 28))).join('')
+        + (unseen > 0 ? '<span class="pd-more-n" title="' + esc(crowd.filter(e => !shown.includes(e)).map(e => e.name).join(', ')) + '">+' + unseen + '</span>' : '') + '</div>'
+        + (along.length ? '<div class="pd-tiles">' + along.map(it => itemTile(it, 40)).join('') + '</div>' : '');
+      h += stop('<span class="pd-node-icon">⚔</span>', 'On the way', 'the creatures you go through' + (along.length ? ', and what they drop' : ''), body);
+    }
+    for (const gs of order) {
+      const role = topRole(gs), boss = role === 'Boss', lead = rec(gs[gs.length - 1]);
+      const gives = [...new Map(gs.flatMap(g => d.byGiver.get(g) || []).map(x => [x.id, x])).values()];
+      const special = gives.filter(notable), rest = gives.filter(x => !notable(x));
+      const body = '<div class="pd-tiles">' + special.map(it => itemTile(it, boss ? 52 : 44)).join('') + '</div>'
+        + (rest.length ? '<p class="pd-also">also ' + rest.slice(0, 4).map(x => esc(x.name)).join(', ') + (rest.length > 4 ? ' and ' + (rest.length - 4) + ' more' : '') + '</p>' : '');
+      const faces = gs.length > 1 ? '<span class="pd-faces">' + gs.slice(-3).map(g => alive(rec(g), 32)).join('') + '</span>' : alive(lead, boss ? 64 : 48);
+      const title = gs.map(g => open(rec(g), esc(rec(g).name), 'pd-plain pd-who')).join('<span class="pd-and">, </span>');
+      const say = { Enemy: ['Creature', 'Creatures'], Minion: ['Creature', 'Creatures'], Miniboss: ['Miniboss', 'Minibosses'], Boss: ['Boss', 'Bosses'], 'Treasure room': ['Treasure room', 'Treasure room'] }[role] || [role, role];
+      const sub = '<span class="pd-role">' + say[gs.length > 1 ? 1 : 0] + '</span>' + (gs.length === 1 ? vitals(lead) : '');
+      h += stop(faces, title, sub, body, boss ? 'is-boss' : 'is-mini');
+    }
+    const loose = d.loose.filter(notable);
+    // A Legacy page's name said the way a player says it: "Heroic Undead Lair (Legacy)".
+    const placeSay = n => String(n).replace(/^Legacy\s+(.*?)(?:\s+Portal)?$/, '$1 (Legacy)');
+    const samePlace = p => p && p.kind === 'portal' && (p.id === d.r.id || placeSay(p.name).replace(/ \(Legacy\)$/, '') === placeSay(d.r.name).replace(/ \(Legacy\)$/, ''));
+    // What RealmEye says the dungeon itself drops, without naming a creature.
+    const inside = loose.filter(it => relations(it).some(x => x.type === 'dropped_by' && x.to && samePlace(rec(x.to))));
+    const away = loose.filter(it => !inside.includes(it));
+    if (inside.length) h += stop('<span class="pd-node-icon">✦</span>', 'Anywhere inside', 'RealmEye says the dungeon drops these, not which creature', '<div class="pd-tiles">' + inside.map(it => itemTile(it, 44)).join('') + '</div>');
+    if (away.length) {
+      // RealmEye lists these on the dungeon's page, but what drops them lives somewhere else: each says where.
+      const whence = it => {
+        const from = relations(it).filter(x => x.type === 'dropped_by' && x.to && rec(x.to) && rec(x.to).kind === 'enemy').map(x => rec(x.to));
+        const place = from.map(e => homeOf(e)).find(Boolean);
+        if (from.length) return 'from ' + esc(from[0].name) + (place ? ' · ' + esc(placeSay(place.name)) : '');
+        const portal = relations(it).map(x => x.type === 'dropped_by' && x.to && rec(x.to)).find(x => x && x.kind === 'portal');
+        if (portal) return 'from ' + esc(placeSay(portal.name));
+        return relations(it).some(x => /quest-chest/.test(x.toRealmEye || '')) ? 'from a quest chest' : '';
+      };
+      const said = away.map(whence), elsewhere = said.every(Boolean);
+      h += stop('<span class="pd-node-icon">↗</span>', 'Also on its page', elsewhere ? 'RealmEye lists these here, but what drops them lives elsewhere' : 'RealmEye lists these here without saying who drops them', '<div class="pd-tiles">' + away.map((it, i) => itemTile(it, 44, said[i])).join('') + '</div>');
+    }
+    h += '</ol>';
+    const rest = d.items.filter(it => !notable(it));
+    if (rest.length) h += '<details class="pd-rest"><summary>Everything else that drops here <small>' + rest.length + '</small></summary><div class="pd-chips">' + rest.map(it => open(it, art(it, 20) + '<span>' + esc(it.name) + '</span>', 'pd-chip')).join('') + '</div></details>';
+    h += '<div data-pcside class="pd-more"></div></div>';
+    return h;
+  }
+
+  function dungeon(root, r) {
+    const d = dungeonData(r, root);
+    const blocks = blocksOf(root);
+    const keep = [...blocks].filter(([t]) => /Links|Other/i.test(t)).map(([, b]) => b);
+    const host = document.createElement('div');
+    host.innerHTML = runHtml(d, root);
+    const side = host.querySelector('[data-pcside]');
+    keep.forEach(b => side.appendChild(b));
+    const card = host.firstElementChild;
+    root.querySelector('.fc-cols').replaceWith(card);
+    requestAnimationFrame(() => balanceColumns(card));
+  }
+
+  /* ================================================================ *
+   * Every other kind of card, in the gear card's frame                *
+   * ================================================================ */
+  /*
+   * The same three floors as the gear card: who it is (its picture large, what
+   * kind of thing, its name, the chips that place it), the few figures a
+   * player wants first, large, then what there is to know about it in columns
+   * that end level. The site's own blocks are kept where they already say a
+   * thing well (a set's bonus table, a skin's preview, a class's stats); the
+   * links and tags nobody reads first are folded at the end.
+   */
+  const sec = (title, body, cls = '') => body ? '<section class="pg-sec ' + cls + '">' + (title ? '<h3>' + title + '</h3>' : '') + body + '</section>' : '';
+  const chipOf = (x, px = 20) => open(x, art(x, px) + '<span>' + esc(x.said || x.name) + '</span>', 'pg-set');
+  const statChips = (stats, sign = true) => STAT_ORDER.filter(k => stats && stats[k]).map(k => '<b style="color:' + TINT[k] + '">' + (sign && stats[k] > 0 ? '+' : '') + n(stats[k]) + ' <small>' + STAT_SHORT[k] + '</small></b>').join('');
+  const statFigure = (label, stats) => statChips(stats) ? '<div class="pg-fig pg-stats"><span class="pg-fig-l">' + label + '</span><div>' + statChips(stats) + '</div></div>' : '';
+  const srcCard = (x, sub, px = 40) => open(x, '<span class="pg-src-pic">' + (x.kind === 'enemy' ? alive(x, px) : art(x, px)) + '</span><span class="pg-src-t"><b>' + esc(x.said || x.name) + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>', 'pg-src');
+  const faceRow = (list, px = 32, max = 18) => {
+    const seen = list.filter(hasFace), shown = seen.slice(0, max), more = list.length - shown.length;
+    return '<div class="pd-crowdline pk-faces">' + shown.map(e => open(e, alive(e, px))).join('')
+      + (more > 0 ? '<span class="pd-more-n" title="' + esc(list.filter(e => !shown.includes(e)).map(e => e.name).join(', ')) + '">+' + more + '</span>' : '') + '</div>';
+  };
+  const tilesOf = (items, px = 44) => {
+    const top = items.filter(notable), rest = items.filter(x => !notable(x));
+    return (top.length ? '<div class="pd-tiles">' + top.map(it => itemTile(it, px)).join('') + '</div>' : '')
+      + (rest.length ? '<div class="pd-chips pk-chips">' + rest.map(it => open(it, art(it, 20) + '<span>' + esc(it.said || it.name) + '</span>', 'pd-chip')).join('') + '</div>' : '');
+  };
+  const titleOf = b => ((b.querySelector('summary, h4') || {}).textContent || '').trim();
+  const linkIds = (blocks, rx) => { const out = []; for (const b of blocks.values()) for (const row of rowsOf(b)) if (rx.test(row.label)) row.ids.forEach(id => { if (!out.includes(id)) out.push(id); }); return out.map(rec).filter(Boolean); };
+  // What drops it, read once for every creature: the items whose RealmEye page says they drop from it.
+  let dropsBy = null;
+  const dropsOf = id => {
+    if (!dropsBy) {
+      dropsBy = new Map();
+      for (const it of D.all.values()) if (it.kind === 'item' && !it.folded && !it.hidden) for (const x of relations(it)) if (x.type === 'dropped_by' && x.to) (dropsBy.get(x.to) || dropsBy.set(x.to, []).get(x.to)).push(it);
+    }
+    // RealmEye's pages about a kind of thing ("Themed Sets") are not things that drop.
+    return [...new Map((dropsBy.get(id) || []).filter(x => x.art || !/^(Marks|Themed Sets|Mystery Items)$/.test(x.name)).map(x => [x.id, x])).values()];
+  };
+  // Every place a creature lives, the real dungeon first.
+  const homesOf = e => {
+    const lives = D.archive && D.archive() && D.archive().livesIn;
+    const at = lives && lives.get(e.id);
+    const places = at ? [...at].map(rec).filter(Boolean) : [];
+    const one = homeOf(e);
+    if (one && !places.includes(one)) places.unshift(one);
+    return places.sort((a, b) => (a === one ? -1 : b === one ? 1 : 0));
+  };
+
+  function kindHero(r, root, eyebrow, chips, tone = '') {
+    const text = ((root.dataset.said || '') || (r.about || '').replace(/\r?\n/g, ' ')).trim();
+    return '<header class="pg-hero"><div class="pg-stage">' + (r.kind === 'enemy' ? alive(r, 96) : art(r, 96)) + '</div>'
+      + '<div class="pg-id"><p class="pg-eyebrow">' + eyebrow.map((e, i) => '<span' + (i ? ' class="pg-tier is-' + (tone || 't') + '"' : '') + '>' + e + '</span>').join('') + '</p>'
+      + '<h2 class="pg-name' + (tone ? ' is-' + tone : '') + '">' + esc(r.said || r.name) + '</h2>'
+      + (chips ? '<div class="pg-who">' + chips + '</div>' : '')
+      + (text ? '<p class="pg-desc">' + esc(text) + '</p>' : '') + '</div></header>';
+  }
+
+  /* -- each kind: its eyebrow, its chips, its figures, its parts -- */
+  const KINDS = {
+    enemy(r, root, blocks) {
+      const f = facts(r), say = Object.values(f).filter(v => typeof v === 'string').join(' ');
+      const exp = (/EXP: ([\d,]+)/.exec(say) || [])[1];
+      const homes = homesOf(r);
+      const role = r.god ? 'God' : (r.labels || []).includes('QUEST') ? 'Quest' : '';
+      const immune = r.immune || [];
+      const chips = homes.slice(0, 3).map(p => chipOf(p)).join('') + immune.map(s => '<span class="pg-chip">' + statusArt(s, 16) + '<span>Immune to ' + esc(s) + '</span></span>').join('');
+      const figs = [];
+      if (r.hp) figs.push(figure('Life', n(r.hp) + '<small> HP</small>', 'before the party scales it', null, TINT.MAXHP));
+      if (r.def !== undefined) figs.push(figure('Defense', n(r.def), r.def >= 100 ? 'only armour-piercing shots get through' : r.def ? 'taken off every hit' : 'every hit lands in full', null, TINT.DEF));
+      if (exp) figs.push(figure('Experience', exp, 'shared by who hits it'));
+      // What its own page lists as dropping (the potions) and what the items' pages say drop from it.
+      const drops = [...new Map(linkIds(blocks, /dropping/i).filter(x => x.kind === 'item').concat(dropsOf(r.id)).map(x => [x.id, x])).values()];
+      const parts = [];
+      const combat = [...blocks.values()].find(b => /^(Attacks|Other data)/.test(titleOf(b)) && b.querySelector('table'));
+      if (combat) parts.push(combat);
+      const tiers = [...blocks.values()].filter(b => /^Drops/.test(titleOf(b))).flatMap(b => rowsOf(b)).filter(row => /tier/i.test(row.label)).flatMap(row => row.words);
+      if (drops.length || tiers.length) parts.push(sec('What it drops', tilesOf(drops) + (tiers.length ? '<div class="pd-chips pk-chips">' + tiers.map(w => '<span class="pg-chip">' + esc(w) + '</span>').join('') + '</div>' : '')));
+      if (homes.length) parts.push(sec('Where it lives', '<div class="pg-srcs">' + homes.map(p => srcCard(p, p.kind === 'portal' ? 'dungeon' : 'biome')).join('') + '</div>'));
+      const near = linkIds(blocks, /spawn/i).filter(x => x.kind === 'enemy' && x.id !== r.id);
+      if (near.length) parts.push(sec('Comes with', faceRow(near) + '<p class="pd-also">' + esc(near.slice(0, 6).map(x => x.name).join(', ')) + (near.length > 6 ? ' and ' + (near.length - 6) + ' more' : '') + '</p>'));
+      const deals = [...blocks.values()].find(b => /^Status effects/.test(titleOf(b)));
+      if (deals && rowsOf(deals).some(row => !/immune/i.test(row.label))) parts.push(deals);
+      return { eyebrow: ['Enemy'].concat(role ? [role] : []), chips, figs, parts, keep: [/^Links|^Tags|^Drops|^Where to find it|^Combat|^Status effects/] };
+    },
+    set(r, root, blocks) {
+      const f = facts(r), pieces = (r.pieces || []).map(p => rec('item:' + p)).filter(Boolean);
+      const cls = linkIds(blocks, /^Class/i).filter(x => x.kind === 'class');
+      const figs = [statFigure('Full set adds', r.worn), figure('Pieces', String(pieces.length), pieces.length ? 'bonuses from 2 worn' : '')];
+      if (f.total_xp_bonus) figs.push(figure('XP bonus', esc(f.total_xp_bonus), 'with every piece worn'));
+      const parts = [];
+      parts.push(sec('Its pieces', '<div class="pd-tiles">' + pieces.map(it => itemTile(it, 48)).join('') + '</div>'));
+      const bonus = blocks.get('Set bonus'); if (bonus) parts.push(bonus);
+      const skin = blocks.get('Full set skin'), stage = skin && skin.querySelector('.fc2-bigart');
+      if (skin && !stage) parts.push(skin);
+      const src = gearSource(r); if (src) parts.push(node(src).firstElementChild);
+      const note = blocks.get('Notes'); if (note) parts.push(note);
+      return { eyebrow: ['Set'].concat(f.set_generation ? [esc(f.set_generation)] : []), chips: cls.map(c => chipOf(c, 24)).join('') + (f.soulbound ? '<span class="pg-chip">Soulbound</span>' : ''), figs, parts, stage, keep: [/^Links|^Other data|^Tags|^Where to get it|^Pieces|^Full set skin/] };
+    },
+    skin(r, root, blocks) {
+      const cls = (r.outLinks || []).filter(l => l[0] === 'worn by').map(l => rec(l[1])).filter(Boolean);
+      const unlock = (r.inLinks || []).filter(l => l[0] === 'unlocks').map(l => rec(l[1])).filter(Boolean);
+      const set = [...D.all.values()].find(x => x.kind === 'set' && (x.skin === r.name || x.drawnAs === r.name));
+      const figs = [];
+      if (r.tier !== undefined) figs.push(figure('Rarity', 'T' + r.tier, 'as the client ranks it'));
+      if (cls.length) figs.push(figure('Worn by', cls.map(c => art(c, 28)).join(' '), cls.map(c => esc(c.name)).join(', ')));
+      if (unlock.length) figs.push(figure('Unlocked by', art(unlock[0], 28), esc(unlock[0].name)));
+      const parts = [];
+      const preview = blocks.get('Preview'), stage = preview && preview.querySelector('.fc2-bigart');
+      for (const u of unlock) { const src = gearSource(u); parts.push(sec('Where its unlock comes from', '<div class="pg-srcs">' + srcCard(u, 'the item that unlocks it') + '</div>' + (src ? bare(src) : ''))); }
+      if (set) parts.push(sec('Its set', '<div class="pg-srcs">' + srcCard(set, 'wearing the whole set gives this look') + '</div>'));
+      return { eyebrow: ['Skin'], chips: cls.map(c => chipOf(c, 24)).join(''), figs, parts, stage, keep: [/^Unlock|^Links|^Tags|^Preview/] };
+    },
+    item(r, root, blocks) {
+      const f = facts(r), cx = extra(r);
+      const effect = [].concat(f.effect_s || []).join(' · ');
+      const stat = /([+-]\d+) maximum (\w+)/.exec(effect || r.about || '');
+      const KEY = { HP: 'MAXHP', MP: 'MAXMP', ATT: 'ATT', DEF: 'DEF', SPD: 'SPD', DEX: 'DEX', VIT: 'VIT', WIS: 'WIS', Life: 'MAXHP', Mana: 'MAXMP' };
+      const figs = [];
+      if (stat && KEY[stat[2]]) figs.push(figure('Gives', stat[1] + ' <small>' + STAT_SHORT[KEY[stat[2]]] + '</small>', 'for good, to the character who drinks it', null, TINT[KEY[stat[2]]]));
+      else if (effect) figs.push(figure('Does', esc(effect.length > 40 ? effect.slice(0, 38) + '…' : effect), ''));
+      if (cx.feed || f.feed_power) figs.push(figure('Feed power', n(+cx.feed || +f.feed_power), 'to a pet'));
+      if (cx.bag !== undefined) figs.push(figure('Drops in', bagArt(cx.bag, 28), (BAG_SAY[cx.bag] || '') + ' bag'));
+      const t = tierOf(r);
+      const parts = [];
+      const special = gearSpecial(r, root, blocks); if (special) parts.push(node(special).firstElementChild);
+      const src = gearSource(r); if (src) parts.push(node(src).firstElementChild);
+      const craft = gearCraft(r, root, null);
+      if (craft && /pc-recipe|pc-slot/.test(craft)) { const el = node(craft).firstElementChild; const figs = el.querySelector('.pc-figs'); if (figs) figs.remove(); parts.push(el); }
+      for (const b of blocks.values()) if (/^Facts/.test(titleOf(b))) parts.push(b);
+      return { eyebrow: [esc(slotSay(r) || (r.use ? 'Consumable' : 'Item'))].concat(t.say ? [t.say] : []), tone: t.cls !== 't' ? t.cls : '', chips: r.sb ? '<span class="pg-chip">Soulbound</span>' : '', figs, parts, keep: [/^Economy|^Links|^Tags|^Other data|^Where to get it|^Effects|^Notes/] };
+    },
+    enchant(r, root, blocks) {
+      const fits = String(r.fits || '').split(',').filter(Boolean).map(x => x.charAt(0) + x.slice(1).toLowerCase());
+      const pools = (r.outLinks || []).filter(l => /favoured|pool/i.test(l[0])).map(l => rec(l[1])).filter(Boolean);
+      const rare = r.weight >= 1000 ? 'common' : r.weight >= 500 ? 'uncommon' : r.weight >= 100 ? 'rare' : 'very rare';
+      const figs = [figure('Goes on', fits.join(', ') || 'any gear', r.refuses ? 'never on ' + String(r.refuses).toLowerCase().replace(/,/g, ', ') : '')];
+      if (r.weight) figs.push(figure('Rolls', rare, 'weight ' + n(r.weight) + ' in its pools'));
+      if (r.pools) figs.push(figure('Pools', n(r.pools), 'that can roll it'));
+      const parts = [sec('What it does', '<p class="pk-big">' + esc(r.about || '').replace(/\r?\n/g, '<br>') + '</p>')];
+      // A pool has no picture of its own: it is shown with the enchantment it favours.
+      if (pools.length) parts.push(sec('Favoured by', '<div class="pg-srcs">' + pools.map(p => srcCard(p.art ? p : Object.assign({}, p, { art: r.art }), 'rolls it more often')).join('') + '</div>'));
+      const awaken = linkIds(blocks, /awaken/i).filter(x => x.kind === 'item');
+      if (awaken.length) parts.push(sec('Awakens on', tilesOf(awaken)));
+      return { eyebrow: ['Enchantment'].concat((r.labels || []).includes('UNIQUE') ? ['Unique'] : []), chips: '', figs, parts, quiet: true, keep: [/^Effect|^Links|^Tags/] };
+    },
+    status(r, root, blocks) {
+      const bad = r.tone === 'bad';
+      const find = rx => [...blocks.values()].find(x => rx.test(titleOf(x)));
+      // A block's count is in its title ("Creatures that inflict it · 147"); its list may be cut short.
+      const count = b => b ? +((/·\s*([\d,]+)/.exec(titleOf(b)) || [])[1] || '0').replace(/,/g, '') || b.querySelectorAll('[data-open]').length : 0;
+      const hurt = find(/^Gear that inflicts/), help = find(/^Gear that grants/), beasts = find(/^Creatures that inflict/);
+      // Each piece of gear with how long and how hard, as the site wrote it beside its name.
+      const gearTiles = b => '<div class="pd-tiles">' + [...b.querySelectorAll('[data-open]')].map(x => {
+        const it = rec(x.dataset.open); if (!it) return '';
+        const said = x.textContent.replace(it.name, '').trim();
+        return itemTile(it, 40, esc(said));
+      }).join('') + '</div>';
+      const figs = [figure('It is', bad ? 'Harmful' : 'Helpful', bad ? 'to whoever carries it' : 'to whoever carries it', null, bad ? '#ff6b6b' : '#6ee07a'),
+        figure('Gear', String(count(hurt) + count(help)), 'that inflicts or grants it'),
+        figure('Creatures', String(count(beasts)), 'that inflict it')];
+      const parts = [];
+      for (const b of blocks.values()) if (/^(What it does|In the numbers)/.test(titleOf(b))) parts.push(b);
+      if (hurt) parts.push(sec('Gear that inflicts it <small>' + count(hurt) + '</small>', gearTiles(hurt)));
+      if (help) parts.push(sec('Gear that grants it <small>' + count(help) + '</small>', gearTiles(help)));
+      if (beasts) { const list = [...beasts.querySelectorAll('[data-open]')].map(x => rec(x.dataset.open)).filter(Boolean); parts.push(sec('Creatures that inflict it <small>' + count(beasts) + '</small>', faceRow(list, 32, 40))); }
+      return { eyebrow: ['Status effect'], chips: '', figs, parts, keep: [/^Links|^Tags|^Gear that|^Creatures that/], art: statusArt(r.name, 72) };
+    },
+    place(r, root, blocks) {
+      const rel = relations(r), get = t => rel.filter(x => x.type === t && x.to && rec(x.to)).map(x => rec(x.to));
+      const crowd = get('biome_regular_enemy'), meet = get('biome_encounter'), loot = get('biome_drop_interest');
+      const figs = [figure('Creatures', String(crowd.length), 'that roam it'), figure('Encounters', String(meet.length), 'events and bosses that appear'), figure('Worth the trip', String(loot.filter(notable).length), 'things it drops')];
+      const parts = [];
+      if (meet.length) parts.push(sec('What appears there', faceRow(meet, 40) + '<p class="pd-also">' + esc(meet.slice(0, 6).map(x => x.name).join(', ')) + (meet.length > 6 ? ' and ' + (meet.length - 6) + ' more' : '') + '</p>'));
+      if (crowd.length) parts.push(sec('What roams it', faceRow(crowd, 32)));
+      if (loot.length) parts.push(sec('What it drops', tilesOf(loot)));
+      return { eyebrow: ['Biome'], chips: '', figs, parts, keep: [/^Population|^Loot|^Links|^Tags/], art: r.icon ? '<img class="pc-art" src="' + esc(r.icon) + '" alt="" style="width:96px;height:96px;object-fit:contain">' : '' };
+    },
+    class(r, root, blocks) {
+      const s = r.stats || {};
+      const top = { MAXHP: s.hpTop, MAXMP: s.mpTop, ATT: s.attTop, DEF: s.defTop, SPD: s.spdTop, DEX: s.dexTop, VIT: s.vitTop, WIS: s.wisTop };
+      const kit = (r.kit || []).filter(Boolean).map(k => rec('item:' + k)).filter(Boolean);
+      const skins = (r.inLinks || []).filter(l => l[0] === 'worn by').map(l => rec(l[1])).filter(Boolean);
+      const figs = ['<div class="pg-fig pg-stats pk-wide"><span class="pg-fig-l">At its best (8/8)</span><div>' + statChips(top, false) + '</div></div>'];
+      const parts = [];
+      const stats = [...blocks.values()].find(b => /^Stats/.test(titleOf(b))); if (stats) parts.push(stats);
+      if (kit.length) parts.push(sec('Starts with', '<div class="pd-tiles">' + kit.map(it => itemTile(it, 44)).join('') + '</div>'));
+      const vs = [...blocks.values()].find(b => /^Against all/.test(titleOf(b))); if (vs) parts.push(vs);
+      if (skins.length) parts.push(sec('Its skins <small>' + skins.length + '</small>', faceRow(skins, 32, 30)));
+      return { eyebrow: ['Class'], chips: '', figs, parts, keep: [/^Links|^Other data|^Tags/] };
+    }
+  };
+
+  KINDS.pool = (r, root, blocks) => {
+    const ids = linkIds(blocks, /./).filter(x => x.kind === 'enchant');
+    return { eyebrow: ['Enchantment pool'], chips: '', art: ids[0] ? art(ids[0], 96) : '', figs: [figure('Enchantments', String(ids.length), 'it can roll')], parts: ids.length ? [sec('What it rolls', '<div class="pd-chips">' + ids.map(x => open(x, art(x, 20) + '<span>' + esc(x.name) + '</span>', 'pd-chip')).join('') + '</div>')] : [], keep: [/^Links|^Tags/] };
+  };
+  KINDS.pet = (r, root, blocks) => ({ eyebrow: ['Pet'], chips: '', figs: [], parts: [], keep: [/^Tags/] });
+  /*
+   * The site's blocks, with its first one (the sheet: name, prose, and the parts that
+   * follow them, "Set bonus", "Preview", "Stats") opened into its parts, each a block
+   * of its own: the hero says the name and the prose, the parts go to the columns.
+   */
+  function kindBlocks(root) {
+    const out = new Map();
+    const sheet = root.querySelector('.fc2-sheet');
+    if (sheet) sheet.querySelectorAll('details.ix-part').forEach(d => {
+      if (d.parentElement.closest('details.ix-part')) return;
+      const t = d.querySelector('summary');
+      const title = t ? t.childNodes[0].textContent.trim() : '';
+      if (!title || out.has(title)) return;
+      const box = document.createElement('div'); box.className = 'ix-block'; box.appendChild(d);
+      out.set(title, box);
+    });
+    for (const [title, b] of blocksOf(root)) if (!b.classList.contains('fc2-sheet') && !out.has(title)) out.set(title, b);
+    return out;
+  }
+  function kindCard(root, r) {
+    const prose = root.querySelector('.fc2-sheet .ix-prose');
+    const said = prose ? desc(root.querySelector('.fc2-sheet'), r) : '';
+    const blocks = kindBlocks(root);
+    const make = KINDS[r.kind === 'item' ? 'item' : r.kind];
+    if (!make) return false;
+    root.dataset.said = said;
+    const spec = make(r, root, blocks);
+    const host = document.createElement('div');
+    if (spec.quiet) root.dataset.said = ' ';
+    const hero = kindHero(r, root, spec.eyebrow, spec.chips, spec.tone);
+    // Nothing drawn (an invisible spawner): no frame with initials in it, the name says it.
+    const pic = spec.art !== undefined && spec.art !== '' ? spec.art : null;
+    let top = pic ? hero.replace(/<div class="pg-stage">[\s\S]*?<\/div>/, '<div class="pg-stage">' + pic + '</div>') : hero;
+    if (!spec.stage && /<div class="pg-stage"><span class="pc-noart/.test(top)) top = top.replace(/<div class="pg-stage">[\s\S]*?<\/span><\/div>/, '').replace('<header class="pg-hero">', '<header class="pg-hero is-bare">');
+    host.innerHTML = '<div class="pc pg pg-columns pk-kind pk-' + r.kind + '">' + top
+      + (spec.figs.filter(Boolean).length ? '<div class="pg-figs">' + spec.figs.filter(Boolean).join('') + '</div>' : '') + '<div data-pclow class="pg-low"></div></div>';
+    const low = host.querySelector('[data-pclow]');
+    const used = new Set(spec.parts.filter(x => x && x.nodeType));
+    const parts = spec.parts.filter(Boolean).map(x => typeof x === 'string' ? node(x).firstElementChild : x).filter(Boolean);
+    // What the card did not say in its own words, and the site's blocks it left: shown under, the links and tags folded.
+    const rest = [...blocks.values()].filter(b => !used.has(b) && !b.classList.contains('fc2-sheet') && !b.classList.contains('fc2-empty') && !parts.includes(b));
+    const folded = rest.filter(b => (spec.keep || []).some(rx => rx.test(titleOf(b))) || !b.textContent.trim());
+    rest.filter(b => !folded.includes(b)).forEach(b => parts.push(b));
+    low.appendChild(columnsOf(parts));
+    if (folded.length) {
+      const more = document.createElement('details'); more.className = 'pg-sec pk-more';
+      more.innerHTML = '<summary>More about it</summary>';
+      folded.forEach(b => more.appendChild(b));
+      low.appendChild(more);
+    }
+    if (spec.stage) { const at = host.querySelector('.pg-stage'); at.textContent = ''; at.appendChild(spec.stage); at.classList.add('is-live'); }
+    const card = host.firstElementChild;
+    root.querySelector('.fc-cols').replaceWith(card);
+    requestAnimationFrame(() => balanceColumns(card));
+    return true;
+  }
+
+  /* ---------------- when the site has drawn a card ---------------- */
+  function apply(box) {
+    const root = box.querySelector('.fc-root');
+    if (!root || root.dataset.laid || typeof RealmIndex === 'undefined') return;
+    D = D || RealmIndex.data();
+    if (!D) return;
+    const love = root.querySelector('[data-love]');
+    const r = rec(love ? love.dataset.love : '');
+    root.dataset.laid = '1';
+    if (!r) return;
+    const isGear = r.kind === 'item' && r.hand && !r.use;
+    try {
+      if (isGear) { gear(root, r); box.classList.add('pc-host'); }
+      else if (r.kind === 'portal') { dungeon(root, r); box.classList.add('pc-host'); }
+      else if (root.querySelector('.fc-cols') && kindCard(root, r)) box.classList.add('pc-host');
+    } catch (err) { console.error('index card', err); }
+  }
+  // RealmEye's archive arrives after the first card: the card is drawn again with it.
+  document.addEventListener('realmindex:realmeye', () => {
+    dropsBy = null;
+    const box = document.getElementById('ixCard'), root = box && box.querySelector('.fc-root');
+    const love = root && root.querySelector('[data-love]');
+    if (!love) return;
+    const id = love.dataset.love;
+    RealmIndex.close();
+    setTimeout(() => RealmIndex.open(id), 0);
+  });
+  const wait = setInterval(() => {
+    const box = document.getElementById('ixCard');
+    if (!box) return;
+    clearInterval(wait);
+    new MutationObserver(() => apply(box)).observe(box, { childList: true });
+    apply(box);
+    // A card laid out for one width is laid out again for another (half window to full screen).
+    let wasWide = 0;
+    new ResizeObserver(() => {
+      const w = Math.round(box.clientWidth / 40);
+      if (w === wasWide) return;
+      wasWide = w;
+      const card = box.querySelector('.pc');
+      if (card) requestAnimationFrame(() => balanceColumns(card));
+    }).observe(box);
+  }, 200);
+})();
