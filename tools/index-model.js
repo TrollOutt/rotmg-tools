@@ -77,7 +77,11 @@ function attach(records, mechanics, objects) {
   }
   const view = {};
   for (const group of Object.keys(fields)) {
-    view[group] = mechanics[group].map(value => {
+    view[group] = mechanics[group].filter(value =>
+      // "Long Sword 1Rarity" and its three siblings are swatches for drawing a rarity frame, not swords:
+      // the Index hides them (tools/build-index.js) and the bench must not offer them.
+      !(group === 'items' && /\d+Rarity$/.test(String(value.id || value.name)))
+    ).map(value => {
       const r = lookup.get(kinds[group] + '|' + (value.id || value.name));
       if (!r) throw new Error('No index record for ' + group + ': ' + (value.id || value.name));
       assign(r, group, value);
