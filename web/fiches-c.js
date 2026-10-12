@@ -18,12 +18,21 @@
   /* Un seul affichage : la fiche harmonisée. */
   const mode = 'c2';
   /* La fiche attend toutes ses données : aucun second rendu visible quand l'une d'elles arrive. */
-  let pending = 7;
+  let pending = 8;
   const settled = () => {
     if (--pending > 0) return;
     for (const box of hosts()) box.style.visibility = '';
     redraw();
   };
+  /*
+   * Ce que l'équipement fait en plus de ses tirs et de ses statistiques : les balles qu'il lance quand on tire,
+   * les grenades de poison, ce qu'il faut porter avec (tools/build-gear-effects.js). Partagé avec la seconde mise en page.
+   */
+  {
+    const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.gearText;
+    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.json()))
+      .then(j => { window.RealmGearEffects = j.items || {}; }).catch(() => { window.RealmGearEffects = {}; }).finally(settled);
+  }
   let reRecords = null;
   fetch('assets/index/realmeye-enrichment.json').then(r => r.json())
     .then(j => { reRecords = j.records || {}; }).catch(() => { reRecords = {}; }).finally(settled);
@@ -2294,7 +2303,10 @@
       out.push(figure('Range', n(f.reach) + '<small> tiles</small>', rangeWord(f.reach), standing(r, f.reach, x => ((x.fires || [])[0] || {}).reach || 0)));
     } else if (r.hand === 'ability') {
       if (r.mp) out.push(figure('Costs', r.mp + '<small> MP</small>', r.cool ? n(r.cool) + 's cooldown' : '', null, TINT.MAXMP));
-      if (f && f.high) out.push(figure('Damage', n(f.low) + (f.low !== f.high ? '–' + n(f.high) : ''), shotsOf(r) > 1 ? shotsOf(r) + ' shots' : ''));
+      // An ability throws what its activation says (Primal Arcana: eight), not what the projectile it names would on its own.
+      const thrown = (r.cast && r.cast.shots) || shotsOf(r);
+      if (f && f.high) out.push(figure('Damage', n(f.low) + (f.low !== f.high ? '–' + n(f.high) : ''),
+        thrown > 1 ? thrown + ' shots · ' + n(thrown * (f.low + f.high) / 2) + ' in all' : ''));
       const heal = (r.conditions || []).find(c => c.effect === 'Healing' && c.amount);
       if (heal) out.push(figure('Heals', String(+heal.amount), 'over ' + heal.duration + 's · ' + (heal.range ? heal.range + ' tiles' : 'the party'), null, TINT.MAXHP));
     }
@@ -2326,6 +2338,48 @@
     if (sh.accel) out.push([sh.accel > 0 ? '»' : '«', sh.accel > 0 ? 'Speeds up' : 'Slows down', sh.accel > 0 ? 'and reaches further than it starts' : 'and lingers where it stops']);
     return out;
   }
+  /*
+   * Ce que l'objet lance ou inflige en plus, dit comme RealmEye le dit : les balles qu'il tire avec l'arme, leurs
+   * dégâts, ce qui les fait grandir, la défense qu'elles ignorent, et avec quoi il faut le porter.
+   * Les lignes identiques sont une seule ligne : trois balles qui partent chacune à leur tour ne sont pas trois effets.
+   */
+  const STAT_WORD = { ATT: 'ATT', DEF: 'DEF', SPD: 'SPD', DEX: 'DEX', VIT: 'VIT', WIS: 'WIS', MAXHP: 'HP', MAXMP: 'MP' };
+  const tinted = tag => '<b style="color:' + (TINT[tag] || 'inherit') + '">' + esc(STAT_WORD[tag] || tag) + '</b>';
+  function procRows(r) {
+    const mine = (window.RealmGearEffects || {})[r.name];
+    if (!mine || !mine.procs) return [];
+    const groups = new Map();
+    for (const p of mine.procs) {
+      const key = JSON.stringify([p.kind, p.on, p.needs || null, p.low, p.high, p.pierce, p.by, p.from, p.per, p.total, p.impact, p.duration]);
+      (groups.get(key) || groups.set(key, []).get(key)).push(p);
+    }
+    const out = [];
+    for (const list of groups.values()) {
+      const p = list[0], when = p.on === 'hit' ? 'when a shot of yours lands' : 'when you shoot';
+      const needs = p.needs || {};
+      const only = [
+        needs.wear && needs.wear.length ? 'worn with ' + needs.wear.map(esc).join(' and ') : '',
+        needs.wearAny && needs.wearAny.length ? 'worn with ' + needs.wearAny.map(esc).join(' or ') : '',
+        needs.notWear && needs.notWear.length ? 'not beside ' + needs.notWear.map(esc).join(' or ') : '',
+        ...(needs.other || []).map(esc)
+      ].filter(Boolean).join(', ');
+      // Each entry is one bolt, with its own wait; say how often each goes.
+      const kinds = new Map();
+      for (const x of list) { const k = x.proc + '|' + x.cooldown; (kinds.get(k) || kinds.set(k, { x, bolts: 0 }).get(k)).bolts += x.shots; }
+      const often = [...kinds.values()].map(({ x, bolts }) => (x.kind === 'poison' ? '' : (bolts === 1 ? 'one bolt ' : bolts + ' bolts '))
+        + (x.proc < 1 ? 'on ' + Math.round(x.proc * 100) + '% of shots' : 'every shot') + (x.cooldown ? ', each at most every ' + x.cooldown + ' s' : '')).join('; ');
+      if (p.kind === 'poison') {
+        out.push(['☣', 'Throws a grenade of poison ' + when,
+          n(p.total) + ' damage over ' + p.duration + ' s' + (p.impact ? ', ' + n(p.impact) + ' of it on impact' : '') + ' · ' + often + (only ? ' · ' + only : '')]);
+        continue;
+      }
+      const count = list.reduce((all, x) => all + x.shots, 0);
+      const damage = n(p.low) + (p.low !== p.high ? '–' + n(p.high) : '') + (p.per ? ' (+' + +(p.per * 1).toFixed(2) + ' per ' + tinted(p.by) + ' over ' + p.from + ')' : '');
+      out.push(['⋔', 'Fires ' + (count === 1 ? 'one more bolt' : count + ' more bolts') + ' ' + when,
+        'each ' + damage + (p.pierce ? ', ignoring defense' : '') + (p.reach ? ', reaching ' + p.reach + ' tiles' : '') + ' · ' + often + (only ? ' · ' + only : '')]);
+    }
+    return out;
+  }
   function gearSpecial(r, root, blocks) {
     const rows = [];
     const row = (pic, title, text, cls = '') => rows.push('<li class="pg-row ' + cls + '"><span class="pg-ico">' + pic + '</span><div><b>' + title + '</b>' + (text ? '<span>' + text + '</span>' : '') + '</div></li>');
@@ -2338,6 +2392,10 @@
       const who = c.target === 'enemy' ? (c.on === 'hit' ? 'to what it hits' : 'to enemies around') : c.target === 'self' ? 'to you' : c.target === 'allies' ? 'to the party' : '';
       row(statusArt(c.effect, 28) || '✦', verb + ' ' + esc(c.effect), [who, c.duration ? 'for ' + c.duration + ' seconds' : ''].filter(Boolean).join(' '), 'is-status');
     }
+    for (const [sign, title, text] of procRows(r)) row(sign, title, text, 'is-proc');
+    const fx = (window.RealmGearEffects || {})[r.name] || {};
+    if (fx.combat) row('⚔', 'In combat it costs you', Object.entries(fx.combat).map(([s, v]) => tinted(s) + ' ' + (v < 0 ? '−' : '+') + Math.abs(v)).join(', ') + ' · while you are in combat, so every fight is fought with it', 'is-proc');
+    if (fx.cost) row('✧', fx.cost < 1 ? 'Abilities cost less magic' : 'Abilities cost more magic', Math.round(Math.abs(1 - fx.cost) * 100) + '% ' + (fx.cost < 1 ? 'less' : 'more') + ' of the ' + tinted('MAXMP') + ' an ability costs, each use, while worn', 'is-proc');
     if (!rows.length && facts(r).effect_s) row('✦', esc(facts(r).effect_s), '');
     for (const [sign, title, text] of shotTraits(r)) row(sign, title, text, 'is-shot');
     const note = blocks.get('Notes');

@@ -160,6 +160,8 @@ const sources = {
   wikiText: readText('Index', 'wiki.json'),
   statusText: fs.existsSync(path.join(web, 'assets', 'index', 'status-effects.json'))
     ? fs.readFileSync(path.join(web, 'assets', 'index', 'status-effects.json'), 'utf8') : '',
+  gearText: fs.existsSync(path.join(web, 'assets', 'index', 'gear-effects.json'))
+    ? fs.readFileSync(path.join(web, 'assets', 'index', 'gear-effects.json'), 'utf8') : '',
   eventsText: fs.existsSync(path.join(web, 'assets', 'index', 'realm-events.json'))
     ? fs.readFileSync(path.join(web, 'assets', 'index', 'realm-events.json'), 'utf8') : '',
   realmeyeEnrichmentText: fs.existsSync(path.join(dataRoot, 'Index', 'realmeye-enrichment.json'))
@@ -575,6 +577,7 @@ delete served.indexText;
 delete served.wikiText;
 delete served.statusText;
 delete served.eventsText;
+delete served.gearText;
 delete served.realmeyeEnrichmentText;
 // The refreshed bench catalogue is paid for when the bench is opened.
 // The downloadable copy still embeds it, together with its sheet.

@@ -16,8 +16,16 @@
  *
  *     shots a second   1.5 + 6.5 x DEX/75, times the weapon's own rate
  *     tiles a second   4 + 5.6 x SPD/75
- *     life a second    1 + 0.12 x VIT
- *     magic a second   0.5 + 0.06 x WIS
+ *     life a second    2 + 0.2407 x VIT out of combat, half of it in combat
+ *     magic a second   0.5 + 0.12 x WIS out of combat, 0.5 + 0.06 x WIS in combat
+ *
+ * Life and magic follow Vital Combat (Exalt 1.1): once a hit above the combat
+ * trigger lands, what VIT and WIS bring is at half effectiveness until a few
+ * seconds pass without one (7 - 0.04 x VIT, never under 1). The figures are
+ * RealmEye's, checked against its worked examples - 153 VIT is 19.41 HP/s and
+ * 135 WIS is 8.6 MP/s in combat - and a fight is in combat, so the fight uses
+ * those. The enchantments that add regeneration say "doubled while out of
+ * combat": their figure is the combat one.
  *
  * And the damage formula, which is the one thing everything here turns on:
  * a shot rolls between its low and high, is raised by the attacker's attack,
@@ -34,8 +42,15 @@ var TheoryCraft = (function () {
 
   const SHOTS_AT = dex => 1.5 + 6.5 * (dex / 75);
   const PACE_AT = spd => 4 + 5.6 * (spd / 75);
-  const HEAL_AT = vit => 1 + 0.12 * vit;
+  // Out of combat. In combat the statistic's part is halved: the whole of it for life, the part WIS adds for magic.
+  const HEAL_CALM = vit => 2 + 0.2407 * vit;
+  const MANA_CALM = wis => 0.5 + 0.12 * wis;
+  const HEAL_AT = vit => HEAL_CALM(vit) / 2;
   const MANA_AT = wis => 0.5 + 0.06 * wis;
+  // The Healing status, when the reader says a party member keeps it up.
+  const HEALING_A_SECOND = 20;
+  // How long a character stays in combat after the last hit above the trigger, before VIT shortens it.
+  const COMBAT_SECONDS = 7, COMBAT_PER_VIT = 0.04, COMBAT_LEAST = 1;
 
   const STATS = [
     ['hp', 'Life', 'HP'], ['mp', 'Magic', 'MP'], ['att', 'Attack', 'ATT'],
@@ -667,7 +682,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       top[key] = ceiling;
       out[key] = base[key];
     }
-    const from = { gear: {}, ench: {}, set: {}, exalt: {}, rel: {}, share: {} };
+    const from = { gear: {}, ench: {}, set: {}, exalt: {}, rel: {}, share: {}, regen: {} };
 
     // Sets first, because they are decided by what is worn rather than by
     // any one piece.
@@ -687,7 +702,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       }
       for (const id of (worn && worn.ench) || []) {
         const spell = id && data.byEnch[id];
-        if (!spell || !spell.worn) continue;
+        if (!spell) continue;
+        // Regeneration the enchantment adds on top of what VIT and WIS bring (see regenOf).
+        for (const kind of ['flatHP', 'flatMP', 'partHP', 'partMP']) {
+          if (spell.heal && spell.heal[kind]) from.regen[kind] = (from.regen[kind] || 0) + spell.heal[kind];
+        }
+        if (!spell.worn) continue;
         for (const tag of Object.keys(spell.worn)) {
           const key = OF_STAT[tag];
           if (key) from.ench[key] = (from.ench[key] || 0) + spell.worn[tag];
@@ -867,7 +887,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * time, and why. `stats` are the build's own, for how fast its weapon fires
    * and how fast its magic comes back.
    */
-  function effectsFor(state, stats) {
+  function effectsFor(state, stats, mana, cost) {
     if (!statusInfo || !state || !stats) return null;
     const up = {}, from = {};
     const boss = data.byBoss[state.boss];
@@ -889,7 +909,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       else take(c.effect, share, 'weapon');
     }
     if (ability && ability.mp) {
-      const every = Math.max(ability.mp / MANA_AT(stats.wis), ability.cool || 0);
+      const every = Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0);
       for (const c of ability.conditions || []) {
         if (c.target === 'player') continue;
         // On you and the party, only what casting it gives - not what a hit on you sets off.
@@ -1149,7 +1169,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * And how often is not a choice: it is what the magic pays for, at the rate
    * wisdom brings the magic back.
    */
-  function abilityRate(item, stats, def, fx) {
+  function abilityRate(item, stats, def, fx, mana, cost) {
     if (!item || !item.shots || !item.shots.length || !item.mp) {
       return { each: 0, every: 0, dps: 0 };
     }
@@ -1159,7 +1179,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const over = cast.from === undefined ? 0 : Math.max(0, stats[OF_STAT[cast.stat] || 'wis'] - cast.from);
     const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
       + over * (cast.dmg || 0);
-    const each = landed(roll, stats.att, def, shot.pierce, fx);
+    // "Attack does not affect ability damage" (RealmEye, Character Stats): the attacker's attack multiplies a
+    // weapon's shot and nothing else, so an ability's bolt is raised by what its own line says (the stat it
+    // scales with, above) and by nothing more. Attack 25 is the multiplier of one.
+    const each = landed(roll, 25, def, shot.pierce, fx);
     const many = Math.max(1, Math.round((cast.shots || item.many || 1)
       + over * (cast.more || 0)));
     /*
@@ -1177,7 +1200,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * has not been read for have none here, and those fall back to the mana
      * rule by themselves.
      */
-    const afford = item.mp / MANA_AT(stats.wis);
+    const afford = item.mp * (cost || 1) / (mana || MANA_AT(stats.wis));
     const every = Math.max(afford, item.cool || 0);
     return { each, many, every, dps: each * many / every, reach: shot.reach,
       held: item.cool && item.cool > afford ? 'cooldown' : 'mana' };
@@ -1193,6 +1216,115 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * count the same hands, or they would be three answers to three questions
    * nobody asked.
    */
+  /*
+   * What gear does that is neither a shot nor a statistic
+   * (tools/build-gear-effects.js, read off the client).
+   *
+   * A few pieces cost you while you fight: Valor takes ten attack, Warmonger
+   * five dexterity, Dusky Catalyst ten wisdom, once a hit above the combat
+   * trigger has landed. A fight is in combat, so the figures of a fight are
+   * worked out with them; the page's statistics, which are the character's,
+   * are not.
+   */
+  let gearInfo = null;
+  async function loadGearInfo() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.gearText;
+    if (!raw) raw = await fetch('assets/index/gear-effects.json').then(r => (r.ok ? r.text() : '')).catch(() => '');
+    if (!raw) return null;
+    try { return new Map(Object.entries(JSON.parse(raw).items || {})); } catch (err) { return null; }
+  }
+  const gearOf = name => (gearInfo && name && gearInfo.get(name)) || null;
+  const wornEffects = state => HANDS.map(([hand]) => gearOf((state.gear[hand] || {}).name)).filter(Boolean);
+  function fightOf(state, stats) {
+    const penalty = {};
+    for (const one of wornEffects(state)) {
+      for (const tag of Object.keys(one.combat || {})) {
+        const key = OF_STAT[tag];
+        if (key) penalty[key] = (penalty[key] || 0) + one.combat[tag];
+      }
+    }
+    if (!Object.keys(penalty).length) return { ...stats, penalty };
+    const now = { ...stats.now };
+    for (const key of Object.keys(penalty)) now[key] = Math.max(0, now[key] + penalty[key]);
+    return { ...stats, now, penalty };
+  }
+  // What a worn item does to the magic an ability costs: 0.9 is a tenth off, and they multiply.
+  const costOf = state => wornEffects(state).reduce((all, one) => all * (one.cost || 1), 1);
+  /*
+   * Damage a gear's effects add, a second, as the range the client lets us say.
+   *
+   * Each states how often it goes off - a chance, and a cooldown that starts
+   * when it does - so it goes off once every cooldown plus the wait for the
+   * chance to come up. A grenade of poison deals its total over its duration
+   * and ignores armour. A burst of bolts is the bolts' damage, raised by the
+   * stat it scales with; whether the attacker's attack multiplies it is the
+   * server's business and not the client's, so the low end leaves it out and
+   * the high end counts it. These are kept apart from the damage a second of
+   * the weapon, which is exact, and are not part of what the build is judged on.
+   */
+  // Whether what a proc needs is there: the other items it must be worn with, and those it cannot be worn beside.
+  function procOn(proc, wornNames) {
+    const needs = proc.needs;
+    if (!needs) return true;
+    if (needs.other) return false;               // a status, a meter, life under a threshold: only the fight knows
+    if ((needs.wear || []).some(name => !wornNames.has(name))) return false;
+    if (needs.wearAny && !needs.wearAny.some(name => wornNames.has(name))) return false;
+    return !(needs.notWear || []).some(name => wornNames.has(name));
+  }
+  function specialsOf(state, stats, def, shots) {
+    const list = [];
+    let low = 0, high = 0;
+    const att = stats.att || 0;
+    const wornNames = new Set(HANDS.map(([hand]) => (state.gear[hand] || {}).name).filter(Boolean));
+    for (const [hand] of HANDS) {
+      const name = (state.gear[hand] || {}).name, one = gearOf(name);
+      for (const proc of (one && one.procs) || []) {
+        if (!procOn(proc, wornNames)) continue;
+        const wait = proc.proc > 0 && shots > 0 ? 1 / (proc.proc * shots) : Infinity;
+        const goes = 1 / (proc.cooldown + wait);
+        let each = [0, 0];
+        if (proc.kind === 'poison') each = [proc.total, proc.total];
+        else {
+          const over = proc.per ? Math.max(0, (stats[OF_STAT[proc.by]] || 0) - proc.from) * proc.per : 0;
+          const roll = (proc.low + proc.high) / 2 + over;
+          each = [landed(roll, 25, def, proc.pierce) * proc.shots, landed(roll, att, def, proc.pierce) * proc.shots];
+        }
+        if (!(goes > 0) || !isFinite(goes)) continue;
+        low += goes * each[0]; high += goes * each[1];
+        list.push({ name, kind: proc.kind, on: proc.on, goes, low: goes * each[0], high: goes * each[1] });
+      }
+    }
+    return { low, high, list };
+  }
+
+  /*
+   * Life and magic a second, in combat and out of it.
+   *
+   * What VIT and WIS bring is the statistic's own (see the formulas at the top).
+   * The enchantments that add regeneration are flat - 4 life a second - or a
+   * share of the maximum - 0.5% of your life a second - and say "doubled while
+   * out of combat", so what the client states is the combat figure and the calm
+   * one is twice it. Both kinds are read from the maximum the build really has,
+   * enchantments and gear included, and the Healing status adds twenty a second
+   * to life in either state when the reader assumes it.
+   */
+  function regenOf(stats, assume, fought) {
+    const now = stats.now, got = (stats.from && stats.from.regen) || {};
+    // In combat the character wears its combat penalties (a wisdom ring that costs wisdom in combat).
+    const hot = (fought || stats).now;
+    const bonus = {
+      hp: (got.flatHP || 0) + (got.partHP || 0) * now.hp,
+      mp: (got.flatMP || 0) + (got.partMP || 0) * now.mp
+    };
+    const healing = assume && assume.Healing ? HEALING_A_SECOND : 0;
+    const hp = { combat: HEAL_AT(hot.vit) + bonus.hp + healing, calm: HEAL_CALM(now.vit) + 2 * bonus.hp + healing };
+    const mp = { combat: MANA_AT(hot.wis) + bonus.mp, calm: MANA_CALM(now.wis) + 2 * bonus.mp };
+    // Seconds without a hit above the trigger before the character is out of combat again.
+    const inCombat = Math.max(COMBAT_LEAST, COMBAT_SECONDS - COMBAT_PER_VIT * now.vit);
+    return { hp, mp, bonus, healing, inCombat };
+  }
+
   const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
 
   function numbersFor(state, def) {
@@ -1212,13 +1344,19 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const ability = data.byItem[(state.gear.ability || {}).name];
     const scale = scaleOf(state);
     // The status effects the build keeps up, its own and the party's it assumes.
-    const effects = effectsFor(state, stats.now);
+    // A fight is in combat: what the worn gear costs you then (see fightOf) counts here.
+    const fought = fightOf(state, stats);
+    const cost = costOf(state);
+    const regen = regenOf(stats, state.assume, fought);
+    const effects = effectsFor(state, fought.now, regen.mp.combat, cost);
     const fx = fxOf(effects);
     const gun = using === 'spell' ? NONE
-      : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
-    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
+      : weaponRate(weapon, fought.now, def, scale, subOf(state), fx);
+    // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
+    const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost);
     const bleed = effects ? effects.bleed : 0;
-    return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
+    const special = specialsOf(state, fought.now, def, gun.rate);
+    return { stats, fought, gun, spell, effects, bleed, regen, special, total: (using === 'spell' ? 0 : gun.dps) + bleed };
   }
 
   /* ---------------- the state of a build ---------------- */
@@ -3394,6 +3532,25 @@ const TINT = {
     if (kill !== null) {
       rows.push([esc(boss.name) + ' dies in', round(kill) + 's', true]);
     }
+    // What the build gets back, in combat and out of it (Vital Combat halves what VIT and WIS bring).
+    if (numbers.regen) {
+      const back = numbers.regen;
+      rows.push(['life a second, in / out of combat', round(back.hp.combat) + ' / ' + round(back.hp.calm)]);
+      rows.push(['magic a second, in / out of combat', round(back.mp.combat) + ' / ' + round(back.mp.calm)]);
+    }
+    // What the worn gear costs in combat, and what its effects add that the weapon's own shots do not.
+    const penalties = Object.entries((numbers.fought && numbers.fought.penalty) || {});
+    if (penalties.length) {
+      rows.push(['gear costs you in combat', tintStats(penalties.map(([key, v]) => STATS.find(s => s[0] === key)[2] + ' ' + v).join(', '))]);
+    }
+    // The ability's bolts, as often as the magic comes back to pay for them. Not part of the damage a second above.
+    if (!spellOnly && numbers.spell && numbers.spell.dps > 0) {
+      rows.push(['ability damage a second, held by magic', commas(numbers.spell.dps)]);
+    }
+    if (numbers.special && numbers.special.high > 0) {
+      const { low, high } = numbers.special;
+      rows.push(['special effects a second, estimate', round(low) === round(high) ? commas(round(low)) : commas(round(low)) + '–' + commas(round(high))]);
+    }
     /*
      * The same row of figures the enchanter uses for its answer: the number
      * large and set in tabular figures, the words for it small and grey
@@ -3631,13 +3788,14 @@ const TINT = {
   function stepDuel(delta) {
     const boss = data.byBoss[build.boss];
     if (!boss) return;
-    const stats = statsOf(build).now;
+    const whole = statsOf(build), fought = fightOf(build, whole), stats = fought.now;
+    const mana = regenOf(whole, build.assume, fought).mp.combat, discount = costOf(build);
     const weapon = data.byItem[(build.gear.weapon || {}).name];
     const ability = data.byItem[(build.gear.ability || {}).name];
-    const effects = effectsFor(build, stats);
+    const effects = effectsFor(build, stats, mana, discount);
     const fx = fxOf(effects);
     const gun = weaponRate(weapon, stats, boss.def, scaleOf(build), subOf(build), fx);
-    const spell = abilityRate(ability, stats, boss.def, fx);
+    const spell = abilityRate(ability, stats, boss.def, fx, mana, discount);
 
     stepBits(delta);
     if (duel.hp <= 0) return;                 // it is over; nothing else moves
@@ -3692,7 +3850,7 @@ const TINT = {
      * thing a sustained figure cannot show you.
      */
     const cost = 0;                            // the ability is set aside
-    duel.mp = Math.min(duel.mpFull, duel.mp + MANA_AT(stats.wis) * delta);
+    duel.mp = Math.min(duel.mpFull, duel.mp + mana * delta);
     if (spell.dps > 0 && cost) {
       duel.spell -= delta;
       if (duel.spell <= 0 && duel.mp >= cost) {
@@ -5327,6 +5485,7 @@ const TINT = {
     for (const one of data.enchants) data.byEnch[one.id] = one;
     for (const one of data.bosses) data.byBoss[one.name] = one;
     statusInfo = await loadStatusInfo();
+    gearInfo = await loadGearInfo();
     await loadAccess();
     try { profile = BuildProgression.normalize(JSON.parse(localStorage.getItem(PROFILE_STORE)), access); }
     catch (_) { profile = null; }
