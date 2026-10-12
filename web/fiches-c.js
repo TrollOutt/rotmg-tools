@@ -1972,6 +1972,13 @@
   const TINT = { MAXHP: '#58cfda', MAXMP: '#f4d24c', ATT: '#ca46dd', DEF: '#8b9cb3', SPD: '#58da6e', DEX: '#ff5f2a', VIT: '#dd0c32', WIS: '#4b9be7' };
   const STAT_SHORT = { MAXHP: 'HP', MAXMP: 'MP', ATT: 'ATT', DEF: 'DEF', SPD: 'SPD', DEX: 'DEX', VIT: 'VIT', WIS: 'WIS' };
   const STAT_ORDER = ['MAXHP', 'MAXMP', 'ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS'];
+  /* "+N more" under "Where it comes from": the other source cards are already in the grid, hidden. */
+  document.addEventListener('click', e => {
+    const more = e.target.closest && e.target.closest('.pg-more');
+    if (!more) return;
+    more.parentNode.querySelectorAll('.pg-src[hidden]').forEach(c => { c.hidden = false; });
+    more.remove();
+  });
   const BAG_SAY = ['Brown', 'Pink', 'Purple', 'Egg', 'Cyan', 'Blue', 'White', 'Gold', 'Orange', 'Red'];
 
   /* ---------------- what is read ---------------- */
@@ -2379,7 +2386,9 @@
     const bagName = cx.bag === undefined ? '' : BAG_SAY[cx.bag] === 'Egg' ? 'an egg basket' : ('a' + (/^[AEIOU]/.test(BAG_SAY[cx.bag]) ? 'n ' : ' ') + BAG_SAY[cx.bag].toLowerCase() + ' bag');
     return '<section class="pg-sec pg-source"><h3>Where it comes from</h3>'
       + (bagName ? '<p class="pg-bagsay">' + bagArt(cx.bag, 32) + '<span>Drops in <b>' + bagName + '</b></span></p>' : '')
-      + '<div class="pg-srcs">' + cards.slice(0, MAX).join('') + (more > 0 ? '<span class="pg-src is-more">+' + more + ' more</span>' : '') + '</div>'
+      + '<div class="pg-srcs">' + cards.slice(0, MAX).join('')
+      + cards.slice(MAX).map(c => c.replace(/^<(button|div) /, '<$1 hidden ')).join('')
+      + (more > 0 ? '<button type="button" class="pg-src is-more pg-more">+' + more + ' more</button>' : '') + '</div>'
       + '</section>';
   }
   /* The rest of what the client says about it, each a figure of its own at a size that can be read. */

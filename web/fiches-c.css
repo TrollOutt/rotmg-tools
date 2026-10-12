@@ -479,7 +479,8 @@
   border: 1px solid var(--line); background: rgb(0 0 0 / .22); text-align: left; cursor: pointer; font: inherit; color: var(--text); }
 .pg-src:hover { border-color: var(--accent); }
 .pg-src.is-plain { cursor: default; border-style: dashed; }
-.pg-src.is-more { display: flex; justify-content: center; color: var(--dim); cursor: default; border-style: dashed; }
+.pg-src[hidden] { display: none; }
+.pg-src.is-more { display: flex; justify-content: center; color: var(--dim); cursor: pointer; border-style: dashed; font: inherit; }
 .pg-src-pic { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 10px; background: rgb(255 255 255 / .04); }
 .pg-src-glyph { font-size: 22px; color: var(--muted); }
 .pg-src-t { display: grid; min-width: 0; }
