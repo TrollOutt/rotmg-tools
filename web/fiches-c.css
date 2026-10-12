@@ -208,6 +208,31 @@
 .fc2-more[open] > summary { display: none; }
 .fc2-more > span { display: contents; }
 
+/* Événement : à quel score du royaume sort chaque créature */
+.ix-kind.is-event { color: var(--accent); }
+.fc2-who { display: inline-flex; align-items: center; gap: 8px; min-width: 0; text-align: left; }
+.fc2-who b { font-size: .92em; font-weight: 650; }
+.fc2-mono { display: inline-grid; place-items: center; border-radius: 10px; background: rgb(var(--hi-rgb) / .08); color: var(--muted);
+  font-size: .72em; font-weight: 650; flex: none; }
+.fc2-scores { display: flex; flex-direction: column; gap: 22px; padding: 18px 4px 4px; }
+.fc2-score { display: grid; grid-template-columns: minmax(120px, 190px) minmax(0, 1fr); align-items: center; gap: 14px; }
+.fc2-track { position: relative; height: 8px; margin-right: 14px; border-radius: 99px; background: rgb(var(--hi-rgb) / .1); }
+.fc2-track i { position: absolute; left: var(--at); top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  background: #ffcb70; box-shadow: 0 0 0 3px rgb(255 203 112 / .2); }
+.fc2-track i span { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: .74em;
+  color: var(--muted); white-space: nowrap; }
+.fc2-score.is-axis { margin-top: -12px; }
+.fc2-axis { display: flex; justify-content: space-between; margin-right: 14px; font-size: .7em; color: var(--dim); }
+.fc2-spawn { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr); gap: 10px 14px; align-items: start; padding: 6px 0; }
+.fc2-spawn + .fc2-spawn { border-top: 1px solid var(--line); }
+.fc2-spawnsay { display: grid; gap: 2px; min-width: 0; font-size: .9em; }
+.fc2-spawnsay small { color: var(--muted); font-size: .88em; line-height: 1.35; }
+.fc2-wave { display: grid; gap: 6px; padding: 6px 0; }
+.fc2-wave + .fc2-wave { border-top: 1px solid var(--line); }
+.fc2-wave h5 { margin: 0; font-size: .8em; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fc2-wave > small { color: var(--dim); }
+@media (max-width: 640px) { .fc2-score, .fc2-spawn { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+
 /* Set : skin final et pièces */
 .fc2-setskin { display: flex; gap: 14px; align-items: center; }
 .fc2-setskin > div { display: grid; gap: 6px; justify-items: start; }

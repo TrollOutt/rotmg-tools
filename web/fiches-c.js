@@ -1804,6 +1804,60 @@
       : emptyBox('Who uses it', 'Nothing in the client declares it: the game applies it from its own code.');
   }
 
+  /* ---------- la fiche d'un événement (tools/build-realm-events.js) ---------- */
+  /* Les événements sont créés à l'exécution par la page de l'Index, comme les statuts : on les lit là, pas dans index.json. */
+  const eventRec = id => { const d = typeof RealmIndex !== 'undefined' && RealmIndex.data && RealmIndex.data(); return d && d.all.get(id); };
+  const initialsOf = name => String(name).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const markSay = at => at === '?' ? 'score not known' : Array.isArray(at) ? at.map(m => m + '%').join(' · ') : '';
+  /* Qui sort : sa fiche quand l'Index la connaît, son nom sinon. */
+  function whoIs(s, side) {
+    const o = s.id && rec(s.id);
+    const pic = o && art(o, side) || '<span class="fc2-mono" style="width:' + side + 'px;height:' + side + 'px">' + esc(initialsOf(s.name)) + '</span>';
+    return o ? '<button type="button" class="ix-jump fc2-who" data-open="' + esc(o.id) + '">' + pic + '<b>' + esc(s.name) + '</b></button>'
+      : '<span class="fc2-who">' + pic + '<b>' + esc(s.name) + '</b></span>';
+  }
+  /* Une ligne de la piste : qui, et les repères du score du royaume où il sort. */
+  const scoreRow = (who, marks) => '<div class="fc2-score"><span class="fc2-scorewho">' + who + '</span><span class="fc2-track">'
+    + marks.map(m => '<i style="--at:' + m + '%"><span>' + m + '%</span></i>').join('') + '</span></div>';
+  function sheetEvent(r) {
+    const e = r.event, face = r.artOf && rec(r.artOf);
+    const pic = face && art(face, 40) || '<span class="fc2-mono" style="width:40px;height:40px">' + esc(initialsOf(e.name)) + '</span>';
+    const head = '<div class="ix-part fc2-head"><span class="ix-cell">' + pic + '</span>'
+      + '<div class="fc2-name"><span class="ix-kind is-event">Event</span><h3>' + esc(e.name) + '</h3>'
+      + '<div class="fc2-sub">' + esc(e.when) + '</div></div></div>';
+    const prose = '<div class="ix-prose"><p>' + esc(e.summary) + '</p></div>';
+    // Everything that has marks goes on one axis, the event's own start first.
+    const rows = [];
+    if (e.begins !== undefined) rows.push(scoreRow('<span class="fc2-who"><b>The event begins</b></span>', [e.begins]));
+    for (const s of e.spawns) if (Array.isArray(s.at)) rows.push(scoreRow(whoIs(s, 28), s.at));
+    const track = rows.length
+      ? '<div class="fc2-scores">' + rows.join('') + '<div class="fc2-score is-axis"><span></span><span class="fc2-axis"><span>realm score 0%</span><span>100%</span></span></div></div>'
+      : '';
+    const unknown = e.spawns.filter(s => s.at === '?');
+    const noMark = unknown.length
+      ? '<p class="fc-note">' + unknown.map(s => esc(s.name)).join(', ') + ': the score is not known yet.</p>' : '';
+    return blockOf([head, part('What it is', prose), part('At what score of the realm', track + noMark, { tag: 'RealmEye' })], 'fc2-sheet');
+  }
+  function eventDossier(r) {
+    const e = r.event;
+    const lines = e.spawns.map(s => '<div class="fc2-spawn">' + whoIs(s, 32)
+      + '<span class="fc2-spawnsay">' + (markSay(s.at) ? '<b>' + esc(markSay(s.at)) + '</b>' : '') + (s.where ? '<span>' + esc(s.where) + '</span>' : '')
+      + (s.note ? '<small>' + esc(s.note) + '</small>' : '') + '</span></div>').join('');
+    const waves = (e.waves || []).map(w => '<div class="fc2-wave"><h5>' + esc(w.tier) + ' biomes · wave ' + w.wave + '</h5>'
+      + '<div class="fc2-chips">' + w.enemies.map(x => {
+        const o = rec(x.id);
+        return '<button type="button" class="ix-jump" data-open="' + esc(x.id) + '">' + (o ? art(o, 16) : '') + esc(x.name)
+          + (x.hp ? ' <small>' + x.hp.toLocaleString('en-US') + ' ' + statWord('MAXHP', 'HP') + '</small>' : '') + '</button>';
+      }).join('') + '</div><small>' + esc(w.terrain.join(', ')) + '</small></div>').join('');
+    const sources = [...new Map([...e.sources, ...e.spawns.flatMap(s => s.sources)].map(s => [s.label, s])).values()]
+      .map(s => s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.label) + ' ↗</a>' : esc(s.label)).join(' · ');
+    return [
+      blockOf([part('Who comes out · ' + e.spawns.length, lines, { tag: 'RealmEye' })]),
+      waves ? blockOf([part('The invasion waves', waves + '<p class="fc-note">Which aliens belong to which wave, and where, is declared by the client. How many kills each wave takes is not published.</p>', { tag: 'client' })]) : '',
+      blockOf([part('Where this is written', '<p class="fc-note">' + sources + '</p><p class="fc-note">The marks are the community\'s word: the client does not state them, the server watches the realm\'s score.</p>')])
+    ].filter(Boolean).join('');
+  }
+
   /* ---------- branchement ---------- */
   const isGear = r => Boolean(r && r.kind === 'item' && !r.use && !r.family && r.slot !== undefined && r.slot !== 10);
   /* The card the site drew, per host: the Index page, and the atlas's drawer on the left of the map. */
@@ -1821,6 +1875,13 @@
     const com = communityOf(r);
     card.__used = new Set();
     const bar = '<div class="fc-bar"><div class="fc-tools">' + card.doors + card.away + card.love + '</div>' + modeBar() + '</div>';
+    /* Un événement a sa propre fiche, tirée du catalogue des événements. */
+    const happening = card.id.startsWith('event:') ? eventRec(card.id) : null;
+    if (happening && happening.event) {
+      return '<div class="fc-root fc2">' + bar + card.warns
+        + '<div class="fc-cols"><div class="fc-left">' + sheetEvent(happening) + '</div>'
+        + '<div class="fc-right fc2-right">' + eventDossier(happening) + '</div></div></div>';
+    }
     /* Un statut a sa propre fiche, tirée du catalogue des statuts. */
     if (card.id.startsWith('status:') && statusData && statusData.byName.has(card.id.slice(7))) {
       const name = card.id.slice(7);
@@ -1911,6 +1972,13 @@
       if (html) { box.innerHTML = html; settle(box); }
     }
   }
+  /* "+N more" under "Where it comes from": the other source cards are already in the grid, hidden. */
+  document.addEventListener('click', e => {
+    const more = e.target.closest && e.target.closest('.pg-more');
+    if (!more) return;
+    more.parentNode.querySelectorAll('.pg-src[hidden]').forEach(c => { c.hidden = false; });
+    more.remove();
+  });
   function onCard(box) {
     if (!box.firstElementChild || box.querySelector('.fc-root, .fc-oldbar')) return;
     drawn.set(box, box.innerHTML);
@@ -1972,13 +2040,6 @@
   const TINT = { MAXHP: '#58cfda', MAXMP: '#f4d24c', ATT: '#ca46dd', DEF: '#8b9cb3', SPD: '#58da6e', DEX: '#ff5f2a', VIT: '#dd0c32', WIS: '#4b9be7' };
   const STAT_SHORT = { MAXHP: 'HP', MAXMP: 'MP', ATT: 'ATT', DEF: 'DEF', SPD: 'SPD', DEX: 'DEX', VIT: 'VIT', WIS: 'WIS' };
   const STAT_ORDER = ['MAXHP', 'MAXMP', 'ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS'];
-  /* "+N more" under "Where it comes from": the other source cards are already in the grid, hidden. */
-  document.addEventListener('click', e => {
-    const more = e.target.closest && e.target.closest('.pg-more');
-    if (!more) return;
-    more.parentNode.querySelectorAll('.pg-src[hidden]').forEach(c => { c.hidden = false; });
-    more.remove();
-  });
   const BAG_SAY = ['Brown', 'Pink', 'Purple', 'Egg', 'Cyan', 'Blue', 'White', 'Gold', 'Orange', 'Red'];
 
   /* ---------------- what is read ---------------- */
@@ -2808,6 +2869,20 @@
       if (combat) parts.push(combat);
       const tiers = [...blocks.values()].filter(b => /^Drops/.test(titleOf(b))).flatMap(b => rowsOf(b)).filter(row => /tier/i.test(row.label)).flatMap(row => row.words);
       if (drops.length || tiers.length) parts.push(sec('What it drops', tilesOf(drops) + (tiers.length ? '<div class="pd-chips pk-chips">' + tiers.map(w => '<span class="pg-chip">' + esc(w) + '</span>').join('') + '</div>' : '')));
+      // The events that bring it out, and at what mark of the realm's score (tools/build-realm-events.js).
+      const seen = (r.outLinks || []).filter(l => l[0] === 'appears in').map(l => rec(l[1])).filter(x => x && x.event);
+      if (seen.length) {
+        const say = ev => {
+          const s = ev.event.spawns.find(x => x.id === r.id);
+          if (s && Array.isArray(s.at)) return s.at.map(m => m + '%').join(' · ') + ' of the realm’s score';
+          if (s && s.at === '?') return 'at a score nobody has written down';
+          return (ev.event.waves || []).some(w => w.enemies.some(x => x.id === r.id)) ? 'in a wave of the invasion' : 'once the event is under way';
+        };
+        parts.push(sec('When it comes out', '<div class="pg-srcs">' + seen.map(ev => {
+          const face = ev.artOf && rec(ev.artOf);
+          return open(ev, '<span class="pg-src-pic">' + (face ? alive(face, 40) : '') + '</span><span class="pg-src-t"><b>' + esc(ev.name) + '</b><small>' + esc(say(ev)) + '</small></span>', 'pg-src');
+        }).join('') + '</div>'));
+      }
       if (homes.length) parts.push(sec('Where it lives', '<div class="pg-srcs">' + homes.map(p => srcCard(p, p.kind === 'portal' ? 'dungeon' : 'biome')).join('') + '</div>'));
       const near = linkIds(blocks, /spawn/i).filter(x => x.kind === 'enemy' && x.id !== r.id);
       if (near.length) parts.push(sec('Comes with', faceRow(near) + '<p class="pd-also">' + esc(near.slice(0, 6).map(x => x.name).join(', ')) + (near.length > 6 ? ' and ' + (near.length - 6) + ' more' : '') + '</p>'));
@@ -2897,6 +2972,21 @@
       if (help) parts.push(sec('Gear that grants it <small>' + count(help) + '</small>', gearTiles(help)));
       if (beasts) { const list = [...beasts.querySelectorAll('[data-open]')].map(x => rec(x.dataset.open)).filter(Boolean); parts.push(sec('Creatures that inflict it <small>' + count(beasts) + '</small>', faceRow(list, 32, 40))); }
       return { eyebrow: ['Status effect'], chips: '', figs, parts, keep: [/^Links|^Tags|^Gear that|^Creatures that/], art: statusArt(r.name, 72) };
+    },
+    event(r, root, blocks) {
+      const e = r.event, face = r.artOf && rec(r.artOf);
+      const find = rx => [...blocks.values()].find(x => rx.test(titleOf(x)));
+      const marks = [...new Set(e.spawns.flatMap(s => Array.isArray(s.at) ? s.at : []))].sort((a, b) => a - b);
+      const first = e.begins !== undefined ? e.begins : marks[0];
+      const figs = [
+        figure('First mark', first !== undefined ? first + '%' : 'not known', e.begins !== undefined ? 'of the realm’s score, where it begins' : 'of the realm’s score'),
+        figure('Creatures', String(e.spawns.length), 'it brings out'),
+        e.waves ? figure('Waves', String(e.waves.length), 'declared by the client, Adept then Veteran')
+          : figure('Marks', String(marks.length), marks.length ? marks.slice(0, 6).join('%, ') + '%' + (marks.length > 6 ? '…' : '') : 'none given')
+      ];
+      const parts = [];
+      for (const rx of [/^At what score/, /^Who comes out/, /^The invasion waves/, /^Where this is written/]) { const b = find(rx); if (b) parts.push(b); }
+      return { eyebrow: ['Event'], chips: '<span class="pg-chip">' + esc(e.when) + '</span>', figs, parts, art: face ? alive(face, 96) : '', keep: [/^What it is|^Links|^Tags/] };
     },
     place(r, root, blocks) {
       const rel = relations(r), get = t => rel.filter(x => x.type === t && x.to && rec(x.to)).map(x => rec(x.to));

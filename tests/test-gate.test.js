@@ -17,6 +17,7 @@ const deployCritical = [
   'index-extras.test.js',
   'index-quality.test.js',
   'progression.test.js',
+  'realm-events.test.js',
   'projections.test.js',
   'realm-brush-engine.test.js',
   'realm-contract.test.js',

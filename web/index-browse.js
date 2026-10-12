@@ -119,7 +119,7 @@
     }
     if (IX.isGear(r)) return (IX.slots[r.slot] || ['Gear'])[0] + (r.tier !== undefined ? ' · T' + r.tier : L(r).includes('UT') ? ' · UT' : L(r).includes('ST') ? ' · ST' : '');
     if (r.kind === 'item' && ['use', 'consumable', 'other', 'material'].includes(FAMILY(r))) return SHELF_ONE[bagShelf(r)] || 'Consumable';
-    return ({ portal: 'Dungeon', place: 'Biome', class: 'Class', skin: 'Skin', set: 'Set', enchant: 'Enchantment', pool: 'Pool', use: 'Consumable' })[FAMILY(r)]
+    return ({ portal: 'Dungeon', place: 'Biome', class: 'Class', skin: 'Skin', set: 'Set', enchant: 'Enchantment', pool: 'Pool', use: 'Consumable', event: 'Event' })[FAMILY(r)]
       || FAMILY(r)[0].toUpperCase() + FAMILY(r).slice(1);
   };
   const KCLASS = r => 'is-' + (r.kind === 'item' && (r.use || r.family) ? 'use' : r.kind);
@@ -145,6 +145,11 @@
 
   IX.art = function art(r, px = 32) {
     if (!r) return glyph('?', 'none', px);
+    // An event is drawn by the creature that stands for it, or by its initials when none does.
+    if (r.kind === 'event') {
+      const face = r.artOf && D.all.get(r.artOf);
+      return face ? IX.art(face, px) : glyph(initials(r.name), 'none', px);
+    }
     if (r.statusArt && D.statusSheet) return slice((bundle() && bundle().statusSheet) || 'assets/index/status-icons.png', D.statusSheet, r.statusArt, px,
       // The game draws a lowered stat with the raised stat's icon in red.
       r.name === 'Stat Reduction' ? 'filter:grayscale(1) sepia(1) saturate(6) hue-rotate(-40deg) brightness(.95)' : '');
@@ -218,7 +223,7 @@
     }
     return r.art && !IX.isBlank(r.art) ? r.art : null;
   }
-  IX.hasPicture = r => Boolean(r && (r.statusArt || IX.beaconOf(r) || picFor(r)));
+  IX.hasPicture = r => Boolean(r && (r.statusArt || IX.beaconOf(r) || picFor(r) || (r.kind === 'event' && r.artOf)));
   // Machinery rather than things: an enemy or a portal the client never drew.
   IX.isTechnical = r => (r.kind === 'enemy' || r.kind === 'portal') && !IX.hasPicture(r);
 
@@ -327,6 +332,10 @@
     const places = visible(r => r.kind === 'place');
     domain('biomes', 'Realm biomes', 'The places of the realm and what roams them.',
       IX.BIOME_LEVELS.map(l => section(l.toLowerCase(), l === 'Other' ? 'Other biomes' : l, places.filter(id => IX.biomeLevel(IX.records.get(id)) === l))));
+    // The events in the order the catalogue writes them: the invasion, then the year's holidays, then the seasons.
+    const events = visible(r => r.kind === 'event');
+    domain('events', 'Events', 'The seasonal events, and the score of the realm at which each brings out its creatures.',
+      [section('all', 'Events', events)], { sortBy: r => events.indexOf(r.id) });
     const st = visible(r => r.kind === 'status');
     domain('status', 'Status effects', 'What each effect does, what inflicts it and who is immune.', [
       section('bad', 'Debuffs', st.filter(id => IX.records.get(id).tone === 'bad')),
@@ -409,7 +418,7 @@
   };
   // How much a reader is likely to mean a kind of thing.
   const weight = r => {
-    if (r.kind === 'portal' || r.kind === 'class' || r.kind === 'status' || r.kind === 'place' || r.kind === 'set') return 0;
+    if (r.kind === 'portal' || r.kind === 'class' || r.kind === 'status' || r.kind === 'place' || r.kind === 'set' || r.kind === 'event') return 0;
     if (IX.isTechnical(r) || r.dev) return 6;
     if (r.kind === 'enemy') return /Hero|Encounter|Boss|God/.test(IX.kindSay(r)) ? 1 : 3;
     if (IX.isGear(r)) return 1;
@@ -497,9 +506,9 @@
   /* ================================================================== *
    * The page                                                             *
    * ================================================================== */
-  const ORDER = ['classes', 'dungeons', 'biomes', 'status', 'enemies', 'gear', 'sets', 'skins', 'bag', 'enchants'];
+  const ORDER = ['classes', 'dungeons', 'biomes', 'events', 'status', 'enemies', 'gear', 'sets', 'skins', 'bag', 'enchants'];
   // A family drawn as a wall of pictures by default: few members, each a thing with a card.
-  const VISUAL = new Set(['classes', 'dungeons', 'biomes', 'status', 'sets', 'skins']);
+  const VISUAL = new Set(['classes', 'dungeons', 'biomes', 'events', 'status', 'sets', 'skins']);
 
   /* ---------------- state, kept in the address ---------------- */
   const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'scl', 'home', 'dcls', 'dh', 'open', 'wide'];

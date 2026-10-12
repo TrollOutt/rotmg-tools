@@ -321,6 +321,43 @@ const RealmIndex = (function () {
   }
 
   /*
+   * The seasonal events, and the mark of the realm's score at which each brings
+   * its creatures out (tools/build-realm-events.js, from data/Items/
+   * realm-events.txt and the client's invasion waves). Each is a record of its
+   * own, filed as an event, and the creatures it brings out are linked to it
+   * both ways: the event "brings out" the Gardener, and the Gardener "appears
+   * in" Valentine's Day. The marks themselves are the community's word, not
+   * the client's, and the card says so.
+   */
+  let realmEvents = null;
+  async function loadEvents() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.eventsText;
+    if (!raw) {
+      raw = await fetch('assets/index/realm-events.json').then(r => (r.ok ? r.text() : '')).catch(() => '');
+    }
+    if (!raw) return;
+    let said;
+    try { said = JSON.parse(raw); } catch (err) { return; }
+    realmEvents = said;
+    for (const event of said.events || []) {
+      const id = 'event:' + event.id;
+      const one = { id, kind: 'event', name: event.name, said: event.name, event, artOf: event.art, outLinks: [], inLinks: [] };
+      all.set(id, one);
+      light.push([id, event.name, 'event', '', 0, 0, '']);
+      const who = new Set([...event.spawns.map(s => s.id), ...(event.waves || []).flatMap(w => w.enemies.map(e => e.id))].filter(Boolean));
+      for (const from of who) {
+        const there = all.get(from);
+        if (!there) continue;
+        // The index's own link list is shared with every reader of it; add to a copy.
+        if (there.outLinks === there.out) there.outLinks = (there.out || []).slice();
+        there.outLinks.push(['appears in', id]);
+        one.outLinks.push(['brings out', from]);
+      }
+    }
+  }
+
+  /*
    * And what the community knows, which is a separate file because it is a
    * separate kind of claim. The client does not say where anything comes from
    * - loot is the server's business - so "dropped by" can only ever be what
@@ -2794,7 +2831,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')) + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses()]);
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses(), loadEvents()]);
     if (classic()) buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special
