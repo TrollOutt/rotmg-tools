@@ -65,6 +65,8 @@ const page = read('web/index-page.js'), browse = read('web/index-browse.js'), fi
 assert(/async function loadEvents\(\)/.test(page) && page.includes("'event:' + event.id") && /loadStatuses\(\), loadEvents\(\)/.test(page),
   'the Index page creates an event record for each event');
 assert(browse.includes("domain('events', 'Events'") && /const ORDER = \[[^\]]*'events'/.test(browse), 'the Index has an Events family');
+assert(browse.includes('function eventCards(rows, d)') && /if \(d\.id === 'events'\) \{[^}]*eventCards\(rows, d\)/.test(browse)
+  && read('web/style.css').includes('.ixb-evgrid'), 'the Events family shows each event as a card, as the overview does its families');
 assert(/^    event\(r, root, blocks\) \{/m.test(fiches) && fiches.includes('function sheetEvent') && fiches.includes('function eventDossier'),
   'an event has its own card, in both layouts');
 assert(read('tools/build-standalone.js').includes('eventsText'), 'the kept copy carries the events');

@@ -889,13 +889,20 @@
       + tags.map(([k, t]) => '<button type="button" class="ixb-chip' + (S.tags.has(k) ? ' is-on' : '') + '" data-tag="' + k + '">' + esc(t.say) + '</button>').join('');
     const anySet = FILTERS.some(k => S[k]) || S.tags.size;
     const grouping = bys.length > 1 ? '<span class="ixb-lbl">Group</span><select data-by>' + bys.map(k => '<option value="' + k + '"' + (by === k ? ' selected' : '') + '>' + GROUP[k].say + '</option>').join('') + '</select>' : '';
-    const toggle = '<span class="ixb-tog" title="List or portraits"><button type="button" class="' + (view === 'rows' ? 'is-on' : '') + '" data-view="rows" title="List">☰</button><button type="button" class="' + (view === 'wall' ? 'is-on' : '') + '" data-view="wall" title="Portraits">▦</button></span>';
+    const toggle = d.id === 'events' ? '' : '<span class="ixb-tog" title="List or portraits"><button type="button" class="' + (view === 'rows' ? 'is-on' : '') + '" data-view="rows" title="List">☰</button><button type="button" class="' + (view === 'wall' ? 'is-on' : '') + '" data-view="wall" title="Portraits">▦</button></span>';
     const title = g ? '<button type="button" class="ixb-up" data-f="' + d.id + '" title="Back to all ' + esc(d.title) + '">' + esc(d.title) + ' ›</button> ' + esc(g.title) : esc(d.title);
     box.innerHTML = '<div class="ixb-head">' + (pic ? '<span class="ixb-big">' + IX.art(pic, 38) + '</span>' : '')
       + '<div><h2>' + title + '</h2>' + (g ? '' : '<p>' + esc(d.blurb) + '</p>') + '</div>'
       + '<div class="ixb-right"><span class="ixb-count">' + (rows.length === all.length ? n0(rows.length) : n0(rows.length) + ' of ' + n0(all.length)) + '</span>' + toggle + '</div></div>'
       + (filters || grouping ? '<div class="ixb-tools">' + filters + (anySet ? '<button type="button" class="ixb-clear" data-clear>clear</button>' : '') + '<span class="ixb-push">' + grouping + '</span></div>' : '')
       + '<div id="ixbList"></div><div class="ixb-sentinel" id="ixbSentinel"></div>';
+    // Few enough events to give each a card of its own, as the overview does its families.
+    if (d.id === 'events') {
+      pending = [];
+      viewNow = view;
+      $('ixbList').innerHTML = eventCards(rows, d);
+      return;
+    }
     pending = grouped(rows, ctx, by);
     viewNow = view;
     // A single group that only repeats the title has no heading.
@@ -1064,6 +1071,41 @@
     const some = d.groups.slice(0, 7);
     return some.map(g => '<button type="button" data-f="' + d.id + '" data-s="' + esc(g.id) + '">' + esc(g.title) + '</button>').join('')
       + (d.groups.length > some.length ? '<button type="button" data-f="' + d.id + '">+' + (d.groups.length - some.length) + ' more</button>' : '');
+  }
+  /*
+   * The events, each as a card like the overview's: its name and how many
+   * creatures it brings out, when it runs, what it is, their faces, and the
+   * marks of the realm's score they come out at.
+   */
+  function eventCards(rows, d) {
+    const faces = r => [...new Set([...r.event.spawns.map(s => s.id), ...(r.event.waves || []).flatMap(w => w.enemies.map(x => x.id))].filter(Boolean))];
+    // A long, regular run of marks (the mercenaries, at every tenth) is said as the step and the range.
+    const marks = s => {
+      const a = s.at;
+      if (a === '?') return 'not known';
+      if (!Array.isArray(a)) return '';
+      if (a.length > 5) {
+        const step = a[1] - a[0];
+        return a.every((m, i) => !i || m - a[i - 1] === step) ? 'every ' + step + '% · ' + a[0] + '–' + a[a.length - 1] + '%'
+          : a.slice(0, 3).map(m => m + '%').join(' · ') + ' …';
+      }
+      return a.map(m => m + '%').join(' · ');
+    };
+    const lines = e => [e.begins !== undefined ? ['The event begins', e.begins + '%'] : null,
+      ...e.spawns.filter(s => marks(s)).map(s => [s.name, marks(s)])].filter(Boolean);
+    return '<div class="ixb-evgrid">' + rows.slice().sort((a, b) => d.sortBy(a) - d.sortBy(b)).map(r => {
+      const e = r.event, ids = faces(r), say = lines(e), shown = say.slice(0, 4);
+      // Every creature the event names, pictured or not: two of Christmas's three have no card in the Index.
+      const named = new Set([...e.spawns.map(s => s.id || s.name), ...ids]).size;
+      return '<div class="ixb-famcard"><button type="button" class="ixb-t" data-pick="' + esc(r.id) + '">'
+        + '<span class="ixb-tpic">' + IX.art(r, 30) + '</span><b>' + esc(e.name) + '</b><small>' + named + (named === 1 ? ' creature' : ' creatures') + '</small></button>'
+        + '<p class="ixb-evwhen">' + esc(e.when) + '</p><p>' + esc(e.summary) + '</p>'
+        // The event's own picture first, and only those who have a picture: a monogram says nothing in a strip of faces.
+        + '<div class="ixb-strip">' + [...new Set([r.artOf, ...ids].filter(Boolean))].filter(id => IX.hasPicture(IX.records.get(id))).slice(0, 14).map(id => '<button type="button" data-pick="' + esc(id) + '" title="' + esc((IX.records.get(id) || {}).said || (IX.records.get(id) || {}).name) + '">' + IX.art(IX.records.get(id), 34) + '</button>').join('') + '</div>'
+        + (shown.length ? '<div class="ixb-evlines">' + shown.map(([who, at]) => '<span>' + esc(who) + '</span><b>' + esc(at) + '</b>').join('')
+          + (say.length > shown.length ? '<span class="ixb-evmore">+' + (say.length - shown.length) + ' more marks</span>' : '') + '</div>' : '')
+        + '</div>';
+    }).join('') + '</div>';
   }
   /*
    * The page before a family is chosen: every family as a card that fills

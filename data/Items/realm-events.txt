@@ -60,15 +60,15 @@ at|easter|enemy:Biff the Buffed Bunny|50,80|Relentless Springs|As of Easter 2025
 event|white-snake|Legend of the White Snake|Lunar New Year events|—|An altar in the Carboniferous that calls Primal Snakes as the realm fills.|enemy:Altar of the White Snake|altar-of-the-white-snake,release-history-2025
 at|white-snake|enemy:Altar of the White Snake|30,50|Carboniferous|Appears at 30% with three Primal Snakes; it can be used again at 50%. More Primal Snakes come at other marks the pages do not give.|altar-of-the-white-snake,release-history-2025
 
-event|oryxmania|Oryxmania|Oryxmania events|—|Arena champions, with their way in brought out twice a realm.|enemy:Arena Announcer|release-history-2025,oryxmania
+event|oryxmania|Oryxmania|Oryxmania events|—|Arena champions, with their way in brought out twice a realm.|portal:Mysterious Arena|release-history-2025,oryxmania
 at|oryxmania|enemy:Arena Announcer|33,66|Realm|Take part in the Rumble by fighting him; a portal leads to the first Arena.|release-history-2025
 at|oryxmania|The Keyper of the Arena|33,66|Realm|A reskin of the Keyper, out twice a realm.|oryxmania
 
-event|vindication|Vindication|August 2024|—|The mercenaries come back to the realms.||release-history-2024
+event|vindication|Vindication|August 2024|—|The mercenaries come back to the realms.|enemy:Pirate Queen Ramm|release-history-2024
 at|vindication|The mercenaries|10,20,30,40,50,60,70,80,90|Realm|In the new realm, one at each tenth of the score. In the old realm they came after 8, 16, 24 and 32 Heroes of Oryx.|release-history-2024
 at|vindication|The Interregnum Portals|45,85|Realm|Two sets, in the new realm. In the old realm they came after the Red Demons and the Ghost Kings.|release-history-2024
 
-event|blooming-oasis|Blooming Oasis|Season 21|—|Harmless flowers bloom in the Adept biomes.|enemy:Blooming Flower Realm|quest-monsters,blooming-flower
+event|blooming-oasis|Blooming Oasis|Season 21|—|Harmless flowers bloom in the Adept biomes.|enemy:Pink Bloom|quest-monsters,blooming-flower
 at|blooming-oasis|enemy:Blooming Flower Realm|60|Adept biomes|Harmless, during the first half of the season.|blooming-flower,quest-monsters
 at|blooming-oasis|Voided Blooming Flower|60|Adept biomes|Harmless, during the second half of the season.|voided-blooming-flower
 
