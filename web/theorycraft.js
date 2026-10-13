@@ -41,6 +41,8 @@ var TheoryCraft = (function () {
   'use strict';
 
   const SHOTS_AT = dex => 1.5 + 6.5 * (dex / 75);
+  // The game lets an ability go off once a second at the most, whatever its magic cost or its own cooldown say.
+  const CAST_LEAST = 1;
   const PACE_AT = spd => 4 + 5.6 * (spd / 75);
   // Out of combat. In combat the statistic's part is halved: the whole of it for life, the part WIS adds for magic.
   const HEAL_CALM = vit => 2 + 0.2407 * vit;
@@ -909,7 +911,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       else take(c.effect, share, 'weapon');
     }
     if (ability && ability.mp) {
-      const every = Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0);
+      const every = Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0, CAST_LEAST);
       for (const c of ability.conditions || []) {
         if (c.target === 'player') continue;
         // On you and the party, only what casting it gives - not what a hit on you sets off.
@@ -922,7 +924,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     // Worn gear that gives you Damaging or Berserk when you shoot or cast: on for its duration each time it goes off.
     const wornNames = new Set(HANDS.map(([hand]) => (state.gear[hand] || {}).name).filter(Boolean));
-    const everyCast = ability && ability.mp ? Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0) : 0;
+    const everyCast = ability && ability.mp ? Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0, CAST_LEAST) : 0;
     for (const [hand] of HANDS) {
       for (const g of (gearOf((state.gear[hand] || {}).name) || {}).statuses || []) {
         const rate = g.on === 'shoot' ? fires : everyCast ? 1 / everyCast : 0;
@@ -1181,6 +1183,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       list.push({ kind: part.kind, each: dealt / (part.count || 1), count: part.count || 1, dealt });
       total += dealt;
     }
+    // And the bolts it releases when it goes off, which are its own (Wandering Souls Spell throws six): same arithmetic as its first.
+    for (const proc of (one && one.procs) || []) {
+      if (proc.on !== 'ability' || proc.kind !== 'bullets') continue;
+      const over = proc.per ? Math.max(0, (stats[OF_STAT[proc.by]] || 0) - proc.from) * proc.per : 0;
+      const dealt = landed((proc.low + proc.high) / 2 + over, 25, def, proc.pierce, fx) * proc.shots * (proc.proc || 1);
+      list.push({ kind: 'bolts', each: dealt / proc.shots, count: proc.shots, dealt });
+      total += dealt;
+    }
     return { total, list };
   }
   /*
@@ -1206,7 +1216,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function abilityRate(item, stats, def, fx, mana, cost, struck) {
     // `struck`: shots of the weapon that land in a second; Hex piles up one for each between two casts.
     const mpOf = it => (it && (it.mp || ((gearOf(it.name) || {}).thrown || {}).end)) || 0;
-    const wait = mpOf(item) ? Math.max(mpOf(item) * (cost || 1) / (mana || MANA_AT(stats.wis)), item.cool || 0) : 0;
+    const wait = mpOf(item) ? Math.max(mpOf(item) * (cost || 1) / (mana || MANA_AT(stats.wis)), item.cool || 0, CAST_LEAST) : 0;
     const hits = abilityHits(item, stats, def, fx, (struck || 0) * wait);
     const bolts = item && item.shots && item.shots.length;
     if (!item || !mpOf(item) || (!bolts && !hits.total)) {
@@ -1240,7 +1250,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * rule by themselves.
      */
     const afford = mpOf(item) * (cost || 1) / (mana || MANA_AT(stats.wis));
-    const every = Math.max(afford, item.cool || 0);
+    const every = Math.max(afford, item.cool || 0, CAST_LEAST);
     return { each, many, every, hits, dps: (each * many + hits.total) / every, reach: shot.reach,
       held: item.cool && item.cool > afford ? 'cooldown' : 'mana' };
   }
@@ -1330,7 +1340,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const status of needs.status || []) if (status !== 'In Combat') share *= SELF_BUFFS.includes(status) ? Math.min(1, (up && up[status]) || 0) : 0;
     return share;
   }
-  function specialsOf(state, stats, def, shots, up) {
+  function specialsOf(state, stats, def, shots, up, casts) {
     const list = [];
     let low = 0, high = 0;
     const by = {};
@@ -1339,9 +1349,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const [hand] of HANDS) {
       const name = (state.gear[hand] || {}).name, one = gearOf(name);
       for (const proc of (one && one.procs) || []) {
+        // The ability's own bolts, which the ability figure already counts, are not extras.
+        if (hand === 'ability' && proc.on === 'ability') continue;
         const share = procOn(proc, wornNames, up);
         if (!(share > 0)) continue;
-        const wait = proc.proc > 0 && shots > 0 ? 1 / (proc.proc * shots) : Infinity;
+        const rate = proc.on === 'ability' ? casts : shots;
+        const wait = proc.proc > 0 && rate > 0 ? 1 / (proc.proc * rate) : Infinity;
         const goes = 1 / (proc.cooldown + wait);
         let each = [0, 0];
         if (proc.kind === 'poison') each = [proc.total, proc.total];
@@ -1464,7 +1477,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
     const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost, gun.each > 0 ? gun.dps / gun.each : 0);
     const bleed = effects ? effects.bleed : 0;
-    const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up);
+    const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up, spell.every > 0 ? 1 / spell.every : 0);
     // Where the damage a second comes from: each worn piece's own shots and what they set off, and all of it together.
     const piece = (hand, base) => ({ low: base + ((special.by[hand] || {}).low || 0), high: base + ((special.by[hand] || {}).high || 0) });
     const parts = { weapon: piece('weapon', gun.dps + bleed), ability: piece('ability', spell.dps), armor: piece('armor', 0), ring: piece('ring', 0) };

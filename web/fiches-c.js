@@ -2304,7 +2304,9 @@
     } else if (r.hand === 'ability') {
       if (r.mp) out.push(figure('Costs', r.mp + '<small> MP</small>', r.cool ? n(r.cool) + 's cooldown' : '', null, TINT.MAXMP));
       // An ability throws what its activation says (Primal Arcana: eight), not what the projectile it names would on its own.
-      const thrown = (r.cast && r.cast.shots) || shotsOf(r);
+      // The bolts it releases when it goes off count too (Wandering Souls Spell: six).
+      const own = (((window.RealmGearEffects || {})[r.name] || {}).procs || []).filter(p => p.on === 'ability' && p.kind === 'bullets').reduce((all, p) => all + p.shots * (p.proc || 1), 0);
+      const thrown = ((r.cast && r.cast.shots) || shotsOf(r)) + own;
       if (f && f.high) out.push(figure('Damage', n(f.low) + (f.low !== f.high ? '–' + n(f.high) : ''),
         thrown > 1 ? thrown + ' shots · ' + n(thrown * (f.low + f.high) / 2) + ' in all' : ''));
       const heal = (r.conditions || []).find(c => c.effect === 'Healing' && c.amount);
@@ -2369,6 +2371,7 @@
     if (!mine || !mine.procs) return [];
     const groups = new Map();
     for (const p of mine.procs) {
+      if (r.hand === 'ability' && p.on === 'ability') continue;       // an ability's own bolts, said in its figures
       const key = JSON.stringify([p.kind, p.on, p.needs || null, p.low, p.high, p.pierce, p.by, p.from, p.per, p.total, p.impact, p.duration]);
       (groups.get(key) || groups.set(key, []).get(key)).push(p);
     }

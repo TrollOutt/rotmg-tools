@@ -210,8 +210,8 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
   // Stasis Orb: "Base Damage 100 (+1 per WIS over 50)", "Damage Per Stack 3 (+0.1 per WIS over 50) + 1% damage", a Hex piled by each hit between two casts.
   {
     const orb = raw.items.find(i => i.name === 'Stasis Orb');
-    const r = t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 10);   // 75 magic a cast at 100 a second: 0.75 s, 7.5 hits
-    near(r.hits.total, ((100 + 30) + 7.5 * (3 + 0.1 * 30)) * (1 + 7.5 * 0.01), 1e-9, 'a Hex blast with its stacks, and a percent more for each');
+    const r = t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 10);   // 75 magic a cast at 100 a second is 0.75 s, but a cast waits a second: 10 hits
+    near(r.hits.total, ((100 + 30) + 10 * (3 + 0.1 * 30)) * (1 + 10 * 0.01), 1e-9, 'a Hex blast with its stacks, and a percent more for each');
     assert.equal(t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 1000).hits.total, ((100 + 30) + 100 * 6) * 2, 'a hundred stacks at most');
   }
   // Basic Star: "Damage 150-250 (+6 per WIS over 50)", "When Key Released MP Cost: 30": a throw costs 30, at the pace the magic comes back.
@@ -220,6 +220,18 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
     const r = t.abilityRate(star, { att: 75, wis: 70 }, 0, null, 10);
     near(r.each, 200 + 6 * 20, 1e-9, 'a star');
     near(r.every, 30 / 10, 1e-9, 'a throw every 3 s at 10 magic a second');
+  }
+  // Wandering Souls Spell: "6 Shots" - the one its activation makes and five its use releases, each 345-500 (+6 per SPD over 36).
+  {
+    const souls = raw.items.find(i => i.name === 'Wandering Souls Spell');
+    const r = t.abilityRate(souls, { att: 50, wis: 69, spd: 123 }, 0, null, 24.5, 0.9);
+    const bolt = 422.5 + 6 * (123 - 36);
+    near(r.each + r.hits.total, 6 * bolt, 1e-9, 'six bolts a cast');
+    near(r.every, 85 * 0.9 / 24.5, 1e-9, 'a cast every 3.1 s');
+    near(r.dps, 6 * bolt / (85 * 0.9 / 24.5), 1e-9, 'damage a second of the ability');
+    // And an ability is never used more than once a second, whatever the magic would allow.
+    const spray = raw.items.find(i => i.name === 'Fire Spray Spell');
+    assert.equal(t.abilityRate(spray, { att: 50, wis: 100 }, 0, null, 10000).every, 1, 'one use a second at the most');
   }
   const spider = raw.items.find(i => i.name === 'Spider Venom');
   assert(t.abilityRate(spider, { att: 75, wis: 80 }, 0, null, 100).dps > 0, 'a poison is an ability with a damage a second');
