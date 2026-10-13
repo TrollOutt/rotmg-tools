@@ -116,6 +116,10 @@ assert.equal(t.costOf({ gear: { weapon: {}, ability: { name: 'Robe of the Mad Sc
   assert.equal(arcana.length, 3, 'three bolts');
   for (const p of arcana) assert.deepEqual([p.low, p.high, p.pierce, p.reach, p.by, p.from, p.per, p.shots], [100, 120, true, 8.75, 'DEX', 60, 0.5, 1]);
   assert.deepEqual(arcana.map(p => [p.proc, p.cooldown]), [[1, 0.2], [1, 0.2], [0.33, 0]]);
+  // The picture of each bolt is on the Theory sheet, so the fight can draw what gear throws.
+  for (const p of arcana) assert(p.art && raw.sheet.pics[p.art], 'a picture for ' + p.art);
+  const bolts = Object.values(gear.items).flatMap(x => x.procs || []).filter(p => p.kind === 'bullets');
+  assert(bolts.filter(p => p.art && raw.sheet.pics[p.art]).length / bolts.length > 0.95, 'nearly every bolt gear throws has its picture');
   const item = raw.items.find(i => i.name === 'Primal Arcana');
   assert.equal(item.cast.shots, 8, 'eight shots of the orb');
   const state = { gear: { weapon: {}, ability: { name: 'Primal Arcana' }, armor: {}, ring: {} } };

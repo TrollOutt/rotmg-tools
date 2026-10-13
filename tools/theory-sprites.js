@@ -266,6 +266,34 @@ for (const one of facts.items) {
 }
 
 /*
+ * And the bolts that gear throws without being the thing that throws them: an orb that makes the weapon fire three
+ * more, a cloak that releases bolts when it is used. The item names an object (type="0x...") and that object holds
+ * the projectile; its picture is cut under the same key as any other bolt, so the fight can draw it.
+ */
+let extras = 0;
+{
+  const byType = new Map();
+  for (const text of objectText) {
+    for (const m of text.matchAll(/<Object\b([^>]*)>([\s\S]*?)<\/Object>/g)) {
+      const type = /\btype="(0x[0-9a-fA-F]+)"/.exec(m[1]);
+      if (type) byType.set(Number(type[1]), m[2]);
+    }
+  }
+  for (const text of objectText) {
+    for (const m of text.matchAll(SHAPE)) {
+      if (!/<Item\s*\/>/.test(m[2])) continue;
+      for (const make of m[2].matchAll(/<(?:OnPlayerShootActivate|OnEnemyHitActivate|OnPlayerAbilityActivate)\b([^>]*)>BulletCreate</g)) {
+        const type = /\btype="(0x[0-9a-fA-F]+)"/.exec(make[1]);
+        const made = type && byType.get(Number(type[1]));
+        const shot = made && /<Projectile\b[^>]*>[\s\S]*?<ObjectId>([^<]+)<\/ObjectId>/.exec(made);
+        if (!shot || already.has('p:' + shot[1].trim())) continue;
+        if (cutOne('p:' + shot[1].trim(), shot[1].trim(), true)) extras++;
+      }
+    }
+  }
+}
+
+/*
  * And the nineteen classes, in the same way.
  *
  * They were being read out of the realm atlas instead - a folder of one strip

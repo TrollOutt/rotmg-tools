@@ -1367,7 +1367,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         low += share * goes * each[0]; high += share * goes * each[1];
         const mine = by[hand] || (by[hand] = { low: 0, high: 0 });
         mine.low += share * goes * each[0]; mine.high += share * goes * each[1];
-        list.push({ hand, name, shots: proc.shots, reach: proc.reach, kind: proc.kind, on: proc.on, goes: share * goes, low: share * goes * each[0], high: share * goes * each[1] });
+        list.push({ hand, name, shots: proc.shots, reach: proc.reach, art: proc.art, kind: proc.kind, on: proc.on, goes: share * goes, low: share * goes * each[0], high: share * goes * each[1] });
       }
     }
     return { low, high, list, by };
@@ -3823,9 +3823,12 @@ const TINT = {
    * all read from the same functions, so the clock in the corner and the
    * "dies in" line agree by construction rather than by luck.
    */
+  // How each part of an ability is drawn when it has no bolt: a chain of lightning, a lobbed grenade or trap, a ring.
+  const FX_OF = { lightning: 'zap', shockblast: 'boom', trap: 'lob', bomb: 'boom', impact: 'lob', poison: 'cloud', nova: 'ring', blast: 'boom', hex: 'boom' };
+  const FX_COLOUR = { poison: '#5fd36a', impact: '#5fd36a', nova: '#ffd84a', blast: '#d04a4a', hex: '#a35fd0' };
   const duel = {
     on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0, left: 0,
-    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [],
+    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [], fx: [],
     mp: 0, mpFull: 0
   };
 
@@ -3926,7 +3929,7 @@ const TINT = {
 
   function resetDuel() {
     const boss = data.byBoss[build.boss];
-    duel.at = 0; duel.dealt = 0; duel.shots.length = 0;
+    duel.at = 0; duel.dealt = 0; duel.shots.length = 0; duel.fx.length = 0;
     duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.swingFor = 0; duel.over = 0; duel.left = 0;
     duel.full = boss ? boss.hp : 0;
     duel.hp = duel.full;
@@ -4003,16 +4006,22 @@ const TINT = {
      * the damage they do is already in the figure the target loses life by.
      */
     duel.mp = Math.min(duel.mpFull, duel.mp + mana * delta);
-    if (spell.dps > 0 && spell.every > 0 && ability && ability.shots && ability.shots.length) {
+    if (spell.dps > 0 && spell.every > 0 && ability) {
       duel.spell -= delta;
       if (duel.spell <= 0) {
         duel.spell += spell.every;
-        loose(ability, spell, false);
+        if (ability.shots && ability.shots.length) loose(ability, spell, false);
+        // What it does that is not a bolt - a chain of lightning, a grenade, a nova - drawn as the client colours it.
+        for (const part of ((gearOf(ability.name) || {}).ability || [])) {
+          const how = FX_OF[part.kind];
+          if (how && !part.meter) duel.fx.push({ how, color: part.color || FX_COLOUR[part.kind] || '#cfd8ff', age: 0, lasts: how === 'lob' ? 0.9 : 0.5, seed: Math.random() });
+        }
       }
     }
+    for (let i = duel.fx.length - 1; i >= 0; i--) { duel.fx[i].age += delta; if (duel.fx[i].age >= duel.fx[i].lasts) duel.fx.splice(i, 1); }
     for (const one of nums.special.list) {
       if (one.kind !== 'bullets' || !(Math.random() < one.goes * delta)) continue;
-      loose(null, { many: one.shots || 1, reach: one.reach || 6, fast: 12, each: 0 }, true);
+      loose({ pic: one.art }, { many: one.shots || 1, reach: one.reach || 6, fast: 12, each: 0 }, true);
     }
 
     /*
@@ -4086,6 +4095,45 @@ const TINT = {
         phase: (n % 2) ? Math.PI : 0,
         reach
       });
+    }
+  }
+
+  /*
+   * What an ability does that has no bolt to draw, in the colour the client gives it: lightning is a jagged line to the target,
+   * a grenade or a trap is lobbed and leaves a cloud, a nova or a blast is a ring that opens. Only for the eye; the damage is
+   * already in the figure the target loses life by.
+   */
+  function drawAbilityFx(pen, from, to, y, side) {
+    for (const one of duel.fx) {
+      const t = Math.min(1, one.age / one.lasts);
+      pen.save();
+      pen.strokeStyle = one.color; pen.fillStyle = one.color; pen.lineWidth = 2;
+      pen.globalAlpha = 1 - t * 0.85;
+      if (one.how === 'zap') {
+        pen.beginPath(); pen.moveTo(from, y);
+        const steps = 9;
+        for (let i = 1; i <= steps; i++) {
+          const jag = (Math.sin(one.seed * 40 + i * 7.3) * 0.5 + Math.sin(i * 12.9 + one.seed * 90) * 0.5) * side * 0.18;
+          pen.lineTo(from + (to - from) * i / steps, y + (i === steps ? 0 : jag));
+        }
+        pen.stroke();
+      } else if (one.how === 'lob' || one.how === 'cloud') {
+        const flight = one.how === 'lob' ? 0.35 : 0.3;
+        if (t < flight) {
+          const u = t / flight, x = from + (to - from) * u;
+          pen.beginPath(); pen.arc(x, y - Math.sin(u * Math.PI) * side * 0.5, 4, 0, Math.PI * 2); pen.fill();
+        } else {
+          const u = (t - flight) / (1 - flight);
+          pen.globalAlpha = 0.45 * (1 - u);
+          pen.beginPath(); pen.arc(to, y, side * (0.25 + 0.35 * u), 0, Math.PI * 2); pen.fill();
+        }
+      } else if (one.how === 'boom') {
+        pen.beginPath(); pen.arc(to, y, side * (0.15 + 0.7 * t), 0, Math.PI * 2); pen.stroke();
+      } else {
+        pen.beginPath(); pen.arc(from, y, side * (0.2 + 1.1 * t), 0, Math.PI * 2); pen.stroke();
+      }
+      pen.restore();
+      pen.beginPath();                    // the shapes above must not stay in the path the bars are filled from
     }
   }
 
@@ -4367,6 +4415,7 @@ const TINT = {
      */
     const from = left + mine * 0.9, to = bossX + across * 0.45;
     const reachAcross = to - from;
+    drawAbilityFx(pen, from, to, floor - side * 0.55, side);
     for (const one of duel.shots) {
       const part = Math.max(0, Math.min(1, one.age / one.lasts));
       const along = reachAcross * part;

@@ -55,7 +55,9 @@ function boltOf(a, objects) {
   const speed = num(client.tag(p, 'Speed'), 0), clamp = num(client.tag(p, 'SpeedClamp'), 0), slows = num(client.tag(p, 'Acceleration'), 0) < 0 && num(client.tag(p, 'AccelerationDelay'), 0) === 0;
   const flies = (clamp && slows ? Math.min(speed, clamp) : speed) / 10;
   const reach = Math.round(flies * num(client.tag(p, 'LifetimeMS'), 0) / 1000 * 100) / 100;
-  return { low, high, ...(/<ArmorPiercing\b/.test(p) ? { pierce: true } : {}), ...(reach ? { reach } : {}) };
+  // The picture is filed under the projectile's object id (tools/theory-sprites.js cuts it under "p:" + id).
+  const art = /<ObjectId>([^<]+)<\/ObjectId>/.exec(p);
+  return { low, high, ...(/<ArmorPiercing\b/.test(p) ? { pierce: true } : {}), ...(reach ? { reach } : {}), ...(art ? { art: 'p:' + art[1].trim() } : {}) };
 }
 
 /* The projectile an object we are told to make shoots with (a summoned undead, a rat). */
@@ -83,7 +85,10 @@ function abilityOf(body, objects) {
   for (const m of body.matchAll(/<(Activate|OnSwitchAbilityActivate)\b([^>]*)>([^<]*)<\/\1>/g)) {
     const kind = m[3].trim(), a = client.attributes(m[2]);
     const grows = { by: a.scalingStat || 'WIS', from: num(a.statModScalingMin, 0) };
-    const part = (name, low, high, per, extra) => parts.push({ kind: name, low, high, ...(per ? { per: +per.toFixed(4), ...grows } : {}), ...extra });
+    // The colour the client draws the effect in, so the fight can draw it the same.
+    const tint = /^(?:0x|#)?([0-9a-fA-F]{6})$/.exec(String(a.color || '').trim());
+    const color = tint ? { color: '#' + tint[1].toLowerCase() } : {};
+    const part = (name, low, high, per, extra) => parts.push({ kind: name, low, high, ...(per ? { per: +per.toFixed(4), ...grows } : {}), ...color, ...extra });
     if (kind === 'Lightning' && Number(a.totalDamage) > 0) {
       part('lightning', Number(a.totalDamage), Number(a.totalDamage), num(a.wisDamageBase, 0) / 10, { targets: num(a.maxTargets, 1), falls: num(a.decrDamage, 0) });
       if (Number(a.aoeDamage) > 0) part('shockblast', Number(a.aoeDamage), Number(a.aoeDamage), num(a.statModDamage, 0) / 10, { pierce: a.aoeArmorPierce === 'true', count: num(a.aoeActivationCount, 1) });
@@ -103,7 +108,7 @@ function abilityOf(body, objects) {
       const shot = shotOfObject(objects, a.objectId);
       if (shot) part('creep', shot.low, shot.high, num(a.statModDamage, 0), { life: num(a.lifeTime, 0), cost: num(a.summonCost, 0), ...(shot.pierce ? { pierce: true } : {}) });
     } else if (kind === 'VampireBlast' && Number(a.totalDamage) > 0) {
-      parts.push({ kind: 'blast', low: Number(a.totalDamage), high: Number(a.totalDamage), per: num(a.wisDamageBase, 0) / 10, by: 'WIS', from: 50,
+      parts.push({ kind: 'blast', low: Number(a.totalDamage), high: Number(a.totalDamage), per: num(a.wisDamageBase, 0) / 10, by: 'WIS', from: 50, ...color,
         heal: num(a.heal, 0), radius: num(a.radius, 0), ...(num(a.ignoreDef, 0) ? { ignores: num(a.ignoreDef, 0) } : {}), ...(a.minimumMeter ? { meter: Number(a.minimumMeter) } : {}) });
     } else if (kind === 'DetonateHex' && Number(a.baseDamage) > 0) {
       part('hex', Number(a.baseDamage), Number(a.baseDamage), num(a.statModBaseDamage, 0), { stack: num(a.stackDamage, 0), stackPer: num(a.statModStackDamage, 0), share: num(a.stackMultiplier, 0), radius: num(a.radius, 0) });
