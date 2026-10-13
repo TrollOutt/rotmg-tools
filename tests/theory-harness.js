@@ -7,7 +7,7 @@ module.exports = function(sources, raw, withEngine = true) {
   const marker = 'return { start, share, open, put };';
   if (!original.includes(marker)) throw new Error('Theory harness return marker moved');
   const script = original.replace(marker, `return {
-    statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate, regenOf, fightOf, costOf, specialsOf,
+    statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate, regenOf, fightOf, costOf, specialsOf, temperOf,
     setGearInfo(value) { gearInfo = value; },
     numbersFor, optimise, scoreOf, aimOf, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,

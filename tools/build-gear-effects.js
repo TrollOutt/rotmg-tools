@@ -58,6 +58,17 @@ function boltOf(a, objects) {
   return { low, high, ...(/<ArmorPiercing\b/.test(p) ? { pierce: true } : {}), ...(reach ? { reach } : {}) };
 }
 
+/* The projectile an object we are told to make shoots with (a summoned undead, a rat). */
+function shotOfObject(objects, id) {
+  const made = objects && objects.byId.get(id);
+  const shot = made && /<Projectile\b[^>]*>([\s\S]*?)<\/Projectile>/.exec(made);
+  if (!shot) return null;
+  const p = shot[1], damage = num(client.tag(p, 'Damage'), 0);
+  const low = num(client.tag(p, 'MinDamage'), damage), high = num(client.tag(p, 'MaxDamage'), damage);
+  const leech = /<LeechLife\b[^>]*perc="([\d.]+)"/.exec(p);
+  return high > 0 ? { low, high, ...(/<ArmorPiercing\b/.test(p) ? { pierce: true } : {}), ...(leech ? { leech: Number(leech[1]) } : {}) } : null;
+}
+
 /*
  * What an ability does besides throw bolts, as parts that are each a base and what a stat adds above a floor.
  * The client states the scaling in its own units, which are not the same from one verb to the next; each is
@@ -67,10 +78,10 @@ function boltOf(a, objects) {
  *   Poison      (statModDamage - statModImpactDamage)/10 for the poison, statModImpactDamage/10 for the impact
  *   Nova        statModDamage a point, each time it explodes
  */
-function abilityOf(body) {
+function abilityOf(body, objects) {
   const parts = [];
-  for (const m of body.matchAll(/<Activate\b([^>]*)>([^<]*)<\/Activate>/g)) {
-    const kind = m[2].trim(), a = client.attributes(m[1]);
+  for (const m of body.matchAll(/<(Activate|OnSwitchAbilityActivate)\b([^>]*)>([^<]*)<\/\1>/g)) {
+    const kind = m[3].trim(), a = client.attributes(m[2]);
     const grows = { by: a.scalingStat || 'WIS', from: num(a.statModScalingMin, 0) };
     const part = (name, low, high, per, extra) => parts.push({ kind: name, low, high, ...(per ? { per: +per.toFixed(4), ...grows } : {}), ...extra });
     if (kind === 'Lightning' && Number(a.totalDamage) > 0) {
@@ -85,16 +96,38 @@ function abilityOf(body) {
       part('poison', total - impact, total - impact, (grow - grow0) / 10, { pierce: true, duration: num(a.duration, 0) });
     } else if (kind === 'DamageNova' && Number(a.maxDamage) > 0) {
       part('nova', num(a.minDamage, 0), Number(a.maxDamage), num(a.statModDamage, 0), { count: num(a.activationCount, 1) });
+    } else if (kind === 'RaiseDead' && a.undeadId) {
+      const shot = shotOfObject(objects, a.undeadId);
+      if (shot) part('raise', shot.low, shot.high, num(a.statModDamage, 0), { count: num(a.numDead, 1), ...(shot.pierce ? { pierce: true } : {}), ...(shot.leech ? { leech: shot.leech } : {}) });
+    } else if (kind === 'SpawnCreep' && a.objectId) {
+      const shot = shotOfObject(objects, a.objectId);
+      if (shot) part('creep', shot.low, shot.high, num(a.statModDamage, 0), { life: num(a.lifeTime, 0), cost: num(a.summonCost, 0), ...(shot.pierce ? { pierce: true } : {}) });
+    } else if (kind === 'VampireBlast' && Number(a.totalDamage) > 0) {
+      parts.push({ kind: 'blast', low: Number(a.totalDamage), high: Number(a.totalDamage), per: num(a.wisDamageBase, 0) / 10, by: 'WIS', from: 50,
+        heal: num(a.heal, 0), radius: num(a.radius, 0), ...(num(a.ignoreDef, 0) ? { ignores: num(a.ignoreDef, 0) } : {}), ...(a.minimumMeter ? { meter: Number(a.minimumMeter) } : {}) });
+    } else if (kind === 'DetonateHex' && Number(a.baseDamage) > 0) {
+      part('hex', Number(a.baseDamage), Number(a.baseDamage), num(a.statModBaseDamage, 0), { stack: num(a.stackDamage, 0), stackPer: num(a.statModStackDamage, 0), share: num(a.stackMultiplier, 0), radius: num(a.radius, 0) });
+    } else if (kind === 'Heal' && Number(a.amount) > 0) {
+      part('heal', Number(a.amount), Number(a.amount), num(a.statModAmount, 0));
     }
   }
-  return parts;
+  const seen = new Set();
+  return parts.filter(x => { const k = JSON.stringify(x); return seen.has(k) ? false : seen.add(k); });
 }
 
 function effectsOf(body, objects, nameOfType, count) {
   const out = {};
-  const ability = abilityOf(body);
+  const ability = abilityOf(body, objects);
   if (ability.length) out.ability = ability;
-  for (const m of body.matchAll(/<(OnPlayerShootActivate|OnEnemyHitActivate|ActivateOnEquip)\b([^>]*)>([^<]*)<\/\1>/g)) {
+  // A star the Ninja holds and lets go: it costs magic by the second while held and a lump when thrown.
+  const end = num(client.tag(body, 'MpEndCost'), 0), held = num(client.tag(body, 'MpCostPerSecond'), 0);
+  if (end > 0) out.thrown = { end, ...(held ? { held } : {}) };
+  // An ability that raises a statistic of its caster for a while each time it is used.
+  for (const m of body.matchAll(/<Activate\b([^>]*)>StatBoostSelf<\/Activate>/g)) {
+    const a = client.attributes(m[1]);
+    if (STATS.has(a.stat) && Number(a.amount) && num(a.duration, 0) > 0) (out.boosts || (out.boosts = [])).push({ on: 'use', proc: 1, cooldown: 0, stat: a.stat, amount: Number(a.amount), duration: Number(a.duration) });
+  }
+  for (const m of body.matchAll(/<(OnPlayerShootActivate|OnEnemyHitActivate|OnPlayerAbilityActivate|ActivateOnEquip)\b([^>]*)>([^<]*)<\/\1>/g)) {
     const on = m[1], kind = m[3].trim(), a = client.attributes(m[2]);
     if (on === 'ActivateOnEquip') {
       if (kind === 'AbilityUseDiscount' && Number(a.multiplier) > 0) out.cost = (out.cost || 1) * Number(a.multiplier);
@@ -106,23 +139,27 @@ function effectsOf(body, objects, nameOfType, count) {
       (out.combat || (out.combat = {}))[a.stat] = (out.combat[a.stat] || 0) + Number(a.amount);
       continue;
     }
-    if (kind !== 'PoisonGrenade' && kind !== 'BulletCreate') continue;
-    // What it takes: other things worn with it (named here), or something this file cannot know.
-    const needs = {};
-    const named = list => hexes(list).map(t => nameOfType(t)).filter(Boolean);
-    if (a.mustWear) needs.wear = named(a.mustWear);
-    if (a.mustWearOR) needs.wearAny = named(a.mustWearOR);
-    if (a.mustNotWear || a.mustNotWearOR) needs.notWear = named(a.mustNotWear).concat(named(a.mustNotWearOR));
-    // Statuses the character must have (or not have) are said by name; a meter or life left is only said.
-    const list = text => String(text || '').split(/[;,]/).map(x => x.trim()).filter(Boolean);
-    if (a.requiredConditions) needs.status = list(a.requiredConditions);
-    if (a.requiredConditionsNOR) needs.notStatus = list(a.requiredConditionsNOR);
-    if (Object.keys(a).some(k => /^(minimumMeter|meterCost|idMeter|hp[A-Z]|damageThreshold)/.test(k))) {
-      needs.other = [(a.minimumMeter || a.idMeter) && 'with its meter full', Object.keys(a).some(k => /^hp/.test(k)) && 'by how much life you have'].filter(Boolean);
-      if (!needs.other.length) needs.other = ['only in some conditions'];
+    if (kind === 'ConditionEffectSelf' && (a.effect === 'Damaging' || a.effect === 'Berserk') && on !== 'OnEnemyHitActivate' && num(a.duration, 0) > 0) {
+      // A damage status the piece gives you when you shoot or cast; it multiplies the shots for as long as it is on.
+      const needs = needsOf(a, nameOfType);
+      (out.statuses || (out.statuses = [])).push({ on: { OnPlayerShootActivate: 'shoot', OnPlayerAbilityActivate: 'ability' }[on], effect: a.effect, duration: Number(a.duration), proc: num(a.proc, 1), cooldown: num(a.cooldown, 0), ...(Object.keys(needs).length ? { needs } : {}) });
+      continue;
     }
-    const base = { on: on === 'OnPlayerShootActivate' ? 'shoot' : 'hit', proc: num(a.proc, 1), cooldown: num(a.cooldown, 0),
-      ...(Object.keys(needs).length ? { needs } : {}) };
+    if (kind !== 'PoisonGrenade' && kind !== 'BulletCreate' && kind !== 'Magic' && kind !== 'Heal' && kind !== 'StatBoostSelf') continue;
+    const needs = needsOf(a, nameOfType);
+    const when = { OnPlayerShootActivate: 'shoot', OnEnemyHitActivate: 'hit', OnPlayerAbilityActivate: 'ability' }[on];
+    const base = { on: when, proc: num(a.proc, 1), cooldown: num(a.cooldown, 0), ...(Object.keys(needs).length ? { needs } : {}) };
+    if (kind === 'Magic' || kind === 'Heal') {
+      // Magic or life handed back when it goes off: a share of the regeneration a second.
+      if (Number(a.amount) > 0 && on !== 'OnEnemyHitActivate') (out.gains || (out.gains = [])).push({ ...base, give: kind === 'Magic' ? 'mp' : 'hp', amount: Number(a.amount) });
+      continue;
+    }
+    if (kind === 'StatBoostSelf') {
+      // A statistic raised for a while each time it goes off (the plain combat penalty above is not one of these).
+      if (STATS.has(a.stat) && Number(a.amount) && on !== 'OnEnemyHitActivate') (out.boosts || (out.boosts = [])).push({ ...base, stat: a.stat, amount: Number(a.amount), duration: num(a.duration, 0) });
+      continue;
+    }
+    if (on === 'OnPlayerAbilityActivate' && kind === 'BulletCreate' && !boltOf(a, objects)) continue;
     if (kind === 'PoisonGrenade') {
       if (!(Number(a.totalDamage) > 0)) continue;
       (out.procs || (out.procs = [])).push({ ...base, kind: 'poison', total: Number(a.totalDamage), impact: num(a.impactDamage, 0), duration: num(a.duration, 0) });
@@ -134,6 +171,25 @@ function effectsOf(body, objects, nameOfType, count) {
     }
   }
   return out;
+}
+
+/* What it takes for an effect to go off: other things worn with it (named), statuses, and what only the fight knows. */
+function needsOf(a, nameOfType) {
+  const needs = {};
+  const named = list => hexes(list).map(t => nameOfType(t)).filter(Boolean);
+  if (a.mustWear) needs.wear = named(a.mustWear);
+  if (a.mustWearOR) needs.wearAny = named(a.mustWearOR);
+  if (a.mustNotWear || a.mustNotWearOR) needs.notWear = named(a.mustNotWear).concat(named(a.mustNotWearOR));
+  const list = text => String(text || '').split(/[;,]/).map(x => x.trim()).filter(Boolean);
+  if (a.requiredConditions) needs.status = list(a.requiredConditions);
+  if (a.requiredConditionsNOR) needs.notStatus = list(a.requiredConditionsNOR);
+  const keys = Object.keys(a);
+  if (keys.some(k => /^(minimumMeter|meterCost|idMeter|hp[A-Z]|mana[A-Z]|damageThreshold)/.test(k))) {
+    needs.other = [(a.minimumMeter || a.idMeter) && 'with its meter full', keys.some(k => /^hp/.test(k)) && 'by how much life you have',
+      keys.some(k => /^mana/.test(k)) && 'by how much magic you have'].filter(Boolean);
+    if (!needs.other.length) needs.other = ['only in some conditions'];
+  }
+  return needs;
 }
 
 function main() {
@@ -152,8 +208,17 @@ function main() {
     const found = effectsOf(body, objects, nameOfType, count);
     if (Object.keys(found).length) { items[r.name] = found; count.items++; }
   }
+  // Enchantments that make abilities cheaper (<MultiplyMPCost>0.96</MultiplyMPCost>), by id.
+  const enchants = {};
+  const xml = path.join(root, 'client-data', 'Enchantments.xml');
+  if (fs.existsSync(xml)) {
+    for (const m of fs.readFileSync(xml, 'utf8').matchAll(/<Enchantment\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/Enchantment>/g)) {
+      const cost = /<MultiplyMPCost>([\d.]+)<\/MultiplyMPCost>/.exec(m[2]);
+      if (cost && Number(cost[1]) > 0) enchants[m[1]] = { mp: Number(cost[1]) };
+    }
+  }
   const sorted = Object.fromEntries(Object.entries(items).sort((a, b) => a[0].localeCompare(b[0])));
-  const out = { built: index.built, from: index.from, tool: 'tools/build-gear-effects.js', items: sorted };
+  const out = { built: index.built, from: index.from, tool: 'tools/build-gear-effects.js', enchants, items: sorted };
   fs.writeFileSync(OUT, JSON.stringify(out) + '\n');
   const sum = key => Object.values(sorted).filter(x => x[key]).length;
   const procs = Object.values(sorted).flatMap(x => x.procs || []);

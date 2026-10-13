@@ -68,7 +68,9 @@ near(t.weaponRate({ shots: [{ low: 1000, high: 1000 }], rate: 1 }, { att: 96, de
 
 /* ---------------- what gear costs and adds (tools/build-gear-effects.js) ---------------- */
 const gear = JSON.parse(read('web/assets/index/gear-effects.json'));
-t.setGearInfo(new Map(Object.entries(gear.items)));
+const info = new Map(Object.entries(gear.items));
+info.enchants = gear.enchants;
+t.setGearInfo(info);
 // What the client states, for the items the audit looked at by hand.
 assert.deepEqual(gear.items.Valor.combat, { ATT: -10 });
 assert.deepEqual(gear.items.Warmonger.combat, { DEX: -5 });
@@ -96,6 +98,8 @@ for (const name of Object.keys(gear.items)) assert(raw.items.some(i => i.name ==
 }
 // An ability discount is a multiplier and several of them multiply.
 assert.equal(t.costOf({ gear: { weapon: { name: 'Dusky Catalyst' }, ability: { name: 'Robe of the Mad Scientist' }, armor: {}, ring: {} } }), 0.95 * 0.85);
+// An enchantment that takes 4% off an ability's magic, with a worn discount, multiplies.
+assert.equal(t.costOf({ gear: { weapon: {}, ability: { name: 'Robe of the Mad Scientist', ench: ['MP_Cost_Reduction_1', null] }, armor: {}, ring: { name: 'Dusky Catalyst' } } }), 0.96 * 0.85 * 0.95, 'the enchantment and the pieces');
 // A grenade of poison thrown at every shot with a three second cooldown: 1000 every 3 seconds and the wait for a shot.
 {
   const state = { gear: { weapon: { name: 'Fire Blade' }, ability: {}, armor: {}, ring: {} } };
@@ -138,6 +142,26 @@ assert.equal(t.costOf({ gear: { weapon: { name: 'Dusky Catalyst' }, ability: { n
   assert.equal(t.specialsOf(mine('Combcutter Kunai'), { att: 75, dex: 75, vit: 75 }, 0, 8).list.filter(x => x.kind === 'bullets').length, 0, 'without Damaging it does not count');
   assert(t.specialsOf(mine('Combcutter Kunai'), { att: 75, dex: 75, vit: 75 }, 0, 8, { Damaging: 1 }).high > 0, 'with Damaging it does');
 }
+// Magic handed back on a chance with a wait, and a statistic raised for a while: averaged over the shots and the casts.
+{
+  const mine = name => ({ gear: { weapon: {}, ability: {}, armor: {}, ring: { name } } });
+  // Crystal Bone Ring: 5 magic on 10% of shots, at most every 0.4 s. At 8 shots a second one goes off every 0.4 + 1/(0.1*8) s.
+  const ring = t.temperOf(mine('Crystal Bone Ring'), 8, 0, {});
+  near(ring.gain.mp, 5 / (0.4 + 1 / (0.1 * 8)), 1e-9, 'magic a second from the ring');
+  // Leaf Dragon Hide Armor: 15 defense for 5 s when you cast, at most every 15 s. At 0.5 casts a second: on 5/(15+2) of the time.
+  const armor = t.temperOf({ gear: { weapon: {}, ability: {}, ring: {}, armor: { name: 'Leaf Dragon Hide Armor' } } }, 8, 0.5, {});
+  near(armor.boost.def, 15 * 5 / (15 + 1 / 0.5), 1e-9, 'defense on average');
+  assert.equal(t.temperOf(mine('Crystal Bone Ring'), 0, 0, {}).gain.mp, 0, 'no shots, nothing handed back');
+}
+// Gear that gives you Berserk when you shoot: Eden's Embrace, 6% of shots, at most every 8 s, 6 s long.
+{
+  const sword = raw.items.find(i => i.name === 'Short Sword'), fires = 8 * (sword.rate === undefined ? 1 : sword.rate);
+  const state = { gear: { weapon: { name: 'Short Sword' }, ability: {}, armor: {}, ring: { name: "Eden's Embrace" } }, assume: {} };
+  const up = t.effectsFor(state, { dex: 75, wis: 50, att: 50 }, 5, 1).up;
+  near(up.Berserk, Math.min(1, 6 / (8 + 1 / (0.06 * fires))), 1e-9, 'Berserk from the ring');
+  state.ring = {}; state.gear.ring = { name: "Esben's Wedding Ring" };
+  assert(!t.effectsFor(state, { dex: 75, wis: 50, att: 50 }, 5, 1).up.Damaging, "Esben's ring needs Berserk to give Damaging");
+}
 assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.js').includes('RealmGearEffects'), 'the card says what a piece throws');
 
 /* ---------------- an ability is not raised by attack ---------------- */
@@ -163,6 +187,20 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
   near(cast('Hunting Trap', 44).total, (65 + 50) + (150 + 50), 1e-9, 'a trap and its bomb');
   // Healing Tome: "Explodes 2 times ... Damage 160 (+4.8 per WIS over 70)".
   near(cast('Healing Tome', 80).total, 2 * (160 + 4.8 * 10), 1e-9, 'a nova that explodes twice');
+  // Stasis Orb: "Base Damage 100 (+1 per WIS over 50)", "Damage Per Stack 3 (+0.1 per WIS over 50)", a Hex piled by each hit between two casts.
+  {
+    const orb = raw.items.find(i => i.name === 'Stasis Orb');
+    const r = t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 10);   // 75 magic a cast at 100 a second: 0.75 s, 7.5 hits
+    near(r.hits.total, (100 + 30) + 7.5 * (3 + 0.1 * 30), 1e-9, 'a Hex blast with its stacks');
+    assert.equal(t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 1000).hits.total, (100 + 30) + 100 * 6, 'a hundred stacks at most');
+  }
+  // Basic Star: "Damage 150-250 (+6 per WIS over 50)", "When Key Released MP Cost: 30": a throw costs 30, at the pace the magic comes back.
+  {
+    const star = raw.items.find(i => i.name === 'Basic Star');
+    const r = t.abilityRate(star, { att: 75, wis: 70 }, 0, null, 10);
+    near(r.each, 200 + 6 * 20, 1e-9, 'a star');
+    near(r.every, 30 / 10, 1e-9, 'a throw every 3 s at 10 magic a second');
+  }
   const spider = raw.items.find(i => i.name === 'Spider Venom');
   assert(t.abilityRate(spider, { att: 75, wis: 80 }, 0, null, 100).dps > 0, 'a poison is an ability with a damage a second');
 }
@@ -251,7 +289,8 @@ if (!oracle.available()) {
     const state = t.fresh(klass.name);
     state.maxed = next() < 0.6; state.exalt = next() < 0.6; state.level = state.maxed ? 20 : 1 + Math.floor(next() * 20);
     for (const hand of ['weapon', 'ability', 'armor', 'ring']) {
-      const pool = t.itemsFor(hand, klass.name);
+      // Items that hand out magic, life or a raised statistic are judged by hand above; the oracle has no such rule.
+      const pool = t.itemsFor(hand, klass.name).filter(i => !(gear.items[i.name] && (gear.items[i.name].gains || gear.items[i.name].boosts)));
       if (pool.length) state.gear[hand].name = pick(pool).name;
     }
     check(state, pick([0, 15, 40, 100]));

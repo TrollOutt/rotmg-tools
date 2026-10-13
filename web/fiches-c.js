@@ -2345,6 +2345,25 @@
    */
   const STAT_WORD = { ATT: 'ATT', DEF: 'DEF', SPD: 'SPD', DEX: 'DEX', VIT: 'VIT', WIS: 'WIS', MAXHP: 'HP', MAXMP: 'MP' };
   const tinted = tag => '<b style="color:' + (TINT[tag] || 'inherit') + '">' + esc(STAT_WORD[tag] || tag) + '</b>';
+  const WHEN = { hit: 'when a shot of yours lands', shoot: 'when you shoot', ability: 'when you use your ability', use: 'each time you use it' };
+  // What an item hands out each time it goes off, or raises for a while: said with its chance, its wait and what it needs.
+  function giveRows(r) {
+    const mine = (window.RealmGearEffects || {})[r.name];
+    if (!mine) return [];
+    const needsText = needs => needs ? [
+      needs.wear && needs.wear.length ? 'worn with ' + needs.wear.map(esc).join(' and ') : '',
+      needs.wearAny && needs.wearAny.length ? 'worn with ' + needs.wearAny.map(esc).join(' or ') : '',
+      needs.notWear && needs.notWear.length ? 'not beside ' + needs.notWear.map(esc).join(' or ') : '',
+      needs.status && needs.status.length ? 'while you are ' + needs.status.map(esc).join(' and ') : '',
+      needs.notStatus && needs.notStatus.length ? 'not while ' + needs.notStatus.map(esc).join(' or ') : '',
+      ...(needs.other || []).map(esc)
+    ].filter(Boolean).join(', ') : '';
+    const often = x => (x.proc < 1 ? 'on ' + Math.round(x.proc * 100) + '% of them' : 'every time') + (x.cooldown ? ', at most every ' + x.cooldown + ' s' : '');
+    const out = [];
+    for (const g of mine.gains || []) out.push(['✚', 'Gives back ' + n(g.amount) + ' ' + (g.give === 'mp' ? tinted('MAXMP') : tinted('MAXHP')) + ' ' + WHEN[g.on], often(g) + (needsText(g.needs) ? ' · ' + needsText(g.needs) : '')]);
+    for (const b of mine.boosts || []) out.push(['⇧', (b.amount > 0 ? 'Raises ' : 'Lowers ') + tinted(b.stat) + ' by ' + n(Math.abs(b.amount)) + ' for ' + b.duration + ' s ' + WHEN[b.on], often(b) + (needsText(b.needs) ? ' · ' + needsText(b.needs) : '')]);
+    return out;
+  }
   function procRows(r) {
     const mine = (window.RealmGearEffects || {})[r.name];
     if (!mine || !mine.procs) return [];
@@ -2355,7 +2374,7 @@
     }
     const out = [];
     for (const list of groups.values()) {
-      const p = list[0], when = p.on === 'hit' ? 'when a shot of yours lands' : 'when you shoot';
+      const p = list[0], when = WHEN[p.on];
       const needs = p.needs || {};
       const only = [
         needs.wear && needs.wear.length ? 'worn with ' + needs.wear.map(esc).join(' and ') : '',
@@ -2394,7 +2413,7 @@
       const who = c.target === 'enemy' ? (c.on === 'hit' ? 'to what it hits' : 'to enemies around') : c.target === 'self' ? 'to you' : c.target === 'allies' ? 'to the party' : '';
       row(statusArt(c.effect, 28) || '✦', verb + ' ' + esc(c.effect), [who, c.duration ? 'for ' + c.duration + ' seconds' : ''].filter(Boolean).join(' '), 'is-status');
     }
-    for (const [sign, title, text] of procRows(r)) row(sign, title, text, 'is-proc');
+    for (const [sign, title, text] of procRows(r).concat(giveRows(r))) row(sign, title, text, 'is-proc');
     const fx = (window.RealmGearEffects || {})[r.name] || {};
     // What an ability deals besides bolts (tools/build-gear-effects.js): said as RealmEye says it, per part.
     for (const a of fx.ability || []) {
@@ -2404,12 +2423,18 @@
         shockblast: (a.count > 1 ? a.count + ' times, ' : '') + 'around the first target' + (a.pierce ? ', ignoring defense' : ''),
         trap: 'when an enemy steps on it', bomb: 'a sticky bomb on what sets it off',
         impact: 'where the grenade lands', poison: 'over ' + a.duration + ' s, ignoring defense',
-        nova: 'explodes ' + (a.count || 1) + (a.count > 1 ? ' times, each' : ' time') + ' around you'
+        nova: 'explodes ' + (a.count || 1) + (a.count > 1 ? ' times, each' : ' time') + ' around you',
+        raise: (a.count > 1 ? 'each of the ' + a.count + ' it raises shoots' : 'the one it raises shoots') + (a.pierce ? ' ignoring defense' : '') + (a.leech ? ', stealing ' + Math.round(a.leech * 100) + '% of what it deals' : '') + ' · how often it shoots and how long it stays is up to the game server',
+        creep: 'a summoned creature that shoots for ' + a.life + ' s, costing ' + a.cost + ' summon points' + (a.pierce ? ', ignoring defense' : ''),
+        blast: (a.radius ? 'within ' + a.radius + ' tiles' : '') + (a.heal ? ', healing you ' + a.heal : '') + (a.ignores ? ', ignoring ' + a.ignores + ' defense' : '') + (a.meter ? ' · only with its meter full (' + n(a.meter) + ')' : ''),
+        hex: 'when it goes off, plus ' + a.stack + ' (+' + a.stackPer + ' per ' + tinted(a.by) + ') and ' + +(a.share * 100).toFixed(2) + '% more for each Hex on the enemy · radius ' + a.radius,
+        heal: 'to you'
       }[a.kind] || '';
-      const title = { lightning: 'Lightning', shockblast: 'Shockblast', trap: 'Trap', bomb: 'Sticky bomb', impact: 'Poison impact', poison: 'Poison', nova: 'Damage nova' }[a.kind];
+      const title = { lightning: 'Lightning', shockblast: 'Shockblast', trap: 'Trap', bomb: 'Sticky bomb', impact: 'Poison impact', poison: 'Poison', nova: 'Damage nova', raise: 'Raises the dead:', creep: 'Summons:', blast: 'Vampire blast', hex: 'Hex blast', heal: 'Heals' }[a.kind];
       if (title) row('ϟ', title + ' ' + dmg, more, 'is-proc');
     }
     if (fx.combat) row('⚔', 'In combat it costs you', Object.entries(fx.combat).map(([s, v]) => tinted(s) + ' ' + (v < 0 ? '−' : '+') + Math.abs(v)).join(', ') + ' · while you are in combat, so every fight is fought with it', 'is-proc');
+    if (fx.thrown) row('✧', 'Held, then thrown', (fx.thrown.held ? n(fx.thrown.held) + ' ' + tinted('MAXMP') + ' a second while you hold it, and ' : '') + n(fx.thrown.end) + ' ' + tinted('MAXMP') + ' when you let go · the quickest throw costs only the last, so that is how often the damage here can come', 'is-proc');
     if (fx.cost) row('✧', fx.cost < 1 ? 'Abilities cost less magic' : 'Abilities cost more magic', Math.round(Math.abs(1 - fx.cost) * 100) + '% ' + (fx.cost < 1 ? 'less' : 'more') + ' of the ' + tinted('MAXMP') + ' an ability costs, each use, while worn', 'is-proc');
     if (!rows.length && facts(r).effect_s) row('✦', esc(facts(r).effect_s), '');
     for (const [sign, title, text] of shotTraits(r)) row(sign, title, text, 'is-shot');
