@@ -1150,6 +1150,25 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /*
+   * What an ability does that is not a bolt: a chain of lightning, a trap and its sticky bomb, a grenade of poison,
+   * a nova of damage (tools/build-gear-effects.js reads each off the client; RealmEye words them the same way).
+   * Worked out against one target, every part once: the first one a chain strikes, the bomb a trap puts on one
+   * enemy, a nova's explosions each. Poison and the shockblast ignore defense, as the client says they do.
+   */
+  function abilityHits(item, stats, def, fx) {
+    const one = gearOf(item && item.name), parts = (one && one.ability) || [];
+    const list = [];
+    let total = 0;
+    for (const part of parts) {
+      const over = part.per ? Math.max(0, (stats[OF_STAT[part.by]] || 0) - part.from) : 0;
+      const roll = (part.low + part.high) / 2 + over * (part.per || 0);
+      const dealt = landed(roll, 25, def, part.pierce, fx) * (part.count || 1);
+      list.push({ kind: part.kind, each: dealt / (part.count || 1), count: part.count || 1, dealt });
+      total += dealt;
+    }
+    return { total, list };
+  }
+  /*
    * And an ability, which is bounded by magic rather than by dexterity: you
    * may use it as often as the magic comes back, and no oftener.
    */
@@ -1170,10 +1189,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * wisdom brings the magic back.
    */
   function abilityRate(item, stats, def, fx, mana, cost) {
-    if (!item || !item.shots || !item.shots.length || !item.mp) {
+    const hits = abilityHits(item, stats, def, fx);
+    const bolts = item && item.shots && item.shots.length;
+    if (!item || !item.mp || (!bolts && !hits.total)) {
       return { each: 0, every: 0, dps: 0 };
     }
-    const shot = item.shots[0];
+    const shot = bolts ? item.shots[0] : { low: 0, high: 0 };
     const cast = item.cast || {};
     // Over the floor of the stat it grows with: wisdom unless the client names another.
     const over = cast.from === undefined ? 0 : Math.max(0, stats[OF_STAT[cast.stat] || 'wis'] - cast.from);
@@ -1182,7 +1203,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     // "Attack does not affect ability damage" (RealmEye, Character Stats): the attacker's attack multiplies a
     // weapon's shot and nothing else, so an ability's bolt is raised by what its own line says (the stat it
     // scales with, above) and by nothing more. Attack 25 is the multiplier of one.
-    const each = landed(roll, 25, def, shot.pierce, fx);
+    const each = bolts ? landed(roll, 25, def, shot.pierce, fx) : 0;
     const many = Math.max(1, Math.round((cast.shots || item.many || 1)
       + over * (cast.more || 0)));
     /*
@@ -1202,7 +1223,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      */
     const afford = item.mp * (cost || 1) / (mana || MANA_AT(stats.wis));
     const every = Math.max(afford, item.cool || 0);
-    return { each, many, every, dps: each * many / every, reach: shot.reach,
+    return { each, many, every, hits, dps: (each * many + hits.total) / every, reach: shot.reach,
       held: item.cool && item.cool > afford ? 'cooldown' : 'mana' };
   }
 
@@ -1263,16 +1284,25 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * the high end counts it. These are kept apart from the damage a second of
    * the weapon, which is exact, and are not part of what the build is judged on.
    */
-  // Whether what a proc needs is there: the other items it must be worn with, and those it cannot be worn beside.
-  function procOn(proc, wornNames) {
+  /*
+   * How much of the time what a proc needs is there (0 to 1): the other items it must be worn with, the statuses
+   * you must have - a fight is always in combat, the rest are what the build and the party keep up - and nothing
+   * for a meter or life left, which only the fight knows. A proc that needs a status the build never makes does not count.
+   */
+  // The statuses the model keeps up on the player; the others it tracks are on the enemy.
+  const SELF_BUFFS = ['Damaging', 'Berserk'];
+  function procOn(proc, wornNames, up) {
     const needs = proc.needs;
-    if (!needs) return true;
-    if (needs.other) return false;               // a status, a meter, life under a threshold: only the fight knows
-    if ((needs.wear || []).some(name => !wornNames.has(name))) return false;
-    if (needs.wearAny && !needs.wearAny.some(name => wornNames.has(name))) return false;
-    return !(needs.notWear || []).some(name => wornNames.has(name));
+    if (!needs) return 1;
+    if (needs.other) return 0;
+    if ((needs.wear || []).some(name => !wornNames.has(name))) return 0;
+    if (needs.wearAny && !needs.wearAny.some(name => wornNames.has(name))) return 0;
+    if ((needs.notWear || []).some(name => wornNames.has(name))) return 0;
+    let share = 1;
+    for (const status of needs.status || []) if (status !== 'In Combat') share *= SELF_BUFFS.includes(status) ? Math.min(1, (up && up[status]) || 0) : 0;
+    return share;
   }
-  function specialsOf(state, stats, def, shots) {
+  function specialsOf(state, stats, def, shots, up) {
     const list = [];
     let low = 0, high = 0;
     const att = stats.att || 0;
@@ -1280,7 +1310,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const [hand] of HANDS) {
       const name = (state.gear[hand] || {}).name, one = gearOf(name);
       for (const proc of (one && one.procs) || []) {
-        if (!procOn(proc, wornNames)) continue;
+        const share = procOn(proc, wornNames, up);
+        if (!(share > 0)) continue;
         const wait = proc.proc > 0 && shots > 0 ? 1 / (proc.proc * shots) : Infinity;
         const goes = 1 / (proc.cooldown + wait);
         let each = [0, 0];
@@ -1291,8 +1322,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           each = [landed(roll, 25, def, proc.pierce) * proc.shots, landed(roll, att, def, proc.pierce) * proc.shots];
         }
         if (!(goes > 0) || !isFinite(goes)) continue;
-        low += goes * each[0]; high += goes * each[1];
-        list.push({ name, kind: proc.kind, on: proc.on, goes, low: goes * each[0], high: goes * each[1] });
+        low += share * goes * each[0]; high += share * goes * each[1];
+        list.push({ name, kind: proc.kind, on: proc.on, goes: share * goes, low: share * goes * each[0], high: share * goes * each[1] });
       }
     }
     return { low, high, list };
@@ -1355,7 +1386,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
     const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost);
     const bleed = effects ? effects.bleed : 0;
-    const special = specialsOf(state, fought.now, def, gun.rate);
+    const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up);
     return { stats, fought, gun, spell, effects, bleed, regen, special, total: (using === 'spell' ? 0 : gun.dps) + bleed };
   }
 

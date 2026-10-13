@@ -129,6 +129,15 @@ assert.equal(t.costOf({ gear: { weapon: { name: 'Dusky Catalyst' }, ability: { n
   assert.equal(t.specialsOf(plain, { att: 75, dex: 75 }, 0, 8).list.length, 0, 'nothing without the ring');
   assert(t.specialsOf(withRing, { att: 75, dex: 75 }, 0, 8).high > 0, 'bolts with the ring');
 }
+// What needs a status: a fight is in combat, and Damaging counts only when the build or the party keeps it up.
+{
+  const mine = name => ({ gear: { weapon: { name }, ability: {}, armor: {}, ring: {} } });
+  assert(t.specialsOf(mine('Flames of Genesis'), { att: 75, dex: 75 }, 0, 8).high > 0, 'needs only combat: counted');
+  const kunai = gear.items['Combcutter Kunai'].procs.find(p => p.needs.status.includes('Damaging') && !p.needs.other);
+  assert(kunai, 'the Kunai bolt that needs Damaging');
+  assert.equal(t.specialsOf(mine('Combcutter Kunai'), { att: 75, dex: 75, vit: 75 }, 0, 8).list.filter(x => x.kind === 'bullets').length, 0, 'without Damaging it does not count');
+  assert(t.specialsOf(mine('Combcutter Kunai'), { att: 75, dex: 75, vit: 75 }, 0, 8, { Damaging: 1 }).high > 0, 'with Damaging it does');
+}
 assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.js').includes('RealmGearEffects'), 'the card says what a piece throws');
 
 /* ---------------- an ability is not raised by attack ---------------- */
@@ -140,6 +149,22 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
   assert.equal(at(0, 60).each, at(75, 60).each, '"Attack does not affect ability damage" (RealmEye, Character Stats)');
   assert.equal(at(75, 60).many, Math.round(16 + 0.0667 * (60 - 42)), 'the bolts a cast throws');
   near(at(75, 42).each, 22.5, 1e-9, 'no scaling at the floor of the stat');
+}
+
+/* ---------------- abilities that are not bolts, as RealmEye words them ---------------- */
+{
+  const cast = (name, wis, def = 0) => t.abilityRate(raw.items.find(i => i.name === name), { att: 75, wis }, def, null, 100).hits;
+  // Spider Venom: "Impact Damage 100 (+0.8 per WIS over 50)", "Damage Over Time 200 (+5.2 per WIS over 50)"; poison ignores defense.
+  near(cast('Spider Venom', 80).total, (100 + 0.8 * 30) + (200 + 5.2 * 30), 1e-9, 'poison and its impact');
+  near(cast('Spider Venom', 80, 40).total, Math.max(124 - 40, 124 * 0.15) + 356, 1e-9, 'only the impact is cut by defense');
+  // Discharge Scepter: "Damage 120 (+2.5 per WIS over 50)" and "Shockblast Damage 30 (+1.2 per WIS over 50)" for the first target.
+  near(cast('Discharge Scepter', 70).total, (120 + 2.5 * 20) + (30 + 1.2 * 20), 1e-9, 'a chain and its shockblast');
+  // Hunting Trap: "Damage 65 (+5 per WIS over 34)", "Sticky Bomb Damage 150 (+5 per WIS over 34)".
+  near(cast('Hunting Trap', 44).total, (65 + 50) + (150 + 50), 1e-9, 'a trap and its bomb');
+  // Healing Tome: "Explodes 2 times ... Damage 160 (+4.8 per WIS over 70)".
+  near(cast('Healing Tome', 80).total, 2 * (160 + 4.8 * 10), 1e-9, 'a nova that explodes twice');
+  const spider = raw.items.find(i => i.name === 'Spider Venom');
+  assert(t.abilityRate(spider, { att: 75, wis: 80 }, 0, null, 100).dps > 0, 'a poison is an ability with a damage a second');
 }
 
 /* ---------------- every weapon against the client's own XML ---------------- */

@@ -2361,6 +2361,8 @@
         needs.wear && needs.wear.length ? 'worn with ' + needs.wear.map(esc).join(' and ') : '',
         needs.wearAny && needs.wearAny.length ? 'worn with ' + needs.wearAny.map(esc).join(' or ') : '',
         needs.notWear && needs.notWear.length ? 'not beside ' + needs.notWear.map(esc).join(' or ') : '',
+        needs.status && needs.status.length ? 'while you are ' + needs.status.map(esc).join(' and ') : '',
+        needs.notStatus && needs.notStatus.length ? 'not while ' + needs.notStatus.map(esc).join(' or ') : '',
         ...(needs.other || []).map(esc)
       ].filter(Boolean).join(', ');
       // Each entry is one bolt, with its own wait; say how often each goes.
@@ -2394,6 +2396,19 @@
     }
     for (const [sign, title, text] of procRows(r)) row(sign, title, text, 'is-proc');
     const fx = (window.RealmGearEffects || {})[r.name] || {};
+    // What an ability deals besides bolts (tools/build-gear-effects.js): said as RealmEye says it, per part.
+    for (const a of fx.ability || []) {
+      const dmg = n(a.low) + (a.high !== a.low ? '–' + n(a.high) : '') + (a.per ? ' (+' + +a.per.toFixed(3) + ' per ' + tinted(a.by) + ' over ' + a.from + ')' : '');
+      const more = {
+        lightning: 'on the first target' + (a.falls ? ', ' + n(a.falls) + ' less for each one after it' : '') + (a.targets ? ', up to ' + a.targets + ' targets' : ''),
+        shockblast: (a.count > 1 ? a.count + ' times, ' : '') + 'around the first target' + (a.pierce ? ', ignoring defense' : ''),
+        trap: 'when an enemy steps on it', bomb: 'a sticky bomb on what sets it off',
+        impact: 'where the grenade lands', poison: 'over ' + a.duration + ' s, ignoring defense',
+        nova: 'explodes ' + (a.count || 1) + (a.count > 1 ? ' times, each' : ' time') + ' around you'
+      }[a.kind] || '';
+      const title = { lightning: 'Lightning', shockblast: 'Shockblast', trap: 'Trap', bomb: 'Sticky bomb', impact: 'Poison impact', poison: 'Poison', nova: 'Damage nova' }[a.kind];
+      if (title) row('ϟ', title + ' ' + dmg, more, 'is-proc');
+    }
     if (fx.combat) row('⚔', 'In combat it costs you', Object.entries(fx.combat).map(([s, v]) => tinted(s) + ' ' + (v < 0 ? '−' : '+') + Math.abs(v)).join(', ') + ' · while you are in combat, so every fight is fought with it', 'is-proc');
     if (fx.cost) row('✧', fx.cost < 1 ? 'Abilities cost less magic' : 'Abilities cost more magic', Math.round(Math.abs(1 - fx.cost) * 100) + '% ' + (fx.cost < 1 ? 'less' : 'more') + ' of the ' + tinted('MAXMP') + ' an ability costs, each use, while worn', 'is-proc');
     if (!rows.length && facts(r).effect_s) row('✦', esc(facts(r).effect_s), '');
