@@ -3602,25 +3602,25 @@ const TINT = {
       const e = statusInfo.byName.get(name);
       if (!e) return '';
       const p = name === 'Bleeding' ? (effects.bleed > 0 ? 1 : 0) : (effects.up[name] || 0);
+      if (name === 'Bleeding' && !p) return '';              // nothing inflicts it: nothing to say
       const why = effects.from[name];
       const immune = effects.immune && effects.immune.has(name);
-      const own = why === 'weapon' || why === 'ability';
+      const own = why === 'weapon' || why === 'ability' || why === 'gear';
       const state = immune ? FX_SAY.immune
-        : name === 'Bleeding' ? (effects.bleed > 0 ? commas(effects.bleed) + ' a second' : 'nothing inflicts it')
+        : name === 'Bleeding' ? commas(effects.bleed) + ' a second'
         : p ? (FX_SAY[why] || why) + (p < 1 ? ' · ' + Math.round(p * 100) + '% of the time' : '')
-        : 'not up';
-      // A switch for what a party could bring, unless your own gear already keeps it up all the time.
+        : 'not up - click to assume the party keeps it up';
+      // The chip is the switch for what a party could bring, unless your own gear keeps it up all the time.
       const can = name !== 'Bleeding' && !immune && !(own && p >= 1);
-      return '<span class="tc-fx' + (p ? ' is-up' : '') + (immune ? ' is-immune' : '') + ' is-' + e.tone + '"'
-        + ' title="' + esc(e.enemy || e.player || name) + '">'
-        + statusIconTc(name, 16) + '<b>' + esc(name) + '</b><small>' + esc(state) + '</small>'
-        + (can ? '<button type="button" class="tc-fx-assume" data-assume="' + esc(name) + '" aria-pressed="'
-          + (assume[name] ? 'true' : 'false') + '">party</button>' : '')
-        + '</span>';
+      const body = statusIconTc(name, 16) + '<b>' + esc(name) + '</b>' + (p > 0 && p < 1 ? '<small>' + Math.round(p * 100) + '%</small>' : '');
+      const tag = 'class="tc-fx' + (p ? ' is-up' : '') + (immune ? ' is-immune' : '') + ' is-' + e.tone + '" title="' + esc(state) + '"';
+      return can ? '<button type="button" ' + tag + ' data-assume="' + esc(name) + '" aria-pressed="' + (assume[name] ? 'true' : 'false') + '">' + body + '</button>'
+        : '<span ' + tag + '>' + body + '</span>';
     }).join('');
     box.innerHTML = '<div class="tc-fx-row">' + rows + '</div>';
   }
 
+  let moreOpen = false;
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -3669,8 +3669,9 @@ const TINT = {
     // What the build gets back, in combat and out of it (Vital Combat halves what VIT and WIS bring).
     if (numbers.regen) {
       const back = numbers.regen;
-      rows.push(['life a second, in / out of combat', round(back.hp.combat) + ' / ' + round(back.hp.calm)]);
-      rows.push(['magic a second, in / out of combat', round(back.mp.combat) + ' / ' + round(back.mp.calm)]);
+      rows.push([tintStats('HP a second, in combat'), round(back.hp.combat), 'main']);
+      rows.push([tintStats('MP a second, in combat'), round(back.mp.combat), 'main']);
+      rows.push([tintStats('HP / MP a second, out of combat'), round(back.hp.calm) + ' / ' + round(back.mp.calm)]);
     }
     // What the worn gear costs in combat, and what its effects add that the weapon's own shots do not.
     const penalties = Object.entries((numbers.fought && numbers.fought.penalty) || {});
@@ -3702,9 +3703,17 @@ const TINT = {
      * underneath. Four tiles in boxes was this page inventing a treatment the
      * site already had.
      */
-    box.innerHTML = rows.map(([say, was, loud]) =>
-      '<span class="figure' + (loud ? ' is-loud' : '') + '"><b>' + was
-      + '</b><small>' + say + '</small></span>').join('');
+    // The essentials first - the damage, how long the target lasts, what you get back - and the rest one click away.
+    const tile = ([say, was, loud]) => '<span class="figure' + (loud === true ? ' is-loud' : '') + '"><b>' + was
+      + '</b><small>' + say + '</small></span>';
+    const main = rows.filter(row => row[2]), more = rows.filter(row => !row[2]);
+    box.innerHTML = main.map(tile).join('')
+      + (more.length ? '<details class="tc-more"' + (moreOpen ? ' open' : '') + '><summary>All the figures</summary><div class="tc-facts">'
+        + more.map(tile).join('') + '</div></details>' : '');
+    if (!box.dataset.moreWired) {
+      box.dataset.moreWired = '1';
+      box.addEventListener('toggle', event => { if (event.target.classList && event.target.classList.contains('tc-more')) moreOpen = event.target.open; }, true);
+    }
     drawEffects(numbers);
   }
 

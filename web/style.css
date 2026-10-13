@@ -6463,20 +6463,23 @@ body.globe-wide #atlasIndex:not([hidden]) {
 .tc-status { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
 .tc-fx-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .tc-fx {
-  display: inline-grid; grid-template-columns: auto auto auto; grid-template-rows: auto auto; column-gap: 6px; align-items: center;
-  padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: rgb(var(--shade) / calc(.2 * var(--shade-k))); font-size: 12px; opacity: .62;
+  display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit;
+  padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px;
+  background: rgb(var(--shade) / calc(.2 * var(--shade-k))); font-size: 12px; opacity: .55;
 }
+button.tc-fx { cursor: pointer; }
 .tc-fx.is-up { opacity: 1; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.tc-fx[aria-pressed="true"] { opacity: 1; background: color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
 .tc-fx.is-immune { opacity: .5; text-decoration: line-through; text-decoration-color: var(--bad); }
-.tc-fx .tc-fx-icon { grid-row: 1 / span 2; display: inline-block; background-repeat: no-repeat; image-rendering: pixelated; }
+.tc-fx .tc-fx-icon { display: inline-block; background-repeat: no-repeat; image-rendering: pixelated; }
 .tc-fx b { font-weight: 650; color: var(--text); }
-.tc-fx small { grid-column: 2; color: var(--dim); font-size: 11px; }
-.tc-fx-assume {
-  grid-column: 3; grid-row: 1 / span 2; margin-left: 4px; font: inherit; font-size: 11px; cursor: pointer;
-  color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
-}
-.tc-fx-assume[aria-pressed="true"] { color: #0f1218; background: var(--accent); border-color: var(--accent); }
+.tc-fx small { color: var(--dim); font-size: 11px; }
+.tc-more { flex-basis: 100%; margin-top: 2px; }
+.tc-more > summary { cursor: pointer; color: var(--dim); font-size: 12px; list-style: none; }
+.tc-more > summary::-webkit-details-marker { display: none; }
+.tc-more > summary::before { content: "+ "; }
+.tc-more[open] > summary::before { content: "\2212 "; }
+.tc-more > .tc-facts { margin-top: 8px; border-top: 0; padding-top: 0; }
 
 /* ======================================================================= *
  * The Index's browser (web/index-browse.js): families on the left, the     *
