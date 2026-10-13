@@ -173,6 +173,13 @@ assert.equal(t.costOf({ gear: { weapon: {}, ability: { name: 'Robe of the Mad Sc
   near(P.weapon.low, n.gun.dps + n.bleed, 1e-9, 'the weapon alone');
   assert(P.ability.high > P.ability.low && P.ability.low >= n.special.low - 1e-9, 'the bolts Primal Arcana makes the weapon throw are its own');
   near(P.all.low, P.weapon.low + P.ability.low + P.armor.low + P.ring.low, 1e-9, 'all together is the sum');
+  // The reader picks which damage counts: the weapon's shots (the default), the ability, or everything worn.
+  assert.equal(n.chosen, n.total, 'the weapon by default');
+  state.damage = 'ability'; assert.equal(t.numbersFor(state, 0).chosen, P.ability.low, 'the ability alone');
+  state.damage = 'all'; assert.equal(t.numbersFor(state, 0).chosen, P.all.low, 'everything together');
+  const dps = t.GOALS.find(g => g.id === 'dps');
+  assert.equal(dps.of(t.numbersFor(state, 0), state), P.all.low, 'the goal follows the choice');
+  delete state.damage;
   assert.equal(n.total, n.gun.dps + n.bleed, "the figure the optimiser uses is still the weapon's");
 }
 assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.js').includes('RealmGearEffects'), 'the card says what a piece throws');

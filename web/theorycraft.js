@@ -1470,7 +1470,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const parts = { weapon: piece('weapon', gun.dps + bleed), ability: piece('ability', spell.dps), armor: piece('armor', 0), ring: piece('ring', 0) };
     parts.all = { low: 0, high: 0 };
     for (const hand of ['weapon', 'ability', 'armor', 'ring']) { parts.all.low += parts[hand].low; parts.all.high += parts[hand].high; }
-    return { stats, fought, gun, spell, effects, bleed, regen, special, temper, parts, total: (using === 'spell' ? 0 : gun.dps) + bleed };
+    const total = (using === 'spell' ? 0 : gun.dps) + bleed;
+    // The damage the reader asked to count: the weapon's shots, the ability, or every piece worn (at the low end of what is estimated).
+    const chosen = state.damage === 'all' ? parts.all.low : state.damage === 'ability' ? parts.ability.low : total;
+    return { stats, fought, gun, spell, effects, bleed, regen, special, temper, parts, total, chosen };
   }
 
   /* ---------------- the state of a build ---------------- */
@@ -2080,14 +2083,17 @@ const TINT = {
   spd: '#58da6e', dex: '#ff5f2a', vit: '#dd0c32', wis: '#4b9be7'
 };
 
+  // What the reader may count as damage: the weapon's shots, the ability, or every piece worn.
+  const DAMAGES = [['weapon', 'Weapon'], ['ability', 'Ability'], ['all', 'All together']];
+  const DAMAGE_SAYS = { weapon: 'damage', ability: 'ability damage', all: 'all damage' };
   const GOALS = [
     { group: 'Others', id: 'dps', say: 'Damage a second', tint: '#e08a3c',
-      of: n => n.total },
+      of: n => n.chosen },
     { group: 'Others', id: 'kill', say: 'Kill it fast', tint: '#f0c274', of: (n, s) => {
       const boss = data.byBoss[s.boss];
       if (!boss) return 0;
-      if (!(n.total > 0)) return -Infinity;
-      return -boss.hp / n.total;
+      if (!(n.chosen > 0)) return -Infinity;
+      return -boss.hp / n.chosen;
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
       tint: TINT[key], of: n => n.stats.now[key] }))
@@ -3610,8 +3616,8 @@ const TINT = {
     const numbers = numbersFor(build, at);
     const boss = data.byBoss[build.boss];
     const againstBoss = boss ? numbersFor(build, boss.def) : null;
-    const kill = boss && againstBoss && againstBoss.total
-      ? boss.hp / againstBoss.total : null;
+    const kill = boss && againstBoss && againstBoss.chosen
+      ? boss.hp / againstBoss.chosen : null;
     /*
      * Four numbers. Everything else this page can work out is on the curve
      * beneath it or in the fight above it, and a wall of figures is what
@@ -3630,7 +3636,7 @@ const TINT = {
       ? (hand.every ? round(1 / hand.every) : 0)
       : round(hand.rate);
     const rows = [
-      ['damage a second', commas(numbers.total), true],
+      [(DAMAGE_SAYS[build.damage] || DAMAGE_SAYS.weapon) + ' a second', commas(numbers.chosen), true],
       [spellOnly ? 'casts a second' : 'shots a second', often],
       [spellOnly ? 'each cast' : 'each shot', commas(hand.each)
         + (hand.many > 1 ? ' x ' + hand.many : '')]
@@ -3714,14 +3720,14 @@ const TINT = {
     const lines = [
       { say: 'weapon', tint: '#e0a13a', of: n => n.gun.dps },
       { say: 'ability', tint: '#6f9fd8', of: n => n.spell.dps },
-      { say: 'both', tint: '#8fd08a', of: n => n.total }
+      { say: 'all together', tint: '#8fd08a', of: n => n.parts.all.low }
     ];
     const points = [];
     let ceiling = 1;
     for (let def = 0; def <= MOST; def++) {
       const n = numbersFor(build, def);
       points.push(n);
-      ceiling = Math.max(ceiling, n.total);
+      ceiling = Math.max(ceiling, n.total, n.parts.all.low, n.spell.dps);
     }
     const pad = { l: 52, r: 10, t: 12, b: 26 };
     const x = def => pad.l + (def / MOST) * (wide - pad.l - pad.r);
@@ -3931,8 +3937,8 @@ const TINT = {
      * the visualisation of the weapon; their range and speed must not make a
      * target live longer simply because its sprite is drawn farther away.
      */
-    // Every piece's damage, at the low end of what is estimated (the weapon's own shots, the ability, armour and ring).
-    const dps = Math.max(0, nums.parts.all.low);
+    // The damage the reader chose to count (weapon, ability or all pieces, at the low end of what is estimated).
+    const dps = Math.max(0, nums.chosen);
     if (dps > 0) {
       const before = duel.hp;
       const hurt = dps * delta;
@@ -4869,6 +4875,9 @@ const TINT = {
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
     }
+    for (const node of el('tcGoals').querySelectorAll('[data-damage]')) {
+      node.classList.toggle('is-on', node.dataset.damage === (build.damage || 'weapon'));
+    }
     // Read against whatever is being fought, since there is no dial any more.
     const aimedAt = data.byBoss[build.boss];
     build.against = aimedAt ? aimedAt.def : 0;
@@ -5126,7 +5135,9 @@ const TINT = {
         '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
         + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
-      + '</span></div>').join('');
+      + '</span></div>').join('')
+      + '<div class="tc-goal-row"><i>Damage counts</i><span>' + DAMAGES.map(([id, say]) =>
+        '<button type="button" class="tc-goal" data-damage="' + id + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>';
   }
 
   /* ---------------- wiring ---------------- */
@@ -5218,6 +5229,8 @@ const TINT = {
     });
 
     el('tcGoals').addEventListener('click', event => {
+      const damage = event.target.closest('[data-damage]');
+      if (damage) { build.damage = damage.dataset.damage; keep(); paint(); return; }
       const pick = event.target.closest('[data-goal]');
       if (!pick) return;
       /*
