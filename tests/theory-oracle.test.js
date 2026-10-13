@@ -162,6 +162,19 @@ assert.equal(t.costOf({ gear: { weapon: {}, ability: { name: 'Robe of the Mad Sc
   state.ring = {}; state.gear.ring = { name: "Esben's Wedding Ring" };
   assert(!t.effectsFor(state, { dex: 75, wis: 50, att: 50 }, 5, 1).up.Damaging, "Esben's ring needs Berserk to give Damaging");
 }
+// The damage a second by piece: the weapon's shots, the ability, armour and ring, and all of it together.
+{
+  const klass = raw.classes.find(c => t.itemsFor('ability', c.name).some(i => i.name === 'Primal Arcana'));
+  assert(klass, 'a class can wear Primal Arcana');
+  const state = t.fresh(klass.name);
+  state.gear.ability.name = 'Primal Arcana';
+  t.use(state);
+  const n = t.numbersFor(state, 0), P = n.parts;
+  near(P.weapon.low, n.gun.dps + n.bleed, 1e-9, 'the weapon alone');
+  assert(P.ability.high > P.ability.low && P.ability.low >= n.special.low - 1e-9, 'the bolts Primal Arcana makes the weapon throw are its own');
+  near(P.all.low, P.weapon.low + P.ability.low + P.armor.low + P.ring.low, 1e-9, 'all together is the sum');
+  assert.equal(n.total, n.gun.dps + n.bleed, "the figure the optimiser uses is still the weapon's");
+}
 assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.js').includes('RealmGearEffects'), 'the card says what a piece throws');
 
 /* ---------------- an ability is not raised by attack ---------------- */
@@ -187,12 +200,12 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
   near(cast('Hunting Trap', 44).total, (65 + 50) + (150 + 50), 1e-9, 'a trap and its bomb');
   // Healing Tome: "Explodes 2 times ... Damage 160 (+4.8 per WIS over 70)".
   near(cast('Healing Tome', 80).total, 2 * (160 + 4.8 * 10), 1e-9, 'a nova that explodes twice');
-  // Stasis Orb: "Base Damage 100 (+1 per WIS over 50)", "Damage Per Stack 3 (+0.1 per WIS over 50)", a Hex piled by each hit between two casts.
+  // Stasis Orb: "Base Damage 100 (+1 per WIS over 50)", "Damage Per Stack 3 (+0.1 per WIS over 50) + 1% damage", a Hex piled by each hit between two casts.
   {
     const orb = raw.items.find(i => i.name === 'Stasis Orb');
     const r = t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 10);   // 75 magic a cast at 100 a second: 0.75 s, 7.5 hits
-    near(r.hits.total, (100 + 30) + 7.5 * (3 + 0.1 * 30), 1e-9, 'a Hex blast with its stacks');
-    assert.equal(t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 1000).hits.total, (100 + 30) + 100 * 6, 'a hundred stacks at most');
+    near(r.hits.total, ((100 + 30) + 7.5 * (3 + 0.1 * 30)) * (1 + 7.5 * 0.01), 1e-9, 'a Hex blast with its stacks, and a percent more for each');
+    assert.equal(t.abilityRate(orb, { att: 75, wis: 80 }, 0, null, 100, 1, 1000).hits.total, ((100 + 30) + 100 * 6) * 2, 'a hundred stacks at most');
   }
   // Basic Star: "Damage 150-250 (+6 per WIS over 50)", "When Key Released MP Cost: 30": a throw costs 30, at the pace the magic comes back.
   {

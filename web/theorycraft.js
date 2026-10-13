@@ -1174,8 +1174,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       if (!COUNTED.has(part.kind) || part.meter) continue;       // summons and meters are the server's to pace
       const over = part.per ? Math.max(0, (stats[OF_STAT[part.by]] || 0) - part.from) : 0;
       // A Hex blast is its base and a little for each Hex the shots have piled on the enemy by then (at most a hundred).
-      const piled = part.kind === 'hex' ? Math.min(100, stacks || 0) * (part.stack + (part.stackPer || 0) * over) : 0;
-      const roll = (part.low + part.high) / 2 + over * (part.per || 0) + piled;
+      const heaped = part.kind === 'hex' ? Math.min(100, stacks || 0) : 0;
+      const piled = heaped * ((part.stack || 0) + (part.stackPer || 0) * over);
+      const roll = ((part.low + part.high) / 2 + over * (part.per || 0) + piled) * (1 + heaped * (part.share || 0));
       const dealt = landed(roll, 25, Math.max(0, def - (part.ignores || 0)), part.pierce, fx) * (part.count || 1);
       list.push({ kind: part.kind, each: dealt / (part.count || 1), count: part.count || 1, dealt });
       total += dealt;
@@ -1332,6 +1333,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function specialsOf(state, stats, def, shots, up) {
     const list = [];
     let low = 0, high = 0;
+    const by = {};
     const att = stats.att || 0;
     const wornNames = new Set(HANDS.map(([hand]) => (state.gear[hand] || {}).name).filter(Boolean));
     for (const [hand] of HANDS) {
@@ -1350,10 +1352,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         }
         if (!(goes > 0) || !isFinite(goes)) continue;
         low += share * goes * each[0]; high += share * goes * each[1];
-        list.push({ name, kind: proc.kind, on: proc.on, goes: share * goes, low: share * goes * each[0], high: share * goes * each[1] });
+        const mine = by[hand] || (by[hand] = { low: 0, high: 0 });
+        mine.low += share * goes * each[0]; mine.high += share * goes * each[1];
+        list.push({ hand, name, shots: proc.shots, reach: proc.reach, kind: proc.kind, on: proc.on, goes: share * goes, low: share * goes * each[0], high: share * goes * each[1] });
       }
     }
-    return { low, high, list };
+    return { low, high, list, by };
   }
 
   /*
@@ -1461,7 +1465,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost, gun.each > 0 ? gun.dps / gun.each : 0);
     const bleed = effects ? effects.bleed : 0;
     const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up);
-    return { stats, fought, gun, spell, effects, bleed, regen, special, temper, total: (using === 'spell' ? 0 : gun.dps) + bleed };
+    // Where the damage a second comes from: each worn piece's own shots and what they set off, and all of it together.
+    const piece = (hand, base) => ({ low: base + ((special.by[hand] || {}).low || 0), high: base + ((special.by[hand] || {}).high || 0) });
+    const parts = { weapon: piece('weapon', gun.dps + bleed), ability: piece('ability', spell.dps), armor: piece('armor', 0), ring: piece('ring', 0) };
+    parts.all = { low: 0, high: 0 };
+    for (const hand of ['weapon', 'ability', 'armor', 'ring']) { parts.all.low += parts[hand].low; parts.all.high += parts[hand].high; }
+    return { stats, fought, gun, spell, effects, bleed, regen, special, temper, parts, total: (using === 'spell' ? 0 : gun.dps) + bleed };
   }
 
   /* ---------------- the state of a build ---------------- */
@@ -3657,14 +3666,16 @@ const TINT = {
       const raised = Object.entries(temper.boost).filter(([, v]) => Math.abs(v) >= 0.05).map(([key, v]) => STATS.find(x => x[0] === key)[2] + ' ' + (v > 0 ? '+' : '') + round(v));
       if (raised.length) rows.push(['gear raises on average, in combat', tintStats(raised.join(', '))]);
     }
-    // The ability's bolts, as often as the magic comes back to pay for them. Not part of the damage a second above.
-    if (!spellOnly && numbers.spell && numbers.spell.dps > 0) {
-      rows.push(['ability damage a second, held by magic', commas(numbers.spell.dps)]);
-      rows.push(['weapon and ability together, a second', commas(numbers.total + numbers.spell.dps)]);
-    }
-    if (numbers.special && numbers.special.high > 0) {
-      const { low, high } = numbers.special;
-      rows.push(['special effects a second, estimate', round(low) === round(high) ? commas(round(low)) : commas(round(low)) + '–' + commas(round(high))]);
+    // Where the damage comes from, piece by piece, and all of it together. A range where a figure rests on a rule only the
+    // game server knows (whether attack raises a bolt an item throws); the weapon's own shots alone are the figure above.
+    if (numbers.parts) {
+      const P = numbers.parts;
+      const say = x => (round(x.low) === round(x.high) ? commas(round(x.low)) : commas(round(x.low)) + '–' + commas(round(x.high)));
+      rows.push(['weapon a second, with what its shots set off', say(P.weapon)]);
+      if (P.ability.high > 0) rows.push(['ability a second, as often as the magic allows', say(P.ability)]);
+      if (P.armor.high > 0) rows.push(['armour a second', say(P.armor)]);
+      if (P.ring.high > 0) rows.push(['ring a second', say(P.ring)]);
+      if (P.ability.high > 0 || P.armor.high > 0 || P.ring.high > 0 || P.weapon.high > numbers.total + 1e-9) rows.push(['all together, a second', say(P.all)]);
     }
     /*
      * The same row of figures the enchanter uses for its answer: the number
@@ -3903,14 +3914,13 @@ const TINT = {
   function stepDuel(delta) {
     const boss = data.byBoss[build.boss];
     if (!boss) return;
-    const whole = statsOf(build), fought = fightOf(build, whole), stats = fought.now;
-    const mana = regenOf(whole, build.assume, fought).mp.combat, discount = costOf(build);
+    // The fight is worked out with the same figures the page shows: its own and what the worn gear adds.
+    const nums = numbersFor(build, boss.def);
+    if (!nums) return;
+    const mana = nums.regen.mp.combat;
     const weapon = data.byItem[(build.gear.weapon || {}).name];
     const ability = data.byItem[(build.gear.ability || {}).name];
-    const effects = effectsFor(build, stats, mana, discount);
-    const fx = fxOf(effects);
-    const gun = weaponRate(weapon, stats, boss.def, scaleOf(build), subOf(build), fx);
-    const spell = abilityRate(ability, stats, boss.def, fx, mana, discount);
+    const effects = nums.effects, gun = nums.gun, spell = nums.spell;
 
     stepBits(delta);
     if (duel.hp <= 0) return;                 // it is over; nothing else moves
@@ -3921,7 +3931,8 @@ const TINT = {
      * the visualisation of the weapon; their range and speed must not make a
      * target live longer simply because its sprite is drawn farther away.
      */
-    const dps = Math.max(0, (gun.dps || 0) + (effects ? effects.bleed : 0));
+    // Every piece's damage, at the low end of what is estimated (the weapon's own shots, the ability, armour and ring).
+    const dps = Math.max(0, nums.parts.all.low);
     if (dps > 0) {
       const before = duel.hp;
       const hurt = dps * delta;
@@ -3959,20 +3970,21 @@ const TINT = {
       }
     }
     /*
-     * The magic comes back at the rate wisdom says it does, and a cast is
-     * paid for out of what is there. So the first seconds of a fight are the
-     * fast ones and the rest is whatever the pool can afford - which is the
-     * thing a sustained figure cannot show you.
+     * The ability goes as often as the magic allows (its own figure: whichever of the magic or its cooldown is slower),
+     * and the bolts the worn pieces throw when you shoot come as often as the figures count them. Both are drawn;
+     * the damage they do is already in the figure the target loses life by.
      */
-    const cost = 0;                            // the ability is set aside
     duel.mp = Math.min(duel.mpFull, duel.mp + mana * delta);
-    if (spell.dps > 0 && cost) {
+    if (spell.dps > 0 && spell.every > 0 && ability && ability.shots && ability.shots.length) {
       duel.spell -= delta;
-      if (duel.spell <= 0 && duel.mp >= cost) {
-        duel.mp -= cost;
-        duel.spell = 0.6;                     // as fast as a hand can cast
+      if (duel.spell <= 0) {
+        duel.spell += spell.every;
         loose(ability, spell, false);
       }
+    }
+    for (const one of nums.special.list) {
+      if (one.kind !== 'bullets' || !(Math.random() < one.goes * delta)) continue;
+      loose(null, { many: one.shots || 1, reach: one.reach || 6, fast: 12, each: 0 }, true);
     }
 
     /*
