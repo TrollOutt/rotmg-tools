@@ -32,9 +32,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
 
-      # No install step: the tests and the build are plain Node, with no
-      # dependency at all.
+      # Install the locked development dependencies only for the type check.
+      # The site and its build remain plain Node with no runtime dependencies.
+      - name: Install type checking tools
+        run: npm ci
+
+      - name: Check progression types
+        run: npm run typecheck
+
       - name: Verify the calculation engine
         run: npm test
 
