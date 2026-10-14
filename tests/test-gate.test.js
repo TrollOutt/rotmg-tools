@@ -15,6 +15,7 @@ const deployCritical = [
   'enchant-optimization.test.js',
   'i18n.test.js',
   'index-extras.test.js',
+  'fiches-community.test.js',
   'index-quality.test.js',
   'index-sheet.test.js',
   'progression.test.js',

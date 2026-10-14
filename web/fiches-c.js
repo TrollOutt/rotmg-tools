@@ -25,8 +25,22 @@
     redraw();
   };
   let reRecords = null;
-  fetch('assets/index/realmeye-enrichment.json').then(r => r.json())
+  /*
+   * Ce que RealmEye sait. Le site lit assets/index/realmeye-enrichment.json. La copie à garder,
+   * ouverte depuis le disque, n'a aucun fichier à côté d'elle à interroger : le fetch échouait et
+   * les fiches restaient sans leurs faits et leurs notes. Mais elle porte ce même fichier en texte,
+   * qu'elle décode au moment où une fiche en a besoin, pas au démarrage.
+   */
+  const keptEnrichment = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.realmeyeEnrichmentText;
+  if (keptEnrichment) Promise.resolve().finally(settled);
+  else fetch('assets/index/realmeye-enrichment.json').then(r => r.json())
     .then(j => { reRecords = j.records || {}; }).catch(() => { reRecords = {}; }).finally(settled);
+  function communityRecords() {
+    if (reRecords === null && keptEnrichment) {
+      try { reRecords = JSON.parse(keptEnrichment).records || {}; } catch (err) { reRecords = {}; }
+    }
+    return reRecords || {};
+  }
 
   /* Ce que le client déclare et que l'Index ne porte pas encore : forge, feed power, XP, poussière. */
   let clientExtra = {};
@@ -153,7 +167,7 @@
   }
 
   function communityOf(r) {
-    const data = (reRecords || {})[r.id] || null;
+    const data = communityRecords()[r.id] || null;
     const out = { facts: {}, notes: '', prose: [], variants: '' };
     if (!data) return out;
     const f = data.facts || {};
