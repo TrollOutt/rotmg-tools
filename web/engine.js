@@ -9,6 +9,106 @@
  * and mainwindow.cpp. Places where this port deliberately differs from the Qt
  * source are marked with "DIVERGENCE" and listed in engine.NOTES.
  */
+/**
+ * Client catalogue records and calculator contracts. Names and labels remain
+ * strings because the installed client's catalogue can grow independently.
+ * @typedef {Object} EnchantMod
+ * @property {string} name
+ * @property {string} description
+ * @property {number} weight
+ * @property {Set<string>} tags
+ * @property {Set<string>} excludes
+ * @property {Set<string>} itemTags
+ * @property {Set<string>} special
+ * @property {number[]} distribution
+ * @property {string[]} [members] Family goals, never actual pool entries.
+ * @typedef {EnchantMod & {id: number}} Enchantment
+ * @typedef {{keys: Set<string>, excludes: Set<string>}} EnchantWeightKeys
+ * @typedef {EnchantWeightKeys & ({multiplier: number, increment?: never} | {increment: number, multiplier?: never})} EnchantWeightRule
+ * @typedef {{include: Set<string> | null, exclude: Set<string>, names: Set<string>}} EnchantPoolEntry
+ * @typedef {{dust: string, value: number}} EnchantArtifactCost
+ * @typedef {Object} EnchantArtifact
+ * @property {string} name
+ * @property {string} pool
+ * @property {string} description
+ * @property {Set<string>} labels
+ * @property {EnchantArtifactCost} cost
+ * @property {number} consumeProb
+ * @property {EnchantPoolEntry} entry
+ * @property {EnchantWeightRule[]} rules
+ * @typedef {Object} EnchantItem
+ * @property {string} name
+ * @property {string | null} type
+ * @property {string | null} dust
+ * @property {number[]} costs
+ * @property {number[]} slotChance
+ * @property {string | null} base
+ * @property {string} pool
+ * @property {Set<string>} labels
+ * @typedef {{clientModText?: string, modTexts?: string[], clientArtifactText: string, clientItemText: string, awakenText: string}} EnchantSources
+ * @typedef {Object} EnchantDataset
+ * @property {Enchantment[]} enchants
+ * @property {Map<string, Enchantment>} byName
+ * @property {EnchantArtifact[]} artifacts
+ * @property {{name: string, missing: string[]}[]} heldArtifacts
+ * @property {Map<string, EnchantArtifact>} byArtifact
+ * @property {Map<string, string[]>} awakenings
+ * @property {Map<string, EnchantItem>} itemsByName
+ * @property {Set<string>} awokenArt
+ * @property {Set<string>} blockingLabels
+ * @property {Record<string, string>} spriteAlias
+ * @typedef {{slots: number, locks: string[]}} EnchantSlotCounts
+ * @typedef {{item: string, type: string | null, subtypes?: Set<string> | string[] | null}} EnchantItemSelection
+ * @typedef {EnchantSlotCounts & EnchantItemSelection} EnchantPoolConfig
+ * @typedef {EnchantPoolConfig & {dust: string, tiers?: Set<number> | number[] | null}} EnchantPlanConfig
+ * @typedef {EnchantPlanConfig & {desired: string}} EnchantConfig
+ * @typedef {{index: number, name?: string, locked: boolean}} EnchantSlotSelection
+ * @typedef {{other: Enchantment, reason: 'duplicate' | 'after-lock' | 'before-wanted' | 'mutual'}} EnchantConflict
+ * @typedef {Object} EnchantOptions
+ * @property {number} [budget]
+ * @property {number} [samples]
+ * @property {Set<number> | number[] | null} [acceptedTiers]
+ * @property {EnchantArtifact[]} [artifacts]
+ * @property {() => void | Promise<void>} [breathe]
+ * @property {() => boolean} [cancelled]
+ * @typedef {{mods: Enchantment[], weights: Map<number, number>, total: number}} EnchantWeightedPool
+ * @typedef {{tagMask: number, excludeMask: number, weight: number, count: number, goalId: number | null, members: string[]}} EnchantClass
+ * @typedef {{distribution: Float64Array, exact: boolean, nodes: number, samples?: number}} EnchantDistribution
+ * @typedef {EnchantDistribution & {pool: Enchantment[], impossible?: boolean}} EnchantDistributionResult
+ * @typedef {EnchantDistributionResult & {odds: number}} EnchantOdds
+ * @typedef {Object} EnchantCost
+ * @property {number} rerolls
+ * @property {number} perReroll
+ * @property {number} dust
+ * @property {number} artifactDust
+ * @property {string} [artifactDustType]
+ * @property {number} artifactsUsed
+ * @property {number} medianRerolls
+ * @typedef {EnchantCost & {artifact: EnchantArtifact, odds: number, rawOdds: number, exact: boolean, samples?: number}} EnchantEvaluation
+ * @typedef {EnchantCost & {artifact: EnchantArtifact, odds: number, exact: boolean}} EnchantSimultaneousPlan
+ * @typedef {{probability: number, value: number, rerolls: number, next: number, sub: number}} EnchantOutcome
+ * @typedef {{dust: number, rerolls: number, accepted: EnchantOutcome[], rejected: EnchantOutcome[], progressChance: number}} EnchantOutcomePolicy
+ * @typedef {EnchantOutcomePolicy & {artifact: EnchantArtifact, perReroll: number, pending: string[], artifactCharge: number, distribution: Float64Array}} EnchantPlanChoice
+ * @typedef {{rolled: string[], lock: string[], reroll: string[], chance: number, action: 'partial' | 'lock' | 'reroll'}} EnchantDecision
+ * @typedef {Object} EnchantPathStep
+ * @property {string[]} locked
+ * @property {string[]} pending
+ * @property {EnchantArtifact} artifact
+ * @property {number} perReroll
+ * @property {number} artifactCharge
+ * @property {string} artifactDustType
+ * @property {number} progressChance
+ * @property {number} expectedDustFromHere
+ * @property {number} expectedRerollsFromHere
+ * @property {string[]} likelyGain
+ * @property {number} likelyChance
+ * @property {boolean} throwsBack
+ * @property {{name: string, chance: number}[]} declined
+ * @property {EnchantDecision[]} decisions Non-enumerable UI metadata.
+ * @property {string[]} hunt Non-enumerable UI metadata.
+ * @typedef {{feasible: true, goals: string[], dust: number, rerolls: number, path: EnchantPathStep[], exact: boolean, first: EnchantPlanChoice | null}} EnchantFeasiblePlan
+ * @typedef {EnchantFeasiblePlan | {feasible: false, reason: 'slots' | 'impossible'} | null} EnchantPlan
+ */
 var EnchantEngine = (function () {
   'use strict';
 
@@ -18,8 +118,13 @@ var EnchantEngine = (function () {
 
   // The original data files store one record per "[...]" line, records being
   // separated by a line of asterisks. "##" lines are comments.
+  /**
+   * @param {string} text
+   * @returns {string[][]}
+   */
   function readBracketGroups(text) {
     const groups = [];
+    /** @type {string[]} */
     let current = [];
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -32,10 +137,15 @@ var EnchantEngine = (function () {
     return groups;
   }
 
+  /** @param {string | null | undefined} value @returns {Set<string>} */
   const splitSet = value => new Set(String(value || '').split(',').map(v => v.trim()).filter(Boolean));
 
   // Record layout: name, description, weight, Labels, Incompatible Labels,
   // item types, special base requirement, tier weight distribution.
+  /**
+   * @param {string} text
+   * @returns {EnchantMod[]}
+   */
   function parseMods(text) {
     return readBracketGroups(text).filter(group => group.length >= 7).map(group => ({
       name: group[0],
@@ -61,7 +171,12 @@ var EnchantEngine = (function () {
    * tier split is those four weights over their total rather than a figure
    * rounded by hand.
    */
+  /**
+   * @param {string} text
+   * @returns {EnchantMod[]}
+   */
   function parseClientMods(text) {
+    /** @type {EnchantMod[]} */
     const out = [];
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -95,15 +210,21 @@ var EnchantEngine = (function () {
    * any other enchantment, but it carries a `members` list and is kept out of
    * every pool: it is a way of asking, never a thing the game rolls.
    */
+  /**
+   * @param {EnchantMod[]} enchants
+   * @returns {EnchantMod[]}
+   */
   function tradeoffFamilies(enchants) {
+    /** @type {Map<string, EnchantMod[]>} */
     const families = new Map();
     for (const mod of enchants) {
       if (!mod.tags.has('ROLLABLE')) continue;
       const match = /^(.+?) -(.+) Tradeoff$/.exec(mod.name);
       if (!match) continue;
       if (!families.has(match[1])) families.set(match[1], []);
-      families.get(match[1]).push(mod);
+      /** @type {EnchantMod[]} */ (families.get(match[1])).push(mod);
     }
+    /** @type {EnchantMod[]} */
     const out = [];
     for (const [stat, members] of families) {
       if (members.length < 2) continue;          // nothing to choose between
@@ -141,6 +262,11 @@ var EnchantEngine = (function () {
   }
 
   // The names a goal stands for: itself, or every member of its family.
+  /**
+   * @param {EnchantDataset} data
+   * @param {string} name
+   * @returns {string[]}
+   */
   function membersOf(data, name) {
     const mod = data.byName.get(name);
     return mod && mod.members ? mod.members : [name];
@@ -161,11 +287,19 @@ var EnchantEngine = (function () {
    * weight — so a rule naming them, whether it bars them at the entry or
    * multiplies them by zero, is collected into tierRules() instead.
    */
+  /** @type {Record<string, string | undefined>} */
   const CLIENT_DUST = { greenDust: 'Green', redDust: 'Red', purpleDust: 'Purple', na: 'na' };
+  /** @param {string} key @returns {boolean} */
   const isTier = key => /^TIER[1-4]$/.test(key);
 
+  /**
+   * @param {string} text
+   * @returns {EnchantArtifact[]}
+   */
   function parseClientArtifacts(text) {
+    /** @type {EnchantArtifact[]} */
     const out = [];
+    /** @type {EnchantArtifact | null} */
     let current = null;
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -208,11 +342,13 @@ var EnchantEngine = (function () {
         const keys = byName ? [parts[1]] : (parts[1] || '').split(',').filter(Boolean);
         const excludes = byName ? [] : (parts[2] || '').split(',').filter(Boolean);
         const amount = parts[byName ? 2 : 3] || '';
+        /** @type {EnchantWeightKeys & {increment?: number, multiplier?: number}} */
         const rule = { keys: new Set(keys), excludes: new Set(excludes) };
         if (amount.startsWith('increment=')) rule.increment = Number(amount.slice(10)) || 0;
         else rule.multiplier = Number(amount.slice(5));
         if (rule.multiplier !== undefined && !Number.isFinite(rule.multiplier)) rule.multiplier = 1;
-        current.rules.push(rule);
+        /** Both branches above assign exactly one weight operation. */
+        current.rules.push(/** @type {EnchantWeightRule} */ (rule));
       }
     }
 
@@ -241,8 +377,13 @@ var EnchantEngine = (function () {
    * enchantment each item unlocks — all of which used to be scraped from wiki
    * pages and inferred from tier bands.
    */
+  /**
+   * @param {string} text
+   * @returns {{items: EnchantItem[], awakenings: Map<string, string[]>}}
+   */
   function parseClientItems(text) {
     const items = [];
+    /** @type {Map<string, string[]>} */
     const awakenings = new Map();
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -274,7 +415,12 @@ var EnchantEngine = (function () {
    */
   const ITEM_SPRITE_ALIAS = { 'Nightmatter Circlet': 'AoO Rings' };
 
+  /**
+   * @param {string} text
+   * @returns {Map<string, string[]>}
+   */
   function parseAwakenings(text) {
+    /** @type {Map<string, string[]>} */
     const map = new Map();
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -284,7 +430,7 @@ var EnchantEngine = (function () {
       const [item, mod] = match[1].split(',').map(part => part.trim());
       if (!item || !mod) continue;
       if (!map.has(item)) map.set(item, []);
-      map.get(item).push(mod);
+      /** @type {string[]} */ (map.get(item)).push(mod);
     }
     return map;
   }
@@ -293,6 +439,10 @@ var EnchantEngine = (function () {
   // Night's Soul (AoO Rings) awakened pool. The sprite alias reuses the group
   // artwork shipped with the Qt build, so no external asset is needed.
 
+  /**
+   * @param {EnchantSources} sources
+   * @returns {EnchantDataset}
+   */
   function buildDataset(sources) {
     // The Qt source keys enchantments by name. Several documents repeat shared
     // modifiers (ability/ring regeneration, armor/ring on-hit procs), so they
@@ -300,6 +450,7 @@ var EnchantEngine = (function () {
     // One source now: the client. sources.modTexts is still read when it is the
     // only thing given, so a caller holding the old documents still works, but
     // nothing in the project passes them any more.
+    /** @type {Map<string, EnchantMod>} */
     const unique = new Map();
     const parsed = sources.clientModText
       ? parseClientMods(sources.clientModText)
@@ -391,15 +542,30 @@ var EnchantEngine = (function () {
    * Configuration helpers                                               *
    * ------------------------------------------------------------------ */
 
+  /** @template T @param {Set<T> | T[] | null | undefined} value @returns {Set<T>} */
   const asSet = value => value instanceof Set ? value : new Set(value || []);
 
   // A configuration describes the item in front of the player:
   //   slots   total enchantment slots granted by the rarity
   //   locks   enchantments already on the item and kept
+  /**
+   * @param {EnchantSlotCounts} cfg
+   * @returns {number}
+   */
   function lockCount(cfg) { return cfg.locks.length; }
+  /**
+   * @param {EnchantSlotCounts} cfg
+   * @returns {number}
+   */
   function rollsRemaining(cfg) { return Math.max(0, cfg.slots - lockCount(cfg)); }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantSlotCounts} cfg
+   * @returns {Set<string>}
+   */
   function lockedLabels(data, cfg) {
+    /** @type {Set<string>} */
     const labels = new Set();
     for (const name of cfg.locks) {
       const mod = data.byName.get(name);
@@ -410,6 +576,11 @@ var EnchantEngine = (function () {
 
   // The item's own family, straight from the same client catalogue used by the
   // calculator. Consumers must not guess Alien / Neo Alien from the item name.
+  /**
+   * @param {EnchantDataset | null | undefined} data
+   * @param {string} itemName
+   * @returns {Set<string>}
+   */
   function subtypesForItem(data, itemName) {
     const item = data && data.itemsByName && data.itemsByName.get(itemName);
     return new Set(item && item.base ? [item.base] : []);
@@ -419,6 +590,12 @@ var EnchantEngine = (function () {
   // artifact entry rule. eligiblePool() also needs this for artifact-only
   // entries; calculator pickers add isNaturallyRollable() through
   // eligibleForItem().
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantItemSelection | null | undefined} cfg
+   * @param {EnchantMod | null | undefined} mod
+   * @returns {boolean}
+   */
   function itemAllows(data, cfg, mod) {
     if (!mod || !cfg || !cfg.type || !mod.itemTags.has(cfg.type)) return false;
     if (mod.excludes.has('AWAKENED') && !(data.awakenings.get(cfg.item) || []).includes(mod.name)) return false;
@@ -427,10 +604,22 @@ var EnchantEngine = (function () {
     return true;
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantItemSelection | null | undefined} cfg
+   * @param {EnchantMod | null | undefined} mod
+   * @returns {boolean}
+   */
   function eligibleForItem(data, cfg, mod) {
     return isNaturallyRollable(mod) && itemAllows(data, cfg, mod);
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantItemSelection | null | undefined} cfg
+   * @param {EnchantMod | null | undefined} mod
+   * @returns {string[] | null}
+   */
   function missingBase(data, cfg, mod) {
     if (!mod || !cfg || !cfg.type || !mod.itemTags.has(cfg.type)) return null;
     if (mod.excludes.has('AWAKENED') && !(data.awakenings.get(cfg.item) || []).includes(mod.name)) return null;
@@ -441,11 +630,23 @@ var EnchantEngine = (function () {
 
   // Directional incompatibility: candidate may follow prior iff none of the
   // candidate's refused labels are carried by prior.
+  /**
+   * @param {EnchantMod} candidate
+   * @param {EnchantMod} prior
+   * @returns {boolean}
+   */
   function follows(candidate, prior) {
     for (const label of candidate.excludes) if (prior.tags.has(label)) return false;
     return true;
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantMod} mod
+   * @param {EnchantSlotSelection} slot
+   * @param {EnchantSlotSelection[]} others
+   * @returns {EnchantConflict | null}
+   */
   function conflictWith(data, mod, slot, others) {
     for (const other of others) {
       if (other.index === slot.index || !other.name) continue;
@@ -476,6 +677,12 @@ var EnchantEngine = (function () {
   // Alien and Neo Alien are equipment families, and an enchantment of a family
   // only goes on equipment of that same family, so the item is the only thing
   // that can satisfy the requirement here.
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact | null | undefined} artifact
+   * @returns {Enchantment[]}
+   */
   function eligiblePool(data, cfg, artifact) {
     const locked = new Set(cfg.locks);
     const labels = lockedLabels(data, cfg);
@@ -507,10 +714,19 @@ var EnchantEngine = (function () {
    * read. Pickers and planners without an artifact need this narrower set.
    * Keeping the predicate here gives every module the same boundary.
    */
+  /**
+   * @param {EnchantMod | null | undefined} mod
+   * @returns {boolean}
+   */
   function isNaturallyRollable(mod) {
     return !!(mod && mod.weight > 0 && mod.tags && mod.tags.has('ROLLABLE'));
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @returns {Enchantment[]}
+   */
   function rollablePool(data, cfg) {
     return eligiblePool(data, cfg, null).filter(isNaturallyRollable);
   }
@@ -539,6 +755,11 @@ var EnchantEngine = (function () {
    * enchantment's own weight rather than a multiplier on the whole of it, and
    * tierMass accounts for them.
    */
+  /**
+   * @param {EnchantMod} mod
+   * @param {EnchantArtifact | null | undefined} artifact
+   * @returns {number}
+   */
   function weightFor(mod, artifact) {
     if (!artifact || artifact.name === 'No Artifact') return mod.weight;
     // Rules apply in the order the client lists them, because one of them adds
@@ -562,8 +783,15 @@ var EnchantEngine = (function () {
     return Math.trunc(weight);
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact | null | undefined} artifact
+   * @returns {EnchantWeightedPool}
+   */
   function weightedPool(data, cfg, artifact) {
     const mods = eligiblePool(data, cfg, artifact);
+    /** @type {Map<number, number>} */
     const weights = new Map();
     let total = 0;
     for (const mod of mods) { const weight = weightFor(mod, artifact); weights.set(mod.id, weight); total += weight; }
@@ -583,16 +811,27 @@ var EnchantEngine = (function () {
    * is enumerated exactly in milliseconds. Goals are kept as singleton classes
    * so an individual enchantment can still be identified.
    */
+  /**
+   * @param {Enchantment[]} pool
+   * @param {EnchantArtifact} artifact
+   * @param {Set<number>} goalIds
+   * @param {Set<string>} blockingLabels
+   * @returns {{classes: EnchantClass[], labelCount: number}}
+   */
   function buildClasses(pool, artifact, goalIds, blockingLabels) {
+    /** @type {Map<string, number>} */
     const labelIndex = new Map();
+    /** @param {string} label @returns {number} */
     const indexOf = label => {
       if (!labelIndex.has(label)) labelIndex.set(label, labelIndex.size);
-      return labelIndex.get(label);
+      return /** @type {number} */ (labelIndex.get(label));
     };
     // Only labels that some *surviving* candidate refuses can change the pool.
+    /** @type {Set<string>} */
     const relevant = new Set();
     for (const mod of pool) for (const label of mod.excludes) if (blockingLabels.has(label)) relevant.add(label);
 
+    /** @type {Map<string, EnchantClass>} */
     const groups = new Map();
     for (const mod of pool) {
       const isGoal = goalIds.has(mod.id);
@@ -634,9 +873,22 @@ var EnchantEngine = (function () {
    * the roll gives. Every member of such a family is then one class of its own
    * with the same goal bit, so the walk needs no other change.
    */
+  /**
+   * @param {Enchantment[]} pool
+   * @param {EnchantArtifact} artifact
+   * @param {number} rolls
+   * @param {Enchantment[][]} goalSets
+   * @param {Set<string>} blockingLabels
+   * @param {number} [budget]
+   * @param {Set<number> | number[] | null} [acceptedTiers]
+   * @returns {EnchantDistribution}
+   */
   function goalDistribution(pool, artifact, rolls, goalSets, blockingLabels, budget, acceptedTiers) {
+    /** @type {Set<number>} */
     const goalIds = new Set();
+    /** @type {Map<number, number>} */
     const bitOfId = new Map();
+    /** @type {Map<number, number>} */
     const acceptedById = new Map();
     const tiers = acceptedTiers ? asSet(acceptedTiers) : null;
     goalSets.forEach((set, index) => {
@@ -668,16 +920,19 @@ var EnchantEngine = (function () {
     const excludeMask = classes.map(entry => entry.excludeMask);
     const goalBit = classes.map(entry => entry.goalId === null ? 0 : (bitOfId.get(entry.goalId) || 0));
     const goalAccept = classes.map(entry => entry.goalId === null ? 1
-      : (acceptedById.has(entry.goalId) ? acceptedById.get(entry.goalId) : 1));
+      : (acceptedById.has(entry.goalId) ? /** @type {number} */ (acceptedById.get(entry.goalId)) : 1));
     const remaining = classes.map(entry => entry.count);
 
+    /** @type {Map<string, Float64Array>} */
     const memo = new Map();
     const limit = budget || DEFAULT_BUDGET;
     let nodes = 0;
 
     // `picked` holds the class indices already consumed, kept sorted so that
     // permutations of the same multiset share one memo entry.
+    /** @type {number[]} */
     const picked = [];
+    /** @param {number} index @returns {number} */
     const insert = index => {
       let at = picked.length;
 
@@ -697,6 +952,7 @@ var EnchantEngine = (function () {
       return at;
     };
 
+    /** @param {number} at @returns {void} */
     const removeAt = at => {
       picked.splice(
         at,
@@ -704,6 +960,14 @@ var EnchantEngine = (function () {
       );
     };
 
+    /**
+     * @param {number} left
+     * @param {number} active
+     * @param {number} achieved
+     * @param {Float64Array} out
+     * @param {number} scale
+     * @returns {void}
+     */
     function walk(left, active, achieved, out, scale) {
       if (++nodes > limit) throw new Error('tree budget exceeded');
       if (achieved === full || left === 0) { out[achieved] += scale; return; }
@@ -766,9 +1030,23 @@ var EnchantEngine = (function () {
    * its node budget, which the class collapse makes very unlikely; the caller
    * is told so it can label the number as an estimate rather than a fact.
    */
+  /**
+   * @param {Enchantment[]} pool
+   * @param {EnchantArtifact} artifact
+   * @param {number} rolls
+   * @param {Enchantment[][]} goalSets
+   * @param {Set<string>} blockingLabels
+   * @param {string} seedText
+   * @param {number} [samples]
+   * @param {Set<number> | number[] | null} [acceptedTiers]
+   * @returns {EnchantDistribution}
+   */
   function sampledDistribution(pool, artifact, rolls, goalSets, blockingLabels, seedText, samples, acceptedTiers) {
+    /** @type {Set<number>} */
     const goalIds = new Set();
+    /** @type {Map<number, number>} */
     const bitOfId = new Map();
+    /** @type {Map<number, number>} */
     const acceptedById = new Map();
     const tiers = acceptedTiers ? asSet(acceptedTiers) : null;
     goalSets.forEach((set, index) => {
@@ -793,10 +1071,11 @@ var EnchantEngine = (function () {
     const count = classes.length;
     const goalBit = classes.map(entry => entry.goalId === null ? 0 : (bitOfId.get(entry.goalId) || 0));
     const goalAccept = classes.map(entry => entry.goalId === null ? 1
-      : (acceptedById.has(entry.goalId) ? acceptedById.get(entry.goalId) : 1));
+      : (acceptedById.has(entry.goalId) ? /** @type {number} */ (acceptedById.get(entry.goalId)) : 1));
     let seed = [...String(seedText)].reduce((value, ch) => ((value * 31) + ch.charCodeAt(0)) >>> 0, 2166136261);
     const random = () => ((seed = (1664525 * seed + 1013904223) >>> 0) / 4294967296);
     const total = samples || 20000;
+    /** @type {number[]} */
     const remaining = new Array(count);
     for (let sample = 0; sample < total; sample++) {
       for (let i = 0; i < count; i++) remaining[i] = classes[i].count;
@@ -833,10 +1112,16 @@ var EnchantEngine = (function () {
    * tree.
    */
   const DISTRIBUTION_CACHE_MAX = 256;
+  /** @type {WeakMap<EnchantDataset, Map<string, EnchantDistributionResult>>} */
   const distributionCacheByData = new WeakMap();
+  /** @type {WeakMap<EnchantArtifact, number>} */
   const distributionArtifactIds = new WeakMap();
   let distributionArtifactSerial = 0;
 
+  /**
+   * @param {EnchantArtifact | null | undefined} artifact
+   * @returns {number | string}
+   */
   function distributionArtifactId(artifact) {
     if (
       !artifact
@@ -866,6 +1151,13 @@ var EnchantEngine = (function () {
     return id;
   }
 
+  /**
+   * Serializes arbitrary cache-key values; object, Set, Map and array reads
+   * stay unknown until the existing runtime guards identify their container.
+   * @param {unknown} value
+   * @param {WeakSet<object>} [seen]
+   * @returns {unknown}
+   */
   function distributionCacheShape(value, seen) {
     if (value === undefined) {
       return '[Undefined]';
@@ -887,12 +1179,13 @@ var EnchantEngine = (function () {
 
     visited.add(value);
 
+    /** @type {unknown} */
     let out;
 
     if (value instanceof Set) {
       out = [
         'Set',
-        [...value]
+        [.../** @type {Set<unknown>} */ (value)]
           .map(one =>
             distributionCacheShape(
               one,
@@ -909,7 +1202,7 @@ var EnchantEngine = (function () {
     } else if (value instanceof Map) {
       out = [
         'Map',
-        [...value]
+        [.../** @type {Map<unknown, unknown>} */ (value)]
           .map(([key, item]) => [
             distributionCacheShape(
               key,
@@ -929,7 +1222,7 @@ var EnchantEngine = (function () {
       ];
     } else if (Array.isArray(value)) {
       out =
-        value.map(one =>
+        /** @type {unknown[]} */ (value).map(one =>
           distributionCacheShape(
             one,
             visited
@@ -942,9 +1235,9 @@ var EnchantEngine = (function () {
         const key
         of Object.keys(value).sort()
       ) {
-        out[key] =
+        /** @type {Record<string, unknown>} */ (out)[key] =
           distributionCacheShape(
-            value[key],
+            /** @type {Record<string, unknown>} */ (value)[key],
             visited
           );
       }
@@ -955,6 +1248,10 @@ var EnchantEngine = (function () {
     return out;
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @returns {Map<string, EnchantDistributionResult>}
+   */
   function distributionCacheFor(data) {
     let cache =
       distributionCacheByData.get(
@@ -973,12 +1270,20 @@ var EnchantEngine = (function () {
     return cache;
   }
 
+  /**
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact} artifact
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} settings
+   * @returns {string}
+   */
   function distributionCacheKey(
     cfg,
     artifact,
     goalNames,
     settings
   ) {
+    /** @type {Record<string, unknown>} */
     const usefulSettings = {};
 
     for (
@@ -992,7 +1297,7 @@ var EnchantEngine = (function () {
       if (key === 'artifacts') continue;
 
       usefulSettings[key] =
-        settings[key];
+        /** @type {Record<string, unknown>} */ (settings)[key];
     }
 
     return JSON.stringify([
@@ -1007,6 +1312,10 @@ var EnchantEngine = (function () {
     ]);
   }
 
+  /**
+   * @param {EnchantDistributionResult} result
+   * @returns {EnchantDistributionResult}
+   */
   function cloneDistributionResult(result) {
     const copy =
       Object.assign(
@@ -1030,13 +1339,22 @@ var EnchantEngine = (function () {
     return copy;
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact} artifact
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantDistributionResult}
+   */
   function distributionForUncached(data, cfg, artifact, goalNames, options) {
     const settings = options || {};
     const pool = eligiblePool(data, cfg, artifact);
     const present = new Map(pool.map(mod => [mod.name, mod]));
     // A goal is one name, or a family standing for several — see membersOf.
-    const goalMods = goalNames.map(name =>
-      membersOf(data, name).map(member => present.get(member)).filter(Boolean));
+    /** Boolean removes the undefined results of missing Map entries. */
+    const goalMods = /** @type {Enchantment[][]} */ (goalNames.map(name =>
+      membersOf(data, name).map(member => present.get(member)).filter(Boolean)));
     const size = 1 << goalNames.length;
     // A goal none of whose members is in the pool can never be rolled.
     if (goalMods.some(set => !set.length)) {
@@ -1062,6 +1380,14 @@ var EnchantEngine = (function () {
     }
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact} artifact
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantDistributionResult}
+   */
   function distributionFor(
     data,
     cfg,
@@ -1119,7 +1445,8 @@ var EnchantEngine = (function () {
       > DISTRIBUTION_CACHE_MAX
     ) {
       cache.delete(
-        cache.keys().next().value
+        /** The size guard guarantees a first key exists. */
+        /** @type {string} */ (cache.keys().next().value)
       );
     }
 
@@ -1127,6 +1454,14 @@ var EnchantEngine = (function () {
   }
 
   // Probability (in percent) that at least one of `goalNames` is rolled.
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact} artifact
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantOdds}
+   */
   function oddsAny(data, cfg, artifact, goalNames, options) {
     const result = distributionFor(data, cfg, artifact, goalNames, options);
     let odds = 0;
@@ -1135,6 +1470,14 @@ var EnchantEngine = (function () {
   }
 
   // Probability (in percent) that every one of `goalNames` is rolled together.
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPoolConfig} cfg
+   * @param {EnchantArtifact} artifact
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantOdds}
+   */
   function oddsAll(data, cfg, artifact, goalNames, options) {
     const result = distributionFor(data, cfg, artifact, goalNames, options);
     const full = result.distribution.length - 1;
@@ -1152,6 +1495,10 @@ var EnchantEngine = (function () {
  * TIER1,TIER2 x0 and TIER3 x4.25; most artifacts say nothing and leave all
  * four at 1.
  */
+  /**
+   * @param {EnchantArtifact} artifact
+   * @returns {number[] | null}
+   */
   function tierRules(artifact) {
     let perTier = null;
     for (const rule of artifact.rules) {
@@ -1159,7 +1506,8 @@ var EnchantEngine = (function () {
         const match = /^TIER([1-4])$/.exec(key);
         if (!match) continue;
         if (!perTier) perTier = [1, 1, 1, 1];
-        perTier[Number(match[1]) - 1] = rule.multiplier;
+        /** Client TIER rules are multipliers, never increments. */
+        perTier[Number(match[1]) - 1] = /** @type {number} */ (rule.multiplier);
       }
     }
     return perTier;                       // null when the artifact says nothing
@@ -1174,6 +1522,11 @@ var EnchantEngine = (function () {
    * is the entire reason that card is the one you use to hunt a unique. Left
    * out of the denominator, every tiered competitor kept its full weight and
    * the card looked far weaker than it is.
+   */
+  /**
+   * @param {EnchantMod | null | undefined} mod
+   * @param {EnchantArtifact} artifact
+   * @returns {number}
    */
   function tierMass(mod, artifact) {
     if (!mod || !mod.tags.has('TIERED') || !mod.distribution.length) return 1;
@@ -1209,6 +1562,12 @@ var EnchantEngine = (function () {
    * longer restore, so the totals drifted. Reading the multipliers off the
    * artifact settles both.
    */
+  /**
+   * @param {EnchantMod | null | undefined} mod
+   * @param {EnchantArtifact} artifact
+   * @param {Set<number> | number[] | null} [tiers]
+   * @returns {number}
+   */
   function tierMultiplier(mod, artifact, tiers) {
     if (!mod || !mod.tags.has('TIERED')) return 1;
     const distribution = mod.distribution;
@@ -1234,6 +1593,10 @@ var EnchantEngine = (function () {
   const BASE_COSTS = [0, 50, 65, 80, 100];
 
   // Cost of one reroll of every unlocked slot. Each locked slot doubles it.
+  /**
+   * @param {EnchantSlotCounts} cfg
+   * @returns {number}
+   */
   function rerollCost(cfg) { return BASE_COSTS[cfg.slots] * Math.pow(2, lockCount(cfg)); }
 
   // A reroll has a 50 % chance of consuming the artifact rather than a certain
@@ -1245,6 +1608,13 @@ var EnchantEngine = (function () {
    * Expected totals for "reroll until the target appears".
    * Rerolls follow a geometric law, so the mean number of attempts is 1/p and
    * every per-attempt cost is simply multiplied by it.
+   */
+  /**
+   * @param {EnchantSlotCounts} cfg
+   * @param {number} oddsPercent
+   * @param {Pick<EnchantArtifact, "cost" | "consumeProb">} artifact
+   * @param {string} dustType
+   * @returns {EnchantCost}
    */
   function costFor(cfg, oddsPercent, artifact, dustType) {
     if (!(oddsPercent > 0)) {
@@ -1275,6 +1645,13 @@ var EnchantEngine = (function () {
   }
 
   // One table row: odds for the primary target with this artifact, plus cost.
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantConfig} cfg
+   * @param {EnchantArtifact} artifact
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantEvaluation | null}
+   */
   function evaluate(data, cfg, artifact, options) {
     const settings = options || {};
     const target = data.byName.get(cfg.desired);
@@ -1284,8 +1661,15 @@ var EnchantEngine = (function () {
     return Object.assign({ artifact, odds, rawOdds: raw.odds, exact: raw.exact, samples: raw.samples }, costFor(cfg, odds, artifact, cfg.dust));
   }
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantConfig} cfg
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantEvaluation[]}
+   */
   function evaluateAll(data, cfg, options) {
-    return data.artifacts.map(artifact => evaluate(data, cfg, artifact, options)).filter(Boolean);
+    /** Boolean removes the null results of unknown desired enchantments. */
+    return /** @type {EnchantEvaluation[]} */ (data.artifacts.map(artifact => evaluate(data, cfg, artifact, options)).filter(Boolean));
   }
 
   /* ------------------------------------------------------------------ *
@@ -1323,6 +1707,13 @@ var EnchantEngine = (function () {
    * charging for the wait until the thing turns up — which the comparator that
    * used to live here did not do, so it is gone rather than misleading.
    */
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPlanConfig} cfg
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {Generator<void, EnchantPlan, void>}
+   */
   function* planGoalsSteps(data, cfg, goalNames, options) {
     const settings = options || {};
     const planSettings = Object.assign({}, settings, { acceptedTiers: cfg.tiers });
@@ -1333,13 +1724,18 @@ var EnchantEngine = (function () {
     if (lockCount(cfg) + count > cfg.slots) return { feasible: false, reason: 'slots' };
 
     const artifacts = settings.artifacts || data.artifacts;
+    /** @type {number[]} */
     const value = new Array(states).fill(Infinity);       // expected dust from this state on
+    /** @type {number[]} */
     const rerollValue = new Array(states).fill(Infinity); // expected rerolls from this state on
+    /** @type {(EnchantPlanChoice | null)[]} */
     const choice = new Array(states).fill(null);
     value[states - 1] = 0;
     rerollValue[states - 1] = 0;
 
+    /** @param {number} mask @returns {number} */
     const popcount = mask => { let bits = 0; while (mask) { mask &= mask - 1; bits++; } return bits; };
+    /** @param {number} mask @returns {string[]} */
     const names = mask => goals.filter((_, index) => mask & (1 << index));
     let exact = true;
 
@@ -1354,6 +1750,7 @@ var EnchantEngine = (function () {
 
         const perReroll = rerollCost(stateCfg);
         const lockMultiplier = Math.pow(2, lockCount(stateCfg));
+        /** @type {EnchantPlanChoice | null} */
         let best = null;
 
         for (const artifact of artifacts) {
@@ -1387,7 +1784,7 @@ var EnchantEngine = (function () {
           // Accepting the k cheapest outcomes and rerolling on everything else
           // is optimal for some k; try them all and keep the best.
           outcomes.sort((a, b) => a.value - b.value);
-          let chance = 0, dustAcc = 0, rerollAcc = 0, bestForArtifact = null;
+          let chance = 0, dustAcc = 0, rerollAcc = 0, bestForArtifact = /** @type {EnchantOutcomePolicy | null} */ (null);
           for (let k = 0; k < outcomes.length; k++) {
             chance += outcomes[k].probability;
             dustAcc += outcomes[k].probability * outcomes[k].value;
@@ -1411,13 +1808,16 @@ var EnchantEngine = (function () {
     if (!Number.isFinite(value[0])) return { feasible: false, reason: 'impossible' };
 
     // Most likely progression, for display.
+    /** @type {EnchantPathStep[]} */
     const path = [];
     let mask = 0;
+    /** @type {Set<number>} */
     const guard = new Set();
     while (mask !== states - 1 && choice[mask] && !guard.has(mask)) {
       guard.add(mask);
-      const step = choice[mask];
-      const likely = step.accepted.reduce((bestOutcome, outcome) => !bestOutcome || outcome.probability > bestOutcome.probability ? outcome : bestOutcome, null);
+      /** The loop guard checked this state's choice. */
+      const step = /** @type {EnchantPlanChoice} */ (choice[mask]);
+      const likely = step.accepted.reduce((bestOutcome, outcome) => !bestOutcome || outcome.probability > bestOutcome.probability ? outcome : bestOutcome, /** @type {EnchantOutcome | null} */ (null));
       // Outcomes the optimal policy deliberately declines to lock in full.
       const throwsBack = step.accepted.some(outcome => {
         let all = mask;
@@ -1437,6 +1837,7 @@ var EnchantEngine = (function () {
       // An accepted outcome may still lock only part of what rolled; a rejected
       // outcome means throw the whole result back and reroll.
       const lockedNow = names(mask);
+      /** @param {EnchantOutcome} outcome @param {boolean} accepted @returns {EnchantDecision} */
       const decisionFor = (outcome, accepted) => {
         const rolled = [];
         for (let bit = 0; bit < step.pending.length; bit++) {
@@ -1496,7 +1897,8 @@ var EnchantEngine = (function () {
         hunt: { value: hunt, enumerable: false }
       });
 
-      path.push(pathStep);
+      /** defineProperties installed the non-enumerable decisions and hunt. */
+      path.push(/** @type {EnchantPathStep} */ (pathStep));
       mask = likely ? likely.next : states - 1;
     }
 
@@ -1512,6 +1914,13 @@ var EnchantEngine = (function () {
    * Tests, Node consumers and callers that need an immediate answer keep the
    * exact historical API. The generator only introduces safe pause points;
    * driving every step immediately reproduces the old synchronous algorithm.
+   */
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPlanConfig} cfg
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantPlan}
    */
   function planGoals(data, cfg, goalNames, options) {
     const steps =
@@ -1542,6 +1951,13 @@ var EnchantEngine = (function () {
    *
    * `cancelled` lets a newer calculator generation stop obsolete work as soon
    * as the browser gets control back.
+   */
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPlanConfig} cfg
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {Promise<EnchantPlan>}
    */
   async function planGoalsAsync(data, cfg, goalNames, options) {
     const settings =
@@ -1596,9 +2012,17 @@ var EnchantEngine = (function () {
   }
 
 
+  /**
+   * @param {EnchantDataset} data
+   * @param {EnchantPlanConfig} cfg
+   * @param {string[]} goalNames
+   * @param {EnchantOptions} [options]
+   * @returns {EnchantSimultaneousPlan | null}
+   */
   function planSimultaneous(data, cfg, goalNames, options) {
     const settings = Object.assign({}, options || {}, { acceptedTiers: cfg.tiers });
     const artifacts = settings.artifacts || data.artifacts;
+    /** @type {EnchantSimultaneousPlan | null} */
     let best = null;
     for (const artifact of artifacts) {
       const result = oddsAll(data, cfg, artifact, goalNames, settings);

@@ -11,6 +11,7 @@
     "types": []
   },
   "include": [
+    "web/engine.js",
     "web/progression.js",
     "web/progression-module.d.ts"
   ]
