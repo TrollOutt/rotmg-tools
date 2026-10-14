@@ -122,6 +122,9 @@ function abilityOf(body, objects) {
 
 function effectsOf(body, objects, nameOfType, count) {
   const out = {};
+  // Shots that turn as they fly (a circling turn or a turn rate) do not keep the line they leave on, so where they were
+  // aimed says little about whether they land.
+  if (/<(CircleTurnAngle|TurnRate)>\s*-?[1-9]/.test(body)) out.curves = true;
   const ability = abilityOf(body, objects);
   if (ability.length) out.ability = ability;
   // A star the Ninja holds and lets go: it costs magic by the second while held and a lump when thrown.

@@ -1195,7 +1195,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     // Out of reach of the target, the weapon's own shot does nothing.
     const near = reaches(shot.reach === undefined ? undefined : shot.reach * by.life * by.fast, gap);
-    const perShot = (near ? each * fanHits(many, item.fan, false, gap) : 0) + along;
+    const perShot = (near ? each * ((gearOf(item.name) || {}).curves ? many : fanHits(many, item.fan, false, gap)) : 0) + along;
     const dps = cycle
       ? perShot * cycle.shots / cycle.every
       : perShot * rate;
@@ -1281,7 +1281,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     const each = bolts && reaches(shot.reach, gap) ? landed(roll, 25, def, shot.pierce, fx) : 0;
     const thrown = Math.max(1, Math.round((cast.shots || item.many || 1) + over * (cast.more || 0)));
     // Of the bolts it throws, the ones that touch the target (a round spray, as the fight draws it, from eight up).
-    const many = Math.max(thrown > 0 ? 0 : 1, fanHits(thrown, item.fan, thrown >= 8, gap));
+    const many = (gearOf(item.name) || {}).curves ? thrown : fanHits(thrown, item.fan, thrown >= 8, gap);
     /*
      * How often it can really be used, which is two limits and not one.
      *
@@ -4145,16 +4145,21 @@ const TINT = {
        * the target's radius, and it flies far enough, it lands and is gone there. Otherwise it goes on past.
        */
       const turned = Math.abs(((one.angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
-      const lands = turned < Math.PI / 2
-        && (!(stand.d > 0) || stand.d * Math.tan(turned) <= stand.radius)
-        && reaches(one.reach, stand);
-      const travel = lands ? Math.min(one.reach, Math.max(0.6, stand.gap / Math.max(0.2, Math.cos(turned)))) : one.reach;
+      // On the target every shot lands, and one that turns as it flies comes round to it: both are drawn straight at it.
+      const curves = Boolean(item && (gearOf(item.name) || {}).curves);
+      const lands = reaches(one.reach, stand)
+        && (!(stand.d > 0) || curves || (turned < Math.PI / 2 && stand.d * Math.tan(turned) <= stand.radius));
+      if (lands && (!(stand.d > 0) || curves)) { one.angle = 0; one.reach = Math.max(one.reach, stand.gap); }
+      const aimed = lands && (!(stand.d > 0) || curves) ? 0 : turned;
+      const travel = lands ? Math.min(one.reach, Math.max(0.6, stand.gap / Math.max(0.2, Math.cos(aimed)))) : one.reach;
+      // A shot that lands on a target it stands next to would be gone in a few frames; it is slowed to be seen arriving.
+      const lasts = Math.max(lands ? 0.14 : 0.05, travel / one.fast);
       duel.shots.push({
         age: 0,
-        lasts: Math.max(0.05, travel / one.fast),
+        lasts,
         angle: one.angle,
         hit: lands,
-        fast: one.fast,
+        fast: lands ? travel / lasts : one.fast,
         hurt: rate.each,
         mine, bolt,
         spin: bolt && bolt.spin ? bolt.spin : 0,
