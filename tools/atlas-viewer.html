@@ -7731,6 +7731,16 @@ addEventListener('keydown', event => {
    * A standalone Atlas has no parent counter, so it keeps its own.
    */
   if (bare) return;
+  /*
+   * Only the published site is counted. A copy on localhost, a preview
+   * address, or a file opened from disk is somebody working on the page, not
+   * somebody who came, and would otherwise add to the real tally. Those pages
+   * never ask Abacus anything, so the line stays hidden there.
+   */
+  const published = location.protocol === 'https:'
+    && location.hostname === 'trolloutt.github.io'
+    && location.pathname.startsWith('/rotmg-tools/');
+  if (!published) return;
   const ABACUS = 'https://abacus.jasoncameron.dev/rotmg-realm-atlas/';
   const put = (into, n) => {
     const cell = document.getElementById(into);

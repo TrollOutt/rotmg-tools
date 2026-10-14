@@ -5791,6 +5791,17 @@ const appLoading = load();
  * stops marking, and drops out of the count within the minute.
  * ------------------------------------------------------------------ */
 (function countVisitors() {
+  /*
+   * Only the published site is counted. A copy on localhost, a preview
+   * address, or the downloaded file opened from disk is somebody working on
+   * the page or keeping it, not somebody who came, and every one of them
+   * would otherwise add to the real tally. Those pages never ask Abacus
+   * anything, so the line stays hidden there.
+   */
+  const published = location.protocol === 'https:'
+    && location.hostname === 'trolloutt.github.io'
+    && location.pathname.startsWith('/rotmg-tools/');
+  if (!published) return;
   const ABACUS = 'https://abacus.jasoncameron.dev/rotmg-realm-atlas/';
   const put = (into, n) => {
     const cell = document.getElementById(into);
