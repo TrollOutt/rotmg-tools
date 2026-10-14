@@ -1020,7 +1020,26 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     };
   }
 
-  function weaponRate(item, stats, def, scale, extra, fx) {
+  /*
+   * Where the fighter stands.
+   *
+   * Melee is on top of the target. Mid range is three to six tiles away and long range six to nine, taken at the
+   * middle of the band: 4.5 and 7.5. A shot lands if it flies far enough to reach the target's edge, which is its
+   * size away from its middle (tools/build-gear-effects.js reads the size off the client); one that falls short
+   * does nothing. What the shot does on the way is not part of the figure.
+   */
+  const RANGES = [['melee', 'Melee', 0], ['mid', 'Mid range', 4.5], ['long', 'Long range', 7.5]];
+  const RANGE_SAYS = { melee: 'on the target', mid: '3 to 6 tiles away', long: '6 to 9 tiles away' };
+  function gapOf(state) {
+    const at = (RANGES.find(one => one[0] === (state.range || 'melee')) || RANGES[0])[2];
+    if (!at) return 0;
+    const boss = data.byBoss[state.boss];
+    const size = (boss && gearInfo && gearInfo.targets && gearInfo.targets[boss.name]);
+    return Math.max(0, at - Math.max(0.3, size === undefined ? 0.5 : size));
+  }
+  // A shot that flies this far reaches a target this far off (a shot whose reach the client does not give is not held back).
+  const reaches = (reach, gap) => !(gap > 0) || reach === undefined || reach >= gap;
+  function weaponRate(item, stats, def, scale, extra, fx, gap) {
     if (!item || !item.shots || !item.shots.length) return { each: 0, rate: 0, dps: 0 };
     const by = scale || { dmg: 1, rate: 1, life: 1, fast: 1 };
     // Berserk, when it is up: the weapon fires that much faster.
@@ -1049,6 +1068,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       let fast = 0;
 
       for (const shot of channels) {
+        if (!reaches(shot.reach === undefined ? undefined : shot.reach * by.life * by.fast, gap)) continue;
         const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
           * by.dmg;
         const each = landed(roll, stats.att, def, shot.pierce, fx);
@@ -1088,6 +1108,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       for (const one of (extra || [])) {
         if (one.how !== 'add') continue;
         const its = one.shots[0];
+        if (!reaches(its.reach === undefined ? undefined : its.reach * by.life * by.fast, gap)) continue;
         const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2
           * by.dmg;
         along += landed(mid, stats.att, def, its.pierce, fx) * (one.many || 1);
@@ -1147,10 +1168,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const one of (extra || [])) {
       if (one.how !== 'add') continue;
       const its = one.shots[0];
+      if (!reaches(its.reach === undefined ? undefined : its.reach * by.life * by.fast, gap)) continue;
       const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2 * by.dmg;
       along += landed(mid, stats.att, def, its.pierce, fx) * (one.many || 1);
     }
-    const perShot = each * many + along;
+    // Out of reach of the target, the weapon's own shot does nothing.
+    const near = reaches(shot.reach === undefined ? undefined : shot.reach * by.life * by.fast, gap);
+    const perShot = (near ? each * many : 0) + along;
     const dps = cycle
       ? perShot * cycle.shots / cycle.every
       : perShot * rate;
@@ -1168,12 +1192,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * enemy, a nova's explosions each. Poison and the shockblast ignore defense, as the client says they do.
    */
   const COUNTED = new Set(['lightning', 'shockblast', 'trap', 'bomb', 'impact', 'poison', 'nova', 'blast', 'hex']);
-  function abilityHits(item, stats, def, fx, stacks) {
+  function abilityHits(item, stats, def, fx, stacks, gap) {
     const one = gearOf(item && item.name), parts = (one && one.ability) || [];
     const list = [];
     let total = 0;
     for (const part of parts) {
       if (!COUNTED.has(part.kind) || part.meter) continue;       // summons and meters are the server's to pace
+      // A nova or a blast goes off around the caster: a target farther off than its radius is not touched.
+      if ((part.kind === 'nova' || part.kind === 'blast') && !reaches(part.radius, gap)) continue;
       const over = part.per ? Math.max(0, (stats[OF_STAT[part.by]] || 0) - part.from) : 0;
       // A Hex blast is its base and a little for each Hex the shots have piled on the enemy by then (at most a hundred).
       const heaped = part.kind === 'hex' ? Math.min(100, stacks || 0) : 0;
@@ -1185,7 +1211,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     // And the bolts it releases when it goes off, which are its own (Wandering Souls Spell throws six): same arithmetic as its first.
     for (const proc of (one && one.procs) || []) {
-      if (proc.on !== 'ability' || proc.kind !== 'bullets') continue;
+      if (proc.on !== 'ability' || proc.kind !== 'bullets' || !reaches(proc.reach, gap)) continue;
       const over = proc.per ? Math.max(0, (stats[OF_STAT[proc.by]] || 0) - proc.from) * proc.per : 0;
       const dealt = landed((proc.low + proc.high) / 2 + over, 25, def, proc.pierce, fx) * proc.shots * (proc.proc || 1);
       list.push({ kind: 'bolts', each: dealt / proc.shots, count: proc.shots, dealt });
@@ -1213,11 +1239,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * And how often is not a choice: it is what the magic pays for, at the rate
    * wisdom brings the magic back.
    */
-  function abilityRate(item, stats, def, fx, mana, cost, struck) {
+  function abilityRate(item, stats, def, fx, mana, cost, struck, gap) {
     // `struck`: shots of the weapon that land in a second; Hex piles up one for each between two casts.
     const mpOf = it => (it && (it.mp || ((gearOf(it.name) || {}).thrown || {}).end)) || 0;
     const wait = mpOf(item) ? Math.max(mpOf(item) * (cost || 1) / (mana || MANA_AT(stats.wis)), item.cool || 0, CAST_LEAST) : 0;
-    const hits = abilityHits(item, stats, def, fx, (struck || 0) * wait);
+    const hits = abilityHits(item, stats, def, fx, (struck || 0) * wait, gap);
     const bolts = item && item.shots && item.shots.length;
     if (!item || !mpOf(item) || (!bolts && !hits.total)) {
       return { each: 0, every: 0, dps: 0 };
@@ -1231,7 +1257,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     // "Attack does not affect ability damage" (RealmEye, Character Stats): the attacker's attack multiplies a
     // weapon's shot and nothing else, so an ability's bolt is raised by what its own line says (the stat it
     // scales with, above) and by nothing more. Attack 25 is the multiplier of one.
-    const each = bolts ? landed(roll, 25, def, shot.pierce, fx) : 0;
+    const each = bolts && reaches(shot.reach, gap) ? landed(roll, 25, def, shot.pierce, fx) : 0;
     const many = Math.max(1, Math.round((cast.shots || item.many || 1)
       + over * (cast.more || 0)));
     /*
@@ -1284,6 +1310,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     try {
       const parsed = JSON.parse(raw), info = new Map(Object.entries(parsed.items || {}));
       info.enchants = parsed.enchants || {};
+      info.targets = parsed.targets || {};
       return info;
     } catch (err) { return null; }
   }
@@ -1340,7 +1367,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     for (const status of needs.status || []) if (status !== 'In Combat') share *= SELF_BUFFS.includes(status) ? Math.min(1, (up && up[status]) || 0) : 0;
     return share;
   }
-  function specialsOf(state, stats, def, shots, up, casts) {
+  function specialsOf(state, stats, def, shots, up, casts, gap) {
     const list = [];
     let low = 0, high = 0;
     const by = {};
@@ -1351,6 +1378,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       for (const proc of (one && one.procs) || []) {
         // The ability's own bolts, which the ability figure already counts, are not extras.
         if (hand === 'ability' && proc.on === 'ability') continue;
+        if (proc.kind === 'bullets' && !reaches(proc.reach, gap)) continue;
         const share = procOn(proc, wornNames, up);
         if (!(share > 0)) continue;
         const rate = proc.on === 'ability' ? casts : shots;
@@ -1472,12 +1500,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     const effects = effectsFor(state, fought.now, regen.mp.combat, cost);
     const fx = fxOf(effects);
+    const gap = gapOf(state);
     const gun = using === 'spell' ? NONE
-      : weaponRate(weapon, fought.now, def, scale, subOf(state), fx);
+      : weaponRate(weapon, fought.now, def, scale, subOf(state), fx, gap);
     // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
-    const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost, gun.each > 0 ? gun.dps / gun.each : 0);
+    const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost, gun.each > 0 ? gun.dps / gun.each : 0, gap);
     const bleed = effects ? effects.bleed : 0;
-    const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up, spell.every > 0 ? 1 / spell.every : 0);
+    const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up, spell.every > 0 ? 1 / spell.every : 0, gap);
     // Where the damage a second comes from: each worn piece's own shots and what they set off, and all of it together.
     const piece = (hand, base) => ({ low: base + ((special.by[hand] || {}).low || 0), high: base + ((special.by[hand] || {}).high || 0) });
     const parts = { weapon: piece('weapon', gun.dps + bleed), ability: piece('ability', spell.dps), armor: piece('armor', 0), ring: piece('ring', 0) };
@@ -4946,6 +4975,9 @@ const TINT = {
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
     }
+    for (const node of el('tcGoals').querySelectorAll('[data-range]')) {
+      node.classList.toggle('is-on', node.dataset.range === (build.range || 'melee'));
+    }
     for (const node of el('tcGoals').querySelectorAll('[data-damage]')) {
       node.classList.toggle('is-on', node.dataset.damage === (build.damage || 'weapon'));
     }
@@ -5207,6 +5239,8 @@ const TINT = {
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
         + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
       + '</span></div>').join('')
+      + '<div class="tc-goal-row"><i>Distance</i><span>' + RANGES.map(([id, say]) =>
+        '<button type="button" class="tc-goal" data-range="' + id + '" title="' + RANGE_SAYS[id] + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>'
       + '<div class="tc-goal-row"><i>Damage counts</i><span>' + DAMAGES.map(([id, say]) =>
         '<button type="button" class="tc-goal" data-damage="' + id + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>';
   }
@@ -5300,6 +5334,8 @@ const TINT = {
     });
 
     el('tcGoals').addEventListener('click', event => {
+      const range = event.target.closest('[data-range]');
+      if (range) { build.range = range.dataset.range; keep(); paint(); return; }
       const damage = event.target.closest('[data-damage]');
       if (damage) { build.damage = damage.dataset.damage; keep(); paint(); return; }
       const pick = event.target.closest('[data-goal]');

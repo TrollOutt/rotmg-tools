@@ -70,6 +70,7 @@ near(t.weaponRate({ shots: [{ low: 1000, high: 1000 }], rate: 1 }, { att: 96, de
 const gear = JSON.parse(read('web/assets/index/gear-effects.json'));
 const info = new Map(Object.entries(gear.items));
 info.enchants = gear.enchants;
+info.targets = gear.targets;
 t.setGearInfo(info);
 // What the client states, for the items the audit looked at by hand.
 assert.deepEqual(gear.items.Valor.combat, { ATT: -10 });
@@ -199,6 +200,33 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
   near(at(75, 42).each, 22.5, 1e-9, 'no scaling at the floor of the stat');
 }
 
+/* ---------------- how far the fighter stands ---------------- */
+{
+  // Ferryman's Scythe throws eight shots that fly 6.1, 4.4, 2.6, 0.9 tiles and so on: the further the target, the fewer reach it.
+  const scythe = raw.items.find(i => i.name === "Ferryman's Scythe");
+  const stats = { att: 75, dex: 75 };
+  const at = gap => t.weaponRate(scythe, stats, 0, null, null, null, gap).dps;
+  const by = gap => scythe.shots.filter(x => x.subattack && (!(gap > 0) || x.reach >= gap))
+    .reduce((all, x) => all + t.landed((x.low + x.high) / 2, 75, 0) * (x.many || 1) * (1.5 + 6.5) * x.rate, 0);
+  near(at(0), by(0), 1e-6, 'every shot reaches a target that is touched');
+  near(at(3), by(3), 1e-6, 'only the shots that fly three tiles reach one that far');
+  near(at(6.1), by(6.1), 1e-6, 'the longest shots just reach 6.1 tiles');
+  assert.equal(at(8), 0, 'nothing reaches a target eight tiles off');
+  assert(at(0) > at(3) && at(3) > at(6.1), 'the further, the less');
+  // The size of the target counts: its edge is closer than its middle.
+  // And the page's own choice: a short sword does nothing from long range, and a bit more of the target is reached from mid range.
+  {
+    const state = t.fresh('Warrior');
+    state.boss = 'Marble Colossus';
+    t.use(state);
+    const dps = range => { state.range = range; return t.numbersFor(state, 0).total; };
+    assert(dps('melee') > 0, 'a Warrior hits a target he stands on');
+    assert.equal(dps('long'), 0, "a short sword does not reach 6 to 9 tiles away");
+    assert(dps('mid') <= dps('melee'), 'mid range is never better than melee');
+  }
+  const colossus = gear.targets['Marble Colossus'];
+  near(colossus, 0.5 * 1.4 * 2, 1e-9, 'Size 140 with a hitbox of scale 2 is 1.4 tiles from the middle');
+}
 /* ---------------- abilities that are not bolts, as RealmEye words them ---------------- */
 {
   const cast = (name, wis, def = 0) => t.abilityRate(raw.items.find(i => i.name === name), { att: 75, wis }, def, null, 100).hits;

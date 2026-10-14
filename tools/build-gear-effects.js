@@ -100,7 +100,7 @@ function abilityOf(body, objects) {
       if (impact) part('impact', impact, impact, grow0 / 10);
       part('poison', total - impact, total - impact, (grow - grow0) / 10, { pierce: true, duration: num(a.duration, 0) });
     } else if (kind === 'DamageNova' && Number(a.maxDamage) > 0) {
-      part('nova', num(a.minDamage, 0), Number(a.maxDamage), num(a.statModDamage, 0), { count: num(a.activationCount, 1) });
+      part('nova', num(a.minDamage, 0), Number(a.maxDamage), num(a.statModDamage, 0), { count: num(a.activationCount, 1), radius: num(a.radius, 0) });
     } else if (kind === 'RaiseDead' && a.undeadId) {
       const shot = shotOfObject(objects, a.undeadId);
       if (shot) part('raise', shot.low, shot.high, num(a.statModDamage, 0), { count: num(a.numDead, 1), ...(shot.pierce ? { pierce: true } : {}), ...(shot.leech ? { leech: shot.leech } : {}) });
@@ -222,8 +222,18 @@ function main() {
       if (cost && Number(cost[1]) > 0) enchants[m[1]] = { mp: Number(cost[1]) };
     }
   }
+  // How big each thing worth fighting is, as the distance from its middle to where a shot lands: half its size in tiles
+  // (<Size>100</Size> is one tile across), grown by the scale of its custom hitbox where it has one. Shots that
+  // fall short of a target are judged against its edge, not its middle.
+  const targets = {};
+  for (const boss of require('./index-model').project(index).bosses) {
+    const body = objects.byId.get(boss.id);
+    if (!body) continue;
+    const size = num(client.tag(body, 'Size'), 100), hit = /<CustomHitbox\b[^>]*\bscale="([\d.]+)"/.exec(body);
+    targets[boss.name] = +(0.5 * (size > 0 ? size : 100) / 100 * (hit ? Number(hit[1]) : 1)).toFixed(3);
+  }
   const sorted = Object.fromEntries(Object.entries(items).sort((a, b) => a[0].localeCompare(b[0])));
-  const out = { built: index.built, from: index.from, tool: 'tools/build-gear-effects.js', enchants, items: sorted };
+  const out = { built: index.built, from: index.from, tool: 'tools/build-gear-effects.js', enchants, targets, items: sorted };
   fs.writeFileSync(OUT, JSON.stringify(out) + '\n');
   const sum = key => Object.values(sorted).filter(x => x[key]).length;
   const procs = Object.values(sorted).flatMap(x => x.procs || []);
