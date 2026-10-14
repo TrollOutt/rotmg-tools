@@ -31,6 +31,7 @@ const deployCritical = [
   'theory-optimization.test.js',
   'theory.test.js',
   'ui-cache.test.js',
+  'visit-counter.test.js',
   'whats-new.test.js'
 ];
 
