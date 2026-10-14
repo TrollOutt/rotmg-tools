@@ -12,10 +12,11 @@ function bundle(file) {
   return { html, data: JSON.parse(match[1]) };
 }
 const served = bundle('docs/index.html'), offline = bundle('docs/Realm-Tools.html');
-for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText']) {
+for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText', 'clientForgeText']) {
   assert(!served.data.sources[name], name + ' must not increase calculator startup');
   assert(offline.data.sources[name], name + ' missing from the downloadable copy');
 }
+assert.equal(offline.data.sources.clientForgeText.trim(), read('web/assets/index/client-forge.json').trim());
 for (const version of [served, offline]) {
   assert(version.html.includes('var BuildProgression'), 'Progression code missing');
 }

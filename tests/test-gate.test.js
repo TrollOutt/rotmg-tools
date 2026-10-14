@@ -16,6 +16,7 @@ const deployCritical = [
   'i18n.test.js',
   'index-extras.test.js',
   'fiches-community.test.js',
+  'fiches-forge.test.js',
   'index-quality.test.js',
   'index-sheet.test.js',
   'progression.test.js',

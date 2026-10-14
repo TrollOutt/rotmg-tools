@@ -160,6 +160,9 @@ const sources = {
   wikiText: readText('Index', 'wiki.json'),
   statusText: fs.existsSync(path.join(web, 'assets', 'index', 'status-effects.json'))
     ? fs.readFileSync(path.join(web, 'assets', 'index', 'status-effects.json'), 'utf8') : '',
+  // Only the downloadable copy carries the client forge data for Index cards.
+  clientForgeText: fs.existsSync(path.join(web, 'assets', 'index', 'client-forge.json'))
+    ? fs.readFileSync(path.join(web, 'assets', 'index', 'client-forge.json'), 'utf8') : '',
   realmeyeEnrichmentText: fs.existsSync(path.join(dataRoot, 'Index', 'realmeye-enrichment.json'))
     ? readText('Index', 'realmeye-enrichment.json') : '',
   // Compact, existing Atlas evidence for biome populations and tiered loot.
@@ -572,6 +575,7 @@ delete served.indexText;
 delete served.wikiText;
 delete served.statusText;
 delete served.realmeyeEnrichmentText;
+delete served.clientForgeText;
 // The refreshed bench catalogue is paid for when the bench is opened.
 // The downloadable copy still embeds it, together with its sheet.
 delete served.theoryText;

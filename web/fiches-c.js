@@ -43,9 +43,17 @@
   }
 
   /* Ce que le client déclare et que l'Index ne porte pas encore : forge, feed power, XP, poussière. */
-  let clientExtra = {};
-  fetch('assets/index/client-forge.json').then(r => r.json())
+  const keptForge = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.clientForgeText;
+  let clientExtra = keptForge ? null : {};
+  if (keptForge) Promise.resolve().finally(settled);
+  else fetch('assets/index/client-forge.json').then(r => r.json())
     .then(j => { clientExtra = j || {}; }).catch(() => {}).finally(settled);
+  function forgeExtra() {
+    if (clientExtra === null && keptForge) {
+      try { clientExtra = JSON.parse(keptForge) || {}; } catch (err) { clientExtra = {}; }
+    }
+    return clientExtra;
+  }
   const index = () => window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index;
   function recs() {
     const s = index();
@@ -513,7 +521,7 @@
 
   function ecoForge(r, com) {
     /* L'économie de l'objet, telle que le client la déclare. */
-    const cx = clientExtra[r.clientId || r.name] || {};
+    const cx = forgeExtra()[r.clientId || r.name] || {};
     const f = com.facts;
     const eco = [];
     /* Le bonus d'XP va avec les stats équipées quand il y en a ; sinon il rejoint l'économie plutôt que d'occuper un bloc seul. */
@@ -563,11 +571,11 @@
           /* Ce que la Forge accepte : le label demandé, aucun label caché, et un objet que le client dit démontable. */
           const pool = [...recs().values()].filter(o => isGear(o) && !o.twin && !o.folded
             && (o.labels || []).includes(x.label) && !(fg.hide || []).some(h => (o.labels || []).includes(h))
-            && ((clientExtra[o.clientId || o.name] || {}).forge || {}).canDismantle);
+            && ((forgeExtra()[o.clientId || o.name] || {}).forge || {}).canDismantle);
           const shown = pool.slice(0, 8).map(o => '<button type="button" class="ix-jump" data-open="' + esc(o.id) + '" title="' + esc(o.said || o.name) + '">'
             + art(o, 14) + esc(o.said || o.name) + '</button>').join('');
           /* La famille se reconnaît à son icône : c'est celle que portent tous les objets qu'on peut sacrifier. */
-          const fams = new Set(pool.map(o => (clientExtra[o.clientId || o.name] || {}).family).filter(v => v !== undefined));
+          const fams = new Set(pool.map(o => (forgeExtra()[o.clientId || o.name] || {}).family).filter(v => v !== undefined));
           const fam = fams.size === 1 ? [...fams][0] : undefined;
           rows.push([fam !== undefined ? 'Sacrificing ' + x.amount + ' items of the family' : 'Sacrificing ' + x.amount + ' of',
             (fam !== undefined ? famIcon(fam, 'fc2-fam-inline') : '') + shown + (pool.length > 8 ? '<em>and ' + (pool.length - 8) + ' more</em>' : '')]);
@@ -598,7 +606,7 @@
       + 'px;background-position:' + (-(n % famSheet.cols) * 24) + 'px ' + (-Math.floor(n / famSheet.cols) * 24) + 'px"></span>';
   }
   const marks = (r, tier) => {
-    const fam = famIcon((clientExtra[r.clientId || r.name] || {}).family);
+    const fam = famIcon((forgeExtra()[r.clientId || r.name] || {}).family);
     /* Not yet in the game, by RealmEye's list: the tools leave it out, the card says so up front. */
     const out = r.availability === 'unreleased'
       ? '<span class="fc2-unreleased" title="Listed by RealmEye as unreleased: not yet obtainable, so no tool offers it">Unreleased</span>' : '';
@@ -670,7 +678,7 @@
       if (!items.length && com.facts.effect) items.push('<li>' + esc(com.facts.effect) + ' <em>· RealmEye</em></li>');
       parts.push(part('Effects', items.length ? '<ul class="ix-does">' + items.join('') + '</ul>' : ''));
       /* Un blueprint dit ce qu'il débloque : le gear, cliquable, avec son sprite. */
-      const unlocks = Object.entries(clientExtra).filter(([, v]) => (v.blueprints || []).includes(r.clientId)).map(([id]) => byClient(id)).filter(Boolean);
+      const unlocks = Object.entries(forgeExtra()).filter(([, v]) => (v.blueprints || []).includes(r.clientId)).map(([id]) => byClient(id)).filter(Boolean);
       if (unlocks.length) parts.push(part('Unlocks in the Forge', '<div class="fc2-chips">' + unlocks.map(g => '<button type="button" class="ix-jump" data-open="'
         + esc(g.id) + '">' + art(g, 14) + esc(g.said || g.name) + '</button>').join('') + '</div>'));
       const [community, forgePart] = ecoForge(r, com);
@@ -685,7 +693,7 @@
 
   /* Ce qui manque est dit, pas laissé en blanc ; la boîte ne s'affiche que quand il y a deux colonnes. */
   const emptyBox = (title, say) => '<div class="ix-block fc2-empty"><div class="ix-part"><h4>' + esc(title) + '</h4><p>' + esc(say) + '</p></div></div>';
-  const powerOf = (r, com) => { const cx = clientExtra[r.clientId || r.name] || {}; return cx.power !== undefined ? String(cx.power) : com.facts.power || ''; };
+  const powerOf = (r, com) => { const cx = forgeExtra()[r.clientId || r.name] || {}; return cx.power !== undefined ? String(cx.power) : com.facts.power || ''; };
   function sheet2(r, card, com) {
     const t = tierOf(r), tc = tierColor(r);
     const holds = rowByLabel(card.rows.links, /may hold/i);
@@ -750,7 +758,7 @@
     /* Une fois équipé : la grille du jeu, en puces du site. */
     const w = r.worn || {};
     const worn = STAT_ORDER.filter(k => w[k] !== undefined);
-    const xp = (clientExtra[r.clientId || r.name] || {}).xp;
+    const xp = (forgeExtra()[r.clientId || r.name] || {}).xp;
     const equip = part('On equip', worn.length ? (xp ? '<p class="fc2-xp">XP bonus <b>' + xp + ' %</b></p>' : '') + '<div class="fc2-chips fc2-stats">' + worn.map(k =>
       '<span class="ix-data-chip fc2-stat' + (w[k] < 0 ? ' is-cut' : '') + '" style="--tint:' + TINT[k] + '"><b>' + signed(w[k]) + '</b> ' + STAT_NAME[k] + '</span>').join('') + '</div>'
  : '');
@@ -809,7 +817,7 @@
     const wakes = take(card.rows.links, /^wakes$/i)[0];
     const pool = take(card.rows.links, /rolls from/i)[0];
     const encRows = [['Status', r.ench ? chip('Enchantable') + chip('4 slots') : chip('Not enchantable')]];
-    const cx = clientExtra[r.clientId || r.name] || {};
+    const cx = forgeExtra()[r.clientId || r.name] || {};
     const DUST = { redDust: 'red', purpleDust: 'purple', greenDust: 'green', blueDust: 'blue', yellowDust: 'yellow', orangeDust: 'orange' };
     if (r.ench && cx.dust && UI[cx.dust] !== undefined) encRows.push(['Dust per slot',
       (cx.dustAmounts || []).map((n, i) => '<span class="ix-data-chip fc2-matchip" title="Slot ' + (i + 1) + ': ' + n
