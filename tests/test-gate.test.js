@@ -33,6 +33,7 @@ const deployCritical = [
   'theory.test.js',
   'ui-cache.test.js',
   'visit-counter.test.js',
+  'whats-new-sheet.test.js',
   'whats-new.test.js'
 ];
 

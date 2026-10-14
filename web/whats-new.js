@@ -195,6 +195,35 @@ var WhatsNew = (function () {
   const hasArt = t => { const c = clipsOf(t); return !!(t.sheet || (c && (c.walk || c.stand || c.attack))); };
   const fileOf = t => { const c = clipsOf(t); return t.sheet ? 'sheet:' + t.sheet.join(',') : c ? Object.values(c)[0].file : t.id; };
   /*
+   * The Index's picture sheet, when it is a data: URI, written once.
+   *
+   * In the downloadable copy the sheet is not an address but its own bytes,
+   * over a megabyte of them, and every picture on a page used to repeat all of
+   * it in its style: the summary alone drew fifty-odd, so opening it built some
+   * seventy million characters, held a hundred megabytes more and kept the page
+   * busy for over a second. The sheet is declared here as a rule of its own, once
+   * per sheet however often a page, a tab or a season is drawn, and each picture
+   * only names the rule. The rule says `.wn-art.` so it wins over the
+   * stylesheet's own `.wn-art` background, as the inline style did.
+   */
+  const sheetClasses = new Map();
+  function sheetClass(url) {
+    if (!/^data:/i.test(url)) return '';
+    let name = sheetClasses.get(url);
+    if (!name) {
+      name = 'pn-sheet-' + sheetClasses.size;
+      sheetClasses.set(url, name);
+      let rules = $('wnSheet');
+      if (!rules) {
+        rules = document.createElement('style');
+        rules.id = 'wnSheet';
+        document.head.appendChild(rules);
+      }
+      rules.appendChild(document.createTextNode('.wn-art.' + name + '{background-image:url(\'' + url + '\')}'));
+    }
+    return name;
+  }
+  /*
    * A sprite, sized by whole numbers so the pixels stay square, and rounded
    * down so it never leaves its box: a sixteen-pixel walker asked to fit forty
    * pixels is drawn at thirty-two, not forty-eight. It walks as the game draws
@@ -206,8 +235,10 @@ var WhatsNew = (function () {
     // The Index's own picture, unless the thing moves and the update has cut its walk.
     if (t.sheet && ix && ix.sheet && !moves(t)) {
       const [x, y, w, h] = t.sheet, z = Math.max(1, Math.min(max || 12, Math.floor((aim || 56) / Math.max(w, h, 8))));
-      return '<span class="wn-art pn-sheet" style="width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(\'' + sheetUrl() + '\');background-size:'
-        + ix.sheet.wide * z + 'px ' + ix.sheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
+      const shared = sheetClass(sheetUrl());
+      return '<span class="wn-art pn-sheet' + (shared ? ' ' + shared : '') + '" style="width:' + w * z + 'px;height:' + h * z + 'px;'
+        + (shared ? '' : 'background-image:url(\'' + sheetUrl() + '\');')
+        + 'background-size:' + ix.sheet.wide * z + 'px ' + ix.sheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
     }
     const rest = clips && (clips.walk || clips.stand || clips.attack);
     if (!rest) {
