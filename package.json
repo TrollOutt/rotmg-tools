@@ -33,6 +33,10 @@
     "wiki-refresh": "npm run wiki-monitor && npm run wiki-integrate",
     "skin-looks": "node tools/build-skin-looks.js",
     "index-extras": "node tools/build-index-extras.js && node tools/build-status-effects.js",
-    "wiki-availability": "python tools/database/export_realmeye_availability.py"
+    "wiki-availability": "python tools/database/export_realmeye_availability.py",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
   }
 }
