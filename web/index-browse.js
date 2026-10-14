@@ -157,10 +157,39 @@
     if (pic && D.sheet) return slice((bundle() && bundle().indexSheet) || 'assets/index/sheet.png', D.sheet, pic, px);
     return glyph(initials(r.name), r.kind === 'status' ? r.tone : 'none', px);
   };
+  /*
+   * A picture sheet that is a data: URI, written once.
+   *
+   * In the downloadable copy the sheet is not an address but its own bytes,
+   * over a megabyte of them, and every small picture used to repeat all of it
+   * in its style. The family landing draws hundreds of pictures, so the page
+   * it was building passed what a string can hold and the Index stayed empty.
+   * The sheet is declared here as a rule of its own, once per sheet however
+   * often the Index is opened, and each picture only names the rule.
+   */
+  const sheetClasses = new Map();
+  function sheetClass(url) {
+    if (!/^data:/i.test(url)) return '';
+    let name = sheetClasses.get(url);
+    if (!name) {
+      name = 'ixb-sheet-' + sheetClasses.size;
+      sheetClasses.set(url, name);
+      let rules = $('ixbSheets');
+      if (!rules) {
+        rules = document.createElement('style');
+        rules.id = 'ixbSheets';
+        document.head.appendChild(rules);
+      }
+      rules.appendChild(document.createTextNode('.' + name + '{background-image:url(' + url + ')}'));
+    }
+    return name;
+  }
   function slice(url, sheet, [x, y, w, h], px, extra = '') {
     const z = px / Math.max(w, h, 8);
-    return '<span class="ixb-art" style="' + extra + ';width:' + w * z + 'px;height:' + h * z + 'px;background-image:url(' + url
-      + ');background-size:' + sheet.wide * z + 'px ' + sheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
+    const shared = sheetClass(url);
+    return '<span class="ixb-art' + (shared ? ' ' + shared : '') + '" style="' + extra + ';width:' + w * z + 'px;height:' + h * z + 'px;'
+      + (shared ? '' : 'background-image:url(' + url + ');')
+      + 'background-size:' + sheet.wide * z + 'px ' + sheet.tall * z + 'px;background-position:' + (-x * z) + 'px ' + (-y * z) + 'px"></span>';
   }
   const initials = name => String(name).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
   const glyph = (text, tone, px) => '<span class="ixb-glyph is-' + tone + '" style="width:' + px + 'px;height:' + px + 'px;font-size:' + Math.max(8, px * 0.38) + 'px">' + esc(text) + '</span>';
