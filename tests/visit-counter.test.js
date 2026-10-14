@@ -135,4 +135,27 @@ for (const file of ['web/app.js', 'tools/atlas-viewer.html', 'web/assets/atlas/i
   checks++;
 }
 
+// The three counters above are the only places that may talk to Abacus. A
+// fourth would count visits from anywhere and this test would never see it.
+const allowed = new Set(['web/app.js', 'tools/atlas-viewer.html', 'web/assets/atlas/index.html']);
+const callers = [];
+(function walk(directory) {
+  for (const entry of fs.readdirSync(path.join(root, directory), { withFileTypes: true })) {
+    const relative = directory + '/' + entry.name;
+    if (entry.isDirectory()) { walk(relative); continue; }
+    if (!/\.(?:js|mjs|html)$/.test(entry.name)) continue;
+    if (/abacus/i.test(read(relative))) callers.push(relative);
+  }
+})('web');
+(function walk(directory) {
+  for (const entry of fs.readdirSync(path.join(root, directory), { withFileTypes: true })) {
+    const relative = directory + '/' + entry.name;
+    if (entry.isDirectory()) { if (entry.name !== '__pycache__') walk(relative); continue; }
+    if (/\.(?:js|mjs|html)$/.test(entry.name) && /abacus/i.test(read(relative))) callers.push(relative);
+  }
+})('tools');
+assert.deepEqual(callers.sort(), [...allowed].sort(),
+  'only the three guarded counters may name Abacus; found: ' + callers.join(', '));
+checks++;
+
 console.log(`Visitor counter: ${checks} checks - counted only on the published site, never locally or from a file.`);
