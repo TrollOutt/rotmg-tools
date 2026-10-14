@@ -37,6 +37,7 @@ const root = path.join(__dirname, '..');
 
 function options(argv) {
   const out = { reps: 7, warmup: 1, full: false, json: null, check: null };
+  let repeated = false;
   const need = (i, name) => {
     if (i + 1 >= argv.length) throw new Error(name + ' needs a value');
     return argv[i + 1];
@@ -44,14 +45,15 @@ function options(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--full') out.full = true;
-    else if (a === '--reps') out.reps = Number(need(i++, a));
-    else if (a === '--warmup') out.warmup = Number(need(i++, a));
+    else if (a === '--reps') { out.reps = Number(need(i++, a)); repeated = true; }
+    else if (a === '--warmup') { out.warmup = Number(need(i++, a)); repeated = true; }
     else if (a === '--json') out.json = need(i++, a);
     else if (a === '--check') out.check = need(i++, a);
     else throw new Error('unknown option ' + a);
   }
   if (!Number.isInteger(out.reps) || out.reps < 1) throw new Error('--reps must be a whole number of at least 1');
   if (!Number.isInteger(out.warmup) || out.warmup < 0) throw new Error('--warmup must be a whole number, 0 or more');
+  if (out.full && repeated) throw new Error('--full times each search once, so --reps and --warmup do not apply to it');
   return out;
 }
 
@@ -196,9 +198,15 @@ if (opt.check) {
     if (was.digest !== r.digest) differences.push(`${r.class}/${r.goal}: the score or the build changed`);
   }
   if (!compared) throw new Error('--check: no search in common with that file');
+  const mine = new Set(results.map(r => r.class + '/' + r.goal));
+  const notRun = [...earlier.keys()].filter(key => !mine.has(key)).length;
+  const notThere = results.length - compared;
+  const partial = notRun || notThere
+    ? ` Partial comparison: ${notThere} of this run's searches are not in that file, and ${notRun} of its searches were not run now.`
+    : '';
   if (differences.length) {
     console.error('\nThe optimiser no longer finds what it found before:\n  ' + differences.join('\n  '));
     process.exit(1);
   }
-  console.log(`--check: ${compared} searches found exactly what they found before (candidates looked at and the build).`);
+  console.log(`--check: ${compared} searches found exactly what they found before (candidates looked at and the build).${partial}`);
 }
