@@ -1,5 +1,5 @@
 {
- "made": "2026-10-06",
+ "made": "2026-10-14",
  "notes": {
   "parts": [
    {
@@ -658,9 +658,9 @@
  "upcoming": [],
  "before": "15a3ce058fe946c792c23558bdb10e2c",
  "counts": {
-  "added": 223,
+  "added": 225,
   "changed": 5,
-  "gone": 3
+  "gone": 0
  },
  "tally": {
   "pets": {
@@ -684,7 +684,7 @@
    "gone": 0
   },
   "skins": {
-   "added": 19,
+   "added": 21,
    "changed": 0,
    "gone": 0
   },
@@ -711,7 +711,7 @@
   "creatures": {
    "added": 19,
    "changed": 0,
-   "gone": 3
+   "gone": 0
   },
   "places": {
    "added": 2,
@@ -2076,6 +2076,45 @@
      }
     },
     {
+     "id": "Mini Skeletosaur Druid",
+     "type": "0x9E41",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1344
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "tier": 4,
+      "for": "Druid"
+     },
+     "sprite": {
+      "moving": true,
+      "clips": {
+       "stand": {
+        "file": "mini-skeletosaur-druid-stand.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       },
+       "walk": {
+        "file": "mini-skeletosaur-druid-walk.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 2
+       },
+       "attack": {
+        "file": "mini-skeletosaur-druid-attack.png",
+        "tile": 16,
+        "height": 8,
+        "frames": 2
+       }
+      }
+     }
+    },
+    {
      "id": "Mini Swamp Hermit Druid Skin",
      "type": "0xbed3",
      "art": {
@@ -2327,6 +2366,48 @@
         "tile": 32,
         "height": 16,
         "frames": 4
+       }
+      }
+     }
+    },
+    {
+     "id": "Mini Skeletosaur Druid Skin",
+     "type": "0x9E42",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins",
+      "index": 1344
+     },
+     "description": "A tiny keeper of ancient bones, breathing new life into creatures long forgotten.\\n\\nSkin Class: Druid",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "feed power": 1000,
+      "bag": 7,
+      "soulbound": true,
+      "consumable": true
+     },
+     "sprite": {
+      "moving": true,
+      "clips": {
+       "stand": {
+        "file": "mini-skeletosaur-druid-skin-stand.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       },
+       "walk": {
+        "file": "mini-skeletosaur-druid-skin-walk.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 2
+       },
+       "attack": {
+        "file": "mini-skeletosaur-druid-skin-attack.png",
+        "tile": 16,
+        "height": 8,
+        "frames": 2
        }
       }
      }
