@@ -1030,15 +1030,36 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    */
   const RANGES = [['melee', 'Melee', 0], ['mid', 'Mid range', 4.5], ['long', 'Long range', 7.5]];
   const RANGE_SAYS = { melee: 'on the target', mid: '3 to 6 tiles away', long: '6 to 9 tiles away' };
-  function gapOf(state) {
-    const at = (RANGES.find(one => one[0] === (state.range || 'melee')) || RANGES[0])[2];
-    if (!at) return 0;
+  // Where the fighter stands against the target: how far off its middle, how big it is, and how far a shot must fly to touch its edge.
+  function standOf(state) {
+    const d = (RANGES.find(one => one[0] === (state.range || 'melee')) || RANGES[0])[2];
     const boss = data.byBoss[state.boss];
     const size = (boss && gearInfo && gearInfo.targets && gearInfo.targets[boss.name]);
-    return Math.max(0, at - Math.max(0.3, size === undefined ? 0.5 : size));
+    const radius = Math.max(0.3, size === undefined ? 0.5 : size);
+    return { d, radius, gap: Math.max(0, d - radius) };
   }
   // A shot that flies this far reaches a target this far off (a shot whose reach the client does not give is not held back).
-  const reaches = (reach, gap) => !(gap > 0) || reach === undefined || reach >= gap;
+  // Accepts the distance to cover, or the whole stand.
+  const reaches = (reach, aim) => {
+    const gap = aim && typeof aim === 'object' ? aim.gap : aim;
+    return !(gap > 0) || reach === undefined || reach >= gap;
+  };
+  /*
+   * A volley is not a wall: its shots leave at angles, and one aimed at the middle of a target that is far off may
+   * pass either side of it. Of `many` shots, those whose line is no more than the target's radius from its middle when
+   * it gets there (distance times the tangent of the angle) hit; a round volley is spread over the whole circle, a
+   * fanned one by the arc gap between neighbours. Standing on the target, or with no stand given, every shot hits.
+   */
+  function fanHits(many, fan, round, aim) {
+    if (!aim || typeof aim !== 'object' || !(aim.d > 0) || !(many > 1)) return many;
+    let hit = 0;
+    for (let i = 0; i < many; i++) {
+      let angle = round ? (i / many) * 2 * Math.PI : (i - (many - 1) / 2) * (fan || 12) * Math.PI / 180;
+      angle = Math.abs(((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+      if (angle < Math.PI / 2 && aim.d * Math.tan(angle) <= aim.radius) hit++;
+    }
+    return hit;
+  }
   function weaponRate(item, stats, def, scale, extra, fx, gap) {
     if (!item || !item.shots || !item.shots.length) return { each: 0, rate: 0, dps: 0 };
     const by = scale || { dmg: 1, rate: 1, life: 1, fast: 1 };
@@ -1174,7 +1195,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     // Out of reach of the target, the weapon's own shot does nothing.
     const near = reaches(shot.reach === undefined ? undefined : shot.reach * by.life * by.fast, gap);
-    const perShot = (near ? each * many : 0) + along;
+    const perShot = (near ? each * fanHits(many, item.fan, false, gap) : 0) + along;
     const dps = cycle
       ? perShot * cycle.shots / cycle.every
       : perShot * rate;
@@ -1258,8 +1279,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     // weapon's shot and nothing else, so an ability's bolt is raised by what its own line says (the stat it
     // scales with, above) and by nothing more. Attack 25 is the multiplier of one.
     const each = bolts && reaches(shot.reach, gap) ? landed(roll, 25, def, shot.pierce, fx) : 0;
-    const many = Math.max(1, Math.round((cast.shots || item.many || 1)
-      + over * (cast.more || 0)));
+    const thrown = Math.max(1, Math.round((cast.shots || item.many || 1) + over * (cast.more || 0)));
+    // Of the bolts it throws, the ones that touch the target (a round spray, as the fight draws it, from eight up).
+    const many = Math.max(thrown > 0 ? 0 : 1, fanHits(thrown, item.fan, thrown >= 8, gap));
     /*
      * How often it can really be used, which is two limits and not one.
      *
@@ -1500,7 +1522,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     const effects = effectsFor(state, fought.now, regen.mp.combat, cost);
     const fx = fxOf(effects);
-    const gap = gapOf(state);
+    const gap = standOf(state);
     const gun = using === 'spell' ? NONE
       : weaponRate(weapon, fought.now, def, scale, subOf(state), fx, gap);
     // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
@@ -4093,36 +4115,55 @@ const TINT = {
    * looked like neither.
    */
   function loose(item, rate, mine) {
-    const many = Math.max(1, rate.many || 1);
+    const stand = standOf(build);
     const shot = (item && item.shots && item.shots[0]) || {};
     const bolt = pieceOf(item && item.pic);
-    const reach = rate.reach || shot.reach || 6;
-    const fast = rate.fast || shot.fast || 8;
-    const round = many >= 8 && !mine;
-    const fan = (item && item.fan !== undefined ? item.fan : 12) * Math.PI / 180;
-    for (let n = 0; n < many; n++) {
-      const angle = round
-        ? (n / many) * Math.PI * 2
-        : (many === 1 ? 0 : (n - (many - 1) / 2) * fan);
+    const channels = item && item.shots ? item.shots.filter(one => one.subattack) : [];
+    // Each shot that leaves: the way it points, how far it flies and how fast. A weapon built of channels (a flail's
+    // anvil and its chain) throws one of each, all along the same line; the rest throw their count fanned or round.
+    const out = [];
+    if (channels.length) {
+      for (const one of channels) {
+        for (let n = 0; n < (one.many || 1); n++) out.push({ angle: 0, reach: one.reach || 6, fast: one.fast || 8, amp: one.amp, freq: one.freq });
+      }
+    } else {
+      const many = Math.max(1, rate.many || 1);
+      const reach = rate.reach || shot.reach || 6;
+      const fast = rate.fast || shot.fast || 8;
+      const round = many >= 8 && !mine;
+      const fan = (item && item.fan !== undefined ? item.fan : 12) * Math.PI / 180;
+      for (let n = 0; n < many; n++) {
+        out.push({
+          angle: round ? (n / many) * Math.PI * 2 : (many === 1 ? 0 : (n - (many - 1) / 2) * fan),
+          reach, fast, amp: shot.amp, freq: shot.freq, phase: (n % 2) ? Math.PI : 0
+        });
+      }
+    }
+    for (const one of out) {
+      /*
+       * Does it touch the target? Its line passes the target's middle at distance times tan(angle); if that is within
+       * the target's radius, and it flies far enough, it lands and is gone there. Otherwise it goes on past.
+       */
+      const turned = Math.abs(((one.angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+      const lands = turned < Math.PI / 2
+        && (!(stand.d > 0) || stand.d * Math.tan(turned) <= stand.radius)
+        && reaches(one.reach, stand);
+      const travel = lands ? Math.min(one.reach, Math.max(0.6, stand.gap / Math.max(0.2, Math.cos(turned)))) : one.reach;
       duel.shots.push({
         age: 0,
-        lasts: Math.max(0.05, reach / fast),
-        angle,
+        lasts: Math.max(0.05, travel / one.fast),
+        angle: one.angle,
+        hit: lands,
+        fast: one.fast,
         hurt: rate.each,
         mine, bolt,
         spin: bolt && bolt.spin ? bolt.spin : 0,
         tilt: bolt && bolt.tilt ? bolt.tilt : 0,
-        /*
-         * How it weaves, if it does. The client gives an amplitude in tiles
-         * and a frequency, and a volley alternates phase - which is why a
-         * staff's two missiles braid around each other instead of flying as
-         * one thick line. The sine is the shape the game's own players have
-         * always read off those two numbers; the numbers are the client's.
-         */
-        amp: shot.amp || 0,
-        freq: shot.freq || 0,
-        phase: (n % 2) ? Math.PI : 0,
-        reach
+        // How it weaves, if it does: the client gives an amplitude in tiles and a frequency.
+        amp: one.amp || 0,
+        freq: one.freq || 0,
+        phase: one.phase || 0,
+        reach: one.reach
       });
     }
   }
@@ -4347,20 +4388,6 @@ const TINT = {
     const floor = tall - 30 * k;
     pen.drawImage(groundOf(wide, tall, dpr, k, floor), 0, 0, wide, tall);
 
-    /*
-     * How far apart they stand: the range of the weapon in your hand.
-     *
-     * The bench used to be a fixed stretch of floor whatever you were
-     * holding, which quietly showed a dagger and a bow reaching the same
-     * distance and spread a volley across twenty tiles of ground - so the
-     * shots of a bow left the top of the frame long before they arrived. A
-     * tile is a tile here, thirty pixels of it, and the two of them stand the
-     * weapon's own range apart with the pair middled in the frame.
-     */
-    const kit = statsOf(build);
-    const arm = data.byItem[(build.gear.weapon || {}).name];
-    const shooting = kit
-      ? weaponRate(arm, kit.now, 0, scaleOf(build), subOf(build)) : {};
     const PX_TILE = 30 * k;
     const piece = pieceOf(boss && boss.pic);
     const room = Math.min(88 * k, tall * 0.64);
@@ -4374,10 +4401,17 @@ const TINT = {
     const me = pieceOf((kind && kind.pic) || '');
     const side = Math.min(52 * k, tall * 0.4);
     const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
-    const apart = Math.max(80, Math.min(wide - 40 - mine - across,
-      (shooting.reach || 6) * PX_TILE));
-    const left = Math.max(14, (wide - (mine + apart + across)) / 2);
-    const bossX = left + mine + apart;
+    /*
+     * Where they stand is the distance the reader chose: on the target, three to six tiles off or six to nine, measured
+     * from the target's middle (mid range at 4.5, long range at 7.5). A tile is thirty pixels unless the frame is too
+     * narrow for that, and every length below - shots, reach - is drawn at the same scale, so what passes a target and
+     * what reaches it can be seen.
+     */
+    const stand = standOf(build);
+    const dist = Math.max(stand.d, stand.radius);
+    const tilePx = Math.max(8, Math.min(PX_TILE, (wide - mine - across * 0.5 - 44) / Math.max(dist, 1)));
+    const bossX = wide - across - 14 * k;
+    const left = Math.max(6, bossX + across / 2 - dist * tilePx - mine * 0.9);
 
     /* The one on the left, in whichever pose it is in. */
     if (me) {
@@ -4412,7 +4446,7 @@ const TINT = {
      * not teleport, so it keeps its own idle animation throughout and the hit
      * shows as a flash instead.
      */
-    const struck = duel.hp > 0 && duel.shots.some(s => s.age > s.lasts * 0.86);
+    const struck = duel.hp > 0 && duel.shots.some(s => s.hit && s.age > s.lasts * 0.86);
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
     const drew = drawPiece(pen, piece, targetFrame(piece, duel.at), bossX, floor, room, targetRun);
     if (drew && struck) {
@@ -4442,20 +4476,18 @@ const TINT = {
      * is a spinner. Turning the bitmap rather than drawing a line beside it
      * means the black outline the art already carries turns with the colour.
      */
-    const from = left + mine * 0.9, to = bossX + across * 0.45;
-    const reachAcross = to - from;
+    const from = left + mine * 0.9, to = bossX + across / 2;
     drawAbilityFx(pen, from, to, floor - side * 0.55, side);
     for (const one of duel.shots) {
-      const part = Math.max(0, Math.min(1, one.age / one.lasts));
-      const along = reachAcross * part;
+      // How far it has flown, at the scale of the floor.
+      const along = one.age * one.fast * tilePx;
       /*
        * Across its own line, if it weaves. The offset is perpendicular to the
        * direction of travel, in tiles converted to the width of the bench, so
        * a half-tile amplitude looks like half a tile of the range it covers.
        */
       const sway = one.amp
-        ? one.amp * (reachAcross / Math.max(1, one.reach))
-          * Math.sin(2 * Math.PI * one.freq * one.age + one.phase)
+        ? one.amp * tilePx * Math.sin(2 * Math.PI * one.freq * one.age + one.phase)
         : 0;
       const x = from + Math.cos(one.angle) * along - Math.sin(one.angle) * sway;
       const y = floor - side * 0.55 + Math.sin(one.angle) * along

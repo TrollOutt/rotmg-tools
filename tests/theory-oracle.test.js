@@ -213,6 +213,15 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
   near(at(6.1), by(6.1), 1e-6, 'the longest shots just reach 6.1 tiles');
   assert.equal(at(8), 0, 'nothing reaches a target eight tiles off');
   assert(at(0) > at(3) && at(3) > at(6.1), 'the further, the less');
+  // A volley is not a wall: of three shots fanned 20 degrees apart only the middle one is within a target's reach from 7.5 tiles.
+  {
+    const fanned = { shots: [{ low: 100, high: 100, reach: 20 }], rate: 1, many: 3, fan: 20 };
+    const one = t.landed(100, 75, 0) * 8;
+    const dps = aim => t.weaponRate(fanned, { att: 75, dex: 75 }, 0, null, null, null, aim).dps;
+    near(dps({ d: 0, radius: 1.4, gap: 0 }), 3 * one, 1e-6, 'on the target all three hit');
+    near(dps({ d: 7.5, radius: 1.4, gap: 6.1 }), one, 1e-6, 'from far off only the middle one');
+    near(dps({ d: 3, radius: 1.4, gap: 1.6 }), 3 * one - 0 * one, 1e-6, '3 tiles off the +-20 degrees are 1.09 tiles to the side, inside the target');
+  }
   // The size of the target counts: its edge is closer than its middle.
   // And the page's own choice: a short sword does nothing from long range, and a bit more of the target is reached from mid range.
   {
