@@ -19,18 +19,34 @@
  * the synthetic "Tier 9 Weapon" entries a player can price without knowing an
  * item's name.
  */
+/**
+ * Client item descriptions and synthetic tier bands. Slots, dust and families
+ * stay strings because the installed client's catalogue can grow independently.
+ * @typedef {Object} EnchantItemDetails
+ * @property {string} name
+ * @property {string} type
+ * @property {string} dust
+ * @property {number | null} tier
+ * @property {boolean} tiered
+ * @property {string | null} sprite
+ * @property {string | null} base
+ * @property {string} note
+ * @typedef {Record<string, [number, number]>} EnchantTierBands
+ */
 var EnchantItems = (function () {
   'use strict';
 
   // Tiered gear: the dust follows the tier number, in three bands per slot.
   // Kept here as well as in the generator so a stale catalogue is still
   // interpreted consistently.
+  /** @type {Record<string, EnchantTierBands>} */
   const TIER_BANDS = {
     WEAPON:  { Green: [1, 9], Red: [10, 12], Purple: [13, 14] },
     ABILITY: { Green: [1, 4], Red: [5, 6],   Purple: [7, 7] },
     ARMOR:   { Green: [1, 9], Red: [10, 12], Purple: [13, 14] },
     RING:    { Green: [1, 4], Red: [5, 6],   Purple: [7, 7] }
   };
+  /** @type {Record<string, string>} */
   const TIER_LABEL = { WEAPON: 'Weapon', ABILITY: 'Ability', ARMOR: 'Armor', RING: 'Ring' };
 
   /*
@@ -44,6 +60,7 @@ var EnchantItems = (function () {
    * client states it per item, so there is nothing left to correct. The hook
    * stays in case the game itself ever ships something that needs one.
    */
+  /** @type {Record<string, Partial<EnchantItemDetails>>} */
   const OVERRIDES = {};
 
   /*
@@ -53,10 +70,17 @@ var EnchantItems = (function () {
    * case-and-spacing-insensitive lookup below covers the rest. The hook stays
    * for a name the client genuinely writes differently from the player.
    */
+  /** @type {Record<string, string>} */
   const ALIASES = {};
 
+  /** @param {string | null} [name] @returns {string} */
   const normalise = name => String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
+  /**
+   * @param {string} type
+   * @param {number | null} [tier]
+   * @returns {string | null}
+   */
   function dustForTier(type, tier) {
     const bands = TIER_BANDS[type];
     if (!bands || tier === undefined || tier === null) return null;
@@ -64,7 +88,9 @@ var EnchantItems = (function () {
     return null;
   }
 
+  /** @type {Map<string, EnchantItemDetails>} */
   let index = new Map();
+  /** @type {Map<string, EnchantItemDetails>} */
   let byNormalised = new Map();
 
   /*
@@ -75,6 +101,10 @@ var EnchantItems = (function () {
    * tier bands above survive only for the synthetic "Tier 9 Weapon" entries,
    * which exist so someone who does not remember an item's name can still price
    * a roll; no real item needs them.
+   */
+  /**
+   * @param {string} text
+   * @returns {Map<string, EnchantItemDetails>}
    */
   function loadClient(text) {
     index = new Map();
@@ -110,6 +140,10 @@ var EnchantItems = (function () {
   }
 
   // Tolerant lookup: exact name, then case/spacing-insensitive, then an alias.
+  /**
+   * @param {string | null} [name]
+   * @returns {EnchantItemDetails | null | undefined}
+   */
   function lookup(name) {
     if (!name) return null;
     if (index.has(name)) return index.get(name);
@@ -122,7 +156,9 @@ var EnchantItems = (function () {
   return {
     TIER_BANDS, TIER_LABEL, ALIASES, OVERRIDES,
     dustForTier, normalise, loadClient, lookup,
+    /** @returns {Map<string, EnchantItemDetails>} */
     get index() { return index; },
+    /** @returns {number} */
     get size() { return index.size; }
   };
 })();
