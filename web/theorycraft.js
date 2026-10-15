@@ -1085,112 +1085,11 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return n;
   };
 
-  let enchByName = null;
-  const charmByQuery = new Map();
-  function charmNamed(name) {
-    if (charmByQuery.has(name)) return charmByQuery.get(name);
-    if (!enchByName) {
-      enchByName = new Map();
-      for (const one of data.enchants) {
-        for (const key of [one.name, plainly(one.name), enchantKey(one.name)]) {
-          const had = enchByName.get(key);
-          if (!had || worth(one) > worth(had)) enchByName.set(key, one);
-        }
-      }
-    }
-    const found = enchByName.get(name)
-      || enchByName.get(plainly(name))
-      || enchByName.get(enchantKey(name));
-    charmByQuery.set(name, found);
-    return found;
-  }
-
-  /*
-   * What is already on the item, in names the calculator recognises.
-   *
-   * It files "Wisdom -Defense Tradeoff", the thing you ask for; the client
-   * files four of them, I through IV, which are what it rolls. Handing over
-   * the client's spelling meant the calculator looked up the name, found
-   * nothing, and so believed the item was bare - which is how the optimiser
-   * came to put four copies of the same tradeoff on one weapon.
-   */
-  function locksOn(held, already, at) {
-    const out = [];
-    (already || []).forEach((id, i) => {
-      if (i === at || !id) return;
-      const one = data.byEnch[id];
-      if (!one) return;
-      const bare = enchantKey(one.name);
-      for (const name of [one.name, one.name.replace(NUMERAL, '').trim()]) {
-        if (held.byName && held.byName.get(name)) { out.push(name); return; }
-      }
-      // Nothing matched exactly: cross the raw-client/canonical-name boundary
-      // before deciding that the calculator does not know this enchantment.
-      for (const [name] of held.byName || []) {
-        if (enchantKey(name) === bare) { out.push(name); return; }
-      }
+  const { charmNamed, locksOn, rollableEnchantsFor, enchantsFor, enchantFitsItem } =
+    TheoryEngine.createEnchants({
+      getData: () => data, plainly, enchantKey, worth, numeral: NUMERAL,
+      getEngine: () => EnchantEngine, rulesFor, ofHand: OF_HAND
     });
-    return out;
-  }
-
-  function rollableEnchantsFor(itemName, already, at) {
-    const item = data.byItem[itemName];
-    if (!item) return [];
-    const held = rulesFor();
-    if (held) {
-      const locks = locksOn(held, already, at);
-      const cfg = {
-        item: itemName,
-        type: OF_HAND[item.hand] || 'WEAPON',
-        slots: (already || []).length || 4,
-        locks,
-        subtypes: EnchantEngine.subtypesForItem(held, itemName)
-      };
-      return EnchantEngine.rollablePool(held, cfg);
-    }
-
-    throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
-  }
-
-  function enchantsFor(itemName, already, at) {
-    const pool = rollableEnchantsFor(itemName, already, at);
-    const out = [];
-    const seen = new Set();
-    for (const mod of pool) {
-      /*
-       * Only what an enchanting will actually put on an item.
-       *
-       * The calculator's list is the whole list, and the whole list is
-       * wider than what a player can roll. The retired ones - Kogbold
-       * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
-       * item already carrying one still reads, and are given a weight of
-       * nought to say they can never come out again. The seasonal ones -
-       * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
-       * at the time, not out of enchanting, and the client marks the
-       * difference with a ROLLABLE label. This page has no artifact in it,
-       * so it plans with what a plain enchanting can roll and nothing else.
-       */
-      if (seen.has(mod.name)) continue;
-      seen.add(mod.name);
-      const mine = charmNamed(mod.name);
-      // How likely it is to come out, kept for the slot that has nothing
-      // countable left to put in it.
-      out.push(Object.assign(
-        { roll: mod.weight },
-        mine || { id: 'n:' + mod.name },
-        { name: mod.name }
-      ));
-    }
-    return out;
-  }
-
-  function enchantFitsItem(itemName, already, at) {
-    const wanted = already[at];
-    return rollableEnchantsFor(itemName, already, at).some(mod => {
-      const mine = charmNamed(mod.name);
-      return (mine ? mine.id : 'n:' + mod.name) === wanted;
-    });
-  }
 
   const itemSearch = TheoryEngine.createItemSearch({
     getData: () => data, hands: HANDS, accessible

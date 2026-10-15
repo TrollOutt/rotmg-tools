@@ -116,6 +116,29 @@
  * @typedef {{getData: () => TheoryItemSearchCatalogue, hands: readonly (readonly string[])[],
  *   accessible: (name: string) => boolean}} TheoryItemSearchDependencies
  */
+/**
+ * @typedef {TheoryStatEnchantment & {id: string, name: string,
+ *   heal?: {flatHP?: number, partHP?: number, flatMP?: number, partMP?: number,
+ *     soak?: number}}} TheoryCharm
+ * @typedef {import('./engine').Enchantment} TheoryEnchantment
+ * @typedef {import('./engine').EnchantDataset} TheoryEnchantRules
+ * @typedef {import('./engine').EnchantPoolConfig} TheoryEnchantPoolConfig
+ * @typedef {TheoryEnchantment[]} TheoryEnchantPool
+ * @typedef {Pick<typeof import('./engine'), 'rollablePool' | 'subtypesForItem'>} TheoryEnchantEngine
+ * @typedef {{enchants: TheoryCharm[], byEnch: Record<string, TheoryCharm | undefined>,
+ *   byItem: Record<string, {hand: string} | undefined>}} TheoryEnchantCatalogue
+ * @typedef {(string | null | undefined)[]} TheoryEnchantSlots
+ * @typedef {TheoryCharm & {roll: number}} TheoryEnchantChoice
+ * @typedef {Object} TheoryEnchantDependencies
+ * @property {() => TheoryEnchantCatalogue} getData Read each catalogue at the original lookup site.
+ * @property {(name: string) => string} plainly
+ * @property {(name: string) => string} enchantKey
+ * @property {(one: TheoryCharm | undefined) => number} worth
+ * @property {RegExp} numeral
+ * @property {() => TheoryEnchantEngine} getEngine Resolve only when loaded rules need the engine.
+ * @property {() => TheoryEnchantRules | false | null | undefined} rulesFor
+ * @property {Readonly<Record<string, string | undefined>>} ofHand
+ */
 var TheoryEngine = (function () {
   'use strict';
 
@@ -794,7 +817,140 @@ var TheoryEngine = (function () {
     return { compatibleItemsFor, itemsFor };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createBeaten, createItemSearch };
+  /**
+   * Keep both name caches for the caller's lifetime, building the index on first demand.
+   * Catalogue replacement alone did not invalidate them in the page or its harness.
+   * @param {TheoryEnchantDependencies} dependencies
+   */
+  function createEnchants({ getData, plainly, enchantKey, worth, numeral, getEngine, rulesFor, ofHand }) {
+    /** @type {Map<string, TheoryCharm> | null} */
+    let enchByName = null;
+    /** @type {Map<string, TheoryCharm | undefined>} */
+    const charmByQuery = new Map();
+    /** @param {string} name @returns {TheoryCharm | undefined} */
+    function charmNamed(name) {
+      if (charmByQuery.has(name)) return charmByQuery.get(name);
+      if (!enchByName) {
+        enchByName = new Map();
+        for (const one of getData().enchants) {
+          for (const key of [one.name, plainly(one.name), enchantKey(one.name)]) {
+            const had = enchByName.get(key);
+            if (!had || worth(one) > worth(had)) enchByName.set(key, one);
+          }
+        }
+      }
+      const found = enchByName.get(name)
+        || enchByName.get(plainly(name))
+        || enchByName.get(enchantKey(name));
+      charmByQuery.set(name, found);
+      return found;
+    }
+
+    /*
+     * What is already on the item, in names the calculator recognises.
+     *
+     * It files "Wisdom -Defense Tradeoff", the thing you ask for; the client
+     * files four of them, I through IV, which are what it rolls. Handing over
+     * the client's spelling meant the calculator looked up the name, found
+     * nothing, and so believed the item was bare - which is how the optimiser
+     * came to put four copies of the same tradeoff on one weapon.
+     */
+    /** @param {Partial<Pick<TheoryEnchantRules, 'byName'>>} held
+     * @param {TheoryEnchantSlots | null | undefined} already @param {number} at
+     * @returns {string[]} */
+    function locksOn(held, already, at) {
+      /** @type {string[]} */
+      const out = [];
+      (already || []).forEach((id, i) => {
+        if (i === at || !id) return;
+        const one = getData().byEnch[id];
+        if (!one) return;
+        const bare = enchantKey(one.name);
+        for (const name of [one.name, one.name.replace(numeral, '').trim()]) {
+          if (held.byName && held.byName.get(name)) { out.push(name); return; }
+        }
+        // Nothing matched exactly: cross the raw-client/canonical-name boundary
+        // before deciding that the calculator does not know this enchantment.
+        for (const [name] of held.byName || []) {
+          if (enchantKey(name) === bare) { out.push(name); return; }
+        }
+      });
+      return out;
+    }
+
+    /** @param {string} itemName
+     * @param {TheoryEnchantSlots | null | undefined} already @param {number} at
+     * @returns {TheoryEnchantPool} */
+    function rollableEnchantsFor(itemName, already, at) {
+      const item = getData().byItem[itemName];
+      if (!item) return [];
+      const held = rulesFor();
+      if (held) {
+        const locks = locksOn(held, already, at);
+        /** @type {TheoryEnchantPoolConfig} */
+        const cfg = {
+          item: itemName,
+          type: ofHand[item.hand] || 'WEAPON',
+          slots: (already || []).length || 4,
+          locks,
+          subtypes: getEngine().subtypesForItem(held, itemName)
+        };
+        return getEngine().rollablePool(held, cfg);
+      }
+
+      throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
+    }
+
+    /** @param {string} itemName
+     * @param {TheoryEnchantSlots | null | undefined} already @param {number} at
+     * @returns {TheoryEnchantChoice[]} */
+    function enchantsFor(itemName, already, at) {
+      const pool = rollableEnchantsFor(itemName, already, at);
+      /** @type {TheoryEnchantChoice[]} */
+      const out = [];
+      /** @type {Set<string>} */
+      const seen = new Set();
+      for (const mod of pool) {
+        /*
+         * Only what an enchanting will actually put on an item.
+         *
+         * The calculator's list is the whole list, and the whole list is
+         * wider than what a player can roll. The retired ones - Kogbold
+         * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
+         * item already carrying one still reads, and are given a weight of
+         * nought to say they can never come out again. The seasonal ones -
+         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
+         * at the time, not out of enchanting, and the client marks the
+         * difference with a ROLLABLE label. This page has no artifact in it,
+         * so it plans with what a plain enchanting can roll and nothing else.
+         */
+        if (seen.has(mod.name)) continue;
+        seen.add(mod.name);
+        const mine = charmNamed(mod.name);
+        // How likely it is to come out, kept for the slot that has nothing
+        // countable left to put in it.
+        out.push(Object.assign(
+          { roll: mod.weight },
+          mine || { id: 'n:' + mod.name },
+          { name: mod.name }
+        ));
+      }
+      return out;
+    }
+
+    /** @param {string} itemName @param {TheoryEnchantSlots} already @param {number} at
+     * @returns {boolean} */
+    function enchantFitsItem(itemName, already, at) {
+      const wanted = already[at];
+      return rollableEnchantsFor(itemName, already, at).some(mod => {
+        const mine = charmNamed(mod.name);
+        return (mine ? mine.id : 'n:' + mod.name) === wanted;
+      });
+    }
+    return { charmNamed, locksOn, rollableEnchantsFor, enchantsFor, enchantFitsItem };
+  }
+
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createBeaten, createItemSearch, createEnchants };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;

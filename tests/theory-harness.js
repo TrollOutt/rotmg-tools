@@ -8,6 +8,8 @@ module.exports = function(sources, raw, withEngine = true) {
   if (!original.includes(marker)) throw new Error('Theory harness return marker moved');
   const script = original.replace(marker, `return {
     statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate,
+    charmNamed, locksOn, rollableEnchantsFor, enchantFitsItem, plainly, enchantKey, worth, NUMERAL,
+    setRules(value) { rules = value; },
     numbersFor, optimise, scoreOf, aimOf, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
     setStatusInfo(value) { statusInfo = value; },

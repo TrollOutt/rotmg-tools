@@ -900,6 +900,375 @@ const samples = [
   ['Alien', choose(item => item.type && item.base === 'ALIEN')],
   ['Neo Alien', choose(item => item.type && item.base === 'NEO_ALIEN')]
 ];
+
+// Frozen enchantment implementation from ffba5e4, including spelling and ranking helpers.
+{
+  function legacy(getData, rulesFor, EnchantEngine) {
+    const OF_HAND = { weapon: 'WEAPON', ability: 'ABILITY', armor: 'ARMOR', ring: 'RING' };
+    const NUMERAL = /\s+(?:[IVX]+|\d+)$/;
+    const plainly = name => String(name).replace(NUMERAL, '').trim().toLowerCase();
+
+    const ENCHANT_NAME_ALIASES = new Map([
+      ['mana -attacktradeoff', 'mana -attack tradeoff'],
+      ['pirates expertise', "pirate's expertise"],
+      ['vampric lifeforce', 'vampiric lifeforce']
+    ]);
+
+    const enchantKey = name => {
+      const bare = plainly(name);
+      return ENCHANT_NAME_ALIASES.get(bare) || bare;
+    };
+    /*
+     * How much of an enchantment there is, for choosing between four of the
+     * same thing. The client rolls Flat Life Regeneration I through IV under
+     * one name to a player, and the strongest is the one anybody planning a
+     * build means - so what it heals and what it keeps off you count towards
+     * that as much as a statistic does, which they did not, which is why the
+     * page kept offering the weakest of every family that raises nothing.
+     */
+    const worth = one => {
+      if (!one) return 0;
+      let n = Object.values(one.worn || {}).reduce((sum, v) => sum + Math.abs(v), 0);
+      const heal = one.heal;
+      if (heal) {
+        n += (heal.flatHP || 0) + (heal.partHP || 0) * 400
+          + ((heal.flatMP || 0) + (heal.partMP || 0) * 200) * 0.25
+          + (heal.soak ? (1 - heal.soak) * 200 : 0);
+      }
+      if (one.mul) {
+        n += Object.values(one.mul).reduce((sum, v) => sum + Math.abs(v - 1) * 100, 0);
+      }
+      // A share of a bonus is worth what the bonus is; sixteen per cent of a
+      // good one beats four flat points, and this only has to rank them.
+      for (const part of one.rel || []) n += Math.abs(part.pct) / 2;
+      for (const part of one.sub || []) n += (part.shots[0].high || 0) / 4;
+      return n;
+    };
+
+    let enchByName = null;
+    const charmByQuery = new Map();
+    function charmNamed(name) {
+      if (charmByQuery.has(name)) return charmByQuery.get(name);
+      if (!enchByName) {
+        enchByName = new Map();
+        for (const one of getData().enchants) {
+          for (const key of [one.name, plainly(one.name), enchantKey(one.name)]) {
+            const had = enchByName.get(key);
+            if (!had || worth(one) > worth(had)) enchByName.set(key, one);
+          }
+        }
+      }
+      const found = enchByName.get(name)
+        || enchByName.get(plainly(name))
+        || enchByName.get(enchantKey(name));
+      charmByQuery.set(name, found);
+      return found;
+    }
+
+    /*
+     * What is already on the item, in names the calculator recognises.
+     *
+     * It files "Wisdom -Defense Tradeoff", the thing you ask for; the client
+     * files four of them, I through IV, which are what it rolls. Handing over
+     * the client's spelling meant the calculator looked up the name, found
+     * nothing, and so believed the item was bare - which is how the optimiser
+     * came to put four copies of the same tradeoff on one weapon.
+     */
+    function locksOn(held, already, at) {
+      const out = [];
+      (already || []).forEach((id, i) => {
+        if (i === at || !id) return;
+        const one = getData().byEnch[id];
+        if (!one) return;
+        const bare = enchantKey(one.name);
+        for (const name of [one.name, one.name.replace(NUMERAL, '').trim()]) {
+          if (held.byName && held.byName.get(name)) { out.push(name); return; }
+        }
+        // Nothing matched exactly: cross the raw-client/canonical-name boundary
+        // before deciding that the calculator does not know this enchantment.
+        for (const [name] of held.byName || []) {
+          if (enchantKey(name) === bare) { out.push(name); return; }
+        }
+      });
+      return out;
+    }
+
+    function rollableEnchantsFor(itemName, already, at) {
+      const item = getData().byItem[itemName];
+      if (!item) return [];
+      const held = rulesFor();
+      if (held) {
+        const locks = locksOn(held, already, at);
+        const cfg = {
+          item: itemName,
+          type: OF_HAND[item.hand] || 'WEAPON',
+          slots: (already || []).length || 4,
+          locks,
+          subtypes: EnchantEngine.subtypesForItem(held, itemName)
+        };
+        return EnchantEngine.rollablePool(held, cfg);
+      }
+
+      throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
+    }
+
+    function enchantsFor(itemName, already, at) {
+      const pool = rollableEnchantsFor(itemName, already, at);
+      const out = [];
+      const seen = new Set();
+      for (const mod of pool) {
+        /*
+         * Only what an enchanting will actually put on an item.
+         *
+         * The calculator's list is the whole list, and the whole list is
+         * wider than what a player can roll. The retired ones - Kogbold
+         * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
+         * item already carrying one still reads, and are given a weight of
+         * nought to say they can never come out again. The seasonal ones -
+         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
+         * at the time, not out of enchanting, and the client marks the
+         * difference with a ROLLABLE label. This page has no artifact in it,
+         * so it plans with what a plain enchanting can roll and nothing else.
+         */
+        if (seen.has(mod.name)) continue;
+        seen.add(mod.name);
+        const mine = charmNamed(mod.name);
+        // How likely it is to come out, kept for the slot that has nothing
+        // countable left to put in it.
+        out.push(Object.assign(
+          { roll: mod.weight },
+          mine || { id: 'n:' + mod.name },
+          { name: mod.name }
+        ));
+      }
+      return out;
+    }
+
+    function enchantFitsItem(itemName, already, at) {
+      const wanted = already[at];
+      return rollableEnchantsFor(itemName, already, at).some(mod => {
+        const mine = charmNamed(mod.name);
+        return (mine ? mine.id : 'n:' + mod.name) === wanted;
+      });
+    }
+    return { charmNamed, locksOn, rollableEnchantsFor, enchantsFor, enchantFitsItem };
+  }
+  const { createEnchants } = require('../web/theory-engine');
+  const api = harness(sources, raw);
+  let data = { ...raw };
+  api.configure(data); api.setRules(shared);
+  let held = shared;
+  const dependencies = {
+    getData: () => data, rulesFor: () => held, getEngine: () => engine,
+    plainly: api.plainly, enchantKey: api.enchantKey, worth: api.worth,
+    numeral: api.NUMERAL,
+    ofHand: { weapon: 'WEAPON', ability: 'ABILITY', armor: 'ARMOR', ring: 'RING' }
+  };
+  const factory = createEnchants(dependencies);
+  const old = legacy(() => data, () => held, engine);
+  function exact(got, expected) {
+    if (expected === null || typeof expected !== 'object') {
+      assert.ok(Object.is(got, expected), 'exact primitive parity'); return;
+    }
+    assert.deepEqual(Object.keys(got), Object.keys(expected), 'property and element order');
+    for (const key of Object.keys(expected)) exact(got[key], expected[key]);
+  }
+  const queries = [...raw.enchants.flatMap(one => [one.name,
+    one.name.replace(/\s+(?:[IVX]+|\d+)$/, ''), one.name.toUpperCase()]),
+    ...shared.enchants.map(one => one.name), 'unknown enchantment', '',
+    'Mana -AttackTradeoff IV', 'Pirates Expertise', "Pirate's Expertise", 'Vampric Lifeforce'];
+  for (const name of queries) {
+    const expected = old.charmNamed(name);
+    assert.ok(Object.is(factory.charmNamed(name), expected), 'factory charm reference: ' + name);
+    assert.ok(Object.is(api.charmNamed(name), expected), 'adapter charm reference: ' + name);
+  }
+  // Several classes and all four hands, plus each special client pool family.
+  const items = new Set();
+  for (const klass of ['Wizard', 'Archer', 'Warrior', 'Necromancer', 'Ninja']) {
+    for (const hand of ['weapon', 'ability', 'armor', 'ring']) {
+      const item = api.compatibleItemsFor(hand, klass, {}).find(one =>
+        old.rollableEnchantsFor(one.name, [], 0).length);
+      assert.ok(item, klass + '/' + hand + ' has a rollable sample');
+      items.add(item.name);
+    }
+  }
+  for (const [, item] of samples) items.add(item.name);
+  items.add('unknown item');
+  let compared = 0, fits = 0, misses = 0;
+  for (const itemName of items) {
+    const pool = old.enchantsFor(itemName, [], 0);
+    const ids = pool.slice(0, 4).map(one => one.id);
+    const scenarios = [undefined, null, [], [null, '', null, null],
+      [ids[0], null, 'unknown id', ''], ids, ['unknown id'], [null, ...ids]];
+    for (const already of scenarios) {
+      for (const at of [-1, 0, 1, 4, 99]) {
+        for (const name of ['locksOn', 'rollableEnchantsFor', 'enchantsFor', 'enchantFitsItem']) {
+          const args = name === 'locksOn' ? [held, already, at]
+            : [itemName, name === 'enchantFitsItem' ? already || [] : already, at];
+          const expected = old[name](...args);
+          const got = factory[name](...args);
+          const adapted = api[name](...args);
+          exact(got, expected); exact(adapted, expected);
+          if (name === 'rollableEnchantsFor') {
+            for (const result of [got, adapted]) result.forEach((one, i) =>
+              assert.ok(Object.is(one, expected[i]), 'engine pool references'));
+          }
+          if (name === 'enchantFitsItem') expected ? fits++ : misses++;
+          compared++;
+        }
+      }
+    }
+    const first = factory.enchantsFor(itemName, [], 0);
+    const next = factory.enchantsFor(itemName, [], 0);
+    first.forEach((one, i) => {
+      assert.notEqual(one, next[i], 'each choice is a new object');
+      const mine = factory.charmNamed(one.name);
+      if (mine) {
+        assert.notEqual(one, mine, 'the charm is copied');
+        for (const key of Object.keys(mine).filter(key => key !== 'name' && key !== 'roll')) {
+          assert.ok(Object.is(one[key], mine[key]), 'shallow charm member references: ' + key);
+        }
+      }
+    });
+  }
+  assert.ok(fits > 0 && misses > 0, 'both fit outcomes are exercised');
+  // Each translation branch, first-match ordering, ignored ids and excluded slot.
+  for (const one of raw.enchants) {
+    const bare = one.name.replace(api.NUMERAL, '').trim();
+    const canonical = shared.enchants.find(mod => api.enchantKey(mod.name) === api.enchantKey(one.name));
+    const maps = [shared.byName, new Map([[one.name, one], [bare, one]]),
+      new Map([[bare, one]]), canonical && new Map([[canonical.name.toUpperCase(), canonical],
+        [canonical.name.toLowerCase(), canonical]]), undefined].filter(value => value !== false);
+    for (const byName of maps) {
+      const rules = { byName };
+      for (const at of [0, 1, -1]) {
+        const args = [rules, [one.id, one.id, '', null, 'unknown id'], at];
+        exact(factory.locksOn(...args), old.locksOn(...args));
+        exact(api.locksOn(...args), old.locksOn(...args));
+      }
+    }
+  }
+  // Missing rules are checked after item lookup, at every call, with the exact message.
+  const unavailable = 'Enchanting rules are unavailable. Reload the page before planning a build.';
+  const known = [...items][0];
+  for (const missing of [false, null, undefined]) {
+    held = missing;
+    const missingApi = harness({}, raw, false);
+    missingApi.configure(data); missingApi.setRules(missing);
+    for (const target of [factory, missingApi, old]) {
+      for (const name of ['rollableEnchantsFor', 'enchantsFor', 'enchantFitsItem']) {
+        assert.throws(() => target[name](known, [], 0), error => error.message === unavailable);
+        exact(target[name]('unknown item', [], 0), name === 'enchantFitsItem' ? false : []);
+      }
+    }
+  }
+  held = { ...shared, byName: new Map(shared.byName) }; api.setRules(held);
+  exact(factory.enchantsFor(known, [], 0), old.enchantsFor(known, [], 0));
+  exact(api.enchantsFor(known, [], 0), old.enchantsFor(known, [], 0));
+
+  // Replacement preserves both existing name caches, but item/id lookups stay live.
+  const remembered = factory.charmNamed(raw.enchants[0].name);
+  const newCharm = { id: 'new charm', name: 'New Charm IV', worn: { ATT: 50 } };
+  data = { ...raw, items: [], enchants: [newCharm] };
+  api.configure(data);
+  for (const target of [factory, api, old]) {
+    assert.ok(Object.is(target.charmNamed(raw.enchants[0].name), remembered));
+    assert.equal(target.charmNamed(newCharm.name), undefined, 'configure does not invalidate name caches');
+    exact(target.rollableEnchantsFor(known, [], 0), []);
+    exact(target.locksOn({ byName: new Map([['New Charm', newCharm]]) }, [newCharm.id], -1), ['New Charm']);
+    exact(target.locksOn(shared, [remembered.id], -1), []);
+  }
+  const lazyApi = harness(sources, raw);
+  lazyApi.configure(data);
+  assert.ok(Object.is(lazyApi.charmNamed('New Charm'), newCharm), 'configure before first demand is live');
+  const lazyFactory = createEnchants(dependencies);
+  data = { ...data, enchants: [remembered] };
+  assert.ok(Object.is(lazyFactory.charmNamed(remembered.name), remembered));
+
+  // Observe the actual Maps: a cached undefined remains present and returns before helpers.
+  const maps = [];
+  class ObservedMap extends Map { constructor(...args) { super(...args); maps.push(this); } }
+  const context = { module: { exports: {} }, Map: ObservedMap };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'web/theory-engine.js'), 'utf8'), context);
+  let reads = 0, calls = 0;
+  const fixture = { get enchants() { reads++; return raw.enchants; },
+    byEnch: { [remembered.id]: remembered }, byItem: { [known]: { hand: 'weapon' } } };
+  const observed = context.module.exports.createEnchants({ ...dependencies, getData: () => fixture,
+    plainly(name) { calls++; return api.plainly(name); },
+    enchantKey(name) { calls++; return api.enchantKey(name); } });
+  assert.equal(reads, 0); assert.equal(maps.length, 1);
+  observed.locksOn(shared, [remembered.id], -1);
+  observed.rollableEnchantsFor(known, [], 0);
+  assert.equal(reads, 0); assert.equal(maps.length, 1, 'locks and pools do not build the name index');
+  assert.equal(observed.charmNamed('missing query'), undefined);
+  assert.equal(maps.length, 2); assert.equal(reads, 1);
+  assert.ok(maps[0].has('missing query')); assert.equal(maps[0].get('missing query'), undefined);
+  const before = calls;
+  assert.equal(observed.charmNamed('missing query'), undefined);
+  assert.equal(calls, before, 'negative cache bypasses all name helpers');
+  for (const name of queries) observed.charmNamed(name);
+  assert.equal(reads, 1); assert.equal(maps.length, 2, 'both Maps are constructed once');
+
+  // Preserve lookup timing, including per-id catalogue reads and absent-item short circuits.
+  function probe(create) {
+    const trace = [];
+    const liveData = {
+      get byItem() { trace.push('item'); return { [known]: { hand: 'weapon' } }; },
+      get byEnch() { trace.push('enchant'); return { [remembered.id]: remembered }; }
+    };
+    const pool = [], subtypes = new Set();
+    const injectedEngine = {
+      subtypesForItem() { trace.push('subtypes'); return subtypes; },
+      rollablePool() { trace.push('pool'); return pool; }
+    };
+    const rulesFor = () => { trace.push('rules'); return shared; };
+    const getData = () => { trace.push('data'); return liveData; };
+    const target = create({ ...dependencies, getData, rulesFor, getEngine: () => injectedEngine });
+    assert.equal(target.rollableEnchantsFor(known,
+      [remembered.id, null, 'unknown id', remembered.id], 0), pool);
+    assert.deepEqual(trace, ['data', 'item', 'rules', 'data', 'enchant', 'data', 'enchant', 'subtypes', 'pool']);
+    trace.length = 0;
+    exact(target.rollableEnchantsFor('unknown item', [], 0), []);
+    assert.deepEqual(trace, ['data', 'item']);
+  }
+  probe(deps => legacy(deps.getData, deps.rulesFor, deps.getEngine())); probe(createEnchants);
+
+  // Ties keep the first charm; an exact tier takes precedence over stronger bare matches.
+  const ties = [{ id: 'first', name: 'Tie I', worn: { ATT: 1 } },
+    { id: 'second', name: 'Tie II', worn: { ATT: 1 } },
+    { id: 'strong', name: 'Tie III', worn: { ATT: 2 } }];
+  const tieFactory = createEnchants({ ...dependencies, getData: () => ({ enchants: ties.slice(0, 2) }) });
+  assert.equal(tieFactory.charmNamed('Tie'), ties[0]);
+  const ranked = createEnchants({ ...dependencies, getData: () => ({ enchants: ties }) });
+  assert.equal(ranked.charmNamed('Tie I'), ties[0]); assert.equal(ranked.charmNamed('Tie'), ties[2]);
+
+  // Duplicate engine names keep the first weight. Synthetic ids and shared charm fields survive.
+  const mod = shared.enchants.find(one => old.charmNamed(one.name));
+  const synthetic = { ...mod, name: 'No Client Charm', weight: -0 };
+  const pool = [mod, { ...mod, weight: 999 }, synthetic, { ...synthetic, weight: 1 }];
+  let cfg, subtypeRules, poolRules;
+  const subtypes = new Set(['fixture']);
+  const injected = {
+    subtypesForItem(rules, item) { subtypeRules = rules; assert.equal(item, known); return subtypes; },
+    rollablePool(rules, config) { poolRules = rules; cfg = config; return pool; }
+  };
+  const snapshot = { ...raw, byItem: { [known]: { hand: 'unknown hand' } } };
+  const injectedDeps = { ...dependencies, getData: () => snapshot, getEngine: () => injected, rulesFor: () => shared };
+  const duplicate = createEnchants(injectedDeps);
+  const expected = legacy(() => snapshot, () => shared, injected).enchantsFor(known, [], 0);
+  exact(duplicate.enchantsFor(known, [], 0), expected);
+  assert.equal(expected.length, 2); assert.ok(Object.is(expected[1].roll, -0));
+  assert.deepEqual(Object.keys(expected[1]), ['roll', 'id', 'name']);
+  assert.deepEqual(Object.keys(cfg), ['item', 'type', 'slots', 'locks', 'subtypes']);
+  assert.equal(cfg.type, 'WEAPON'); assert.equal(cfg.slots, 4); assert.equal(cfg.subtypes, subtypes);
+  assert.equal(subtypeRules, shared); assert.equal(poolRules, shared);
+  duplicate.rollableEnchantsFor(known, [null], -1); assert.equal(cfg.slots, 1);
+  assert.equal(duplicate.enchantFitsItem(known, ['n:No Client Charm'], 0), true);
+  assert.equal(duplicate.enchantFitsItem(known, ['n:wrong'], 0), false);
+  console.log('Enchantments: ' + queries.length + ' charm queries and ' + compared
+    + ' exact legacy comparisons, references, negative caches and live lookups.');
+}
+
 // TheoryCraft projects a tiered enchantment to the strongest concrete tier
 // (for example "Attack Bonus IV"), while EnchantEngine exposes the player-facing
 // family name ("Attack Bonus"). Compare the rule identity, not that presentation.
