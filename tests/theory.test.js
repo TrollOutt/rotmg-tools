@@ -9,6 +9,100 @@ assert.equal(t.weaponRate, require('../web/theory-engine').weaponRate,
   'TheoryCraft must use the extracted weapon calculation directly');
 assert.equal(t.landed, require('../web/theory-engine').landed,
   'TheoryCraft must use the extracted shot calculation directly');
+
+// Exercise the statistic seam without browser globals, status data or set rules.
+// The corpus below covers the real catalogue; this fixture makes evaluation
+// order, rounding, shared references and the caller's cache lifetime explicit.
+{
+  const stats = ['hp', 'mp', 'att', 'def', 'spd', 'dex', 'vit', 'wis'].map(key => [key]);
+  const hands = ['weapon', 'ability', 'armor', 'ring'].map(key => [key]);
+  const ofStat = Object.fromEntries(stats.map(([key]) => [key.toUpperCase(), key]));
+  ofStat.MAXHP = 'hp'; ofStat.MAXMP = 'mp';
+  const calculations = require('../web/theory-engine').createStatistics({ stats, hands, ofStat });
+  const kind = { name: 'Fixture', grow: {} };
+  for (const [key] of stats) {
+    kind[key] = 10; kind[key + 'Top'] = 20; kind.grow[key] = 0.25;
+  }
+  Object.assign(kind, { hp: 100, hpTop: 101, mp: 50, mpTop: 100 });
+  Object.assign(kind.grow, { hp: 0.75, mp: 1.25 });
+  const first = { how: 'add', shots: [{ low: 10 }] };
+  const second = { how: 'set', shots: [{ low: 20 }] };
+  const third = { how: 'add', shots: [{ low: 30 }] };
+  const items = [
+    { name: 'Sword', worn: { ATT: 4.25, WIS: 3, Unknown: 999 },
+      rel: [{ stat: 'ATT', of: 'ATT', pct: 50 }, { stat: 'HP', of: 'WIS', pct: 175 }],
+      share: [{ stat: 'HP', of: 'MP', pct: 100 }, { stat: 'MP', of: 'HP', pct: 50 },
+        { stat: 'Unknown', of: 'HP', pct: 100 }] },
+    { name: 'Orb', worn: { MP: 10 }, share: [{ stat: 'HP', of: 'HP', pct: -50 }] },
+    { name: 'Ring', worn: { HP: 20, MAXMP: 5 } }
+  ];
+  const enchants = [
+    { id: 'a', worn: { ATT: 1.5, MP: 2 }, rel: [{ stat: 'ATT', of: 'ATT', pct: 50 }],
+      mul: { dmg: 1.1, rate: 0.9, life: 0 }, sub: [first] },
+    { id: 'b', worn: { WIS: 1 }, rel: [{ stat: 'HP', of: 'ATT', pct: 16 },
+      { stat: 'HP', of: 'Unknown', pct: 100 }],
+      mul: { dmg: 0.75, fast: 1.2 }, sub: [second, third] }
+  ];
+  const catalogue = {
+    byClass: { Fixture: kind }, byItem: Object.fromEntries(items.map(one => [one.name, one])),
+    byEnch: Object.fromEntries(enchants.map(one => [one.id, one]))
+  };
+  const bonuses = [{ gives: { att: 2.25, mp: 3 } }, { gives: { att: 1, mp: 4 } }];
+  const state = { klass: 'Fixture', level: 3, maxed: false, exalt: true,
+    exalts: { hp: 25, mp: 25, att: 5, wis: 5 }, gear: {
+      weapon: { name: 'Sword', ench: [null, 'a', 'missing', ''] },
+      ability: { name: 'Orb' }, armor: null, ring: { name: 'Ring', ench: ['b'] }
+    } };
+  const before = JSON.stringify({ state, catalogue, bonuses });
+  const got = calculations.statsOf(state, catalogue, bonuses);
+  assert.deepEqual(got.base, { hp: 101, mp: 53, att: 11, def: 11, spd: 11, dex: 11, vit: 11, wis: 11 });
+  assert.deepEqual(got.from.bonus, { hp: 20, mp: 24, att: 9, def: 0, spd: 0, dex: 0, vit: 0, wis: 4 });
+  assert.equal(got.from.rel.att, 9, 'relative bonuses use the same snapshot and exclude exalts');
+  assert.equal(got.from.share.mp, 154.44 * 0.5, 'shares use totals before any share applies');
+  assert.deepEqual(got.now, { hp: 179.2, mp: 179.2, att: 34, def: 11, spd: 11, dex: 11, vit: 11, wis: 20 });
+  assert.deepEqual(Object.keys(got.from), ['gear', 'ench', 'set', 'exalt', 'rel', 'share', 'bonus']);
+  assert.equal(JSON.stringify({ state, catalogue, bonuses }), before, 'inputs remain untouched');
+  assert.notEqual(calculations.statsOf(state, catalogue, bonuses).now, got.now, 'results are not cached');
+  assert.equal(calculations.statsOf({ ...state, klass: 'missing' }, catalogue, bonuses), null);
+  const capped = calculations.statsOf({ ...state, maxed: true, exalt: false, gear: {} }, catalogue, []);
+  assert.deepEqual(capped.now, capped.top, 'maxed bases use class caps without gear or exalts');
+
+  assert.deepEqual(calculations.scaleOf(state, catalogue.byEnch),
+    { dmg: 1.1 * 0.75, rate: 0.9, life: 0, fast: 1.2 });
+  const parts = calculations.subOf(state, catalogue.byEnch);
+  assert.deepEqual(parts, [first, second, third]);
+  parts.forEach((part, i) => assert.equal(part, [first, second, third][i], 'subattacks retain catalogue identity'));
+  assert.notEqual(calculations.subOf(state, catalogue.byEnch), parts, 'only the list is fresh');
+  state.gear.ability.ench = ['a'];
+  const repeated = calculations.subOf(state, catalogue.byEnch);
+  assert.deepEqual(repeated, [first, first, second, third], 'hand order and duplicates are preserved');
+  assert.equal(repeated[0], repeated[1]);
+  assert.equal(calculations.scaleOf(state, catalogue.byEnch).dmg, 1.1 * 1.1 * 0.75);
+  assert.deepEqual(calculations.scaleOf(state, {}), { dmg: 1, rate: 1, life: 1, fast: 1 });
+  assert.deepEqual(calculations.subOf(state, {}), [], 'catalogues are supplied per call');
+  catalogue.byEnch.a.mul.dmg = 2;
+  assert.equal(calculations.scaleOf(state, catalogue.byEnch).dmg, 2 * 2 * 0.75, 'catalogue changes are read immediately');
+  hands.reverse();
+  assert.equal(calculations.subOf(state, catalogue.byEnch)[0], second, 'rule tables retain their references');
+  hands.reverse();
+  delete state.gear.ability.ench;
+
+  const fixture = { classes: [kind], items, enchants, bosses: [], sets: [] };
+  const adapter = harness({}, fixture, false);
+  assert.equal(adapter.statsOf({ ...state, klass: 'missing' }), null);
+  fixture.sets = [{ name: 'Fixture set', pieces: ['Sword', 'Orb'], steps: { 2: { ATT: 3.25, MP: 7 } } }];
+  adapter.configure(JSON.parse(JSON.stringify(fixture)));
+  const plain = value => JSON.parse(JSON.stringify(value));
+  assert.deepEqual(plain(adapter.statsOf(state)), got, 'adapters pass resolved set bonuses to the engine');
+  assert.deepEqual(plain(adapter.scaleOf(state)), calculations.scaleOf(state, catalogue.byEnch));
+  const adaptedParts = adapter.subOf(state);
+  assert.equal(adaptedParts[0], adapter.subOf(state)[0], 'adapter preserves subattack identity across calls');
+  assert.deepEqual(plain(adaptedParts), calculations.subOf(state, catalogue.byEnch));
+  adapter.configure({ ...fixture, sets: [] });
+  assert.deepEqual(plain(adapter.statsOf(state)), got,
+    'set indexes stay owned by the UI closure and retain their existing lifetime');
+}
+
 const portraitHelpers = (() => {
   const file = path.join(root, 'web/theorycraft.js');
   const marker = 'return { start, share, open, put };';

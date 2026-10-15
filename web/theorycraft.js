@@ -48,6 +48,7 @@ var TheoryCraft = (function () {
   OF_STAT.MAXHP = 'hp'; OF_STAT.MAXMP = 'mp';
   const HANDS = [['weapon', 'Weapon'], ['ability', 'Ability'],
     ['armor', 'Armour'], ['ring', 'Ring']];
+  const statistics = TheoryEngine.createStatistics({ stats: STATS, hands: HANDS, ofStat: OF_STAT });
 /*
  * Exaltations. Five of each statistic, and what one is worth depends on the
  * statistic: life and magic go up five at a time, so a fully exalted
@@ -655,117 +656,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   function statsOf(state) {
-    const kind = data.byClass[state.klass];
-    if (!kind) return null;
-    const out = {}, base = {}, top = {};
-    for (const [key] of STATS) {
-      const ceiling = kind[key + 'Top'];
-      const grown = (kind[key] || 0) + (kind.grow[key] || 0) * (state.level - 1);
-      // Eight of eight means every potion drunk: the ceiling itself.
-      const reached = state.maxed ? ceiling : Math.min(ceiling, grown);
-      base[key] = Math.round(reached);
-      top[key] = ceiling;
-      out[key] = base[key];
-    }
-    const from = { gear: {}, ench: {}, set: {}, exalt: {}, rel: {}, share: {} };
-
-    // Sets first, because they are decided by what is worn rather than by
-    // any one piece.
-    for (const kit of setsOn(state)) {
-      for (const key of Object.keys(kit.gives)) {
-        from.set[key] = (from.set[key] || 0) + kit.gives[key];
-      }
-    }
-    for (const hand of HANDS) {
-      const worn = state.gear[hand[0]];
-      const item = worn && data.byItem[worn.name];
-      if (item && item.worn) {
-        for (const tag of Object.keys(item.worn)) {
-          const key = OF_STAT[tag];
-          if (key) from.gear[key] = (from.gear[key] || 0) + item.worn[tag];
-        }
-      }
-      for (const id of (worn && worn.ench) || []) {
-        const spell = id && data.byEnch[id];
-        if (!spell || !spell.worn) continue;
-        for (const tag of Object.keys(spell.worn)) {
-          const key = OF_STAT[tag];
-          if (key) from.ench[key] = (from.ench[key] || 0) + spell.worn[tag];
-        }
-      }
-    }
-    for (const [key] of STATS) {
-      from.exalt[key] = state.exalt ? (state.exalts[key] || 0) : 0;
-      out[key] = base[key] + (from.gear[key] || 0) + (from.ench[key] || 0)
-        + (from.set[key] || 0) + from.exalt[key];
-    }
-
-    /*
-     * Then the enchantments that take a share of what the gear gives.
-     *
-     * "Increases Attack by 16% of Bonus Attack" - the bonus, not the total:
-     * what the four items, their enchantments and any set have added, with
-     * the class's own statistic and the exaltations left out of it. Worth
-     * nothing on a bare character and a great deal on a good one, which is
-     * why every build worth the name is full of them.
-     *
-     * They are taken from the bonus as it stood before any of them applied,
-     * so two cannot feed on each other.
-     */
-    {
-      const bonus = {};
-      for (const [key] of STATS) {
-        bonus[key] = (from.gear[key] || 0) + (from.ench[key] || 0) + (from.set[key] || 0);
-      }
-      const takes = part => {
-        const key = OF_STAT[part.stat], of = OF_STAT[part.of];
-        if (!key || !of) return;
-        const much = bonus[of] * part.pct / 100;
-        from.rel[key] = (from.rel[key] || 0) + much;
-        out[key] += much;
-      };
-      for (const hand of HANDS) {
-        const worn = state.gear[hand[0]];
-        // A few items are built the same way: the Ring of Cubed Wisdom is a
-        // hundred and seventy-five per cent of your bonus wisdom as life.
-        const item = worn && data.byItem[worn.name];
-        for (const part of (item && item.rel) || []) takes(part);
-        for (const id of (worn && worn.ench) || []) {
-          const one = id && data.byEnch[id];
-          for (const part of (one && one.rel) || []) takes(part);
-        }
-      }
-      /* Kept, so the page can say what a share came to without working the
-         bonus out a second time and drifting from the sum that counted. */
-      from.bonus = bonus;
-    }
-
-    /*
-     * And last, the ones given as a share of another statistic.
-     *
-     * The Wretched Rags do not add life: they take half of it away and give
-     * back all of your mana as life, which on a wizard with nine hundred mana
-     * is eight hundred and fifty. They are read after everything else,
-     * because a share is a share of the whole - what the class has, what is
-     * worn and what the exaltations added - and taken from the totals as they
-     * stood before any share was applied, so two of them cannot feed on each
-     * other.
-     */
-    const stood = Object.assign({}, out);
-    for (const hand of HANDS) {
-      const worn = state.gear[hand[0]];
-      const item = worn && data.byItem[worn.name];
-      for (const part of (item && item.share) || []) {
-        const key = OF_STAT[part.stat], of = OF_STAT[part.of];
-        if (!key || !of) continue;
-        const much = stood[of] * part.pct / 100;
-        from.share[key] = (from.share[key] || 0) + much;
-        out[key] += much;
-      }
-    }
-
-    for (const [key] of STATS) out[key] = Math.round(out[key] * 10) / 10;
-    return { now: out, base, top, from };
+    // An unknown class must not initialise the set indexes.
+    if (!data.byClass[state.klass]) return null;
+    return statistics.statsOf(state, data, setsOn(state));
   }
 
   /*
@@ -777,18 +670,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * much a part of what a build does as an attack bonus is.
    */
   function scaleOf(state) {
-    const out = { dmg: 1, rate: 1, life: 1, fast: 1 };
-    for (const [hand] of HANDS) {
-      const worn = state.gear[hand];
-      for (const id of (worn && worn.ench) || []) {
-        const one = id && data.byEnch[id];
-        if (!one || !one.mul) continue;
-        for (const key of Object.keys(out)) {
-          if (one.mul[key] !== undefined) out[key] *= one.mul[key];
-        }
-      }
-    }
-    return out;
+    return statistics.scaleOf(state, data.byEnch);
   }
 
   /* ---------------- status effects ---------------- */
@@ -947,15 +829,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * at, with its own damage, its own count and its own burst.
    */
   function subOf(state) {
-    const out = [];
-    for (const [hand] of HANDS) {
-      const worn = state.gear[hand];
-      for (const id of (worn && worn.ench) || []) {
-        const one = id && data.byEnch[id];
-        for (const part of (one && one.sub) || []) out.push(part);
-      }
-    }
-    return out;
+    return statistics.subOf(state, data.byEnch);
   }
 
   /*

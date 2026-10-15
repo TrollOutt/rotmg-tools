@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
-// Test-only access to the UI closure, with the pure weapon engine supplied below.
+// Test-only access to the UI closure, with the arithmetic engine supplied below.
 module.exports = function(sources, raw, withEngine = true) {
   const file = path.join(__dirname, '../web/theorycraft.js');
   const original = fs.readFileSync(file, 'utf8');
