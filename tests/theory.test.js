@@ -103,6 +103,178 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
     'set indexes stay owned by the UI closure and retain their existing lifetime');
 }
 
+// Compare the extracted seam with the pre-extraction implementation.
+{
+  const hands = ['weapon', 'ability', 'armor', 'ring'].map(key => [key]);
+  const ofStat = Object.fromEntries(['hp', 'mp', 'att', 'def', 'spd', 'dex', 'vit', 'wis']
+    .map(key => [key.toUpperCase(), key]));
+  ofStat.MAXHP = 'hp'; ofStat.MAXMP = 'mp';
+  const rules = { hands, ofStat };
+  const createSets = require('../web/theory-engine').createSets;
+  function legacy(data) {
+    const HANDS = hands, OF_STAT = ofStat;
+    let sharedPieces = null;
+    let setsByPiece = null;
+
+    function ensureSetIndex() {
+      if (sharedPieces && setsByPiece) return;
+
+      sharedPieces = new Map();
+      setsByPiece = new Map();
+
+      for (const [order, kit] of (data.sets || []).entries()) {
+        for (const piece of kit.pieces) {
+          sharedPieces.set(piece, (sharedPieces.get(piece) || 0) + 1);
+          if (!setsByPiece.has(piece)) setsByPiece.set(piece, []);
+          setsByPiece.get(piece).push({ kit, order });
+        }
+      }
+    }
+
+    function timesListed(name) {
+      ensureSetIndex();
+      return sharedPieces.get(name) || 0;
+    }
+
+    function setsOn(state) {
+      ensureSetIndex();
+
+      const worn = new Set(HANDS.map(h => (state.gear[h[0]] || {}).name).filter(Boolean));
+      const hits = new Map();
+
+      /*
+       * Only sets containing something actually worn can possibly pay.
+       * Record their hit count while walking the four equipped pieces instead
+       * of walking every piece of every set for every optimiser score.
+       */
+      for (const piece of worn) {
+        for (const { kit, order } of setsByPiece.get(piece) || []) {
+          let hit = hits.get(kit);
+          if (!hit) {
+            hit = { kit, order, many: 0, ours: false };
+            hits.set(kit, hit);
+          }
+          hit.many++;
+          // Something that belongs to this set and to no other.
+          if (timesListed(piece) === 1) hit.ours = true;
+        }
+      }
+
+      const out = [];
+      const active = Array.from(hits.values()).sort((a, b) => a.order - b.order);
+
+      for (const hit of active) {
+        const kit = hit.kit;
+        const howMany = hit.many;
+        /*
+         * A set pays only when something you are wearing is its own.
+         *
+         * The alien sets list the same three dozen weapons and the same nine
+         * suits of armour as each other, and differ only in the core that goes
+         * on the finger - so an alien weapon and an alien suit, counted
+         * plainly, satisfied two pieces of thirteen different sets at once and
+         * handed over all thirteen bonuses. What separates them is the piece
+         * that appears in one list and nowhere else.
+         */
+        if (howMany < 2 || !hit.ours) continue;
+        const gives = {};
+        for (const step of Object.keys(kit.steps)) {
+          if (Number(step) > howMany) continue;
+          for (const tag of Object.keys(kit.steps[step])) {
+            const key = OF_STAT[tag] || OF_STAT[tag.replace(/^MAX/, '')];
+            if (key) gives[key] = (gives[key] || 0) + kit.steps[step][tag];
+          }
+        }
+        if (Object.keys(gives).length) out.push({ name: kit.name, many: howMany, gives });
+      }
+      return out;
+    }
+    return { setsOn, timesListed };
+  }
+  const plain = value => JSON.parse(JSON.stringify(value));
+  const gearFor = names => Object.fromEntries(hands.map(([hand], i) =>
+    [hand, names[i] ? { name: names[i] } : null]));
+  const original = legacy(raw);
+  const extracted = createSets(rules, () => raw.sets);
+  const builds = [
+    [], ['Harmonious Harp'], ['Harmonious Harp', "Angel's Fanfare"],
+    ['Harmonious Harp', "Angel's Fanfare", 'Wings of Sanctity', 'Heavenly Halo'],
+    ['Laser Rifle', null, 'Fitted Protective Matrix'],
+    ['Laser Rifle', null, 'Fitted Protective Matrix', 'Loaded Core'],
+    ['Neo Laser Rifle', null, 'Neo Fitted Protective Matrix', 'Neo Alien Core: Power'],
+    ['Harmonious Harp', "Angel's Fanfare", null, 'Loaded Core'],
+    ['Loaded Core', 'Laser Rifle', 'Loaded Core'], ['not a piece', null, null, '']
+  ];
+  const before = JSON.stringify(raw.sets);
+  for (const names of builds) {
+    const gear = gearFor(names), snapshot = JSON.stringify(gear);
+    const got = extracted.setsOn(gear);
+    assert.deepEqual(got, original.setsOn({ gear }), `set parity: ${names}`);
+    assert.deepEqual(plain(t.setsOn({ gear })), got, 'UI adapter preserves resolved bonuses');
+    assert.equal(JSON.stringify(gear), snapshot);
+    assert.notEqual(extracted.setsOn(gear), got, 'results remain fresh');
+  }
+  assert.equal(extracted.timesListed('Harmonious Harp'), 1);
+  assert.ok(extracted.timesListed('Laser Rifle') > 1);
+  assert.equal(extracted.timesListed('not a piece'), 0);
+  assert.deepEqual(extracted.setsOn(gearFor(builds[1])), [], 'one unique piece cannot pay');
+  assert.equal(extracted.setsOn(gearFor(builds[2]))[0].many, 2);
+  assert.deepEqual(extracted.setsOn(gearFor(builds[4])), [], 'shared alien pieces alone cannot pay');
+  assert.deepEqual(extracted.setsOn(gearFor(builds[5])).map(kit => kit.name), ['Loaded Core']);
+  assert.equal(JSON.stringify(raw.sets), before);
+
+  // Observe catalogue access and iteration without exposing the private maps.
+  for (const first of ['setsOn', 'timesListed']) {
+    let reads = 0, builds = 0;
+    const kit = { name: 'First', pieces: ['A', 'B'],
+      steps: { 2: { MAXATT: 2, Unknown: 99 }, 3: { ATT: 100 } } };
+    const kits = [kit, { name: 'Second', pieces: ['C', 'D'], steps: { 2: { ATT: 3 } } }];
+    kits.entries = function () { builds++; return Array.prototype.entries.call(this); };
+    let current = [];
+    const calculations = createSets(rules, () => { reads++; return current; });
+    assert.equal(reads, 0, 'factory does not read sets');
+    assert.equal(builds, 0, 'factory does not build indexes');
+    current = kits;
+    if (first === 'setsOn') calculations.setsOn({});
+    else assert.equal(calculations.timesListed('A'), 1);
+    assert.equal(reads, 1); assert.equal(builds, 1);
+    current = [];
+    const gear = gearFor(['D', 'C', 'B', 'A']);
+    assert.deepEqual(calculations.setsOn(gear), [
+      { name: 'First', many: 2, gives: { att: 2 } },
+      { name: 'Second', many: 2, gives: { att: 3 } }
+    ], 'catalogue order, MAX fallback and threshold survive gear order and catalogue replacement');
+    kit.name = 'Renamed'; kit.steps[2].MAXATT = 7;
+    const got = calculations.setsOn(gear);
+    assert.equal(got[0].name, 'Renamed'); assert.equal(got[0].gives.att, 7,
+      'indexes retain original kit and steps references');
+    ofStat.MAXATT = 'dex';
+    assert.equal(calculations.setsOn(gear)[0].gives.dex, 7, 'stat table is retained by reference');
+    delete ofStat.MAXATT;
+    assert.equal(calculations.timesListed('A'), 1);
+    assert.equal(reads, 1); assert.equal(builds, 1, 'indexes are built only once');
+  }
+  for (const initial of [undefined, null, []]) {
+    let current = initial, reads = 0;
+    const calculations = createSets(rules, () => { reads++; return current; });
+    assert.deepEqual(calculations.setsOn(gearFor(builds[2])), []);
+    current = raw.sets;
+    assert.equal(calculations.timesListed('Harmonious Harp'), 0);
+    assert.deepEqual(calculations.setsOn(gearFor(builds[2])), []);
+    assert.equal(reads, 1, 'even an empty index retains its lifetime');
+  }
+  const adapter = harness({}, raw, false);
+  adapter.configure({ ...raw, sets: [] });
+  adapter.configure(raw);
+  const state = { gear: gearFor(builds[2]) };
+  assert.deepEqual(plain(adapter.setsOn(state)), extracted.setsOn(state.gear),
+    'configure before first demand uses the current catalogue');
+  adapter.configure({ ...raw, sets: [] });
+  adapter.use({ gear: {} });
+  assert.deepEqual(plain(adapter.setsOn(state)), extracted.setsOn(state.gear),
+    'configure and use do not invalidate existing indexes');
+}
+
 const portraitHelpers = (() => {
   const file = path.join(root, 'web/theorycraft.js');
   const marker = 'return { start, share, open, put };';

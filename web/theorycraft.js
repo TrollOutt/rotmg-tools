@@ -578,81 +578,10 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * outfit rather than from any one piece, which is exactly why it is the one
    * thing a search that changes one item at a time can never find.
    */
-  let sharedPieces = null;
-  let setsByPiece = null;
-
-  function ensureSetIndex() {
-    if (sharedPieces && setsByPiece) return;
-
-    sharedPieces = new Map();
-    setsByPiece = new Map();
-
-    for (const [order, kit] of (data.sets || []).entries()) {
-      for (const piece of kit.pieces) {
-        sharedPieces.set(piece, (sharedPieces.get(piece) || 0) + 1);
-        if (!setsByPiece.has(piece)) setsByPiece.set(piece, []);
-        setsByPiece.get(piece).push({ kit, order });
-      }
-    }
-  }
-
-  function timesListed(name) {
-    ensureSetIndex();
-    return sharedPieces.get(name) || 0;
-  }
+  const setCalculations = TheoryEngine.createSets({ hands: HANDS, ofStat: OF_STAT }, () => data.sets);
 
   function setsOn(state) {
-    ensureSetIndex();
-
-    const worn = new Set(HANDS.map(h => (state.gear[h[0]] || {}).name).filter(Boolean));
-    const hits = new Map();
-
-    /*
-     * Only sets containing something actually worn can possibly pay.
-     * Record their hit count while walking the four equipped pieces instead
-     * of walking every piece of every set for every optimiser score.
-     */
-    for (const piece of worn) {
-      for (const { kit, order } of setsByPiece.get(piece) || []) {
-        let hit = hits.get(kit);
-        if (!hit) {
-          hit = { kit, order, many: 0, ours: false };
-          hits.set(kit, hit);
-        }
-        hit.many++;
-        // Something that belongs to this set and to no other.
-        if (timesListed(piece) === 1) hit.ours = true;
-      }
-    }
-
-    const out = [];
-    const active = Array.from(hits.values()).sort((a, b) => a.order - b.order);
-
-    for (const hit of active) {
-      const kit = hit.kit;
-      const howMany = hit.many;
-      /*
-       * A set pays only when something you are wearing is its own.
-       *
-       * The alien sets list the same three dozen weapons and the same nine
-       * suits of armour as each other, and differ only in the core that goes
-       * on the finger - so an alien weapon and an alien suit, counted
-       * plainly, satisfied two pieces of thirteen different sets at once and
-       * handed over all thirteen bonuses. What separates them is the piece
-       * that appears in one list and nowhere else.
-       */
-      if (howMany < 2 || !hit.ours) continue;
-      const gives = {};
-      for (const step of Object.keys(kit.steps)) {
-        if (Number(step) > howMany) continue;
-        for (const tag of Object.keys(kit.steps[step])) {
-          const key = OF_STAT[tag] || OF_STAT[tag.replace(/^MAX/, '')];
-          if (key) gives[key] = (gives[key] || 0) + kit.steps[step][tag];
-        }
-      }
-      if (Object.keys(gives).length) out.push({ name: kit.name, many: howMany, gives });
-    }
-    return out;
+    return setCalculations.setsOn(state.gear);
   }
 
   function statsOf(state) {
