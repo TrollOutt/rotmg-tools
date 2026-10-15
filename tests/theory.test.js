@@ -10,6 +10,113 @@ assert.equal(t.weaponRate, require('../web/theory-engine').weaponRate,
 assert.equal(t.landed, require('../web/theory-engine').landed,
   'TheoryCraft must use the extracted shot calculation directly');
 
+// Frozen pre-extraction implementation: preserve comparison and Set insertion order.
+{
+  function legacy(data) {
+  const COUNTS = ['ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS', 'MAXHP', 'MAXMP'];
+  const stat = (one, key) => (one && one.worn && one.worn[key]) || 0;
+  // Worth more than its own statistics: not comparable, so not dropped.
+  const deeper = one => !!(one.set || one.share || one.rel || one.sub || one.mul
+    || one.heal || one.alters || one.does || one.cast || one.many || one.burst
+    || (one.shots || []).some(shot => shot.subattack));
+
+  let beaten = null;
+  function beatenOnes() {
+    if (beaten) return beaten;
+    beaten = { ench: new Set(), gear: new Set() };
+
+    /*
+     * Enchantments, within one family: same identifier but for the tier on
+     * the end, so the four Attack -Defense Tradeoffs are compared with each
+     * other and with nothing else.
+     */
+    const family = new Map();
+    for (const one of data.enchants || []) {
+      const stem = String(one.id).replace(/_[1-4]$/, '');
+      if (stem === String(one.id)) continue;              // not a tiered one
+      if (!family.has(stem)) family.set(stem, []);
+      family.get(stem).push(one);
+    }
+    for (const kin of family.values()) {
+      if (kin.length < 2) continue;
+      for (const one of kin) {
+        if (deeper(one)) continue;
+        if (kin.some(other => other !== one && !deeper(other)
+          && COUNTS.every(key => stat(other, key) >= stat(one, key))
+          && COUNTS.some(key => stat(other, key) > stat(one, key)))) {
+          beaten.ench.add(one.id);
+        }
+      }
+    }
+
+    /* Gear, within one hand and one slot, on its statistics and its shot. */
+    const hurt = one => (one.shots && one.shots[0])
+      ? (one.shots[0].low + (one.shots[0].high === undefined
+        ? one.shots[0].low : one.shots[0].high)) / 2 : 0;
+    const far = one => (one.shots && one.shots[0] && one.shots[0].reach) || 0;
+    const shelf = new Map();
+    for (const one of data.items) {
+      const key = one.hand + '/' + one.slot;
+      if (!shelf.has(key)) shelf.set(key, []);
+      shelf.get(key).push(one);
+    }
+    for (const kin of shelf.values()) {
+      for (const one of kin) {
+        if (deeper(one)) continue;
+        if (kin.some(other => other !== one && !deeper(other)
+          && COUNTS.every(key => stat(other, key) >= stat(one, key))
+          && hurt(other) >= hurt(one) && far(other) >= far(one)
+          && (other.mp || 0) <= (one.mp || 0)
+          && (COUNTS.some(key => stat(other, key) > stat(one, key))
+            || hurt(other) > hurt(one)))) {
+          beaten.gear.add(one.name);
+        }
+      }
+    }
+    return beaten;
+  }
+
+    return beatenOnes;
+  }
+  const { createBeaten } = require('../web/theory-engine');
+  const exact = (got, expected) => {
+    assert.deepEqual(Object.keys(got), Object.keys(expected));
+    for (const key of ['ench', 'gear']) assert.deepEqual([...got[key]], [...expected[key]]);
+  };
+  let data = raw, reads = 0;
+  const factory = createBeaten(() => { reads++; return data; });
+  assert.equal(reads, 0, 'construction stays lazy');
+  const result = factory.beatenOnes();
+  exact(result, legacy(raw)());
+  assert.equal(factory.beatenOnes(), result);
+  assert.equal(reads, 2, 'catalogues are read only on first demand');
+  data = { items: [], enchants: [] };
+  assert.equal(factory.beatenOnes(), result, 'replacement alone keeps the cache');
+  factory.invalidate();
+  const empty = factory.beatenOnes();
+  assert.notEqual(empty, result);
+  exact(empty, legacy(data)());
+  data = { items: [] };
+  factory.invalidate(); exact(factory.beatenOnes(), legacy(data)());
+  data = {};
+  factory.invalidate();
+  assert.throws(() => factory.beatenOnes(), TypeError);
+  const old = legacy(data); assert.throws(() => old(), TypeError);
+  exact(factory.beatenOnes(), old()); // Original caches the partial result before failing.
+  const api = harness({}, raw);
+  exact(api.beatenOnes(), result);
+  const cached = api.beatenOnes();
+  api.configure({ ...raw, items: [], enchants: [] });
+  assert.equal(api.beatenOnes(), cached, 'configure does not invalidate');
+  api.progression(null, { mode: 'best' });
+  assert.notEqual(api.beatenOnes(), cached);
+  exact(api.beatenOnes(), empty);
+  const lazy = harness({}, raw);
+  lazy.configure({ ...raw, items: [], enchants: [] });
+  exact(lazy.beatenOnes(), empty);
+  console.log('Beaten candidates: exact catalogue order, lazy lifetime and explicit invalidation.');
+}
+
 // Exercise the statistic seam without browser globals, status data or set rules.
 // The corpus below covers the real catalogue; this fixture makes evaluation
 // order, rounding, shared references and the caller's cache lifetime explicit.

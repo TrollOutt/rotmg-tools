@@ -99,6 +99,15 @@
  * @typedef {{getData: () => TheoryScoreCatalogue,
  *   numbersFor: (state: TheoryScoreState, def: number) => TheoryScoreNumbers | null}} TheoryScoreDependencies
  */
+/**
+ * @typedef {{worn?: TheoryStatValues, set?: unknown, share?: unknown, rel?: unknown,
+ *   sub?: unknown, mul?: unknown, heal?: unknown, alters?: unknown, does?: unknown,
+ *   cast?: unknown, many?: unknown, burst?: unknown, shots?: TheoryShot[]}} TheoryComparable
+ * @typedef {TheoryComparable & {id: string}} TheoryBeatenEnchantment
+ * @typedef {TheoryComparable & {name: string, hand: string, slot?: number, mp?: number}} TheoryBeatenItem
+ * @typedef {{enchants?: TheoryBeatenEnchantment[], items: TheoryBeatenItem[]}} TheoryBeatenCatalogue
+ * @typedef {{ench: Set<string>, gear: Set<string>}} TheoryBeatenResult
+ */
 var TheoryEngine = (function () {
   'use strict';
 
@@ -637,7 +646,85 @@ var TheoryEngine = (function () {
     return scoreOf;
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore };
+  /**
+   * Retain the caller's lazy cache lifetime, including explicit profile invalidation.
+   * @param {() => TheoryBeatenCatalogue} getData
+   */
+  function createBeaten(getData) {
+    const COUNTS = ['ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS', 'MAXHP', 'MAXMP'];
+    /** @param {TheoryComparable} one @param {string} key @returns {number} */
+    const stat = (one, key) => (one && one.worn && one.worn[key]) || 0;
+    // Worth more than its own statistics: not comparable, so not dropped.
+    /** @param {TheoryComparable} one @returns {boolean} */
+    const deeper = one => !!(one.set || one.share || one.rel || one.sub || one.mul
+      || one.heal || one.alters || one.does || one.cast || one.many || one.burst
+      || (one.shots || []).some(shot => shot.subattack));
+
+    /** @type {TheoryBeatenResult | null} */
+    let beaten = null;
+    /** @returns {TheoryBeatenResult} */
+    function beatenOnes() {
+      if (beaten) return beaten;
+      beaten = { ench: new Set(), gear: new Set() };
+
+      /*
+       * Enchantments, within one family: same identifier but for the tier on
+       * the end, so the four Attack -Defense Tradeoffs are compared with each
+       * other and with nothing else.
+       */
+      /** @type {Map<string, TheoryBeatenEnchantment[]>} */
+      const family = new Map();
+      for (const one of getData().enchants || []) {
+        const stem = String(one.id).replace(/_[1-4]$/, '');
+        if (stem === String(one.id)) continue;              // not a tiered one
+        if (!family.has(stem)) family.set(stem, []);
+        family.get(stem)?.push(one);
+      }
+      for (const kin of family.values()) {
+        if (kin.length < 2) continue;
+        for (const one of kin) {
+          if (deeper(one)) continue;
+          if (kin.some(other => other !== one && !deeper(other)
+            && COUNTS.every(key => stat(other, key) >= stat(one, key))
+            && COUNTS.some(key => stat(other, key) > stat(one, key)))) {
+            beaten.ench.add(one.id);
+          }
+        }
+      }
+
+      /* Gear, within one hand and one slot, on its statistics and its shot. */
+      /** @param {TheoryBeatenItem} one @returns {number} */
+      const hurt = one => (one.shots && one.shots[0])
+        ? (one.shots[0].low + (one.shots[0].high === undefined
+          ? one.shots[0].low : one.shots[0].high)) / 2 : 0;
+      /** @param {TheoryBeatenItem} one @returns {number} */
+      const far = one => (one.shots && one.shots[0] && one.shots[0].reach) || 0;
+      /** @type {Map<string, TheoryBeatenItem[]>} */
+      const shelf = new Map();
+      for (const one of getData().items) {
+        const key = one.hand + '/' + one.slot;
+        if (!shelf.has(key)) shelf.set(key, []);
+        shelf.get(key)?.push(one);
+      }
+      for (const kin of shelf.values()) {
+        for (const one of kin) {
+          if (deeper(one)) continue;
+          if (kin.some(other => other !== one && !deeper(other)
+            && COUNTS.every(key => stat(other, key) >= stat(one, key))
+            && hurt(other) >= hurt(one) && far(other) >= far(one)
+            && (other.mp || 0) <= (one.mp || 0)
+            && (COUNTS.some(key => stat(other, key) > stat(one, key))
+              || hurt(other) > hurt(one)))) {
+            beaten.gear.add(one.name);
+          }
+        }
+      }
+      return beaten;
+    }
+    return { beatenOnes, invalidate() { beaten = null; } };
+  }
+
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createBeaten };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;

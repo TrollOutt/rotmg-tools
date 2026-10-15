@@ -471,7 +471,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     catch (_) { profileSaved = false; }
     before = null;
     el('tcSaid').textContent = '';
-    beaten = null;
+    beatenSearch.invalidate();
   }
 
   function wireProgress() {
@@ -1265,68 +1265,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * another statistic, or an effect the page does not model, and none of
    * those show up in a comparison of what it wears.
    */
-  const COUNTS = ['ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS', 'MAXHP', 'MAXMP'];
-  const stat = (one, key) => (one && one.worn && one.worn[key]) || 0;
-  // Worth more than its own statistics: not comparable, so not dropped.
-  const deeper = one => !!(one.set || one.share || one.rel || one.sub || one.mul
-    || one.heal || one.alters || one.does || one.cast || one.many || one.burst
-    || (one.shots || []).some(shot => shot.subattack));
-
-  let beaten = null;
-  function beatenOnes() {
-    if (beaten) return beaten;
-    beaten = { ench: new Set(), gear: new Set() };
-
-    /*
-     * Enchantments, within one family: same identifier but for the tier on
-     * the end, so the four Attack -Defense Tradeoffs are compared with each
-     * other and with nothing else.
-     */
-    const family = new Map();
-    for (const one of data.enchants || []) {
-      const stem = String(one.id).replace(/_[1-4]$/, '');
-      if (stem === String(one.id)) continue;              // not a tiered one
-      if (!family.has(stem)) family.set(stem, []);
-      family.get(stem).push(one);
-    }
-    for (const kin of family.values()) {
-      if (kin.length < 2) continue;
-      for (const one of kin) {
-        if (deeper(one)) continue;
-        if (kin.some(other => other !== one && !deeper(other)
-          && COUNTS.every(key => stat(other, key) >= stat(one, key))
-          && COUNTS.some(key => stat(other, key) > stat(one, key)))) {
-          beaten.ench.add(one.id);
-        }
-      }
-    }
-
-    /* Gear, within one hand and one slot, on its statistics and its shot. */
-    const hurt = one => (one.shots && one.shots[0])
-      ? (one.shots[0].low + (one.shots[0].high === undefined
-        ? one.shots[0].low : one.shots[0].high)) / 2 : 0;
-    const far = one => (one.shots && one.shots[0] && one.shots[0].reach) || 0;
-    const shelf = new Map();
-    for (const one of data.items) {
-      const key = one.hand + '/' + one.slot;
-      if (!shelf.has(key)) shelf.set(key, []);
-      shelf.get(key).push(one);
-    }
-    for (const kin of shelf.values()) {
-      for (const one of kin) {
-        if (deeper(one)) continue;
-        if (kin.some(other => other !== one && !deeper(other)
-          && COUNTS.every(key => stat(other, key) >= stat(one, key))
-          && hurt(other) >= hurt(one) && far(other) >= far(one)
-          && (other.mp || 0) <= (one.mp || 0)
-          && (COUNTS.some(key => stat(other, key) > stat(one, key))
-            || hurt(other) > hurt(one)))) {
-          beaten.gear.add(one.name);
-        }
-      }
-    }
-    return beaten;
-  }
+  const beatenSearch = TheoryEngine.createBeaten(() => data);
+  const beatenOnes = beatenSearch.beatenOnes;
 
   /*
    * The same two lists, for the search only.

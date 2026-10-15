@@ -12,7 +12,7 @@ module.exports = function(sources, raw, withEngine = true) {
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
     setStatusInfo(value) { statusInfo = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,
-    progression(catalogue, saved) { access = catalogue; profile = saved; beaten = null; },
+    progression(catalogue, saved) { access = catalogue; profile = saved; beatenSearch.invalidate(); },
     configure(raw) {
       profile = { version: 1, mode: 'best', zones: [] };
       data = raw; data.byClass = {}; data.byItem = {}; data.byEnch = {}; data.byBoss = {};
