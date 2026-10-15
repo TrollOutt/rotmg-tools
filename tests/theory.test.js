@@ -117,6 +117,118 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   console.log('Beaten candidates: exact catalogue order, lazy lifetime and explicit invalidation.');
 }
 
+// Frozen fit-index implementation, with the same live accessibility callback.
+{
+  const HANDS = ['weapon', 'ability', 'armor', 'ring'].map(hand => [hand]);
+  function legacy(getData, accessible) {
+    let itemsByFit = null;
+
+    function ensureItemSearchIndex() {
+      if (itemsByFit) return;
+
+      itemsByFit = new Map();
+      for (const one of getData().items) {
+        const broad = one.hand + '/*';
+        const exact = one.hand + '/' + one.slot;
+
+        if (!itemsByFit.has(broad)) itemsByFit.set(broad, []);
+        itemsByFit.get(broad).push(one);
+
+        if (!itemsByFit.has(exact)) itemsByFit.set(exact, []);
+        itemsByFit.get(exact).push(one);
+      }
+    }
+
+    /*
+     * Everything that physically fits this class slot, minus the reader's
+     * blacklist. This is the manual picker catalogue: progression must not make
+     * an existing item disappear when somebody simply wants to inspect it.
+     */
+    function compatibleItemsFor(hand, klass, state) {
+      const kind = getData().byClass[klass];
+      const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
+      const out = (state && state.banned) || {};
+
+      ensureItemSearchIndex();
+      const key = hand + '/' + (slot === undefined ? '*' : slot);
+      const candidates = itemsByFit.get(key) || [];
+
+      return candidates.filter(one => !out[one.name]);
+    }
+
+    /*
+     * What an automatic personalised search may actually offer.
+     * Best-possible mode makes accessible() true for the full catalogue.
+     */
+    function itemsFor(hand, klass, state) {
+      return compatibleItemsFor(hand, klass, state)
+        .filter(one => accessible(one.name));
+    }
+
+    return { compatibleItemsFor, itemsFor };
+  }
+  const { createItemSearch } = require('../web/theory-engine');
+  let data = { ...raw, byClass: Object.fromEntries(raw.classes.map(one => [one.name, one])) };
+  let allow = () => true;
+  const accessible = name => allow(name);
+  const factory = createItemSearch({ getData: () => data, hands: HANDS, accessible });
+  const old = legacy(() => data, accessible);
+  const api = harness({}, raw);
+  api.configure(data);
+  const same = (got, expected) => {
+    assert.equal(got.length, expected.length);
+    got.forEach((one, i) => assert.ok(Object.is(one, expected[i]), 'candidate order and item references'));
+  };
+  let compared = 0;
+  for (const klass of [...raw.classes.map(one => one.name), 'missing']) {
+    for (const [hand] of [...HANDS, ['missing']]) {
+      for (const state of [undefined, null, {}, { banned: Object.fromEntries(raw.items.map((one, i) =>
+        [one.name, i % 3 === 0 ? true : i % 3 === 1 ? 0 : 'excluded'])) }]) {
+        for (const name of ['compatibleItemsFor', 'itemsFor']) {
+          const expected = old[name](hand, klass, state);
+          same(factory[name](hand, klass, state), expected);
+          same(api[name](hand, klass, state), expected);
+          compared++;
+        }
+      }
+    }
+  }
+  allow = name => name.length % 2 === 0;
+  same(factory.itemsFor('weapon', 'Wizard', {}), old.itemsFor('weapon', 'Wizard', {}));
+  allow = () => false;
+  assert.equal(factory.itemsFor('weapon', 'Wizard', {}).length, 0);
+  assert.ok(factory.compatibleItemsFor('weapon', 'Wizard', {}).length > 0);
+  api.progression(null, { mode: 'personal' });
+  assert.equal(api.itemsFor('weapon', 'Wizard', {}).length, 0);
+  api.progression(null, { mode: 'best' });
+  same(api.itemsFor('weapon', 'Wizard', {}), factory.compatibleItemsFor('weapon', 'Wizard', {}));
+  const state = api.fresh('Wizard');
+  state.banned = Object.fromEntries(raw.items.map(one => [one.name, true]));
+  api.use(state);
+  assert.equal(api.itemsFor('weapon', 'Wizard').length, 0, 'adapter reads the current build');
+  api.use({ ...state, banned: {} });
+  assert.ok(api.itemsFor('weapon', 'Wizard').length > 0);
+  const cached = factory.compatibleItemsFor('weapon', 'missing', {});
+  data = { ...data, items: [], byClass: {} };
+  same(factory.compatibleItemsFor('weapon', 'Wizard', {}), cached);
+  api.configure(data);
+  same(api.compatibleItemsFor('weapon', 'missing', {}), cached);
+
+  let reads = 0;
+  const fixture = { byClass: {}, get items() { reads++; return raw.items; } };
+  const lazy = createItemSearch({ getData: () => fixture, hands: HANDS, accessible });
+  assert.equal(reads, 0);
+  lazy.compatibleItemsFor('weapon', 'missing', {});
+  lazy.itemsFor('ring', 'missing', {});
+  lazy.compatibleItemsFor('armor', 'missing', {});
+  assert.equal(reads, 1, 'the index is built exactly once across both APIs');
+  let current = { items: [], byClass: {} };
+  const live = createItemSearch({ getData: () => current, hands: HANDS, accessible });
+  current = { items: raw.items, byClass: {} };
+  same(live.compatibleItemsFor('weapon', 'missing', {}), cached);
+  console.log('Item candidates: ' + compared + ' exact catalogue comparisons, live access and persistent lazy indexes.');
+}
+
 // Exercise the statistic seam without browser globals, status data or set rules.
 // The corpus below covers the real catalogue; this fixture makes evaluation
 // order, rounding, shared references and the caller's cache lifetime explicit.

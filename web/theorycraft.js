@@ -1192,48 +1192,16 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     });
   }
 
-  let itemsByFit = null;
+  const itemSearch = TheoryEngine.createItemSearch({
+    getData: () => data, hands: HANDS, accessible
+  });
 
-  function ensureItemSearchIndex() {
-    if (itemsByFit) return;
-
-    itemsByFit = new Map();
-    for (const one of data.items) {
-      const broad = one.hand + '/*';
-      const exact = one.hand + '/' + one.slot;
-
-      if (!itemsByFit.has(broad)) itemsByFit.set(broad, []);
-      itemsByFit.get(broad).push(one);
-
-      if (!itemsByFit.has(exact)) itemsByFit.set(exact, []);
-      itemsByFit.get(exact).push(one);
-    }
-  }
-
-  /*
-   * Everything that physically fits this class slot, minus the reader's
-   * blacklist. This is the manual picker catalogue: progression must not make
-   * an existing item disappear when somebody simply wants to inspect it.
-   */
   function compatibleItemsFor(hand, klass, state = build) {
-    const kind = data.byClass[klass];
-    const slot = kind && kind.slots[HANDS.findIndex(h => h[0] === hand)];
-    const out = (state && state.banned) || {};
-
-    ensureItemSearchIndex();
-    const key = hand + '/' + (slot === undefined ? '*' : slot);
-    const candidates = itemsByFit.get(key) || [];
-
-    return candidates.filter(one => !out[one.name]);
+    return itemSearch.compatibleItemsFor(hand, klass, state);
   }
 
-  /*
-   * What an automatic personalised search may actually offer.
-   * Best-possible mode makes accessible() true for the full catalogue.
-   */
   function itemsFor(hand, klass, state = build) {
-    return compatibleItemsFor(hand, klass, state)
-      .filter(one => accessible(one.name));
+    return itemSearch.itemsFor(hand, klass, state);
   }
 
   /* ---------------- what the search need not try ---------------- *

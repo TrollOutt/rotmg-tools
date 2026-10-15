@@ -1,5 +1,5 @@
-/* Weapon, statistic, set, build numbers and scoring with explicit inputs. Catalogue
- * ownership, status modelling and search stay with the caller. */
+/* Weapon, statistic, set, build numbers, scoring and candidates with explicit inputs. Catalogue
+ * ownership, status modelling and optimisation stay with the caller. */
 /**
  * @typedef {{many: number, wait: number, rush: number}} TheoryBurst
  * @typedef {{every: number, shots: number, wait: number, run: number}} TheoryBurstCycle
@@ -107,6 +107,14 @@
  * @typedef {TheoryComparable & {name: string, hand: string, slot?: number, mp?: number}} TheoryBeatenItem
  * @typedef {{enchants?: TheoryBeatenEnchantment[], items: TheoryBeatenItem[]}} TheoryBeatenCatalogue
  * @typedef {{ench: Set<string>, gear: Set<string>}} TheoryBeatenResult
+ */
+/**
+ * @typedef {{name: string, hand: string, slot?: number}} TheorySearchItem
+ * @typedef {{items: TheorySearchItem[],
+ *   byClass: Record<string, {slots: number[]} | undefined>}} TheoryItemSearchCatalogue
+ * @typedef {{banned?: Record<string, unknown>}} TheoryItemSearchState
+ * @typedef {{getData: () => TheoryItemSearchCatalogue, hands: readonly (readonly string[])[],
+ *   accessible: (name: string) => boolean}} TheoryItemSearchDependencies
  */
 var TheoryEngine = (function () {
   'use strict';
@@ -724,7 +732,69 @@ var TheoryEngine = (function () {
     return { beatenOnes, invalidate() { beaten = null; } };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createBeaten };
+  /**
+   * Build the fit index once on first demand; catalogue replacement keeps it alive.
+   * @param {TheoryItemSearchDependencies} dependencies
+   */
+  function createItemSearch({ getData, hands, accessible }) {
+    /** @type {Map<string, TheorySearchItem[]> | null} */
+    let itemsByFit = null;
+
+    function ensureItemSearchIndex() {
+      if (itemsByFit) return;
+
+      itemsByFit = new Map();
+      for (const one of getData().items) {
+        const broad = one.hand + '/*';
+        const exact = one.hand + '/' + one.slot;
+
+        if (!itemsByFit.has(broad)) itemsByFit.set(broad, []);
+        itemsByFit.get(broad)?.push(one);
+
+        if (!itemsByFit.has(exact)) itemsByFit.set(exact, []);
+        itemsByFit.get(exact)?.push(one);
+      }
+    }
+
+    /*
+     * Everything that physically fits this class slot, minus the reader's
+     * blacklist. This is the manual picker catalogue: progression must not make
+     * an existing item disappear when somebody simply wants to inspect it.
+     */
+    /**
+     * @param {string} hand @param {string} klass
+     * @param {TheoryItemSearchState | null | undefined} state
+     * @returns {TheorySearchItem[]}
+     */
+    function compatibleItemsFor(hand, klass, state) {
+      const kind = getData().byClass[klass];
+      const slot = kind && kind.slots[hands.findIndex(h => h[0] === hand)];
+      const out = (state && state.banned) || {};
+
+      ensureItemSearchIndex();
+      const key = hand + '/' + (slot === undefined ? '*' : slot);
+      const candidates = itemsByFit?.get(key) || [];
+
+      return candidates.filter(one => !out[one.name]);
+    }
+
+    /*
+     * What an automatic personalised search may actually offer.
+     * Best-possible mode makes accessible() true for the full catalogue.
+     */
+    /**
+     * @param {string} hand @param {string} klass
+     * @param {TheoryItemSearchState | null | undefined} state
+     * @returns {TheorySearchItem[]}
+     */
+    function itemsFor(hand, klass, state) {
+      return compatibleItemsFor(hand, klass, state)
+        .filter(one => accessible(one.name));
+    }
+    return { compatibleItemsFor, itemsFor };
+  }
+
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createBeaten, createItemSearch };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;
