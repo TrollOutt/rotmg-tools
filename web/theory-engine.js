@@ -141,7 +141,7 @@
  */
 /**
  * @typedef {TheoryScoreState & {goals?: string[], goal?: string,
- *   locked: Record<string, boolean>, share?: Record<string, unknown>}} TheoryGoalState
+ *   locked: Record<string, boolean>, share?: Record<string, unknown> | null}} TheoryGoalState
  * @typedef {TheoryScoreGoal & {say: string}} TheoryGoal
  * @typedef {{goal: TheoryGoal, raw: number, part: number}} TheoryGoalShare
  * @typedef {Record<string, number>} TheoryGoalBest
@@ -152,6 +152,10 @@
  * @property {(state: TheoryGoalState, goal: TheoryGoal, report: null) => {score: number}} optimise Retains the caller's live progression and catalogue access.
  * @property {(state: TheoryGoalState, goal: TheoryGoal) => number} scoreOf
  * @property {(state: TheoryGoalState) => TheoryGoalShare[]} sharesOf
+ */
+/**
+ * @typedef {{share?: Record<string, unknown> | null}} TheoryShareState
+ * @typedef {{goalsOf: (state: TheoryGoalState) => TheoryGoal[]}} TheoryShareDependencies
  */
 var TheoryEngine = (function () {
   'use strict';
@@ -692,6 +696,36 @@ var TheoryEngine = (function () {
   }
 
   /**
+   * Create raw and relative shares once. The callback resolves goal selection
+   * only when called, allowing the goal factory to receive sharesOf in turn.
+   * @param {TheoryShareDependencies} dependencies
+   * @returns {{shareOf: (state: TheoryShareState, id: string) => number,
+   *   sharesOf: (state: TheoryGoalState) => TheoryGoalShare[]}}
+   */
+  function createShares({ goalsOf }) {
+    /** @param {TheoryShareState} state @param {string} id @returns {number} */
+    function shareOf(state, id) {
+      const want = state.share || {};
+      const n = Number(want[id]);
+      return Number.isFinite(n) && n > 0 ? n : 1;
+    }
+
+    /** @param {TheoryGoalState} state @returns {TheoryGoalShare[]} */
+    function sharesOf(state) {
+      const list = goalsOf(state);
+      let all = 0;
+      for (const one of list) all += shareOf(state, one.id);
+      return list.map(one => ({
+        goal: one,
+        raw: shareOf(state, one.id),
+        part: all > 0 ? shareOf(state, one.id) / all : 1 / list.length
+      }));
+    }
+
+    return { shareOf, sharesOf };
+  }
+
+  /**
    * Create goal selection and its one-entry ideal cache once. As before, only
    * the serialized key invalidates it; profile/catalogue replacement alone does not.
    * @param {TheoryGoalDependencies} dependencies
@@ -1115,7 +1149,7 @@ var TheoryEngine = (function () {
     return { charmNamed, locksOn, rollableEnchantsFor, enchantsFor, enchantFitsItem };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createGoals, createBeaten, createItemSearch, createEnchants };
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createShares, createGoals, createBeaten, createItemSearch, createEnchants };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;

@@ -692,8 +692,108 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   console.log('Build scores: ' + compared + ' exact legacy comparisons through factory and adapter, live bosses.');
 }
 
+// Frozen share arithmetic before extraction, including repeated value coercion.
+function legacyShares(goalsOf) {
+  function shareOf(state, id) {
+    const want = state.share || {};
+    const n = Number(want[id]);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+  function sharesOf(state) {
+    const list = goalsOf(state);
+    let all = 0;
+    for (const one of list) all += shareOf(state, one.id);
+    return list.map(one => ({
+      goal: one,
+      raw: shareOf(state, one.id),
+      part: all > 0 ? shareOf(state, one.id) / all : 1 / list.length
+    }));
+  }
+  return { shareOf, sharesOf };
+}
+
+{
+  const theory = require('../web/theory-engine');
+  const api = harness({}, raw, false);
+  const prior = legacyShares(api.goalsOf);
+  const factory = theory.createShares({ goalsOf: api.goalsOf });
+  let compared = 0;
+  function same(got, expected) {
+    assert.equal(got.length, expected.length);
+    got.forEach((one, i) => {
+      assert.deepEqual(Object.keys(one), Object.keys(expected[i]));
+      for (const key of ['goal', 'raw', 'part']) {
+        assert.ok(Object.is(one[key], expected[i][key]), 'exact share ' + key);
+      }
+      compared++;
+    });
+  }
+  const selections = [{ goals: undefined, goal: undefined }, { goals: [] }, { goals: [], goal: 'stat:hp' },
+    { goal: 'unknown' }, { goals: ['unknown'] }, { goals: ['stat:hp'] },
+    { goals: ['stat:hp', 'dps', 'unknown', 'dps', 'stat:dex'] }];
+  const values = [undefined, null, {}, { dps: 70, 'stat:hp': 30, 'stat:dex': 0.1 },
+    { dps: 0, 'stat:hp': -2, 'stat:dex': NaN },
+    { dps: null, 'stat:hp': undefined, 'stat:dex': '2.7' },
+    { dps: Infinity, 'stat:hp': -Infinity, 'stat:dex': false },
+    { dps: Number.MAX_VALUE, 'stat:hp': Number.MAX_VALUE, 'stat:dex': Number.MIN_VALUE }];
+  for (const selection of selections) for (const share of values) {
+    const state = { ...api.fresh('Wizard'), ...selection, share,
+      pinned: { dps: true, 'stat:hp': true } };
+    for (const name of ['dps', 'stat:hp', 'stat:dex', 'unknown']) {
+      for (const subject of [factory, api]) {
+        assert.ok(Object.is(subject.shareOf(state, name), prior.shareOf(state, name)));
+      }
+    }
+    same(factory.sharesOf(state), prior.sharesOf(state));
+    same(api.sharesOf(state), prior.sharesOf(state));
+  }
+  const empty = { get pinned() { throw new Error('shares must not read UI pins'); } };
+  same(api.sharesOf(empty), prior.sharesOf(empty));
+  same(factory.sharesOf(empty), prior.sharesOf(empty));
+  // A live selector can return an empty or replaced list, preserving identities.
+  let list = api.GOALS.slice(0, 2);
+  const live = theory.createShares({ goalsOf: () => list });
+  const old = legacyShares(() => list);
+  for (const next of [list, [], [api.GOALS[3], api.GOALS[0]]]) {
+    list = next;
+    same(live.sharesOf({}), old.sharesOf({}));
+  }
+  // Getters and coercion observe every read in the original order.
+  function observed(run, sequence) {
+    const calls = [];
+    let at = 0;
+    const state = { get share() {
+      calls.push('share');
+      return new Proxy({}, { get(_target, id) {
+        calls.push(id);
+        return { valueOf() { calls.push('number'); return sequence[at++ % sequence.length]; } };
+      } });
+    } };
+    const result = run(state);
+    return { calls, result };
+  }
+  list = api.GOALS.slice(0, 2);
+  const sequence = [1e16, 0.1, 7, 3, 11, 5];
+  const got = observed(live.sharesOf, sequence), expected = observed(old.sharesOf, sequence);
+  same(got.result, expected.result);
+  assert.deepEqual(got.calls, expected.calls);
+  assert.equal(got.calls.length, 18, 'three share reads and coercions per goal');
+  // Construction and adapter identities remain stable across repeated calls.
+  const original = theory.createShares;
+  let made, constructions = 0;
+  theory.createShares = dependencies => { constructions++; return made = original(dependencies); };
+  let bound;
+  try { bound = harness({}, raw, false); }
+  finally { theory.createShares = original; }
+  for (let i = 0; i < 100; i++) bound.sharesOf({ goals: ['dps', 'stat:hp'] });
+  assert.equal(constructions, 1);
+  assert.strictEqual(bound.shareOf, made.shareOf);
+  assert.strictEqual(bound.sharesOf, made.sharesOf);
+  console.log('Goal shares: ' + compared + ' exact legacy rows, live goals, repeated reads and adapter identity.');
+}
+
 // Frozen goal selection before extraction. Only the closure bindings become
-// callbacks; optimisation, scoring and share arithmetic use the existing APIs.
+// callbacks; real catalogue comparisons use the frozen share arithmetic above.
 {
   function legacy({ getGoals, getBuild, optimise, scoreOf, sharesOf }) {
     function goalsOf(state) {
@@ -784,7 +884,8 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   const dependencies = { getGoals: () => api.GOALS, getBanned: () => (build && build.banned) || null,
     optimise: api.optimise, scoreOf: api.scoreOf, sharesOf: api.sharesOf };
   const factory = createGoals(dependencies);
-  const old = legacy({ ...dependencies, getBuild: () => build });
+  const old = legacy({ ...dependencies, getBuild: () => build,
+    sharesOf: legacyShares(api.goalsOf).sharesOf });
   const choices = [{}, { goals: [] }, { goals: [], goal: 'stat:hp' }, { goal: 'kill' },
     { goals: ['unavailable'], goal: 'stat:hp' }, { goals: ['stat:hp', 'dps', 'dps', 'unavailable'] },
     { goals: ['stat:dex', 'kill', 'stat:hp'] }];
@@ -863,7 +964,8 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   local.use(at); local.progression(access, { mode: 'personal', zones: [] });
   const localDeps = { getGoals: () => local.GOALS, getBanned: () => null,
     optimise: local.optimise, scoreOf: local.scoreOf, sharesOf: local.sharesOf };
-  const live = createGoals(localDeps), prior = legacy({ ...localDeps, getBuild: () => at });
+  const live = createGoals(localDeps), prior = legacy({ ...localDeps, getBuild: () => at,
+    sharesOf: legacyShares(local.goalsOf).sharesOf });
   const start = local.bestAlone(at, ids);
   const startLive = live.bestAlone(at, ids), startPrior = prior.bestAlone(at, ids);
   sameBest(startLive, startPrior); sameBest(start, startPrior);

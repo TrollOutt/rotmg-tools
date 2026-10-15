@@ -1267,12 +1267,6 @@ const TINT = {
     numbersFor: numberCalculations.numbersFor
   });
 
-  const { goalsOf, bestAlone, aimOf } = TheoryEngine.createGoals({
-    getGoals: () => GOALS,
-    getBanned: () => build && build.banned,
-    optimise, scoreOf, sharesOf
-  });
-
   /*
    * How hard each thing asked for is being pulled.
    *
@@ -1283,22 +1277,16 @@ const TINT = {
    * their own total, so moving one moves what the others are worth without
    * anybody having to make them add up.
    */
-  function shareOf(state, id) {
-    const want = state.share || {};
-    const n = Number(want[id]);
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  }
+  // Goal selection is resolved after both factories have been constructed.
+  const { shareOf, sharesOf } = TheoryEngine.createShares({
+    goalsOf: state => goalsOf(state)
+  });
 
-  function sharesOf(state) {
-    const list = goalsOf(state);
-    let all = 0;
-    for (const one of list) all += shareOf(state, one.id);
-    return list.map(one => ({
-      goal: one,
-      raw: shareOf(state, one.id),
-      part: all > 0 ? shareOf(state, one.id) / all : 1 / list.length
-    }));
-  }
+  const { goalsOf, bestAlone, aimOf } = TheoryEngine.createGoals({
+    getGoals: () => GOALS,
+    getBanned: () => build && build.banned,
+    optimise, scoreOf, sharesOf
+  });
 
   /*
    * A hundred per cent, split up - never a hundred per cent each.
