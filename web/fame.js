@@ -18,6 +18,67 @@
  * Every figure here is read out of an installed game client by
  * tools/generate-fame.js. Nothing is estimated.
  */
+/**
+ * Client fame records and planning results. Availability stays a string because
+ * the override file can supply labels independently of the client collections.
+ * @typedef {{what: string, count: number}} FameNeed
+ * @typedef {Object} FameBonus
+ * @property {string} id
+ * @property {string} group
+ * @property {string} category
+ * @property {string} name
+ * @property {number} absolute
+ * @property {number} relative
+ * @property {boolean} repeatable
+ * @property {string} description
+ * @property {FameNeed[]} needs
+ * @typedef {{at: number, fame: number, name: string}} FameLadderStep
+ * @typedef {{name: string, category: string, ladder: FameLadderStep[], collections: string[], availability: string}} FameDungeon
+ * @typedef {Omit<FameDungeon, 'availability'> & {availability?: string}} FamePendingDungeon
+ * @typedef {{stats: number, flat: number, percent: number}} FameMaxed
+ * @typedef {Object} FameDataset
+ * @property {FameBonus[]} bonuses
+ * @property {FameBonus[]} collections
+ * @property {Set<string>} corrected
+ * @property {FameMaxed} maxed
+ * @property {FameDungeon[]} dungeons
+ * @property {Map<string, FameDungeon>} byName
+ * @typedef {Object} FameCollectionSummary
+ * @property {string[]} needs
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {number} absolute
+ * @property {number} relative
+ * @property {string[]} wanted
+ * @property {string[]} missing
+ * @property {number} have
+ * @property {boolean} done
+ * @property {number} value
+ * @typedef {Object} FameSummary
+ * @property {number} base
+ * @property {FameMaxed} maxed
+ * @property {number} maxedFame
+ * @property {number} earnedFlat
+ * @property {number} earnedPercent
+ * @property {number} earnedFame
+ * @property {number} remainingFlat
+ * @property {number} remainingPercent
+ * @property {number} remainingFame
+ * @property {number} total
+ * @property {number} potential
+ * @property {FameCollectionSummary[]} collections
+ * @property {number} ticked
+ * @property {number} dungeons
+ * @typedef {Object} FameRecommendation
+ * @property {string} name
+ * @property {number} first
+ * @property {FameCollectionSummary[]} unlocks
+ * @property {FameCollectionSummary[]} towards
+ * @property {number} ticks
+ * @property {string} availability
+ * @typedef {Set<string> | string[] | null | undefined} FameSelection
+ */
 var EnchantFame = (function () {
   'use strict';
 
@@ -25,8 +86,15 @@ var EnchantFame = (function () {
    * data/Fame/client-fame.txt: one "bonus" line, then one "needs" line per
    * condition it wants met.
    */
+  /**
+   * @param {string} text
+   * @param {string | null} [overrideText]
+   * @returns {FameDataset}
+   */
   function parse(text, overrideText) {
+    /** @type {FameBonus[]} */
     const bonuses = [];
+    /** @type {FameBonus | null} */
     let current = null;
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -59,6 +127,7 @@ var EnchantFame = (function () {
      * counts towards. Every dungeon named by a collection has a ladder, so
      * nothing is lost by taking the ladders as the list.
      */
+    /** @type {Map<string, FamePendingDungeon>} */
     const dungeons = new Map();
     for (const bonus of bonuses) {
       if (bonus.group !== 'Dungeon Bonuses' || bonus.category === 'Dungeon Collection') continue;
@@ -67,7 +136,8 @@ var EnchantFame = (function () {
       if (!dungeons.has(need.what)) {
         dungeons.set(need.what, { name: need.what, category: bonus.category, ladder: [], collections: [] });
       }
-      dungeons.get(need.what).ladder.push({ at: need.count, fame: bonus.absolute, name: bonus.name });
+      /** The entry was installed above when absent. */
+      /** @type {FamePendingDungeon} */ (dungeons.get(need.what)).ladder.push({ at: need.count, fame: bonus.absolute, name: bonus.name });
     }
     for (const dungeon of dungeons.values()) dungeon.ladder.sort((a, b) => a.at - b.at);
     for (const collection of collections) {
@@ -86,6 +156,7 @@ var EnchantFame = (function () {
      * event and rotating content, in no collection at all, so there is nothing
      * to complete by doing them.
      */
+    /** @param {string} name @returns {Set<string>} */
     const named = name => {
       const entry = collections.find(collection => collection.name === name);
       return new Set(entry ? entry.needs.map(need => need.what) : []);
@@ -105,6 +176,7 @@ var EnchantFame = (function () {
      * game overrides the installed client, so it is a file with dates and
      * reasons in it rather than a list buried here.
      */
+    /** @type {Set<string>} */
     const corrected = new Set();
     for (const raw of String(overrideText || '').replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
@@ -142,12 +214,17 @@ var EnchantFame = (function () {
       collections,
       corrected,
       maxed,
-      dungeons: [...dungeons.values()].sort((a, b) => a.name.localeCompare(b.name)),
-      byName: dungeons
+      /** The availability loop populated every dungeon before returning. */
+      dungeons: /** @type {FameDungeon[]} */ ([...dungeons.values()].sort((a, b) => a.name.localeCompare(b.name))),
+      byName: /** @type {Map<string, FameDungeon>} */ (dungeons)
     };
   }
 
   // What one completion of a dungeon is worth, before any collection.
+  /**
+   * @param {Pick<FameDungeon, 'ladder'>} dungeon
+   * @returns {number}
+   */
   function firstCompletion(dungeon) {
     const step = dungeon.ladder.find(entry => entry.at <= 1);
     return step ? step.fame : 0;
@@ -160,6 +237,12 @@ var EnchantFame = (function () {
    * "Earned" counts what those completions are already worth; "remaining" is
    * what finishing every collection would add. The percentages are turned into
    * fame with the base the player typed, so both halves are comparable.
+   */
+  /**
+   * @param {FameDataset} data
+   * @param {FameSelection} [done]
+   * @param {number | string | null} [baseFame]
+   * @returns {FameSummary}
    */
   function summarise(data, done, baseFame) {
     const ticked = done instanceof Set ? done : new Set(done || []);
@@ -180,6 +263,7 @@ var EnchantFame = (function () {
        * is missing rather than the whole list: the seasonal ones you have
        * already done cannot stop you finishing it.
        */
+      /** @type {Set<string>} */
       const needs = new Set();
       for (const name of missing) {
         const dungeon = data.byName.get(name);
@@ -254,6 +338,16 @@ var EnchantFame = (function () {
    * "skip" is the dungeons a player has said they are not doing. They are not
    * ticked — refusing one earns nothing — they are simply not offered, and
    * everything behind them moves up.
+   */
+  /**
+   * @param {FameDataset} data
+   * @param {FameSelection} [done]
+   * @param {number | string | null} [baseFame]
+   * @param {number | null} [limit]
+   * @param {Set<string> | null} [allow]
+   * @param {Set<string> | null} [skip]
+   * @param {FameSelection} [focus]
+   * @returns {FameRecommendation[]}
    */
   function nextBest(data, done, baseFame, limit, allow, skip, focus) {
     const picked = focus instanceof Set ? focus : new Set(focus || []);

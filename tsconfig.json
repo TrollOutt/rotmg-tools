@@ -12,6 +12,7 @@
   },
   "include": [
     "web/engine.js",
+    "web/fame.js",
     "web/progression.js",
     "web/progression-module.d.ts"
   ]
