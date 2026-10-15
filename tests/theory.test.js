@@ -692,6 +692,293 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   console.log('Build scores: ' + compared + ' exact legacy comparisons through factory and adapter, live bosses.');
 }
 
+// Frozen goal selection before extraction. Only the closure bindings become
+// callbacks; optimisation, scoring and share arithmetic use the existing APIs.
+{
+  function legacy({ getGoals, getBuild, optimise, scoreOf, sharesOf }) {
+    function goalsOf(state) {
+      const want = state.goals && state.goals.length
+        ? state.goals : [state.goal || 'dps'];
+      const out = getGoals().filter(one => want.includes(one.id));
+      return out.length ? out : [getGoals()[0]];
+    }
+
+    const AUGMENT = 1e-3;
+
+    let ideals = { key: null, best: null };
+
+    function bestAlone(state, list) {
+      const build = getBuild();
+      const key = JSON.stringify([state.klass, state.level, state.boss, state.against,
+        state.gear, state.locked, state.exalt, (build && build.banned) || null,
+        list.map(one => one.id)]);
+      if (ideals.key === key) return ideals.best;
+      const best = {};
+      for (const one of list) {
+        const alone = optimise(state, one, null);
+        const was = scoreOf(state, one);
+        best[one.id] = Number.isFinite(alone.score) ? alone.score
+          : (Number.isFinite(was) ? was : 0);
+      }
+      ideals = { key, best };
+      return best;
+    }
+
+    function aimOf(state, goals) {
+      const list = goals || goalsOf(state);
+      if (list.length === 1) return list[0];
+      const parts = new Map(sharesOf(state).map(one => [one.goal.id, one.part]));
+      const best = bestAlone(state, list);
+      const span = {}, pull = {};
+      for (const one of list) {
+        const was = scoreOf(state, one);
+        const from = Number.isFinite(was) ? was : 0;
+        const reach = Math.abs(best[one.id] - from);
+        span[one.id] = reach > 1e-9 ? reach : 1;
+        // Never nought: a goal that is on is never silently switched off.
+        pull[one.id] = Math.max(1e-6, parts.get(one.id) || 1 / list.length);
+      }
+      return {
+        id: list.map(one => one.id).join('+'),
+        say: list.map(one => one.say.toLowerCase()).join(' and '),
+        goals: list,
+        of: (numbers, at) => {
+          let worst = -Infinity, rest = 0;
+          for (const one of list) {
+            const short = (best[one.id] - one.of(numbers, at)) / span[one.id];
+            rest -= short;
+            const felt = pull[one.id] * short;
+            if (felt > worst) worst = felt;
+          }
+          return -worst + AUGMENT * rest;
+        }
+      };
+    }
+
+    return { goalsOf, bestAlone, aimOf };
+  }
+  const { createGoals } = require('../web/theory-engine');
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const sameList = (got, expected) => {
+    assert.deepEqual(Array.from(got, one => one.id), Array.from(expected, one => one.id));
+    got.forEach((one, i) => assert.ok(Object.is(one, expected[i]), 'goal references and order'));
+  };
+  const sameBest = (got, expected) => {
+    assert.deepEqual(Object.keys(got), Object.keys(expected));
+    for (const id of Object.keys(expected)) assert.ok(Object.is(got[id], expected[id]), id);
+  };
+  let compared = 0;
+  const sameAim = (got, expected, samples) => {
+    assert.deepEqual(Object.keys(got), Object.keys(expected));
+    assert.equal(got.id, expected.id); assert.equal(got.say, expected.say);
+    if (expected.goals) sameList(got.goals, expected.goals);
+    else assert.ok(Object.is(got, expected), 'a single goal is the original GOALS object');
+    for (const [numbers, state] of samples) {
+      assert.ok(Object.is(got.of(numbers, state), expected.of(numbers, state)), 'exact aim score: ' + got.id);
+      compared++;
+    }
+  };
+  const api = harness({}, raw, false);
+  let data = clone(raw), build = null;
+  api.configure(data);
+  const dependencies = { getGoals: () => api.GOALS, getBanned: () => (build && build.banned) || null,
+    optimise: api.optimise, scoreOf: api.scoreOf, sharesOf: api.sharesOf };
+  const factory = createGoals(dependencies);
+  const old = legacy({ ...dependencies, getBuild: () => build });
+  const choices = [{}, { goals: [] }, { goals: [], goal: 'stat:hp' }, { goal: 'kill' },
+    { goals: ['unavailable'], goal: 'stat:hp' }, { goals: ['stat:hp', 'dps', 'dps', 'unavailable'] },
+    { goals: ['stat:dex', 'kill', 'stat:hp'] }];
+  for (const klass of ['Wizard', 'Warrior', 'Archer', 'Bard']) {
+    const state = clone(api.fresh(klass));
+    state.scope = 'gear'; state.against = 40;
+    // Keep real catalogue searches small while still optimising the ring slot.
+    for (const hand of Object.keys(state.gear)) state.locked[hand] = hand !== 'ring';
+    if (klass === 'Warrior') { state.maxed = false; state.level = 7; }
+    const samples = [state, { ...state, exalt: false }, { ...state, maxed: false, level: 3 }]
+      .map(at => [api.numbersFor(at, 40), at]);
+    for (const boss of [data.bosses[0].name, 'unknown boss']) {
+      state.boss = boss;
+      for (const choice of choices) {
+        delete state.goals; delete state.goal; Object.assign(state, choice);
+        build = state; api.use(build);
+        const list = old.goalsOf(state);
+        sameList(factory.goalsOf(state), list); sameList(api.goalsOf(state), list);
+        const expected = old.bestAlone(state, list);
+        sameBest(factory.bestAlone(state, list), expected); sameBest(api.bestAlone(state, list), expected);
+        for (const share of [{}, { dps: 90, 'stat:hp': 10, kill: 1, 'stat:dex': 3 },
+          { dps: '0', 'stat:hp': Infinity, kill: -2, 'stat:dex': '9' }]) {
+          state.share = share;
+          const aim = old.aimOf(state);
+          sameAim(factory.aimOf(state), aim, samples); sameAim(api.aimOf(state), aim, samples);
+        }
+      }
+    }
+    for (const list of [[], [api.GOALS[2], api.GOALS[0]], [api.GOALS[0]]]) {
+      const aim = old.aimOf(state, list);
+      for (const target of [factory, api]) {
+        const got = target.aimOf(state, list);
+        sameAim(got, aim, samples);
+        if (list.length !== 1) assert.ok(Object.is(got.goals, list), 'explicit list is retained');
+        if (!list.length) assert.ok(Object.is(got.of(samples[0][0], state), Infinity));
+      }
+    }
+  }
+
+  // The kill closure keeps reading the live catalogue even when its ideal is cached.
+  const state = clone(api.fresh('Wizard'));
+  state.scope = 'gear'; state.goals = ['kill', 'stat:hp']; state.boss = data.bosses[0].name;
+  for (const hand of Object.keys(state.gear)) state.locked[hand] = true;
+  build = state; api.use(build);
+  const list = api.goalsOf(state), cached = api.bestAlone(state, list);
+  sameBest(factory.bestAlone(state, list), cached); sameBest(old.bestAlone(state, list), cached);
+  const aimBefore = api.aimOf(state), valueBefore = api.scoreOf(state, aimBefore);
+  data = clone(raw); data.bosses.find(one => one.name === state.boss).hp *= 3;
+  api.configure(data);
+  assert.ok(Object.is(api.bestAlone(state, list), cached), 'catalogue replacement does not invalidate ideals');
+  assert.ok(!Object.is(api.scoreOf(state, aimBefore), valueBefore), 'captured goals still read live boss data');
+  for (const target of [factory, api]) sameAim(target.aimOf(state), old.aimOf(state), [[api.numbersFor(state, 40), state]]);
+  build = { banned: { changed: true } }; api.use(build);
+  const after = api.bestAlone(state, list);
+  assert.notStrictEqual(after, cached, 'current build bans invalidate even when state is a different object');
+  sameBest(after, old.bestAlone(state, list)); sameBest(factory.bestAlone(state, list), after);
+  console.log('Goals: ' + compared + ' exact catalogue aim comparisons, goal identity, order and live bosses.');
+
+  // Changing the profile and access catalogue affects eligibility at the existing
+  // optimiser boundary. As before it does not, by itself, invalidate ideals.
+  const P = require('../web/progression');
+  const items = ['Energy Staff', 'Comet Staff', 'Staff of the Cosmic Whole']
+    .map(name => raw.items.find(one => one.name === name));
+  assert.ok(items.every(Boolean));
+  const records = [{ id: 'portal:Goal cave', kind: 'portal', name: 'Goal cave' },
+    { id: 'enemy:Goal boss', kind: 'enemy', name: 'Goal boss' },
+    ...items.map(one => ({ id: 'item:' + one.name, kind: 'item', name: one.name }))];
+  const access = P.catalogue({ records, views: { theory: { items: records.slice(2).map(one => one.id) } } },
+    { ids: records.map(one => one.id),
+      pages: records.map(one => [one.name.toLowerCase().replace(/ /g, '-'), one.name]),
+      page: records.map((_, i) => [i, i]), spawn: [],
+      dungeon: [[0, 1]], drop: [[1, 4]] }, items);
+  const local = harness({}, { ...raw, items, enchants: [], sets: [] }, false);
+  const at = clone(local.fresh('Wizard')); at.scope = 'gear'; at.goals = ['dps', 'stat:hp'];
+  const ids = local.goalsOf(at);
+  local.use(at); local.progression(access, { mode: 'personal', zones: [] });
+  const localDeps = { getGoals: () => local.GOALS, getBanned: () => null,
+    optimise: local.optimise, scoreOf: local.scoreOf, sharesOf: local.sharesOf };
+  const live = createGoals(localDeps), prior = legacy({ ...localDeps, getBuild: () => at });
+  const start = local.bestAlone(at, ids);
+  const startLive = live.bestAlone(at, ids), startPrior = prior.bestAlone(at, ids);
+  sameBest(startLive, startPrior); sameBest(start, startPrior);
+  assert.equal(local.accessible(items[2].name), false);
+  local.progression(access, { mode: 'personal', zones: ['dungeon:goal-cave'] });
+  assert.equal(local.accessible(items[2].name), true, 'profile is live');
+  assert.strictEqual(local.bestAlone(at, ids), start, 'profile updates do not clear ideals');
+  assert.strictEqual(live.bestAlone(at, ids), startLive);
+  assert.strictEqual(prior.bestAlone(at, ids), startPrior);
+  // A key change forces fresh searches against the new profile.
+  at.against = 41;
+  const reachable = local.bestAlone(at, ids);
+  sameBest(reachable, prior.bestAlone(at, ids)); sameBest(live.bestAlone(at, ids), reachable);
+  assert.ok(reachable.dps > start.dps, 'newly reachable staff enters the optimisation');
+  local.progression(null, { mode: 'personal', zones: ['dungeon:goal-cave'] });
+  assert.equal(local.accessible(items[2].name), false, 'access catalogue is live');
+  assert.strictEqual(local.bestAlone(at, ids), reachable, 'access replacement alone preserves ideals');
+  at.against = 42;
+  for (const target of [local, live, prior]) assert.throws(() => target.bestAlone(at, ids), /Set up your progression/);
+  local.progression(access, { mode: 'personal', zones: [] });
+  sameBest(local.bestAlone(at, ids), prior.bestAlone(at, ids));
+
+  // Instrument the seam: cache hits perform no scoring or searching; misses
+  // always optimise then score once per list entry, even for finite optima.
+  let goals = api.GOALS.slice(0, 3), bans = null, searches = 0;
+  const calls = [];
+  let optimum = 11, was = 7;
+  const atState = clone(state), numbers = { total: 3, stats: { now: { hp: 20 } } };
+  const probeDeps = { getGoals() { calls.push('goals'); return goals; },
+    getBanned() { calls.push('banned'); return bans; },
+    optimise(s, one, report) { assert.strictEqual(s, atState); assert.strictEqual(report, null);
+      calls.push('optimise:' + one.id); searches++; return { score: optimum }; },
+    scoreOf(s, one) { assert.strictEqual(s, atState); calls.push('score:' + one.id); return was; },
+    sharesOf(s) { assert.strictEqual(s, atState); calls.push('shares');
+      return goals.map((goal, i) => ({ goal, raw: i, part: i === 0 ? 0 : i === 1 ? -1 : NaN })); } };
+  const probe = createGoals(probeDeps), original = legacy({ ...probeDeps, getBuild: () => ({ banned: bans }) });
+  assert.deepEqual(calls, [], 'construction stays lazy');
+  const pair = goals.slice(0, 2);
+  const first = probe.bestAlone(atState, pair);
+  assert.deepEqual(calls, ['banned', 'optimise:dps', 'score:dps', 'optimise:kill', 'score:kill']);
+  assert.equal(searches, 2); calls.length = 0;
+  assert.strictEqual(probe.bestAlone(atState, pair), first); assert.deepEqual(calls, ['banned']);
+  atState.share = { dps: 99 }; atState.exalts.hp++; atState.maxed = !atState.maxed;
+  assert.strictEqual(probe.bestAlone(atState, pair), first, 'shares, maxed and exalts remain outside the original key');
+  bans = { excluded: true };
+  assert.notStrictEqual(probe.bestAlone(atState, pair), first);
+  const second = probe.bestAlone(atState, pair);
+  bans.excluded = false;
+  assert.notStrictEqual(probe.bestAlone(atState, pair), second, 'in-place ban edits are observed');
+  for (const change of [() => atState.klass += '!', () => atState.level++, () => atState.boss += '!',
+    () => atState.against++, () => atState.gear.weapon.name += '!', () => atState.locked.weapon = false,
+    () => atState.exalt = !atState.exalt, () => pair.reverse()]) {
+    const before = searches; change(); probe.bestAlone(atState, pair);
+    assert.equal(searches - before, pair.length, 'each serialized field invalidates');
+  }
+  const beforeEmpty = searches, empty = probe.bestAlone(atState, []);
+  assert.deepEqual(Object.keys(empty), []); assert.equal(searches, beforeEmpty);
+  assert.strictEqual(probe.bestAlone(atState, []), empty);
+  const beforeEviction = searches; probe.bestAlone(atState, pair);
+  assert.equal(searches - beforeEviction, pair.length, 'cache retains only one key');
+  // Every finite/non-finite fallback, signed zero, near-zero margin and pull floor.
+  for (optimum of [NaN, Infinity, -Infinity, -0, 7, 7 + 1e-10, 7 + 1e-8, 1e16]) {
+    for (was of [NaN, Infinity, -Infinity, -0, 7]) {
+      atState.level++;
+      sameBest(probe.bestAlone(atState, pair), original.bestAlone(atState, pair));
+      const got = probe.aimOf(atState, goals), expected = original.aimOf(atState, goals);
+      sameAim(got, expected, [[numbers, atState]]);
+      assert.strictEqual(got.goals, goals);
+    }
+  }
+  atState.level++; calls.length = 0;
+  probe.aimOf(atState, pair);
+  assert.deepEqual(calls, ['shares', 'banned',
+    ...pair.flatMap(one => ['optimise:' + one.id, 'score:' + one.id]),
+    ...pair.map(one => 'score:' + one.id)], 'aim reads shares before searching and measuring margins');
+  calls.length = 0; probe.aimOf(atState, pair);
+  assert.deepEqual(calls, ['shares', 'banned', ...pair.map(one => 'score:' + one.id)],
+    'a cached aim still remeasures shares and starting scores');
+  calls.length = 0;
+  assert.ok(Object.is(probe.aimOf(atState, []).of(numbers, atState), Infinity));
+  assert.deepEqual(calls, ['shares', 'banned'], 'empty aim keeps its original dependency order');
+  calls.length = 0;
+  assert.strictEqual(probe.aimOf(atState, [goals[0]]), goals[0]);
+  assert.deepEqual(calls, [], 'single goal does not read shares, bans or scores');
+  goals = [api.GOALS[3], api.GOALS[2]]; atState.goals = ['unavailable'];
+  assert.strictEqual(probe.goalsOf(atState)[0], goals[0], 'fallback reads replacement GOALS');
+  atState.goals = ['stat:hp', 'stat:mp'];
+  sameList(probe.goalsOf(atState), original.goalsOf(atState));
+  sameList(probe.goalsOf(atState), goals);
+  // The composite closes over the supplied list and passes evaluation arguments
+  // through unchanged, with one goal evaluation at a time in list order.
+  const evaluated = [];
+  goals = [0, 1].map(i => ({ id: 'probe:' + i, say: 'Probe ' + i, of(n, s) {
+    assert.strictEqual(n, numbers); assert.strictEqual(s, atState); evaluated.push(i); return i ? Infinity : NaN;
+  } }));
+  atState.level++; was = NaN; optimum = Infinity;
+  const composite = probe.aimOf(atState, goals);
+  assert.ok(Object.is(composite.of(numbers, atState), NaN)); assert.deepEqual(evaluated, [0, 1]);
+  console.log('Goal cache: exact non-finite fallbacks, call order, hits, key changes, eviction and live progression.');
+}
+
+// Bind each extracted function once, without a per-call adapter allocation.
+{
+  const theory = require('../web/theory-engine'), original = theory.createGoals;
+  let made, constructions = 0;
+  theory.createGoals = dependencies => { constructions++; return made = original(dependencies); };
+  let api;
+  try { api = harness({}, raw, false); }
+  finally { theory.createGoals = original; }
+  const state = api.fresh('Wizard');
+  for (let i = 0; i < 100; i++) assert.strictEqual(api.aimOf(state), api.GOALS[0]);
+  for (const name of ['goalsOf', 'bestAlone', 'aimOf']) assert.strictEqual(api[name], made[name]);
+  assert.equal(constructions, 1);
+}
+
 // One function per factory, no per-score wrapper or result allocation; preserve
 // lookup order, references, falsy exits and non-finite callback results.
 {

@@ -10,7 +10,7 @@ module.exports = function(sources, raw, withEngine = true) {
     statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate,
     charmNamed, locksOn, rollableEnchantsFor, enchantFitsItem, plainly, enchantKey, worth, NUMERAL,
     setRules(value) { rules = value; },
-    numbersFor, optimise, scoreOf, aimOf, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
+    numbersFor, optimise, scoreOf, goalsOf, bestAlone, sharesOf, aimOf, accessible, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
     setStatusInfo(value) { statusInfo = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,

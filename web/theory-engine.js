@@ -1,4 +1,4 @@
-/* Weapon, statistic, set, build numbers, scoring and candidates with explicit inputs. Catalogue
+/* Weapon, statistic, set, build numbers, scoring, goals and candidates with explicit inputs. Catalogue
  * ownership, status modelling and optimisation stay with the caller. */
 /**
  * @typedef {{many: number, wait: number, rush: number}} TheoryBurst
@@ -138,6 +138,20 @@
  * @property {() => TheoryEnchantEngine} getEngine Resolve only when loaded rules need the engine.
  * @property {() => TheoryEnchantRules | false | null | undefined} rulesFor
  * @property {Readonly<Record<string, string | undefined>>} ofHand
+ */
+/**
+ * @typedef {TheoryScoreState & {goals?: string[], goal?: string,
+ *   locked: Record<string, boolean>, share?: Record<string, unknown>}} TheoryGoalState
+ * @typedef {TheoryScoreGoal & {say: string}} TheoryGoal
+ * @typedef {{goal: TheoryGoal, raw: number, part: number}} TheoryGoalShare
+ * @typedef {Record<string, number>} TheoryGoalBest
+ * @typedef {TheoryGoal & {goals?: TheoryGoal[]}} TheoryGoalResult
+ * @typedef {Object} TheoryGoalDependencies
+ * @property {() => TheoryGoal[]} getGoals Read the current goal objects, without copying them.
+ * @property {() => Record<string, unknown> | null | undefined} getBanned Read the current build's bans for each cache key.
+ * @property {(state: TheoryGoalState, goal: TheoryGoal, report: null) => {score: number}} optimise Retains the caller's live progression and catalogue access.
+ * @property {(state: TheoryGoalState, goal: TheoryGoal) => number} scoreOf
+ * @property {(state: TheoryGoalState) => TheoryGoalShare[]} sharesOf
  */
 var TheoryEngine = (function () {
   'use strict';
@@ -678,6 +692,157 @@ var TheoryEngine = (function () {
   }
 
   /**
+   * Create goal selection and its one-entry ideal cache once. As before, only
+   * the serialized key invalidates it; profile/catalogue replacement alone does not.
+   * @param {TheoryGoalDependencies} dependencies
+   * @returns {{goalsOf: (state: TheoryGoalState) => TheoryGoal[],
+   *   bestAlone: (state: TheoryGoalState, list: TheoryGoal[]) => TheoryGoalBest,
+   *   aimOf: (state: TheoryGoalState, goals?: TheoryGoal[] | null) => TheoryGoalResult}}
+   */
+  function createGoals({ getGoals, getBanned, optimise, scoreOf, sharesOf }) {
+    /* Which of them are being asked for, with the old single choice honoured. */
+    /** @param {TheoryGoalState} state @returns {TheoryGoal[]} */
+    function goalsOf(state) {
+      const want = state.goals && state.goals.length
+        ? state.goals : [state.goal || 'dps'];
+      const out = getGoals().filter(one => want.includes(one.id));
+      return out.length ? out : [getGoals()[0]];
+    }
+
+    /*
+     * Asking for more than one thing at once.
+     *
+     * Damage is in the thousands, survival in seconds and dexterity in dozens,
+     * so they cannot be added as they stand. Each is measured against what the
+     * build already has of it, which turns every one of them into the same kind
+     * of number, and against the best that thing could reach on its own, which
+     * is what makes the shares mean something.
+     *
+     * What this is NOT any more is a weighted sum of those numbers, and the
+     * reason is worth setting down because the sum looks obviously right.
+     *
+     * Maximising a weighted sum over a set of things you either wear or do not
+     * always lands on a corner of the set. Move the slider and the answer does
+     * not slide with it: it sits still, sits still, and then jumps. Worse, any
+     * build that is a fair compromise but not a corner can never be chosen at
+     * any setting whatever. That is not a tuning problem, it is what the sum is.
+     *
+     * Measured on this game's rings, against damage and life: the four that are
+     * worth wearing at all are Decades Chronicle, Collector's Monocle,
+     * Chrysalis of Eternity and Overclocking Amulet. The sum reaches three of
+     * them. Collector's Monocle - eight points of damage for a hundred and
+     * forty of life, a perfectly reasonable middle - lies just inside the line
+     * between its neighbours, and no share the reader can set will ever pick
+     * it. What the reader sees instead is the jump: one per cent of the slider
+     * turning a hundred and twenty life into two points of damage.
+     *
+     * So the shares are read as tolerances rather than as weights. Each goal
+     * knows how far it is from the best it could have been, alone; that
+     * shortfall is multiplied by the share; and the build chosen is the one
+     * whose worst weighted shortfall is smallest. Asking for little of
+     * something is then a statement that it is allowed to fall behind, which is
+     * what anybody moving that slider means. The whole of the frontier can be
+     * reached this way, corners and middles alike - all four rings, in the same
+     * measurement.
+     *
+     * The small sum on the end is a tiebreak. Judging only by the worst goal
+     * leaves builds that are equal at their worst and unequal everywhere else
+     * looking identical, so what is left over settles it.
+     */
+    const AUGMENT = 1e-3;
+
+    /*
+     * The best each goal could reach alone, worked out once and kept.
+     *
+     * It costs a search per goal, which is real money: with two goals it took
+     * the whole thing from eleven seconds to twenty-seven the first time it was
+     * measured. But none of it depends on where the slider is - the best damage
+     * a build could possibly do is the same number whether the reader is asking
+     * for a tenth of it or all of it - and moving the slider is exactly what
+     * this change was made for. So it is remembered against everything that
+     * does change the answer, and a reader sweeping the slider pays for it
+     * once rather than on every press.
+     */
+    /** @type {{key: null, best: null} | {key: string, best: TheoryGoalBest}} */
+    let ideals = { key: null, best: null };
+
+    /** @param {TheoryGoalState} state @param {TheoryGoal[]} list @returns {TheoryGoalBest} */
+    function bestAlone(state, list) {
+      const key = JSON.stringify([state.klass, state.level, state.boss, state.against,
+        state.gear, state.locked, state.exalt, getBanned() || null,
+        list.map(one => one.id)]);
+      if (ideals.key === key) return ideals.best;
+      /** @type {TheoryGoalBest} */
+      const best = {};
+      for (const one of list) {
+        const alone = optimise(state, one, null);
+        const was = scoreOf(state, one);
+        best[one.id] = Number.isFinite(alone.score) ? alone.score
+          : (Number.isFinite(was) ? was : 0);
+      }
+      ideals = { key, best };
+      return best;
+    }
+
+    /**
+     * @param {TheoryGoalState} state @param {TheoryGoal[] | null} [goals]
+     * @returns {TheoryGoalResult}
+     */
+    function aimOf(state, goals) {
+      const list = goals || goalsOf(state);
+      if (list.length === 1) return list[0];
+      const parts = new Map(sharesOf(state).map(one => [one.goal.id, one.part]));
+      const best = bestAlone(state, list);
+      /** @type {Record<string, number>} */
+      const span = {};
+      /** @type {Record<string, number>} */
+      const pull = {};
+      for (const one of list) {
+        const was = scoreOf(state, one);
+        const from = Number.isFinite(was) ? was : 0;
+        /*
+         * A shortfall is measured against the room the goal has, not against
+         * where it started.
+         *
+         * Dividing by the starting value looks like the same thing and is not.
+         * A bare build of this class does ninety-one damage a second and can be
+         * taken to seventy-three thousand, which is eight hundred times over;
+         * its life goes from seven hundred and thirty to eighteen hundred,
+         * which is two and a half times. Read that way the damage shortfall is
+         * always the larger number by a factor of three hundred, so damage is
+         * always the worst goal and always wins, and the slider does nothing at
+         * all - which is what it did when this was first written.
+         *
+         * Against the room instead, both run from one at the starting build to
+         * nought at the best that goal can do. Then a share is a share of
+         * something, and moving it moves the answer.
+         */
+        const reach = Math.abs(best[one.id] - from);
+        span[one.id] = reach > 1e-9 ? reach : 1;
+        // Never nought: a goal that is on is never silently switched off.
+        pull[one.id] = Math.max(1e-6, parts.get(one.id) || 1 / list.length);
+      }
+      return {
+        id: list.map(one => one.id).join('+'),
+        say: list.map(one => one.say.toLowerCase()).join(' and '),
+        goals: list,
+        of: (numbers, at) => {
+          let worst = -Infinity, rest = 0;
+          for (const one of list) {
+            const short = (best[one.id] - one.of(numbers, at)) / span[one.id];
+            rest -= short;
+            const felt = pull[one.id] * short;
+            if (felt > worst) worst = felt;
+          }
+          return -worst + AUGMENT * rest;
+        }
+      };
+    }
+
+    return { goalsOf, bestAlone, aimOf };
+  }
+
+  /**
    * Retain the caller's lazy cache lifetime, including explicit profile invalidation.
    * @param {() => TheoryBeatenCatalogue} getData
    */
@@ -950,7 +1115,7 @@ var TheoryEngine = (function () {
     return { charmNamed, locksOn, rollableEnchantsFor, enchantsFor, enchantFitsItem };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createBeaten, createItemSearch, createEnchants };
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createGoals, createBeaten, createItemSearch, createEnchants };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;
