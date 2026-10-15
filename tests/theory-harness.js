@@ -10,7 +10,7 @@ module.exports = function(sources, raw, withEngine = true) {
     statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate,
     charmNamed, locksOn, rollableEnchantsFor, enchantFitsItem, plainly, enchantKey, worth, NUMERAL,
     setRules(value) { rules = value; },
-    numbersFor, optimise, scoreOf, goalsOf, bestAlone, shareOf, sharesOf, aimOf, accessible, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
+    numbersFor, optimiseSteps, optimise, optimiseAsync, scoreOf, goalsOf, bestAlone, shareOf, sharesOf, aimOf, accessible, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
     setStatusInfo(value) { statusInfo = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,
@@ -22,9 +22,10 @@ module.exports = function(sources, raw, withEngine = true) {
       for (const one of data.items) data.byItem[one.name] = one;
       for (const one of data.enchants) data.byEnch[one.id] = one;
       for (const one of data.bosses) data.byBoss[one.name] = one;
-    }, use(state) { build = state; }
+    }, use(state) { build = state; }, setData(value) { data = value; }
   };`);
   const context = { window: { ROTMG_BUNDLE: { sources } }, module: { exports: {} }, console,
+    performance: require('perf_hooks').performance, setTimeout,
     TheoryEngine: require('../web/theory-engine'),
     BuildProgression: require('../web/progression') };
   if (withEngine) context.EnchantEngine = require('../web/engine');

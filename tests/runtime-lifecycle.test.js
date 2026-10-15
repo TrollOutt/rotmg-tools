@@ -9,6 +9,7 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
 const app = read('web/app.js');
 const theory = read('web/theorycraft.js');
+const theoryEngine = read('web/theory-engine.js');
 const engineSource = read('web/engine.js');
 const i18nSource = read('web/i18n.js');
 const realm = read('web/realm-map.js');
@@ -713,9 +714,10 @@ console.log('runtime lifecycle: ok');
  * contract tests, while the browser drives the same work cooperatively.
  */
 assert(
-  theory.includes('function* optimiseSteps(')
+  theoryEngine.includes('function* optimiseSteps(')
+    && theory.includes('const { optimiseSteps } = TheoryEngine.createOptimiser({')
     && theory.includes('async function runOptimiserStepsAsync(')
-    && /yield;\s*(?:const|let)\s+\w+\s*=\s*scoreOf\(/.test(theory)
+    && /yield;\s*(?:const|let)\s+\w+\s*=\s*scoreOf\(/.test(theoryEngine)
     && theory.includes('yield* optimiseSteps(trial, goal, null);')
     && theory.includes('await optimiseAsync(plain, aim, null, gather);')
     && theory.includes('await optimiseAsync(build, aim, null, gather);')

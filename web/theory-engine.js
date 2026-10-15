@@ -1,5 +1,5 @@
-/* Weapon, statistic, set, build numbers, scoring, goals and candidates with explicit inputs. Catalogue
- * ownership, status modelling and optimisation stay with the caller. */
+/* Weapon, statistic, set, build numbers, scoring, goals, candidates and optimisation
+ * with explicit inputs. Catalogue ownership, status modelling and scheduling stay with the caller. */
 /**
  * @typedef {{many: number, wait: number, rush: number}} TheoryBurst
  * @typedef {{every: number, shots: number, wait: number, run: number}} TheoryBurstCycle
@@ -156,6 +156,34 @@
 /**
  * @typedef {{share?: Record<string, unknown> | null}} TheoryShareState
  * @typedef {{goalsOf: (state: TheoryGoalState) => TheoryGoal[]}} TheoryShareDependencies
+ */
+/**
+ * @typedef {(string | null)[]} TheoryOptimiserSlots
+ * @typedef {{name: string | null, slots: number, ench: TheoryOptimiserSlots}} TheoryOptimiserEquipment
+ * @typedef {TheoryScoreState & {gear: Record<string, TheoryOptimiserEquipment>,
+ *   locked: Record<string, boolean>, scope?: string}} TheoryOptimiserState
+ * @typedef {TheorySearchItem & {tier?: number}} TheoryOptimiserCandidate
+ * @typedef {TheoryEnchantChoice & {labels?: string}} TheoryOptimiserEnchantCandidate
+ * @typedef {{key: string, score: number, gear: Record<string, string>}} TheoryOptimiserOffer
+ * @typedef {Map<string, TheoryOptimiserOffer>} TheoryOptimiserGather
+ * @typedef {(pass: number, looked: number, score: number) => void} TheoryOptimiserReport
+ * @typedef {{state: TheoryOptimiserState, score: number, looked: number}} TheoryOptimiserResult
+ * @typedef {{byItem: Record<string, {tier?: number} | undefined>,
+ *   byEnch: Record<string, TheoryCharm | undefined>, sets?: {pieces: string[]}[]}} TheoryOptimiserCatalogue
+ * @typedef {Object} TheoryOptimiserDependencies
+ * @property {() => {mode: string} | null | undefined} getProfile Read only when the generator first advances.
+ * @property {() => unknown} getAccess Read only for a personal profile at the original guard.
+ * @property {() => TheoryOptimiserCatalogue} getData Read the catalogue at every original lookup site.
+ * @property {readonly (readonly string[])[]} hands
+ * @property {number} gatherKeep
+ * @property {(a: TheoryOptimiserOffer, b: TheoryOptimiserOffer) => number} byScoreThenSignature
+ * @property {(state: TheoryOptimiserState) => string} gearSignature
+ * @property {(state: TheoryOptimiserState) => TheoryOptimiserState} prepareSearchable Retains live catalogue, progression and search filters.
+ * @property {(hand: string, klass: string, state: TheoryOptimiserState) => TheoryOptimiserCandidate[]} searchItems
+ * @property {(name: string, already: TheoryOptimiserSlots, at: number) => TheoryOptimiserEnchantCandidate[]} searchEnchants
+ * @property {(name: string, already: TheoryOptimiserSlots, at: number) => boolean} enchantFitsItem
+ * @property {(one: TheoryCharm | undefined) => number} worth
+ * @property {(state: TheoryOptimiserState, goal: TheoryScoreGoal) => number} scoreOf
  */
 var TheoryEngine = (function () {
   'use strict';
@@ -1149,7 +1177,335 @@ var TheoryEngine = (function () {
     return { charmNamed, locksOn, rollableEnchantsFor, enchantsFor, enchantFitsItem };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createShares, createGoals, createBeaten, createItemSearch, createEnchants };
+  /**
+   * Bind once; compatibility, candidates, offers and tiers belong to each search.
+   * @param {TheoryOptimiserDependencies} dependencies
+   */
+  function createOptimiser({ getProfile, getAccess, getData, hands: HANDS,
+    gatherKeep: GATHER_KEEP, byScoreThenSignature, gearSignature, prepareSearchable,
+    searchItems, searchEnchants, enchantFitsItem, worth, scoreOf }) {
+    /**
+     * @param {TheoryOptimiserState} state @param {TheoryScoreGoal} goal
+     * @param {TheoryOptimiserReport | null} [report]
+     * @param {TheoryOptimiserGather} [gather]
+     * @returns {Generator<void, TheoryOptimiserResult, unknown>}
+     */
+    function* optimiseSteps(state, goal, report, gather) {
+      if (!getProfile() || (/** @type {{mode: string}} */ (getProfile()).mode === 'personal' && !getAccess())) throw new Error('Set up your progression before crafting.');
+      const work = prepareSearchable(state);
+      // Cache compatibility only for this search, including the full slot state.
+      /** @type {Map<string, boolean>} */
+      const enchantFitCache = new Map();
+      /** @param {string} itemName @param {TheoryOptimiserSlots} already @param {number} at */
+      const enchantFits = (itemName, already, at) => {
+        const key = JSON.stringify([itemName, already, at]);
+        if (!enchantFitCache.has(key)) {
+          enchantFitCache.set(key,
+            enchantFitsItem(itemName, already, at));
+        }
+        return /** @type {boolean} */ (enchantFitCache.get(key));
+      };
+      // Eligibility stays fixed during this search; rebuild on the next call.
+      /** @type {Map<string, TheoryOptimiserCandidate[]>} */
+      const candidatesByHand = new Map();
+      /** @param {string} hand */
+      const candidatesForHand = hand => {
+        if (!candidatesByHand.has(hand)) {
+          candidatesByHand.set(hand, searchItems(hand, work.klass, work));
+        }
+        return /** @type {TheoryOptimiserCandidate[]} */ (candidatesByHand.get(hand));
+      };
+      /*
+       * Each padlock holds the one thing it is on.
+       *
+       * It used to be that holding an item held everything on it too, on the
+       * argument that leaving the weapon alone and rearranging all four of its
+       * enchantments is not what anybody means by keeping something. That reads
+       * well and is wrong twice over.
+       *
+       * It is wrong about the page, which puts five padlocks on every item -
+       * one on the item and one on each of its four slots - and says "keep this
+       * item" on the first of them. If the first held the other four there
+       * would be no reason for them to exist, and pressing it would do
+       * something the button does not say.
+       *
+       * And it is wrong about the question people bring. Keeping a weapon is
+       * usually how you say "this is the one I own"; what you want to know next
+       * is what to roll on it. Held whole, an item you own and have not
+       * enchanted yet comes back exactly as empty as it went in, and the search
+       * quietly refuses to answer the thing you asked.
+       *
+       * So a padlock on the item fixes the item, a padlock on a slot fixes that
+       * slot, and to hold the lot you press all five. What is not kept is
+       * assumed to have all four slots, since there you are planning rather
+       * than describing - but a kept item keeps the count it really has.
+       */
+      for (const [hand] of HANDS) {
+        const held = work.locked[hand];
+        if (!held) work.gear[hand].slots = 4;
+        const many = Math.max(0, work.gear[hand].slots || 0);
+        while (work.gear[hand].ench.length < many) work.gear[hand].ench.push(null);
+        /*
+         * And every slot that is not being kept starts empty.
+         *
+         * A search that begins from what is already there can only add and
+         * swap, never take away - so an enchantment left over from an earlier
+         * question stayed for the next one, and a build asked for damage came
+         * back still wearing the mana regeneration it was given while somebody
+         * was asking about survival. Everything is worked out again from
+         * nothing; what is kept is kept, and the rest has to earn its place.
+         */
+        for (let at = 0; at < many; at++) {
+          if (!work.locked[hand + ':' + at]) work.gear[hand].ench[at] = null;
+        }
+      }
+      yield;
+      let score = scoreOf(work, goal);
+      let looked = 0;
+      /*
+       * A gear set the search has just scored, kept if it is one somebody
+       * could actually wear: all four slots filled, every free slot with
+       * something this search was allowed to offer there - so whatever the
+       * page later proposes has been through the same progression, blacklist
+       * and filters as the answer itself - and every kept slot as it is.
+       * Nothing is scored for it; the number is the one the search just made.
+       */
+      /** @type {Map<string, Set<string>>} */
+      const offered = new Map();
+      /** @param {string} hand @param {string} name */
+      const offers = (hand, name) => {
+        if (!offered.has(hand)) offered.set(hand, new Set(candidatesForHand(hand).map(item => item.name)));
+        return /** @type {Set<string>} */ (offered.get(hand)).has(name);
+      };
+      /*
+       * And never a lower tier than the slot can have. An alternative is
+       * another way to play, not the same way a tier worse: a T5 ring where the
+       * T6 one is on offer is only a downgrade that happens to spell a new
+       * signature. A tiered item is noted only at the best tier this search
+       * may offer in its slot; untiered and set pieces carry no tier and are
+       * judged on their score like anything else.
+       */
+      /** @type {Map<string, number>} */
+      const bestTier = new Map();
+      /** @param {string} hand */
+      const topTier = hand => {
+        if (!bestTier.has(hand)) {
+          let most = -Infinity;
+          for (const item of candidatesForHand(hand)) if (Number.isFinite(item.tier)) most = Math.max(most, /** @type {number} */ (item.tier));
+          bestTier.set(hand, most);
+        }
+        return /** @type {number} */ (bestTier.get(hand));
+      };
+      /** @param {TheoryOptimiserState} one @param {number} value */
+      const note = (one, value) => {
+        if (!gather || !Number.isFinite(value)) return;
+        /** @type {Record<string, string>} */
+        const names = {};
+        for (const [hand] of HANDS) {
+          const name = one.gear[hand].name;
+          if (!name) return;
+          if (!one.locked[hand] && !offers(hand, name)) return;
+          const item = getData().byItem[name];
+          if (!one.locked[hand] && item && Number.isFinite(item.tier) && /** @type {number} */ (item.tier) < topTier(hand)) return;
+          names[hand] = name;
+        }
+        const key = gearSignature(one);
+        const had = gather.get(key);
+        if (had && had.score >= value) return;
+        gather.set(key, { key, score: value, gear: names });
+        if (gather.size > GATHER_KEEP * 2) {
+          const kept = [...gather.values()].sort(byScoreThenSignature).slice(0, GATHER_KEEP);
+          gather.clear();
+          for (const one of kept) gather.set(one.key, one);
+        }
+      };
+      note(work, score);
+      for (let pass = 0; pass < 4; pass++) {
+        let moved = false;
+        for (const [hand] of HANDS) {
+          if (work.locked[hand]) continue;
+          const was = work.gear[hand].name;
+          let best = was;
+          for (const one of candidatesForHand(hand)) {
+            work.gear[hand].name = one.name;
+            // An enchantment that no longer fits the item cannot be counted.
+            const kept = work.gear[hand].ench.slice();
+            work.gear[hand].ench = kept.map((id, i) =>
+              (id && enchantFits(one.name, kept, i)) ? id : null);
+            yield;
+            const now = scoreOf(work, goal);
+            looked++;
+            note(work, now);
+            /*
+             * A stat goal often cannot see whole equipment slots. Life, for
+             * example, gives an ordinary staff the same score as the starter
+             * staff. Keep improving the tier when two tiered items tie so a
+             * reachable T10 weapon is not reported as T0 merely because neither
+             * changes Life. Untiered gear still has to win on the requested
+             * goal, so this tie-break cannot replace a useful UT arbitrarily.
+             */
+            const current = getData().byItem[/** @type {string} */ (best)];
+            const tierTie = Math.abs(now - score) <= 1e-9
+              && Number.isFinite(one.tier) && Number.isFinite(current && current.tier)
+              && /** @type {number} */ (one.tier) > /** @type {{tier: number}} */ (current).tier;
+            if (now > score + 1e-9 || tierTie) {
+              score = Math.max(score, now);
+              best = one.name;
+            }
+            work.gear[hand].ench = kept;
+          }
+          work.gear[hand].name = best;
+          if (best !== was) moved = true;
+        }
+        /*
+         * And whole sets, which no single swap can ever reach.
+         *
+         * A set pays nothing until two of its pieces are on at once, so every
+         * step towards one is a step downhill and a search that changes one
+         * thing at a time turns back at the first of them. Each set is
+         * therefore tried whole: the best piece it has for every hand that is
+         * free, put on together, kept only if the lot of them beats what was
+         * there.
+         */
+        for (const kit of getData().sets || []) {
+          /** @type {TheoryOptimiserState} */
+          const trial = JSON.parse(JSON.stringify(work));
+          let put = 0;
+          for (const [hand] of HANDS) {
+            if (trial.locked[hand]) continue;
+            let best = null, mark = -Infinity;
+            const mine = new Set(kit.pieces);
+            for (const one of candidatesForHand(hand)) {
+              if (!mine.has(one.name)) continue;
+              const was = trial.gear[hand].name;
+              trial.gear[hand].name = one.name;
+              yield;
+              const now = scoreOf(trial, goal);
+              looked++;
+              if (now > mark) { mark = now; best = one.name; }
+              trial.gear[hand].name = was;
+            }
+            if (!best) continue;
+            trial.gear[hand].name = best;
+            // An enchantment that no longer fits the item cannot be counted.
+            const kept = trial.gear[hand].ench.slice();
+            trial.gear[hand].ench = kept.map((id, i) =>
+              (id && enchantFits(best, kept, i)) ? id : null);
+            put++;
+          }
+          if (put < 2) continue;
+          yield;
+          const now = scoreOf(trial, goal);
+          looked++;
+          note(trial, now);
+          if (now <= score) continue;
+          score = now;
+          for (const [hand] of HANDS) {
+            if (work.locked[hand]) continue;
+            work.gear[hand] = trial.gear[hand];
+          }
+          moved = true;
+        }
+
+        /*
+         * Sometimes the question is only which gear to wear. An enchanted
+         * answer is no use to somebody deciding what to hunt for first, so the
+         * search can be told to leave the enchantments exactly as they are and
+         * change nothing but the four items.
+         */
+        for (const [hand] of HANDS) {
+          if (work.scope === 'gear') break;
+          const worn = work.gear[hand];
+          /* Held or not: the padlock on the item holds the item, and the slots
+             on it answer to their own. */
+          if (!worn.name) continue;
+          for (let at = 0; at < worn.slots; at++) {
+            if (work.locked[hand + ':' + at]) continue;
+            const was = worn.ench[at];
+            /*
+             * An empty slot is worth filling even by something that changes
+             * nothing this goal can see. Insisting on a strict improvement left
+             * slots empty whenever every remaining candidate was neutral - and
+             * the game's own rules make that common, since two statistics on
+             * one item block the rest of the statistics from ever joining them.
+             * Between two that score the same, the bigger one wins, so a slot
+             * that has to be filled with something is filled with the best
+             * something rather than the first one out of the pool.
+             */
+            /*
+             * Whether an empty slot has to be filled at all.
+             *
+             * Asked to fill them, the search puts the best thing the rules
+             * still allow in every slot, and once two statistics are on an item
+             * the game allows only effects - so the answer comes back wearing
+             * mana regeneration on a build that never casts. Asked for only
+             * what helps, it leaves a slot empty rather than write down
+             * something that does nothing for the question.
+             */
+            const fills = work.scope !== 'helps';
+            let best = was;
+            let bestScore = score;
+            let bestWorth = worth(getData().byEnch[/** @type {string} */ (was)]);
+            for (const one of searchEnchants(worn.name, worn.ench, at)) {
+              // Anything this page can count: a statistic, a scaling of the
+              // weapon, or something that keeps you alive. The rest change the
+              // shot in ways it does not model.
+              if (!one.worn && !one.mul && !one.heal && !one.rel && !one.sub) continue;
+              worn.ench[at] = one.id;
+              yield;
+              const now = scoreOf(work, goal);
+              looked++;
+              const mine = worth(one);
+              const better = now > bestScore + 1e-9;
+              const evens = fills && !was
+                && Math.abs(now - bestScore) <= 1e-9 && mine > bestWorth;
+              if (better || evens) {
+                bestScore = Math.max(bestScore, now);
+                best = one.id;
+                bestWorth = mine;
+              }
+            }
+            /*
+             * And if nothing this page can count is allowed here, the slot is
+             * still a slot. Two statistics on one item bar every other
+             * statistic from joining them, so the last slots of a piece of
+             * armour are often a choice between effects the page does not
+             * model and nothing at all - and nothing at all is the one answer
+             * that is certainly wrong, since the game will put something there.
+             * The likeliest roll takes it, and the page says plainly that it is
+             * not counting what it does.
+             */
+            if (!best && fills) {
+              let common = null;
+              for (const one of searchEnchants(worn.name, worn.ench, at)) {
+                // Loot and dust bonuses are rolled for the bag, not for the
+                // fight, so they are the last thing to put in a fighting slot.
+                const spoils = (one.labels || '').includes('REWARD');
+                const mineIs = (spoils ? 0 : 1e9) + (one.roll || 0);
+                const hisIs = common
+                  ? ((common.labels || '').includes('REWARD') ? 0 : 1e9) + (common.roll || 0)
+                  : -1;
+                if (mineIs > hisIs) common = one;
+              }
+              if (common) best = common.id;
+            }
+            worn.ench[at] = best;
+            score = bestScore;
+            if (best !== was) moved = true;
+          }
+        }
+        if (report) report(pass + 1, looked, score);
+        if (!moved) break;
+      }
+      // The answer itself, enchanted, is the best this gear set has shown.
+      note(work, score);
+      return { state: work, score, looked };
+    }
+
+    return { optimiseSteps };
+  }
+
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createOptimiser, createShares, createGoals, createBeaten, createItemSearch, createEnchants };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;
