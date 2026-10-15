@@ -32,6 +32,7 @@ const deployCritical = [
   'storage-contract.test.js',
   'test-gate.test.js',
   'theory-optimization.test.js',
+  'theory-sheet-style.test.js',
   'theory.test.js',
   'ui-cache.test.js',
   'visit-counter.test.js',

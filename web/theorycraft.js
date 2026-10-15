@@ -2520,6 +2520,30 @@ const TINT = {
       + (mark ? '?v=' + encodeURIComponent(mark) : '');
   }
 
+  /*
+   * Inherited CSS variables containing the embedded PNGs make Chrome's style
+   * recalculation expensive when the search toggles inert or replaces results.
+   * Keep the same bytes behind short URLs. These two sheets live as long as
+   * this document; the browser releases their object URLs with the document.
+   * Canvas loading and ordinary versioned HTTP sheet URLs stay unchanged.
+   */
+  const sheetStyleUrls = new Map();
+  function sheetStyleUrl(source) {
+    if (!source.startsWith('data:image/png;base64,')) return source;
+    if (sheetStyleUrls.has(source)) return sheetStyleUrls.get(source);
+    try {
+      const binary = atob(source.slice('data:image/png;base64,'.length));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+      sheetStyleUrls.set(source, url);
+      return url;
+    } catch (_) {
+      // Preserve embedded images if object URLs are unavailable.
+      return source;
+    }
+  }
+
   function theSheet() {
     let img = duel.art.get('sheet');
     if (!img) {
@@ -4255,7 +4279,7 @@ const TINT = {
     {
       const bundle = window.ROTMG_BUNDLE;
       el('tcBody').style.setProperty('--tc-sheet', 'url('
-        + theorySheetUrl() + ')');
+        + sheetStyleUrl(theorySheetUrl()) + ')');
       const wrap = el('tcPickerWrap');
       if (wrap) wrap.style.setProperty('--tc-sheet', el('tcBody').style.getPropertyValue('--tc-sheet'));
       /*
@@ -4265,7 +4289,7 @@ const TINT = {
        * page ever opened.
        */
       document.documentElement.style.setProperty('--sheet', 'url('
-        + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
+        + sheetStyleUrl((bundle && bundle.indexSheet) || 'assets/index/sheet.png') + ')');
     }
     fillPickers();
     if (!recall()) tabs = [fresh('Wizard')];
