@@ -19,6 +19,7 @@ const deployCritical = [
   'fiches-forge.test.js',
   'index-quality.test.js',
   'index-sheet.test.js',
+  'index-sheet-style.test.js',
   'progression.test.js',
   'projections.test.js',
   'realm-brush-engine.test.js',

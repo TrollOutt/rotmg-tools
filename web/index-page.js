@@ -2784,7 +2784,7 @@ const RealmIndex = (function () {
       // Asked for by the Index's own build, so a cached sheet from another build never lends its pictures.
       const ix = window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index, mark = ix && (ix.built || (ix.from && ix.from.build));
       el('ixBody').style.setProperty('--ix-sheet', 'url('
-        + ((bundle && bundle.indexSheet) || 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')) + ')');
+        + ((bundle && bundle.indexSheet) ? indexSheetStyleUrl() : 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')) + ')');
     }
     await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses()]);
     if (classic()) buildFacets();

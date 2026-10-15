@@ -3620,6 +3620,24 @@ async function loadUpdateMade() {
   }
 }
 
+// The calculator and Index share this embedded sheet in inherited CSS variables.
+// Keep one resource for the document; revoking it on picker close breaks reuse.
+let indexSheetStyle = null;
+function indexSheetStyleUrl() {
+  if (indexSheetStyle) return indexSheetStyle;
+  const source = (BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png';
+  if (!source.startsWith('data:image/png;base64,')) return source;
+  try {
+    const binary = atob(source.slice('data:image/png;base64,'.length));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    indexSheetStyle = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+    return indexSheetStyle;
+  } catch (_) {
+    return source;
+  }
+}
+
 let itemArtLoading = null;
 function ensureItemArt() {
   if (state.itemArt) return Promise.resolve(state.itemArt);
@@ -3627,7 +3645,7 @@ function ensureItemArt() {
 
   // The sheet's address, once, for every picture on the calculator to point at.
   document.documentElement.style.setProperty('--sheet',
-    'url(' + ((BUNDLE && BUNDLE.indexSheet) || 'assets/index/sheet.png') + ')');
+    'url(' + indexSheetStyleUrl() + ')');
 
   if (BUNDLE && BUNDLE.itemArt) {
     state.itemArt = BUNDLE.itemArt;
