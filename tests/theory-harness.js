@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
-// Test-only access to the existing closure, without moving any production rule.
+// Test-only access to the UI closure, with the pure weapon engine supplied below.
 module.exports = function(sources, raw, withEngine = true) {
   const file = path.join(__dirname, '../web/theorycraft.js');
   const original = fs.readFileSync(file, 'utf8');
@@ -23,6 +23,7 @@ module.exports = function(sources, raw, withEngine = true) {
     }, use(state) { build = state; }
   };`);
   const context = { window: { ROTMG_BUNDLE: { sources } }, module: { exports: {} }, console,
+    TheoryEngine: require('../web/theory-engine'),
     BuildProgression: require('../web/progression') };
   if (withEngine) context.EnchantEngine = require('../web/engine');
   vm.runInNewContext(script, context, { filename: file });

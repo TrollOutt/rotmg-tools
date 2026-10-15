@@ -278,6 +278,71 @@ const RealmIndex = require('../web/index-page.js');
 const createOpenController = RealmIndex.__test.createOpenController;
 
 async function run() {
+  // Exercise the real lazy loader with controlled script completion, including
+  // concurrent navigation and retry after either dependency fails.
+  const vm = require('vm');
+  const page = read('web/index.html');
+  assert(/<script data-lazy-src="theory-engine\.js"><\/script>\r?\n<script data-lazy-src="theorycraft\.js"><\/script>/.test(page),
+    'Theory engine and UI must both remain lazy, in dependency order');
+  const begin = app.indexOf('let theoryScriptLoading = null;');
+  const end = app.indexOf('\n/*', begin);
+  assert(begin >= 0 && end > begin, 'Theory lazy loader remains extractable');
+  for (const failure of [null, 'theory-engine.js', 'theorycraft.js']) {
+    const pending = [];
+    const context = {
+      document: {
+        body: { dataset: { page: 'theory' } },
+        querySelector: selector => ({ dataset: { lazySrc: /"([^"]+)"/.exec(selector)[1] } })
+      },
+      loadLateScript: (placeholder, loaded, failed) => pending.push({
+        src: placeholder.dataset.lazySrc, loaded, failed
+      })
+    };
+    vm.createContext(context);
+    vm.runInContext(app.slice(begin, end), context);
+    const open = () => vm.runInContext('ensureTheoryPage()', context);
+    assert.equal(pending.length, 0, 'Theory scripts wait for navigation');
+    const first = open(), concurrent = open();
+    assert.equal(pending.length, 1, 'Concurrent navigation shares the dependency load');
+    assert.equal(pending[0].src, 'theory-engine.js');
+    if (failure === 'theory-engine.js') {
+      pending.shift().failed();
+      await assert.rejects(first, /Could not load Theory Crafting/);
+      await assert.rejects(concurrent, /Could not load Theory Crafting/);
+    } else {
+      vm.runInContext(read('web/theory-engine.js'), context);
+      pending.shift().loaded();
+      assert.equal(pending.length, 1);
+      assert.equal(pending[0].src, 'theorycraft.js', 'UI loads only after its engine executes');
+      if (failure) {
+        pending.shift().failed();
+        await assert.rejects(first, /Could not load Theory Crafting/);
+        await assert.rejects(concurrent, /Could not load Theory Crafting/);
+      } else {
+        context.TheoryCraft = { start: () => true };
+        pending.shift().loaded();
+        assert.equal(await first, true);
+        assert.equal(await concurrent, true);
+        assert.equal(await open(), true);
+        assert.equal(pending.length, 0, 'Revisit reuses both scripts');
+      }
+    }
+    if (failure) {
+      const retry = open();
+      assert.equal(pending[0].src,
+        failure === 'theory-engine.js' ? 'theory-engine.js' : 'theorycraft.js',
+        'Retry keeps an already loaded engine');
+      if (!context.TheoryEngine) {
+        vm.runInContext(read('web/theory-engine.js'), context);
+        pending.shift().loaded();
+      }
+      context.TheoryCraft = { start: () => true };
+      pending.shift().loaded();
+      assert.equal(await retry, true);
+      assert.equal(pending.length, 0);
+    }
+  }
+
   let starts = 0;
   let lookups = 0;
   let shows = 0;

@@ -428,6 +428,7 @@ const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
 const famePageSource = readWeb('fame-page.js');
+const theoryEngineSource = readWeb('theory-engine.js');
 const theorySource = readWeb('theorycraft.js');
 const progressionSource = readWeb('progression.js');
 const indexSource = readWeb('index-page.js');
@@ -528,7 +529,7 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
   || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
@@ -647,6 +648,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(whatsNewSource)}\n</script>`,
     `<script>\n${safe(progressionSource)}\n</script>`,
+    `<script>\n${safe(theoryEngineSource)}\n</script>`,
     `<script>\n${safe(theorySource)}\n</script>`,
     `<script>\n${safe(indexSource)}\n</script>`,
     `<script>\n${safe(browseSource)}\n</script>`,

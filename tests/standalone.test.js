@@ -19,6 +19,12 @@ for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText', 'cli
 assert.equal(offline.data.sources.clientForgeText.trim(), read('web/assets/index/client-forge.json').trim());
 for (const version of [served, offline]) {
   assert(version.html.includes('var BuildProgression'), 'Progression code missing');
+  const engineAt = version.html.indexOf('var TheoryEngine =');
+  const uiAt = version.html.indexOf('var TheoryCraft =');
+  assert(engineAt >= 0 && uiAt > engineAt,
+    'Pure theory engine must be inlined before TheoryCraft in both HTML copies');
+  assert(!version.html.includes('<script data-lazy-src="theory-engine.js">'),
+    'Built copies must inline the theory engine rather than fetch it');
 }
 assert(JSON.parse(offline.data.sources.realmLootText).creatures, 'Biome loot evidence missing');
 assert.equal(read('docs/assets/theory/progression.json').trim(), offline.data.sources.realmLootText);

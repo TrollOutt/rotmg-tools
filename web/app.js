@@ -5355,12 +5355,20 @@ function ensureTheoryPage() {
     if (!placeholder) {
       return Promise.reject(new Error('Theory Crafting script placeholder is missing.'));
     }
+    const enginePlaceholder = document.querySelector('script[data-lazy-src="theory-engine.js"]');
+    if (typeof TheoryEngine === 'undefined' && !enginePlaceholder) {
+      return Promise.reject(new Error('Theory engine script placeholder is missing.'));
+    }
 
     theoryScriptLoading = new Promise((resolve, reject) => {
-      loadLateScript(placeholder, resolve, () => {
+      const failed = () => {
         theoryScriptLoading = null;
         reject(new Error('Could not load Theory Crafting.'));
-      });
+      };
+      const loadTheory = () => loadLateScript(placeholder, resolve, failed);
+      // Keep both scripts lazy, and execute the pure dependency first.
+      if (typeof TheoryEngine !== 'undefined') loadTheory();
+      else loadLateScript(enginePlaceholder, loadTheory, failed);
     });
   }
 

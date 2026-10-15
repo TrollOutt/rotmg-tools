@@ -15,6 +15,7 @@
     "web/fame.js",
     "web/items.js",
     "web/progression.js",
+    "web/theory-engine.js",
     "web/progression-module.d.ts"
   ]
 }

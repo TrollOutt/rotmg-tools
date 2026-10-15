@@ -368,6 +368,7 @@ function theoryStorageHarness(localStorage) {
     window: {
       ROTMG_BUNDLE: { sources: {} }
     },
+    TheoryEngine: require('../web/theory-engine'),
     BuildProgression: require('../web/progression'),
     EnchantEngine: require('../web/engine')
   };

@@ -5,12 +5,17 @@ const raw = JSON.parse(fs.readFileSync(path.join(root, 'data/TheoryCraft/theoryc
 const harness = require('./theory-harness');
 const engine = require('../web/engine');
 const t = harness({}, raw, false);
+assert.equal(t.weaponRate, require('../web/theory-engine').weaponRate,
+  'TheoryCraft must use the extracted weapon calculation directly');
+assert.equal(t.landed, require('../web/theory-engine').landed,
+  'TheoryCraft must use the extracted shot calculation directly');
 const portraitHelpers = (() => {
   const file = path.join(root, 'web/theorycraft.js');
   const marker = 'return { start, share, open, put };';
   const script = fs.readFileSync(file, 'utf8').replace(marker,
     'return { facePortrait, faceStyle };');
   const context = { window: {}, module: { exports: {} }, console,
+    TheoryEngine: require('../web/theory-engine'),
     BuildProgression: require('../web/progression') };
   vm.runInNewContext(script, context, { filename: file });
   return context.module.exports;
@@ -21,6 +26,7 @@ const iconHelpers = (() => {
   const script = fs.readFileSync(file, 'utf8').replace(marker,
     'return { itemIcon, indexIcon, gradeOf, setIconTestData: v => { data = v; } };');
   const context = { window: {}, module: { exports: {} }, console,
+    TheoryEngine: require('../web/theory-engine'),
     BuildProgression: require('../web/progression') };
   vm.runInNewContext(script, context, { filename: file });
   return context.module.exports;
@@ -31,6 +37,7 @@ const targetHelpers = (() => {
   const script = fs.readFileSync(file, 'utf8').replace(marker,
     'return { targetBounds, targetFit, sheetIcon, setTargetTestData: v => { data = v; } };');
   const context = { window: {}, module: { exports: {} }, console,
+    TheoryEngine: require('../web/theory-engine'),
     BuildProgression: require('../web/progression') };
   vm.runInNewContext(script, context, { filename: file });
   return context.module.exports;
