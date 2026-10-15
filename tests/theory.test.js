@@ -275,6 +275,202 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
     'configure and use do not invalidate existing indexes');
 }
 
+// Keep the original numbersFor body independent of the extracted implementation.
+// Compare every leaf exactly, including non-finite numbers and property order;
+// JSON round-tripping would hide NaN, -0 and the immune Set.
+{
+  const { createNumbers } = require('../web/theory-engine');
+  const api = harness({}, raw, false);
+  const clone = value => JSON.parse(JSON.stringify(value));
+  let data = clone(raw);
+  api.configure(data);
+  const { statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf } = api;
+  const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
+
+  function numbersFor(state, def) {
+    const stats = statsOf(state);
+    if (!stats) return null;
+    /*
+     * The weapon, and only the weapon.
+     *
+     * An ability is a different question with different arithmetic - what it
+     * costs, how the pool pays for it, whether it lands where you are or
+     * where you are aiming - and answering both at once was making a mess of
+     * each. The ability side is set aside until the weapon side is right; the
+     * seam is here, not deleted.
+     */
+    const using = 'gun';
+    const weapon = data.byItem[(state.gear.weapon || {}).name];
+    const ability = data.byItem[(state.gear.ability || {}).name];
+    const scale = scaleOf(state);
+    // The status effects the build keeps up, its own and the party's it assumes.
+    const effects = effectsFor(state, stats.now);
+    const fx = fxOf(effects);
+    const gun = using === 'spell' ? NONE
+      : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
+    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
+    const bleed = effects ? effects.bleed : 0;
+    return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
+  }
+
+  const extracted = createNumbers({ getData: () => data,
+    statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf });
+  function exact(got, expected, why) {
+    if (expected === null || typeof expected !== 'object') {
+      assert.strictEqual(got, expected, why);
+      return;
+    }
+    assert.ok(got && typeof got === 'object', why);
+    if (Object.prototype.toString.call(expected) === '[object Set]') {
+      assert.strictEqual(Object.prototype.toString.call(got), '[object Set]', why);
+      assert.deepStrictEqual([...got], [...expected], why);
+      return;
+    }
+    assert.deepStrictEqual(Object.keys(got), Object.keys(expected), why + ' key order');
+    for (const key of Object.keys(expected)) exact(got[key], expected[key], why + '.' + key);
+  }
+  const hands = ['weapon', 'ability', 'armor', 'ring'];
+  function outfit(klass, names = []) {
+    const state = clone(api.fresh(klass));
+    names.forEach((name, i) => {
+      if (name === undefined) return;
+      if (name === null) state.gear[hands[i]] = null;
+      else {
+        assert.ok(data.byItem[name], name + ' is in the real catalogue');
+        state.gear[hands[i]].name = name;
+      }
+    });
+    return state;
+  }
+  const builds = [
+    outfit('Wizard'), outfit('Warrior'),
+    outfit('Wizard', [undefined, undefined, 'Wretched Rags', 'Ring of Cubed Wisdom']),
+    outfit('Archer', ['Frangible Longbow']),
+    outfit('Bard', ['Harmonious Harp', "Angel's Fanfare", 'Wings of Sanctity', 'Heavenly Halo']),
+    outfit('Bard', ['Harmonious Harp', "Angel's Fanfare", null, null]),
+    outfit('Archer', ['Laser Rifle', undefined, 'Fitted Protective Matrix', null]),
+    outfit('Archer', ['Laser Rifle', undefined, 'Fitted Protective Matrix', 'Loaded Core']),
+    outfit('Mystic', [undefined, 'Imprisonment Orb', undefined, 'Ring of Cubed Wisdom']),
+    outfit('Samurai', ['Blood Siphoning Katana']),
+    outfit('Rogue', ['Poison Fang Dagger']),
+    outfit('Wizard', [null, null, null, null])
+  ];
+  builds[0].gear.weapon.ench = ['Damage_Tradeoff_4', 'FireRate_Tradeoff_4'];
+  builds[2].level = 7; builds[2].maxed = false; builds[2].exalt = false;
+  builds[10].gear.weapon.ench = ['AWAKENED_POISON_FANG_DAGGER'];
+  const stinger = outfit('Rogue', ["Queen's Stinger"]);
+  stinger.gear.weapon.ench = ['BUZZING_BULLETS_STINGER'];
+  builds.push(stinger);
+  for (const state of builds) for (const worn of Object.values(state.gear)) {
+    for (const id of (worn && worn.ench) || []) if (id) assert.ok(data.byEnch[id], id);
+  }
+  const unknown = { ...builds[0], klass: 'not a class' };
+  builds.push(unknown);
+  assert.ok(api.setsOn(builds[4]).length > 0, 'four-piece set fixture pays');
+  assert.ok(api.setsOn(builds[5]).length > 0, 'two-piece set fixture pays');
+  assert.strictEqual(api.setsOn(builds[6]).length, 0, 'shared alien pieces alone do not pay');
+  assert.ok(api.setsOn(builds[7]).some(kit => kit.name === 'Loaded Core'));
+
+  const catalogue = JSON.parse(fs.readFileSync(path.join(root, 'web/assets/index/status-effects.json'), 'utf8'));
+  const info = { byName: new Map(catalogue.effects.map(one => [one.name, one])), immune: new Map() };
+  for (const one of catalogue.effects) for (const id of one.immune || []) {
+    const name = id.replace(/^enemy:/, '');
+    if (!info.immune.has(name)) info.immune.set(name, new Set());
+    info.immune.get(name).add(one.name);
+  }
+  let compared = 0;
+  for (const status of [null, info]) {
+    api.setStatusInfo(status);
+    for (const [i, state] of builds.entries()) {
+      state.boss = i % 2 ? 'Void Entity' : data.bosses.find(b => b.name !== 'Void Entity').name;
+      state.assume = i % 2 ? {} : { Damaging: true, Berserk: true, Curse: true,
+        'Armor Broken': true, Exposed: true };
+      for (const using of ['gun', 'spell', 'both']) for (const def of [0, 40, 500, -20]) {
+        state.using = using;
+        const before = JSON.stringify(state);
+        const expected = numbersFor(state, def);
+        exact(extracted.numbersFor(state, def), expected, 'factory ' + i + '/' + using + '/' + def);
+        exact(api.numbersFor(state, def), expected, 'adapter ' + i + '/' + using + '/' + def);
+        assert.strictEqual(JSON.stringify(state), before, 'numbers do not mutate the build');
+        compared++;
+      }
+    }
+  }
+  assert.strictEqual(compared, 336);
+  assert.strictEqual(api.numbersFor(unknown, 0), null);
+  const bleeding = api.numbersFor(builds[9], 40);
+  assert.ok(bleeding.bleed > 0, 'the weapon fixture contributes bleeding');
+  assert.strictEqual(bleeding.spell.dps, 0, 'the ability stays inactive even with its status effects');
+  api.setStatusInfo(null);
+  assert.strictEqual(api.numbersFor(builds[9], 40).effects, null, 'status can be removed after construction');
+  api.setStatusInfo(info);
+  assert.ok(api.numbersFor(builds[9], 40).effects, 'status can be restored after construction');
+
+  // Reconfiguration must reach both catalogue lookups and the live callbacks,
+  // while set indexes keep the lifetime already covered above.
+  const before = api.numbersFor(builds[0], 40);
+  const replacement = clone(raw);
+  const name = builds[0].gear.weapon.name;
+  replacement.items.find(one => one.name === name).shots[0].low += 13;
+  replacement.classes.find(one => one.name === 'Wizard').attTop += 7;
+  data = replacement;
+  api.configure(data);
+  exact(api.numbersFor(builds[0], 40), numbersFor(builds[0], 40), 'reconfigured adapter');
+  exact(extracted.numbersFor(builds[0], 40), numbersFor(builds[0], 40), 'reconfigured factory');
+  assert.notStrictEqual(api.numbersFor(builds[0], 40).total, before.total);
+  console.log('Build numbers: 336 exact legacy comparisons through factory and adapter, live catalogues and status.');
+}
+
+// The composition seam preserves call order, object identity and the one
+// shared inactive result, without reading globals or introducing a cache.
+{
+  const { createNumbers } = require('../web/theory-engine');
+  const calls = [], state = { gear: { weapon: { name: 'w' }, ability: { name: 'a' } } };
+  const stats = { now: { att: 50, dex: 75 } }, scale = {}, subs = [];
+  const effects = { bleed: 1 }, fx = {}, gun = { dps: 1e16 };
+  const weapon = {}, ability = {};
+  let current = { byItem: { get w() { calls.push('weapon'); return weapon; },
+    get a() { calls.push('ability'); return ability; } } };
+  let valid = true, expectedWeapon = weapon;
+  const dependencies = {
+    getData() { calls.push('data'); return current; },
+    statsOf(s) { calls.push('stats'); assert.strictEqual(s, state); return valid ? stats : null; },
+    scaleOf(s) { calls.push('scale'); assert.strictEqual(s, state); return scale; },
+    effectsFor(s, now) { calls.push('effects'); assert.strictEqual(s, state);
+      assert.strictEqual(now, stats.now); return effects; },
+    fxOf(e) { calls.push('fx'); assert.strictEqual(e, effects); return fx; },
+    subOf(s) { calls.push('sub'); assert.strictEqual(s, state); return subs; },
+    weaponRate(w, now, def, by, extra, f) {
+      calls.push('rate');
+      assert.strictEqual(w, expectedWeapon); assert.strictEqual(now, stats.now);
+      assert.strictEqual(def, -0); assert.strictEqual(by, scale);
+      assert.strictEqual(extra, subs); assert.strictEqual(f, fx);
+      return gun;
+    },
+    abilityRate() { assert.fail('the inactive ability must not be evaluated'); }
+  };
+  const calculations = createNumbers(dependencies);
+  assert.deepStrictEqual(calls, [], 'construction does not read data or status');
+  const first = calculations.numbersFor(state, -0);
+  assert.deepStrictEqual(calls, ['stats', 'data', 'weapon', 'data', 'ability', 'scale', 'effects', 'fx', 'sub', 'rate']);
+  assert.strictEqual(first.stats, stats); assert.strictEqual(first.gun, gun);
+  assert.strictEqual(first.effects, effects);
+  assert.deepStrictEqual(Object.keys(first), ['stats', 'gun', 'spell', 'effects', 'bleed', 'total']);
+  assert.deepStrictEqual(Object.keys(first.spell), ['each', 'rate', 'many', 'every', 'dps']);
+  first.spell.dps = -1e16;
+  calls.length = 0;
+  current = { byItem: { w: expectedWeapon = {} } };
+  const second = calculations.numbersFor(state, -0);
+  assert.strictEqual(second.spell, first.spell, 'inactive result stays shared and mutable');
+  assert.strictEqual(second.total, 1, 'addition stays left associative, including the shared spell term');
+  assert.notStrictEqual(second, first, 'the composite result remains fresh');
+  assert.notStrictEqual(createNumbers(dependencies).numbersFor(state, -0).spell, first.spell,
+    'each caller owns its inactive result');
+  calls.length = 0; valid = false;
+  assert.strictEqual(calculations.numbersFor(state, -0), null);
+  assert.deepStrictEqual(calls, ['stats'], 'unknown class exits before catalogue or status access');
+}
+
 const portraitHelpers = (() => {
   const file = path.join(root, 'web/theorycraft.js');
   const marker = 'return { start, share, open, put };';

@@ -1,4 +1,4 @@
-/* Weapon, statistic and set calculations with explicit inputs. Catalogue
+/* Weapon, statistic, set and build numbers with explicit inputs. Catalogue
  * ownership, status modelling and search stay with the caller. */
 /**
  * @typedef {{many: number, wait: number, rush: number}} TheoryBurst
@@ -62,6 +62,34 @@
  * @typedef {TheorySetIndexEntry & {many: number, ours: boolean}} TheorySetHit
  * @typedef {{name: string, many: number, gives: TheoryStatValues}} TheorySetResult
  * @typedef {Pick<TheoryStatRules, 'hands' | 'ofStat'>} TheorySetRules
+ */
+/**
+ * @typedef {TheoryStatState & {boss?: string, assume?: Record<string, boolean>,
+ *   using?: string}} TheoryNumbersState
+ * @typedef {number} TheoryNumbersDefence
+ * @typedef {TheoryStatResult & {now: Record<TheoryStatKey, number>}} TheoryNumbersStats
+ * @typedef {TheoryWeapon & {mp?: number, cool?: number,
+ *   cast?: {from?: number, stat?: string, dmg?: number, shots?: number, more?: number}}} TheoryNumbersItem
+ * @typedef {{byItem: Record<string, TheoryNumbersItem | undefined>}} TheoryNumbersCatalogue
+ * @typedef {{up: Record<string, number>, from: Record<string, string>,
+ *   bleed: number, immune: Set<string>}} TheoryNumbersEffects
+ * @typedef {{each: number, every: number, dps: number, many?: number}} TheoryAbilityResult
+ * @typedef {TheoryWeaponResult & TheoryAbilityResult & {many: number}} TheoryInactiveResult
+ * @typedef {{stats: TheoryNumbersStats, gun: TheoryWeaponResult,
+ *   spell: TheoryAbilityResult, effects: TheoryNumbersEffects | null,
+ *   bleed: number, total: number}} TheoryNumbersResult
+ * @typedef {Object} TheoryNumbersDependencies
+ * @property {() => TheoryNumbersCatalogue} getData Read the current catalogue at each lookup.
+ * @property {(state: TheoryNumbersState) => TheoryNumbersStats | null} statsOf Includes the caller's set resolution.
+ * @property {(state: TheoryNumbersState) => TheoryScale} scaleOf
+ * @property {(state: TheoryNumbersState) => TheorySubattack[]} subOf
+ * @property {(item: TheoryWeapon | null | undefined, stats: TheoryWeaponStats,
+ *   def: number, scale?: TheoryScale | null, extra?: TheorySubattack[] | null,
+ *   fx?: TheoryWeaponEffects | null) => TheoryWeaponResult} weaponRate
+ * @property {(item: TheoryNumbersItem | undefined, stats: TheoryNumbersStats['now'],
+ *   def: TheoryNumbersDefence, fx: TheoryWeaponEffects | null) => TheoryAbilityResult} abilityRate
+ * @property {(state: TheoryNumbersState, stats: TheoryNumbersStats['now']) => TheoryNumbersEffects | null} effectsFor
+ * @property {(effects: TheoryNumbersEffects | null) => TheoryWeaponEffects | null} fxOf
  */
 var TheoryEngine = (function () {
   'use strict';
@@ -536,7 +564,52 @@ var TheoryEngine = (function () {
     return { setsOn, timesListed };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets };
+  /**
+   * Compose one build's numbers without owning catalogue, status or search
+   * caches. The callbacks retain their live data/status access and lifetime.
+   * Only the inactive-hand result is shared, once per caller as before.
+   * @param {TheoryNumbersDependencies} dependencies
+   * @returns {{numbersFor: (state: TheoryNumbersState, def: TheoryNumbersDefence) => TheoryNumbersResult | null}}
+   */
+  function createNumbers(dependencies) {
+    const { getData, statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf } = dependencies;
+    /** @type {TheoryInactiveResult} */
+    const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
+
+    /**
+     * @param {TheoryNumbersState} state @param {TheoryNumbersDefence} def
+     * @returns {TheoryNumbersResult | null}
+     */
+    function numbersFor(state, def) {
+      const stats = statsOf(state);
+      if (!stats) return null;
+      /*
+       * The weapon, and only the weapon.
+       *
+       * An ability is a different question with different arithmetic - what it
+       * costs, how the pool pays for it, whether it lands where you are or
+       * where you are aiming - and answering both at once was making a mess of
+       * each. The ability side is set aside until the weapon side is right; the
+       * seam is here, not deleted.
+       */
+      const using = /** @type {'gun' | 'spell'} */ ('gun');
+      const weapon = getData().byItem[String((state.gear.weapon || {}).name)];
+      const ability = getData().byItem[String((state.gear.ability || {}).name)];
+      const scale = scaleOf(state);
+      // The status effects the build keeps up, its own and the party's it assumes.
+      const effects = effectsFor(state, stats.now);
+      const fx = fxOf(effects);
+      const gun = using === 'spell' ? NONE
+        : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
+      const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
+      const bleed = effects ? effects.bleed : 0;
+      return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
+    }
+
+    return { numbersFor };
+  }
+
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;

@@ -825,32 +825,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * count the same hands, or they would be three answers to three questions
    * nobody asked.
    */
-  const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
+  const numberCalculations = TheoryEngine.createNumbers({
+    getData: () => data,
+    statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf
+  });
 
   function numbersFor(state, def) {
-    const stats = statsOf(state);
-    if (!stats) return null;
-    /*
-     * The weapon, and only the weapon.
-     *
-     * An ability is a different question with different arithmetic - what it
-     * costs, how the pool pays for it, whether it lands where you are or
-     * where you are aiming - and answering both at once was making a mess of
-     * each. The ability side is set aside until the weapon side is right; the
-     * seam is here, not deleted.
-     */
-    const using = 'gun';
-    const weapon = data.byItem[(state.gear.weapon || {}).name];
-    const ability = data.byItem[(state.gear.ability || {}).name];
-    const scale = scaleOf(state);
-    // The status effects the build keeps up, its own and the party's it assumes.
-    const effects = effectsFor(state, stats.now);
-    const fx = fxOf(effects);
-    const gun = using === 'spell' ? NONE
-      : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
-    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
-    const bleed = effects ? effects.bleed : 0;
-    return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
+    return numberCalculations.numbersFor(state, def);
   }
 
   /* ---------------- the state of a build ---------------- */
