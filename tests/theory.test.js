@@ -421,6 +421,104 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   console.log('Build numbers: 336 exact legacy comparisons through factory and adapter, live catalogues and status.');
 }
 
+// Keep the old scoring body independent of the factory and compare every goal
+// with Object.is: serialization would hide NaN and infinities.
+{
+  const { createScore } = require('../web/theory-engine');
+  const api = harness({}, raw, false);
+  let data = JSON.parse(JSON.stringify(raw));
+  api.configure(data);
+  function legacy(state, goal) {
+    const boss = data.byBoss[state.boss];
+    const def = goal.id === 'kill' && boss ? boss.def : state.against;
+    const numbers = api.numbersFor(state, def);
+    if (!numbers) return -Infinity;
+    return goal.of(numbers, state);
+  }
+  const score = createScore({ getData: () => data, numbersFor: api.numbersFor });
+  const builds = ['Wizard', 'Warrior', 'Archer', 'Bard'].map(klass =>
+    JSON.parse(JSON.stringify(api.fresh(klass))));
+  builds[0].gear.weapon.ench = ['Damage_Tradeoff_4', 'FireRate_Tradeoff_4'];
+  builds[1].maxed = false; builds[1].level = 7;
+  builds[2].gear.weapon.name = 'Frangible Longbow';
+  builds[3].gear.weapon.name = 'Harmonious Harp';
+  builds.push({ ...builds[0], klass: 'not a class' });
+  const empty = JSON.parse(JSON.stringify(builds[0]));
+  for (const hand of Object.keys(empty.gear)) empty.gear[hand] = null;
+  builds.push(empty);
+  let compared = 0;
+  for (const state of builds) for (const boss of [data.bosses[0].name, '', 'unknown boss']) {
+    state.boss = boss;
+    for (const def of [null, 0, 40, 500]) {
+      state.against = def;
+      for (const goal of api.GOALS) {
+        const expected = legacy(state, goal);
+        assert.ok(Object.is(score(state, goal), expected), 'factory parity: ' + goal.id);
+        assert.ok(Object.is(api.scoreOf(state, goal), expected), 'adapter parity: ' + goal.id);
+        compared++;
+      }
+    }
+  }
+  const state = builds[0], kill = api.GOALS.find(goal => goal.id === 'kill');
+  state.boss = data.bosses[0].name;
+  const before = score(state, kill);
+  assert.ok(Number.isFinite(before) && before < 0);
+  data = JSON.parse(JSON.stringify(raw));
+  const boss = data.bosses.find(one => one.name === state.boss);
+  boss.def = 0; boss.hp *= 3;
+  api.configure(data);
+  assert.ok(!Object.is(score(state, kill), before), 'replacement boss catalogue changes kill score');
+  assert.ok(Object.is(score(state, kill), legacy(state, kill)), 'factory uses replacement defence');
+  assert.ok(Object.is(api.scoreOf(state, kill), legacy(state, kill)), 'adapter uses replacement defence');
+  console.log('Build scores: ' + compared + ' exact legacy comparisons through factory and adapter, live bosses.');
+}
+
+// One function per factory, no per-score wrapper or result allocation; preserve
+// lookup order, references, falsy exits and non-finite callback results.
+{
+  const theory = require('../web/theory-engine');
+  const calls = [], state = { boss: 'boss', against: 40 }, numbers = { total: 7 };
+  let result = numbers, expectedDef = 0;
+  const catalogue = { byBoss: { get boss() { calls.push('boss'); return { def: 0 }; } } };
+  const score = theory.createScore({
+    getData() { calls.push('data'); return catalogue; },
+    numbersFor(s, def) {
+      calls.push('numbers'); assert.strictEqual(s, state);
+      assert.ok(Object.is(def, expectedDef)); return result;
+    }
+  });
+  assert.deepStrictEqual(calls, [], 'construction does not read data');
+  let value = NaN;
+  const goal = { get id() { calls.push('goal'); return 'kill'; }, of(n, s) {
+    calls.push('of'); assert.strictEqual(n, numbers); assert.strictEqual(s, state); return value;
+  } };
+  for (value of [NaN, Infinity, -Infinity, -0, 7]) {
+    calls.length = 0;
+    assert.ok(Object.is(score(state, goal), value));
+    assert.deepStrictEqual(calls, ['data', 'boss', 'goal', 'numbers', 'of']);
+  }
+  for (result of [null, undefined, false, 0, NaN, '']) {
+    calls.length = 0;
+    assert.ok(Object.is(score(state, goal), -Infinity));
+    assert.deepStrictEqual(calls, ['data', 'boss', 'goal', 'numbers']);
+  }
+  result = numbers; expectedDef = 40;
+  assert.ok(Object.is(score(state, { id: 'dps', of: () => NaN }), NaN));
+
+  const original = theory.createScore;
+  let constructions = 0, created;
+  theory.createScore = dependencies => { constructions++; return created = original(dependencies); };
+  let api;
+  try { api = harness({}, raw, false); }
+  finally { theory.createScore = original; }
+  assert.strictEqual(api.scoreOf, created, 'adapter binds the created function directly');
+  const build = api.fresh('Wizard'), dps = api.GOALS.find(one => one.id === 'dps');
+  const expected = api.scoreOf(build, dps);
+  for (let i = 0; i < 1000; i++) assert.ok(Object.is(api.scoreOf(build, dps), expected));
+  assert.strictEqual(api.scoreOf, created, 'repeated calls retain function identity');
+  assert.strictEqual(constructions, 1, 'factory is constructed only once');
+}
+
 // The composition seam preserves call order, object identity and the one
 // shared inactive result, without reading globals or introducing a cache.
 {

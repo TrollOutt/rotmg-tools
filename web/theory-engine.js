@@ -1,4 +1,4 @@
-/* Weapon, statistic, set and build numbers with explicit inputs. Catalogue
+/* Weapon, statistic, set, build numbers and scoring with explicit inputs. Catalogue
  * ownership, status modelling and search stay with the caller. */
 /**
  * @typedef {{many: number, wait: number, rush: number}} TheoryBurst
@@ -90,6 +90,14 @@
  *   def: TheoryNumbersDefence, fx: TheoryWeaponEffects | null) => TheoryAbilityResult} abilityRate
  * @property {(state: TheoryNumbersState, stats: TheoryNumbersStats['now']) => TheoryNumbersEffects | null} effectsFor
  * @property {(effects: TheoryNumbersEffects | null) => TheoryWeaponEffects | null} fxOf
+ */
+/**
+ * @typedef {TheoryNumbersState & {boss: string, against: number}} TheoryScoreState
+ * @typedef {TheoryNumbersResult} TheoryScoreNumbers
+ * @typedef {{id: string, of: (numbers: TheoryScoreNumbers, state: TheoryScoreState) => number}} TheoryScoreGoal
+ * @typedef {{byBoss: Record<string, {def: number} | undefined>}} TheoryScoreCatalogue
+ * @typedef {{getData: () => TheoryScoreCatalogue,
+ *   numbersFor: (state: TheoryScoreState, def: number) => TheoryScoreNumbers | null}} TheoryScoreDependencies
  */
 var TheoryEngine = (function () {
   'use strict';
@@ -609,7 +617,27 @@ var TheoryEngine = (function () {
     return { numbersFor };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers };
+  /**
+   * Create the score function once, retaining live boss catalogue access.
+   * @param {TheoryScoreDependencies} dependencies
+   * @returns {(state: TheoryScoreState, goal: TheoryScoreGoal) => number}
+   */
+  function createScore(dependencies) {
+    const { getData, numbersFor } = dependencies;
+
+    /** @param {TheoryScoreState} state @param {TheoryScoreGoal} goal @returns {number} */
+    function scoreOf(state, goal) {
+      const boss = getData().byBoss[state.boss];
+      const def = goal.id === 'kill' && boss ? boss.def : state.against;
+      const numbers = numbersFor(state, def);
+      if (!numbers) return -Infinity;
+      return goal.of(numbers, state);
+    }
+
+    return scoreOf;
+  }
+
+  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;

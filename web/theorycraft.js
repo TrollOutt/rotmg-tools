@@ -1455,13 +1455,10 @@ const TINT = {
       tint: TINT[key], of: n => n.stats.now[key] }))
   ];
 
-  function scoreOf(state, goal) {
-    const boss = data.byBoss[state.boss];
-    const def = goal.id === 'kill' && boss ? boss.def : state.against;
-    const numbers = numbersFor(state, def);
-    if (!numbers) return -Infinity;
-    return goal.of(numbers, state);
-  }
+  const scoreOf = TheoryEngine.createScore({
+    getData: () => data,
+    numbersFor: numberCalculations.numbersFor
+  });
 
   /* Which of them are being asked for, with the old single choice honoured. */
   function goalsOf(state) {
