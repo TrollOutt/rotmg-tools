@@ -1,0 +1,79 @@
+## When in a realm's run the seasonal events bring their creatures out.
+##
+## Which creatures appear, and how a realm's score decides when, is not in the
+## client's files: the server watches the realm's score (the percentage meter
+## that fills as creatures die) and brings the creature out when it passes a
+## mark. So this is what players have written down, kept here where it can be
+## read and corrected, like data/Items/status-effects.txt. The client does say
+## which aliens belong to which invasion wave; tools/build-realm-events.js reads
+## that itself and joins it to this file.
+##
+## tools/build-realm-events.js writes web/assets/index/realm-events.json.
+##
+## Two kinds of line:
+##
+## event|id|name|when it runs|begins at (% of the realm's score)|summary|picture|sources
+## at|event id|who|scores|where|what happens|sources
+##
+##   who      an Index id ("enemy:The Gardener"), or a plain name. A plain name is
+##            joined to the Index creature of that name when there is one; a
+##            creature the Index has not got (a reskin, a portal, a group of
+##            mercenaries) stays as the name it was given.
+##   scores   the percentages, "15,50,85". Left empty when the creature comes
+##            out for another reason (the kills before it), which the next
+##            column says. "?" when the source says it is score-based and gives
+##            no figure.
+##   sources  RealmEye pages (the part after /wiki/), comma separated, or
+##            notes:<file> for this project's own update notes (data/Updates).
+##
+## Written from RealmEye's pages and release notes, read 2026-10-12. The figures
+## are the community's, not the client's: where two pages differ the later
+## release note wins, and the line says so.
+
+event|alien-invasion|Alien Invasion|Special events, and now and then outside them|15|Aliens come through the realm in three waves, the Adept biomes first and the Veteran biomes after, until Commander Calbrik's UFO arrives. The waves come from the client; how many kills each takes is not published.|enemy:Alien UFO|release-history-2026,alien-ufo,alien-soldier
+at|alien-invasion|enemy:Alien Reactor#AI Alien Reactor Adept||Adept biomes|Stationary reactors stand in the biomes while the invasion runs; Calbrik's defeat makes them vulnerable.|alien-reactor-adept,commander-calbrik
+at|alien-invasion|enemy:Alien UFO||Abandoned City|Appears once enough aliens have been killed and every wormhole has gone.|alien-ufo
+at|alien-invasion|enemy:Commander Calbrik||Runic Tundra|The last fight of the invasion. Defeating him opens the reactors.|alien-ufo,commander-calbrik
+at|alien-invasion|enemy:Alien Biff||Wormholes|Once a realm, after every Cyclops God is dead (the Alien Invasion 2 event).|special-event-quest-monsters
+at|alien-invasion|enemy:Alien Leprechaun||Wormholes|Once a realm, after every Ghost King is dead (the Alien Invasion 2 event).|special-event-quest-monsters
+
+event|halloween|Halloween|Halloween events|—|Three Halloween threats keep to the Haunted Hallows, each out at its own marks of the realm's score.|enemy:Totalia the Malevolent|release-history-2024,notes:motmg-season31-part1
+at|halloween|enemy:Totalia the Malevolent|15,50,85|Haunted Hallows|A small blackened setpiece with a pile of bones. In Season 31 she also shows once in the Ship Wreck and once in the Dead Church.|totalia-the-malevolent,release-history-2024,notes:motmg-season31-part1
+at|halloween|enemy:Zombie Horde|40,60,80|Haunted Hallows|Waves of zombies; their boss comes out once enough of them have been killed.|zombie-horde,notes:motmg-season31-part1
+at|halloween|enemy:Bonegrind the Undead Butcher||Haunted Hallows|The Zombie Horde's boss, out once a certain number of its minions are killed.|special-event-quest-monsters,notes:motmg-season31-part1
+at|halloween|enemy:The Hemomancer's Henchman|46,66,86|Haunted Hallows|Defeated three times, one for each mark, to bring out the Hemomancer.|the-hemomancer-s-henchman
+at|halloween|enemy:The Hemomancer||Haunted Hallows|Comes out after the third Henchman falls, the last of them at 86%.|the-hemomancer
+
+event|christmas|Christmas|Winter events|—|Winter bosses that wait for the realm to fill.|enemy:Jotunn|release-history-2026,special-event-quest-monsters
+at|christmas|enemy:Jotunn|75|Runic Tundra|Once a realm.|jotunn,release-history-2026
+at|christmas|The Santappetizer|33|Eternal Frost|During special event periods in winter.|the-santappetizer
+at|christmas|The Skeyper|33,66|Adept biomes|Five towers rise at 33% and wake again at 66%; the Skeyper comes once they have all fallen.|the-skeyper
+
+event|valentines|Valentine's Day|Valentine's Day, and some other events|—|Event bosses for the Adept biomes, brought out at a third and two thirds of the realm.|enemy:The Gardener|release-history-2026,special-event-quest-monsters
+at|valentines|enemy:The Gardener|33,66|Adept and Veteran biomes|Marked with a quest marker when it spawns. It used to keep to the Sprite Forest and the Coral Reefs; the 2026 notes widen it to the Adept and Veteran biomes.|the-gardener,release-history-2026
+at|valentines|The Keyper|33,66|Adept biomes|Five Crystal Towers rise in the Adept biomes at 33% and respawn their minions at 66%; the Keyper comes after all five have fallen.|the-keyper,crystal-tower
+at|valentines|The Appetizer|33|Adept biomes|During special event periods.|the-appetizer
+
+event|easter|Easter|Easter events|—|Biff comes out of Relentless Springs twice.|enemy:Biff the Buffed Bunny|biff-the-buffed-bunny
+at|easter|enemy:Biff the Buffed Bunny|50,80|Relentless Springs|As of Easter 2025.|biff-the-buffed-bunny
+
+event|white-snake|Legend of the White Snake|Lunar New Year events|—|An altar in the Carboniferous that calls Primal Snakes as the realm fills.|enemy:Altar of the White Snake|altar-of-the-white-snake,release-history-2025
+at|white-snake|enemy:Altar of the White Snake|30,50|Carboniferous|Appears at 30% with three Primal Snakes; it can be used again at 50%. More Primal Snakes come at other marks the pages do not give.|altar-of-the-white-snake,release-history-2025
+
+event|oryxmania|Oryxmania|Oryxmania events|—|Arena champions, with their way in brought out twice a realm.|portal:Mysterious Arena|release-history-2025,oryxmania
+at|oryxmania|enemy:Arena Announcer|33,66|Realm|Take part in the Rumble by fighting him; a portal leads to the first Arena.|release-history-2025
+at|oryxmania|The Keyper of the Arena|33,66|Realm|A reskin of the Keyper, out twice a realm.|oryxmania
+
+event|vindication|Vindication|August 2024|—|The mercenaries come back to the realms.|enemy:Pirate Queen Ramm|release-history-2024
+at|vindication|The mercenaries|10,20,30,40,50,60,70,80,90|Realm|In the new realm, one at each tenth of the score. In the old realm they came after 8, 16, 24 and 32 Heroes of Oryx.|release-history-2024
+at|vindication|The Interregnum Portals|45,85|Realm|Two sets, in the new realm. In the old realm they came after the Red Demons and the Ghost Kings.|release-history-2024
+
+event|blooming-oasis|Blooming Oasis|Season 21|—|Harmless flowers bloom in the Adept biomes.|enemy:Pink Bloom|quest-monsters,blooming-flower
+at|blooming-oasis|enemy:Blooming Flower Realm|60|Adept biomes|Harmless, during the first half of the season.|blooming-flower,quest-monsters
+at|blooming-oasis|Voided Blooming Flower|60|Adept biomes|Harmless, during the second half of the season.|voided-blooming-flower
+
+event|heatwave|Heatwave|Season 23|—|Totems stand in the Adept biomes at two marks.|enemy:Oryx Wood Totem|oryx-wood-totem,quest-monsters
+at|heatwave|enemy:Oryx Wood Totem|30,60|Adept biomes|Harmless; they take more damage from water balloons and Heatwave reskinned weapons.|oryx-wood-totem,quest-monsters
+
+event|carnival|Oryx Carnival|Oryx Carnival events|—|A jester box opens on the realm's score.|enemy:Carnival Clown|special-event-quest-monsters,carnival-clown
+at|carnival|enemy:Carnival Clown|?|Sprite Forest, Haunted Hallows, Coral Reefs|The page says the score is not known yet. He starts in a jester box.|special-event-quest-monsters,carnival-clown

@@ -7,10 +7,11 @@ module.exports = function(sources, raw, withEngine = true) {
   const marker = 'return { start, share, open, put };';
   if (!original.includes(marker)) throw new Error('Theory harness return marker moved');
   const script = original.replace(marker, `return {
-    statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate,
+    statsOf, setsOn, scaleOf, subOf, landed, weaponRate, abilityRate, regenOf, fightOf, costOf, specialsOf, temperOf, wornEffects, standOf,
     charmNamed, locksOn, rollableEnchantsFor, enchantFitsItem, plainly, enchantKey, worth, NUMERAL,
     setRules(value) { rules = value; },
     numbersFor, optimiseSteps, optimise, optimiseAsync, scoreOf, goalsOf, bestAlone, shareOf, sharesOf, aimOf, accessible, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
+    setGearInfo(value) { gearInfo = value; },
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
     setStatusInfo(value) { statusInfo = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,

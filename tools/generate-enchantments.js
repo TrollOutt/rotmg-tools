@@ -13,7 +13,7 @@ const lines = [
   '## Written by tools/generate-enchantments.js. Do not edit by hand: run the',
   '## generator again after a game update and diff the result.',
   '##',
-  '## ench|name|weight|tier split|Labels|Incompatible Labels|slots|required family|incompatible item ids|description',
+  '## ench|name|weight|tier split|Labels|Incompatible Labels|slots|required family|incompatible item ids|description|item labels needed',
   '##',
   '## A tiered enchantment is four records in the client and one line here; the',
   '## split is those four weights over their total, not a rounded figure.',
@@ -22,7 +22,7 @@ const lines = [
 for (const record of out) {
   lines.push(['ench', record.name, record.weight, record.split, record.labels.join(','),
     record.excludes.join(','), record.slots.join(','), record.families.join(','),
-    record.incompatibleIds.join(','), record.description].join('|'));
+    record.incompatibleIds.join(','), record.description, (record.needs || []).join(',')].join('|'));
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });

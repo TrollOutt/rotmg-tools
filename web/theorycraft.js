@@ -16,8 +16,16 @@
  *
  *     shots a second   1.5 + 6.5 x DEX/75, times the weapon's own rate
  *     tiles a second   4 + 5.6 x SPD/75
- *     life a second    1 + 0.12 x VIT
- *     magic a second   0.5 + 0.06 x WIS
+ *     life a second    2 + 0.2407 x VIT out of combat, half of it in combat
+ *     magic a second   0.5 + 0.12 x WIS out of combat, 0.5 + 0.06 x WIS in combat
+ *
+ * Life and magic follow Vital Combat (Exalt 1.1): once a hit above the combat
+ * trigger lands, what VIT and WIS bring is at half effectiveness until a few
+ * seconds pass without one (7 - 0.04 x VIT, never under 1). The figures are
+ * RealmEye's, checked against its worked examples - 153 VIT is 19.41 HP/s and
+ * 135 WIS is 8.6 MP/s in combat - and a fight is in combat, so the fight uses
+ * those. The enchantments that add regeneration say "doubled while out of
+ * combat": their figure is the combat one.
  *
  * And the damage formula, which is the one thing everything here turns on:
  * a shot rolls between its low and high, is raised by the attacker's attack,
@@ -32,10 +40,24 @@
 var TheoryCraft = (function () {
   'use strict';
 
-  const { SHOTS_AT, landed, weaponRate } = TheoryEngine;
+  const { SHOTS_AT, landed, reaches, fanHits } = TheoryEngine;
+
+  function weaponRate(item, stats, def, scale, extra, fx, gap) {
+    return TheoryEngine.weaponRate(item, stats, def, scale, extra, fx, gap,
+      !!(gearOf(item && item.name) || {}).curves);
+  }
+  // The game lets an ability go off once a second at the most.
+  const CAST_LEAST = 1;
   const PACE_AT = spd => 4 + 5.6 * (spd / 75);
-  const HEAL_AT = vit => 1 + 0.12 * vit;
+  // Out of combat. In combat the statistic's part is halved: the whole of it for life, the part WIS adds for magic.
+  const HEAL_CALM = vit => 2 + 0.2407 * vit;
+  const MANA_CALM = wis => 0.5 + 0.12 * wis;
+  const HEAL_AT = vit => HEAL_CALM(vit) / 2;
   const MANA_AT = wis => 0.5 + 0.06 * wis;
+  // The Healing status, when the reader says a party member keeps it up.
+  const HEALING_A_SECOND = 20;
+  // How long a character stays in combat after the last hit above the trigger, before VIT shortens it.
+  const COMBAT_SECONDS = 7, COMBAT_PER_VIT = 0.04, COMBAT_LEAST = 1;
 
   const STATS = [
     ['hp', 'Life', 'HP'], ['mp', 'Magic', 'MP'], ['att', 'Attack', 'ATT'],
@@ -670,7 +692,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * time, and why. `stats` are the build's own, for how fast its weapon fires
    * and how fast its magic comes back.
    */
-  function effectsFor(state, stats) {
+  function effectsFor(state, stats, mana, cost) {
     if (!statusInfo || !state || !stats) return null;
     const up = {}, from = {};
     const boss = data.byBoss[state.boss];
@@ -692,7 +714,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       else take(c.effect, share, 'weapon');
     }
     if (ability && ability.mp) {
-      const every = Math.max(ability.mp / MANA_AT(stats.wis), ability.cool || 0);
+      const every = Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0, CAST_LEAST);
       for (const c of ability.conditions || []) {
         if (c.target === 'player') continue;
         // On you and the party, only what casting it gives - not what a hit on you sets off.
@@ -701,6 +723,16 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
         const share = durationOf(c, stats) / every * chance;
         if (c.effect === 'Bleeding') { if (c.target === 'enemy') bleed += bleedOf(c) * Math.min(1, share); }
         else take(c.effect, share, 'ability');
+      }
+    }
+    // Worn gear that gives you Damaging or Berserk when you shoot or cast: on for its duration each time it goes off.
+    const wornNames = new Set(HANDS.map(([hand]) => (state.gear[hand] || {}).name).filter(Boolean));
+    const everyCast = ability && ability.mp ? Math.max(ability.mp * (cost || 1) / (mana || MANA_AT(stats.wis)), ability.cool || 0, CAST_LEAST) : 0;
+    for (const [hand] of HANDS) {
+      for (const g of (gearOf((state.gear[hand] || {}).name) || {}).statuses || []) {
+        const rate = g.on === 'shoot' ? fires : everyCast ? 1 / everyCast : 0;
+        const goes = g.proc > 0 && rate > 0 ? 1 / (g.cooldown + 1 / (g.proc * rate)) : 0;
+        take(g.effect, Math.min(1, goes * g.duration) * procOn(g, wornNames, up), 'gear');
       }
     }
     for (const [name, on] of Object.entries(state.assume || {})) if (on) take(name, 1, 'party');
@@ -762,6 +794,58 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   }
 
   /*
+   * Where the fighter stands.
+   *
+   * Melee is on top of the target. Mid range is three to six tiles away and long range six to nine, taken at the
+   * middle of the band: 4.5 and 7.5. A shot lands if it flies far enough to reach the target's edge, which is its
+   * size away from its middle (tools/build-gear-effects.js reads the size off the client); one that falls short
+   * does nothing. What the shot does on the way is not part of the figure.
+   */
+  const RANGES = [['melee', 'Melee', 0], ['mid', 'Mid range', 4.5], ['long', 'Long range', 7.5]];
+  const RANGE_SAYS = { melee: 'on the target', mid: '3 to 6 tiles away', long: '6 to 9 tiles away' };
+  // Where the fighter stands against the target: how far off its middle, how big it is, and how far a shot must fly to touch its edge.
+  function standOf(state) {
+    const d = (RANGES.find(one => one[0] === (state.range || 'melee')) || RANGES[0])[2];
+    const boss = data.byBoss[state.boss];
+    const size = (boss && gearInfo && gearInfo.targets && gearInfo.targets[boss.name]);
+    const radius = Math.max(0.3, size === undefined ? 0.5 : size);
+    return { d, radius, gap: Math.max(0, d - radius) };
+  }
+  /*
+   * What an ability does that is not a bolt: a chain of lightning, a trap and its sticky bomb, a grenade of poison,
+   * a nova of damage (tools/build-gear-effects.js reads each off the client; RealmEye words them the same way).
+   * Worked out against one target, every part once: the first one a chain strikes, the bomb a trap puts on one
+   * enemy, a nova's explosions each. Poison and the shockblast ignore defense, as the client says they do.
+   */
+  const COUNTED = new Set(['lightning', 'shockblast', 'trap', 'bomb', 'impact', 'poison', 'nova', 'blast', 'hex']);
+  function abilityHits(item, stats, def, fx, stacks, gap) {
+    const one = gearOf(item && item.name), parts = (one && one.ability) || [];
+    const list = [];
+    let total = 0;
+    for (const part of parts) {
+      if (!COUNTED.has(part.kind) || part.meter) continue;       // summons and meters are the server's to pace
+      // A nova or a blast goes off around the caster: a target farther off than its radius is not touched.
+      if ((part.kind === 'nova' || part.kind === 'blast') && !reaches(part.radius, gap)) continue;
+      const over = part.per ? Math.max(0, (stats[OF_STAT[part.by]] || 0) - part.from) : 0;
+      // A Hex blast is its base and a little for each Hex the shots have piled on the enemy by then (at most a hundred).
+      const heaped = part.kind === 'hex' ? Math.min(100, stacks || 0) : 0;
+      const piled = heaped * ((part.stack || 0) + (part.stackPer || 0) * over);
+      const roll = ((part.low + part.high) / 2 + over * (part.per || 0) + piled) * (1 + heaped * (part.share || 0));
+      const dealt = landed(roll, 25, Math.max(0, def - (part.ignores || 0)), part.pierce, fx) * (part.count || 1);
+      list.push({ kind: part.kind, each: dealt / (part.count || 1), count: part.count || 1, dealt });
+      total += dealt;
+    }
+    // And the bolts it releases when it goes off, which are its own (Wandering Souls Spell throws six): same arithmetic as its first.
+    for (const proc of (one && one.procs) || []) {
+      if (proc.on !== 'ability' || proc.kind !== 'bullets' || !reaches(proc.reach, gap)) continue;
+      const over = proc.per ? Math.max(0, (stats[OF_STAT[proc.by]] || 0) - proc.from) * proc.per : 0;
+      const dealt = landed((proc.low + proc.high) / 2 + over, 25, def, proc.pierce, fx) * proc.shots * (proc.proc || 1);
+      list.push({ kind: 'bolts', each: dealt / proc.shots, count: proc.shots, dealt });
+      total += dealt;
+    }
+    return { total, list };
+  }
+  /*
    * And an ability, which is bounded by magic rather than by dexterity: you
    * may use it as often as the magic comes back, and no oftener.
    */
@@ -781,19 +865,28 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * And how often is not a choice: it is what the magic pays for, at the rate
    * wisdom brings the magic back.
    */
-  function abilityRate(item, stats, def, fx) {
-    if (!item || !item.shots || !item.shots.length || !item.mp) {
+  function abilityRate(item, stats, def, fx, mana, cost, struck, gap) {
+    // `struck`: shots of the weapon that land in a second; Hex piles up one for each between two casts.
+    const mpOf = it => (it && (it.mp || ((gearOf(it.name) || {}).thrown || {}).end)) || 0;
+    const wait = mpOf(item) ? Math.max(mpOf(item) * (cost || 1) / (mana || MANA_AT(stats.wis)), item.cool || 0, CAST_LEAST) : 0;
+    const hits = abilityHits(item, stats, def, fx, (struck || 0) * wait, gap);
+    const bolts = item && item.shots && item.shots.length;
+    if (!item || !mpOf(item) || (!bolts && !hits.total)) {
       return { each: 0, every: 0, dps: 0 };
     }
-    const shot = item.shots[0];
+    const shot = bolts ? item.shots[0] : { low: 0, high: 0 };
     const cast = item.cast || {};
     // Over the floor of the stat it grows with: wisdom unless the client names another.
     const over = cast.from === undefined ? 0 : Math.max(0, stats[OF_STAT[cast.stat] || 'wis'] - cast.from);
     const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
       + over * (cast.dmg || 0);
-    const each = landed(roll, stats.att, def, shot.pierce, fx);
-    const many = Math.max(1, Math.round((cast.shots || item.many || 1)
-      + over * (cast.more || 0)));
+    // "Attack does not affect ability damage" (RealmEye, Character Stats): the attacker's attack multiplies a
+    // weapon's shot and nothing else, so an ability's bolt is raised by what its own line says (the stat it
+    // scales with, above) and by nothing more. Attack 25 is the multiplier of one.
+    const each = bolts && reaches(shot.reach, gap) ? landed(roll, 25, def, shot.pierce, fx) : 0;
+    const thrown = Math.max(1, Math.round((cast.shots || item.many || 1) + over * (cast.more || 0)));
+    // Of the bolts it throws, the ones that touch the target (a round spray, as the fight draws it, from eight up).
+    const many = (gearOf(item.name) || {}).curves ? thrown : fanHits(thrown, item.fan, thrown >= 8, gap);
     /*
      * How often it can really be used, which is two limits and not one.
      *
@@ -809,9 +902,9 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
      * has not been read for have none here, and those fall back to the mana
      * rule by themselves.
      */
-    const afford = item.mp / MANA_AT(stats.wis);
-    const every = Math.max(afford, item.cool || 0);
-    return { each, many, every, dps: each * many / every, reach: shot.reach,
+    const afford = mpOf(item) * (cost || 1) / (mana || MANA_AT(stats.wis));
+    const every = Math.max(afford, item.cool || 0, CAST_LEAST);
+    return { each, many, every, hits, dps: (each * many + hits.total) / every, reach: shot.reach,
       held: item.cool && item.cool > afford ? 'cooldown' : 'mana' };
   }
 
@@ -825,9 +918,182 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * count the same hands, or they would be three answers to three questions
    * nobody asked.
    */
+  /*
+   * What gear does that is neither a shot nor a statistic
+   * (tools/build-gear-effects.js, read off the client).
+   *
+   * A few pieces cost you while you fight: Valor takes ten attack, Warmonger
+   * five dexterity, Dusky Catalyst ten wisdom, once a hit above the combat
+   * trigger has landed. A fight is in combat, so the figures of a fight are
+   * worked out with them; the page's statistics, which are the character's,
+   * are not.
+   */
+  let gearInfo = null;
+  async function loadGearInfo() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.gearText;
+    if (!raw) raw = await fetch('assets/index/gear-effects.json').then(r => (r.ok ? r.text() : '')).catch(() => '');
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw), info = new Map(Object.entries(parsed.items || {}));
+      info.enchants = parsed.enchants || {};
+      info.targets = parsed.targets || {};
+      return info;
+    } catch (err) { return null; }
+  }
+  const gearOf = name => (gearInfo && name && gearInfo.get(name)) || null;
+  const wornEffects = state => HANDS.map(([hand]) => gearOf((state.gear[hand] || {}).name)).filter(Boolean);
+  function fightOf(state, stats) {
+    const penalty = {};
+    for (const one of wornEffects(state)) {
+      for (const tag of Object.keys(one.combat || {})) {
+        const key = OF_STAT[tag];
+        if (key) penalty[key] = (penalty[key] || 0) + one.combat[tag];
+      }
+    }
+    if (!Object.keys(penalty).length) return { ...stats, penalty };
+    const now = { ...stats.now };
+    for (const key of Object.keys(penalty)) now[key] = Math.max(0, now[key] + penalty[key]);
+    return { ...stats, now, penalty };
+  }
+  // What a worn item does to the magic an ability costs: 0.9 is a tenth off, and they multiply.
+  const costOf = state => HANDS.reduce((all, [hand]) => {
+    const worn = state.gear[hand] || {};
+    let now = all * ((gearOf(worn.name) || {}).cost || 1);
+    // And the enchantments that take a share off what an ability costs.
+    for (const id of worn.ench || []) now *= (id && gearInfo && gearInfo.enchants && gearInfo.enchants[id] && gearInfo.enchants[id].mp) || 1;
+    return now;
+  }, 1);
+  /*
+   * Damage a gear's effects add, a second, as the range the client lets us say.
+   *
+   * Each states how often it goes off - a chance, and a cooldown that starts
+   * when it does - so it goes off once every cooldown plus the wait for the
+   * chance to come up. A grenade of poison deals its total over its duration
+   * and ignores armour. A burst of bolts is the bolts' damage, raised by the
+   * stat it scales with; whether the attacker's attack multiplies it is the
+   * server's business and not the client's, so the low end leaves it out and
+   * the high end counts it. These are kept apart from the damage a second of
+   * the weapon, which is exact, and are not part of what the build is judged on.
+   */
+  /*
+   * How much of the time what a proc needs is there (0 to 1): the other items it must be worn with, the statuses
+   * you must have - a fight is always in combat, the rest are what the build and the party keep up - and nothing
+   * for a meter or life left, which only the fight knows. A proc that needs a status the build never makes does not count.
+   */
+  // The statuses the model keeps up on the player; the others it tracks are on the enemy.
+  const SELF_BUFFS = ['Damaging', 'Berserk'];
+  function procOn(proc, wornNames, up) {
+    const needs = proc.needs;
+    if (!needs) return 1;
+    if (needs.other) return 0;
+    if ((needs.wear || []).some(name => !wornNames.has(name))) return 0;
+    if (needs.wearAny && !needs.wearAny.some(name => wornNames.has(name))) return 0;
+    if ((needs.notWear || []).some(name => wornNames.has(name))) return 0;
+    let share = 1;
+    for (const status of needs.status || []) if (status !== 'In Combat') share *= SELF_BUFFS.includes(status) ? Math.min(1, (up && up[status]) || 0) : 0;
+    return share;
+  }
+  function specialsOf(state, stats, def, shots, up, casts, gap) {
+    const list = [];
+    let low = 0, high = 0;
+    const by = {};
+    const att = stats.att || 0;
+    const wornNames = new Set(HANDS.map(([hand]) => (state.gear[hand] || {}).name).filter(Boolean));
+    for (const [hand] of HANDS) {
+      const name = (state.gear[hand] || {}).name, one = gearOf(name);
+      for (const proc of (one && one.procs) || []) {
+        // The ability's own bolts, which the ability figure already counts, are not extras.
+        if (hand === 'ability' && proc.on === 'ability') continue;
+        if (proc.kind === 'bullets' && !reaches(proc.reach, gap)) continue;
+        const share = procOn(proc, wornNames, up);
+        if (!(share > 0)) continue;
+        const rate = proc.on === 'ability' ? casts : shots;
+        const wait = proc.proc > 0 && rate > 0 ? 1 / (proc.proc * rate) : Infinity;
+        const goes = 1 / (proc.cooldown + wait);
+        let each = [0, 0];
+        if (proc.kind === 'poison') each = [proc.total, proc.total];
+        else {
+          const over = proc.per ? Math.max(0, (stats[OF_STAT[proc.by]] || 0) - proc.from) * proc.per : 0;
+          const roll = (proc.low + proc.high) / 2 + over;
+          each = [landed(roll, 25, def, proc.pierce) * proc.shots, landed(roll, att, def, proc.pierce) * proc.shots];
+        }
+        if (!(goes > 0) || !isFinite(goes)) continue;
+        low += share * goes * each[0]; high += share * goes * each[1];
+        const mine = by[hand] || (by[hand] = { low: 0, high: 0 });
+        mine.low += share * goes * each[0]; mine.high += share * goes * each[1];
+        list.push({ hand, name, shots: proc.shots, reach: proc.reach, art: proc.art, kind: proc.kind, on: proc.on, goes: share * goes, low: share * goes * each[0], high: share * goes * each[1] });
+      }
+    }
+    return { low, high, list, by };
+  }
+
+  /*
+   * What gear hands out when you shoot or cast: magic or life back (a few points each time it goes off) and
+   * statistics raised for a few seconds. Each states a chance and a cooldown, so it goes off once per cooldown plus
+   * the wait for the chance to come up, counted over the shots a second or the casts a second. A raised statistic is
+   * worked out as its average over time (what it adds times how much of the time it is on), which is what a long
+   * fight sees; the burst a moment after a shot is not what a sustained figure is about.
+   */
+  function temperOf(state, shots, casts, up) {
+    const wornNames = new Set(HANDS.map(([hand]) => (state.gear[hand] || {}).name).filter(Boolean));
+    const boost = {}, gain = { hp: 0, mp: 0 }, list = [];
+    const goesOf = proc => {
+      const rate = proc.on === 'shoot' ? shots : proc.on === 'ability' || proc.on === 'use' ? casts : 0;
+      const wait = proc.proc > 0 && rate > 0 ? 1 / (proc.proc * rate) : Infinity;
+      return 1 / (proc.cooldown + wait);
+    };
+    for (const [hand] of HANDS) {
+      const name = (state.gear[hand] || {}).name, one = gearOf(name);
+      if (!one) continue;
+      for (const g of one.gains || []) {
+        const share = procOn(g, wornNames, up), goes = goesOf(g);
+        if (!(share > 0) || !isFinite(goes)) continue;
+        gain[g.give] += share * goes * g.amount;
+        list.push({ name, give: g.give, goes: share * goes, a_second: share * goes * g.amount });
+      }
+      for (const b of one.boosts || []) {
+        const key = OF_STAT[b.stat], share = procOn(b, wornNames, up), goes = goesOf(b);
+        if (!key || !(share > 0) || !isFinite(goes)) continue;
+        const on = Math.min(1, goes * (b.duration || 0)) * share;
+        boost[key] = (boost[key] || 0) + b.amount * on;
+        list.push({ name, stat: b.stat, on, adds: b.amount * on });
+      }
+    }
+    return { boost, gain, list };
+  }
+
+  /*
+   * Life and magic a second, in combat and out of it.
+   *
+   * What VIT and WIS bring is the statistic's own (see the formulas at the top).
+   * The enchantments that add regeneration are flat - 4 life a second - or a
+   * share of the maximum - 0.5% of your life a second - and say "doubled while
+   * out of combat", so what the client states is the combat figure and the calm
+   * one is twice it. Both kinds are read from the maximum the build really has,
+   * enchantments and gear included, and the Healing status adds twenty a second
+   * to life in either state when the reader assumes it.
+   */
+  function regenOf(stats, assume, fought, gain) {
+    const now = stats.now, got = (stats.from && stats.from.regen) || {};
+    // In combat the character wears its combat penalties (a wisdom ring that costs wisdom in combat).
+    const hot = (fought || stats).now;
+    const bonus = {
+      hp: (got.flatHP || 0) + (got.partHP || 0) * now.hp,
+      mp: (got.flatMP || 0) + (got.partMP || 0) * now.mp
+    };
+    const healing = assume && assume.Healing ? HEALING_A_SECOND : 0;
+    const hp = { combat: HEAL_AT(hot.vit) + bonus.hp + healing + ((gain && gain.hp) || 0), calm: HEAL_CALM(now.vit) + 2 * bonus.hp + healing };
+    const mp = { combat: MANA_AT(hot.wis) + bonus.mp + ((gain && gain.mp) || 0), calm: MANA_CALM(now.wis) + 2 * bonus.mp };
+    // Seconds without a hit above the trigger before the character is out of combat again.
+    const inCombat = Math.max(COMBAT_LEAST, COMBAT_SECONDS - COMBAT_PER_VIT * now.vit);
+    return { hp, mp, bonus, healing, inCombat };
+  }
+
   const numberCalculations = TheoryEngine.createNumbers({
     getData: () => data,
-    statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf
+    statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf,
+    fightOf, costOf, regenOf, wornEffects, temperOf, standOf, specialsOf
   });
 
   function numbersFor(state, def) {
@@ -1249,14 +1515,17 @@ const TINT = {
   spd: '#58da6e', dex: '#ff5f2a', vit: '#dd0c32', wis: '#4b9be7'
 };
 
+  // What the reader may count as damage: the weapon's shots, the ability, or every piece worn.
+  const DAMAGES = [['weapon', 'Weapon'], ['ability', 'Ability'], ['all', 'All together']];
+  const DAMAGE_SAYS = { weapon: 'damage', ability: 'ability damage', all: 'all damage' };
   const GOALS = [
     { group: 'Others', id: 'dps', say: 'Damage a second', tint: '#e08a3c',
-      of: n => n.total },
+      of: n => n.chosen },
     { group: 'Others', id: 'kill', say: 'Kill it fast', tint: '#f0c274', of: (n, s) => {
       const boss = data.byBoss[s.boss];
       if (!boss) return 0;
-      if (!(n.total > 0)) return -Infinity;
-      return -boss.hp / n.total;
+      if (!(n.chosen > 0)) return -Infinity;
+      return -boss.hp / n.chosen;
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
       tint: TINT[key], of: n => n.stats.now[key] }))
@@ -1674,6 +1943,9 @@ const TINT = {
     return { bounds, scale, width: bounds.w * scale, height: bounds.h * scale };
   }
 
+  // A target, a boss, is someone: it wears the one outline every page lays on a character (web/outline.js).
+  const inkOf = scale => window.RealmOutline ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
+
   function sheetIcon(key, side, extra) {
     const piece = data.sheet && data.sheet.pics[key];
     if (!piece) return '';
@@ -1778,7 +2050,7 @@ const TINT = {
     const at = frame => (-(piece.x + frame * piece.w + fit.bounds.x) * zoom) + 'px '
       + (-(piece.y + fit.bounds.y) * zoom) + 'px';
     return '<span class="tc-charm"'
-      + ' style="width:' + fit.width + 'px;height:' + fit.height + 'px'
+      + ' style="' + inkOf(zoom) + 'width:' + fit.width + 'px;height:' + fit.height + 'px'
       + ';background-size:' + (data.sheet.wide * zoom) + 'px '
       + (data.sheet.tall * zoom) + 'px'
       + ';background-position:' + at(run[0]) + '"></span>';
@@ -2029,12 +2301,16 @@ const TINT = {
           : swaps ? '<u>' + esc(swaps) + '</u>'
           : shares ? '<u>' + esc(shares) + '</u>'
           : heals ? '<u>' + esc(heals) + '</u>'
+          : (one && gearInfo && gearInfo.enchants && gearInfo.enchants[one.id]) ? '<u>' + round((1 - gearInfo.enchants[one.id].mp) * 100) + '% less magic an ability costs</u>'
           : (one && one.alters ? '<u class="tc-uncounted">changes the shot</u>' : ''));
         // The whole sentence, for the one that has been cut short on the card.
         const whole = one && (swaps || shares || heals
           || (one.worn && Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' ')));
+        // A plain roll never gives it: say which engraving it takes.
+        const book = one && rulesFor();
+        const via = book ? EnchantEngine.engravingsFor(book, { name: one.name })[0] : '';
         chips.push('<span class="tc-ench' + (held ? ' is-held' : '')
-          + (one ? '' : ' is-empty') + '"'
+          + (one ? '' : ' is-empty') + (via ? ' has-via' : '') + '"'
           + (whole ? ' title="' + esc(one.name + ' — ' + whole) + '"' : '') + '>'
           + (one ? sheetIcon(one.pic, 18) : '')
           // Its whole name on hover: a gear column is narrow enough to cut it.
@@ -2042,6 +2318,7 @@ const TINT = {
           + (one ? ' title="' + esc(one.name) + '"' : '') + '>'
           + (one ? esc(one.name) : '<em>empty</em>') + '</button>'
           + said
+          + (via ? '<i class="tc-via" title="Only through the ' + esc(via) + '">engraving</i>' : '')
           + '<button type="button" class="tc-hold tc-lock" data-hold="'
           + hand + ':' + at + '" aria-pressed="' + (held ? 'true' : 'false')
           + '" title="' + lockSays(held) + ' while the calculator works"'
@@ -2312,25 +2589,25 @@ const TINT = {
       const e = statusInfo.byName.get(name);
       if (!e) return '';
       const p = name === 'Bleeding' ? (effects.bleed > 0 ? 1 : 0) : (effects.up[name] || 0);
+      if (name === 'Bleeding' && !p) return '';              // nothing inflicts it: nothing to say
       const why = effects.from[name];
       const immune = effects.immune && effects.immune.has(name);
-      const own = why === 'weapon' || why === 'ability';
+      const own = why === 'weapon' || why === 'ability' || why === 'gear';
       const state = immune ? FX_SAY.immune
-        : name === 'Bleeding' ? (effects.bleed > 0 ? commas(effects.bleed) + ' a second' : 'nothing inflicts it')
+        : name === 'Bleeding' ? commas(effects.bleed) + ' a second'
         : p ? (FX_SAY[why] || why) + (p < 1 ? ' · ' + Math.round(p * 100) + '% of the time' : '')
-        : 'not up';
-      // A switch for what a party could bring, unless your own gear already keeps it up all the time.
+        : 'not up - click to assume the party keeps it up';
+      // The chip is the switch for what a party could bring, unless your own gear keeps it up all the time.
       const can = name !== 'Bleeding' && !immune && !(own && p >= 1);
-      return '<span class="tc-fx' + (p ? ' is-up' : '') + (immune ? ' is-immune' : '') + ' is-' + e.tone + '"'
-        + ' title="' + esc(e.enemy || e.player || name) + '">'
-        + statusIconTc(name, 16) + '<b>' + esc(name) + '</b><small>' + esc(state) + '</small>'
-        + (can ? '<button type="button" class="tc-fx-assume" data-assume="' + esc(name) + '" aria-pressed="'
-          + (assume[name] ? 'true' : 'false') + '">party</button>' : '')
-        + '</span>';
+      const body = statusIconTc(name, 16) + '<b>' + esc(name) + '</b>' + (p > 0 && p < 1 ? '<small>' + Math.round(p * 100) + '%</small>' : '');
+      const tag = 'class="tc-fx' + (p ? ' is-up' : '') + (immune ? ' is-immune' : '') + ' is-' + e.tone + '" title="' + esc(state) + '"';
+      return can ? '<button type="button" ' + tag + ' data-assume="' + esc(name) + '" aria-pressed="' + (assume[name] ? 'true' : 'false') + '">' + body + '</button>'
+        : '<span ' + tag + '>' + body + '</span>';
     }).join('');
     box.innerHTML = '<div class="tc-fx-row">' + rows + '</div>';
   }
 
+  let moreOpen = false;
   function drawNumbers() {
     const box = el('tcNumbers');
     if (!box) return;
@@ -2339,8 +2616,8 @@ const TINT = {
     const numbers = numbersFor(build, at);
     const boss = data.byBoss[build.boss];
     const againstBoss = boss ? numbersFor(build, boss.def) : null;
-    const kill = boss && againstBoss && againstBoss.total
-      ? boss.hp / againstBoss.total : null;
+    const kill = boss && againstBoss && againstBoss.chosen
+      ? boss.hp / againstBoss.chosen : null;
     /*
      * Four numbers. Everything else this page can work out is on the curve
      * beneath it or in the fight above it, and a wall of figures is what
@@ -2359,7 +2636,7 @@ const TINT = {
       ? (hand.every ? round(1 / hand.every) : 0)
       : round(hand.rate);
     const rows = [
-      ['damage a second', commas(numbers.total), true],
+      [(DAMAGE_SAYS[build.damage] || DAMAGE_SAYS.weapon) + ' a second', commas(numbers.chosen), true],
       [spellOnly ? 'casts a second' : 'shots a second', often],
       [spellOnly ? 'each cast' : 'each shot', commas(hand.each)
         + (hand.many > 1 ? ' x ' + hand.many : '')]
@@ -2376,15 +2653,54 @@ const TINT = {
     if (kill !== null) {
       rows.push([esc(boss.name) + ' dies in', round(kill) + 's', true]);
     }
+    // What the build gets back, in combat and out of it (Vital Combat halves what VIT and WIS bring).
+    if (numbers.regen) {
+      const back = numbers.regen;
+      rows.push([tintStats('HP a second, in combat'), round(back.hp.combat), 'main']);
+      rows.push([tintStats('MP a second, in combat'), round(back.mp.combat), 'main']);
+      rows.push([tintStats('HP / MP a second, out of combat'), round(back.hp.calm) + ' / ' + round(back.mp.calm)]);
+    }
+    // What the worn gear costs in combat, and what its effects add that the weapon's own shots do not.
+    const penalties = Object.entries((numbers.fought && numbers.fought.penalty) || {});
+    if (penalties.length) {
+      rows.push(['gear costs you in combat', tintStats(penalties.map(([key, v]) => STATS.find(s => s[0] === key)[2] + ' ' + v).join(', '))]);
+    }
+    // What gear gives back or raises while you fight: counted in the figures above, said here so they can be traced.
+    const temper = numbers.temper;
+    if (temper && temper.list.length) {
+      const gives = [temper.gain.mp > 0 ? round(temper.gain.mp) + ' magic' : '', temper.gain.hp > 0 ? round(temper.gain.hp) + ' life' : ''].filter(Boolean);
+      if (gives.length) rows.push(['gear gives back a second, in combat', gives.join(', ')]);
+      const raised = Object.entries(temper.boost).filter(([, v]) => Math.abs(v) >= 0.05).map(([key, v]) => STATS.find(x => x[0] === key)[2] + ' ' + (v > 0 ? '+' : '') + round(v));
+      if (raised.length) rows.push(['gear raises on average, in combat', tintStats(raised.join(', '))]);
+    }
+    // Where the damage comes from, piece by piece, and all of it together. A range where a figure rests on a rule only the
+    // game server knows (whether attack raises a bolt an item throws); the weapon's own shots alone are the figure above.
+    if (numbers.parts) {
+      const P = numbers.parts;
+      const say = x => (round(x.low) === round(x.high) ? commas(round(x.low)) : commas(round(x.low)) + '–' + commas(round(x.high)));
+      rows.push(['weapon a second, with what its shots set off', say(P.weapon)]);
+      if (P.ability.high > 0) rows.push(['ability a second, as often as the magic allows', say(P.ability)]);
+      if (P.armor.high > 0) rows.push(['armour a second', say(P.armor)]);
+      if (P.ring.high > 0) rows.push(['ring a second', say(P.ring)]);
+      if (P.ability.high > 0 || P.armor.high > 0 || P.ring.high > 0 || P.weapon.high > numbers.total + 1e-9) rows.push(['all together, a second', say(P.all)]);
+    }
     /*
      * The same row of figures the enchanter uses for its answer: the number
      * large and set in tabular figures, the words for it small and grey
      * underneath. Four tiles in boxes was this page inventing a treatment the
      * site already had.
      */
-    box.innerHTML = rows.map(([say, was, loud]) =>
-      '<span class="figure' + (loud ? ' is-loud' : '') + '"><b>' + was
-      + '</b><small>' + say + '</small></span>').join('');
+    // The essentials first - the damage, how long the target lasts, what you get back - and the rest one click away.
+    const tile = ([say, was, loud]) => '<span class="figure' + (loud === true ? ' is-loud' : '') + '"><b>' + was
+      + '</b><small>' + say + '</small></span>';
+    const main = rows.filter(row => row[2]), more = rows.filter(row => !row[2]);
+    box.innerHTML = main.map(tile).join('')
+      + (more.length ? '<details class="tc-more"' + (moreOpen ? ' open' : '') + '><summary>All the figures</summary><div class="tc-facts">'
+        + more.map(tile).join('') + '</div></details>' : '');
+    if (!box.dataset.moreWired) {
+      box.dataset.moreWired = '1';
+      box.addEventListener('toggle', event => { if (event.target.classList && event.target.classList.contains('tc-more')) moreOpen = event.target.open; }, true);
+    }
     drawEffects(numbers);
   }
 
@@ -2413,14 +2729,14 @@ const TINT = {
     const lines = [
       { say: 'weapon', tint: '#e0a13a', of: n => n.gun.dps },
       { say: 'ability', tint: '#6f9fd8', of: n => n.spell.dps },
-      { say: 'both', tint: '#8fd08a', of: n => n.total }
+      { say: 'all together', tint: '#8fd08a', of: n => n.parts.all.low }
     ];
     const points = [];
     let ceiling = 1;
     for (let def = 0; def <= MOST; def++) {
       const n = numbersFor(build, def);
       points.push(n);
-      ceiling = Math.max(ceiling, n.total);
+      ceiling = Math.max(ceiling, n.total, n.parts.all.low, n.spell.dps);
     }
     const pad = { l: 52, r: 10, t: 12, b: 26 };
     const x = def => pad.l + (def / MOST) * (wide - pad.l - pad.r);
@@ -2494,9 +2810,12 @@ const TINT = {
    * all read from the same functions, so the clock in the corner and the
    * "dies in" line agree by construction rather than by luck.
    */
+  // How each part of an ability is drawn when it has no bolt: a chain of lightning, a lobbed grenade or trap, a ring.
+  const FX_OF = { lightning: 'zap', shockblast: 'boom', trap: 'lob', bomb: 'boom', impact: 'lob', poison: 'cloud', nova: 'ring', blast: 'boom', hex: 'boom' };
+  const FX_COLOUR = { poison: '#5fd36a', impact: '#5fd36a', nova: '#ffd84a', blast: '#d04a4a', hex: '#a35fd0' };
   const duel = {
     on: true, at: 0, dealt: 0, shots: [], cool: 0, spell: 0, swing: 0, left: 0,
-    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [],
+    hp: 0, full: 0, over: 0, last: 0, art: new Map(), bits: [], fx: [],
     mp: 0, mpFull: 0
   };
 
@@ -2573,6 +2892,23 @@ const TINT = {
   }
 
   /*
+   * The frame of a swing at a given moment of it, 0 at the shot and 1 when it is over.
+   *
+   * The attack pose used to be picked from the clock the whole fight runs on, so
+   * a swing that lasts a fifth of a second showed whichever of its frames the
+   * clock happened to be on - not the first at the shot, and sometimes not the
+   * second at all. The frames are spread over the swing itself instead: the
+   * first as the shot leaves, the last as it ends.
+   */
+  function swingFrame(piece, progress) {
+    if (!piece) return 0;
+    const poses = piece.poses;
+    if (!poses) return 0;
+    const list = poses['0/2'] || poses['3/2'] || poses['0/0'] || poses[Object.keys(poses)[0]];
+    return list[Math.max(0, Math.min(list.length - 1, Math.floor(progress * list.length)))];
+  }
+
+  /*
    * One frame of a piece, stood on the floor at x.
    *
    * `tall` is the height it is drawn at - unless `fit` is set, when it is the
@@ -2582,25 +2918,30 @@ const TINT = {
    * steps by the rectangle's own width, because that is how the frames are
    * packed.
    */
-  function drawPiece(pen, piece, frame, x, y, tall, fit) {
+  function drawPiece(pen, piece, frame, x, y, tall, fit, inked = true) {
     const img = theSheet();
     if (!piece || !img.complete || !img.naturalWidth) return false;
     if (fit) {
       const box = targetFit(piece, tall, Array.isArray(fit) ? fit : null);
-      pen.drawImage(img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
-        box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height);
+      inkedDraw(pen, img, piece.x + frame * piece.w + box.bounds.x, piece.y + box.bounds.y,
+        box.bounds.w, box.bounds.h, x, y - box.height, box.width, box.height, inked);
       return true;
     }
     const wide = tall * (piece.w / piece.h);
-    pen.drawImage(img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
-      x, y - tall, wide, tall);
+    inkedDraw(pen, img, piece.x + frame * piece.w, piece.y, piece.w, piece.h,
+      x, y - tall, wide, tall, inked);
     return true;
+  }
+  // Everyone and everything that flies wears the one outline every page lays on a character (web/outline.js).
+  function inkedDraw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh, inked) {
+    if (inked && window.RealmOutline) window.RealmOutline.draw(pen, img, sx, sy, sw, sh, dx, dy, dw, dh);
+    else pen.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
   }
 
   function resetDuel() {
     const boss = data.byBoss[build.boss];
-    duel.at = 0; duel.dealt = 0; duel.shots.length = 0;
-    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.over = 0; duel.left = 0;
+    duel.at = 0; duel.dealt = 0; duel.shots.length = 0; duel.fx.length = 0;
+    duel.cool = 0; duel.spell = 0; duel.swing = 0; duel.swingFor = 0; duel.over = 0; duel.left = 0;
     duel.full = boss ? boss.hp : 0;
     duel.hp = duel.full;
     duel.bits.length = 0;
@@ -2615,13 +2956,13 @@ const TINT = {
   function stepDuel(delta) {
     const boss = data.byBoss[build.boss];
     if (!boss) return;
-    const stats = statsOf(build).now;
+    // The fight is worked out with the same figures the page shows: its own and what the worn gear adds.
+    const nums = numbersFor(build, boss.def);
+    if (!nums) return;
+    const mana = nums.regen.mp.combat;
     const weapon = data.byItem[(build.gear.weapon || {}).name];
     const ability = data.byItem[(build.gear.ability || {}).name];
-    const effects = effectsFor(build, stats);
-    const fx = fxOf(effects);
-    const gun = weaponRate(weapon, stats, boss.def, scaleOf(build), subOf(build), fx);
-    const spell = abilityRate(ability, stats, boss.def, fx);
+    const effects = nums.effects, gun = nums.gun, spell = nums.spell;
 
     stepBits(delta);
     if (duel.hp <= 0) return;                 // it is over; nothing else moves
@@ -2632,7 +2973,8 @@ const TINT = {
      * the visualisation of the weapon; their range and speed must not make a
      * target live longer simply because its sprite is drawn farther away.
      */
-    const dps = Math.max(0, (gun.dps || 0) + (effects ? effects.bleed : 0));
+    // The damage the reader chose to count (weapon, ability or all pieces, at the low end of what is estimated).
+    const dps = Math.max(0, nums.chosen);
     if (dps > 0) {
       const before = duel.hp;
       const hurt = dps * delta;
@@ -2665,25 +3007,32 @@ const TINT = {
         } else {
           duel.cool += 1 / gun.rate;
         }
-        duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
+        duel.swingFor = duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
         loose(weapon, gun, true);
       }
     }
     /*
-     * The magic comes back at the rate wisdom says it does, and a cast is
-     * paid for out of what is there. So the first seconds of a fight are the
-     * fast ones and the rest is whatever the pool can afford - which is the
-     * thing a sustained figure cannot show you.
+     * The ability goes as often as the magic allows (its own figure: whichever of the magic or its cooldown is slower),
+     * and the bolts the worn pieces throw when you shoot come as often as the figures count them. Both are drawn;
+     * the damage they do is already in the figure the target loses life by.
      */
-    const cost = 0;                            // the ability is set aside
-    duel.mp = Math.min(duel.mpFull, duel.mp + MANA_AT(stats.wis) * delta);
-    if (spell.dps > 0 && cost) {
+    duel.mp = Math.min(duel.mpFull, duel.mp + mana * delta);
+    if (spell.dps > 0 && spell.every > 0 && ability) {
       duel.spell -= delta;
-      if (duel.spell <= 0 && duel.mp >= cost) {
-        duel.mp -= cost;
-        duel.spell = 0.6;                     // as fast as a hand can cast
-        loose(ability, spell, false);
+      if (duel.spell <= 0) {
+        duel.spell += spell.every;
+        if (ability.shots && ability.shots.length) loose(ability, spell, false);
+        // What it does that is not a bolt - a chain of lightning, a grenade, a nova - drawn as the client colours it.
+        for (const part of ((gearOf(ability.name) || {}).ability || [])) {
+          const how = FX_OF[part.kind];
+          if (how && !part.meter) duel.fx.push({ how, color: part.color || FX_COLOUR[part.kind] || '#cfd8ff', age: 0, lasts: how === 'lob' ? 0.9 : 0.5, seed: Math.random() });
+        }
       }
+    }
+    for (let i = duel.fx.length - 1; i >= 0; i--) { duel.fx[i].age += delta; if (duel.fx[i].age >= duel.fx[i].lasts) duel.fx.splice(i, 1); }
+    for (const one of nums.special.list) {
+      if (one.kind !== 'bullets' || !(Math.random() < one.goes * delta)) continue;
+      loose({ pic: one.art }, { many: one.shots || 1, reach: one.reach || 6, fast: 12, each: 0 }, true);
     }
 
     /*
@@ -2726,37 +3075,100 @@ const TINT = {
    * looked like neither.
    */
   function loose(item, rate, mine) {
-    const many = Math.max(1, rate.many || 1);
+    const stand = standOf(build);
     const shot = (item && item.shots && item.shots[0]) || {};
     const bolt = pieceOf(item && item.pic);
-    const reach = rate.reach || shot.reach || 6;
-    const fast = rate.fast || shot.fast || 8;
-    const round = many >= 8 && !mine;
-    const fan = (item && item.fan !== undefined ? item.fan : 12) * Math.PI / 180;
-    for (let n = 0; n < many; n++) {
-      const angle = round
-        ? (n / many) * Math.PI * 2
-        : (many === 1 ? 0 : (n - (many - 1) / 2) * fan);
+    const channels = item && item.shots ? item.shots.filter(one => one.subattack) : [];
+    // Each shot that leaves: the way it points, how far it flies and how fast. A weapon built of channels (a flail's
+    // anvil and its chain) throws one of each, all along the same line; the rest throw their count fanned or round.
+    const out = [];
+    if (channels.length) {
+      for (const one of channels) {
+        for (let n = 0; n < (one.many || 1); n++) out.push({ angle: 0, reach: one.reach || 6, fast: one.fast || 8, amp: one.amp, freq: one.freq });
+      }
+    } else {
+      const many = Math.max(1, rate.many || 1);
+      const reach = rate.reach || shot.reach || 6;
+      const fast = rate.fast || shot.fast || 8;
+      const round = many >= 8 && !mine;
+      const fan = (item && item.fan !== undefined ? item.fan : 12) * Math.PI / 180;
+      for (let n = 0; n < many; n++) {
+        out.push({
+          angle: round ? (n / many) * Math.PI * 2 : (many === 1 ? 0 : (n - (many - 1) / 2) * fan),
+          reach, fast, amp: shot.amp, freq: shot.freq, phase: (n % 2) ? Math.PI : 0
+        });
+      }
+    }
+    for (const one of out) {
+      /*
+       * Does it touch the target? Its line passes the target's middle at distance times tan(angle); if that is within
+       * the target's radius, and it flies far enough, it lands and is gone there. Otherwise it goes on past.
+       */
+      const turned = Math.abs(((one.angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+      // On the target every shot lands, and one that turns as it flies comes round to it: both are drawn straight at it.
+      const curves = Boolean(item && (gearOf(item.name) || {}).curves);
+      const lands = reaches(one.reach, stand)
+        && (!(stand.d > 0) || curves || (turned < Math.PI / 2 && stand.d * Math.tan(turned) <= stand.radius));
+      if (lands && (!(stand.d > 0) || curves)) { one.angle = 0; one.reach = Math.max(one.reach, stand.gap); }
+      const aimed = lands && (!(stand.d > 0) || curves) ? 0 : turned;
+      const travel = lands ? Math.min(one.reach, Math.max(0.6, stand.gap / Math.max(0.2, Math.cos(aimed)))) : one.reach;
+      // A shot that lands on a target it stands next to would be gone in a few frames; it is slowed to be seen arriving.
+      const lasts = Math.max(lands ? 0.14 : 0.05, travel / one.fast);
       duel.shots.push({
         age: 0,
-        lasts: Math.max(0.05, reach / fast),
-        angle,
+        lasts,
+        angle: one.angle,
+        hit: lands,
+        fast: lands ? travel / lasts : one.fast,
         hurt: rate.each,
         mine, bolt,
         spin: bolt && bolt.spin ? bolt.spin : 0,
         tilt: bolt && bolt.tilt ? bolt.tilt : 0,
-        /*
-         * How it weaves, if it does. The client gives an amplitude in tiles
-         * and a frequency, and a volley alternates phase - which is why a
-         * staff's two missiles braid around each other instead of flying as
-         * one thick line. The sine is the shape the game's own players have
-         * always read off those two numbers; the numbers are the client's.
-         */
-        amp: shot.amp || 0,
-        freq: shot.freq || 0,
-        phase: (n % 2) ? Math.PI : 0,
-        reach
+        // How it weaves, if it does: the client gives an amplitude in tiles and a frequency.
+        amp: one.amp || 0,
+        freq: one.freq || 0,
+        phase: one.phase || 0,
+        reach: one.reach
       });
+    }
+  }
+
+  /*
+   * What an ability does that has no bolt to draw, in the colour the client gives it: lightning is a jagged line to the target,
+   * a grenade or a trap is lobbed and leaves a cloud, a nova or a blast is a ring that opens. Only for the eye; the damage is
+   * already in the figure the target loses life by.
+   */
+  function drawAbilityFx(pen, from, to, y, side) {
+    for (const one of duel.fx) {
+      const t = Math.min(1, one.age / one.lasts);
+      pen.save();
+      pen.strokeStyle = one.color; pen.fillStyle = one.color; pen.lineWidth = 2;
+      pen.globalAlpha = 1 - t * 0.85;
+      if (one.how === 'zap') {
+        pen.beginPath(); pen.moveTo(from, y);
+        const steps = 9;
+        for (let i = 1; i <= steps; i++) {
+          const jag = (Math.sin(one.seed * 40 + i * 7.3) * 0.5 + Math.sin(i * 12.9 + one.seed * 90) * 0.5) * side * 0.18;
+          pen.lineTo(from + (to - from) * i / steps, y + (i === steps ? 0 : jag));
+        }
+        pen.stroke();
+      } else if (one.how === 'lob' || one.how === 'cloud') {
+        const flight = one.how === 'lob' ? 0.35 : 0.3;
+        if (t < flight) {
+          const u = t / flight, x = from + (to - from) * u;
+          pen.beginPath(); pen.arc(x, y - Math.sin(u * Math.PI) * side * 0.5, 4, 0, Math.PI * 2); pen.fill();
+        } else {
+          const u = (t - flight) / (1 - flight);
+          pen.globalAlpha = 0.45 * (1 - u);
+          pen.beginPath(); pen.arc(to, y, side * (0.25 + 0.35 * u), 0, Math.PI * 2); pen.fill();
+        }
+      } else if (one.how === 'boom') {
+        pen.beginPath(); pen.arc(to, y, side * (0.15 + 0.7 * t), 0, Math.PI * 2); pen.stroke();
+      } else {
+        pen.beginPath(); pen.arc(from, y, side * (0.2 + 1.1 * t), 0, Math.PI * 2); pen.stroke();
+      }
+      pen.restore();
+      pen.beginPath();                    // the shapes above must not stay in the path the bars are filled from
     }
   }
 
@@ -2797,6 +3209,50 @@ const TINT = {
   let duelMeasureCanvas = null;
   let duelMeasureObserver = null;
   let duelMeasure = null;
+
+  /*
+   * The ground the two of them stand on: a band of floor under their feet, tiled
+   * as the game's own ground is, with the line where it starts and a few stones.
+   * Drawn once for a size and kept; the frame blits it.
+   */
+  const duelGround = { key: '', canvas: null };
+  function groundOf(wide, tall, dpr, k, floor) {
+    const key = [wide, tall, dpr, k, floor].join('|');
+    if (duelGround.key === key && duelGround.canvas) return duelGround.canvas;
+    const c = duelGround.canvas || (duelGround.canvas = document.createElement('canvas'));
+    c.width = Math.round(wide * dpr); c.height = Math.round(tall * dpr);
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, wide, tall);
+    g.imageSmoothingEnabled = false;
+    const tile = 30 * k, y0 = Math.round(floor);
+    const shade = g.createLinearGradient(0, y0, 0, tall);
+    shade.addColorStop(0, 'rgba(98, 82, 60, .34)');
+    shade.addColorStop(1, 'rgba(34, 28, 22, .5)');
+    g.fillStyle = shade;
+    g.fillRect(0, y0, wide, tall - y0);
+    // The tiles, in the two shades the client's ground alternates between.
+    g.fillStyle = 'rgba(255, 255, 255, .035)';
+    for (let row = 0; y0 + row * tile < tall; row++) {
+      for (let col = -1; col * tile < wide; col++) {
+        if ((row + col) % 2) g.fillRect(col * tile + (row % 2 ? tile / 2 : 0), y0 + row * tile, tile, tile);
+      }
+    }
+    g.fillStyle = 'rgba(255, 255, 255, .16)';
+    g.fillRect(0, y0, wide, Math.max(1, Math.round(k)));
+    // A few stones, always in the same places.
+    let seed = 2463534242;
+    const next = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return (seed >>> 0) / 4294967296; };
+    for (let i = 0; i < Math.round(wide / (46 * k)); i++) {
+      const x = Math.round(next() * wide), y = y0 + Math.round((0.15 + next() * 0.8) * (tall - y0)), size = Math.max(2, Math.round((2 + next() * 3) * k));
+      g.fillStyle = 'rgba(190, 170, 140, .22)';
+      g.fillRect(x, y, size * 1.5, size);
+      g.fillStyle = 'rgba(0, 0, 0, .3)';
+      g.fillRect(x, y + size, size * 1.5, Math.max(1, Math.round(k * 0.7)));
+    }
+    duelGround.key = key;
+    return c;
+  }
 
   function drawDuel() {
     const canvas = el('tcDuel');
@@ -2895,21 +3351,8 @@ const TINT = {
      */
     const k = Math.max(1, Math.min(2.4, tall / 170, wide / 480));
     const floor = tall - 30 * k;
+    pen.drawImage(groundOf(wide, tall, dpr, k, floor), 0, 0, wide, tall);
 
-    /*
-     * How far apart they stand: the range of the weapon in your hand.
-     *
-     * The bench used to be a fixed stretch of floor whatever you were
-     * holding, which quietly showed a dagger and a bow reaching the same
-     * distance and spread a volley across twenty tiles of ground - so the
-     * shots of a bow left the top of the frame long before they arrived. A
-     * tile is a tile here, thirty pixels of it, and the two of them stand the
-     * weapon's own range apart with the pair middled in the frame.
-     */
-    const kit = statsOf(build);
-    const arm = data.byItem[(build.gear.weapon || {}).name];
-    const shooting = kit
-      ? weaponRate(arm, kit.now, 0, scaleOf(build), subOf(build)) : {};
     const PX_TILE = 30 * k;
     const piece = pieceOf(boss && boss.pic);
     const room = Math.min(88 * k, tall * 0.64);
@@ -2923,14 +3366,22 @@ const TINT = {
     const me = pieceOf((kind && kind.pic) || '');
     const side = Math.min(52 * k, tall * 0.4);
     const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
-    const apart = Math.max(80, Math.min(wide - 40 - mine - across,
-      (shooting.reach || 6) * PX_TILE));
-    const left = Math.max(14, (wide - (mine + apart + across)) / 2);
-    const bossX = left + mine + apart;
+    /*
+     * Where they stand is the distance the reader chose: on the target, three to six tiles off or six to nine, measured
+     * from the target's middle (mid range at 4.5, long range at 7.5). A tile is thirty pixels unless the frame is too
+     * narrow for that, and every length below - shots, reach - is drawn at the same scale, so what passes a target and
+     * what reaches it can be seen.
+     */
+    const stand = standOf(build);
+    const dist = Math.max(stand.d, stand.radius);
+    const tilePx = Math.max(8, Math.min(PX_TILE, (wide - mine - across * 0.5 - 44) / Math.max(dist, 1)));
+    const bossX = wide - across - 14 * k;
+    const left = Math.max(6, bossX + across / 2 - dist * tilePx - mine * 0.9);
 
     /* The one on the left, in whichever pose it is in. */
     if (me) {
-      drawPiece(pen, me, frameOf(me, duel.swing > 0 ? 2 : 0, duel.at),
+      drawPiece(pen, me, duel.swing > 0 && duel.swingFor > 0
+        ? swingFrame(me, 1 - duel.swing / duel.swingFor) : frameOf(me, 0, duel.at),
         left, floor, side);
     } else {
       pen.fillStyle = '#6f8fbf';
@@ -2960,7 +3411,7 @@ const TINT = {
      * not teleport, so it keeps its own idle animation throughout and the hit
      * shows as a flash instead.
      */
-    const struck = duel.hp > 0 && duel.shots.some(s => s.age > s.lasts * 0.86);
+    const struck = duel.hp > 0 && duel.shots.some(s => s.hit && s.age > s.lasts * 0.86);
     pen.globalAlpha = duel.hp > 0 ? 1 : 0.22;
     const drew = drawPiece(pen, piece, targetFrame(piece, duel.at), bossX, floor, room, targetRun);
     if (drew && struck) {
@@ -2990,19 +3441,18 @@ const TINT = {
      * is a spinner. Turning the bitmap rather than drawing a line beside it
      * means the black outline the art already carries turns with the colour.
      */
-    const from = left + mine * 0.9, to = bossX + across * 0.45;
-    const reachAcross = to - from;
+    const from = left + mine * 0.9, to = bossX + across / 2;
+    drawAbilityFx(pen, from, to, floor - side * 0.55, side);
     for (const one of duel.shots) {
-      const part = Math.max(0, Math.min(1, one.age / one.lasts));
-      const along = reachAcross * part;
+      // How far it has flown, at the scale of the floor.
+      const along = one.age * one.fast * tilePx;
       /*
        * Across its own line, if it weaves. The offset is perpendicular to the
        * direction of travel, in tiles converted to the width of the bench, so
        * a half-tile amplitude looks like half a tile of the range it covers.
        */
       const sway = one.amp
-        ? one.amp * (reachAcross / Math.max(1, one.reach))
-          * Math.sin(2 * Math.PI * one.freq * one.age + one.phase)
+        ? one.amp * tilePx * Math.sin(2 * Math.PI * one.freq * one.age + one.phase)
         : 0;
       const x = from + Math.cos(one.angle) * along - Math.sin(one.angle) * sway;
       const y = floor - side * 0.55 + Math.sin(one.angle) * along
@@ -3030,7 +3480,7 @@ const TINT = {
         pen.save();
         pen.translate(x, y);
         pen.rotate(facing);
-        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high);
+        const drew = drawPiece(pen, bolt, frame, -wide / 2, high / 2, high, false);
         pen.restore();
         if (drew) continue;
       }
@@ -3223,7 +3673,7 @@ const TINT = {
     if (held && typeof window.openEnchantPicker === 'function') {
       const item = data.byItem[worn.name];
       const locks = locksOn(held, worn.ench, at);
-      const pool = EnchantEngine.rollablePool(held, {
+      const pool = EnchantEngine.obtainablePool(held, {
         item: worn.name,
         type: OF_HAND[item.hand] || 'WEAPON',
         slots: worn.slots,
@@ -3267,6 +3717,10 @@ const TINT = {
       says: one.worn
         ? Object.keys(one.worn).map(t => plus(one.worn[t]) + ' ' + t).join(' · ')
         : shortly(one.says),
+      note: (() => {
+        const via = held && EnchantEngine.engravingsFor(held, one)[0];
+        return via ? 'only through the ' + via : undefined;
+      })(),
       counted: !!one.worn
     })), 'empty slot');
   }
@@ -3495,6 +3949,8 @@ const TINT = {
       const style = faceStyle(portrait, data.sheet);
       if (style) {
         Object.assign(face.style, style);
+        // The class is someone: it wears the one outline every page lays on a character (web/outline.js).
+        if (window.RealmOutline) face.style.filter = window.RealmOutline.filter(portrait.zoom);
         face.hidden = false;
       } else { face.hidden = true; }
     }
@@ -3515,6 +3971,12 @@ const TINT = {
     const asked = goalsOf(build).map(one => one.id);
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
+    }
+    for (const node of el('tcGoals').querySelectorAll('[data-range]')) {
+      node.classList.toggle('is-on', node.dataset.range === (build.range || 'melee'));
+    }
+    for (const node of el('tcGoals').querySelectorAll('[data-damage]')) {
+      node.classList.toggle('is-on', node.dataset.damage === (build.damage || 'weapon'));
     }
     // Read against whatever is being fought, since there is no dial any more.
     const aimedAt = data.byBoss[build.boss];
@@ -3773,7 +4235,11 @@ const TINT = {
         '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
         + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
-      + '</span></div>').join('');
+      + '</span></div>').join('')
+      + '<div class="tc-goal-row"><i>Distance</i><span>' + RANGES.map(([id, say]) =>
+        '<button type="button" class="tc-goal" data-range="' + id + '" title="' + RANGE_SAYS[id] + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>'
+      + '<div class="tc-goal-row"><i>Damage counts</i><span>' + DAMAGES.map(([id, say]) =>
+        '<button type="button" class="tc-goal" data-damage="' + id + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>';
   }
 
   /* ---------------- wiring ---------------- */
@@ -3865,6 +4331,10 @@ const TINT = {
     });
 
     el('tcGoals').addEventListener('click', event => {
+      const range = event.target.closest('[data-range]');
+      if (range) { build.range = range.dataset.range; keep(); paint(); return; }
+      const damage = event.target.closest('[data-damage]');
+      if (damage) { build.damage = damage.dataset.damage; keep(); paint(); return; }
       const pick = event.target.closest('[data-goal]');
       if (!pick) return;
       /*
@@ -4259,6 +4729,7 @@ const TINT = {
     for (const one of data.enchants) data.byEnch[one.id] = one;
     for (const one of data.bosses) data.byBoss[one.name] = one;
     statusInfo = await loadStatusInfo();
+    gearInfo = await loadGearInfo();
     await loadAccess();
     try { profile = BuildProgression.normalize(JSON.parse(localStorage.getItem(PROFILE_STORE)), access); }
     catch (_) { profile = null; }

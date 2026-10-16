@@ -77,7 +77,11 @@ function attach(records, mechanics, objects) {
   }
   const view = {};
   for (const group of Object.keys(fields)) {
-    view[group] = mechanics[group].map(value => {
+    view[group] = mechanics[group].filter(value =>
+      // "Long Sword 1Rarity" and its three siblings are swatches for drawing a rarity frame, not swords:
+      // the Index hides them (tools/build-index.js) and the bench must not offer them.
+      !(group === 'items' && /\d+Rarity$/.test(String(value.id || value.name)))
+    ).map(value => {
       const r = lookup.get(kinds[group] + '|' + (value.id || value.name));
       if (!r) throw new Error('No index record for ' + group + ': ' + (value.id || value.name));
       assign(r, group, value);
@@ -101,6 +105,12 @@ function attach(records, mechanics, objects) {
         ? article(r.family) + ', not gear anybody wears'
         : r.family === 'other' ? 'not gear anybody wears'
         : r.use ? 'consumable; not worn on the bench'
+        /*
+         * Gear with a shot and no tooltip is what another item fires - a
+         * sigil's bolt, the Overwhelming Axehead's second axe - and it is
+         * not a copy of anything either.
+         */
+        : r.fires && !r.about ? 'what another item fires, not gear anybody wears'
         : 'another copy of a name offered on the bench';
     }
   }

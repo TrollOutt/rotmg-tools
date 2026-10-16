@@ -459,6 +459,20 @@ assert(
 );
 
 /*
+ * "+N more" under "Where it comes from" was a plain span: the cards past the
+ * eighth were never written to the page. They must be in the grid itself,
+ * hidden, so they lay out as its cells once the button reveals them (a details
+ * element puts a box between the grid and its children and stacks them).
+ */
+assert(
+  /cards\.slice\(MAX\)\.map\([^\n]{0,120}hidden [^\n]{0,40}\.join\(''\)/.test(fichesSource)
+    && fichesSource.includes('class="pg-src is-more pg-more"')
+    && /closest\('\.pg-more'\)/.test(fichesSource)
+    && !fichesSource.includes('<details class="pg-more">'),
+  'fiche "+N more" must reveal the remaining source cards as cells of the same grid'
+);
+
+/*
  * PERF: low-rate fiche skin animation must not poll at display refresh rate.
  */
 assert(

@@ -34,13 +34,18 @@
 
   async function readExtras() {
     const b = bundle();
+    const read = file => b && b.cardFiles && b.cardFiles[file] !== undefined
+      ? Promise.resolve().then(() => JSON.parse(b.cardFiles[file]))
+      : fetch(file).then(r => r.json());
+    const image = file => (b && b.cardImages && b.cardImages[file]) || file;
     // The biomes' beacons, the pictures the site keeps for the atlas.
-    IX.beacons = await fetch('assets/realm-biomes/index.json').then(r => r.json()).then(j => j.beacons || null).catch(() => null);
+    IX.beacons = await read('assets/realm-biomes/index.json').then(j => j.beacons || null).catch(() => null);
+    IX.beaconSrc = file => image('assets/realm-biomes/' + encodeURIComponent(file));
     // The creatures' walking loops: carried inside the kept copy, beside the served one.
     const carried = b && b.realmMonsterAnimations;
     IX.moving = carried ? Object.fromEntries(Object.keys(carried).map(k => [k, k]))
-      : await fetch('assets/realm-monster-animations/index.json').then(r => r.json()).catch(() => ({}));
-    IX.loopSrc = key => carried ? carried[key] : 'assets/realm-monster-animations/' + encodeURIComponent(IX.moving[key]);
+      : await read('assets/realm-monster-animations/index.json').catch(() => ({}));
+    IX.loopSrc = key => carried ? carried[key] : image('assets/realm-monster-animations/' + encodeURIComponent(IX.moving[key]));
     await readSheet();
   }
 
@@ -119,7 +124,7 @@
     }
     if (IX.isGear(r)) return (IX.slots[r.slot] || ['Gear'])[0] + (r.tier !== undefined ? ' · T' + r.tier : L(r).includes('UT') ? ' · UT' : L(r).includes('ST') ? ' · ST' : '');
     if (r.kind === 'item' && ['use', 'consumable', 'other', 'material'].includes(FAMILY(r))) return SHELF_ONE[bagShelf(r)] || 'Consumable';
-    return ({ portal: 'Dungeon', place: 'Biome', class: 'Class', skin: 'Skin', set: 'Set', enchant: 'Enchantment', pool: 'Pool', use: 'Consumable' })[FAMILY(r)]
+    return ({ portal: 'Dungeon', place: 'Biome', class: 'Class', skin: 'Skin', set: 'Set', enchant: 'Enchantment', pool: 'Pool', use: 'Consumable', event: 'Event' })[FAMILY(r)]
       || FAMILY(r)[0].toUpperCase() + FAMILY(r).slice(1);
   };
   const KCLASS = r => 'is-' + (r.kind === 'item' && (r.use || r.family) ? 'use' : r.kind);
@@ -145,16 +150,21 @@
 
   IX.art = function art(r, px = 32) {
     if (!r) return glyph('?', 'none', px);
+    // An event is drawn by the creature that stands for it, or by its initials when none does.
+    if (r.kind === 'event') {
+      const face = r.artOf && D.all.get(r.artOf);
+      return face ? IX.art(face, px) : glyph(initials(r.name), 'none', px);
+    }
     if (r.statusArt && D.statusSheet) return slice((bundle() && bundle().statusSheet) || 'assets/index/status-icons.png', D.statusSheet, r.statusArt, px,
       // The game draws a lowered stat with the raised stat's icon in red.
       r.name === 'Stat Reduction' ? 'filter:grayscale(1) sepia(1) saturate(6) hue-rotate(-40deg) brightness(.95)' : '');
     const beacon = IX.beaconOf(r);
-    if (beacon) return '<img class="ixb-pic is-beacon" src="assets/realm-biomes/' + encodeURIComponent(beacon.file) + '" alt="" style="width:' + px + 'px;height:' + px + 'px">';
+    if (beacon) return '<img class="ixb-pic is-beacon" src="' + IX.beaconSrc(beacon.file) + '" alt="" style="width:' + px + 'px;height:' + px + 'px">';
     // A creature that moves is drawn moving: its walking loop, cut for the atlas.
     const loop = r.kind === 'enemy' && IX.loopOf(r);
-    if (loop) return '<img class="ixb-pic" src="' + esc(loop) + '" alt="" loading="lazy" style="width:' + px + 'px;height:' + px + 'px">';
+    if (loop) return '<img class="ixb-pic" src="' + esc(loop) + '" alt="" loading="lazy" style="width:' + px + 'px;height:' + px + 'px;' + inkOf(r, px / 16) + '">';
     const pic = picFor(r);
-    if (pic && D.sheet) return slice((bundle() && bundle().indexSheet) || 'assets/index/sheet.png', D.sheet, pic, px);
+    if (pic && D.sheet) return slice((bundle() && bundle().indexSheet) || 'assets/index/sheet.png', D.sheet, pic, px, inkOf(r, px / Math.max(pic[2], pic[3], 8)));
     return glyph(initials(r.name), r.kind === 'status' ? r.tone : 'none', px);
   };
   /*
@@ -184,6 +194,13 @@
     }
     return name;
   }
+  /*
+   * A picture of someone - a skin, a class, a creature - wears the one outline
+   * every page lays on a character (web/outline.js). It is laid on here, by
+   * kind, so whatever the next client update brings of those kinds has it.
+   */
+  const inkOf = (r, scale) => (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy') && window.RealmOutline
+    ? 'filter:' + window.RealmOutline.filter(scale) : '';
   function slice(url, sheet, [x, y, w, h], px, extra = '') {
     const z = px / Math.max(w, h, 8);
     const shared = sheetClass(url);
@@ -240,7 +257,7 @@
     }
     return r.art && !IX.isBlank(r.art) ? r.art : null;
   }
-  IX.hasPicture = r => Boolean(r && (r.statusArt || IX.beaconOf(r) || picFor(r)));
+  IX.hasPicture = r => Boolean(r && (r.statusArt || IX.beaconOf(r) || picFor(r) || (r.kind === 'event' && r.artOf)));
   // Machinery rather than things: an enemy or a portal the client never drew.
   IX.isTechnical = r => (r.kind === 'enemy' || r.kind === 'portal') && !IX.hasPicture(r);
 
@@ -349,6 +366,10 @@
     const places = visible(r => r.kind === 'place');
     domain('biomes', 'Realm biomes', 'The places of the realm and what roams them.',
       IX.BIOME_LEVELS.map(l => section(l.toLowerCase(), l === 'Other' ? 'Other biomes' : l, places.filter(id => IX.biomeLevel(IX.records.get(id)) === l))));
+    // The events in the order the catalogue writes them: the invasion, then the year's holidays, then the seasons.
+    const events = visible(r => r.kind === 'event');
+    domain('events', 'Events', 'The seasonal events, and the score of the realm at which each brings out its creatures.',
+      [section('all', 'Events', events)], { sortBy: r => events.indexOf(r.id) });
     const st = visible(r => r.kind === 'status');
     domain('status', 'Status effects', 'What each effect does, what inflicts it and who is immune.', [
       section('bad', 'Debuffs', st.filter(id => IX.records.get(id).tone === 'bad')),
@@ -414,6 +435,7 @@
     for (const id of classes) for (const s of IX.records.get(id).slots || []) if (!IX.holderOf.has(s)) IX.holderOf.set(s, IX.records.get(id));
     IX.domains = out;
     familyOf = null;
+    givesMemo = null;
   }
   IX.domain = id => IX.domains.find(d => d.id === id);
   // A family's section by its id, the gear's abilities taken together included.
@@ -430,7 +452,7 @@
   };
   // How much a reader is likely to mean a kind of thing.
   const weight = r => {
-    if (r.kind === 'portal' || r.kind === 'class' || r.kind === 'status' || r.kind === 'place' || r.kind === 'set') return 0;
+    if (r.kind === 'portal' || r.kind === 'class' || r.kind === 'status' || r.kind === 'place' || r.kind === 'set' || r.kind === 'event') return 0;
     if (IX.isTechnical(r) || r.dev) return 6;
     if (r.kind === 'enemy') return /Hero|Encounter|Boss|God/.test(IX.kindSay(r)) ? 1 : 3;
     if (IX.isGear(r)) return 1;
@@ -518,12 +540,12 @@
   /* ================================================================== *
    * The page                                                             *
    * ================================================================== */
-  const ORDER = ['classes', 'dungeons', 'biomes', 'status', 'enemies', 'gear', 'sets', 'skins', 'bag', 'enchants'];
+  const ORDER = ['classes', 'dungeons', 'biomes', 'events', 'status', 'enemies', 'gear', 'sets', 'skins', 'bag', 'enchants'];
   // A family drawn as a wall of pictures by default: few members, each a thing with a card.
-  const VISUAL = new Set(['classes', 'dungeons', 'biomes', 'status', 'sets', 'skins']);
+  const VISUAL = new Set(['classes', 'dungeons', 'biomes', 'events', 'status', 'sets', 'skins']);
 
   /* ---------------- state, kept in the address ---------------- */
-  const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'scl', 'home', 'open', 'wide'];
+  const KEYS = ['f', 's', 'q', 'qf', 'by', 'view', 'tier', 'inf', 'gra', 'cls', 'scl', 'home', 'dcls', 'dh', 'open', 'wide'];
   const S = { tags: new Set(), tech: false };
   function readHash() {
     const hash = location.hash.replace(/^#\/?/, '');
@@ -546,7 +568,7 @@
     if (lastStep !== null && step !== lastStep) history.pushState(null, '', url); else history.replaceState(null, '', url);
     lastStep = step;
   }
-  const FILTERS = ['tier', 'inf', 'gra', 'cls', 'scl', 'home'];
+  const FILTERS = ['tier', 'inf', 'gra', 'cls', 'scl', 'home', 'dcls', 'dh'];
   const clearFilters = () => { for (const k of FILTERS) S[k] = ''; S.tags.clear(); };
 
   /* ---------------- what a line shows, given where it is ---------------- */
@@ -635,7 +657,132 @@
   const hands = new Set(store(HANDS));
 
   /* ---------------- rail ---------------- */
-  const HAND_SAY = { weapon: 'Weapons', ability: 'Abilities', armor: 'Armour', ring: 'Rings' };
+  const HAND_SAY ={ weapon: 'Weapons', ability: 'Abilities', armor: 'Armour', ring: 'Rings' };
+  /*
+   * What a dungeon gives, by class and by hand. RealmEye's word, like every
+   * drop here: the gear its page lists among the notable drops, and the gear
+   * that lists a boss living in that dungeon (or the dungeon itself) as its
+   * source. A part of a dungeon (a boss room, an old version) gives to its
+   * main one. Best first: ST and UT, then the highest tier.
+   */
+  let givesMemo = null;
+  function dungeonGives() {
+    if (givesMemo) return givesMemo;
+    const gear = new Set(IX.domain('gear').ids), by = new Map();
+    const give = (portal, id) => {
+      const home = IX.difficultyOf(portal) ? portal : IX.portalHome(portal) || portal;
+      (by.get(home.id) || by.set(home.id, new Set()).get(home.id)).add(id);
+    };
+    for (const p of IX.list) {
+      if (p.kind !== 'portal') continue;
+      for (const x of (archiveOf(p) || {}).relations || []) if (x.type === 'dungeon_drop_interest' && gear.has(x.to)) give(p, x.to);
+    }
+    for (const id of gear) {
+      for (const x of (archiveOf(IX.records.get(id)) || {}).relations || []) {
+        const from = x.type === 'dropped_by' && x.to && IX.records.get(x.to);
+        if (!from) continue;
+        if (from.kind === 'portal') give(from, id);
+        else if (from.kind === 'enemy') for (const at of (IX.foundIn && IX.foundIn.get(from.id)) || []) { const p = IX.records.get(at); if (p && p.kind === 'portal') give(p, id); }
+      }
+    }
+    givesMemo = new Map([...by].map(([k, ids]) => [k, [...ids].map(id => IX.records.get(id))
+      .sort((a, b) => tierScore(b) - tierScore(a) || String(a.name).localeCompare(b.name))]));
+    return givesMemo;
+  }
+  // The gear a dungeon gives that a class can hold, of one hand or any.
+  const classHolds = (cls, g) => ((IX.records.get(cls) || {}).slots || []).includes(g.slot);
+  const gaveTo = (r, cls, hand) => (dungeonGives().get(r.id) || []).filter(g => (!hand || g.hand === hand) && (!cls || classHolds(cls, g)));
+  // One slot a hand is drawn by: the sword for weapons, the spell for abilities, the leather armour, the ring.
+  const HAND_PIC = { weapon: 1, ability: 11, armor: 6, ring: 9 };
+  // What the filter found in a dungeon, as small pictures, best first.
+  function lootStrip(r, max) {
+    if (r.kind !== 'portal' || !(S.dcls || S.dh)) return '';
+    const found = gaveTo(r, S.dcls, S.dh);
+    if (!found.length) return '';
+    // The hover list names them; a browser tooltip on top of it would only be a second window.
+    return '<span class="ixb-loot">'
+      + found.slice(0, max).map(g => '<span>' + IX.art(g, 16) + '</span>').join('')
+      + (found.length > max ? '<small>+' + (found.length - max) + '</small>' : '') + '</span>';
+  }
+
+  /*
+   * The same list, on hover: a small window beside the dungeon naming what the
+   * filter found, each piece with what it does, to be reached with the pointer
+   * and clicked. It is only ever a preview; a click on the dungeon opens its card.
+   */
+  const num = v => Number.isInteger(v) ? String(v) : String(+Number(v).toFixed(1));
+  const statWord = (k, text) => '<b style="color:' + (STAT_TINT[k] || 'inherit') + '">' + esc(text) + '</b>';
+  // What a piece of gear does, in a line: the shot of a weapon, the cost of an ability, the stats worn.
+  function gearLine(g) {
+    const bits = [], f = (g.fires || [])[0];
+    if ((g.hand === 'weapon' || g.hand === 'ability') && f && f.high) {
+      const shots = g.shots > 1 ? ' ×' + g.shots : '';
+      bits.push('<span>' + num(f.low) + (f.low !== f.high ? '–' + num(f.high) : '') + ' damage' + shots + (g.hand === 'weapon' && f.reach ? ' · range ' + num(f.reach) : '') + '</span>');
+    }
+    if (g.hand === 'ability' && g.mp) bits.push('<span>' + statWord('MAXMP', g.mp + ' mana') + '</span>');
+    const worn = g.worn || {};
+    const stats = STAT_ORDER.filter(k => worn[k]).map(k => statWord(k, (worn[k] > 0 ? '+' : '') + worn[k] + ' ' + STAT_SAY[k]));
+    if (stats.length) bits.push('<span>' + stats.join(' ') + '</span>');
+    if (!bits.length && g.does && g.does[0]) bits.push('<span>' + esc(g.does[0][0]) + '</span>');
+    return bits.join('');
+  }
+  let tipBox = null, tipFrom = null, tipTimer = 0, tipShut = 0;
+  const tipOn = r => r && r.kind === 'portal' && (S.dcls || S.dh);
+  function hideTip() {
+    clearTimeout(tipTimer); clearTimeout(tipShut);
+    tipFrom = null;
+    if (tipBox) tipBox.hidden = true;
+  }
+  function showTip(from) {
+    const r = IX.records.get(from.dataset.pick);
+    const found = tipOn(r) ? gaveTo(r, S.dcls, S.dh) : [];
+    if (!found.length || !from.isConnected) return hideTip();
+    if (!tipBox) {
+      tipBox = document.createElement('div');
+      tipBox.className = 'ixb-tip';
+      tipBox.addEventListener('mouseenter', () => clearTimeout(tipShut));
+      tipBox.addEventListener('mouseleave', () => { clearTimeout(tipShut); tipShut = setTimeout(hideTip, 200); });
+      tipBox.addEventListener('click', e => { const b = e.target.closest('[data-tip-pick]'); if (b) openCard(b.dataset.tipPick); });
+      $('pageIndex').append(tipBox);
+    }
+    const cls = IX.records.get(S.dcls), say = [cls && cls.name, S.dh && HAND_SAY[S.dh]].filter(Boolean).join(' · ');
+    let html = '<div class="ixb-tip-h"><b>' + esc(r.said || r.name) + '</b><span>' + found.length + (found.length === 1 ? ' piece' : ' pieces') + ' · ' + esc(say) + '</span></div>';
+    for (const h of Object.keys(HAND_SAY)) {
+      const list = found.filter(g => g.hand === h);
+      if (!list.length) continue;
+      if (!S.dh) html += '<div class="ixb-tip-g">' + esc(HAND_SAY[h]) + ' <small>' + list.length + '</small></div>';
+      html += list.map(g => { const t = tierOf(g);
+        return '<button type="button" class="ixb-tip-row" data-tip-pick="' + esc(g.id) + '"><span class="ixb-cell">' + IX.art(g, 28) + '</span><span><b>' + esc(g.said || g.name) + '</b>'
+          + '<span class="ixb-tip-l">' + gearLine(g) + '</span></span>' + (t ? '<span class="ixb-tier is-' + t.toLowerCase() + '">' + tierSay(t) + '</span>' : '') + '</button>'; }).join('');
+    }
+    tipBox.innerHTML = html;
+    tipBox.scrollTop = 0;
+    tipBox.hidden = false;
+    tipFrom = from;
+    // Beside the dungeon, on the right where there is room; never cut by the window.
+    const a = from.getBoundingClientRect(), w = tipBox.offsetWidth, h = tipBox.offsetHeight;
+    const left = a.right + w + 12 <= innerWidth ? a.right + 4 : Math.max(8, a.left - w - 4);
+    tipBox.style.left = left + 'px';
+    tipBox.style.top = Math.max(8, Math.min(a.top, innerHeight - h - 8)) + 'px';
+  }
+  const tipTarget = e => e.target.closest('#ixbList .ixb-tile[data-pick], #ixbList .ixb-row[data-pick]');
+  function wireTip() {
+    const mid = $('ixbMid');
+    mid.addEventListener('mouseover', e => {
+      const t = tipTarget(e);
+      if (!t || t === tipFrom) { if (t) clearTimeout(tipShut); return; }
+      if (!tipOn(IX.records.get(t.dataset.pick))) return;
+      clearTimeout(tipTimer); clearTimeout(tipShut);
+      tipTimer = setTimeout(() => showTip(t), tipFrom ? 40 : 180);
+    });
+    mid.addEventListener('mouseout', e => {
+      const t = tipTarget(e);
+      if (!t || t.contains(e.relatedTarget)) return;
+      clearTimeout(tipTimer); clearTimeout(tipShut);
+      tipShut = setTimeout(hideTip, 220);
+    });
+    mid.addEventListener('scroll', hideTip, { passive: true });
+  }
   function rail() {
     const box = $('ixbRail');
     const searching = Boolean(S.q.trim());
@@ -693,6 +840,7 @@
   let pending = [], ctxNow = { d: null }, viewNow = 'rows', familyOf = null, searchFirst = '';
   function mid() {
     const box = $('ixbMid');
+    hideTip();
     if (S.q.trim()) return search(box);
     if (!S.f || !IX.domain(S.f)) return landing(box);
     const d = IX.domain(S.f), g = IX.groupOf(d, S.s);
@@ -707,6 +855,7 @@
     if (S.cls) rows = rows.filter(r => setClass(r) === S.cls);
     if (S.scl) rows = rows.filter(r => scalesOf(r).includes(S.scl));
     if (S.home) rows = rows.filter(r => { const p = placeOf(r); return p && p.id === S.home; });
+    if (d.id === 'dungeons' && (S.dcls || S.dh)) rows = rows.filter(r => gaveTo(r, S.dcls, S.dh).length);
     for (const t of S.tags) if (TAGS[t]) rows = rows.filter(TAGS[t].test);
     results(box, { d, g, all, rows });
   }
@@ -729,7 +878,6 @@
     const homes = d.id === 'enemies' ? count(all.map(placeOf).filter(Boolean).map(p => p.id)) : new Map();
     const homesOrdered = [...homes].sort((a, b) => rankOfPlace(IX.records.get(a[0])) - rankOfPlace(IX.records.get(b[0])) || IX.records.get(a[0]).name.localeCompare(IX.records.get(b[0]).name));
     const tags = Object.entries(TAGS).filter(([k, t]) => t.fams.includes(d.id) && (S.tags.has(k) || all.some(t.test)));
-    const technical = !g && d.id === 'dungeons' ? IX.sidePortals.length : 0;
     // The first option names the filter, so no label is needed beside it.
     // A tint gives each option, and the chosen select, the colour of what it names.
     const select = (key, any, map, label = x => x, ordered, tint) => map.size < 2 && !S[key] ? '' : '<select data-sel="' + key + '" class="' + (S[key] ? 'is-set' : '') + '" title="' + esc(any) + '"'
@@ -758,22 +906,37 @@
         + d.abilities.kinds.map(k => '<button type="button" role="option" class="' + (k.id === cur ? 'is-on' : '') + '" data-ddk="s" data-ddv="' + esc(k.id) + '">' + kindSay(k.id) + '<small>' + n0(k.ids.length) + '</small></button>').join('')
         + '</span></span>';
     })() : '';
-    const filters = kindMenu + (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
+    // Dungeons by what they give: a class, and the kind of gear it holds. Each menu counts the dungeons that would be left.
+    const giving = d.id === 'dungeons' ? (() => {
+      const ofClass = IX.domain('classes').ids.map(id => IX.records.get(id));
+      const classes = ofClass.map(c => [c.id, all.filter(r => gaveTo(r, c.id, S.dh).length).length]).filter(([, n]) => n);
+      const handsLeft = Object.keys(HAND_SAY).map(h => [h, all.filter(r => gaveTo(r, S.dcls, h).length).length]).filter(([, n]) => n);
+      const classSay = v => { const c = IX.records.get(v); return IX.art(c, 16) + '<span>' + esc(c ? c.name : v) + '</span>'; };
+      const handSay = v => { const p = IX.records.get((IX.slots[HAND_PIC[v]] || [])[1]); return (p ? IX.art(p, 16) : '') + '<span>' + esc(HAND_SAY[v] || v) + '</span>'; };
+      return menu('dcls', 'Any class', classes, classSay) + menu('dh', 'Any gear', handsLeft, handSay);
+    })() : '';
+    const filters = giving + kindMenu + (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
       + (d.id === 'sets' ? select('cls', 'Any class', classes, v => (IX.records.get(v) || {}).name || v) : '')
       + (d.id === 'enemies' ? select('home', 'Any biome or dungeon', homes, v => (IX.records.get(v) || {}).name || v, homesOrdered) : menu('inf', 'Inflicts…', byCount(inflicted), statusSay))
       + (d.id === 'gear' || d.id === 'bag' ? menu('gra', 'Grants…', byCount(granted), statusSay) : '')
       + (d.id === 'gear' ? menu('scl', 'Scales with…', STAT_ORDER.filter(k => scaled.has(k)).map(k => [k, scaled.get(k)]), statSay) : '')
-      + tags.map(([k, t]) => '<button type="button" class="ixb-chip' + (S.tags.has(k) ? ' is-on' : '') + '" data-tag="' + k + '">' + esc(t.say) + '</button>').join('')
-      + (technical ? '<button type="button" class="ixb-chip' + (S.tech ? ' is-on' : '') + '" data-tech title="Teleporters, hubs, the inner doors and old versions of dungeons">Other portals <small>' + technical + '</small></button>' : '');
+      + tags.map(([k, t]) => '<button type="button" class="ixb-chip' + (S.tags.has(k) ? ' is-on' : '') + '" data-tag="' + k + '">' + esc(t.say) + '</button>').join('');
     const anySet = FILTERS.some(k => S[k]) || S.tags.size;
     const grouping = bys.length > 1 ? '<span class="ixb-lbl">Group</span><select data-by>' + bys.map(k => '<option value="' + k + '"' + (by === k ? ' selected' : '') + '>' + GROUP[k].say + '</option>').join('') + '</select>' : '';
-    const toggle = '<span class="ixb-tog" title="List or portraits"><button type="button" class="' + (view === 'rows' ? 'is-on' : '') + '" data-view="rows" title="List">☰</button><button type="button" class="' + (view === 'wall' ? 'is-on' : '') + '" data-view="wall" title="Portraits">▦</button></span>';
+    const toggle = d.id === 'events' ? '' : '<span class="ixb-tog" title="List or portraits"><button type="button" class="' + (view === 'rows' ? 'is-on' : '') + '" data-view="rows" title="List">☰</button><button type="button" class="' + (view === 'wall' ? 'is-on' : '') + '" data-view="wall" title="Portraits">▦</button></span>';
     const title = g ? '<button type="button" class="ixb-up" data-f="' + d.id + '" title="Back to all ' + esc(d.title) + '">' + esc(d.title) + ' ›</button> ' + esc(g.title) : esc(d.title);
     box.innerHTML = '<div class="ixb-head">' + (pic ? '<span class="ixb-big">' + IX.art(pic, 38) + '</span>' : '')
       + '<div><h2>' + title + '</h2>' + (g ? '' : '<p>' + esc(d.blurb) + '</p>') + '</div>'
       + '<div class="ixb-right"><span class="ixb-count">' + (rows.length === all.length ? n0(rows.length) : n0(rows.length) + ' of ' + n0(all.length)) + '</span>' + toggle + '</div></div>'
       + (filters || grouping ? '<div class="ixb-tools">' + filters + (anySet ? '<button type="button" class="ixb-clear" data-clear>clear</button>' : '') + '<span class="ixb-push">' + grouping + '</span></div>' : '')
       + '<div id="ixbList"></div><div class="ixb-sentinel" id="ixbSentinel"></div>';
+    // Few enough events to give each a card of its own, as the overview does its families.
+    if (d.id === 'events') {
+      pending = [];
+      viewNow = view;
+      $('ixbList').innerHTML = eventCards(rows, d);
+      return;
+    }
     pending = grouped(rows, ctx, by);
     viewNow = view;
     // A single group that only repeats the title has no heading.
@@ -881,7 +1044,8 @@
     if (d && (d.id === 'gear' || d.id === 'skins')) { const t = tierOf(r); if (t && t !== ctx.heading) end += '<span class="ixb-tier is-' + t.toLowerCase() + '">' + tierSay(t) + '</span>'; }
     // What a creature inflicts is on its card; its line says where it lives.
     if (!d || d.id !== 'enemies') end = fxIcons(r) + end;
-    return '<button type="button" class="ixb-row' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" title="' + esc(r.said || r.name) + '"><span class="ixb-cell">' + IX.art(r, 28) + '</span><span>'
+    if (d && d.id === 'dungeons') end = lootStrip(r, 8) + end;
+    return '<button type="button" class="ixb-row' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" ' + (tipOn(r) ? 'aria-label' : 'title') + '="' + esc(r.said || r.name) + '"><span class="ixb-cell">' + IX.art(r, 28) + '</span><span>'
       + (sub && !d ? sub : '') + '<b>' + esc(shortName(r, ctx)) + '</b>' + (sub && d ? sub : '') + '</span><span class="ixb-end">' + end + '</span></button>';
   }
   function tileOf(r, ctx) {
@@ -891,8 +1055,10 @@
         + r.members.map(([n, m]) => '<button type="button" data-pick="' + esc(m.id) + '" title="' + esc(m.said || m.name) + '">' + n + '</button>').join('') + '</span></div>';
     }
     const dif = r.kind === 'portal' && IX.difficultyOf(r);
-    return '<button type="button" class="ixb-tile' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" title="' + esc((r.said || r.name) + (dif ? ' · difficulty ' + dif + '/10' : '')) + '">'
-      + (dif ? '<i class="ixb-pip">' + dif + '</i>' : '') + IX.art(r, 40) + '<span>' + esc(shortName(r, ctx)) + '</span></button>';
+    const said = esc((r.said || r.name) + (dif ? ' · difficulty ' + dif + '/10' : ''));
+    // With the hover list to read, the browser's own tooltip would open beside it: the name stays for screen readers only.
+    return '<button type="button" class="ixb-tile' + (S.open === r.id ? ' is-on' : '') + '" data-pick="' + esc(r.id) + '" ' + (tipOn(r) ? 'aria-label="' + said + '"' : 'title="' + said + '"') + '>'
+      + (dif ? '<i class="ixb-pip">' + dif + '</i>' : '') + IX.art(r, 40) + '<span>' + esc(shortName(r, ctx)) + '</span>' + lootStrip(r, 4) + '</button>';
   }
 
   /* ---------------- search ---------------- */
@@ -939,6 +1105,41 @@
     const some = d.groups.slice(0, 7);
     return some.map(g => '<button type="button" data-f="' + d.id + '" data-s="' + esc(g.id) + '">' + esc(g.title) + '</button>').join('')
       + (d.groups.length > some.length ? '<button type="button" data-f="' + d.id + '">+' + (d.groups.length - some.length) + ' more</button>' : '');
+  }
+  /*
+   * The events, each as a card like the overview's: its name and how many
+   * creatures it brings out, when it runs, what it is, their faces, and the
+   * marks of the realm's score they come out at.
+   */
+  function eventCards(rows, d) {
+    const faces = r => [...new Set([...r.event.spawns.map(s => s.id), ...(r.event.waves || []).flatMap(w => w.enemies.map(x => x.id))].filter(Boolean))];
+    // A long, regular run of marks (the mercenaries, at every tenth) is said as the step and the range.
+    const marks = s => {
+      const a = s.at;
+      if (a === '?') return 'not known';
+      if (!Array.isArray(a)) return '';
+      if (a.length > 5) {
+        const step = a[1] - a[0];
+        return a.every((m, i) => !i || m - a[i - 1] === step) ? 'every ' + step + '% · ' + a[0] + '–' + a[a.length - 1] + '%'
+          : a.slice(0, 3).map(m => m + '%').join(' · ') + ' …';
+      }
+      return a.map(m => m + '%').join(' · ');
+    };
+    const lines = e => [e.begins !== undefined ? ['The event begins', e.begins + '%'] : null,
+      ...e.spawns.filter(s => marks(s)).map(s => [s.name, marks(s)])].filter(Boolean);
+    return '<div class="ixb-evgrid">' + rows.slice().sort((a, b) => d.sortBy(a) - d.sortBy(b)).map(r => {
+      const e = r.event, ids = faces(r), say = lines(e), shown = say.slice(0, 4);
+      // Every creature the event names, pictured or not: two of Christmas's three have no card in the Index.
+      const named = new Set([...e.spawns.map(s => s.id || s.name), ...ids]).size;
+      return '<div class="ixb-famcard"><button type="button" class="ixb-t" data-pick="' + esc(r.id) + '">'
+        + '<span class="ixb-tpic">' + IX.art(r, 30) + '</span><b>' + esc(e.name) + '</b><small>' + named + (named === 1 ? ' creature' : ' creatures') + '</small></button>'
+        + '<p class="ixb-evwhen">' + esc(e.when) + '</p><p>' + esc(e.summary) + '</p>'
+        // The event's own picture first, and only those who have a picture: a monogram says nothing in a strip of faces.
+        + '<div class="ixb-strip">' + [...new Set([r.artOf, ...ids].filter(Boolean))].filter(id => IX.hasPicture(IX.records.get(id))).slice(0, 14).map(id => '<button type="button" data-pick="' + esc(id) + '" title="' + esc((IX.records.get(id) || {}).said || (IX.records.get(id) || {}).name) + '">' + IX.art(IX.records.get(id), 34) + '</button>').join('') + '</div>'
+        + (shown.length ? '<div class="ixb-evlines">' + shown.map(([who, at]) => '<span>' + esc(who) + '</span><b>' + esc(at) + '</b>').join('')
+          + (say.length > shown.length ? '<span class="ixb-evmore">+' + (say.length - shown.length) + ' more marks</span>' : '') + '</div>' : '')
+        + '</div>';
+    }).join('') + '</div>';
   }
   /*
    * The page before a family is chosen: every family as a card that fills
@@ -1008,6 +1209,7 @@
     }
   }
   function openCard(id, from) {
+    hideTip();
     S.open = id;
     document.querySelectorAll('#ixbMid .is-on[data-pick]').forEach(x => x.classList.remove('is-on'));
     if (from && from.closest('#ixbMid')) (from.closest('.ixb-row,.ixb-tile') || from).classList.add('is-on');
@@ -1095,6 +1297,7 @@
       if (e.key === '/' && !typing) { e.preventDefault(); $('ixbSearch').focus(); $('ixbSearch').select(); return; }
       if (e.target.id === 'ixbSearch' && e.key === 'Enter' && searchFirst) { openCard(searchFirst); return; }
       if (e.key === 'Escape') {
+        hideTip();
         const open = document.querySelector('#ixbMid .ixb-dd.is-open');
         if (open) { shutMenu(open); open.querySelector('.ixb-dd-btn').focus(); return; }
         if (e.target.id === 'ixbSearch' && S.q) { S.q = ''; e.target.value = ''; writeHash(); mid(); railFams(); return; }
@@ -1103,6 +1306,7 @@
       // A bundled line is a div: Enter opens it like a button.
       if (e.key === 'Enter' && e.target.matches('div[data-pick]')) openCard(e.target.dataset.pick, e.target);
     });
+    wireTip();
     document.addEventListener('realmindex:card', e => followCard(e.detail.id));
     document.addEventListener('realmindex:loved', () => rail());
     // RealmEye's archive arrives after the page: places, roles, biomes, dungeon events.

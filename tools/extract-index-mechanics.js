@@ -582,6 +582,21 @@ for (const [, one] of byType) {
    */
   if (labels.split(',').includes('EFFECT')) continue;
   /*
+   * Nor what a sigil or an ability shoots. Nineteen Sigil projectiles are
+   * labelled PROC - the client's own word, which the name test above misses
+   * because none of them says Proc in its id - and the SpecPen shots and the
+   * Wedding Dress Explosion are what the Overwhelming Axehead, the Sinister
+   * Syringes and the Wedding Dress fire, filed as a ring and a quiver. The
+   * item that fires one names it by type in a BulletCreate, and the bench
+   * reads its own shots rather than following that, so no build's damage
+   * ever came from these records - they were only ever on offer in the
+   * pickers, as rings and armour that do nothing. What gives them
+   * away is that the client never wrote a tooltip for them: every piece of
+   * gear a player can hold carries a Description, and these carry none.
+   */
+  if (labels.split(',').includes('PROC')) continue;
+  if (!/<Description>/.test(one.body)) continue;
+  /*
    * Nor anything soulbound. It cannot be traded for or handed over, so it is
    * not a thing a build can be planned around by somebody who does not
    * already have it, and it is two thirds of the catalogue.

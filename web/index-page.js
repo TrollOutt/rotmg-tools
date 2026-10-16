@@ -96,11 +96,19 @@ const RealmIndex = (function () {
    */
   const zoomed = () => Math.min(1.7, Math.max(1, (window.innerWidth || 1400) / 1400));
 
+  /*
+   * A picture of someone - a skin, a class, a creature - wears the one outline
+   * every page lays on a character (web/outline.js), laid on by kind so what a
+   * client update brings of those kinds has it too.
+   */
+  const inked = (one, scale) => (one.kind === 'skin' || one.kind === 'class' || one.kind === 'enemy') && window.RealmOutline
+    ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
+
   function art(one, side) {
     if (!one) return '';
     side = Math.round(side * zoomed());
     if (one.icon) return '<img class="ix-art ix-art-file" width="' + side + '" height="' + side
-      + '" src="' + esc(one.icon) + '" alt="">';
+      + '" style="' + inked(one, side / 16) + '" src="' + esc(one.icon) + '" alt="">';
     // A status effect's picture is on its own small sheet, cut from the client's interface atlas.
     if (one.statusArt && all.statusSheet) {
       const [x, y, w, h] = one.statusArt;
@@ -114,7 +122,7 @@ const RealmIndex = (function () {
     if (!one.art || !all.sheet) return '';
     const [x, y, w, h] = one.art;
     const zoom = side / Math.max(w, h);
-    return '<span class="ix-art" style="width:' + (w * zoom) + 'px;height:' + (h * zoom)
+    return '<span class="ix-art" style="' + inked(one, zoom) + 'width:' + (w * zoom) + 'px;height:' + (h * zoom)
       + 'px;background-size:' + (all.sheet.wide * zoom) + 'px ' + (all.sheet.tall * zoom)
       + 'px;background-position:' + (-x * zoom) + 'px ' + (-y * zoom) + 'px"></span>';
   }
@@ -313,6 +321,43 @@ const RealmIndex = (function () {
   }
 
   /*
+   * The seasonal events, and the mark of the realm's score at which each brings
+   * its creatures out (tools/build-realm-events.js, from data/Items/
+   * realm-events.txt and the client's invasion waves). Each is a record of its
+   * own, filed as an event, and the creatures it brings out are linked to it
+   * both ways: the event "brings out" the Gardener, and the Gardener "appears
+   * in" Valentine's Day. The marks themselves are the community's word, not
+   * the client's, and the card says so.
+   */
+  let realmEvents = null;
+  async function loadEvents() {
+    const bundle = window.ROTMG_BUNDLE;
+    let raw = bundle && bundle.sources && bundle.sources.eventsText;
+    if (!raw) {
+      raw = await fetch('assets/index/realm-events.json').then(r => (r.ok ? r.text() : '')).catch(() => '');
+    }
+    if (!raw) return;
+    let said;
+    try { said = JSON.parse(raw); } catch (err) { return; }
+    realmEvents = said;
+    for (const event of said.events || []) {
+      const id = 'event:' + event.id;
+      const one = { id, kind: 'event', name: event.name, said: event.name, event, artOf: event.art, outLinks: [], inLinks: [] };
+      all.set(id, one);
+      light.push([id, event.name, 'event', '', 0, 0, '']);
+      const who = new Set([...event.spawns.map(s => s.id), ...(event.waves || []).flatMap(w => w.enemies.map(e => e.id))].filter(Boolean));
+      for (const from of who) {
+        const there = all.get(from);
+        if (!there) continue;
+        // The index's own link list is shared with every reader of it; add to a copy.
+        if (there.outLinks === there.out) there.outLinks = (there.out || []).slice();
+        there.outLinks.push(['appears in', id]);
+        one.outLinks.push(['brings out', from]);
+      }
+    }
+  }
+
+  /*
    * And what the community knows, which is a separate file because it is a
    * separate kind of claim. The client does not say where anything comes from
    * - loot is the server's business - so "dropped by" can only ever be what
@@ -380,10 +425,17 @@ const RealmIndex = (function () {
    */
   async function loadSkinBridge() {
     if (skinBridge) return true;
+    const read = file => {
+      const bundle = window.ROTMG_BUNDLE;
+      const text = bundle && bundle.cardFiles && bundle.cardFiles[file];
+      return text !== undefined && text !== null
+        ? Promise.resolve().then(() => JSON.parse(text))
+        : fetch(file).then(r => r.ok ? r.json() : null);
+    };
     const [skins, dyes] = await Promise.all([
-      fetch('assets/skins/generated/skins.json'),
-      fetch('assets/skins/generated/dyes.json')
-    ].map(p => p.then(r => r.ok ? r.json() : null).catch(() => null)));
+      'assets/skins/generated/skins.json',
+      'assets/skins/generated/dyes.json'
+    ].map(file => read(file).catch(() => null)));
     if (!skins || !Array.isArray(skins.skins)) return false;
     const reverse = Object.create(null);
     const at = (id, target) => {
@@ -2786,7 +2838,7 @@ const RealmIndex = (function () {
       el('ixBody').style.setProperty('--ix-sheet', 'url('
         + ((bundle && bundle.indexSheet) ? indexSheetStyleUrl() : 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')) + ')');
     }
-    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses()]);
+    await Promise.all([loadWiki(), loadDungeonDifficulties(), loadSkinBridge(), loadStatuses(), loadEvents()]);
     if (classic()) buildFacets();
     wire();
     /* The same pass every change makes, so the first screen is not a special

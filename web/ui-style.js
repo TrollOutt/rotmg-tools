@@ -57,7 +57,12 @@
     { key: 'foliage', say: 'Foliage', w: 1672, h: 941 }
   ];
   const backgroundOf = key => BACKGROUNDS.find(one => one.key === key) || BACKGROUNDS.find(one => one.key === DEFAULTS.bg);
-  const pictureUrl = (key, thumb) => new URL('assets/ui/backgrounds/' + (thumb ? 'thumbs/' : '') + key + '.webp', document.baseURI).href;
+  const pictureUrl = (key, thumb) => {
+    const file = 'assets/ui/backgrounds/' + (thumb ? 'thumbs/' : '') + key + '.webp';
+    const bundle = window.ROTMG_BUNDLE, kept = bundle && bundle.cardImages && bundle.cardImages[file];
+    if (kept) return window.RealmCardExtras ? window.RealmCardExtras.asset(file) : kept;
+    return new URL(file, document.baseURI).href;
+  };
 
   /* A colour is three channels each: the rail's light, its body, and the light it gives off. */
   const COLORS = [

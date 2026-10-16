@@ -3,6 +3,8 @@
 /**
  * @typedef {{many: number, wait: number, rush: number}} TheoryBurst
  * @typedef {{every: number, shots: number, wait: number, run: number}} TheoryBurstCycle
+ * @typedef {{d: number, radius: number, gap: number}} TheoryStand
+ * @typedef {TheoryStand | number | null} TheoryAim
  * @typedef {Object} TheoryShot
  * @property {number} low
  * @property {number} [high]
@@ -13,7 +15,7 @@
  * @property {TheoryBurst} [burst]
  * @property {number} [reach]
  * @property {number} [fast]
- * @typedef {{shots?: TheoryShot[], rate?: number, many?: number, burst?: TheoryBurst}} TheoryWeapon
+ * @typedef {{shots?: TheoryShot[], rate?: number, many?: number, burst?: TheoryBurst, fan?: number}} TheoryWeapon
  * @typedef {{how: string, shots: TheoryShot[], many?: number}} TheorySubattack
  * @typedef {{att: number, dex: number}} TheoryWeaponStats
  * @typedef {{dmg: number, rate: number, life: number, fast: number}} TheoryScale
@@ -37,7 +39,7 @@
  * @typedef {{stat: string, of: string, pct: number}} TheoryStatShare
  * @typedef {{worn?: TheoryStatValues, rel?: TheoryStatShare[], share?: TheoryStatShare[]}} TheoryStatItem
  * @typedef {{worn?: TheoryStatValues, rel?: TheoryStatShare[],
- *   mul?: Partial<TheoryScale>, sub?: TheorySubattack[]}} TheoryStatEnchantment
+ *   mul?: Partial<TheoryScale>, sub?: TheorySubattack[], heal?: Record<string, number>}} TheoryStatEnchantment
  * @typedef {Record<string, TheoryStatEnchantment | undefined>} TheoryStatEnchantments
  * @typedef {{byClass: Record<string, TheoryClassStats | undefined>,
  *   byItem: Record<string, TheoryStatItem | undefined>, byEnch: TheoryStatEnchantments}} TheoryStatCatalogue
@@ -48,6 +50,7 @@
  * @typedef {{gives: TheoryStatValues}} TheorySetBonus
  * @typedef {{gear: TheoryStatValues, ench: TheoryStatValues, set: TheoryStatValues,
  *   exalt: TheoryStatValues, rel: TheoryStatValues, share: TheoryStatValues,
+ *   regen: TheoryStatValues,
  *   bonus?: TheoryStatValues}} TheoryStatSources
  * @typedef {{now: TheoryStatValues, base: TheoryStatValues, top: TheoryStatValues,
  *   from: TheoryStatSources}} TheoryStatResult
@@ -65,7 +68,7 @@
  */
 /**
  * @typedef {TheoryStatState & {boss?: string, assume?: Record<string, boolean>,
- *   using?: string}} TheoryNumbersState
+ *   using?: string, damage?: string, range?: string}} TheoryNumbersState
  * @typedef {number} TheoryNumbersDefence
  * @typedef {TheoryStatResult & {now: Record<TheoryStatKey, number>}} TheoryNumbersStats
  * @typedef {TheoryWeapon & {mp?: number, cool?: number,
@@ -75,9 +78,18 @@
  *   bleed: number, immune: Set<string>}} TheoryNumbersEffects
  * @typedef {{each: number, every: number, dps: number, many?: number}} TheoryAbilityResult
  * @typedef {TheoryWeaponResult & TheoryAbilityResult & {many: number}} TheoryInactiveResult
+ * @typedef {{low: number, high: number}} TheoryDamagePart
+ * @typedef {{hp: number, mp: number}} TheoryGain
+ * @typedef {{combat: number, calm: number}} TheoryRegenRate
+ * @typedef {{hp: TheoryRegenRate, mp: TheoryRegenRate, bonus: TheoryGain,
+ *   healing: number, inCombat: number}} TheoryRegen
+ * @typedef {TheoryNumbersStats & {penalty: TheoryStatValues}} TheoryFought
+ * @typedef {{boost: TheoryStatValues, gain: TheoryGain, list: unknown[]}} TheoryTemper
+ * @typedef {{low: number, high: number, list: unknown[], by: Record<string, TheoryDamagePart>}} TheorySpecial
  * @typedef {{stats: TheoryNumbersStats, gun: TheoryWeaponResult,
  *   spell: TheoryAbilityResult, effects: TheoryNumbersEffects | null,
- *   bleed: number, total: number}} TheoryNumbersResult
+ *   fought: TheoryFought, regen: TheoryRegen, special: TheorySpecial, temper: TheoryTemper | null,
+ *   parts: Record<string, TheoryDamagePart>, bleed: number, total: number, chosen: number}} TheoryNumbersResult
  * @typedef {Object} TheoryNumbersDependencies
  * @property {() => TheoryNumbersCatalogue} getData Read the current catalogue at each lookup.
  * @property {(state: TheoryNumbersState) => TheoryNumbersStats | null} statsOf Includes the caller's set resolution.
@@ -85,11 +97,23 @@
  * @property {(state: TheoryNumbersState) => TheorySubattack[]} subOf
  * @property {(item: TheoryWeapon | null | undefined, stats: TheoryWeaponStats,
  *   def: number, scale?: TheoryScale | null, extra?: TheorySubattack[] | null,
- *   fx?: TheoryWeaponEffects | null) => TheoryWeaponResult} weaponRate
+ *   fx?: TheoryWeaponEffects | null, gap?: TheoryAim) => TheoryWeaponResult} weaponRate
  * @property {(item: TheoryNumbersItem | undefined, stats: TheoryNumbersStats['now'],
- *   def: TheoryNumbersDefence, fx: TheoryWeaponEffects | null) => TheoryAbilityResult} abilityRate
- * @property {(state: TheoryNumbersState, stats: TheoryNumbersStats['now']) => TheoryNumbersEffects | null} effectsFor
+ *   def: TheoryNumbersDefence, fx: TheoryWeaponEffects | null, mana?: number,
+ *   cost?: number, struck?: number, gap?: TheoryAim) => TheoryAbilityResult} abilityRate
+ * @property {(state: TheoryNumbersState, stats: TheoryNumbersStats['now'],
+ *   mana?: number, cost?: number) => TheoryNumbersEffects | null} effectsFor
  * @property {(effects: TheoryNumbersEffects | null) => TheoryWeaponEffects | null} fxOf
+ * @property {(state: TheoryNumbersState, stats: TheoryNumbersStats) => TheoryFought} fightOf
+ * @property {(state: TheoryNumbersState) => number} costOf
+ * @property {(stats: TheoryNumbersStats, assume: TheoryNumbersState['assume'], fought: TheoryFought,
+ *   gain?: TheoryGain) => TheoryRegen} regenOf
+ * @property {(state: TheoryNumbersState) => {gains?: unknown[], boosts?: unknown[]}[]} wornEffects
+ * @property {(state: TheoryNumbersState, shots: number, casts: number,
+ *   up: Record<string, number> | null) => TheoryTemper} temperOf
+ * @property {(state: TheoryNumbersState) => TheoryStand} standOf
+ * @property {(state: TheoryNumbersState, stats: TheoryNumbersStats['now'], def: number, shots: number,
+ *   up: Record<string, number> | null, casts: number, gap: TheoryStand) => TheorySpecial} specialsOf
  */
 /**
  * @typedef {TheoryNumbersState & {boss: string, against: number}} TheoryScoreState
@@ -124,7 +148,7 @@
  * @typedef {import('./engine').EnchantDataset} TheoryEnchantRules
  * @typedef {import('./engine').EnchantPoolConfig} TheoryEnchantPoolConfig
  * @typedef {TheoryEnchantment[]} TheoryEnchantPool
- * @typedef {Pick<typeof import('./engine'), 'rollablePool' | 'subtypesForItem'>} TheoryEnchantEngine
+ * @typedef {Pick<typeof import('./engine'), 'obtainablePool' | 'subtypesForItem'>} TheoryEnchantEngine
  * @typedef {{enchants: TheoryCharm[], byEnch: Record<string, TheoryCharm | undefined>,
  *   byItem: Record<string, {hand: string} | undefined>}} TheoryEnchantCatalogue
  * @typedef {(string | null | undefined)[]} TheoryEnchantSlots
@@ -231,15 +255,42 @@ var TheoryEngine = (function () {
     };
   }
 
+  // A shot that flies this far reaches a target this far off (a shot whose reach the client does not give is not held back).
+  // Accepts the distance to cover, or the whole stand.
+  /** @param {number | undefined} reach @param {TheoryAim} [aim] @returns {boolean} */
+  const reaches = (reach, aim) => {
+    const gap = aim && typeof aim === 'object' ? aim.gap : aim;
+    return !(gap !== undefined && gap !== null && gap > 0) || reach === undefined || reach >= gap;
+  };
+  /*
+   * A volley is not a wall: its shots leave at angles, and one aimed at the middle of a target that is far off may
+   * pass either side of it. Of `many` shots, those whose line is no more than the target's radius from its middle when
+   * it gets there (distance times the tangent of the angle) hit; a round volley is spread over the whole circle, a
+   * fanned one by the arc gap between neighbours. Standing on the target, or with no stand given, every shot hits.
+   */
+  /** @param {number} many @param {number | undefined} fan @param {boolean} round
+   * @param {TheoryAim} [aim] @returns {number} */
+  function fanHits(many, fan, round, aim) {
+    if (!aim || typeof aim !== 'object' || !(aim.d > 0) || !(many > 1)) return many;
+    let hit = 0;
+    for (let i = 0; i < many; i++) {
+      let angle = round ? (i / many) * 2 * Math.PI : (i - (many - 1) / 2) * (fan || 12) * Math.PI / 180;
+      angle = Math.abs(((angle + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+      if (angle < Math.PI / 2 && aim.d * Math.tan(angle) <= aim.radius) hit++;
+    }
+    return hit;
+  }
+
   /**
    * @param {TheoryWeapon | null | undefined} item
    * @param {TheoryWeaponStats} stats @param {number} def
    * @param {TheoryScale | null} [scale]
    * @param {TheorySubattack[] | null} [extra]
    * @param {TheoryWeaponEffects | null} [fx]
+   * @param {TheoryAim} [gap] @param {boolean} [curves]
    * @returns {TheoryWeaponResult}
    */
-  function weaponRate(item, stats, def, scale, extra, fx) {
+  function weaponRate(item, stats, def, scale, extra, fx, gap, curves) {
     if (!item || !item.shots || !item.shots.length) return { each: 0, rate: 0, dps: 0 };
     const by = scale || { dmg: 1, rate: 1, life: 1, fast: 1 };
     // Berserk, when it is up: the weapon fires that much faster.
@@ -268,6 +319,7 @@ var TheoryEngine = (function () {
       let fast = 0;
 
       for (const shot of channels) {
+        if (!reaches(shot.reach === undefined ? undefined : shot.reach * by.life * by.fast, gap)) continue;
         const roll = (shot.low + (shot.high === undefined ? shot.low : shot.high)) / 2
           * by.dmg;
         const each = landed(roll, stats.att, def, shot.pierce, fx);
@@ -307,6 +359,7 @@ var TheoryEngine = (function () {
       for (const one of (extra || [])) {
         if (one.how !== 'add') continue;
         const its = one.shots[0];
+        if (!reaches(its.reach === undefined ? undefined : its.reach * by.life * by.fast, gap)) continue;
         const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2
           * by.dmg;
         along += landed(mid, stats.att, def, its.pierce, fx) * (one.many || 1);
@@ -366,10 +419,13 @@ var TheoryEngine = (function () {
     for (const one of (extra || [])) {
       if (one.how !== 'add') continue;
       const its = one.shots[0];
+      if (!reaches(its.reach === undefined ? undefined : its.reach * by.life * by.fast, gap)) continue;
       const mid = (its.low + (its.high === undefined ? its.low : its.high)) / 2 * by.dmg;
       along += landed(mid, stats.att, def, its.pierce, fx) * (one.many || 1);
     }
-    const perShot = each * many + along;
+    // Out of reach of the target, the weapon's own shot does nothing.
+    const near = reaches(shot.reach === undefined ? undefined : shot.reach * by.life * by.fast, gap);
+    const perShot = (near ? each * (curves ? many : fanHits(many, item.fan, false, gap)) : 0) + along;
     const dps = cycle
       ? perShot * cycle.shots / cycle.every
       : perShot * rate;
@@ -417,7 +473,7 @@ var TheoryEngine = (function () {
         out[key] = base[key];
       }
       /** @type {TheoryStatSources} */
-      const from = { gear: {}, ench: {}, set: {}, exalt: {}, rel: {}, share: {} };
+      const from = { gear: {}, ench: {}, set: {}, exalt: {}, rel: {}, share: {}, regen: {} };
 
       // Sets first, because they are decided by what is worn rather than by
       // any one piece.
@@ -437,7 +493,12 @@ var TheoryEngine = (function () {
         }
         for (const id of (worn && worn.ench) || []) {
           const spell = id && data.byEnch[id];
-          if (!spell || !spell.worn) continue;
+          if (!spell) continue;
+          // Regeneration the enchantment adds on top of what VIT and WIS bring (see regenOf).
+          for (const kind of ['flatHP', 'flatMP', 'partHP', 'partMP']) {
+            if (spell.heal && spell.heal[kind]) from.regen[kind] = (from.regen[kind] || 0) + spell.heal[kind];
+          }
+          if (!spell.worn) continue;
           for (const tag of Object.keys(spell.worn)) {
             const key = OF_STAT[tag];
             if (key) from.ench[key] = (from.ench[key] || 0) + spell.worn[tag];
@@ -666,7 +727,8 @@ var TheoryEngine = (function () {
    * @returns {{numbersFor: (state: TheoryNumbersState, def: TheoryNumbersDefence) => TheoryNumbersResult | null}}
    */
   function createNumbers(dependencies) {
-    const { getData, statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf } = dependencies;
+    const { getData, statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf,
+      fightOf, costOf, regenOf, wornEffects, temperOf, standOf, specialsOf } = dependencies;
     /** @type {TheoryInactiveResult} */
     const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
 
@@ -691,13 +753,42 @@ var TheoryEngine = (function () {
       const ability = getData().byItem[String((state.gear.ability || {}).name)];
       const scale = scaleOf(state);
       // The status effects the build keeps up, its own and the party's it assumes.
-      const effects = effectsFor(state, stats.now);
+      // A fight is in combat: what the worn gear costs you then (see fightOf) counts here.
+      let fought = fightOf(state, stats);
+      const cost = costOf(state);
+      let regen = regenOf(stats, state.assume, fought);
+      // Gear that hands out magic, life or a raised statistic when you shoot or cast (rare, so only then is it worked out).
+      let temper = null;
+      if (wornEffects(state).some(one => one.gains || one.boosts)) {
+        const up0 = effectsFor(state, fought.now, regen.mp.combat, cost);
+        const gun0 = weaponRate(weapon, fought.now, def, scale, subOf(state), null);
+        const cast0 = abilityRate(ability, fought.now, def, null, regen.mp.combat, cost);
+        temper = temperOf(state, gun0.rate || 0, cast0.every ? 1 / cast0.every : 0, up0 && up0.up);
+        const now = { ...fought.now };
+        for (const key of Object.keys(temper.boost)) now[key] = Math.max(0, (now[key] || 0) + temper.boost[key]);
+        fought = { ...fought, now };
+        regen = regenOf(stats, state.assume, fought, temper.gain);
+      }
+      const effects = effectsFor(state, fought.now, regen.mp.combat, cost);
       const fx = fxOf(effects);
+      const gap = standOf(state);
       const gun = using === 'spell' ? NONE
-        : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
-      const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
+        : weaponRate(weapon, fought.now, def, scale, subOf(state), fx, gap);
+      // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
+      const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost, gun.each > 0 ? gun.dps / gun.each : 0, gap);
       const bleed = effects ? effects.bleed : 0;
-      return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
+      const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up, spell.every > 0 ? 1 / spell.every : 0, gap);
+      // Where the damage a second comes from: each worn piece's own shots and what they set off, and all of it together.
+      /** @param {string} hand @param {number} base @returns {TheoryDamagePart} */
+      const piece = (hand, base) => ({ low: base + ((special.by[hand] || {}).low || 0), high: base + ((special.by[hand] || {}).high || 0) });
+      /** @type {Record<string, TheoryDamagePart>} */
+      const parts = { weapon: piece('weapon', gun.dps + bleed), ability: piece('ability', spell.dps), armor: piece('armor', 0), ring: piece('ring', 0) };
+      parts.all = { low: 0, high: 0 };
+      for (const hand of ['weapon', 'ability', 'armor', 'ring']) { parts.all.low += parts[hand].low; parts.all.high += parts[hand].high; }
+      const total = (using === 'spell' ? 0 : gun.dps) + bleed;
+      // The damage the reader asked to count: the weapon's shots, the ability, or every piece worn (at the low end of what is estimated).
+      const chosen = state.damage === 'all' ? parts.all.low : state.damage === 'ability' ? parts.ability.low : total;
+      return { stats, fought, gun, spell, effects, bleed, regen, special, temper, parts, total, chosen };
     }
 
     return { numbersFor };
@@ -832,6 +923,7 @@ var TheoryEngine = (function () {
     function bestAlone(state, list) {
       const key = JSON.stringify([state.klass, state.level, state.boss, state.against,
         state.gear, state.locked, state.exalt, getBanned() || null,
+        state.range, state.damage,
         list.map(one => one.id)]);
       if (ideals.key === key) return ideals.best;
       /** @type {TheoryGoalBest} */
@@ -1122,7 +1214,7 @@ var TheoryEngine = (function () {
           locks,
           subtypes: getEngine().subtypesForItem(held, itemName)
         };
-        return getEngine().rollablePool(held, cfg);
+        return getEngine().obtainablePool(held, cfg);
       }
 
       throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
@@ -1145,11 +1237,10 @@ var TheoryEngine = (function () {
          * wider than what a player can roll. The retired ones - Kogbold
          * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
          * item already carrying one still reads, and are given a weight of
-         * nought to say they can never come out again. The seasonal ones -
-         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
-         * at the time, not out of enchanting, and the client marks the
-         * difference with a ROLLABLE label. This page has no artifact in it,
-         * so it plans with what a plain enchanting can roll and nothing else.
+         * nought to say they can never come out again. The ones only an
+         * engraving gives - Retrowinds Weapon, Hydroshock, Snowstorm - are
+         * kept: a player holding the engraving wears them, and the picker
+         * and the gear card name the engraving each one takes.
          */
         if (seen.has(mod.name)) continue;
         seen.add(mod.name);
@@ -1505,7 +1596,7 @@ var TheoryEngine = (function () {
     return { optimiseSteps };
   }
 
-  return { SHOTS_AT, landed, burstCycle, weaponRate, createStatistics, createSets, createNumbers, createScore, createOptimiser, createShares, createGoals, createBeaten, createItemSearch, createEnchants };
+  return { SHOTS_AT, landed, burstCycle, reaches, fanHits, weaponRate, createStatistics, createSets, createNumbers, createScore, createOptimiser, createShares, createGoals, createBeaten, createItemSearch, createEnchants };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TheoryEngine;

@@ -163,6 +163,10 @@ const sources = {
   // Only the downloadable copy carries the client forge data for Index cards.
   clientForgeText: fs.existsSync(path.join(web, 'assets', 'index', 'client-forge.json'))
     ? fs.readFileSync(path.join(web, 'assets', 'index', 'client-forge.json'), 'utf8') : '',
+  gearText: fs.existsSync(path.join(web, 'assets', 'index', 'gear-effects.json'))
+    ? fs.readFileSync(path.join(web, 'assets', 'index', 'gear-effects.json'), 'utf8') : '',
+  eventsText: fs.existsSync(path.join(web, 'assets', 'index', 'realm-events.json'))
+    ? fs.readFileSync(path.join(web, 'assets', 'index', 'realm-events.json'), 'utf8') : '',
   realmeyeEnrichmentText: fs.existsSync(path.join(dataRoot, 'Index', 'realmeye-enrichment.json'))
     ? readText('Index', 'realmeye-enrichment.json') : '',
   // Compact, existing Atlas evidence for biome populations and tiered loot.
@@ -424,6 +428,7 @@ if (fs.existsSync(realmAnimationIndex)) {
 // Parsing with the real engine keeps this check honest: if a new enchantment
 // or artifact turns up in the data, a missing sprite fails the build.
 const readWeb = file => fs.readFileSync(path.join(web, file), 'utf8').replace(/\r\n/g, '\n');
+const outlineSource = readWeb('outline.js');
 const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
@@ -517,6 +522,33 @@ const css = readWeb('style.css');
 const appSource = readWeb('app.js');
 // The Index card, drawn over the one index-page.js writes: inlined like the rest.
 const cardCss = readWeb('fiches-c.css');
+// The redesigned cards read these alongside the Index. The kept HTML needs
+// their exact committed bytes too; the served startup pays for none of them.
+const cardFiles = Object.fromEntries([
+  'assets/index/projectiles.json', 'assets/index/collection-icons.json',
+  'assets/realm-monster-animations/index.json',
+  'assets/skins/generated/looks.json', 'assets/skins/generated/skins.json',
+  'assets/skins/generated/dyes.json', 'assets/realm-biomes/index.json'
+].map(file => [file, readWeb(file)]));
+const cardImages = Object.fromEntries([
+  'assets/index/projectiles.png', 'assets/index/collection-icons.png',
+  'assets/index/loot-bags.png', 'assets/index/forge-ui.png',
+  'assets/skins/textures/looks.png'
+].map(file => [file, 'data:image/png;base64,' + fs.readFileSync(path.join(web, file)).toString('base64')]));
+cardImages['assets/index/status-icons.png'] = statusSheet;
+for (const [id, file] of Object.entries(JSON.parse(cardFiles['assets/realm-monster-animations/index.json']))) {
+  if (realmMonsterAnimations[id]) cardImages['assets/realm-monster-animations/' + encodeURIComponent(file)] = realmMonsterAnimations[id];
+}
+for (const beacon of Object.values(JSON.parse(cardFiles['assets/realm-biomes/index.json']).beacons)) {
+  const file = 'assets/realm-biomes/' + beacon.file;
+  cardImages[file] = 'data:image/png;base64,' + fs.readFileSync(path.join(web, file)).toString('base64');
+}
+for (const folder of ['assets/ui/backgrounds', 'assets/ui/backgrounds/thumbs']) {
+  for (const name of fs.readdirSync(path.join(web, folder)).filter(name => name.endsWith('.webp')).sort()) {
+    const file = folder + '/' + name;
+    cardImages[file] = 'data:image/webp;base64,' + fs.readFileSync(path.join(web, file)).toString('base64');
+  }
+}
 const cardSource = readWeb('fiches-c.js');
 const cardStyleTag = '<link rel="stylesheet" href="fiches-c.css">';
 const cardScriptTag = '<script src="fiches-c.js"></script>';
@@ -529,7 +561,7 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
   || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
@@ -575,6 +607,8 @@ const served = Object.assign({}, sources);
 delete served.indexText;
 delete served.wikiText;
 delete served.statusText;
+delete served.eventsText;
+delete served.gearText;
 delete served.realmeyeEnrichmentText;
 delete served.clientForgeText;
 // The refreshed bench catalogue is paid for when the bench is opened.
@@ -632,16 +666,20 @@ const dress = (bundleSources, { skins = true } = {}) =>
   (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
-  .replace(cardStyleTag, () => `<style>\n${cardCss}\n</style>`)
+  .replace(cardStyleTag, () => `<style>\n${bundleSources.indexText
+    ? cardCss.replace(/url\(([^)]+)\)/g, (whole, file) => cardImages[file] ? 'url(' + cardImages[file] + ')' : whole)
+    : cardCss}\n</style>`)
   .replace(cardScriptTag, () => `<script>\n${safe(cardSource)}\n</script>`)
   .replace(lookStyleTag, () => `<style data-ui-style>\n${lookCss}\n</style>`)
   .replace(lookScriptTag, () => `<script>\n${safe(lookSource)}\n</script>`)
   .replace(scriptTags, () => [
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
       theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '',
-      statusSheet: bundleSources.statusText ? statusSheet : '' })};</script>`,
+      statusSheet: bundleSources.statusText ? statusSheet : '',
+      ...(bundleSources.indexText ? { cardFiles, cardImages } : {}) })};</script>`,
     `<script>\n${safe(localesSource)}\n</script>`,
     `<script>\n${safe(i18nSource)}\n</script>`,
+    `<script>\n${safe(outlineSource)}\n</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,

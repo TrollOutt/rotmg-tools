@@ -1,4 +1,7 @@
-## provenance: {"built":"2026-10-06T14:05:04.384Z","from":{"kind":"client","build":"35b35f4a4feb47f98290e2f7628e90d8","date":"2026-10-06"},"tool":"tools/read-client.js"}
+## provenance: {"built":"2026-10-14T17:47:18.651Z","from":{"kind":"client","build":"f1f479830bae49808b3d9927e8ad8fa1","date":"2026-10-14"},"tool":"tools/read-client.js"}
+## 2026-10-14 — build f1f479830bae49808b3d9927e8ad8fa1
+= nothing moved
+
 ## 2026-10-06 — build 35b35f4a4feb47f98290e2f7628e90d8
 ~ item: Venerable Ring of the Sphinx: slot chances 0.5,0.375,0.25,0.125 -> 1,0.375,0.25,0.125
 + item: 2DruidST0

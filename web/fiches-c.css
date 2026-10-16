@@ -208,6 +208,31 @@
 .fc2-more[open] > summary { display: none; }
 .fc2-more > span { display: contents; }
 
+/* Événement : à quel score du royaume sort chaque créature */
+.ix-kind.is-event { color: var(--accent); }
+.fc2-who { display: inline-flex; align-items: center; gap: 8px; min-width: 0; text-align: left; }
+.fc2-who b { font-size: .92em; font-weight: 650; }
+.fc2-mono { display: inline-grid; place-items: center; border-radius: 10px; background: rgb(var(--hi-rgb) / .08); color: var(--muted);
+  font-size: .72em; font-weight: 650; flex: none; }
+.fc2-scores { display: flex; flex-direction: column; gap: 22px; padding: 18px 4px 4px; }
+.fc2-score { display: grid; grid-template-columns: minmax(120px, 190px) minmax(0, 1fr); align-items: center; gap: 14px; }
+.fc2-track { position: relative; height: 8px; margin-right: 14px; border-radius: 99px; background: rgb(var(--hi-rgb) / .1); }
+.fc2-track i { position: absolute; left: var(--at); top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  background: #ffcb70; box-shadow: 0 0 0 3px rgb(255 203 112 / .2); }
+.fc2-track i span { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: .74em;
+  color: var(--muted); white-space: nowrap; }
+.fc2-score.is-axis { margin-top: -12px; }
+.fc2-axis { display: flex; justify-content: space-between; margin-right: 14px; font-size: .7em; color: var(--dim); }
+.fc2-spawn { display: grid; grid-template-columns: minmax(130px, 210px) minmax(0, 1fr); gap: 10px 14px; align-items: start; padding: 6px 0; }
+.fc2-spawn + .fc2-spawn { border-top: 1px solid var(--line); }
+.fc2-spawnsay { display: grid; gap: 2px; min-width: 0; font-size: .9em; }
+.fc2-spawnsay small { color: var(--muted); font-size: .88em; line-height: 1.35; }
+.fc2-wave { display: grid; gap: 6px; padding: 6px 0; }
+.fc2-wave + .fc2-wave { border-top: 1px solid var(--line); }
+.fc2-wave h5 { margin: 0; font-size: .8em; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fc2-wave > small { color: var(--dim); }
+@media (max-width: 640px) { .fc2-score, .fc2-spawn { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+
 /* Set : skin final et pièces */
 .fc2-setskin { display: flex; gap: 14px; align-items: center; }
 .fc2-setskin > div { display: grid; gap: 6px; justify-items: start; }
@@ -369,3 +394,268 @@
 /* Not yet in the game (RealmEye's Unreleased Content): a plain warning badge beside the tier */
 .fc2-unreleased { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
   color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 55%, transparent); border-radius: 999px; padding: 2px 8px; }
+
+/* ================================================================ *
+ * The Index card laid out again (the second half of fiches-c.js)    *
+ * ================================================================ */
+
+/* ---------------- shared ---------------- */
+.pc-host { container-type: inline-size; }
+.pc { --fs: var(--ix-fs, 14px); font-size: var(--fs); color: var(--text); display: grid; gap: 14px; }
+.pc .pc-art, .pc .pc-noart { display: inline-block; flex: none; background-repeat: no-repeat; image-rendering: pixelated; vertical-align: middle; }
+.pc h3 { margin: 0 0 10px; font: 650 .74em var(--mono, monospace); color: var(--dim); text-transform: uppercase; letter-spacing: .1em; display: flex; align-items: center; gap: 8px; }
+.pc h3 small { font-weight: 400; letter-spacing: 0; text-transform: none; }
+.pc .ix-jump { font: inherit; color: inherit; }
+.pc-bag { display: inline-block; width: var(--px); height: var(--px); background: url(assets/index/loot-bags.png) no-repeat;
+  background-size: calc(var(--px) * 10) var(--px); background-position: calc(var(--i) * var(--px) * -1) 0; image-rendering: pixelated; vertical-align: middle; flex: none; }
+
+/* ================= gear ================= */
+.pg { gap: 16px; }
+/* The head: the item large on a stage of its own, then what it is, who holds it, what it says. */
+.pg-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+.pg-stage { position: relative; display: grid; place-items: center; width: 132px; height: 132px; border-radius: 18px;
+  background: radial-gradient(circle at 50% 42%, rgb(255 255 255 / .07), rgb(0 0 0 / .32) 72%); border: 1px solid var(--line-soft); }
+.pg-shot { position: absolute; right: -10px; bottom: -10px; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px;
+  background: #24222b; border: 1px solid var(--line); box-shadow: 0 4px 12px rgb(0 0 0 / .4); }
+.pg-eyebrow { margin: 0 0 4px; display: flex; gap: 10px; font-size: .8em; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+.pg-tier.is-st, .pg-name.is-st { color: #ff9a1f; }
+.pg-tier.is-ut, .pg-name.is-ut { color: #c084ff; }
+.pg-name { margin: 0; font: 400 2.6em/1 var(--ixb-pixel, "Jersey 10", monospace); color: var(--title, #fff); }
+.pg-who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 8px; }
+.pg-class { padding: 1px; border-radius: 6px; border: 1px solid transparent; background: none; cursor: pointer; }
+.pg-class:hover { border-color: var(--accent); }
+.pg-set { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; padding: 2px 10px 2px 4px; border-radius: 999px;
+  border: 1px solid rgb(255 154 31 / .45); background: rgb(255 154 31 / .08); color: #ffcb70; cursor: pointer; font-size: .86em; }
+.pg-desc { margin: 10px 0 0; color: var(--muted); line-height: 1.5; font-size: .95em; max-width: 64ch; }
+
+/* The numbers that decide it, each set against the rest of its kind. */
+.pg-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.pg-fig { display: grid; align-content: start; gap: 3px; padding: 12px 14px; border-radius: 14px; background: rgb(0 0 0 / .24); border: 1px solid var(--line-soft); }
+.pg-fig-l { font-size: .74em; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); font-weight: 650; }
+.pg-fig > b { font: 400 2.5em/1 var(--ixb-pixel, "Jersey 10", monospace); color: var(--title, #fff); }
+.pg-fig > b small { font-size: .5em; color: var(--muted); }
+.pg-fig-s { font-size: .82em; color: var(--muted); }
+.pg-rank { display: block; height: 4px; margin-top: 6px; border-radius: 2px; background: rgb(255 255 255 / .08); overflow: hidden; }
+.pg-rank i { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+.pg-fig-r { font-size: .74em; color: var(--dim); }
+.pg-stats > div { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; }
+.pg-stats b { font: 400 1.9em/1 var(--ixb-pixel, "Jersey 10", monospace); }
+.pg-stats b small { font: 650 .45em var(--mono, monospace); margin-left: 2px; }
+@container (min-width: 720px) { .pg-mid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.pg-sec { padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line-soft); background: rgb(var(--bg-2-rgb, 19 18 27) / .5); }
+.pg-sec .fc2-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+@container (min-width: 820px) { .pg-more { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+
+/* ================= dungeons ================= */
+.pd h2 { margin: 0; font: 400 2.1em/1 var(--ixb-pixel, "Jersey 10", monospace); color: var(--title, #fff); }
+.pd-none { margin: 0; color: var(--dim); font-size: .92em; }
+.pd-also { margin: 8px 0 0; color: var(--dim); font-size: .84em; }
+.pd-door { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 12px; border: 1px solid var(--line); background: rgb(0 0 0 / .22); cursor: pointer; text-align: left; }
+.pd-door:hover { border-color: var(--accent); }
+.pd-door > span { display: grid; }
+.pd-door small { color: var(--dim); font-size: .8em; }
+.pd-doors { display: flex; flex-wrap: wrap; gap: 8px; }
+.pd-doors.is-col { flex-direction: column; align-items: stretch; }
+.pd-doors.is-inline { align-items: center; margin-top: 8px; gap: 6px; }
+.pd-doors.is-inline .pd-door { padding: 3px 10px 3px 3px; }
+.pd-doors.is-inline .pd-door small { display: none; }
+.pd-t { position: absolute; top: -7px; right: -7px; font: 700 10px var(--mono, monospace); font-style: normal; padding: 1px 4px; border-radius: 5px; background: #0f0e14; border: 1px solid #3a3446; }
+.pd-t.is-st { color: #ff9a1f; } .pd-t.is-ut { color: #c084ff; }
+.pd-plain { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.pd-more { display: grid; gap: 12px; }
+.pd-more > .ix-block { margin: 0; }
+
+/* 1. The run: one line down the card, a stop for each fight. */
+.pd-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.pd-head p { margin: 6px 0 0; color: var(--muted); font-size: .9em; line-height: 1.45; }
+.pd-line { list-style: none; margin: 0; padding: 0; position: relative; display: grid; gap: 4px; }
+.pd-line::before { content: ""; position: absolute; left: 31px; top: 30px; bottom: 30px; width: 2px; background: var(--line); border-radius: 1px; }
+.pd-stop { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: start; padding: 8px 0; }
+.pd-node { position: relative; z-index: 1; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: #1a1820; border: 2px solid var(--line); }
+.pd-stop.is-boss .pd-node { width: 64px; height: 64px; border-color: #ffcb70; box-shadow: 0 0 0 4px rgb(255 203 112 / .12); }
+.pd-node-icon { font-size: 22px; color: var(--muted); }
+.pd-stop-h { margin: 4px 0 8px; display: flex; align-items: baseline; gap: 10px; }
+.pd-stop-h b { font-size: 1.15em; }
+.pd-stop.is-boss .pd-stop-h b { color: #ffcb70; font-size: 1.3em; }
+.pd-stop-h small { color: var(--dim); }
+@container (max-width: 640px) { .pd-bagbox.is-big { grid-column: auto; } }
+@container (min-width: 700px) { .pd-boss-grid { grid-template-columns: 230px minmax(0, 1fr); } }
+.pd-eyebrow { margin: 0 0 4px; font-size: .76em; text-transform: uppercase; letter-spacing: .1em; color: #ffcb70; font-weight: 650; }
+.pc .pc-noart { display: inline-grid; place-items: center; border-radius: 8px; background: #2c2836; color: var(--muted); font: 400 1em var(--ixb-pixel, "Jersey 10", monospace); }
+
+/* ---- gear: the lower half ---- */
+/* What makes it special: a line per thing, its picture in a well on the left. */
+.pg-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pg-row { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; }
+.pg-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgb(0 0 0 / .3); border: 1px solid var(--line-soft);
+  font-size: 22px; color: #ffcb70; line-height: 1; }
+.pg-row.is-shot .pg-ico { color: #79c5e8; }
+.pg-row b { display: block; font-size: 1.04em; font-weight: 650; color: var(--text); }
+.pg-row span:not(.pg-ico):not(.pc-art) { display: block; margin-top: 2px; font-size: .92em; color: var(--muted); line-height: 1.4; }
+.pg-note { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; background: rgb(255 255 255 / .03); border: 1px solid var(--line-soft);
+  font-size: .95em; line-height: 1.5; color: var(--text); font-style: italic; }
+.pg-note cite { display: block; margin-top: 4px; font-style: normal; font-size: .78em; color: var(--dim); }
+
+/* Where it comes from: the bag it falls in, then each source as a card. */
+.pg-bagsay { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 1em; color: var(--muted); }
+.pg-bagsay b { color: var(--text); }
+.pg-srcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.pg-src { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px 12px 6px 6px; border-radius: 12px;
+  border: 1px solid var(--line); background: rgb(0 0 0 / .22); text-align: left; cursor: pointer; font: inherit; color: var(--text); }
+.pg-src:hover { border-color: var(--accent); }
+.pg-src.is-plain { cursor: default; border-style: dashed; }
+.pg-src[hidden] { display: none; }
+.pg-src.is-more { display: flex; justify-content: center; color: var(--dim); cursor: pointer; border-style: dashed; font: inherit; }
+.pg-src-pic { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 10px; background: rgb(255 255 255 / .04); }
+.pg-src-glyph { font-size: 22px; color: var(--muted); }
+.pg-src-t { display: grid; min-width: 0; }
+.pg-src-t b { font-weight: 650; font-size: 1em; line-height: 1.25; }
+.pg-src-t small { margin-top: 2px; color: var(--muted); font-size: .84em; line-height: 1.3; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+
+/* ---- dungeons: the run ---- */
+.pd-run { gap: 12px; }
+.pd-run .pd-head { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; }
+.pd-portal { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 16px; background: radial-gradient(circle at 50% 40%, rgb(255 255 255 / .06), rgb(0 0 0 / .3) 72%); border: 1px solid var(--line-soft); }
+.pd-run .pd-eyebrow { color: var(--muted); }
+.pd-desc { margin: 8px 0 0; color: var(--muted); font-size: .92em; line-height: 1.5; cursor: pointer; }
+.pd-desc.is-clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pd-sum { margin: 0; padding: 8px 14px; border-radius: 10px; background: rgb(255 255 255 / .03); color: var(--muted); font-size: .95em; }
+.pd-sum b { color: var(--text); font-size: 1.1em; }
+.pd-run .pd-line::before { left: 39px; top: 40px; bottom: 40px; }
+.pd-run .pd-stop { grid-template-columns: 80px minmax(0, 1fr); gap: 16px; padding: 12px 0; }
+.pd-run .pd-node { width: 80px; height: 80px; background: #17151d; }
+.pd-run .pd-stop.is-mini .pd-node { border-color: #8b9cb3; }
+.pd-run .pd-stop.is-boss .pd-node { width: 80px; height: 80px; border-color: #ffcb70; box-shadow: 0 0 0 5px rgb(255 203 112 / .1); }
+.pd-run .pd-stop.is-boss .pd-stop-body { padding: 12px 14px; border-radius: 14px; border: 1px solid rgb(255 203 112 / .3); background: rgb(255 203 112 / .04); }
+.pd-stop-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 6px 0 10px; }
+.pd-stop-h > b, .pd-stop-h .pd-who { font-size: 1.25em; font-weight: 650; color: var(--text); }
+.pd-run .pd-stop.is-boss .pd-who { color: #ffcb70; font-size: 1.45em; }
+.pd-stop-sub { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 10px; color: var(--muted); font-size: .9em; }
+.pd-role { font-size: .78em; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); font-weight: 650; }
+.pd-vital b { font: 400 1.3em/1 var(--ixb-pixel, "Jersey 10", monospace); }
+.pd-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.pd-tile { display: grid; justify-items: center; gap: 6px; padding: 10px 6px 8px; border-radius: 12px; border: 1px solid var(--line-soft); background: #1b1a21; cursor: pointer; font: inherit; color: var(--text); text-align: center; }
+.pd-tile:hover { border-color: var(--accent); background: #22202a; }
+.pd-tile-pic { position: relative; display: grid; place-items: center; min-height: 56px; min-width: 56px; }
+.pd-tile-pic .pd-t { top: -6px; right: -14px; }
+.pd-tile-name { font-size: .84em; font-weight: 600; line-height: 1.2; }
+.pd-crowdline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 10px; }
+.pd-crowdline .ix-jump { padding: 2px; border-radius: 6px; border: 1px solid transparent; background: none; cursor: pointer; }
+.pd-crowdline .ix-jump:hover { border-color: var(--accent); }
+.pd-more-n { color: var(--dim); font-size: .85em; margin-left: 4px; }
+.pd-rest { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line-soft); background: rgb(0 0 0 / .18); }
+.pd-rest summary { cursor: pointer; font-size: .82em; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 650; }
+.pd-rest summary small { color: var(--dim); text-transform: none; letter-spacing: 0; }
+.pd-rest[open] summary { margin-bottom: 10px; }
+.pd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pd-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 999px; border: 1px solid var(--line); background: rgb(0 0 0 / .2); cursor: pointer; font-size: .9em; }
+.pd-chip:hover { border-color: var(--accent); }
+.pg-src-who { display: inline-flex; gap: 1px; margin-right: 4px; }
+.pg-src-t small { display: flex; }
+
+/* ---- gear: the figures ---- */
+.pg-hero.is-compact { grid-template-columns: auto minmax(0, 1fr); }
+.pg-hero.is-compact .pg-stage { width: 92px; height: 92px; }
+@container (min-width: 760px) { .pg-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* B: the game's tooltip, its lines in the game's order and colours. */
+.tt { padding: 14px 16px 16px; border-radius: 8px; background: #141317; border: 2px solid #4b4559; box-shadow: 0 0 0 1px #000, 0 12px 30px rgb(0 0 0 / .45); font-size: 1.02em; }
+
+/* The run: creatures in boxes of one size, so a big one and a small one read alike. */
+.pd-crowdline .ix-jump { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: rgb(0 0 0 / .25); }
+.pd-run .pd-node .pc-art, .pd-run .pd-node .pc-noart { max-width: 64px; max-height: 64px; }
+
+/* ---- gear: what is under the figures ---- */
+.pg-low { display: grid; gap: 12px; }
+.pq-body { display: grid; gap: 12px; }
+.pq-body > .ix-block, .pk-col > .ix-block, .pk-under > .ix-block, .pk-more > .ix-block { margin: 0; }
+.pt-body > .pq-body, .pt-body > .ix-block { padding: 16px 18px; border-radius: 14px; border: 1px solid var(--line-soft); background: rgb(var(--bg-2-rgb, 19 18 27) / .5); }
+
+/* B · two columns: seeing it on the left, getting it on the right. */
+.pk-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@container (min-width: 760px) { .pk-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+.pk-col { display: grid; gap: 12px; min-width: 0; }
+.pk-col .pg-facts { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+@container (min-width: 760px) { .pk-under { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.pk-more > summary { cursor: pointer; font: 650 .78em var(--mono, monospace); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.pk-more[open] > summary { margin-bottom: 10px; }
+
+/* C · the questions: each one answered in a line, opened for the detail. */
+.pq { border-radius: 14px; border: 1px solid var(--line-soft); background: rgb(var(--bg-2-rgb, 19 18 27) / .5); }
+.pq > summary { list-style: none; display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; align-items: baseline; gap: 14px; padding: 14px 18px; cursor: pointer; }
+.pq > summary::-webkit-details-marker { display: none; }
+.pq > summary::after { content: "▾"; color: var(--dim); transition: transform .15s; }
+.pq[open] > summary::after { transform: rotate(180deg); }
+.pq > .pq-body, .pq > .ix-block { margin: 0 18px 16px; }
+.pq > .pq-body > .pg-sec { padding: 0; border: 0; background: none; }
+@container (max-width: 560px) { .pq > summary { grid-template-columns: minmax(0, 1fr) auto; } .pq-a { grid-column: 1; } }
+.pt-body > .pq-body > .pg-sec { padding: 0; border: 0; background: none; }
+/* The run's difficulty line, where the summary was. */
+.pd-sum { display: flex; align-items: center; gap: 10px; }
+.pd-sum-l { font-size: .8em; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); font-weight: 650; }
+.pd-sum b { font: 400 1.9em/1 var(--ixb-pixel, "Jersey 10", monospace); color: #ff8a8d; }
+.pd-sum small { color: var(--dim); }
+.pd-sum .pd-diffbar { display: inline-flex; gap: 4px; margin-left: 6px; flex: 1; max-width: 360px; }
+.pd-sum .pd-diffbar i { flex: 1; height: 8px; border-radius: 4px; background: rgb(255 255 255 / .1); }
+.pd-sum .pd-diffbar i.is-on { background: #e5484d; }
+.pd-sum .pd-diffbar i.is-half { background: linear-gradient(90deg, #e5484d 50%, rgb(255 255 255 / .1) 50%); }
+
+/* ---- worth, forge and enchanting as one section ---- */
+.pg-special { padding-top: 12px; }
+.pc-craft { display: grid; gap: 18px; }
+.pc-figs { display: flex; flex-wrap: wrap; gap: 0; }
+.pc-fig { display: grid; gap: 2px; padding: 2px 22px 2px 0; margin-right: 22px; border-right: 1px solid var(--line-soft); }
+.pc-fig:last-child { border-right: 0; margin-right: 0; }
+.pc-fig > b { font-size: 1.45em; font-weight: 700; color: var(--text); line-height: 1.15; }
+.pc-fig > small { font-size: .82em; color: var(--muted); }
+.pc-h { margin: 0 0 10px; font-size: .78em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.pc-forge, .pc-ench { padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.pc-recipe { display: grid; gap: 6px; padding: 6px 0; }
+.pc-recipe-say { font-size: .9em; color: var(--muted); }
+.pc-recipe-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pc-recipe-line.is-kin { gap: 6px; }
+.pc-op { font-style: normal; font-size: 1.2em; color: var(--dim); padding: 0 2px; }
+.pc-mat { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 7px; border-radius: 10px; background: rgb(0 0 0 / .28); border: 1px solid var(--line-soft); }
+.pc-mat .fc2-ui { zoom: 1.9 !important; }
+.pc-mat b { font-size: 1.08em; font-weight: 700; color: var(--text); }
+.pc-thing { display: inline-grid; place-items: center; padding: 0; background: none; border: 0; cursor: pointer; }
+.pc-thing-pic { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 12px; background: rgb(0 0 0 / .28); border: 1px solid var(--line-soft); transition: border-color .15s, background .15s; }
+.is-kin .pc-thing-pic { width: 44px; height: 44px; }
+.pc-thing:hover .pc-thing-pic { border-color: var(--line); background: rgb(255 255 255 / .05); }
+.pc-slots { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.pc-slot { display: grid; place-items: center; gap: 4px; min-width: 70px; padding: 10px 8px 7px; border-radius: 12px; border: 1px dashed var(--line); background: rgb(0 0 0 / .2); }
+.pc-slot > i { font-style: normal; font-size: .74em; color: var(--dim); }
+.pc-keep { display: inline-flex; align-items: center; gap: 8px; }
+.pc-slot .pc-mat { background: none; border: 0; padding: 0; }
+.pc-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 0; }
+.pc-line > span:first-child { min-width: 100px; font-size: .9em; color: var(--muted); }
+.pk-grid.is-one { grid-template-columns: minmax(0, 1fr) !important; }
+.pk-col .pg-srcs { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+
+/* ---- creatures that drop the same things share a stop ---- */
+.pd-faces { display: flex; align-items: center; justify-content: center; }
+.pd-faces > * + * { margin-left: -10px; }
+.pd-and { color: var(--muted); font-weight: 400; }
+.pd-tile-from { display: block; margin-top: 2px; font-size: .74em; line-height: 1.25; color: var(--muted); text-align: center; }
+
+/* ---- a full window is not a reason for larger type; it is room for a third column ---- */
+.pc { --fs: min(var(--ix-fs, 14px), 15px); }
+.pk-grid { grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 760px) { .pk-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@container (min-width: 1000px) { .pk-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); } }
+.pk-col[hidden] { display: none; }
+/* The card clips what it scrolls, whatever the browser composites on its own (a sprite's outline filter). */
+#ixCard { contain: paint; clip-path: inset(0 round 12px); }
+
+/* ---- every other kind in the gear card's frame ---- */
+.pg-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border-radius: 999px; border: 1px solid var(--line); background: rgb(0 0 0 / .2); font-size: .9em; color: var(--muted); }
+.pk-faces { flex-wrap: wrap; gap: 6px; }
+.pk-chips { margin-top: 10px; }
+.pk-big { margin: 0; font-size: 1.1em; line-height: 1.5; color: var(--text); }
+.pk-wide { grid-column: 1 / -1; }
+.pk-kind .pg-stats > div { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+
+.pg-stage.is-live .fc2-bigart { display: grid; place-items: center; width: 100%; height: 100%; }
+.pg-stage.is-live { overflow: hidden; }
+.pg-stage.is-live canvas { width: 150px !important; height: 150px !important; image-rendering: pixelated; transform: translateY(-16%); }
+.pg-hero.is-bare { grid-template-columns: minmax(0, 1fr); }

@@ -17,6 +17,23 @@ for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText', 'cli
   assert(offline.data.sources[name], name + ' missing from the downloadable copy');
 }
 assert.equal(offline.data.sources.clientForgeText.trim(), read('web/assets/index/client-forge.json').trim());
+assert(!served.data.cardFiles && !served.data.cardImages, 'Card extras must stay out of served startup');
+assert(offline.data.cardImages['assets/ui/backgrounds/facets.webp'], 'The default Style background must travel with the download');
+for (const file of ['assets/index/projectiles.json', 'assets/index/collection-icons.json',
+  'assets/realm-monster-animations/index.json', 'assets/realm-biomes/index.json',
+  'assets/skins/generated/looks.json', 'assets/skins/generated/skins.json', 'assets/skins/generated/dyes.json']) {
+  assert(offline.data.cardFiles[file], file + ': card and browse loaders need an embedded copy');
+}
+for (const [file, text] of Object.entries(offline.data.cardFiles)) {
+  assert.equal(text, read('web/' + file).replace(/\r\n/g, '\n'), file + ': exact card payload');
+}
+for (const [file, url] of Object.entries(offline.data.cardImages)) {
+  assert.deepEqual(Buffer.from(url.slice(url.indexOf(',') + 1), 'base64'),
+    fs.readFileSync(path.join(root, 'web', decodeURIComponent(file))), file + ': exact card image');
+}
+for (const file of ['assets/index/loot-bags.png', 'assets/index/forge-ui.png', 'assets/index/collection-icons.png']) {
+  assert(!offline.html.includes('url(' + file + ')'), file + ': card CSS must work from a single file');
+}
 for (const version of [served, offline]) {
   assert(version.html.includes('var BuildProgression'), 'Progression code missing');
   const engineAt = version.html.indexOf('var TheoryEngine =');

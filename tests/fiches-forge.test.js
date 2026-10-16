@@ -6,7 +6,10 @@ const KEPT_TEXT = fs.readFileSync(path.join(__dirname, '../web/assets/index/clie
 const expected = JSON.parse(KEPT_TEXT);
 const tail = '})();';
 assert(source.trimEnd().endsWith(tail), 'fiches-c.js: the end this test reaches the script through has moved');
-const instrumented = source.trimEnd().slice(0, -tail.length) + 'window.__fiches = { forgeExtra, powerOf, pending: () => pending };\n' + tail;
+// 53a235c adds a second layout; both must use the lazy forge reader from the first.
+const instrumented = source.replace('\n' + tail,
+  '\nwindow.__fiches = { forgeExtra, powerOf, pending: () => pending };\n' + tail)
+  .trimEnd().slice(0, -tail.length) + 'window.__layout = { extra };\n' + tail;
 const flush = async () => { for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r)); };
 
 async function run({ bundle, answer }) {
@@ -24,7 +27,7 @@ async function run({ bundle, answer }) {
   page.window.document = page.document; page.globalThis = page.window;
   vm.runInNewContext(instrumented, page, { filename: 'web/fiches-c.js' });
   await flush();
-  return { fiches: page.window.__fiches, fetched, bigParses: () => bigParses };
+  return { fiches: page.window.__fiches, layout: page.window.__layout, fetched, bigParses: () => bigParses };
 }
 
 const plain = value => JSON.parse(JSON.stringify(value));
@@ -102,6 +105,9 @@ async function main() {
   assert.equal(offline.bigParses(), 1, 'First use must decode forge data');
   assert.strictEqual(offline.fiches.forgeExtra(), offlineRecords, 'Decoded data must be remembered');
   assert.equal(offline.bigParses(), 1, 'Further reads must not decode forge data again');
+  assert.strictEqual(offline.layout.extra({ clientId: 'Teratoma' }), offlineRecords.Teratoma);
+  assert.strictEqual(offline.layout.extra({ name: 'Stoneborn Husk' }), offlineRecords['Stoneborn Husk']);
+  assert.equal(offline.bigParses(), 1, 'The new layout shares the same decoded payload');
 
   const httpBundle = { sources: {} };
   const http = await run({
@@ -114,6 +120,7 @@ async function main() {
   assert.equal(Object.prototype.hasOwnProperty.call(httpBundle.sources, 'clientForgeText'), false);
 
   const httpRecords = http.fiches.forgeExtra();
+  assert.strictEqual(http.layout.extra({ clientId: 'Teratoma' }), httpRecords.Teratoma);
   assert.strictEqual(http.fiches.forgeExtra(), httpRecords, 'HTTP data must be remembered');
   checkKnownValues(offlineRecords);
   checkKnownValues(httpRecords);

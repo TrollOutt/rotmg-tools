@@ -22,8 +22,9 @@ const assert = require('assert/strict');
 const source = fs.readFileSync(path.join(__dirname, '../web/fiches-c.js'), 'utf8');
 const tail = '})();';
 assert(source.trimEnd().endsWith(tail), 'fiches-c.js: the end this test reaches the script through has moved');
-const instrumented = source.trimEnd().slice(0, -tail.length)
-  + 'window.__fiches = { communityOf, pending: () => pending };\n' + tail;
+// 53a235c adds a second layout closure; the data loader still lives in the first.
+const instrumented = source.replace('\n' + tail,
+  '\nwindow.__fiches = { communityOf, pending: () => pending };\n' + tail);
 
 const ENRICHMENT = {
   records: {

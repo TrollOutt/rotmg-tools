@@ -1,4 +1,4 @@
-## provenance: {"built":"2026-10-06T00:00:00.000Z","from":{"build":"35b35f4a4feb47f98290e2f7628e90d8","date":"2026-10-06","kind":"client"},"tool":"tools/generate-fame.js"}
+## provenance: {"built":"2026-10-14T00:00:00.000Z","from":{"build":"f1f479830bae49808b3d9927e8ad8fa1","date":"2026-10-14","kind":"client"},"tool":"tools/generate-fame.js"}
 ## Every fame bonus an installed RotMG client defines.
 ##
 ## Written by tools/generate-fame.js. Do not edit by hand: run the

@@ -84,7 +84,10 @@ road, bit 1 impassable), blue is the zone id.
     node tools/realm-render.js --copy       the ground, the water, the standing layer
     node tools/realm-atlas-build.js         the pyramid, the zones, the page
     node tools/merge-realm-roles.js         the ranks and the cast
-    node tools/refine-outline.js            the black line round everything, once
+    node tools/refine-outline.js            the sheets doubled, the scenery's line laid, once
+    node tools/recover-life.js --write      the creatures' files bare again (the page draws the line)
+    node tools/recover-bare.js --write      the scenery and the combat pictures bare again, cut from the client
+    node tools/realm-atlas-build.js --page-only --publish   the page, with web/outline.js put in
     node tools/build-sky.js                 the weather sheet, from the drawn clouds
     npm run build                           web/ copied into docs/
 
@@ -317,7 +320,8 @@ all are safe to re-run.
 
 | tool | what it does |
 | --- | --- |
-| `refine-outline.js` | Thins and blackens the dark line round every sprite. Holds the art at 2 sheet pixels to the art pixel and lays a 1-pixel flat-black outline, so the line is half a pixel of art instead of one. **Runs once** — a black line cannot be told from black art afterwards, so to change the factor `git checkout -- web/assets/atlas` first. |
+| `refine-outline.js` | Holds the art at 2 sheet pixels to the art pixel, so the numbers in `atlas.json` and `things.json` are in the doubled grain. It used to lay the black line round every sprite; the creatures are left bare now and the scenery's line is taken off by `recover-bare.js`, because **every page lays the same line itself as it draws** (`web/outline.js`, two fifteenths of a pixel of art, a screen pixel at least) and a line baked into a sheet has one thickness at every zoom. **Runs once.** |
+| `recover-life.js`, `recover-bare.js` | Take the baked line off the creatures' files, `things.png` and the combat pictures by finding each picture in the client (what is certainly the art's own names the sprite it was cut from) and laying the line on it again to check the cell on disk is exactly that; a picture the client cannot account for keeps its line and is marked (`things.json` pic[9], `combat.json` `carriesLine`), and the page does not draw a second one. Run `recover-bare.js --write` after every `import-atlas-combat.js`, which brings pictures with a line of their own. |
 | `prune-map.js` | Takes loot, attacks and orbiting projectiles off the map. Holds explicit lists of `things.png` picture ids and creature names with what each was recognised as, rewrites `things.bin` and its chunk table, drops the listings from `atlas.json`, and deletes creature sprites nothing points at. Idempotent. |
 | `merge-realm-roles.js` | Attaches each zone's rank, encounters and Heroes of Oryx from `realmeye-data.json`, gives beacons their guardian, copies the pictures into `boss/`, and marks creatures already on the map with the part they play instead of duplicating them. Holds the biome→zone name join explicitly. |
 | `rebuild-levels.js` | Rebuilds `z1`–`z4` from `z0` plus the current `things.bin`. **Run this after any change to `things.bin`** or the far zooms will disagree with the near one. `--only=1:2_5` and `--to=DIR` build one chunk elsewhere, which is how the recipe was checked against the published pictures before overwriting them. Takes a few minutes; `--max-old-space-size=6144`. |

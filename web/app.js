@@ -1040,9 +1040,10 @@ async function optimizeCurrentItem() {
     subtypes: config.subtypes
   };
 
+  // What a plain roll or an engraving can give; the plan then says which.
   const candidates =
     EnchantEngine
-      .rollablePool(
+      .obtainablePool(
         state.data,
         poolConfig
       )
@@ -1749,16 +1750,20 @@ function renderPickerList(query) {
   const hidden = state.picker.blocked.filter(entry => matches(entry.mod));
   const offBase = (state.picker.wrongBase || []).filter(entry => matches(entry.mod));
 
-  const row = mod => `
+  const row = mod => {
+    const via = EnchantEngine.engravingsFor(state.data, mod)[0];
+    return `
     <button type="button" class="picker-row" data-name="${html(mod.name)}">
       ${enchantIconHtml(mod, 'picker-icon')}
       <span class="picker-text">
         <b>${html(mod.name)}</b>
         <small>${html(mod.description)}</small>
+        ${via ? `<small class="picker-via">Only through the ${html(via)}</small>` : ''}
         <span class="slot-labels">${labelChips(mod)}</span>
       </span>
       <span class="picker-weight" title="Base roll weight before any artifact multiplier">${count(mod.weight)}</span>
     </button>`;
+  };
 
   const reason = conflict => ({
     'after-lock': `blocked by the locked “${conflict.other.name}”`,
@@ -2500,6 +2505,35 @@ async function renderBuildPlan(config) {
   const artifacts = allowedArtifacts();
 
   /*
+   * An enchantment only an engraving gives brings its engravings along.
+   * Engravings are off unless you turn them on, and asking for Retrowinds
+   * Weapon with them off has exactly one honest answer - the Retrowinds
+   * Engraving - so it is searched rather than reported as impossible. One
+   * you have marked unavailable stays out.
+   */
+  const blocked = blacklistedArtifacts();
+  const broughtIn = [];
+  const unreachable = [];
+  for (const goal of goals) {
+    for (const name of EnchantEngine.membersOf(state.data, goal)) {
+      const mod = state.data.byName.get(name);
+      const via = EnchantEngine.engravingsFor(state.data, mod);
+      if (!via.length) continue;
+      const usable = via.filter(one => !blocked.has(one));
+      if (!usable.length) unreachable.push({ name, via: via[0] });
+      for (const one of usable) {
+        const artifact = state.data.byArtifact.get(one);
+        if (artifact && !artifacts.includes(artifact)) { artifacts.push(artifact); broughtIn.push(one); }
+      }
+    }
+  }
+  if (unreachable.length) {
+    output.innerHTML = unreachable.map(one =>
+      `<p class="note warn">${html(one.name)} only comes from the ${html(one.via)}, which you marked unavailable.</p>`).join('');
+    return;
+  }
+
+  /*
    * PERF:
    * The exact multi-goal planner can visit many state/artifact pairs.
    * Keep every individual probability walk synchronous, but yield between
@@ -2651,7 +2685,8 @@ async function renderBuildPlan(config) {
       <span class="figure strong"><b>${dust(plan.dust)}</b><small>expected ${html(config.dust)} dust for all ${plural(goals.length, 'enchantment')}</small></span>
       <span class="figure"><b>${count(plan.rerolls)}</b><small>rerolls in total</small></span>
     </div>
-
+    ${broughtIn.length ? `<p class="note">Engravings are off, but ${broughtIn.map(html).join(', ')} ${broughtIn.length === 1 ? 'was' : 'were'}
+      searched anyway: what you asked for comes from nowhere else.</p>` : ''}
     <ol class="plan-steps">${steps}</ol>`;
 }
 

@@ -5,8 +5,9 @@ const raw = JSON.parse(fs.readFileSync(path.join(root, 'data/TheoryCraft/theoryc
 const harness = require('./theory-harness');
 const engine = require('../web/engine');
 const t = harness({}, raw, false);
-assert.equal(t.weaponRate, require('../web/theory-engine').weaponRate,
-  'TheoryCraft must use the extracted weapon calculation directly');
+// 768c0b5: the adapter now injects live metadata for shots that curve.
+assert.deepEqual(JSON.parse(JSON.stringify(t.weaponRate(null, { att: 25, dex: 75 }, 0))),
+  require('../web/theory-engine').weaponRate(null, { att: 25, dex: 75 }, 0));
 assert.equal(t.landed, require('../web/theory-engine').landed,
   'TheoryCraft must use the extracted shot calculation directly');
 
@@ -279,7 +280,7 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   assert.equal(got.from.rel.att, 9, 'relative bonuses use the same snapshot and exclude exalts');
   assert.equal(got.from.share.mp, 154.44 * 0.5, 'shares use totals before any share applies');
   assert.deepEqual(got.now, { hp: 179.2, mp: 179.2, att: 34, def: 11, spd: 11, dex: 11, vit: 11, wis: 20 });
-  assert.deepEqual(Object.keys(got.from), ['gear', 'ench', 'set', 'exalt', 'rel', 'share', 'bonus']);
+  assert.deepEqual(Object.keys(got.from), ['gear', 'ench', 'set', 'exalt', 'rel', 'share', 'regen', 'bonus']);
   assert.equal(JSON.stringify({ state, catalogue, bonuses }), before, 'inputs remain untouched');
   assert.notEqual(calculations.statsOf(state, catalogue, bonuses).now, got.now, 'results are not cached');
   assert.equal(calculations.statsOf({ ...state, klass: 'missing' }, catalogue, bonuses), null);
@@ -494,7 +495,8 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
     'configure and use do not invalidate existing indexes');
 }
 
-// Keep the original numbersFor body independent of the extracted implementation.
+// Frozen remote numbersFor (bec9226, 7f146ae, f21eeff, 5a4233f, 6f816f7):
+// keep the accepted combat, piece damage and range rules independent of the factory.
 // Compare every leaf exactly, including non-finite numbers and property order;
 // JSON round-tripping would hide NaN, -0 and the immune Set.
 {
@@ -503,7 +505,8 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   const clone = value => JSON.parse(JSON.stringify(value));
   let data = clone(raw);
   api.configure(data);
-  const { statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf } = api;
+  const { statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf,
+    fightOf, costOf, regenOf, wornEffects, temperOf, standOf, specialsOf } = api;
   const NONE = { each: 0, rate: 0, many: 1, every: 0, dps: 0 };
 
   function numbersFor(state, def) {
@@ -523,17 +526,45 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
     const ability = data.byItem[(state.gear.ability || {}).name];
     const scale = scaleOf(state);
     // The status effects the build keeps up, its own and the party's it assumes.
-    const effects = effectsFor(state, stats.now);
+    // A fight is in combat: what the worn gear costs you then (see fightOf) counts here.
+    let fought = fightOf(state, stats);
+    const cost = costOf(state);
+    let regen = regenOf(stats, state.assume, fought);
+    // Gear that hands out magic, life or a raised statistic when you shoot or cast (rare, so only then is it worked out).
+    let temper = null;
+    if (wornEffects(state).some(one => one.gains || one.boosts)) {
+      const up0 = effectsFor(state, fought.now, regen.mp.combat, cost);
+      const gun0 = weaponRate(weapon, fought.now, def, scale, subOf(state), null);
+      const cast0 = abilityRate(ability, fought.now, def, null, regen.mp.combat, cost);
+      temper = temperOf(state, gun0.rate || 0, cast0.every ? 1 / cast0.every : 0, up0 && up0.up);
+      const now = { ...fought.now };
+      for (const key of Object.keys(temper.boost)) now[key] = Math.max(0, (now[key] || 0) + temper.boost[key]);
+      fought = { ...fought, now };
+      regen = regenOf(stats, state.assume, fought, temper.gain);
+    }
+    const effects = effectsFor(state, fought.now, regen.mp.combat, cost);
     const fx = fxOf(effects);
+    const gap = standOf(state);
     const gun = using === 'spell' ? NONE
-      : weaponRate(weapon, stats.now, def, scale, subOf(state), fx);
-    const spell = using === 'gun' ? NONE : abilityRate(ability, stats.now, def, fx);
+      : weaponRate(weapon, fought.now, def, scale, subOf(state), fx, gap);
+    // The ability is worked out, but kept apart from the total: see the note above on what the page judges a build by.
+    const spell = abilityRate(ability, fought.now, def, fx, regen.mp.combat, cost, gun.each > 0 ? gun.dps / gun.each : 0, gap);
     const bleed = effects ? effects.bleed : 0;
-    return { stats, gun, spell, effects, bleed, total: gun.dps + spell.dps + bleed };
+    const special = specialsOf(state, fought.now, def, gun.rate, effects && effects.up, spell.every > 0 ? 1 / spell.every : 0, gap);
+    // Where the damage a second comes from: each worn piece's own shots and what they set off, and all of it together.
+    const piece = (hand, base) => ({ low: base + ((special.by[hand] || {}).low || 0), high: base + ((special.by[hand] || {}).high || 0) });
+    const parts = { weapon: piece('weapon', gun.dps + bleed), ability: piece('ability', spell.dps), armor: piece('armor', 0), ring: piece('ring', 0) };
+    parts.all = { low: 0, high: 0 };
+    for (const hand of ['weapon', 'ability', 'armor', 'ring']) { parts.all.low += parts[hand].low; parts.all.high += parts[hand].high; }
+    const total = (using === 'spell' ? 0 : gun.dps) + bleed;
+    // The damage the reader asked to count: the weapon's shots, the ability, or every piece worn (at the low end of what is estimated).
+    const chosen = state.damage === 'all' ? parts.all.low : state.damage === 'ability' ? parts.ability.low : total;
+    return { stats, fought, gun, spell, effects, bleed, regen, special, temper, parts, total, chosen };
   }
 
   const extracted = createNumbers({ getData: () => data,
-    statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf });
+    statsOf, scaleOf, subOf, weaponRate, abilityRate, effectsFor, fxOf,
+    fightOf, costOf, regenOf, wornEffects, temperOf, standOf, specialsOf });
   function exact(got, expected, why) {
     if (expected === null || typeof expected !== 'object') {
       assert.strictEqual(got, expected, why);
@@ -619,7 +650,9 @@ assert.equal(t.landed, require('../web/theory-engine').landed,
   assert.strictEqual(api.numbersFor(unknown, 0), null);
   const bleeding = api.numbersFor(builds[9], 40);
   assert.ok(bleeding.bleed > 0, 'the weapon fixture contributes bleeding');
-  assert.strictEqual(bleeding.spell.dps, 0, 'the ability stays inactive even with its status effects');
+  // f21eeff: the ability is evaluated separately; the default total still counts the weapon.
+  assert.strictEqual(bleeding.total, bleeding.gun.dps + bleeding.bleed);
+  assert.strictEqual(bleeding.parts.ability.low, bleeding.spell.dps);
   api.setStatusInfo(null);
   assert.strictEqual(api.numbersFor(builds[9], 40).effects, null, 'status can be removed after construction');
   api.setStatusInfo(info);
@@ -811,6 +844,8 @@ function legacyShares(goalsOf) {
       const build = getBuild();
       const key = JSON.stringify([state.klass, state.level, state.boss, state.against,
         state.gear, state.locked, state.exalt, (build && build.banned) || null,
+        // 6f816f7/5a4233f: range and counted damage now change the ideals.
+        state.range, state.damage,
         list.map(one => one.id)]);
       if (ideals.key === key) return ideals.best;
       const best = {};
@@ -1017,6 +1052,7 @@ function legacyShares(goalsOf) {
   assert.notStrictEqual(probe.bestAlone(atState, pair), second, 'in-place ban edits are observed');
   for (const change of [() => atState.klass += '!', () => atState.level++, () => atState.boss += '!',
     () => atState.against++, () => atState.gear.weapon.name += '!', () => atState.locked.weapon = false,
+    () => atState.range = 'long', () => atState.damage = 'ability',
     () => atState.exalt = !atState.exalt, () => pair.reverse()]) {
     const before = searches; change(); probe.bestAlone(atState, pair);
     assert.equal(searches - before, pair.length, 'each serialized field invalidates');
@@ -1127,13 +1163,14 @@ function legacyShares(goalsOf) {
   assert.strictEqual(constructions, 1, 'factory is constructed only once');
 }
 
-// The composition seam preserves call order, object identity and the one
-// shared inactive result, without reading globals or introducing a cache.
+// bec9226/f21eeff/5a4233f: composition now evaluates both hands, regeneration
+// and piece damage. Dependencies remain explicit and live, with no eager reads.
 {
   const { createNumbers } = require('../web/theory-engine');
-  const calls = [], state = { gear: { weapon: { name: 'w' }, ability: { name: 'a' } } };
+  const calls = [], state = { damage: 'all', gear: { weapon: { name: 'w' }, ability: { name: 'a' } } };
   const stats = { now: { att: 50, dex: 75 } }, scale = {}, subs = [];
-  const effects = { bleed: 1 }, fx = {}, gun = { dps: 1e16 };
+  const fought = { ...stats, penalty: {} }, regen = { mp: { combat: 7 } }, stand = { d: 0, radius: 1, gap: 0 };
+  const effects = { bleed: 1, up: {} }, fx = {}, gun = { each: 10, rate: 5, dps: 100 };
   const weapon = {}, ability = {};
   let current = { byItem: { get w() { calls.push('weapon'); return weapon; },
     get a() { calls.push('ability'); return ability; } } };
@@ -1142,36 +1179,50 @@ function legacyShares(goalsOf) {
     getData() { calls.push('data'); return current; },
     statsOf(s) { calls.push('stats'); assert.strictEqual(s, state); return valid ? stats : null; },
     scaleOf(s) { calls.push('scale'); assert.strictEqual(s, state); return scale; },
-    effectsFor(s, now) { calls.push('effects'); assert.strictEqual(s, state);
-      assert.strictEqual(now, stats.now); return effects; },
+    fightOf(s, own) { calls.push('fight'); assert.strictEqual(s, state); assert.strictEqual(own, stats); return fought; },
+    costOf(s) { calls.push('cost'); assert.strictEqual(s, state); return 0.8; },
+    regenOf(own, assume, hot) { calls.push('regen'); assert.strictEqual(own, stats); assert.strictEqual(hot, fought); return regen; },
+    wornEffects(s) { calls.push('worn'); assert.strictEqual(s, state); return []; },
+    temperOf() { assert.fail('no gains or boosts to evaluate'); },
+    standOf(s) { calls.push('stand'); assert.strictEqual(s, state); return stand; },
+    effectsFor(s, now, mana, cost) { calls.push('effects'); assert.strictEqual(s, state);
+      assert.strictEqual(now, stats.now); assert.equal(mana, 7); assert.equal(cost, 0.8); return effects; },
     fxOf(e) { calls.push('fx'); assert.strictEqual(e, effects); return fx; },
     subOf(s) { calls.push('sub'); assert.strictEqual(s, state); return subs; },
-    weaponRate(w, now, def, by, extra, f) {
+    weaponRate(w, now, def, by, extra, f, aim) {
       calls.push('rate');
       assert.strictEqual(w, expectedWeapon); assert.strictEqual(now, stats.now);
       assert.strictEqual(def, -0); assert.strictEqual(by, scale);
-      assert.strictEqual(extra, subs); assert.strictEqual(f, fx);
+      assert.strictEqual(extra, subs); assert.strictEqual(f, fx); assert.strictEqual(aim, stand);
       return gun;
     },
-    abilityRate() { assert.fail('the inactive ability must not be evaluated'); }
+    abilityRate(a, now, def, f, mana, cost, struck, aim) {
+      calls.push('spell'); assert.strictEqual(a, current.byItem.a); assert.strictEqual(now, stats.now);
+      assert.strictEqual(def, -0); assert.strictEqual(f, fx); assert.equal(mana, 7); assert.equal(cost, 0.8);
+      assert.equal(struck, 10); assert.strictEqual(aim, stand);
+      return { each: 20, every: 2, dps: 10 };
+    },
+    specialsOf(s, now, def, shots, up, casts, aim) {
+      calls.push('special'); assert.strictEqual(s, state); assert.strictEqual(now, stats.now);
+      assert.strictEqual(def, -0); assert.equal(shots, 5); assert.strictEqual(up, effects.up);
+      assert.equal(casts, 0.5); assert.strictEqual(aim, stand);
+      return { low: 4, high: 8, list: [], by: { ring: { low: 4, high: 8 } } };
+    }
   };
   const calculations = createNumbers(dependencies);
   assert.deepStrictEqual(calls, [], 'construction does not read data or status');
   const first = calculations.numbersFor(state, -0);
-  assert.deepStrictEqual(calls, ['stats', 'data', 'weapon', 'data', 'ability', 'scale', 'effects', 'fx', 'sub', 'rate']);
-  assert.strictEqual(first.stats, stats); assert.strictEqual(first.gun, gun);
-  assert.strictEqual(first.effects, effects);
-  assert.deepStrictEqual(Object.keys(first), ['stats', 'gun', 'spell', 'effects', 'bleed', 'total']);
-  assert.deepStrictEqual(Object.keys(first.spell), ['each', 'rate', 'many', 'every', 'dps']);
-  first.spell.dps = -1e16;
+  assert.deepStrictEqual(calls, ['stats', 'data', 'weapon', 'data', 'ability', 'scale', 'fight', 'cost', 'regen',
+    'worn', 'effects', 'fx', 'stand', 'sub', 'rate', 'spell', 'ability', 'special']);
+  assert.strictEqual(first.stats, stats); assert.strictEqual(first.fought, fought); assert.strictEqual(first.gun, gun);
+  assert.strictEqual(first.effects, effects); assert.strictEqual(first.regen, regen);
+  assert.deepStrictEqual(Object.keys(first), ['stats', 'fought', 'gun', 'spell', 'effects', 'bleed', 'regen', 'special', 'temper', 'parts', 'total', 'chosen']);
+  assert.equal(first.total, 101); assert.equal(first.chosen, 115); assert.equal(first.parts.all.high, 119);
   calls.length = 0;
   current = { byItem: { w: expectedWeapon = {} } };
   const second = calculations.numbersFor(state, -0);
-  assert.strictEqual(second.spell, first.spell, 'inactive result stays shared and mutable');
-  assert.strictEqual(second.total, 1, 'addition stays left associative, including the shared spell term');
+  assert.notStrictEqual(second.spell, first.spell, 'ability is evaluated on every request');
   assert.notStrictEqual(second, first, 'the composite result remains fresh');
-  assert.notStrictEqual(createNumbers(dependencies).numbersFor(state, -0).spell, first.spell,
-    'each caller owns its inactive result');
   calls.length = 0; valid = false;
   assert.strictEqual(calculations.numbersFor(state, -0), null);
   assert.deepStrictEqual(calls, ['stats'], 'unknown class exits before catalogue or status access');
@@ -1219,16 +1270,16 @@ const targetHelpers = (() => {
 {
   const checks = {
     Archer: {
-      backgroundPosition: '-3528px -4089.75px',
-      backgroundSize: '5376px 4478.25px'
+      backgroundPosition: '-4830px -4089.75px',
+      backgroundSize: '5376px 4504.5px'
     },
     Assassin: {
-      backgroundPosition: '-4788px -4089.75px',
-      backgroundSize: '5376px 4478.25px'
+      backgroundPosition: '-1008px -4131.75px',
+      backgroundSize: '5376px 4504.5px'
     },
     Bard: {
-      backgroundPosition: '-504px -4131.75px',
-      backgroundSize: '5376px 4478.25px'
+      backgroundPosition: '-2016px -4131.75px',
+      backgroundSize: '5376px 4504.5px'
     }
   };
 
@@ -1395,7 +1446,7 @@ const samples = [
           locks,
           subtypes: EnchantEngine.subtypesForItem(held, itemName)
         };
-        return EnchantEngine.rollablePool(held, cfg);
+        return EnchantEngine.obtainablePool(held, cfg);
       }
 
       throw new Error('Enchanting rules are unavailable. Reload the page before planning a build.');
@@ -1413,11 +1464,10 @@ const samples = [
          * wider than what a player can roll. The retired ones - Kogbold
          * Spirit (Legacy), Living Hive (Legacy), Crown - are kept so that an
          * item already carrying one still reads, and are given a weight of
-         * nought to say they can never come out again. The seasonal ones -
-         * Warm and Cozy, Glorious, Snowstorm - come out of an engraving held
-         * at the time, not out of enchanting, and the client marks the
-         * difference with a ROLLABLE label. This page has no artifact in it,
-         * so it plans with what a plain enchanting can roll and nothing else.
+         * nought to say they can never come out again. The ones only an
+         * engraving gives - Retrowinds Weapon, Hydroshock, Snowstorm - are
+         * kept: a player holding the engraving wears them, and the picker
+         * and the gear card name the engraving each one takes.
          */
         if (seen.has(mod.name)) continue;
         seen.add(mod.name);
@@ -1608,7 +1658,7 @@ const samples = [
     const pool = [], subtypes = new Set();
     const injectedEngine = {
       subtypesForItem() { trace.push('subtypes'); return subtypes; },
-      rollablePool() { trace.push('pool'); return pool; }
+      obtainablePool() { trace.push('pool'); return pool; }
     };
     const rulesFor = () => { trace.push('rules'); return shared; };
     const getData = () => { trace.push('data'); return liveData; };
@@ -1639,7 +1689,7 @@ const samples = [
   const subtypes = new Set(['fixture']);
   const injected = {
     subtypesForItem(rules, item) { subtypeRules = rules; assert.equal(item, known); return subtypes; },
-    rollablePool(rules, config) { poolRules = rules; cfg = config; return pool; }
+    obtainablePool(rules, config) { poolRules = rules; cfg = config; return pool; }
   };
   const snapshot = { ...raw, byItem: { [known]: { hand: 'unknown hand' } } };
   const injectedDeps = { ...dependencies, getData: () => snapshot, getEngine: () => injected, rulesFor: () => shared };
@@ -1667,7 +1717,7 @@ for (const [label, item] of samples) {
   assert(item, `No ${label} item is shared by the client catalogue and TheoryCraft projection`);
   const cfg = { item: item.name, type: item.type, slots: 4, locks: [],
     subtypes: engine.subtypesForItem(shared, item.name) };
-  const expected = engine.rollablePool(shared, cfg).map(mod => ruleName(mod.name)).sort();
+  const expected = engine.obtainablePool(shared, cfg).map(mod => ruleName(mod.name)).sort();
   const actual = [...ruled.enchantsFor(item.name, [], 0)].map(mod => ruleName(mod.name)).sort();
   assert.equal(actual.length, expected.length,
     `${label} TheoryCraft pool size diverges from EnchantEngine for ${item.name}`);
@@ -2317,9 +2367,39 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     'the theory page must not be a box that scrolls inside the page');
 }
 
+/*
+ * What a sigil or an ability fires is not gear. The client files those shots
+ * as Equipment - the SpecPen shots as rings, the Sigil projectiles as heavy
+ * armour, the Wedding Dress Explosion as a quiver - and every one of them
+ * reached the manual picker of every class it fits until the bench dropped
+ * PROC-labelled and tooltip-less records. They stay in the Index with a
+ * reason that says what they are.
+ */
+{
+  const helper = /^(SpecPen (OA|Quiver) Shot|Sigil .*Projectile|Wedding Dress Explosion$)/;
+  assert.deepEqual(raw.items.filter(one => helper.test(one.name)
+    || (one.labels || '').split(',').includes('PROC')).map(one => one.name), [],
+    'no shot another item fires may be on the bench');
+  for (const klass of raw.classes.map(one => one.name)) {
+    for (const hand of ['weapon', 'ability', 'armor', 'ring']) {
+      const offered = [...t.compatibleItemsFor(hand, klass, {})].map(one => one.name).filter(name => helper.test(name));
+      assert.deepEqual(offered, [], klass + ' ' + hand + ' picker offers what another item fires');
+    }
+  }
+  const index = JSON.parse(fs.readFileSync(path.join(root, 'data/Index/index.json'), 'utf8')).records;
+  for (const name of ['SpecPen OA Shot 1', 'SpecPen OA Shot 2', 'SpecPen Quiver Shot',
+    'Sigil Wolf Sub Projectile', 'Sigil UT1 Projectile - Shark', 'Wedding Dress Explosion']) {
+    const record = index.find(one => one.id === 'item:' + name);
+    assert.ok(record, name + ' must stay in the Index');
+    assert.ok(!record.bench, name + ' must not be on the bench');
+    assert.equal(record.benchWhy, 'what another item fires, not gear anybody wears', name + ': bench reason');
+  }
+}
+
 console.log('TheoryCraft: target windows, fitting, frame stride and real targets check out.');
 
-// Frozen from b34ce04 before extraction. Each trace hashes the ordered snapshot
+// Frozen from the unextracted remote engine at 89f5adb after its intentional rule changes.
+// Unchanged error cases retain the b34ce04 baseline. Each trace hashes the ordered snapshot
 // of work.gear, work.locked and the caller's gather at EVERY yield. The full
 // per-yield baseline lives outside the repository; no old optimiser is retained.
 async function optimiserParity() {
@@ -2343,194 +2423,71 @@ async function optimiserParity() {
     for (const key of Object.keys(expected)) exact(got[key], expected[key]);
   }
   const frozen = [
+    // 74c748a: compatible engraving pools; 59fdc85/74c748a: exclude rarity swatches and fired helpers.
+    // Recorded independently from unextracted origin/main (89f5adb), including every yield and ordered gather.
     {
       spec: {"klass":"Wizard","goal":"dps","gather":true,"report":true},
-      final: {"state":{"name":"Wizard build","klass":"Wizard","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Ferryman's Scythe","slots":4,"ench":["FLURRY_OF_BLOWS","Attack_Defense_Tradeoff_4","Attack_To_Dexterity_Bonus_4","Proj_Lifetime_Bonus_4"]},"ability":{"name":"Cobra Serpentis Scroll","slots":4,"ench":["Attack_Mana_Tradeoff_4","SHAITANS_MIGHT","Flat_Mana_Regen_4","MP_Cost_Reduction_1"]},"armor":{"name":"Diplomatic Robe","slots":4,"ench":["Attack_Mana_Tradeoff_4","Attack_To_Dexterity_Bonus_4","Damage_Resistance_4","Flat_Life_Regen_4"]},"ring":{"name":"Overclocking Amulet","slots":4,"ench":["Attack_Mana_Tradeoff_4","Attack_To_Dexterity_Bonus_4","Flat_Life_Regen_4","KOGBOLD_SPIRIT"]}},"goals":["dps"],"share":{},"pinned":{},"scope":"all","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":20197.166616000006,"looked":4858},
-      yielded: 4859,
-      traceDigest: "2cf5252913bbc811ba2e478800001714497045a451f77cd5fe1ef0bceda3f9a0",
-      gather: [
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Overclocking Amulet","score":20197.166616000006,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Rusted Mechanism",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Rusted Mechanism","score":20197.166616000006,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Rusted Mechanism"}}],
-        ["Ferryman's Scythe␟Recurring Terror Spell␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Recurring Terror Spell␟Diplomatic Robe␟Overclocking Amulet","score":20197.166616000006,"gear":{"weapon":"Ferryman's Scythe","ability":"Recurring Terror Spell","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Chrysalis of Eternity",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Chrysalis of Eternity","score":19817.843918400005,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Chrysalis of Eternity"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Amulet of Transcendent Attack",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Amulet of Transcendent Attack","score":19605.079296,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Amulet of Transcendent Attack"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Ring of Transcendent Attack",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Ring of Transcendent Attack","score":19605.079296,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Ring of Transcendent Attack"}}],
-        ["Ferryman's Scythe␟Unstable Firework␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Unstable Firework␟Diplomatic Robe␟Overclocking Amulet","score":19593.949636800007,"gear":{"weapon":"Ferryman's Scythe","ability":"Unstable Firework","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Executioner's Garb␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Executioner's Garb␟Overclocking Amulet","score":19580.024376000005,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Executioner's Garb","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Toga Picta␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Toga Picta␟Overclocking Amulet","score":19580.024376000005,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Toga Picta","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Penetrating Blast Spell␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Penetrating Blast Spell␟Diplomatic Robe␟Overclocking Amulet","score":19580.024376000005,"gear":{"weapon":"Ferryman's Scythe","ability":"Penetrating Blast Spell","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Esben's Vows␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Esben's Vows␟Diplomatic Robe␟Overclocking Amulet","score":19555.24374144,"gear":{"weapon":"Ferryman's Scythe","ability":"Esben's Vows","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟1-Bit Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟1-Bit Robe␟Overclocking Amulet","score":19537.140902400002,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"1-Bit Robe","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Astronomer's Gown␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Astronomer's Gown␟Overclocking Amulet","score":19537.140902400002,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Astronomer's Gown","ring":"Overclocking Amulet"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Magical Lodestone",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Magical Lodestone","score":19441.9497888,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Magical Lodestone"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Esben's Wedding Ring",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Esben's Wedding Ring","score":19400.384995200002,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Esben's Wedding Ring"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Boudoir Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Boudoir Robe␟Overclocking Amulet","score":19383.9630336,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Boudoir Robe","ring":"Overclocking Amulet"}}],
-        ["Aspirant's Staff␟Cobra Serpentis Scroll␟Aspirant's Robes␟Ring of the Sniper",{"key":"Aspirant's Staff␟Cobra Serpentis Scroll␟Aspirant's Robes␟Ring of the Sniper","score":6332.812199999999,"gear":{"weapon":"Aspirant's Staff","ability":"Cobra Serpentis Scroll","armor":"Aspirant's Robes","ring":"Ring of the Sniper"}}],
-        ["Aspirant's Staff␟Cobra Serpentis Scroll␟Aspirant's Robes␟Ring of the Swiftblade",{"key":"Aspirant's Staff␟Cobra Serpentis Scroll␟Aspirant's Robes␟Ring of the Swiftblade","score":5795.422776,"gear":{"weapon":"Aspirant's Staff","ability":"Cobra Serpentis Scroll","armor":"Aspirant's Robes","ring":"Ring of the Swiftblade"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Devilish Robes␟Devil Horn Headband",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Devilish Robes␟Devil Horn Headband","score":16889.125968000004,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Devilish Robes","ring":"Devil Horn Headband"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Thunderstorm Tunic␟Bolt in a Bottle",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Thunderstorm Tunic␟Bolt in a Bottle","score":16272.370540800006,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Thunderstorm Tunic","ring":"Bolt in a Bottle"}}],
-        ["Cursed Harpoon␟Depth Charge␟Phosphorescent Rags␟Diving Weights",{"key":"Cursed Harpoon␟Depth Charge␟Phosphorescent Rags␟Diving Weights","score":5887.614600000001,"gear":{"weapon":"Cursed Harpoon","ability":"Depth Charge","armor":"Phosphorescent Rags","ring":"Diving Weights"}}],
-        ["Nebular Rod␟Cobra Serpentis Scroll␟Astronomer's Gown␟Eye of Divination",{"key":"Nebular Rod␟Cobra Serpentis Scroll␟Astronomer's Gown␟Eye of Divination","score":5907.013808400001,"gear":{"weapon":"Nebular Rod","ability":"Cobra Serpentis Scroll","armor":"Astronomer's Gown","ring":"Eye of Divination"}}],
-        ["Monochrome Staff␟Cobra Serpentis Scroll␟1-Bit Robe␟Strange Ring",{"key":"Monochrome Staff␟Cobra Serpentis Scroll␟1-Bit Robe␟Strange Ring","score":5907.013808400001,"gear":{"weapon":"Monochrome Staff","ability":"Cobra Serpentis Scroll","armor":"1-Bit Robe","ring":"Strange Ring"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Wings of the Fallen␟Pointy Tail",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Wings of the Fallen␟Pointy Tail","score":16354.26936,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Wings of the Fallen","ring":"Pointy Tail"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Chocolate Glazed Robe␟Chocolate Bunny Ears",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Chocolate Glazed Robe␟Chocolate Bunny Ears","score":14988.231165600002,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Chocolate Glazed Robe","ring":"Chocolate Bunny Ears"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Darkness Overcoat␟Void Mask",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Darkness Overcoat␟Void Mask","score":17825.125032000004,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Darkness Overcoat","ring":"Void Mask"}}],
-        ["Bloody Pitch Fork Staff␟Cobra Serpentis Scroll␟Curse Binding Robes␟Spike Headband",{"key":"Bloody Pitch Fork Staff␟Cobra Serpentis Scroll␟Curse Binding Robes␟Spike Headband","score":5309.14176,"gear":{"weapon":"Bloody Pitch Fork Staff","ability":"Cobra Serpentis Scroll","armor":"Curse Binding Robes","ring":"Spike Headband"}}],
-        ["Ferryman's Scythe␟Cobra Serpentis Scroll␟Ritualistic Pa'u␟Tiki Pendant",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Ritualistic Pa'u␟Tiki Pendant","score":18739.0406016,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Ritualistic Pa'u","ring":"Tiki Pendant"}}],
-        ["Gloves of Love␟Cobra Serpentis Scroll␟Boudoir Robe␟Essence of Enlightened Love",{"key":"Gloves of Love␟Cobra Serpentis Scroll␟Boudoir Robe␟Essence of Enlightened Love","score":6405.4488096000005,"gear":{"weapon":"Gloves of Love","ability":"Cobra Serpentis Scroll","armor":"Boudoir Robe","ring":"Essence of Enlightened Love"}}],
-        ["Spring Rose␟Cobra Serpentis Scroll␟Floral Corset␟Rose Brooch",{"key":"Spring Rose␟Cobra Serpentis Scroll␟Floral Corset␟Rose Brooch","score":3640.7999999999997,"gear":{"weapon":"Spring Rose","ability":"Cobra Serpentis Scroll","armor":"Floral Corset","ring":"Rose Brooch"}}],
-        ["Staff of Rich History␟Cobra Serpentis Scroll␟Traditional Blouse␟Bronze Pocketwatch",{"key":"Staff of Rich History␟Cobra Serpentis Scroll␟Traditional Blouse␟Bronze Pocketwatch","score":7881.753600000001,"gear":{"weapon":"Staff of Rich History","ability":"Cobra Serpentis Scroll","armor":"Traditional Blouse","ring":"Bronze Pocketwatch"}}],
-        ["Sweettreats Staff␟Cobra Serpentis Scroll␟Red Riding Dress␟Sweettreats Ring",{"key":"Sweettreats Staff␟Cobra Serpentis Scroll␟Red Riding Dress␟Sweettreats Ring","score":5849.948160000001,"gear":{"weapon":"Sweettreats Staff","ability":"Cobra Serpentis Scroll","armor":"Red Riding Dress","ring":"Sweettreats Ring"}}],
-      ],
-      prunes: 62,
-      reports: [
-        {"at":1965,"args":[1,1964,19387.35292032],"gear":"599f784fb1db88137ca3751319bf6857792dc262701175289eb89bd276165999","gatherDigest":"3f1d148cc23da9b66cf0490ac99f07acb32e213526f81b2abe3033d419640efe"},
-        {"at":3412,"args":[2,3411,20197.166616000006],"gear":"0cea3151b60abc0d57a31aeb8adcf67f93ae4e2f6c28a50a452cf3f342e9ccbf","gatherDigest":"8f13fbdb0bcfd8c22706368dd02a682fd37b93f22b1ef69525ee23ba1149a2ec"},
-        {"at":4859,"args":[3,4858,20197.166616000006],"gear":"0cea3151b60abc0d57a31aeb8adcf67f93ae4e2f6c28a50a452cf3f342e9ccbf","gatherDigest":"5a400c83dfda1a58838eeffb49f06efa2e64e093a7bcb0d5369b2b42e5a516b6"},
-      ],
+      final: {"state":{"name":"Wizard build","klass":"Wizard","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Ferryman's Scythe","slots":4,"ench":["VALENTINES_APHRODITE_SHOT_DAGGER","Attack_Mana_Tradeoff_4","Attack_To_Dexterity_Bonus_4","OnShoot_Attack_Bonus_1"]},"ability":{"name":"Cobra Serpentis Scroll","slots":4,"ench":["Attack_Mana_Tradeoff_4","SHAITANS_MIGHT","Flat_Mana_Regen_4","MP_Cost_Reduction_1"]},"armor":{"name":"Diplomatic Robe","slots":4,"ench":["Attack_To_Dexterity_Bonus_4","Attack_Mana_Tradeoff_4","Damage_Resistance_4","Flat_Life_Regen_4"]},"ring":{"name":"Overclocking Amulet","slots":4,"ench":["Attack_Mana_Tradeoff_4","Attack_To_Dexterity_Bonus_4","Flat_Life_Regen_4","KOGBOLD_SPIRIT"]}},"goals":["dps"],"share":{},"pinned":{},"scope":"all","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":20784.10752,"looked":3436},
+      yielded: 3437,
+      traceDigest: "37de93708626c607036df68affffb818c762c03870fcd59c227de20bd944d934",
+      gather: [["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Overclocking Amulet","score":20784.10752,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Rusted Mechanism",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Rusted Mechanism","score":20784.10752,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Rusted Mechanism"}}],["Ferryman's Scythe␟Recurring Terror Spell␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Recurring Terror Spell␟Diplomatic Robe␟Overclocking Amulet","score":20784.10752,"gear":{"weapon":"Ferryman's Scythe","ability":"Recurring Terror Spell","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Chrysalis of Eternity",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Chrysalis of Eternity","score":20399.057448000003,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Chrysalis of Eternity"}}],["Ferryman's Scythe␟Esben's Vows␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Esben's Vows␟Diplomatic Robe␟Overclocking Amulet","score":20200.716597600003,"gear":{"weapon":"Ferryman's Scythe","ability":"Esben's Vows","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Amulet of Transcendent Attack",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Amulet of Transcendent Attack","score":20198.811599999997,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Amulet of Transcendent Attack"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Ring of Transcendent Attack",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Ring of Transcendent Attack","score":20198.811599999997,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Ring of Transcendent Attack"}}],["Ferryman's Scythe␟Unstable Firework␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Unstable Firework␟Diplomatic Robe␟Overclocking Amulet","score":20170.369296000004,"gear":{"weapon":"Ferryman's Scythe","ability":"Unstable Firework","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Executioner's Garb␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Executioner's Garb␟Overclocking Amulet","score":20163.25872,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Executioner's Garb","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Toga Picta␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Toga Picta␟Overclocking Amulet","score":20163.25872,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Toga Picta","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Penetrating Blast Spell␟Diplomatic Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Penetrating Blast Spell␟Diplomatic Robe␟Overclocking Amulet","score":20163.25872,"gear":{"weapon":"Ferryman's Scythe","ability":"Penetrating Blast Spell","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟1-Bit Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟1-Bit Robe␟Overclocking Amulet","score":20109.770208,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"1-Bit Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Astronomer's Gown␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Astronomer's Gown␟Overclocking Amulet","score":20109.770208,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Astronomer's Gown","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Magical Lodestone",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Magical Lodestone","score":20017.456536,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Magical Lodestone"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Esben's Wedding Ring",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Diplomatic Robe␟Esben's Wedding Ring","score":19989.438744,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Diplomatic Robe","ring":"Esben's Wedding Ring"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Boudoir Robe␟Overclocking Amulet",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Boudoir Robe␟Overclocking Amulet","score":19941.875712000005,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Boudoir Robe","ring":"Overclocking Amulet"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Darkness Overcoat␟Void Mask",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Darkness Overcoat␟Void Mask","score":18335.734559999997,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Darkness Overcoat","ring":"Void Mask"}}],["Bloody Pitch Fork Staff␟Cobra Serpentis Scroll␟Curse Binding Robes␟Spike Headband",{"key":"Bloody Pitch Fork Staff␟Cobra Serpentis Scroll␟Curse Binding Robes␟Spike Headband","score":4915.872,"gear":{"weapon":"Bloody Pitch Fork Staff","ability":"Cobra Serpentis Scroll","armor":"Curse Binding Robes","ring":"Spike Headband"}}],["Ferryman's Scythe␟Cobra Serpentis Scroll␟Ritualistic Pa'u␟Tiki Pendant",{"key":"Ferryman's Scythe␟Cobra Serpentis Scroll␟Ritualistic Pa'u␟Tiki Pendant","score":19289.630712000002,"gear":{"weapon":"Ferryman's Scythe","ability":"Cobra Serpentis Scroll","armor":"Ritualistic Pa'u","ring":"Tiki Pendant"}}],["Gloves of Love␟Cobra Serpentis Scroll␟Boudoir Robe␟Essence of Enlightened Love",{"key":"Gloves of Love␟Cobra Serpentis Scroll␟Boudoir Robe␟Essence of Enlightened Love","score":5930.971119999999,"gear":{"weapon":"Gloves of Love","ability":"Cobra Serpentis Scroll","armor":"Boudoir Robe","ring":"Essence of Enlightened Love"}}],["Spring Rose␟Cobra Serpentis Scroll␟Floral Corset␟Rose Brooch",{"key":"Spring Rose␟Cobra Serpentis Scroll␟Floral Corset␟Rose Brooch","score":4551,"gear":{"weapon":"Spring Rose","ability":"Cobra Serpentis Scroll","armor":"Floral Corset","ring":"Rose Brooch"}}],["Staff of Rich History␟Cobra Serpentis Scroll␟Traditional Blouse␟Bronze Pocketwatch",{"key":"Staff of Rich History␟Cobra Serpentis Scroll␟Traditional Blouse␟Bronze Pocketwatch","score":7297.92,"gear":{"weapon":"Staff of Rich History","ability":"Cobra Serpentis Scroll","armor":"Traditional Blouse","ring":"Bronze Pocketwatch"}}],["Sweettreats Staff␟Cobra Serpentis Scroll␟Red Riding Dress␟Sweettreats Ring",{"key":"Sweettreats Staff␟Cobra Serpentis Scroll␟Red Riding Dress␟Sweettreats Ring","score":5416.618666666667,"gear":{"weapon":"Sweettreats Staff","ability":"Cobra Serpentis Scroll","armor":"Red Riding Dress","ring":"Sweettreats Ring"}}]],
+      prunes: 38,
+      reports: [{"at":1979,"args":[1,1978,20784.10752],"gear":"d8f29d5a3ef39fd6e2a9882bc89d137a8eff8958f1c1a347b114fb321ff8a6ec","gatherDigest":"8333f9f13537aca4c8a69fa12b1196ee97b2e744c53e23b5d2f25c5d00aa3b53"},{"at":3437,"args":[2,3436,20784.10752],"gear":"d8f29d5a3ef39fd6e2a9882bc89d137a8eff8958f1c1a347b114fb321ff8a6ec","gatherDigest":"4b87cd1479261ad6ba3620d21b824d3937e52df5ebdb46e4484d63bc7ed0acf8"}],
     },
+    // 74c748a: compatible engraving pools; 59fdc85/74c748a: exclude rarity swatches and fired helpers.
+    // Recorded independently from unextracted origin/main (89f5adb), including every yield and ordered gather.
     {
       spec: {"klass":"Archer","goal":"kill","gather":true,"report":true,"banned":true},
-      final: {"state":{"name":"Archer build","klass":"Archer","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Makakoyumi","slots":4,"ench":["OVERWHEMLING_STRIKES","Dexterity_Mana_Tradeoff_4","Dexterity_To_Attack_Bonus_4","Proj_Lifetime_Bonus_4"]},"ability":{"name":"Quiver of the Autumn King","slots":4,"ench":["Dexterity_Mana_Tradeoff_4","PIRATES_EXPERTISE","Flat_Mana_Regen_4","MP_Cost_Reduction_1"]},"armor":{"name":"Daopao","slots":4,"ench":["Relative_Dexterity_Bonus_4","Dexterity_Mana_Tradeoff_4","Damage_Resistance_4","Flat_Life_Regen_4"]},"ring":{"name":"Overclocking Amulet","slots":4,"ench":["Dexterity_To_Attack_Bonus_4","Dexterity_Mana_Tradeoff_4","Flat_Life_Regen_4","KOGBOLD_SPIRIT"]}},"goals":["dps"],"share":{},"pinned":{},"scope":"all","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{},"banned":{"weapon":["Warmonger","Warmonger (Rehearsal)","Water Pistol"],"ability":["Snow Critters","Spinal Quiver","Wedding Dress Explosion"],"armor":["Wedding Dress","Withered Poncho","Wraith's Brigandine"],"ring":["Winter Boots","Witch's Brooch","Yokai Amulet"]}},"score":-17.95342580514521,"looked":4903},
-      yielded: 4904,
-      traceDigest: "ff66fe0b77bb14e4b323dc10d72fa613e90fa31b2110021694686f005ed4e02d",
-      gather: [
-        ["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet","score":-17.95342580514521,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Rusted Mechanism",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Rusted Mechanism","score":-17.95342580514521,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Rusted Mechanism"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Hirejou Tenne␟Overclocking Amulet",{"key":"Makakoyumi␟Quiver of the Autumn King␟Hirejou Tenne␟Overclocking Amulet","score":-17.95342580514521,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Hirejou Tenne","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Brine Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Brine Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Brine Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Coalbearing Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Coalbearing Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Coalbearing Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Hydroflow Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Hydroflow Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Hydroflow Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Legion Elite Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Legion Elite Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Legion Elite Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Chrysalis of Eternity",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Chrysalis of Eternity","score":-18.313930373636527,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Chrysalis of Eternity"}}],
-        ["Makakoyumi␟Beehemoth Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Beehemoth Quiver␟Daopao␟Overclocking Amulet","score":-18.36007119333637,"gear":{"weapon":"Makakoyumi","ability":"Beehemoth Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Freezing Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Freezing Quiver␟Daopao␟Overclocking Amulet","score":-18.36007119333637,"gear":{"weapon":"Makakoyumi","ability":"Freezing Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Sinister Syringes␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Sinister Syringes␟Daopao␟Overclocking Amulet","score":-18.37111733756475,"gear":{"weapon":"Makakoyumi","ability":"Sinister Syringes","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Bolt Thrower␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet",{"key":"Bolt Thrower␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet","score":-18.404213030641795,"gear":{"weapon":"Bolt Thrower","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Amulet of Transcendent Dexterity",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Amulet of Transcendent Dexterity","score":-18.449415263927992,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Amulet of Transcendent Dexterity"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Ring of Transcendent Dexterity",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Ring of Transcendent Dexterity","score":-18.449415263927992,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Ring of Transcendent Dexterity"}}],
-        ["Makakoyumi␟Double Vision Darts␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Double Vision Darts␟Daopao␟Overclocking Amulet","score":-18.581821710201552,"gear":{"weapon":"Makakoyumi","ability":"Double Vision Darts","armor":"Daopao","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Centaur's Shielding␟Overclocking Amulet",{"key":"Makakoyumi␟Quiver of the Autumn King␟Centaur's Shielding␟Overclocking Amulet","score":-18.593289567676848,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Centaur's Shielding","ring":"Overclocking Amulet"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Sprite's Dream␟Infinite Bands",{"key":"Makakoyumi␟Quiver of the Autumn King␟Sprite's Dream␟Infinite Bands","score":-24.82603867672211,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Sprite's Dream","ring":"Infinite Bands"}}],
-        ["Sweettreats Bow␟Quiver of the Autumn King␟Haori of the Wind␟Sweettreats Ring",{"key":"Sweettreats Bow␟Quiver of the Autumn King␟Haori of the Wind␟Sweettreats Ring","score":-34.76378878387254,"gear":{"weapon":"Sweettreats Bow","ability":"Quiver of the Autumn King","armor":"Haori of the Wind","ring":"Sweettreats Ring"}}],
-        ["Makakoyumi␟Quiver of the Autumn King␟Primal Padding␟Storied Fossil",{"key":"Makakoyumi␟Quiver of the Autumn King␟Primal Padding␟Storied Fossil","score":-23.63732771825654,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Primal Padding","ring":"Storied Fossil"}}],
-      ],
-      prunes: 62,
-      reports: [
-        {"at":1988,"args":[1,1987,-17.96301566325253],"gear":"8969eeb6695a9d6ecbd8d8c04b42a0bf8071bd59646218b72e9b3ae311f488c5","gatherDigest":"ba94d4d3ce901b9b883817406c1530c30b12ba8711883ea430118330c16a168f"},
-        {"at":3446,"args":[2,3445,-17.95342580514521],"gear":"24c8cbc9b2ac363d7e94320f8a2e9da127a40f0c19cb12c066a6e7625efebf88","gatherDigest":"d9f25afde45da30ae462cdad53d8902b855559f9355749d0484683520819b74b"},
-        {"at":4904,"args":[3,4903,-17.95342580514521],"gear":"24c8cbc9b2ac363d7e94320f8a2e9da127a40f0c19cb12c066a6e7625efebf88","gatherDigest":"cd956af062727617e4def23e128f84ab5bcf289aefcfd1565e46881fcd7232bb"},
-      ],
+      final: {"state":{"name":"Archer build","klass":"Archer","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Makakoyumi","slots":4,"ench":["OVERWHEMLING_STRIKES","Dexterity_Mana_Tradeoff_4","Dexterity_To_Attack_Bonus_4","Proj_Lifetime_Bonus_4"]},"ability":{"name":"Quiver of the Autumn King","slots":4,"ench":["Dexterity_Mana_Tradeoff_4","PIRATES_EXPERTISE","Flat_Mana_Regen_4","MP_Cost_Reduction_1"]},"armor":{"name":"Daopao","slots":4,"ench":["Relative_Dexterity_Bonus_4","Dexterity_Mana_Tradeoff_4","Damage_Resistance_4","Flat_Life_Regen_4"]},"ring":{"name":"Overclocking Amulet","slots":4,"ench":["Dexterity_To_Attack_Bonus_4","Dexterity_Mana_Tradeoff_4","Flat_Life_Regen_4","KOGBOLD_SPIRIT"]}},"goals":["dps"],"share":{},"pinned":{},"scope":"all","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{},"banned":{"weapon":["Warmonger","Warmonger (Rehearsal)","Water Pistol"],"ability":["Sinister Syringes","Snow Critters","Spinal Quiver"],"armor":["Wedding Dress","Withered Poncho","Wraith's Brigandine"],"ring":["Winter Boots","Witch's Brooch","Yokai Amulet"]}},"score":-17.95342580514521,"looked":4898},
+      yielded: 4899,
+      traceDigest: "3642592967f24441cfbc555e5394a58cbd0eb80199c41a1004e68ea0458019cf",
+      gather: [["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet","score":-17.95342580514521,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Rusted Mechanism",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Rusted Mechanism","score":-17.95342580514521,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Rusted Mechanism"}}],["Makakoyumi␟Quiver of the Autumn King␟Hirejou Tenne␟Overclocking Amulet",{"key":"Makakoyumi␟Quiver of the Autumn King␟Hirejou Tenne␟Overclocking Amulet","score":-17.95342580514521,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Hirejou Tenne","ring":"Overclocking Amulet"}}],["Makakoyumi␟Brine Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Brine Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Brine Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Coalbearing Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Coalbearing Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Coalbearing Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Hydroflow Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Hydroflow Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Hydroflow Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Legion Elite Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Legion Elite Quiver␟Daopao␟Overclocking Amulet","score":-18.177375277006906,"gear":{"weapon":"Makakoyumi","ability":"Legion Elite Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Chrysalis of Eternity",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Chrysalis of Eternity","score":-18.313930373636527,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Chrysalis of Eternity"}}],["Makakoyumi␟Beehemoth Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Beehemoth Quiver␟Daopao␟Overclocking Amulet","score":-18.36007119333637,"gear":{"weapon":"Makakoyumi","ability":"Beehemoth Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Freezing Quiver␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Freezing Quiver␟Daopao␟Overclocking Amulet","score":-18.36007119333637,"gear":{"weapon":"Makakoyumi","ability":"Freezing Quiver","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Sinister Syringes␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Sinister Syringes␟Daopao␟Overclocking Amulet","score":-18.37111733756475,"gear":{"weapon":"Makakoyumi","ability":"Sinister Syringes","armor":"Daopao","ring":"Overclocking Amulet"}}],["Bolt Thrower␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet",{"key":"Bolt Thrower␟Quiver of the Autumn King␟Daopao␟Overclocking Amulet","score":-18.404213030641795,"gear":{"weapon":"Bolt Thrower","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Amulet of Transcendent Dexterity",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Amulet of Transcendent Dexterity","score":-18.449415263927992,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Amulet of Transcendent Dexterity"}}],["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Ring of Transcendent Dexterity",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Ring of Transcendent Dexterity","score":-18.449415263927992,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Ring of Transcendent Dexterity"}}],["Makakoyumi␟Double Vision Darts␟Daopao␟Overclocking Amulet",{"key":"Makakoyumi␟Double Vision Darts␟Daopao␟Overclocking Amulet","score":-18.581821710201552,"gear":{"weapon":"Makakoyumi","ability":"Double Vision Darts","armor":"Daopao","ring":"Overclocking Amulet"}}],["Makakoyumi␟Quiver of the Autumn King␟Centaur's Shielding␟Overclocking Amulet",{"key":"Makakoyumi␟Quiver of the Autumn King␟Centaur's Shielding␟Overclocking Amulet","score":-18.593289567676848,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Centaur's Shielding","ring":"Overclocking Amulet"}}],["Aspirant's Bow␟Quiver of the Autumn King␟Aspirant's Hide␟Ring of the Swiftblade",{"key":"Aspirant's Bow␟Quiver of the Autumn King␟Aspirant's Hide␟Ring of the Swiftblade","score":-34.55203328672276,"gear":{"weapon":"Aspirant's Bow","ability":"Quiver of the Autumn King","armor":"Aspirant's Hide","ring":"Ring of the Swiftblade"}}],["Makakoyumi␟Quiver of the Autumn King␟Gravetender's Vest␟Jewel of Vengeance",{"key":"Makakoyumi␟Quiver of the Autumn King␟Gravetender's Vest␟Jewel of Vengeance","score":-21.388547836370293,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Gravetender's Vest","ring":"Jewel of Vengeance"}}],["Electric Guitar␟Quiver of the Autumn King␟Daopao␟Pointy Tail",{"key":"Electric Guitar␟Quiver of the Autumn King␟Daopao␟Pointy Tail","score":-32.250133535030194,"gear":{"weapon":"Electric Guitar","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Pointy Tail"}}],["Makakoyumi␟Quiver of the Autumn King␟Daopao␟Mala Beads",{"key":"Makakoyumi␟Quiver of the Autumn King␟Daopao␟Mala Beads","score":-20.25075708525251,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Mala Beads"}}],["Makakoyumi␟Quiver of the Autumn King␟Chocolate Armor␟Sweetener Ring",{"key":"Makakoyumi␟Quiver of the Autumn King␟Chocolate Armor␟Sweetener Ring","score":-23.633886631786748,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Chocolate Armor","ring":"Sweetener Ring"}}],["Spring Wonder Bow␟Fresh Breeze Quiver␟Painted Eggshell Armor␟Painted Egg Amulet",{"key":"Spring Wonder Bow␟Fresh Breeze Quiver␟Painted Eggshell Armor␟Painted Egg Amulet","score":-36.80685059617819,"gear":{"weapon":"Spring Wonder Bow","ability":"Fresh Breeze Quiver","armor":"Painted Eggshell Armor","ring":"Painted Egg Amulet"}}],["Firestarter␟Quiver of the Autumn King␟Daopao␟Tiki Pendant",{"key":"Firestarter␟Quiver of the Autumn King␟Daopao␟Tiki Pendant","score":-29.038820616755903,"gear":{"weapon":"Firestarter","ability":"Quiver of the Autumn King","armor":"Daopao","ring":"Tiki Pendant"}}],["Frostbite Mittens␟Snow Critters␟Blizzard Jacket␟Magical Winter Scarf",{"key":"Frostbite Mittens␟Snow Critters␟Blizzard Jacket␟Magical Winter Scarf","score":-39.01921306051101,"gear":{"weapon":"Frostbite Mittens","ability":"Snow Critters","armor":"Blizzard Jacket","ring":"Magical Winter Scarf"}}],["Makakoyumi␟Quiver of the Autumn King␟Reaper's Shroud␟Soul Necklace",{"key":"Makakoyumi␟Quiver of the Autumn King␟Reaper's Shroud␟Soul Necklace","score":-22.947533365811218,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Reaper's Shroud","ring":"Soul Necklace"}}],["Makakoyumi␟Quiver of the Autumn King␟Mechpilot's Jerkin␟Pressure Gauge Band",{"key":"Makakoyumi␟Quiver of the Autumn King␟Mechpilot's Jerkin␟Pressure Gauge Band","score":-23.63732771825654,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Mechpilot's Jerkin","ring":"Pressure Gauge Band"}}],["Makakoyumi␟Quiver of the Autumn King␟Mossy Guard␟Willow Sprout",{"key":"Makakoyumi␟Quiver of the Autumn King␟Mossy Guard␟Willow Sprout","score":-22.754863735982735,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Mossy Guard","ring":"Willow Sprout"}}],["Makakoyumi␟Quiver of the Autumn King␟Sprite's Dream␟Infinite Bands",{"key":"Makakoyumi␟Quiver of the Autumn King␟Sprite's Dream␟Infinite Bands","score":-24.82603867672211,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Sprite's Dream","ring":"Infinite Bands"}}],["Sweettreats Bow␟Quiver of the Autumn King␟Haori of the Wind␟Sweettreats Ring",{"key":"Sweettreats Bow␟Quiver of the Autumn King␟Haori of the Wind␟Sweettreats Ring","score":-34.76378878387254,"gear":{"weapon":"Sweettreats Bow","ability":"Quiver of the Autumn King","armor":"Haori of the Wind","ring":"Sweettreats Ring"}}],["Makakoyumi␟Quiver of the Autumn King␟Primal Padding␟Storied Fossil",{"key":"Makakoyumi␟Quiver of the Autumn King␟Primal Padding␟Storied Fossil","score":-23.63732771825654,"gear":{"weapon":"Makakoyumi","ability":"Quiver of the Autumn King","armor":"Primal Padding","ring":"Storied Fossil"}}]],
+      prunes: 61,
+      reports: [{"at":1987,"args":[1,1986,-17.96301566325253],"gear":"8969eeb6695a9d6ecbd8d8c04b42a0bf8071bd59646218b72e9b3ae311f488c5","gatherDigest":"907dbc9c3f7239f963f967367d6bfb5f575770915be4a61c578aa70a016b1dd1"},{"at":3443,"args":[2,3442,-17.95342580514521],"gear":"24c8cbc9b2ac363d7e94320f8a2e9da127a40f0c19cb12c066a6e7625efebf88","gatherDigest":"4ef0f311eac2f2b1d3e57f671c8435a4e5beed58bd0051dded03fc0cff40641b"},{"at":4899,"args":[3,4898,-17.95342580514521],"gear":"24c8cbc9b2ac363d7e94320f8a2e9da127a40f0c19cb12c066a6e7625efebf88","gatherDigest":"8deb37f888c27eb3a1f1dc724485d3e4b36ea0f5717980e623485fecbebd0a8f"}],
     },
+    // 74c748a: compatible engraving pools; 59fdc85/74c748a: exclude rarity swatches and fired helpers.
+    // Recorded independently from unextracted origin/main (89f5adb), including every yield and ordered gather.
     {
       spec: {"klass":"Warrior","goal":"stat:hp","scope":"gear"},
-      final: {"state":{"name":"Warrior build","klass":"Warrior","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Venerable Ancient Stone Sword","slots":4,"ench":[null,null,null,null]},"ability":{"name":"Helm of the Tribune","slots":4,"ench":[null,null,null,null]},"armor":{"name":"Breastplate of New Life","slots":4,"ench":[null,null,null,null]},"ring":{"name":"Decades Chronicle","slots":4,"ench":[null,null,null,null]}},"goals":["dps"],"share":{},"pinned":{},"scope":"gear","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":1215,"looked":2061},
-      yielded: 2062,
-      traceDigest: "c4756693849e27881a60456fad79a0cacb04e6ee9b664e7cfb54a376be67eaa1",
-      gather: [
-      ],
+      final: {"state":{"name":"Warrior build","klass":"Warrior","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Venerable Ancient Stone Sword","slots":4,"ench":[null,null,null,null]},"ability":{"name":"Helm of the Tribune","slots":4,"ench":[null,null,null,null]},"armor":{"name":"Breastplate of New Life","slots":4,"ench":[null,null,null,null]},"ring":{"name":"Decades Chronicle","slots":4,"ench":[null,null,null,null]}},"goals":["dps"],"share":{},"pinned":{},"scope":"gear","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":1215,"looked":2046},
+      yielded: 2047,
+      traceDigest: "2008ae61819666967415ba1c5012ae95015ca9db8c3e5deca3d7ccb0e4715f73",
+      gather: [],
       prunes: 0,
-      reports: [
-      ],
+      reports: [],
     },
+    // 74c748a: compatible engraving pools; 59fdc85/74c748a: exclude rarity swatches and fired helpers.
+    // Recorded independently from unextracted origin/main (89f5adb), including every yield and ordered gather.
     {
       spec: {"klass":"Ninja","goal":"stat:dex","scope":"helps","locks":true,"gather":true,"report":true},
-      final: {"state":{"name":"Ninja build","klass":"Ninja","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Cloudstrike Tachi","slots":2,"ench":["ASCENSION_OF_GEB","Relative_Dexterity_Bonus_4"]},"ability":{"name":"Eternal Star","slots":4,"ench":["Dexterity_Attack_Tradeoff_4","PIRATES_EXPERTISE",null,null]},"armor":{"name":"Venerable Coral Silk Armor","slots":4,"ench":["Dexterity_Attack_Tradeoff_4","PIRATES_EXPERTISE",null,null]},"ring":{"name":"Faded Heart Scarab","slots":4,"ench":["Dexterity_Attack_Tradeoff_4","Relative_Dexterity_Bonus_4",null,null]}},"goals":["dps"],"share":{},"pinned":{},"scope":"helps","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{"weapon":true,"weapon:0":true}},"score":159.8,"looked":3780},
-      yielded: 3781,
-      traceDigest: "8b55d229a4a57fe775a05f4d0e270f1d8df33389f252f52a697e0091ba385287",
-      gather: [
-        ["Cloudstrike Tachi␟Eternal Star␟Venerable Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Venerable Coral Silk Armor␟Faded Heart Scarab","score":159.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Venerable Coral Silk Armor","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Star of Enlightenment␟Venerable Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Star of Enlightenment␟Venerable Coral Silk Armor␟Faded Heart Scarab","score":159.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Star of Enlightenment","armor":"Venerable Coral Silk Armor","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Bachelor's Tuxedo","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Coral Silk Armor␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Coral Silk Armor","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Cupid's Garments␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Cupid's Garments␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Cupid's Garments","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Daopao␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Daopao␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Daopao","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Hirejou Tenne␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Hirejou Tenne␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Hirejou Tenne","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Hollyhock Hide␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Hollyhock Hide␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Hollyhock Hide","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Metal-plated Corset␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Metal-plated Corset␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Metal-plated Corset","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Centaur's Shielding␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Centaur's Shielding␟Faded Heart Scarab","score":154.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Centaur's Shielding","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Leviathan Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Leviathan Armor␟Faded Heart Scarab","score":154.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Leviathan Armor","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Squadron Sheathing␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Squadron Sheathing␟Faded Heart Scarab","score":154.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Squadron Sheathing","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Eggshell Carapace␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Eggshell Carapace␟Faded Heart Scarab","score":153.2,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Eggshell Carapace","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Legion Elite Leather Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Legion Elite Leather Armor␟Faded Heart Scarab","score":153.2,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Legion Elite Leather Armor","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Light Syndicate Attire␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Light Syndicate Attire␟Faded Heart Scarab","score":153.2,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Light Syndicate Attire","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Ballistic Star␟Venerable Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Ballistic Star␟Venerable Coral Silk Armor␟Faded Heart Scarab","score":151.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Ballistic Star","armor":"Venerable Coral Silk Armor","ring":"Faded Heart Scarab"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Gravetender's Vest␟Jewel of Vengeance",{"key":"Cloudstrike Tachi␟Eternal Star␟Gravetender's Vest␟Jewel of Vengeance","score":130.4,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Gravetender's Vest","ring":"Jewel of Vengeance"}}],
-        ["Cloudstrike Tachi␟Enchanted Chisel␟Daopao␟Mala Beads",{"key":"Cloudstrike Tachi␟Enchanted Chisel␟Daopao␟Mala Beads","score":122.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Enchanted Chisel","armor":"Daopao","ring":"Mala Beads"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Chocolate Armor␟Sweetener Ring",{"key":"Cloudstrike Tachi␟Eternal Star␟Chocolate Armor␟Sweetener Ring","score":105.4,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Chocolate Armor","ring":"Sweetener Ring"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Painted Eggshell Armor␟Painted Egg Amulet",{"key":"Cloudstrike Tachi␟Eternal Star␟Painted Eggshell Armor␟Painted Egg Amulet","score":114.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Painted Eggshell Armor","ring":"Painted Egg Amulet"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Blizzard Jacket␟Magical Winter Scarf",{"key":"Cloudstrike Tachi␟Eternal Star␟Blizzard Jacket␟Magical Winter Scarf","score":114.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Blizzard Jacket","ring":"Magical Winter Scarf"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Reaper's Shroud␟Soul Necklace",{"key":"Cloudstrike Tachi␟Eternal Star␟Reaper's Shroud␟Soul Necklace","score":118.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Reaper's Shroud","ring":"Soul Necklace"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Mechpilot's Jerkin␟Pressure Gauge Band",{"key":"Cloudstrike Tachi␟Eternal Star␟Mechpilot's Jerkin␟Pressure Gauge Band","score":119.9,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Mechpilot's Jerkin","ring":"Pressure Gauge Band"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Mossy Guard␟Willow Sprout",{"key":"Cloudstrike Tachi␟Eternal Star␟Mossy Guard␟Willow Sprout","score":123.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Mossy Guard","ring":"Willow Sprout"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Sprite's Dream␟Infinite Bands",{"key":"Cloudstrike Tachi␟Eternal Star␟Sprite's Dream␟Infinite Bands","score":114.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Sprite's Dream","ring":"Infinite Bands"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Sweettreats Ring",{"key":"Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Sweettreats Ring","score":134.4,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Bachelor's Tuxedo","ring":"Sweettreats Ring"}}],
-        ["Cloudstrike Tachi␟Eternal Star␟Primal Padding␟Storied Fossil",{"key":"Cloudstrike Tachi␟Eternal Star␟Primal Padding␟Storied Fossil","score":119.9,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Primal Padding","ring":"Storied Fossil"}}],
-      ],
+      final: {"state":{"name":"Ninja build","klass":"Ninja","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Cloudstrike Tachi","slots":2,"ench":["ASCENSION_OF_GEB","Relative_Dexterity_Bonus_4"]},"ability":{"name":"Eternal Star","slots":4,"ench":["Dexterity_Attack_Tradeoff_4","PIRATES_EXPERTISE",null,null]},"armor":{"name":"Venerable Coral Silk Armor","slots":4,"ench":["Dexterity_Attack_Tradeoff_4","PIRATES_EXPERTISE",null,null]},"ring":{"name":"Faded Heart Scarab","slots":4,"ench":["Dexterity_Attack_Tradeoff_4","Relative_Dexterity_Bonus_4",null,null]}},"goals":["dps"],"share":{},"pinned":{},"scope":"helps","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{"weapon":true,"weapon:0":true}},"score":159.8,"looked":3777},
+      yielded: 3778,
+      traceDigest: "9dad2980223ebddd012053a58ba483b14e5457e59cf3067cdcd68faf617b4019",
+      gather: [["Cloudstrike Tachi␟Eternal Star␟Venerable Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Venerable Coral Silk Armor␟Faded Heart Scarab","score":159.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Venerable Coral Silk Armor","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Star of Enlightenment␟Venerable Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Star of Enlightenment␟Venerable Coral Silk Armor␟Faded Heart Scarab","score":159.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Star of Enlightenment","armor":"Venerable Coral Silk Armor","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Bachelor's Tuxedo","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Coral Silk Armor␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Coral Silk Armor","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Cupid's Garments␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Cupid's Garments␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Cupid's Garments","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Daopao␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Daopao␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Daopao","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Hirejou Tenne␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Hirejou Tenne␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Hirejou Tenne","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Hollyhock Hide␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Hollyhock Hide␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Hollyhock Hide","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Metal-plated Corset␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Metal-plated Corset␟Faded Heart Scarab","score":156.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Metal-plated Corset","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Centaur's Shielding␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Centaur's Shielding␟Faded Heart Scarab","score":154.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Centaur's Shielding","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Leviathan Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Leviathan Armor␟Faded Heart Scarab","score":154.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Leviathan Armor","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Squadron Sheathing␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Squadron Sheathing␟Faded Heart Scarab","score":154.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Squadron Sheathing","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Eggshell Carapace␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Eggshell Carapace␟Faded Heart Scarab","score":153.2,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Eggshell Carapace","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Legion Elite Leather Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Legion Elite Leather Armor␟Faded Heart Scarab","score":153.2,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Legion Elite Leather Armor","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Light Syndicate Attire␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Eternal Star␟Light Syndicate Attire␟Faded Heart Scarab","score":153.2,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Light Syndicate Attire","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Ballistic Star␟Venerable Coral Silk Armor␟Faded Heart Scarab",{"key":"Cloudstrike Tachi␟Ballistic Star␟Venerable Coral Silk Armor␟Faded Heart Scarab","score":151.5,"gear":{"weapon":"Cloudstrike Tachi","ability":"Ballistic Star","armor":"Venerable Coral Silk Armor","ring":"Faded Heart Scarab"}}],["Cloudstrike Tachi␟Eternal Star␟Blizzard Jacket␟Magical Winter Scarf",{"key":"Cloudstrike Tachi␟Eternal Star␟Blizzard Jacket␟Magical Winter Scarf","score":114.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Blizzard Jacket","ring":"Magical Winter Scarf"}}],["Cloudstrike Tachi␟Eternal Star␟Reaper's Shroud␟Soul Necklace",{"key":"Cloudstrike Tachi␟Eternal Star␟Reaper's Shroud␟Soul Necklace","score":118.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Reaper's Shroud","ring":"Soul Necklace"}}],["Cloudstrike Tachi␟Eternal Star␟Mechpilot's Jerkin␟Pressure Gauge Band",{"key":"Cloudstrike Tachi␟Eternal Star␟Mechpilot's Jerkin␟Pressure Gauge Band","score":119.9,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Mechpilot's Jerkin","ring":"Pressure Gauge Band"}}],["Cloudstrike Tachi␟Eternal Star␟Mossy Guard␟Willow Sprout",{"key":"Cloudstrike Tachi␟Eternal Star␟Mossy Guard␟Willow Sprout","score":123.8,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Mossy Guard","ring":"Willow Sprout"}}],["Cloudstrike Tachi␟Eternal Star␟Sprite's Dream␟Infinite Bands",{"key":"Cloudstrike Tachi␟Eternal Star␟Sprite's Dream␟Infinite Bands","score":114.6,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Sprite's Dream","ring":"Infinite Bands"}}],["Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Sweettreats Ring",{"key":"Cloudstrike Tachi␟Eternal Star␟Bachelor's Tuxedo␟Sweettreats Ring","score":134.4,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Bachelor's Tuxedo","ring":"Sweettreats Ring"}}],["Cloudstrike Tachi␟Eternal Star␟Primal Padding␟Storied Fossil",{"key":"Cloudstrike Tachi␟Eternal Star␟Primal Padding␟Storied Fossil","score":119.9,"gear":{"weapon":"Cloudstrike Tachi","ability":"Eternal Star","armor":"Primal Padding","ring":"Storied Fossil"}}]],
       prunes: 51,
-      reports: [
-        {"at":1428,"args":[1,1427,157.8],"gear":"0e87ee5959419c050148e6845644fbf322910b93f747dcc44307ea8a52c49b8d","gatherDigest":"60af837318bf96da2385337f92bdeed7b9ac703fa4fa2fb182fe0521e7533c22"},
-        {"at":2607,"args":[2,2606,159.8],"gear":"1b86140d56f7c9c720e837de5578e08c2a191d22134a00ba2c216614e24bd2eb","gatherDigest":"d587815d67245eb8c07b30202760adbe4b993b2fa4db27394f53b9a3838927c3"},
-        {"at":3781,"args":[3,3780,159.8],"gear":"1b86140d56f7c9c720e837de5578e08c2a191d22134a00ba2c216614e24bd2eb","gatherDigest":"c3b6edfa46b0470c879fe027206bb7ad1e70d3f613cb44a2a1051b305e6898bf"},
-      ],
+      reports: [{"at":1427,"args":[1,1426,157.8],"gear":"0e87ee5959419c050148e6845644fbf322910b93f747dcc44307ea8a52c49b8d","gatherDigest":"2c8d7d4483a9fab75d3b09b0b90ac6b8d3740fc8f92306eb123acbd800eaa600"},{"at":2605,"args":[2,2604,159.8],"gear":"1b86140d56f7c9c720e837de5578e08c2a191d22134a00ba2c216614e24bd2eb","gatherDigest":"ed3d9f820da6bc2b5884677cb80f93e577c815d08ba5d1527fa369ba85bd290b"},{"at":3778,"args":[3,3777,159.8],"gear":"1b86140d56f7c9c720e837de5578e08c2a191d22134a00ba2c216614e24bd2eb","gatherDigest":"5319376ddca843cd6779bb9c8a7b5f4d81567bbb26334d94a7ca1bcc35c3ec8a"}],
     },
+    // 74c748a: compatible engraving pools; 59fdc85/74c748a: exclude rarity swatches and fired helpers.
+    // Recorded independently from unextracted origin/main (89f5adb), including every yield and ordered gather.
     {
       spec: {"klass":"Wizard","goal":"stat:hp","personal":true,"gather":true,"report":true},
-      final: {"state":{"name":"Wizard build","klass":"Wizard","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Spellblade of Decimation","slots":4,"ench":["Life_Mana_Tradeoff_4","VAMPRIC_LIFEFORCE","Damage_Tradeoff_4","Proj_Lifetime_Bonus_4"]},"ability":{"name":"Burning Retribution Spell","slots":4,"ench":["Life_Mana_Tradeoff_4","VAMPRIC_LIFEFORCE","Flat_Mana_Regen_4","MP_Cost_Reduction_1"]},"armor":{"name":"Robe of the Illusionist","slots":4,"ench":["Relative_Life_Bonus_4","Life_Mana_Tradeoff_4","Damage_Resistance_4","Flat_Life_Regen_4"]},"ring":{"name":"Ring of Transcendent Health","slots":4,"ench":["Relative_Life_Bonus_4","Life_Mana_Tradeoff_4","Flat_Life_Regen_4","Flat_Mana_Regen_4"]}},"goals":["dps"],"share":{},"pinned":{},"scope":"all","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":1270.6,"looked":1937},
-      yielded: 1938,
-      traceDigest: "2a1560880c3c7b1d0d383a16e6cf69a3547f809764567d2972aab48422a413ca",
-      gather: [
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Attack",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Attack","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Attack"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Defense",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Defense","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Defense"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Dexterity",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Dexterity","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Dexterity"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health","score":1270.6,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Health"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Magic",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Magic","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Magic"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Speed",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Speed","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Speed"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Vitality",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Vitality","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Vitality"}}],
-        ["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Wisdom",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Wisdom","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Wisdom"}}],
-        ["Staff of Destruction␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health",{"key":"Staff of Destruction␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health","score":1270.6,"gear":{"weapon":"Staff of Destruction","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Health"}}],
-      ],
+      final: {"state":{"name":"Wizard build","klass":"Wizard","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Spellblade of Decimation","slots":4,"ench":["Life_Mana_Tradeoff_4","VAMPRIC_LIFEFORCE","Damage_Tradeoff_4","Proj_Lifetime_Bonus_4"]},"ability":{"name":"Burning Retribution Spell","slots":4,"ench":["Life_Mana_Tradeoff_4","VAMPRIC_LIFEFORCE","Flat_Mana_Regen_4","MP_Cost_Reduction_1"]},"armor":{"name":"Robe of the Illusionist","slots":4,"ench":["Relative_Life_Bonus_4","Life_Mana_Tradeoff_4","Damage_Resistance_4","Flat_Life_Regen_4"]},"ring":{"name":"Ring of Transcendent Health","slots":4,"ench":["Relative_Life_Bonus_4","Life_Mana_Tradeoff_4","Flat_Life_Regen_4","Flat_Mana_Regen_4"]}},"goals":["dps"],"share":{},"pinned":{},"scope":"all","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":1270.6,"looked":1938},
+      yielded: 1939,
+      traceDigest: "835883b6b47d3b231ba38e5a5dee3351d0b60e924f246767d92407c29534aca6",
+      gather: [["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Attack",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Attack","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Attack"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Defense",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Defense","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Defense"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Dexterity",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Dexterity","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Dexterity"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health","score":1270.6,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Health"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Magic",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Magic","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Magic"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Speed",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Speed","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Speed"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Vitality",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Vitality","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Vitality"}}],["Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Wisdom",{"key":"Spellblade of Decimation␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Wisdom","score":1134.2,"gear":{"weapon":"Spellblade of Decimation","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Wisdom"}}],["Staff of Destruction␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health",{"key":"Staff of Destruction␟Burning Retribution Spell␟Robe of the Illusionist␟Ring of Transcendent Health","score":1270.6,"gear":{"weapon":"Staff of Destruction","ability":"Burning Retribution Spell","armor":"Robe of the Illusionist","ring":"Ring of Transcendent Health"}}]],
       prunes: 0,
-      reports: [
-        {"at":1166,"args":[1,1165,1270.6],"gear":"4778fde6cdd909fcab2abc534ea103d5b0190376d99621940d3e9553c46a56fc","gatherDigest":"4684c38cbe13bcd2835e28d089a10506cb504eeb590726de8490f05cce797a35"},
-        {"at":1938,"args":[2,1937,1270.6],"gear":"4778fde6cdd909fcab2abc534ea103d5b0190376d99621940d3e9553c46a56fc","gatherDigest":"2ca0e80f112ac0a35cf0c274980f2fe2c08a73f526832d7431f324b2adcf5c0e"},
-      ],
+      reports: [{"at":1167,"args":[1,1166,1270.6],"gear":"4778fde6cdd909fcab2abc534ea103d5b0190376d99621940d3e9553c46a56fc","gatherDigest":"4684c38cbe13bcd2835e28d089a10506cb504eeb590726de8490f05cce797a35"},{"at":1939,"args":[2,1938,1270.6],"gear":"4778fde6cdd909fcab2abc534ea103d5b0190376d99621940d3e9553c46a56fc","gatherDigest":"2ca0e80f112ac0a35cf0c274980f2fe2c08a73f526832d7431f324b2adcf5c0e"}],
     },
+    // 74c748a: compatible engraving pools; 59fdc85/74c748a: exclude rarity swatches and fired helpers.
+    // Recorded independently from unextracted origin/main (89f5adb), including every yield and ordered gather.
     {
       spec: {"klass":"Priest","goal":"unknown","scope":"gear","gather":true,"report":true},
-      final: {"state":{"name":"Priest build","klass":"Priest","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Earthen Ward","slots":4,"ench":[null,null,null,null]},"ability":{"name":"Tome of Holy Furor","slots":4,"ench":[null,null,null,null]},"armor":{"name":"Diplomatic Robe","slots":4,"ench":[null,null,null,null]},"ring":{"name":"Overclocking Amulet","slots":4,"ench":[null,null,null,null]}},"goals":["dps"],"share":{},"pinned":{},"scope":"gear","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":7639.703999999999,"looked":1490},
-      yielded: 1491,
-      traceDigest: "f393b88622ad2f0cd01362a17bc24c5cce96f674040f03be61723255d125c8fb",
-      gather: [
-        ["Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Rusted Mechanism",{"key":"Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Rusted Mechanism","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Rusted Mechanism"}}],
-        ["Earthen Ward␟Tome of the Dragon␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of the Dragon␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of the Dragon","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of the Mushroom Tribes␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of the Mushroom Tribes␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of the Mushroom Tribes","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Sweet Desire Wand␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet",{"key":"Sweet Desire Wand␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Sweet Desire Wand","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Red Riding Dress␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Red Riding Dress␟Overclocking Amulet","score":7614.378000000001,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Red Riding Dress","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Boudoir Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Boudoir Robe␟Overclocking Amulet","score":7538.508,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Boudoir Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Ragged Robes␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Ragged Robes␟Overclocking Amulet","score":7538.508,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Ragged Robes","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Chrysalis of Eternity",{"key":"Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Chrysalis of Eternity","score":7493.472,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Chrysalis of Eternity"}}],
-        ["Earthen Ward␟Ceremonial Merlot␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Ceremonial Merlot␟Diplomatic Robe␟Overclocking Amulet","score":7480.728000000001,"gear":{"weapon":"Earthen Ward","ability":"Ceremonial Merlot","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Exorcism␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Exorcism␟Diplomatic Robe␟Overclocking Amulet","score":7480.728000000001,"gear":{"weapon":"Earthen Ward","ability":"Tome of Exorcism","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Pain␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Pain␟Diplomatic Robe␟Overclocking Amulet","score":7480.728000000001,"gear":{"weapon":"Earthen Ward","ability":"Tome of Pain","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Darkness Overcoat␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Darkness Overcoat␟Overclocking Amulet","score":7469.7660000000005,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Darkness Overcoat","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Doctor's Overcoat␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Doctor's Overcoat␟Overclocking Amulet","score":7469.7660000000005,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Doctor's Overcoat","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Anointed Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Anointed Robe␟Overclocking Amulet","score":7459.397999999998,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Anointed Robe","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Garb of the Ordained␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Garb of the Ordained␟Overclocking Amulet","score":7459.397999999998,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Garb of the Ordained","ring":"Overclocking Amulet"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Floral Corset␟Rose Brooch",{"key":"Earthen Ward␟Tome of Holy Furor␟Floral Corset␟Rose Brooch","score":6261.191999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Floral Corset","ring":"Rose Brooch"}}],
-        ["Gearhawk Morning Star␟Tome of Holy Furor␟Diplomatic Robe␟Pressure Gauge Band",{"key":"Gearhawk Morning Star␟Tome of Holy Furor␟Diplomatic Robe␟Pressure Gauge Band","score":4307.679999999999,"gear":{"weapon":"Gearhawk Morning Star","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Pressure Gauge Band"}}],
-        ["Pulsating Wand␟Tome of Holy Furor␟Diplomatic Robe␟Willow Sprout",{"key":"Pulsating Wand␟Tome of Holy Furor␟Diplomatic Robe␟Willow Sprout","score":2125.2000000000003,"gear":{"weapon":"Pulsating Wand","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Willow Sprout"}}],
-        ["Dimensional Union␟Tome of Holy Furor␟Diplomatic Robe␟Infinite Bands",{"key":"Dimensional Union␟Tome of Holy Furor␟Diplomatic Robe␟Infinite Bands","score":1302.98,"gear":{"weapon":"Dimensional Union","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Infinite Bands"}}],
-        ["Earthen Ward␟Tome of Holy Furor␟Traditional Blouse␟Bronze Pocketwatch",{"key":"Earthen Ward␟Tome of Holy Furor␟Traditional Blouse␟Bronze Pocketwatch","score":6327.00288,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Traditional Blouse","ring":"Bronze Pocketwatch"}}],
-        ["Sweettreats Wand␟Tome of Holy Furor␟Red Riding Dress␟Sweettreats Ring",{"key":"Sweettreats Wand␟Tome of Holy Furor␟Red Riding Dress␟Sweettreats Ring","score":3763.5370666666668,"gear":{"weapon":"Sweettreats Wand","ability":"Tome of Holy Furor","armor":"Red Riding Dress","ring":"Sweettreats Ring"}}],
-        ["Aeonic Talon␟Tome of Holy Furor␟Diplomatic Robe␟Storied Fossil",{"key":"Aeonic Talon␟Tome of Holy Furor␟Diplomatic Robe␟Storied Fossil","score":4307.679999999999,"gear":{"weapon":"Aeonic Talon","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Storied Fossil"}}],
-      ],
+      final: {"state":{"name":"Priest build","klass":"Priest","level":20,"maxed":true,"exalt":true,"exalts":{"hp":25,"mp":25,"att":5,"def":5,"spd":5,"dex":5,"vit":5,"wis":5},"gear":{"weapon":{"name":"Earthen Ward","slots":4,"ench":[null,null,null,null]},"ability":{"name":"Tome of Holy Furor","slots":4,"ench":[null,null,null,null]},"armor":{"name":"Diplomatic Robe","slots":4,"ench":[null,null,null,null]},"ring":{"name":"Overclocking Amulet","slots":4,"ench":[null,null,null,null]}},"goals":["dps"],"share":{},"pinned":{},"scope":"gear","using":"both","against":null,"assume":{},"boss":"Marble Colossus","locked":{}},"score":7639.703999999999,"looked":1488},
+      yielded: 1489,
+      traceDigest: "80d0e1a52bd38c1d8be92110caf0002e57abed4604ba2618cff377f98a3cb168",
+      gather: [["Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Rusted Mechanism",{"key":"Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Rusted Mechanism","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Rusted Mechanism"}}],["Earthen Ward␟Tome of the Dragon␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of the Dragon␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of the Dragon","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of the Mushroom Tribes␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of the Mushroom Tribes␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Earthen Ward","ability":"Tome of the Mushroom Tribes","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Sweet Desire Wand␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet",{"key":"Sweet Desire Wand␟Tome of Holy Furor␟Diplomatic Robe␟Overclocking Amulet","score":7639.703999999999,"gear":{"weapon":"Sweet Desire Wand","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Red Riding Dress␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Red Riding Dress␟Overclocking Amulet","score":7614.378000000001,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Red Riding Dress","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Boudoir Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Boudoir Robe␟Overclocking Amulet","score":7538.508,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Boudoir Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Ragged Robes␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Ragged Robes␟Overclocking Amulet","score":7538.508,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Ragged Robes","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Chrysalis of Eternity",{"key":"Earthen Ward␟Tome of Holy Furor␟Diplomatic Robe␟Chrysalis of Eternity","score":7493.472,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Chrysalis of Eternity"}}],["Earthen Ward␟Ceremonial Merlot␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Ceremonial Merlot␟Diplomatic Robe␟Overclocking Amulet","score":7480.728000000001,"gear":{"weapon":"Earthen Ward","ability":"Ceremonial Merlot","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Exorcism␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Exorcism␟Diplomatic Robe␟Overclocking Amulet","score":7480.728000000001,"gear":{"weapon":"Earthen Ward","ability":"Tome of Exorcism","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Pain␟Diplomatic Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Pain␟Diplomatic Robe␟Overclocking Amulet","score":7480.728000000001,"gear":{"weapon":"Earthen Ward","ability":"Tome of Pain","armor":"Diplomatic Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Darkness Overcoat␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Darkness Overcoat␟Overclocking Amulet","score":7469.7660000000005,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Darkness Overcoat","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Doctor's Overcoat␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Doctor's Overcoat␟Overclocking Amulet","score":7469.7660000000005,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Doctor's Overcoat","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Anointed Robe␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Anointed Robe␟Overclocking Amulet","score":7459.397999999998,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Anointed Robe","ring":"Overclocking Amulet"}}],["Earthen Ward␟Tome of Holy Furor␟Garb of the Ordained␟Overclocking Amulet",{"key":"Earthen Ward␟Tome of Holy Furor␟Garb of the Ordained␟Overclocking Amulet","score":7459.397999999998,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Garb of the Ordained","ring":"Overclocking Amulet"}}],["Pulsating Wand␟Tome of Holy Furor␟Diplomatic Robe␟Willow Sprout",{"key":"Pulsating Wand␟Tome of Holy Furor␟Diplomatic Robe␟Willow Sprout","score":2125.2000000000003,"gear":{"weapon":"Pulsating Wand","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Willow Sprout"}}],["Dimensional Union␟Tome of Holy Furor␟Diplomatic Robe␟Infinite Bands",{"key":"Dimensional Union␟Tome of Holy Furor␟Diplomatic Robe␟Infinite Bands","score":1302.98,"gear":{"weapon":"Dimensional Union","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Infinite Bands"}}],["Earthen Ward␟Tome of Holy Furor␟Traditional Blouse␟Bronze Pocketwatch",{"key":"Earthen Ward␟Tome of Holy Furor␟Traditional Blouse␟Bronze Pocketwatch","score":6327.00288,"gear":{"weapon":"Earthen Ward","ability":"Tome of Holy Furor","armor":"Traditional Blouse","ring":"Bronze Pocketwatch"}}],["Sweettreats Wand␟Tome of Holy Furor␟Red Riding Dress␟Sweettreats Ring",{"key":"Sweettreats Wand␟Tome of Holy Furor␟Red Riding Dress␟Sweettreats Ring","score":3763.5370666666668,"gear":{"weapon":"Sweettreats Wand","ability":"Tome of Holy Furor","armor":"Red Riding Dress","ring":"Sweettreats Ring"}}],["Aeonic Talon␟Tome of Holy Furor␟Diplomatic Robe␟Storied Fossil",{"key":"Aeonic Talon␟Tome of Holy Furor␟Diplomatic Robe␟Storied Fossil","score":4307.679999999999,"gear":{"weapon":"Aeonic Talon","ability":"Tome of Holy Furor","armor":"Diplomatic Robe","ring":"Storied Fossil"}}]],
       prunes: 38,
-      reports: [
-        {"at":746,"args":[1,745,7639.703999999999],"gear":"3f4293da57c97fdf150cfd5df035f56d29ec0f40edffa6da573b9079800796df","gatherDigest":"3cbc0f6680e65c3b687bc8e5e1fed07cdf166f93c4c1cd084804c9a88e7e529a"},
-        {"at":1491,"args":[2,1490,7639.703999999999],"gear":"3f4293da57c97fdf150cfd5df035f56d29ec0f40edffa6da573b9079800796df","gatherDigest":"c02ea7fe16259e66d5313df8e340a8517ff66386c0c66af3bd1bd8540089d0af"},
-      ],
+      reports: [{"at":745,"args":[1,744,7639.703999999999],"gear":"3f4293da57c97fdf150cfd5df035f56d29ec0f40edffa6da573b9079800796df","gatherDigest":"df292c6fe6a42825756156a26436b87f46e480645084626390508cb2c80d90ec"},{"at":1489,"args":[2,1488,7639.703999999999],"gear":"3f4293da57c97fdf150cfd5df035f56d29ec0f40edffa6da573b9079800796df","gatherDigest":"38b9dcac0387ec36c2ef263883d51248085919872e488954f5f7726d884361cf"}],
     },
     {
       spec: {"klass":"Wizard","goal":"dps","error":"profile"},
@@ -2538,11 +2495,9 @@ async function optimiserParity() {
       error: "Set up your progression before crafting.",
       yielded: 0,
       traceDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      gather: [
-      ],
+      gather: [],
       prunes: 0,
-      reports: [
-      ],
+      reports: [],
     },
     {
       spec: {"klass":"Wizard","goal":"dps","error":"access"},
@@ -2550,11 +2505,9 @@ async function optimiserParity() {
       error: "Set up your progression before crafting.",
       yielded: 0,
       traceDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      gather: [
-      ],
+      gather: [],
       prunes: 0,
-      reports: [
-      ],
+      reports: [],
     },
     {
       spec: {"klass":"Wizard","goal":"dps","error":"data"},
@@ -2562,11 +2515,9 @@ async function optimiserParity() {
       error: "Cannot read properties of null (reading 'byItem')",
       yielded: 0,
       traceDigest: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      gather: [
-      ],
+      gather: [],
       prunes: 0,
-      reports: [
-      ],
+      reports: [],
     },
     {
       spec: {"klass":"Wizard","goal":"dps","error":"goal"},
@@ -2574,11 +2525,9 @@ async function optimiserParity() {
       error: "Cannot read properties of undefined (reading 'id')",
       yielded: 1,
       traceDigest: "c6ffa9c4e34607494cb0c19c6df901e0c84c48480b512ef3f0da4794bf5ef768",
-      gather: [
-      ],
+      gather: [],
       prunes: 0,
-      reports: [
-      ],
+      reports: [],
     },
   ];
   function fixture(api, spec) {

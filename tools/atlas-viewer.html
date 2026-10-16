@@ -319,6 +319,16 @@
 <canvas id="map"></canvas>
 <!-- The weather, on its own glass over the map: see "frontResting" in frame(). -->
 <canvas id="sky" aria-hidden="true"></canvas>
+<!-- The line round a creature in the panels' pictures: one pixel, the side-on neighbours only, as the map draws it. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="ink-1" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+    <feOffset in="SourceAlpha" dx="1" dy="0" result="a"/><feOffset in="SourceAlpha" dx="-1" dy="0" result="b"/>
+    <feOffset in="SourceAlpha" dx="0" dy="1" result="c"/><feOffset in="SourceAlpha" dx="0" dy="-1" result="d"/>
+    <feMerge result="m"><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/><feMergeNode in="d"/></feMerge>
+    <feFlood flood-color="#000" result="k"/><feComposite in="k" in2="m" operator="in" result="ink"/>
+    <feMerge><feMergeNode in="ink"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs></svg>
 <aside id="bench">
   <b>bench &mdash; local only</b>
   <label>tilt <input id="benchTilt" type="range" min="0" max="40" step="1" value="0"><i id="benchTiltAt">off</i></label>
@@ -340,6 +350,7 @@
     <b id="seenNow">&ndash;</b> <i>here now</i></span>
   <span id="hint">drag to pan · wheel to zoom · a/e to turn · double-click to fit</span>
 </div>
+<script>/*OUTLINE*/</script>
 <script>
 const A = /*ATLAS*/null;
 
@@ -352,6 +363,17 @@ const A = /*ATLAS*/null;
  * atlas built before any of that was true.
  */
 const SS = A.ss || 1;
+
+/*
+ * The black line round everyone, laid on as they are drawn: web/outline.js,
+ * put into this page when it is built (tools/realm-atlas-build.js), so that
+ * every page lays the same line. It is made once for a picture at a size and
+ * kept; a frame draws it as one picture. `artPixel` is how many pixels of the
+ * sheet are one pixel of the art: two for these doubled sheets.
+ */
+function drawInked(img, sx, sy, sw, sh, dx, dy, dw, dh, artPixel) {
+  RealmOutline.draw(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh, artPixel);
+}
 
 /*
  * Where the atlas's files are. Beside this page when it is opened on its own;
@@ -394,6 +416,7 @@ const observedCombat = new Map();
 const lootItems = new Map();
 function installCombat(data) {
   combatData = data;
+  carriesLine = new Set(data.carriesLine || []);
   lootItems.clear();
   for (const [name, item] of Object.entries(data.items || {})) lootItems.set(name, item);
   for (const zone of A.zones) for (const kind of zone.lives || []) {
@@ -421,6 +444,8 @@ function installCombat(data) {
   installLiveLandmarks();
   installAlienReactors();
 }
+// The few combat pictures that still carry a line of their own (tools/recover-bare.js); every other one is given the line as it is drawn.
+let carriesLine = new Set();
 function ensureCombat() {
   if (combatData || combatLoading) return combatLoading;
   combatLoading = fetch(asset('combat.json')).then(reply => {
@@ -2714,8 +2739,11 @@ const seen = seenRange(box, 80);
       const run = pic[8] || 800;
       sx += (Math.floor(time / (run / frames)) % frames) * pic[2];
     }
-    ctx.drawImage(thingArt, sx, pic[1], pic[2], pic[3],
+    // A picture the client could not account for keeps the line it carries (pic[9]); the rest are given the line as they are drawn.
+    if (pic[9]) ctx.drawImage(thingArt, sx, pic[1], pic[2], pic[3],
       on.x - w2 / 2, on.y - h2 + foot * on.k - (pic[5] / 100) * view.scale * on.k, w2, h2);
+    else drawInked(thingArt, sx, pic[1], pic[2], pic[3],
+      on.x - w2 / 2, on.y - h2 + foot * on.k - (pic[5] / 100) * view.scale * on.k, w2, h2, SS);
     drawn++;
   }
   while (m < mob.length) living += drawOneLife(mob[m++], box);
@@ -3455,13 +3483,48 @@ function opaqueBox(img) {
   return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
 }
 
+/*
+ * How many picture pixels one pixel of the art was enlarged to. The bosses
+ * and Heroes are whole-pixel enlargements of the client's drawing, so every
+ * run of one colour is a whole number of them long: the greatest common
+ * divisor of the runs is the enlargement. The line round them is laid at the
+ * width of a pixel of the art, so it has to be known.
+ */
+function pixelSizeOf(img) {
+  const off = document.createElement('canvas');
+  off.width = img.naturalWidth; off.height = img.naturalHeight;
+  const o = off.getContext('2d', { willReadFrequently: true });
+  o.drawImage(img, 0, 0);
+  const data = o.getImageData(0, 0, off.width, off.height).data;
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  let size = 0;
+  for (let y = 0; y < off.height && size !== 1; y++) {
+    let run = 1;
+    for (let x = 1; x <= off.width; x++) {
+      const same = x < off.width && data[(y * off.width + x) * 4 + 3] === data[(y * off.width + x - 1) * 4 + 3]
+        && data[(y * off.width + x) * 4] === data[(y * off.width + x - 1) * 4]
+        && data[(y * off.width + x) * 4 + 1] === data[(y * off.width + x - 1) * 4 + 1]
+        && data[(y * off.width + x) * 4 + 2] === data[(y * off.width + x - 1) * 4 + 2];
+      if (same) { run++; continue; }
+      // A run that meets the picture's own edge may have been cut by it.
+      if (x - run > 0 && x < off.width) size = size ? gcd(size, run) : run;
+      run = 1;
+    }
+  }
+  return Math.max(1, Math.min(size || 1, 20));
+}
+const enlargementOf = held => held.enlarge || 1;
+
 function bossFor(file) {
   let held = bossArt.get(file);
   if (held) return held;
   const img = new Image();
   img.decoding = 'async';
   held = { img, box: null };
-  img.onload = () => { try { held.box = opaqueBox(img); } catch (error) { held.box = null; } };
+  img.onload = () => {
+    try { held.box = opaqueBox(img); } catch (error) { held.box = null; }
+    try { held.enlarge = pixelSizeOf(img); } catch (error) { held.enlarge = 1; }
+  };
   img.src = asset('boss/' + file);
   bossArt.set(file, held);
   return held;
@@ -5211,7 +5274,8 @@ function drawFolk(box) {
         const spin = s.visual.rotation ? s.age * 1000 / s.visual.rotation : 0;
         ctx.rotate(Math.atan2(s.vy, s.vx) + (s.visual.angle || 0) * Math.PI / 4 + spin);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall);
+        if (carriesLine.has(s.visual.file)) ctx.drawImage(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall);
+        else drawInked(img, frame * sw, 0, sw, sh, -wide / 2, -tall / 2, wide, tall, 1);
         ctx.restore();
         continue;
       }
@@ -5285,8 +5349,8 @@ function drawLandmarks(box) {
     // blown up it stays square, like everything else on the map.
     ctx.imageSmoothingEnabled = tall < held.box.h;
     ctx.globalAlpha = Math.min(1, (view.scale - from) / (from * 0.9));
-    ctx.drawImage(held.img, held.box.x, held.box.y, held.box.w, held.box.h,
-      at.x - wide / 2, at.y - tall, wide, tall);
+    drawInked(held.img, held.box.x, held.box.y, held.box.w, held.box.h,
+      at.x - wide / 2, at.y - tall, wide, tall, enlargementOf(held));
     drawn++;
   }
   ctx.globalAlpha = 1;
@@ -5351,17 +5415,23 @@ function drawOneLife(one, box) {
   if (!at) return 0;
   const w2 = wide * at.k, h2 = tall * at.k;
   const top = at.y - h2 + (foot + view.scale / 2) * at.k;
+  // A combat picture arrives with its own line; every other creature is given one as it is drawn.
+  const inked = !(sprite.combat && carriesLine.has(sprite.file));
+  // The doubled sheets are two pictures pixels to a pixel of art; a boss's picture is the enlargement it was cut at.
+  const artPixel = sprite.boss ? enlargementOf(bossFor(sprite.file)) : (sprite.combat ? 1 : SS);
   if (pose.flip) {
     // The client has no eastward picture; it keeps west and turns it over.
     ctx.save();
     ctx.translate(at.x, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
+    if (inked) drawInked(img, frame * sprite.tile, 0, sprite.tile, sprite.height, -w2 / 2, top, w2, h2, artPixel);
+    else ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
       -w2 / 2, top, w2, h2);
     ctx.restore();
     return 1;
   }
-  ctx.drawImage(img, frame * tile, 0, tile, height,
+  if (inked) drawInked(img, frame * tile, 0, tile, height, at.x - w2 / 2, top, w2, h2, artPixel);
+  else ctx.drawImage(img, frame * tile, 0, tile, height,
     at.x - w2 / 2, top, w2, h2);
   return 1;
 }
@@ -5871,7 +5941,7 @@ function livesList(list) {
   return '<div class="cast">' + list.map(one => {
     const s = one.sprite;
     const k = Math.max(2, Math.min(6, Math.round(30 / s.height)));
-    const style = 'width:' + (s.tile * k) + 'px;height:' + (s.height * k) + 'px;'
+    const style = 'width:' + (s.tile * k) + 'px;height:' + (s.height * k) + 'px;filter:url(#ink-1);'
       + 'background-image:url(' + asset('life/' + s.file) + ');'
       + 'background-size:' + (s.tile * s.frames * k) + 'px 100%;'
       + '--w:' + (s.tile * s.frames * k) + 'px;--steps:' + s.frames + ';'
@@ -6084,7 +6154,7 @@ function openFolk(one) {
   chosen = 0; chosenBeacon = null;
   const kind = one.kind;
   const art = kind.sprite
-    ? '<span class="face" style="background-image:url(' + asset('life/' + kind.sprite.file)
+    ? '<span class="face" style="filter:url(#ink-1);background-image:url(' + asset('life/' + kind.sprite.file)
       + ');background-size:' + (kind.sprite.frames * 100) + '% 100%"></span>'
     : '<span class="face"></span>';
 

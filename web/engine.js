@@ -21,6 +21,7 @@
  * @property {Set<string>} itemTags
  * @property {Set<string>} special
  * @property {number[]} distribution
+ * @property {Set<string>[]} [needs] Alternative item-label requirements for engravings.
  * @property {string[]} [members] Family goals, never actual pool entries.
  * @typedef {EnchantMod & {id: number}} Enchantment
  * @typedef {{keys: Set<string>, excludes: Set<string>}} EnchantWeightKeys
@@ -54,6 +55,7 @@
  * @property {Map<string, EnchantArtifact>} byArtifact
  * @property {Map<string, string[]>} awakenings
  * @property {Map<string, EnchantItem>} itemsByName
+ * @property {Map<string, string[]>} [engravedBy]
  * @property {Set<string>} awokenArt
  * @property {Set<string>} blockingLabels
  * @property {Record<string, string>} spriteAlias
@@ -181,7 +183,7 @@ var EnchantEngine = (function () {
     for (const raw of String(text).replace(/\r/g, '').split('\n')) {
       const line = raw.trim();
       if (!line || line.startsWith('##') || !line.startsWith('ench|')) continue;
-      const [, name, weight, split, labels, excludes, slots, families, , description] = line.split('|');
+      const [, name, weight, split, labels, excludes, slots, families, , description, needs] = line.split('|');
       out.push({
         name,
         description: description || '',
@@ -190,6 +192,9 @@ var EnchantEngine = (function () {
         excludes: splitSet(excludes),
         itemTags: splitSet(slots),
         special: splitSet(families),
+        // The item labels it asks for besides the slot, any one set of which
+        // will do once same-named variants are merged.
+        needs: [splitSet(needs)],
         distribution: String(split || '').split(',').map(Number).filter(Number.isFinite)
       });
     }
@@ -464,10 +469,42 @@ var EnchantEngine = (function () {
      * last is exactly what once made 105 enchantments look as if they had
      * vanished from the game.
      */
+    /*
+     * And the ones a plain roll never gives come in variants under one name:
+     * Adonis' Shot is twelve records, one per kind of weapon, each asking for
+     * that kind. They are merged, so the name fits every weapon any of them
+     * fits. Where the variants sit in different slots - Path of the Magus on
+     * a weapon, an armour and a ring, each with its own labels - one name
+     * can hold only one, and the slot with the most variants is kept.
+     */
+    const variants = new Map();
     for (const mod of parsed) {
       const seen = unique.get(mod.name);
       if (seen && seen.tags.has('ROLLABLE') && !mod.tags.has('ROLLABLE')) continue;
+      if (!mod.tags.has('ROLLABLE')) {
+        if (!variants.has(mod.name)) variants.set(mod.name, []);
+        variants.get(mod.name).push(mod);
+      }
       unique.set(mod.name, mod);
+    }
+    for (const [name, all] of variants) {
+      // A rollable twin under the same name has already won.
+      if (all.length < 2 || /** @type {EnchantMod} */ (unique.get(name)).tags.has('ROLLABLE')) continue;
+      const bySlot = new Map();
+      for (const mod of all) {
+        const slot = [...mod.itemTags].sort().join(',');
+        if (!bySlot.has(slot)) bySlot.set(slot, []);
+        bySlot.get(slot).push(mod);
+      }
+      const kept = [...bySlot.values()].reduce((a, b) => (b.length >= a.length ? b : a));
+      const mod = kept[kept.length - 1];
+      for (const other of kept) {
+        if (other === mod) continue;
+        for (const tag of other.tags) mod.tags.add(tag);
+        for (const tag of other.excludes) mod.excludes.add(tag);
+        mod.needs.push(...other.needs);
+      }
+      unique.set(name, mod);
     }
     // Nothing is filtered out here. Which enchantments are in play is the
     // pool's business, and every pool the client defines states it: the
@@ -518,6 +555,17 @@ var EnchantEngine = (function () {
     const clientItems = parseClientItems(sources.clientItemText);
     const awakenings = clientItems.awakenings;
     const itemsByName = new Map(clientItems.items.map(item => [item.name, item]));
+    // Which engravings give an enchantment a plain roll never does, the one
+    // that favours it first: all four frost engravings let Ice Rush in, but
+    // only the Ice Rush Engraving multiplies it.
+    const engravedBy = new Map();
+    for (const mod of enchants) {
+      if (mod.members || isNaturallyRollable(mod)) continue;
+      const by = artifacts.filter(a => a.name !== 'No Artifact' && admits(a, mod) && weightFor(mod, a) > 0)
+        .sort((a, b) => weightFor(mod, b) - weightFor(mod, a))
+        .map(a => a.name);
+      if (by.length) engravedBy.set(mod.name, by);
+    }
     return {
       enchants,
       byName,
@@ -530,6 +578,7 @@ var EnchantEngine = (function () {
       byArtifact: new Map(artifacts.map(artifact => [artifact.name, artifact])),
       awakenings,
       itemsByName,
+      engravedBy,
       awokenArt,
       // Only labels that appear in at least one "Incompatible Labels" list can
       // ever remove a candidate; every other label is purely descriptive.
@@ -586,9 +635,9 @@ var EnchantEngine = (function () {
     return new Set(item && item.base ? [item.base] : []);
   }
 
-  // Item-level game rules, deliberately excluding natural rollability and the
+  // Item-level game rules, deliberately excluding rollability and the
   // artifact entry rule. eligiblePool() also needs this for artifact-only
-  // entries; calculator pickers add isNaturallyRollable() through
+  // entries; calculator pickers add isObtainable() through
   // eligibleForItem().
   /**
    * @param {EnchantDataset} data
@@ -601,7 +650,26 @@ var EnchantEngine = (function () {
     if (mod.excludes.has('AWAKENED') && !(data.awakenings.get(cfg.item) || []).includes(mod.name)) return false;
     const subtypes = asSet(cfg.subtypes);
     for (const requirement of mod.special) if (!subtypes.has(requirement)) return false;
+    if (!carriesNeeds(data, cfg, mod)) return false;
     return true;
+  }
+
+  /*
+   * The item labels an engraving's enchantment asks for. Snowstorm goes on
+   * frost armour only, Naughty on an Oryxmas weapon, Path of the Magus on an
+   * Aspirant's: the client lists the labels and the item must carry every
+   * one. Only these are held to it - a plain roll's enchantments are already
+   * bounded by slot, family and awakening, and those pools stay as they are.
+   * With the slot set by hand there is no item to read, so nothing is ruled
+   * out.
+   */
+  /** @param {EnchantDataset} data @param {EnchantItemSelection} cfg
+   * @param {EnchantMod} mod @returns {boolean} */
+  function carriesNeeds(data, cfg, mod) {
+    if (mod.tags.has('ROLLABLE') || !mod.needs) return true;
+    const item = cfg.item && data.itemsByName && data.itemsByName.get(cfg.item);
+    if (!item) return true;
+    return mod.needs.some(set => [...set].every(label => item.labels.has(label)));
   }
 
   /**
@@ -611,7 +679,7 @@ var EnchantEngine = (function () {
    * @returns {boolean}
    */
   function eligibleForItem(data, cfg, mod) {
-    return isNaturallyRollable(mod) && itemAllows(data, cfg, mod);
+    return isObtainable(data, mod) && itemAllows(data, cfg, mod);
   }
 
   /**
@@ -699,12 +767,18 @@ var EnchantEngine = (function () {
       // Night Prince adds one enchantment by name that its labels would not
       // have let in. Assuming every pool was the full rollable set is what
       // made those artifacts impossible to describe at all.
-      if (entry && !entry.names.has(mod.name)) {
-        if (entry.include && ![...entry.include].some(label => mod.tags.has(label))) return false;
-        for (const label of entry.exclude) if (mod.tags.has(label)) return false;
-      }
+      if (entry && !admits(artifact, mod)) return false;
       return true;
     });
+  }
+
+  /** @param {EnchantArtifact} artifact @param {EnchantMod} mod @returns {boolean} */
+  function admits(artifact, mod) {
+    const entry = artifact && artifact.entry;
+    if (!entry || entry.names.has(mod.name)) return true;
+    if (entry.include && ![...entry.include].some(label => mod.tags.has(label))) return false;
+    for (const label of entry.exclude) if (mod.tags.has(label)) return false;
+    return true;
   }
 
   /*
@@ -729,6 +803,30 @@ var EnchantEngine = (function () {
    */
   function rollablePool(data, cfg) {
     return eligiblePool(data, cfg, null).filter(isNaturallyRollable);
+  }
+
+  /*
+   * What a player can get at all: a plain roll, or one engraving.
+   *
+   * Twenty-five enchantments never come out of a plain roll - Retrowinds
+   * Weapon, Hydroshock, Ice Rush, the four Paths - because the client leaves
+   * ROLLABLE off them and lets them in through one engraving's pool. They are
+   * as real as any other: a player holding the engraving gets them. So they
+   * can be asked for, and whatever offers one says which engraving it takes.
+   */
+  /** @param {EnchantDataset} data @param {EnchantMod | null | undefined} mod @returns {string[]} */
+  function engravingsFor(data, mod) {
+    return (mod && data.engravedBy && data.engravedBy.get(mod.name)) || [];
+  }
+
+  /** @param {EnchantDataset} data @param {EnchantMod | null | undefined} mod @returns {boolean} */
+  function isObtainable(data, mod) {
+    return isNaturallyRollable(mod) || engravingsFor(data, mod).length > 0;
+  }
+
+  /** @param {EnchantDataset} data @param {EnchantPoolConfig} cfg @returns {Enchantment[]} */
+  function obtainablePool(data, cfg) {
+    return eligiblePool(data, cfg, null).filter(mod => isObtainable(data, mod));
   }
 
   /* ------------------------------------------------------------------ *
@@ -2084,7 +2182,7 @@ var EnchantEngine = (function () {
   const engine = {
     readBracketGroups, splitSet, parseMods, parseClientMods, parseClientArtifacts, parseClientItems, parseAwakenings, buildDataset,
     lockCount, rollsRemaining, lockedLabels, subtypesForItem, itemAllows, eligibleForItem, missingBase, follows, conflictWith,
-    eligiblePool, isNaturallyRollable, rollablePool, weightFor, weightedPool,
+    eligiblePool, isNaturallyRollable, rollablePool, engravingsFor, isObtainable, obtainablePool, weightFor, weightedPool,
     goalDistribution, distributionFor, oddsAny, oddsAll, tradeoffFamilies, membersOf, tierMultiplier, tierMass, tierRules,
     BASE_COSTS, rerollCost, costFor, evaluate, evaluateAll,
     planGoals, planGoalsAsync, planSimultaneous,

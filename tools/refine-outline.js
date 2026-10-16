@@ -4,6 +4,10 @@
  *
  *   node tools/refine-outline.js
  *
+ * (Only the scenery in things.png carries a line now. The creatures' files are
+ * doubled and left bare, and the page draws the line round them as it draws
+ * them - see bared() below, and tools/recover-life.js.)
+ *
  * The line is baked into the art, not drawn by the page: one pixel of it laid
  * round every silhouette in things.png and in each creature's own file,
  * coloured from whatever it happened to touch and let through at three
@@ -189,13 +193,18 @@ function outline(image) {
   return laid;
 }
 
-// Strip, magnify, line. Kept separate below for things.png, which has to be
-// looked over between the first pass and the second.
-function relined(image) {
+/*
+ * The creatures are stripped and magnified and left bare. The line round a
+ * creature is laid on by the page as it draws it, at the width every page
+ * lays on a character (web/outline.js, drawInked in tools/atlas-viewer.html):
+ * one line in the picture has one thickness at every zoom, and it cannot be
+ * told from black art once it is there. The scenery in things.png keeps the
+ * line baked in.
+ */
+function bared(image) {
   const gone = strip(image);
   const big = magnify(image, SS);
-  const laid = outline(big);
-  return { image: big, gone, laid };
+  return { image: big, gone, laid: 0 };
 }
 
 /* ---------------- what the sheets are measured in ---------------- */
@@ -328,13 +337,13 @@ let files = 0, lifeGone = 0, lifeLaid = 0, wasLife = 0, isLife = 0;
 for (const name of fs.readdirSync(lifeDir).filter(n => n.endsWith('.png'))) {
   const file = path.join(lifeDir, name);
   wasLife += fs.statSync(file).size;
-  const out = relined(readPng(readFile(file)));
+  const out = bared(readPng(readFile(file)));
   writeFile(file, writePng(out.image.width, out.image.height, out.image.pixels));
   isLife += fs.statSync(file).size;
   files++; lifeGone += out.gone; lifeLaid += out.laid;
 }
 console.log('  life/       ' + files + ' creatures, ' + lifeGone + ' pixels of the old line'
-  + ' off and ' + lifeLaid + ' of the new one on, ' + Math.round(wasLife / 1024) + 'K -> '
+  + ' off and none laid (the page draws the line), ' + Math.round(wasLife / 1024) + 'K -> '
   + Math.round(isLife / 1024) + 'K');
 
 /*
