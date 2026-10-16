@@ -37,6 +37,7 @@ const deployCritical = [
   'module-links.test.js',
   'outline.test.js',
   'runtime-lifecycle.test.js',
+  'skin-viewer-data.test.js',
   'skins.test.js',
   'sprite-contract.test.js',
   'status-effects.test.js',

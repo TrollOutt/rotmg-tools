@@ -107,83 +107,14 @@ const [skinCatalogue,dyeCatalogue,classCatalogue,looks,realmAtlas]=await Promise
 
 /* A frame row is [set, action, direction, x, y, w, h, maskX, maskY, padding]. */
 const SAY_ACTION=looks.actions||[],SAY_DIRECTION=looks.directions||[];
-function framesOf(geometry){
-  if(!geometry)return{sequences:[],frames:[]};
-  const sequences=[],byKey=new Map(),flat=[];
-  for(const row of geometry.frames){
-    const[set,action,direction,x,y,w,h,maskX,maskY]=row;
-    const frame={
-      set,actionRaw:action,directionRaw:direction,
-      action:SAY_ACTION[action]||('action '+action),
-      direction:SAY_DIRECTION[direction]||('direction '+direction),
-      atlas:'looks',rect:{x,y,w,h},
-      maskRect:maskX<0?null:{x:maskX,y:maskY,w,h},
-      spriteAvailable:true,maskAvailable:maskX>=0
-    };
-    flat.push(frame);
-    /* One sequence per animation, in the order the client wrote them. */
-    const key=set+'|'+action+'|'+direction;
-    let sequence=byKey.get(key);
-    if(!sequence){
-      sequence={set,actionRaw:action,directionRaw:direction,
-        action:frame.action,direction:frame.direction,frames:[]};
-      byKey.set(key,sequence);sequences.push(sequence);
-    }
-    frame.frame=sequence.frames.length;
-    sequence.frames.push(frame);
-  }
-  return{sequences,frames:flat};
-}
-
-/*
- * Only what there is a picture of.
- *
- * The client declares nineteen skins - every 2-Bit class - whose
- * <AnimatedTexture> its own sprite registry has no entry for, so there is
- * nothing to draw. They belong in the index, which records what the game
- * declares; they do not belong in a list of things to look at, where they
- * were nineteen blank rows that opened onto "missing sprite frame".
- *
- * They are left out here rather than greyed out: a viewer offering something
- * it cannot show is worse than a viewer that is one line shorter.
- */
-const undrawn=skinCatalogue.skins.filter(one=>!looks.skins[one.type]);
-const skins=skinCatalogue.skins.filter(one=>looks.skins[one.type]).map(one=>{
-  const drawn=framesOf(looks.skins[one.type]);
-  return{
-    id:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
-    className:one.wears||null,
-    /* The costume, which the index marks as read off the name rather than
-       declared. Anything no second skin shares a stem with is its own. */
-    family:one.look||'Other',
-    tier:one.tier,level:one.level,given:one.given,pick:one.pick,
-    unlockers:one.unlockers||[],sets:one.sets||[],hidden:one.hidden,
-    sequences:drawn.sequences,frames:drawn.frames
-  };
+const viewerData=SkinViewerData.createCatalogueData({
+  getLooks:()=>looks,getActions:()=>SAY_ACTION,getDirections:()=>SAY_DIRECTION
 });
+const {undrawn,skins}=viewerData.skinEntries(skinCatalogue);
+const dyes=viewerData.dyeEntries(dyeCatalogue);
 
-const dyes=[];
-for(const one of dyeCatalogue.dyes){
-  const made=looks.dyes[one.type];
-  if(!made)continue;
-  dyes.push({
-    id:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
-    target:made.on,
-    kind:made.kind==='cloth'?'textile':made.kind,
-    color:made.color||null,
-    textile:made.cloth?{atlas:made.cloth.atlas,index:made.cloth.index,
-      sheet:'looks',rect:made.cloth.rect}:null,
-    animation:made.moves?{type:made.moves.how,speed:made.moves.speed,
-      pivotX:made.moves.pivotX,pivotY:made.moves.pivotY}:null,
-    icon:made.icon?{sheet:'looks',rect:made.icon.rect}:null
-  });
-}
+const classes=viewerData.classEntries(classCatalogue);
 
-const classes=classCatalogue.classes.map(one=>{
-  const drawn=looks.classes[one.type];
-  return{name:one.name,indexId:one.id,type:Number.parseInt(one.type,16),
-    icon:drawn?{sheet:'looks',rect:drawn.rect}:null};
-});
 const [realmCombat,realmThingIndex,realmThingBuffer]=await Promise.all([
   fetch('assets/atlas/combat.json').then(r=>r.ok?r.json():null).catch(()=>null),
   fetch('assets/atlas/things.json').then(r=>r.ok?r.json():null).catch(()=>null),
@@ -202,24 +133,7 @@ const inked=(ctx,img,sx,sy,sw,sh,dx,dy,dw,dh,art=1)=>window.RealmOutline?window.
  * its skin by type - so each skin and each dye simply knows its own index id
  * and the ids of what it is joined to.
  */
-const indexBridge={
-  skins:Object.fromEntries(skins.map(one=>[one.id,{
-    target:{kind:'index',id:one.indexId},
-    match:{kind:'index',id:one.indexId},
-    unlockers:one.unlockers,sets:one.sets,reason:'declared by the client'
-  }])),
-  dyes:Object.fromEntries(dyes.map(one=>[one.id,{
-    target:{kind:'index',id:one.indexId},
-    match:{kind:'index',id:one.indexId},reason:'declared by the client'
-  }])),
-  reverse:{}
-};
-for(const one of skins){
-  for(const to of [one.indexId,...one.unlockers,...one.sets].filter(Boolean)){
-    (indexBridge.reverse[to]||(indexBridge.reverse[to]=[]))
-      .push({kind:'skin',id:one.id,type:one.type,reason:'declared by the client'});
-  }
-}
+const indexBridge=viewerData.indexBridge(skins,dyes);
 const canvas=$('canvas'),worldBg=$('worldBg'),fxCanvas=$('fxCanvas'),renderer=new Renderer(canvas),bg=worldBg.getContext('2d'),fx=fxCanvas.getContext('2d'),CLASS_ORDER=['Wizard','Priest','Archer','Rogue','Warrior','Knight','Paladin','Assassin','Necromancer','Huntress','Mystic','Trickster','Sorcerer','Ninja','Samurai','Bard','Summoner','Kensei'];
 classes.sort((a,b)=>{const ai=CLASS_ORDER.indexOf(a.name),bi=CLASS_ORDER.indexOf(b.name);return(ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name)});
 const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',skinFilterMode:storageGet('skinViewerSkinFilterMode')==='family'?'family':'class',dyeTarget:'clothing',dyeCategory:'all',classOpen:true,familyOpen:true,dyeCategoryOpen:true};

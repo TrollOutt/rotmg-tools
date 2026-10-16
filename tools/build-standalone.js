@@ -640,6 +640,8 @@ delete served.realmLootText;
  * exactly the bug this exists to prevent.
  */
 const SKIN_VIEWER_PARTS = [
+  ['the catalogue projection it uses',
+    /\n<script src="skin-viewer-data\.js"><\/script>/],
   ['the card on the front page',
     /\n\s*<button type="button" class="home-card" data-go="skins"[\s\S]*?<\/button>\n/],
   ['the page it opens',
@@ -844,6 +846,7 @@ fs.writeFileSync(
  * Skin Viewer stays modular on the served site. Copy both its runtime modules
  * and the generated client data/textures beside the generated Pages document.
  */
+fs.copyFileSync(path.join(web, 'skin-viewer-data.js'), path.join(pagesDir, 'skin-viewer-data.js'));
 carryAcross(path.join(web, 'skins'), path.join(pagesDir, 'skins'));
 carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'skins'));
 fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));

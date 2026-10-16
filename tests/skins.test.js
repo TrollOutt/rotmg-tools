@@ -256,7 +256,9 @@ assert(/y<0\?FACE_AWAY:FACE_YOU/.test(viewerSource),
   assert(/if \(!one\.drawn\) continue;/.test(pageSource),
     'the index must not offer a door into a skin the viewer does not list');
   const viewer = fs.readFileSync(path.join(root, 'web/skins/app.js'), 'utf8');
-  assert(/skinCatalogue\.skins\.filter\(one=>looks\.skins\[one\.type\]\)/.test(viewer),
+  assert(viewer.includes('viewerData.skinEntries(skinCatalogue)')
+    && /skinCatalogue\.skins\.filter\(one=>looks\.skins\[one\.type\]\)/.test(
+      fs.readFileSync(path.join(root, 'web/skin-viewer-data.js'), 'utf8')),
     'the viewer must list only what it has frames for');
 }
 

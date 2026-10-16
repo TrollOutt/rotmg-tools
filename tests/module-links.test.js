@@ -9,6 +9,19 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
 const app = read('web/app.js');
 const sourceHtml = read('web/index.html');
+const skinDataTag = '<script src="skin-viewer-data.js"></script>';
+const skinModuleTag = '<script type="module" src="skins/app.js"></script>';
+assert(sourceHtml.indexOf(skinDataTag) >= 0
+  && sourceHtml.indexOf(skinDataTag) < sourceHtml.indexOf(skinModuleTag),
+  'Skin Viewer catalogue module executes before its ES module adapter');
+assert.equal((read('web/skins/app.js').match(/SkinViewerData\.createCatalogueData\(/g) || []).length, 1,
+  'Each viewer mount creates one shared catalogue factory');
+const servedSkinHtml = read('docs/index.html');
+assert(servedSkinHtml.indexOf(skinDataTag) >= 0
+  && servedSkinHtml.indexOf(skinDataTag) < servedSkinHtml.indexOf(skinModuleTag),
+  'HTTP build preserves catalogue script order');
+assert.equal(read('docs/skin-viewer-data.js'), read('web/skin-viewer-data.js'),
+  'HTTP build serves the exact catalogue module');
 assert(sourceHtml.indexOf('<script src="app-data.js"></script>') >= 0
   && sourceHtml.indexOf('<script src="app-data.js"></script>') < sourceHtml.indexOf('<script src="app.js"></script>'),
   'Calculator data module loads before its adapters');
