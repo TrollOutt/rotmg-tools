@@ -43,6 +43,12 @@ for (const file of ['assets/index/loot-bags.png', 'assets/index/forge-ui.png', '
   assert(!offline.html.includes('url(' + file + ')'), file + ': card CSS must work from a single file');
 }
 for (const version of [served, offline]) {
+  const searchAt = version.html.indexOf('var IndexSearch =');
+  const browseAt = version.html.indexOf('IX.search = IndexSearch.createSearch(');
+  assert(searchAt >= 0 && browseAt > searchAt,
+    'Index search must be inlined before the browse interface in both HTML copies');
+  assert(!version.html.includes('<script data-lazy-src="index-search.js">'),
+    'Built copies must inline Index search rather than fetch it');
   assert(version.html.includes('var BuildProgression'), 'Progression code missing');
   const engineAt = version.html.indexOf('var TheoryEngine =');
   const uiAt = version.html.indexOf('var TheoryCraft =');

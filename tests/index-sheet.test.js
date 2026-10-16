@@ -39,7 +39,8 @@ function page() {
   const exported = { exports: {} };
   const window = { ROTMG_BUNDLE: null };
   vm.runInNewContext(source.replace(marker, 'module.exports = { mount, slice };'),
-    { window, document, module: exported, console, Math, Object, Map, Set, String, Number, JSON, Promise },
+    { window, document, module: exported, console, Math, Object, Map, Set, String, Number, JSON, Promise,
+      IndexSearch: require('../web/index-search') },
     { filename: 'web/index-browse.js' });
   return {
     slice: exported.exports.slice,

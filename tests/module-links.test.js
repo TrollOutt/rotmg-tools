@@ -282,6 +282,59 @@ const RealmIndex = require('../web/index-page.js');
 const createOpenController = RealmIndex.__test.createOpenController;
 
 async function run() {
+  // Index search is a lazy dependency too: load it once before either adapter,
+  // share concurrent loads, and keep completed stages when retrying a failure.
+  {
+    const vm = require('vm');
+    const page = read('web/index.html');
+    assert(/<script data-lazy-src="index-search\.js"><\/script>\r?\n<script data-lazy-src="index-page\.js"><\/script>\r?\n<script data-lazy-src="index-browse\.js"><\/script>/.test(page));
+    const begin = app.indexOf('let indexScriptLoading = null;');
+    const end = app.indexOf('\n}', app.indexOf('function ensureIndexPage(', begin)) + 2;
+    assert(begin >= 0 && end > begin, 'Index lazy loader remains extractable');
+    const stages = ['index-search.js', 'index-page.js', 'index-browse.js'];
+    for (const failure of [null, ...stages]) {
+      const pending = [];
+      const context = {
+        document: { body: { dataset: { page: 'index' } },
+          querySelector: selector => ({ dataset: { lazySrc: /"([^"]+)"/.exec(selector)[1] } }) },
+        loadLateScript: (placeholder, loaded, failed) => pending.push({ src: placeholder.dataset.lazySrc, loaded, failed })
+      };
+      vm.createContext(context);
+      vm.runInContext(app.slice(begin, end), context);
+      const open = () => vm.runInContext('ensureIndexPage()', context);
+      const flush = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
+      const succeed = name => {
+        if (name === stages[0]) vm.runInContext(read('web/index-search.js'), context);
+        if (name === stages[1]) context.RealmIndex = { start: async () => true };
+        if (name === stages[2]) context.RealmIndexBrowse = { mount: async () => true };
+        pending.shift().loaded();
+      };
+      assert.equal(pending.length, 0);
+      const first = open(), concurrent = open();
+      const failureIndex = failure ? stages.indexOf(failure) : stages.length;
+      for (let i = 0; i < failureIndex; i++) {
+        assert.equal(pending.length, 1);
+        assert.equal(pending[0].src, stages[i]);
+        succeed(stages[i]); await flush();
+      }
+      if (failure) {
+        assert.equal(pending[0].src, failure);
+        const rejected = [assert.rejects(first, /Could not load/), assert.rejects(concurrent, /Could not load/)];
+        pending.shift().failed(); await Promise.all(rejected);
+        const retry = open(); await flush();
+        for (let i = failureIndex; i < stages.length; i++) {
+          assert.equal(pending.length, 1);
+          assert.equal(pending[0].src, stages[i]);
+          succeed(stages[i]); await flush();
+        }
+        assert.equal(await retry, true);
+      } else {
+        assert.equal(await first, true); assert.equal(await concurrent, true);
+      }
+      assert.equal(await open(), true);
+      assert.equal(pending.length, 0, 'revisit reuses every Index dependency');
+    }
+  }
   // Exercise the real lazy loader with controlled script completion, including
   // concurrent navigation and retry after either dependency fails.
   const vm = require('vm');

@@ -5471,14 +5471,15 @@ function ensureIndexPage(open) {
 
   if (!indexScriptLoading) {
     const late = name => new Promise((resolve, reject) => {
-      if (name === 'index-page.js' ? typeof RealmIndex !== 'undefined' : typeof RealmIndexBrowse !== 'undefined') { resolve(); return; }
+      if (name === 'index-search.js' ? typeof IndexSearch !== 'undefined'
+        : name === 'index-page.js' ? typeof RealmIndex !== 'undefined' : typeof RealmIndexBrowse !== 'undefined') { resolve(); return; }
       const placeholder = document.querySelector('script[data-lazy-src="' + name + '"]');
       if (!placeholder) { reject(new Error('Index script placeholder is missing: ' + name)); return; }
       loadLateScript(placeholder, resolve, () => reject(new Error('Could not load ' + name + '.')));
     });
-    // The card's module first: the browser beside it reads what that one has read.
+    // Search, then the card's records, then the browser that reads both.
     indexScriptLoading = new Promise((resolve, reject) => {
-      late('index-page.js').then(() => late('index-browse.js')).then(resolve, error => {
+      late('index-search.js').then(() => late('index-page.js')).then(() => late('index-browse.js')).then(resolve, error => {
         indexScriptLoading = null;
         reject(error);
       });
