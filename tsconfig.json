@@ -17,6 +17,7 @@
     "web/progression.js",
     "web/theory-engine.js",
     "web/index-search.js",
+    "web/index-filter.js",
     "web/progression-module.d.ts"
   ]
 }

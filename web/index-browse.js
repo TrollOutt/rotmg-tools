@@ -450,6 +450,20 @@
     isGear: r => IX.isGear(r)
   }).search;
 
+  /* Shared display classifiers remain live; selection owns no UI state. */
+  const selectRows = IndexFilter.createFilter({
+    getState: () => S,
+    getRecord: id => IX.records.get(id),
+    getSidePortals: () => IX.sidePortals,
+    getTags: () => TAGS,
+    tierOf: r => tierOf(r),
+    statusesOf: (r, hows) => statusesOf(r, hows),
+    setClass: r => setClass(r),
+    scalesOf: r => scalesOf(r),
+    placeOf: r => placeOf(r),
+    gaveTo: (r, cls, hand) => gaveTo(r, cls, hand)
+  }).select;
+
   /* ================================================================== *
    * The page                                                             *
    * ================================================================== */
@@ -757,19 +771,7 @@
     if (S.q.trim()) return search(box);
     if (!S.f || !IX.domain(S.f)) return landing(box);
     const d = IX.domain(S.f), g = IX.groupOf(d, S.s);
-    let ids = g ? g.ids : d.ids;
-    // The other portals belong to no section: they are offered on the whole family only.
-    if (S.tech && !g && d.id === 'dungeons') ids = ids.concat(IX.sidePortals);
-    let rows = ids.map(id => IX.records.get(id));
-    const all = rows;
-    if (S.tier) rows = rows.filter(r => tierOf(r) === S.tier);
-    if (S.inf) rows = rows.filter(r => statusesOf(r, ['inflicts', 'inflicts on players']).includes(S.inf));
-    if (S.gra) rows = rows.filter(r => statusesOf(r, ['grants']).includes(S.gra));
-    if (S.cls) rows = rows.filter(r => setClass(r) === S.cls);
-    if (S.scl) rows = rows.filter(r => scalesOf(r).includes(S.scl));
-    if (S.home) rows = rows.filter(r => { const p = placeOf(r); return p && p.id === S.home; });
-    if (d.id === 'dungeons' && (S.dcls || S.dh)) rows = rows.filter(r => gaveTo(r, S.dcls, S.dh).length);
-    for (const t of S.tags) if (TAGS[t]) rows = rows.filter(TAGS[t].test);
+    const { all, rows } = selectRows(d, g);
     results(box, { d, g, all, rows });
   }
   const count = list => { const m = new Map(); for (const x of list) m.set(x, (m.get(x) || 0) + 1); return m; };

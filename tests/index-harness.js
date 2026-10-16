@@ -29,13 +29,17 @@ module.exports = async function (engine, browseSource = read('web/index-browse.j
   const resultMarker = 'results(box, { d, g, all, rows });';
   assert(browseSource.includes(marker) && browseSource.includes(resultMarker), 'Index browse harness markers moved');
   let captured;
-  let creations = 0;
+  let creations = 0, filterCreations = 0;
   const browse = {
     window: {}, document: { getElementById: () => null }, module: { exports: {} }, clearTimeout,
     IndexSearch: { createSearch(deps) { creations++; return engine.createSearch(deps); } },
+    IndexFilter: { createFilter(deps) { filterCreations++; return require('../web/index-filter').createFilter(deps); } },
     capture: value => { captured = value; }
   };
-  vm.runInNewContext(browseSource.replace(resultMarker, 'capture({ d, g, all, rows });')
+  vm.runInNewContext(browseSource.replace("box.dataset.fam = '';", '').replace('const title = id => id ===',
+    'capture({ all: hits, rows: shownHits }); return; const title = id => id ===')
+    .replace('function landing(box) {', 'function landing(box) { capture({ all: [], rows: [] }); return;')
+    .replace(resultMarker, 'capture({ d, g, all, rows });')
     .replace(marker, `window.RealmIndexBrowse = {
       IX, grouped, groupsFor,
       configure(data) { D = data; readRecords(); buildDomains(); },
@@ -47,5 +51,5 @@ module.exports = async function (engine, browseSource = read('web/index-browse.j
     };`), browse);
   const api = browse.window.RealmIndexBrowse;
   api.configure(data);
-  return { ...api, select(state) { api.select(state); return captured; }, creations: () => creations };
+  return { ...api, select(state) { api.select(state); return captured; }, filterCreations: () => filterCreations, creations: () => creations };
 };

@@ -44,6 +44,9 @@ for (const file of ['assets/index/loot-bags.png', 'assets/index/forge-ui.png', '
 }
 for (const version of [served, offline]) {
   const searchAt = version.html.indexOf('var IndexSearch =');
+  const filterAt = version.html.indexOf('var IndexFilter =');
+  assert(filterAt >= 0 && filterAt < version.html.indexOf('const selectRows = IndexFilter.createFilter('));
+  assert(!version.html.includes('<script data-lazy-src="index-filter.js">'));
   const browseAt = version.html.indexOf('IX.search = IndexSearch.createSearch(');
   assert(searchAt >= 0 && browseAt > searchAt,
     'Index search must be inlined before the browse interface in both HTML copies');
