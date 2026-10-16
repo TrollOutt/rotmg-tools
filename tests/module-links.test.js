@@ -287,11 +287,11 @@ async function run() {
   {
     const vm = require('vm');
     const page = read('web/index.html');
-    assert(/<script data-lazy-src="index-search\.js"><\/script>\r?\n<script data-lazy-src="index-filter\.js"><\/script>\r?\n<script data-lazy-src="index-grouping\.js"><\/script>\r?\n<script data-lazy-src="index-page\.js"><\/script>\r?\n<script data-lazy-src="index-browse\.js"><\/script>/.test(page));
+    assert(/<script data-lazy-src="index-search\.js"><\/script>\r?\n<script data-lazy-src="index-filter\.js"><\/script>\r?\n<script data-lazy-src="index-grouping\.js"><\/script>\r?\n<script data-lazy-src="index-families\.js"><\/script>\r?\n<script data-lazy-src="index-page\.js"><\/script>\r?\n<script data-lazy-src="index-browse\.js"><\/script>/.test(page));
     const begin = app.indexOf('let indexScriptLoading = null;');
     const end = app.indexOf('\n}', app.indexOf('function ensureIndexPage(', begin)) + 2;
     assert(begin >= 0 && end > begin, 'Index lazy loader remains extractable');
-    const stages = ['index-search.js', 'index-filter.js', 'index-grouping.js', 'index-page.js', 'index-browse.js'];
+    const stages = ['index-search.js', 'index-filter.js', 'index-grouping.js', 'index-families.js', 'index-page.js', 'index-browse.js'];
     for (const failure of [null, ...stages]) {
       const pending = [];
       const context = {
@@ -307,8 +307,9 @@ async function run() {
         if (name === stages[0]) vm.runInContext(read('web/index-search.js'), context);
         if (name === stages[1]) vm.runInContext(read('web/index-filter.js'), context);
         if (name === stages[2]) vm.runInContext(read('web/index-grouping.js'), context);
-        if (name === stages[3]) context.RealmIndex = { start: async () => true };
-        if (name === stages[4]) context.RealmIndexBrowse = { mount: async () => true };
+        if (name === stages[3]) vm.runInContext(read('web/index-families.js'), context);
+        if (name === stages[4]) context.RealmIndex = { start: async () => true };
+        if (name === stages[5]) context.RealmIndexBrowse = { mount: async () => true };
         pending.shift().loaded();
       };
       assert.equal(pending.length, 0);

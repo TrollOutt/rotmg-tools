@@ -22,6 +22,7 @@ const deployCritical = [
   'index-search.test.js',
   'index-filter.test.js',
   'index-grouping.test.js',
+  'index-families.test.js',
   'index-sheet.test.js',
   'index-sheet-style.test.js',
   'progression.test.js',

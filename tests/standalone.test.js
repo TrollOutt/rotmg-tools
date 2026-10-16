@@ -46,6 +46,9 @@ for (const version of [served, offline]) {
   const searchAt = version.html.indexOf('var IndexSearch =');
   const filterAt = version.html.indexOf('var IndexFilter =');
   const groupingAt = version.html.indexOf('var IndexGrouping =');
+  const familiesAt = version.html.indexOf('var IndexFamilies =');
+  assert(familiesAt > groupingAt && familiesAt < version.html.indexOf('const families = IndexFamilies.createFamilies('));
+  assert(!version.html.includes('<script data-lazy-src="index-families.js">'));
   assert(groupingAt > filterAt && groupingAt < version.html.indexOf('const grouped = IndexGrouping.createGrouping('));
   assert(!version.html.includes('<script data-lazy-src="index-grouping.js">'));
   assert(filterAt >= 0 && filterAt < version.html.indexOf('const selectRows = IndexFilter.createFilter('));

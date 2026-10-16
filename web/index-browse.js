@@ -267,33 +267,34 @@
    * Wine Cellar's locked door, the boss room of the Lost Halls) or its old
    * version (Legacy Pirate Cave) belongs under that dungeon, not beside it.
    */
-  const PORTAL_PART = [
-    [/^AI Untaris\b/, 'Untaris'], [/^HUDL\b/, 'Heroic Undead Lair'], [/^LH\b|^Lost Halls \(/, 'Lost Halls'],
-    [/^LOD\b|Draconis|^Ivory Wyvern/, 'Lair of Draconis'], [/^3D Portal/, 'The Third Dimension'], [/Shaitan/, 'Lair of Shaitan'],
-    [/^Remnant of the Void/, 'The Void'], [/Wine Cellar/, 'Wine Cellar'], [/^Tomb of the Ancients \(/, 'Tomb of the Ancients']
-  ];
-  let mainByName = null;
-  IX.portalHome = r => {
-    if (!r || r.kind !== 'portal' || IX.difficultyOf(r)) return null;
-    if (!mainByName) { mainByName = new Map(); for (const p of IX.list) if (p.kind === 'portal' && IX.difficultyOf(p)) mainByName.set(String(p.name).toLowerCase(), p); }
-    const name = String(r.name);
-    for (const [test, home] of PORTAL_PART) if (test.test(name)) return mainByName.get(home.toLowerCase()) || null;
-    const base = name.replace(/^Legacy\s+/, '').replace(/\s+Portal$/, '').trim().toLowerCase();
-    return mainByName.get(base) || mainByName.get('the ' + base) || null;
-  };
-  // A dungeon RealmEye describes (a boss, a roster, drops) and the client does not rate: an event or seasonal one.
-  IX.isEventDungeon = r => r.kind === 'portal' && !IX.difficultyOf(r) && !IX.portalHome(r)
-    && ((archiveOf(r) || {}).relations || []).some(x => /^dungeon_/.test(x.type));
-  // A portal that is no dungeon of its own: a part of one, a hub (Nexus, Vault, guild halls), a test.
-  IX.isSidePortal = r => r.kind === 'portal' && !IX.difficultyOf(r) && !IX.isEventDungeon(r);
+  // Model caches have the browse lifetime; catalogue and classifiers stay live.
+  const families = IndexFamilies.createFamilies({
+    getList: () => IX.list,
+    getRecord: id => IX.records.get(id),
+    getSlots: () => IX.slots,
+    getDomains: () => IX.domains,
+    getFoundIn: () => IX.foundIn,
+    setSidePortals: ids => { IX.sidePortals = ids; },
+    setHolderOf: holders => { IX.holderOf = holders; },
+    setDomains: domains => { IX.domains = domains; },
+    getBiomeLevels: () => IX.BIOME_LEVELS,
+    difficultyOf: r => IX.difficultyOf(r),
+    portalHome: r => IX.portalHome(r),
+    isEventDungeon: r => IX.isEventDungeon(r),
+    isSidePortal: r => IX.isSidePortal(r),
+    isTechnical: r => IX.isTechnical(r),
+    hasPicture: r => IX.hasPicture(r),
+    picKey: r => IX.picKey(r),
+    isGear: r => IX.isGear(r),
+    kindSay: r => IX.kindSay(r),
+    biomeLevel: r => IX.biomeLevel(r),
+    bagShelf: r => bagShelf(r)
+  });
+  IX.portalHome = families.portalHome;
+  IX.isEventDungeon = families.isEventDungeon;
+  IX.isSidePortal = families.isSidePortal;
 
   /* ---------------- the bag, by shelf ---------------- */
-  const BAG_SHELVES = [
-    ['potions', 'Potions'], ['chests', 'Chests & boxes'], ['keys', 'Keys'], ['blueprints', 'Blueprints'],
-    ['materials', 'Materials & marks'], ['pets', 'Pets'], ['dyes', 'Dyes'], ['styles', 'Item styles'],
-    ['titles', 'Titles'], ['emotes', 'Emotes & entrances'], ['tarot', 'Tarot & artifacts'],
-    ['unlockers', 'Skin unlockers'], ['other', 'Other consumables']
-  ];
   const SHELF_ONE = { potions: 'Potion', chests: 'Chest', keys: 'Key', blueprints: 'Blueprint', materials: 'Material', pets: 'Pet item',
     dyes: 'Dye', styles: 'Item style', titles: 'Title', emotes: 'Emote', tarot: 'Artifact', unlockers: 'Skin unlocker', other: 'Consumable' };
   function bagShelf(r) {
@@ -315,132 +316,17 @@
 
   /* ---------------- the families ---------------- */
   // Judged by the picture itself: two records can share one sprite.
-  const used = new Set();
   IX.picKey = r => {
     const b = IX.beaconOf(r);
     if (b) return 'beacon,' + b.file;
     const a = r && (r.statusArt ? ['s', r.name === 'Stat Reduction' ? 'red' : '', ...r.statusArt] : picFor(r));
     return a ? a.join(',') : '';
   };
-  function pick(ids, score = () => 0) {
-    const ranked = [...ids].map(id => IX.records.get(id)).filter(r => r && !r.hidden && IX.hasPicture(r)).sort((a, b) => score(b) - score(a));
-    const r = ranked.find(x => !used.has(IX.picKey(x))) || ranked[0];
-    if (r) used.add(IX.picKey(r));
-    return r ? r.id : null;
-  }
-  /*
-   * What a family lists: nothing hidden, RealmEye's own records only as
-   * biomes, and the plumbing (the build marks it dev) only where it has a
-   * place of its own: the pools' section, the other portals.
-   */
-  const shown = r => !r.hidden && (!r.dev || r.kind === 'pool' || r.kind === 'portal') && (!r.communityOnly || r.kind === 'place');
-  const visible = test => IX.list.filter(r => shown(r) && !IX.isTechnical(r) && test(r)).map(r => r.id);
-  IX.technical = test => IX.list.filter(r => shown(r) && IX.isTechnical(r) && test(r)).map(r => r.id);
-  const hp = r => r.hp || 0;
-  const tierScore = r => (r.tier !== undefined ? r.tier : L(r).includes('UT') ? 15 : L(r).includes('ST') ? 16 : 0);
-  const section = (id, title, ids, score) => ({ id, title, ids, pic: pick(ids, score) });
-
-  function buildDomains() {
-    used.clear();
-    mainByName = null;
-    const out = [];
-    const domain = (id, title, blurb, groups, extra = {}) => {
-      const ids = [...new Set(groups.flatMap(g => g.ids))];
-      out.push({ id, title, blurb, groups: groups.filter(g => g.ids.length), ids, ...extra });
-    };
-    const classes = visible(r => r.kind === 'class');
-    domain('classes', 'Classes', 'Their stats, the gear they hold and the skins they wear.', [section('all', 'Classes', classes)],
-      { sortBy: r => classes.indexOf(r.id) });
-    const dungeons = visible(r => r.kind === 'portal' && !IX.isSidePortal(r));
-    IX.sidePortals = IX.list.filter(r => shown(r) && IX.isSidePortal(r)).map(r => r.id);
-    const band = r => { const d = IX.difficultyOf(r); return !d ? 'other' : d <= 3 ? 'easy' : d <= 6 ? 'mid' : d <= 8 ? 'hard' : 'end'; };
-    const dungeonScore = r => IX.difficultyOf(r) || 0;
-    const inBand = b => dungeons.filter(id => band(IX.records.get(id)) === b);
-    domain('dungeons', 'Dungeons', 'Every dungeon: who lives there, what drops, how hard it is.', [
-      section('easy', 'Starter (1–3)', inBand('easy'), dungeonScore),
-      section('mid', 'Intermediate (4–6)', inBand('mid'), dungeonScore),
-      section('hard', 'Advanced (7–8)', inBand('hard'), dungeonScore),
-      section('end', 'Endgame (9–10)', inBand('end'), dungeonScore),
-      section('other', 'Events & seasonal', inBand('other'), dungeonScore)
-    ], { sortBy: r => IX.difficultyOf(r) || 99 });
-    const places = visible(r => r.kind === 'place');
-    domain('biomes', 'Realm biomes', 'The places of the realm and what roams them.',
-      IX.BIOME_LEVELS.map(l => section(l.toLowerCase(), l === 'Other' ? 'Other biomes' : l, places.filter(id => IX.biomeLevel(IX.records.get(id)) === l))));
-    // The events in the order the catalogue writes them: the invasion, then the year's holidays, then the seasons.
-    const events = visible(r => r.kind === 'event');
-    domain('events', 'Events', 'The seasonal events, and the score of the realm at which each brings out its creatures.',
-      [section('all', 'Events', events)], { sortBy: r => events.indexOf(r.id) });
-    const st = visible(r => r.kind === 'status');
-    domain('status', 'Status effects', 'What each effect does, what inflicts it and who is immune.', [
-      section('bad', 'Debuffs', st.filter(id => IX.records.get(id).tone === 'bad')),
-      section('good', 'Buffs', st.filter(id => IX.records.get(id).tone === 'good'))
-    ]);
-    const foes = visible(r => r.kind === 'enemy');
-    const role = id => IX.kindSay(IX.records.get(id));
-    domain('enemies', 'Enemies', 'Gods, bosses, encounters and everything that shoots back.', [
-      section('god', 'Gods', foes.filter(id => role(id) === 'God'), hp),
-      section('hero', 'Heroes of Oryx', foes.filter(id => role(id) === 'Hero of Oryx'), hp),
-      section('encounter', 'Encounters', foes.filter(id => role(id) === 'Encounter'), hp),
-      section('boss', 'Bosses', foes.filter(id => role(id) === 'Boss'), hp),
-      section('miniboss', 'Minibosses', foes.filter(id => role(id) === 'Miniboss'), hp),
-      section('spawner', 'Spawners', foes.filter(id => IX.records.get(id).spawns), hp),
-      section('enemy', 'Other enemies', foes.filter(id => role(id) === 'Enemy' && !IX.records.get(id).spawns), hp)
-    // Creatures with a known home first (the event copies and test dummies have none), then the toughest.
-    ], { sortBy: r => (IX.foundIn && IX.foundIn.has(r.id) ? 0 : 1e9) - hp(r) });
-    const gear = visible(IX.isGear);
-    domain('gear', 'Gear', 'Weapons, abilities, armour and rings, tiered, UT and ST.',
-      Object.entries(IX.slots).map(([slot, [say]]) => section('slot' + slot, say, gear.filter(id => String(IX.records.get(id).slot) === slot), tierScore)),
-      { sortBy: r => -tierScore(r) });
-    domain('sets', 'Sets', 'Four pieces that change the look and the shot.', [section('all', 'Sets', visible(r => r.kind === 'set'))]);
-    const skins = visible(r => r.kind === 'skin');
-    const wornBy = r => ((r.out || []).find(([h]) => h === 'worn by') || [])[1];
-    domain('skins', 'Skins', 'Every costume, class by class.',
-      classes.map(cid => section(cid, IX.records.get(cid).name, skins.filter(id => wornBy(IX.records.get(id)) === cid))),
-      { sortBy: r => (L(r).includes('ST') ? 0 : 1) });
-    const bag = visible(r => r.kind === 'item' && !IX.isGear(r));
-    const shelf = new Map(BAG_SHELVES.map(([id]) => [id, []]));
-    for (const id of bag) shelf.get(bagShelf(IX.records.get(id))).push(id);
-    domain('bag', 'Consumables & bag', 'Potions, chests, keys, blueprints, pets, dyes, styles, emotes…',
-      BAG_SHELVES.map(([id, title]) => section(id, title, shelf.get(id))),
-      // The eight stat potions before the boosters and the event drinks.
-      { sortBy: r => (L(r).includes('STATPOTION') ? 0 : 1) });
-    // Enchantments by what they are: the awakened and unique ones apart from the stat bonuses.
-    const enchants = visible(r => r.kind === 'enchant');
-    const sort = r => L(r).includes('AWAKENED') ? 'awakened' : L(r).includes('UNIQUE') ? 'unique'
-      : L(r).some(l => /ALIEN/.test(l)) ? 'alien' : L(r).some(l => /^(PROC|ONHIT|ONSHOOT|ONABILITY)/.test(l)) ? 'proc'
-        : L(r).some(l => /^(REWARD|LOOT|XP|DUST)$/.test(l)) ? 'reward' : 'stat';
-    const ofSort = k => enchants.filter(id => sort(IX.records.get(id)) === k);
-    domain('enchants', 'Enchantments', 'What can roll on gear, and from which pool.', [
-      section('awakened', 'Awakened', ofSort('awakened')),
-      section('unique', 'Unique', ofSort('unique')),
-      section('alien', 'Alien', ofSort('alien')),
-      section('proc', 'On hit, shoot or ability', ofSort('proc')),
-      section('reward', 'Loot, XP & dust', ofSort('reward')),
-      section('stat', 'Stat bonuses', ofSort('stat')),
-      section('pool', 'Pools', visible(r => r.kind === 'pool'))
-    ]);
-    for (const d of out) d.pic = pick(d.groups.map(g => g.pic).filter(Boolean)) || (d.groups[0] && d.groups[0].pic);
-    /*
-     * Nineteen kinds of ability, most of them one class's, made nineteen
-     * headings over a line or two each. They are one section: each line says
-     * its kind and the class that holds it, and a menu narrows to one.
-     */
-    const gd = out.find(d => d.id === 'gear');
-    const kinds = gd ? gd.groups.filter(g => (IX.records.get(g.ids[0]) || {}).hand === 'ability') : [];
-    if (gd && kinds.length) {
-      gd.abilities = { id: 'abilities', title: 'Abilities', ids: kinds.flatMap(g => g.ids), pic: kinds[0].pic, kinds };
-      gd.kindOf = new Map(kinds.flatMap(g => g.ids.map(id => [id, g])));
-    }
-    IX.holderOf = new Map();
-    for (const id of classes) for (const s of IX.records.get(id).slots || []) if (!IX.holderOf.has(s)) IX.holderOf.set(s, IX.records.get(id));
-    IX.domains = out;
-    familyOf = null;
-    givesMemo = null;
-  }
-  IX.domain = id => IX.domains.find(d => d.id === id);
-  // A family's section by its id, the gear's abilities taken together included.
-  IX.groupOf = (d, s) => !s ? null : s === 'abilities' && d.abilities ? d.abilities : d.groups.find(x => x.id === s) || null;
-  const isKind = (d, g) => Boolean(d && d.abilities && g && d.abilities.kinds.includes(g));
+  const buildDomains = families.buildDomains;
+  IX.technical = families.technical;
+  IX.domain = families.domain;
+  IX.groupOf = families.groupOf;
+  const isKind = families.isKind;
 
   /* Search owns its name cache; the catalogue and classifiers stay live here. */
   IX.search = IndexSearch.createSearch({
@@ -599,33 +485,9 @@
    * source. A part of a dungeon (a boss room, an old version) gives to its
    * main one. Best first: ST and UT, then the highest tier.
    */
-  let givesMemo = null;
-  function dungeonGives() {
-    if (givesMemo) return givesMemo;
-    const gear = new Set(IX.domain('gear').ids), by = new Map();
-    const give = (portal, id) => {
-      const home = IX.difficultyOf(portal) ? portal : IX.portalHome(portal) || portal;
-      (by.get(home.id) || by.set(home.id, new Set()).get(home.id)).add(id);
-    };
-    for (const p of IX.list) {
-      if (p.kind !== 'portal') continue;
-      for (const x of (archiveOf(p) || {}).relations || []) if (x.type === 'dungeon_drop_interest' && gear.has(x.to)) give(p, x.to);
-    }
-    for (const id of gear) {
-      for (const x of (archiveOf(IX.records.get(id)) || {}).relations || []) {
-        const from = x.type === 'dropped_by' && x.to && IX.records.get(x.to);
-        if (!from) continue;
-        if (from.kind === 'portal') give(from, id);
-        else if (from.kind === 'enemy') for (const at of (IX.foundIn && IX.foundIn.get(from.id)) || []) { const p = IX.records.get(at); if (p && p.kind === 'portal') give(p, id); }
-      }
-    }
-    givesMemo = new Map([...by].map(([k, ids]) => [k, [...ids].map(id => IX.records.get(id))
-      .sort((a, b) => tierScore(b) - tierScore(a) || String(a.name).localeCompare(b.name))]));
-    return givesMemo;
-  }
-  // The gear a dungeon gives that a class can hold, of one hand or any.
-  const classHolds = (cls, g) => ((IX.records.get(cls) || {}).slots || []).includes(g.slot);
-  const gaveTo = (r, cls, hand) => (dungeonGives().get(r.id) || []).filter(g => (!hand || g.hand === hand) && (!cls || classHolds(cls, g)));
+  const dungeonGives = families.dungeonGives;
+  const classHolds = families.classHolds;
+  const gaveTo = families.gaveTo;
   // One slot a hand is drawn by: the sword for weapons, the spell for abilities, the leather armour, the ring.
   const HAND_PIC = { weapon: 1, ability: 11, armor: 6, ring: 9 };
   // What the filter found in a dungeon, as small pictures, best first.
@@ -771,7 +633,7 @@
   }
 
   /* ---------------- middle ---------------- */
-  let pending = [], ctxNow = { d: null }, viewNow = 'rows', familyOf = null, searchFirst = '';
+  let pending = [], ctxNow = { d: null }, viewNow = 'rows', searchFirst = '';
   function mid() {
     const box = $('ixbMid');
     hideTip();
@@ -950,7 +812,7 @@
   // Everything that matches, sorted into its families, which narrow it in one click.
   function search(box) {
     box.dataset.fam = '';
-    if (!familyOf) { familyOf = new Map(); for (const d of IX.domains) for (const id of d.ids) if (!familyOf.has(id)) familyOf.set(id, d.id); }
+    const familyOf = families.familyMembership();
     const hits = IX.search(S.q, 800);
     const fam = r => familyOf.get(r.id) || (IX.isTechnical(r) ? 'tech' : 'other');
     const per = count(hits.map(fam));
@@ -974,14 +836,7 @@
   }
 
   // A family's taste: one picture per section, then its most telling members, no sprite twice.
-  function sampleOf(d, n) {
-    const out = [], keys = new Set();
-    const add = id => { const r = IX.records.get(id); const k = r && IX.picKey(r); if (r && k && !keys.has(k) && IX.hasPicture(r)) { keys.add(k); out.push(id); } };
-    for (const g of d.groups) add(g.pic);
-    const ranked = d.ids.map(id => IX.records.get(id)).sort((a, b) => (d.sortBy ? d.sortBy(a) - d.sortBy(b) : 0));
-    for (const r of ranked) { if (out.length >= n) break; add(r.id); }
-    return out.slice(0, n);
-  }
+  const sampleOf = families.sampleOf;
   // A family's sections as links; gear's twenty-nine read as its four hands.
   function hubSections(d) {
     if (d.id === 'gear') return Object.entries(HAND_SAY).map(([h, say]) => h === 'ability' && d.abilities
@@ -997,7 +852,6 @@
    * marks of the realm's score they come out at.
    */
   function eventCards(rows, d) {
-    const faces = r => [...new Set([...r.event.spawns.map(s => s.id), ...(r.event.waves || []).flatMap(w => w.enemies.map(x => x.id))].filter(Boolean))];
     // A long, regular run of marks (the mercenaries, at every tenth) is said as the step and the range.
     const marks = s => {
       const a = s.at;
@@ -1013,7 +867,7 @@
     const lines = e => [e.begins !== undefined ? ['The event begins', e.begins + '%'] : null,
       ...e.spawns.filter(s => marks(s)).map(s => [s.name, marks(s)])].filter(Boolean);
     return '<div class="ixb-evgrid">' + rows.slice().sort((a, b) => d.sortBy(a) - d.sortBy(b)).map(r => {
-      const e = r.event, ids = faces(r), say = lines(e), shown = say.slice(0, 4);
+      const e = r.event, ids = families.eventFaces(r), say = lines(e), shown = say.slice(0, 4);
       // Every creature the event names, pictured or not: two of Christmas's three have no card in the Index.
       const named = new Set([...e.spawns.map(s => s.id || s.name), ...ids]).size;
       return '<div class="ixb-famcard"><button type="button" class="ixb-t" data-pick="' + esc(r.id) + '">'
