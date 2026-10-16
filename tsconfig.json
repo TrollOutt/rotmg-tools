@@ -21,6 +21,7 @@
     "web/index-grouping.js",
     "web/index-families.js",
     "web/app-data.js",
+    "web/fiches-data.js",
     "web/progression-module.d.ts"
   ]
 }

@@ -82,6 +82,7 @@ async function run({ bundle, answer }) {
   };
   page.window.document = page.document;
   page.globalThis = page.window;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../web/fiches-data.js'), 'utf8'), page, { filename: 'web/fiches-data.js' });
   vm.runInNewContext(instrumented, page, { filename: 'web/fiches-c.js' });
   await flush();
   const fiches = page.window.__fiches;

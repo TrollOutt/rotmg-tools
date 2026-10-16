@@ -43,6 +43,9 @@ for (const file of ['assets/index/loot-bags.png', 'assets/index/forge-ui.png', '
   assert(!offline.html.includes('url(' + file + ')'), file + ': card CSS must work from a single file');
 }
 for (const version of [served, offline]) {
+  const cardDataAt = version.html.indexOf('var FichesData =');
+  assert(cardDataAt >= 0 && cardDataAt < version.html.indexOf('const cardData = FichesData.createCardData('));
+  assert(!version.html.includes('src="fiches-data.js"'), 'Card data module is embedded in both existing builds');
   const resolverAt = version.html.indexOf('var AppData =');
   assert(resolverAt >= 0 && resolverAt < version.html.indexOf('const appData = AppData.createItemResolver('),
     'Calculator data module is inlined before its adapters in both HTML copies');

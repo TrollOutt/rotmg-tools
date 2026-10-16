@@ -25,6 +25,7 @@ async function run({ bundle, answer }) {
     MutationObserver: observer, ResizeObserver: observer, IntersectionObserver: observer,
     JSON: counted, console, Math, Object, Map, Set, WeakMap, WeakSet, Promise, RegExp, String, Number, Array, Date, Boolean, Error, TypeError };
   page.window.document = page.document; page.globalThis = page.window;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../web/fiches-data.js'), 'utf8'), page, { filename: 'web/fiches-data.js' });
   vm.runInNewContext(instrumented, page, { filename: 'web/fiches-c.js' });
   await flush();
   return { fiches: page.window.__fiches, layout: page.window.__layout, fetched, bigParses: () => bigParses };

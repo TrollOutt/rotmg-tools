@@ -54,36 +54,17 @@
     (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.json()))
       .then(j => { window.RealmGearEffects = j.items || {}; }).catch(() => { window.RealmGearEffects = {}; }).finally(settled);
   }
-  let reRecords = null;
-  /*
-   * Ce que RealmEye sait. Le site lit assets/index/realmeye-enrichment.json. La copie à garder,
-   * ouverte depuis le disque, n'a aucun fichier à côté d'elle à interroger : le fetch échouait et
-   * les fiches restaient sans leurs faits et leurs notes. Mais elle porte ce même fichier en texte,
-   * qu'elle décode au moment où une fiche en a besoin, pas au démarrage.
-   */
-  const keptEnrichment = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.realmeyeEnrichmentText;
-  if (keptEnrichment) Promise.resolve().finally(settled);
-  else fetch('assets/index/realmeye-enrichment.json').then(r => r.json())
-    .then(j => { reRecords = j.records || {}; }).catch(() => { reRecords = {}; }).finally(settled);
-  function communityRecords() {
-    if (reRecords === null && keptEnrichment) {
-      try { reRecords = JSON.parse(keptEnrichment).records || {}; } catch (err) { reRecords = {}; }
-    }
-    return reRecords || {};
-  }
-
-  /* Ce que le client déclare et que l'Index ne porte pas encore : forge, feed power, XP, poussière. */
-  const keptForge = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.clientForgeText;
-  let clientExtra = keptForge ? null : {};
-  if (keptForge) Promise.resolve().finally(settled);
-  else fetch('assets/index/client-forge.json').then(r => r.json())
-    .then(j => { clientExtra = j || {}; }).catch(() => {}).finally(settled);
-  function forgeExtra() {
-    if (clientExtra === null && keptForge) {
-      try { clientExtra = JSON.parse(keptForge) || {}; } catch (err) { clientExtra = {}; }
-    }
-    return clientExtra;
-  }
+  // One shared reader for both layouts; keep each request in its original phase.
+  const cardData = FichesData.createCardData({
+    getSources: () => (window.ROTMG_BUNDLE || {}).sources,
+    fetchCommunity: url => fetch(url).then(r => r.json()),
+    fetchForge: url => fetch(url).then(r => r.json()),
+    settled
+  });
+  cardData.loadCommunity();
+  const communityRecords = () => cardData.communityRecords();
+  cardData.loadForge();
+  const forgeExtra = () => cardData.forgeExtra();
   // Both card layouts read the same lazy payload, including in the kept copy.
   window.RealmCardExtras = { forge: forgeExtra, read: readCardFile, asset: cardAssetUrl };
   const index = () => window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index;
@@ -178,62 +159,8 @@
   }
 
   /* ---------- ce que RealmEye sait ---------- */
-  const SUMMARY_LABELS = ['Tier Grouped Drops', 'Blueprint', 'Drops From', 'Obtained Through', 'Tier', 'On Equip',
-    'Effect(s)', 'MP Cost', 'XP Bonus', 'Soulbound', 'Feed Power', 'Forging Cost', 'Dismantling Value', 'Dust Type',
-    'Loot Bag', 'Notes', 'Shots', 'Damage', 'Projectile Speed', 'Lifetime', 'Range', 'Rate of Fire', 'Reskin(s)',
-    'Upgrade', 'Reactive Proc', 'Potion', 'Consumed with use', 'Amplitude', 'Frequency', 'Power Level', 'Cooldown'];
-  const LABEL_RX = new RegExp('(?:^|\\s)(' + SUMMARY_LABELS.slice().sort((a, b) => b.length - a.length)
-    .map(x => x.replace(/[()]/g, '\\$&')).join('|') + ')(?=\\s|$)', 'g');
-
-  /*
-   * 1 191 objets sur 3 134 n'ont que le résumé aplati de leur page RealmEye,
-   * sans champs. On relit ce résumé pour les quelques champs sûrs ; dans le
-   * vrai site, cela appartient au générateur, pas à la page.
-   */
-  function parseSummary(text, about) {
-    let body = String(text || '');
-    if (about && body.startsWith(about)) body = body.slice(about.length);
-    const hits = [...body.matchAll(LABEL_RX)];
-    if (hits.length < 2) return { prose: body.trim(), fields: {} };
-    const fields = {};
-    let blueprint = false;
-    hits.forEach((m, i) => {
-      const label = m[1];
-      const from = m.index + m[0].length;
-      const to = label === 'Notes' ? body.length : (hits[i + 1] ? hits[i + 1].index : body.length);
-      const value = body.slice(from, to).trim();
-      if (label === 'Blueprint') { blueprint = true; return; }
-      const key = (blueprint && /Drops From|Obtained Through/.test(label) ? 'Blueprint ' : '') + label;
-      if (!(key in fields)) fields[key] = value;
-    });
-    return { prose: '', fields };
-  }
-
-  function communityOf(r) {
-    const data = communityRecords()[r.id] || null;
-    const out = { facts: {}, notes: '', prose: [], variants: '' };
-    if (!data) return out;
-    const f = data.facts || {};
-    const pick = (k, ...names) => { for (const n of names) if (f[n]) { out.facts[k] = f[n]; return; } };
-    pick('power', 'power_level'); pick('xp', 'xp_bonus', 'total_xp_bonus'); pick('feed', 'feed_power');
-    pick('dismantle', 'dismantling_value'); pick('forge', 'forging_cost'); pick('dust', 'dust_type');
-    pick('bag', 'loot_bag'); pick('effect', 'effect_s'); pick('got', 'obtained_through');
-    const summary = (data.presentation && data.presentation.summary) || '';
-    const parsed = parseSummary(summary, r.about);
-    const F = parsed.fields;
-    const ok = (k, v, rx) => { if (!out.facts[k] && v && rx.test(v)) out.facts[k] = v; };
-    ok('xp', F['XP Bonus'], /^\d+%$/);
-    ok('feed', F['Feed Power'], /^[\d,]+$/);
-    ok('dismantle', F['Dismantling Value'], /^[\d\s/]+$/);
-    ok('forge', F['Forging Cost'], /^[\w\s/()]+$/);
-    ok('power', F['Power Level'], /^\d+$/);
-    if (F['Notes']) out.notes = F['Notes'].replace(/^TBA\s+/, '');
-    out.variants = [F['Reskin(s)'] && 'Reskin: ' + F['Reskin(s)'], F['Upgrade'] && 'Upgrade: ' + F['Upgrade']]
-      .filter(Boolean).join(' · ');
-    /* De la prose seulement si c'en est : une table des matières n'en est pas. */
-    if (parsed.prose && /[a-z]\.(\s|$)/.test(parsed.prose)) out.prose.push(parsed.prose);
-    return out;
-  }
+  const parseSummary = (text, about) => cardData.parseSummary(text, about);
+  const communityOf = r => cardData.communityOf(r);
 
   /* ---------- relire la fiche que le site vient de dessiner ---------- */
   function readCard(box) {
@@ -728,7 +655,7 @@
 
   /* Ce qui manque est dit, pas laissé en blanc ; la boîte ne s'affiche que quand il y a deux colonnes. */
   const emptyBox = (title, say) => '<div class="ix-block fc2-empty"><div class="ix-part"><h4>' + esc(title) + '</h4><p>' + esc(say) + '</p></div></div>';
-  const powerOf = (r, com) => { const cx = forgeExtra()[r.clientId || r.name] || {}; return cx.power !== undefined ? String(cx.power) : com.facts.power || ''; };
+  const powerOf = (r, com) => cardData.powerOf(r, com);
   function sheet2(r, card, com) {
     const t = tierOf(r), tc = tierColor(r);
     const holds = rowByLabel(card.rows.links, /may hold/i);

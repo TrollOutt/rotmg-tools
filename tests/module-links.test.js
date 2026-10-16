@@ -15,6 +15,12 @@ assert(sourceHtml.indexOf('<script src="app-data.js"></script>') >= 0
 assert.equal((app.match(/AppData\.createItemResolver\(/g) || []).length, 1,
   'Calculator adapters create one shared item resolver');
 
+assert(sourceHtml.indexOf('<script src="fiches-data.js"></script>') >= 0
+  && sourceHtml.indexOf('<script src="fiches-data.js"></script>') < sourceHtml.indexOf('<script src="fiches-c.js"></script>'),
+  'Card data module loads before both card layouts');
+assert.equal((read('web/fiches-c.js').match(/FichesData\.createCardData\(/g) || []).length, 1,
+  'Card layouts share one data factory');
+
 const atlasTemplate = read('tools/atlas-viewer.html');
 const css = read('web/style.css');
 const indexPageSource = read('web/index-page.js');
