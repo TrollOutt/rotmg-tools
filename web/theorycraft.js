@@ -361,8 +361,13 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function zonePicture(zone, side) {
     if (!zone) return '';
     if (zone.art) return indexIcon(zone.art, side, '');
-    if (zone.icon) return '<img class="tc-zone-file" width="' + side + '" height="' + side
-      + '" src="' + esc(zone.icon) + '" alt="">';
+    if (zone.icon) {
+      const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.cardImages;
+      const icon = window.RealmCardExtras ? window.RealmCardExtras.asset(zone.icon)
+        : (kept && kept[zone.icon]) || zone.icon;
+      return '<img class="tc-zone-file" width="' + side + '" height="' + side
+        + '" src="' + esc(icon) + '" alt="">';
+    }
     return '';
   }
 

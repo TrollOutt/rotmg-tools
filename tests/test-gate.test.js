@@ -39,6 +39,7 @@ const deployCritical = [
   'skins.test.js',
   'sprite-contract.test.js',
   'status-effects.test.js',
+  'standalone-zone-assets.test.js',
   'storage-contract.test.js',
   'test-gate.test.js',
   'theory-optimization.test.js',

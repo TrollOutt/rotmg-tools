@@ -4062,6 +4062,22 @@ function pointAtAtlas() {
   atlasAsked = true;
   const frame = document.getElementById('realmFrame');
   if (!frame || frame.src) return;
+  const unavailable = () => {
+    frame.hidden = true;
+    const missing = document.getElementById('realmMissing');
+    if (missing) missing.hidden = false;
+    /*
+     * And with no world, there is nothing to arrange round one.
+     *
+     * The front page is the modules laid round the realm; without the realm
+     * it is five labels round a hole. So the cards come back - which is
+     * what the kept copy gets, the ground being a folder of pictures that
+     * cannot travel inside a single downloaded page.
+     */
+    if (typeof Ring !== 'undefined') Ring.set(false, false);
+  };
+  // The kept HTML deliberately omits the Atlas; use its normal missing-map view.
+  if (BUNDLE && BUNDLE.cardImages) { unavailable(); return; }
   const base = (window.ATLAS_BASE || 'assets/atlas/');
   fetch(base + 'atlas.json', { method: 'HEAD' })
     .then(response => {
@@ -4099,20 +4115,7 @@ function pointAtAtlas() {
       (served ? fetch(src, { cache: 'no-cache' }).catch(() => {}) : Promise.resolve())
         .then(() => { frame.src = src; });
     })
-    .catch(() => {
-      frame.hidden = true;
-      const missing = document.getElementById('realmMissing');
-      if (missing) missing.hidden = false;
-      /*
-       * And with no world, there is nothing to arrange round one.
-       *
-       * The front page is the modules laid round the realm; without the realm
-       * it is five labels round a hole. So the cards come back - which is
-       * what the kept copy gets, the ground being a folder of pictures that
-       * cannot travel inside a single downloaded page.
-       */
-      if (typeof Ring !== 'undefined') Ring.set(false, false);
-    });
+    .catch(unavailable);
 }
 
 /*
