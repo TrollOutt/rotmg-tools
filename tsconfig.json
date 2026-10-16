@@ -18,6 +18,7 @@
     "web/theory-engine.js",
     "web/index-search.js",
     "web/index-filter.js",
+    "web/index-grouping.js",
     "web/progression-module.d.ts"
   ]
 }

@@ -45,6 +45,9 @@ for (const file of ['assets/index/loot-bags.png', 'assets/index/forge-ui.png', '
 for (const version of [served, offline]) {
   const searchAt = version.html.indexOf('var IndexSearch =');
   const filterAt = version.html.indexOf('var IndexFilter =');
+  const groupingAt = version.html.indexOf('var IndexGrouping =');
+  assert(groupingAt > filterAt && groupingAt < version.html.indexOf('const grouped = IndexGrouping.createGrouping('));
+  assert(!version.html.includes('<script data-lazy-src="index-grouping.js">'));
   assert(filterAt >= 0 && filterAt < version.html.indexOf('const selectRows = IndexFilter.createFilter('));
   assert(!version.html.includes('<script data-lazy-src="index-filter.js">'));
   const browseAt = version.html.indexOf('IX.search = IndexSearch.createSearch(');

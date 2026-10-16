@@ -5473,14 +5473,15 @@ function ensureIndexPage(open) {
     const late = name => new Promise((resolve, reject) => {
       if (name === 'index-search.js' ? typeof IndexSearch !== 'undefined'
         : name === 'index-filter.js' ? typeof IndexFilter !== 'undefined'
+        : name === 'index-grouping.js' ? typeof IndexGrouping !== 'undefined'
         : name === 'index-page.js' ? typeof RealmIndex !== 'undefined' : typeof RealmIndexBrowse !== 'undefined') { resolve(); return; }
       const placeholder = document.querySelector('script[data-lazy-src="' + name + '"]');
       if (!placeholder) { reject(new Error('Index script placeholder is missing: ' + name)); return; }
       loadLateScript(placeholder, resolve, () => reject(new Error('Could not load ' + name + '.')));
     });
-    // Search and selection, then the card's records and the browse interface.
+    // Search, selection and grouping, then the card's records and browse interface.
     indexScriptLoading = new Promise((resolve, reject) => {
-      late('index-search.js').then(() => late('index-filter.js')).then(() => late('index-page.js')).then(() => late('index-browse.js')).then(resolve, error => {
+      late('index-search.js').then(() => late('index-filter.js')).then(() => late('index-grouping.js')).then(() => late('index-page.js')).then(() => late('index-browse.js')).then(resolve, error => {
         indexScriptLoading = null;
         reject(error);
       });

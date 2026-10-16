@@ -464,6 +464,13 @@
     gaveTo: (r, cls, hand) => gaveTo(r, cls, hand)
   }).select;
 
+  /* Grouping owns ordered data; classifiers and catalogue lookups stay live. */
+  const grouped = IndexGrouping.createGrouping({
+    getRecord: id => IX.records.get(id),
+    isSidePortal: r => IX.isSidePortal(r),
+    getGroup: by => GROUP[by]
+  }).grouped;
+
   /* ================================================================== *
    * The page                                                             *
    * ================================================================== */
@@ -859,43 +866,6 @@
     $('ixbList').innerHTML = rows.length ? '' : '<p class="ixb-none">Nothing here with these filters. <button type="button" class="ixb-clear" data-clear>Clear them</button></p>';
     more(view, ctx);
     observe(view, ctx);
-  }
-  /*
-   * Names that differ only by a numeral (Dexterity Bonus I to IV) are one
-   * thing in four strengths: one line, with the strengths as buttons.
-   */
-  const ROMAN = /^(.*\S)\s+(I|II|III|IV|V|VI)$/;
-  function bundleRows(rows) {
-    const out = [], byBase = new Map();
-    for (const r of rows) {
-      const m = String(r.said || r.name).match(ROMAN);
-      if (!m) { out.push(r); continue; }
-      let b = byBase.get(m[1]);
-      if (!b) { b = { bundle: true, name: m[1], members: [] }; byBase.set(m[1], b); out.push(b); }
-      b.members.push([m[2], r]);
-    }
-    const order = ['I', 'II', 'III', 'IV', 'V', 'VI'];
-    for (const b of byBase.values()) b.members.sort((x, y) => order.indexOf(x[0]) - order.indexOf(y[0]));
-    return out.map(x => x.bundle && x.members.length === 1 ? x.members[0][1] : x);
-  }
-  function grouped(rows, ctx, by) {
-    const d = ctx.d;
-    const sorter = (a, b) => (d.sortBy ? d.sortBy(a) - d.sortBy(b) : 0) || String(a.name).replace(/^The /, '').localeCompare(String(b.name).replace(/^The /, ''));
-    const pack = list => d.id === 'enchants' ? bundleRows(list) : list;
-    if (by === 'section') {
-      const keep = new Set(rows.map(r => r.id));
-      const sections = ctx.g ? [ctx.g] : d.abilities
-        ? d.groups.flatMap(x => x === d.abilities.kinds[0] ? [d.abilities] : d.abilities.kinds.includes(x) ? [] : [x]) : d.groups;
-      const parts = sections.map(p => ({ title: p.title, g: p, rows: pack(p.ids.filter(id => keep.has(id)).map(id => IX.records.get(id)).sort(sorter)) }));
-      const side = rows.filter(r => IX.isSidePortal(r));
-      if (side.length && d.id === 'dungeons') parts.push({ title: 'Other portals', rows: side.sort(sorter) });
-      return parts.filter(p => p.rows.length);
-    }
-    const G = GROUP[by], buckets = new Map();
-    for (const r of rows) { const k = G.key(r); (buckets.get(k) || buckets.set(k, []).get(k)).push(r); }
-    // The catch-all bucket (no home, no status) goes last, whatever its size.
-    return [...buckets].map(([title, list]) => ({ title, rows: pack(list.sort(sorter)) }))
-      .sort((a, b) => ((a.title === G.last) - (b.title === G.last)) || (G.order ? G.order(a.title) - G.order(b.title) : b.rows.length - a.rows.length) || a.title.localeCompare(b.title));
   }
   // Draw the next slice: a few hundred cells at a time, whole groups where they fit.
   function more(view, ctx) {
