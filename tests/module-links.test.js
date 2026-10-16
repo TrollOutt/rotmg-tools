@@ -8,6 +8,13 @@ const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
 const app = read('web/app.js');
+const sourceHtml = read('web/index.html');
+assert(sourceHtml.indexOf('<script src="app-data.js"></script>') >= 0
+  && sourceHtml.indexOf('<script src="app-data.js"></script>') < sourceHtml.indexOf('<script src="app.js"></script>'),
+  'Calculator data module loads before its adapters');
+assert.equal((app.match(/AppData\.createItemResolver\(/g) || []).length, 1,
+  'Calculator adapters create one shared item resolver');
+
 const atlasTemplate = read('tools/atlas-viewer.html');
 const css = read('web/style.css');
 const indexPageSource = read('web/index-page.js');

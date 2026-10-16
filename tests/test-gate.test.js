@@ -9,6 +9,7 @@ const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
 const scripts = pkg.scripts || {};
 
 const deployCritical = [
+  'app-data.test.js',
   'atlas-combat.test.js',
   'build-handover.test.js',
   'engine.test.js',

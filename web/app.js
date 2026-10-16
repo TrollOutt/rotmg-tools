@@ -200,53 +200,12 @@ const hasItemArt = (name, awokenKey) =>
  * simply filled in by hand, and the interface says which fields it could not
  * work out.
  */
-function resolveItem(name) {
-  if (!name || !state.data) return null;
-  const known = typeof EnchantItems !== 'undefined' ? EnchantItems.lookup(name) : null;
-
-  // Match the awakenable list case-insensitively too.
-  let awokenKey = state.data.awakenings.has(name) ? name : null;
-  if (!awokenKey) {
-    const target = name.trim().toLowerCase();
-    for (const key of state.data.awakenings.keys()) if (key.toLowerCase() === target) { awokenKey = key; break; }
-  }
-  const awoken = awokenKey ? state.data.awakenings.get(awokenKey) : null;
-  if (!known && !awoken) return null;
-
-  const resolved = {
-    name: known ? known.name : awokenKey,
-    awokenKey,
-    awoken: awoken || [],
-    type: known ? known.type : null,
-    dust: known ? known.dust : null,
-    tiered: Boolean(known && known.tiered),
-    note: known && known.note ? known.note : '',
-    // Alien or Neo Alien, straight from the catalogue when the item has one.
-    special: known && known.base ? known.base : null,
-    source: known ? (awoken ? 'both' : 'wiki') : 'awakened'
-  };
-
-  if (awoken && awoken.length) {
-    const mod = state.data.byName.get(awoken[0]);
-    if (mod) {
-      if (!resolved.type) resolved.type = [...mod.itemTags][0] || null;
-      // Fallback for an awakenable item the catalogue does not carry: an
-      // awakened enchantment tagged ALIEN belongs to an alien base, and the
-      // "Neo" reskins use the NEO_ALIEN pool. The catalogue wins when it knows.
-      if (!resolved.special && mod.tags.has('ALIEN')) resolved.special = /\bneo\b/i.test(resolved.name) ? 'NEO_ALIEN' : 'ALIEN';
-    }
-  }
-  return resolved;
-}
-
-// Everything the item picker can offer: named gear, tiered placeholders and
-// every awakenable item, de-duplicated.
-function knownItemNames() {
-  const names = new Set();
-  if (typeof EnchantItems !== 'undefined') for (const name of EnchantItems.index.keys()) names.add(name);
-  if (state.data) for (const name of state.data.awakenings.keys()) names.add(name);
-  return [...names].sort((a, b) => a.localeCompare(b));
-}
+const appData = AppData.createItemResolver({
+  getData: () => state.data,
+  getItems: () => typeof EnchantItems !== 'undefined' ? EnchantItems : undefined
+});
+function resolveItem(name) { return appData.resolveItem(name); }
+function knownItemNames() { return appData.knownItemNames(); }
 
 /* ------------------------------------------------------------------ *
  * Configuration read from the editor                                  *
@@ -1872,43 +1831,8 @@ window.benchWith = function (said) {
  * rather than being typed in again. What cannot be resolved is dropped rather
  * than guessed: an enchantment this page does not know is one it cannot price.
  */
-function handoverSetup(said) {
-  const resolved = resolveItem(said.item);
-  const slots = (said.slots || [])
-    .map(handoverEnchantName)
-    .filter(Boolean)
-    .slice(0, 4)
-    .map(name => ({ name, locked: false }));
-  return {
-    resolved,
-    setup: {
-      item: said.item,
-      rarity: String(Math.max(slots.length, resolved && resolved.slots ? resolved.slots : 0) || ''),
-      type: (resolved && resolved.type) || '',
-      dust: (resolved && resolved.dust) || '',
-      slots
-    }
-  };
-}
-
-/* An enchantment's name as this page knows it: exact, without its rank numeral, or up to spelling. */
-function handoverEnchantName(name) {
-  if (!name) return null;
-  const byName = state.data.byName;
-  if (byName.has(name)) return name;
-  const bare = String(name).replace(/\s+(?:[IVX]+|\d+)$/, '').trim();
-  if (byName.has(bare)) return bare;
-  const plain = value => String(value).replace(/\s+(?:[IVX]+|\d+)$/, '').replace(/['’\s-]+/g, ' ').trim().toLowerCase();
-  const want = plain(name);
-  const tier = (/\s+([IVX]+|\d+)$/.exec(String(name)) || [])[1];
-  let fallback = null;
-  for (const other of byName.keys()) {
-    if (plain(other) !== want) continue;
-    if (!tier || new RegExp('\\s' + tier + '$').test(other)) return other;
-    fallback = fallback || other;
-  }
-  return fallback;
-}
+function handoverSetup(said) { return appData.handoverSetup(said); }
+function handoverEnchantName(name) { return appData.handoverEnchantName(name); }
 
 /*
  * One item handed over from the Index, in a tab of its own. It used to be

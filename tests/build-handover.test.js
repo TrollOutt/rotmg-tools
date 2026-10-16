@@ -106,11 +106,15 @@ const context = {
   module: { exports: {} }, window: {},
   Date, Math, Set, Array, String, Boolean,
   state: {
-    data: { byName: new Map(['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(name => [name, {}])) },
+    data: { awakenings: new Map(), byName: new Map(['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(name => [name, {}])) },
     tabs: existing
   },
   resolveItem: name => (known.has(name) ? Object.assign({ name }, known.get(name)) : null)
 };
+context.appData = require('../web/app-data').createItemResolver({
+  getData: () => context.state.data,
+  getItems: () => ({ index: known, lookup: name => context.resolveItem(name) })
+});
 vm.runInNewContext(script, context, { filename: 'app.js (build hand-over slice)' });
 const { tabsForBuild, enchantCan } = context.module.exports;
 const before = JSON.stringify(existing);

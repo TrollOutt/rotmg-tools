@@ -523,6 +523,7 @@ const jsonForScript = value => JSON.stringify(value)
   .replace(LINE_SEPARATORS, ch => ch.charCodeAt(0) === 0x2028 ? '\\u2028' : '\\u2029');
 
 const css = readWeb('style.css');
+const appDataSource = readWeb('app-data.js');
 const appSource = readWeb('app.js');
 // The Index card, drawn over the one index-page.js writes: inlined like the rest.
 const cardCss = readWeb('fiches-c.css');
@@ -565,7 +566,7 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
   || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
@@ -699,6 +700,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(indexSource)}\n</script>`,
     `<script>\n${safe(browseSource)}\n</script>`,
     `<script>\n${safe(routerSource)}\n</script>`,
+    `<script>\n${safe(appDataSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);

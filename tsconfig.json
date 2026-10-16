@@ -20,6 +20,7 @@
     "web/index-filter.js",
     "web/index-grouping.js",
     "web/index-families.js",
+    "web/app-data.js",
     "web/progression-module.d.ts"
   ]
 }

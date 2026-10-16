@@ -43,6 +43,10 @@ for (const file of ['assets/index/loot-bags.png', 'assets/index/forge-ui.png', '
   assert(!offline.html.includes('url(' + file + ')'), file + ': card CSS must work from a single file');
 }
 for (const version of [served, offline]) {
+  const resolverAt = version.html.indexOf('var AppData =');
+  assert(resolverAt >= 0 && resolverAt < version.html.indexOf('const appData = AppData.createItemResolver('),
+    'Calculator data module is inlined before its adapters in both HTML copies');
+  assert(!version.html.includes('src="app-data.js"'), 'Built copies never fetch the calculator data module');
   const searchAt = version.html.indexOf('var IndexSearch =');
   const filterAt = version.html.indexOf('var IndexFilter =');
   const groupingAt = version.html.indexOf('var IndexGrouping =');
