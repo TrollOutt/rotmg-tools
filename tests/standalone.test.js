@@ -12,6 +12,14 @@ function bundle(file) {
   return { html, data: JSON.parse(match[1]) };
 }
 const served = bundle('docs/index.html'), offline = bundle('docs/Realm-Tools.html');
+const { modulesFor } = require('./home-navigation.test');
+for (const [version, skins] of [[served, true], [offline, false]]) {
+  const ring = modulesFor(version.html, version.html);
+  assert.equal(ring.some(m => m.go === 'skins'), skins,
+    'The built home ring must agree with the Skin Viewer page availability');
+  assert.equal(ring.some(m => m.walk), skins,
+    'Only the served home ring may request the Skin Viewer walking strip');
+}
 for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText', 'clientForgeText']) {
   assert(!served.data.sources[name], name + ' must not increase calculator startup');
   assert(offline.data.sources[name], name + ' missing from the downloadable copy');

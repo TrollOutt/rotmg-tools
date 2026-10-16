@@ -6045,6 +6045,8 @@ const R_OF_H = .225, R_MOST = 280, R_LEAST = 140;
  * yet. A sixth module is a sixth entry here and nothing else: the geometry
  * has always drawn three rows a side.
  */
+// The kept HTML omits the Skin Viewer. Its ring must offer the same pages
+// as its cards, without requesting artwork for a tool that is not present.
 const MODULES = [
   { side: -1, row: 0, go: 'enchant', name: 'Enchant Calculator',
     line: 'What an enchantment really costs.',
@@ -6088,7 +6090,7 @@ const MODULES = [
           + 'to the next one takes, and which food is the cheapest way there.',
     // Kept with the other cards' pictures: What's New is rebuilt every update and this turtle was last season's.
     art: 'Page Art/Pet Fame.png' }
-];
+].filter(m => !m.go || document.getElementById(PAGES[m.go]));
 
 const NS = 'http://www.w3.org/2000/svg';
 const mix = (a, b, t) => a + (b - a) * t;

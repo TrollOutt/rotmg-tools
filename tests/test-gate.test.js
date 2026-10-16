@@ -17,6 +17,7 @@ const deployCritical = [
   'index-extras.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',
+  'home-navigation.test.js',
   'index-quality.test.js',
   'index-sheet.test.js',
   'index-sheet-style.test.js',
