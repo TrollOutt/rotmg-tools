@@ -22,6 +22,7 @@ const deployCritical = [
   'index-sheet.test.js',
   'index-sheet-style.test.js',
   'progression.test.js',
+  'progression-slider.test.js',
   'realm-events.test.js',
   'projections.test.js',
   'realm-brush-engine.test.js',

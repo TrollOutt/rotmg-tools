@@ -394,9 +394,30 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function drawDungeonCards() {
     const list = el('tcZones-dungeon');
     if (!list) return;
-    list.innerHTML = dungeonCards(selectedDungeons(profileDraft));
-    filterDungeonCards((el('tcZoneSearch').value || '').trim().toLowerCase());
-    startFilms(list);
+    const dungeons = selectedDungeons(profileDraft);
+    const selected = new Set(dungeons.map(zone => zone.id));
+    const cards = new Map([...list.children].map(node => [node.dataset.removeZone, node]));
+    let changed = false;
+    for (const [id, node] of cards) {
+      if (!selected.has(id)) { node.remove(); changed = true; }
+    }
+    // Card content depends only on the zone, not the selected difficulty.
+    // Keep unchanged portals (and their animation nodes) in the document.
+    let next = list.firstElementChild;
+    for (const zone of dungeons) {
+      let node = cards.get(zone.id);
+      if (!node) {
+        list.insertAdjacentHTML('beforeend', dungeonCards([zone]));
+        node = list.lastElementChild;
+        changed = true;
+      }
+      if (node !== next) { list.insertBefore(node, next); changed = true; }
+      next = node.nextElementSibling;
+    }
+    if (changed) {
+      filterDungeonCards((el('tcZoneSearch').value || '').trim().toLowerCase());
+      startFilms(list);
+    }
   }
 
   function drawWelcome() {
