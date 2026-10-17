@@ -1679,63 +1679,15 @@ const TINT = {
    * at a time, which is what a person does by hand and is usually the answer.
    * The page says so rather than claiming a best.
    */
-  /*
-   * The same build every time, whatever is on the page.
-   *
-   * A search reads the build in front of it, so searching twice searched from
-   * two different places and gave two different answers - which makes the
-   * button feel like a dice roll rather than an answer. The starting point is
-   * now always the same: the plainest thing that fits each slot, with
-   * anything kept left exactly as it is.
-   */
-  function bareOf(state) {
-    const out = JSON.parse(JSON.stringify(state));
-    HANDS.forEach(([hand], i) => {
-      const kind = data.byClass[out.klass];
-      const plain = bottomOf((kind && kind.slots || [])[i]);
-      const held = out.locked[hand];
-      const worn = state.gear[hand] || {};
-      /*
-       * A held item stays, with the number of slots it actually has - there
-       * you are describing the copy in your bag. Anything else is stripped
-       * back to the plainest thing that fits, with all four slots, because
-       * there the question is what the item could be.
-       */
-      out.gear[hand] = {
-        name: held ? (worn.name || null)
-                   : ((plain && data.byItem[plain]) ? plain : null),
-        slots: held ? (worn.slots || 4) : 4,
-        ench: [0, 1, 2, 3].map(at =>
-          out.locked[hand + ':' + at] ? (worn.ench || [])[at] || null : null)
-      };
-    });
-    return out;
-  }
-
-  /*
-   * What makes one build another build: its four items, and nothing else.
-   *
-   * Two answers wearing the same four things with different enchantments are
-   * the same build told two ways - the blacklist is how somebody asks for a
-   * different item, and an enchantment is what gets rolled on whatever is
-   * worn. So an alternative has to differ in at least one of the four.
-   */
-  const gearSignature = one => HANDS.map(([hand]) =>
-    (one && one.gear && one.gear[hand] && one.gear[hand].name) || '').join('\u241f');
-
-  /*
-   * How many gear sets a search remembers, and how many it offers.
-   *
-   * The search already scores whole builds as it goes - every item it tries
-   * in a slot is tried inside a complete build - so the next-best gear sets
-   * are there to be kept for nothing: a small table, best score per
-   * signature, pruned back whenever it doubles. Afterwards the best few that
-   * are not the winner are given their own enchantments and ranked by the
-   * same score, which is what the page offers as alternatives.
-   */
-  const GATHER_KEEP = 16, ALTERNATIVES_TRY = 6, ALTERNATIVES_KEEP = 4;
-  const byScoreThenSignature = (a, b) =>
-    (b.score - a.score) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+  // Result preparation and ranking have no page state; these readers stay live.
+  const GATHER_KEEP = 16;
+  const resultCalculations = TheoryEngine.createResults({
+    getData: () => data, getProfile: () => profile, hands: HANDS, bottomOf,
+    enchantFitsItem, optimiseSteps: (...args) => optimiseSteps(...args), scoreOf, sayGoal,
+    alternativesTry: 6, alternativesKeep: 4
+  });
+  const { bareOf, gearSignature, byScoreThenSignature, alternativesOfSteps,
+    describeAlternative, rememberAlternatives } = resultCalculations;
 
   const { optimiseSteps } = TheoryEngine.createOptimiser({
     getProfile: () => profile, getAccess: () => access, getData: () => data,
@@ -1834,37 +1786,6 @@ const TINT = {
       )
     );
   }
-
-  function* alternativesOfSteps(best, gather, goal) {
-    const lead = { key: gearSignature(best.state), state: best.state, score: best.score };
-    const pool = [...(gather ? gather.values() : [])]
-      .filter(one => one.key !== lead.key).sort(byScoreThenSignature).slice(0, ALTERNATIVES_TRY);
-    let looked = 0;
-    const found = [];
-    for (const one of pool) {
-      const trial = JSON.parse(JSON.stringify(best.state));
-      const locks = Object.assign({}, trial.locked);
-      for (const [hand] of HANDS) {
-        const worn = trial.gear[hand];
-        worn.name = one.gear[hand];
-        // What no longer fits the item it is on cannot stay on it.
-        const had = worn.ench.slice();
-        worn.ench = had.map((id, at) => (id && enchantFitsItem(worn.name, had, at)) ? id : null);
-        trial.locked[hand] = true;
-      }
-      const done = yield* optimiseSteps(trial, goal, null);
-      looked += done.looked;
-      if (!Number.isFinite(done.score)) continue;
-      done.state.locked = locks;
-      const key = gearSignature(done.state);
-      if (key === lead.key || found.some(other => other.key === key)) continue;
-      found.push({ key, state: done.state, score: done.score });
-    }
-    const list = [lead].concat(found).sort((a, b) =>
-      (b.score - a.score) || (a === lead ? -1 : b === lead ? 1 : byScoreThenSignature(a, b)));
-    return { list: list.slice(0, 1 + ALTERNATIVES_KEEP), looked };
-  }
-
 
   function alternativesOf(best, gather, goal) {
     return runOptimiserSteps(
@@ -4127,15 +4048,8 @@ const TINT = {
    * search is asked again. With nothing to offer there is nothing drawn.
    */
   let alternatives = null;
-  function alternativeContext(state) {
-    const rest = Object.assign({}, state, { gear: null, name: null });
-    return JSON.stringify(rest) + '|' + JSON.stringify(profile);
-  }
   function alternativesLive() {
-    return !!(alternatives && alternatives.list.length > 1
-      && alternatives.context === alternativeContext(build)
-      && alternatives.list[alternatives.at]
-      && alternatives.list[alternatives.at].key === gearSignature(build));
+    return resultCalculations.alternativesLive(alternatives, build);
   }
   /*
    * All of them on the one line, so they can be compared at a glance: the
@@ -4155,12 +4069,7 @@ const TINT = {
     box.style.setProperty('--alts', list.length);
     box.innerHTML = '<span class="tc-alts-label" title="Whole builds the last search found, ranked by the same goal">Alt</span>'
       + list.map((one, i) => {
-        const probe = JSON.parse(JSON.stringify(build));
-        probe.gear = JSON.parse(JSON.stringify(one.gear));
-        const said = goals.map(goal => goal.say + ' ' + sayGoal(goal, scoreOf(probe, goal))).join(' · ');
-        const behind = lead.score && i ? Math.round((one.score - lead.score) / Math.abs(lead.score) * 1000) / 10 : 0;
-        const where = i === 0 ? 'Best found' : 'Alternative ' + i;
-        const names = HANDS.map(([hand]) => one.gear[hand].name || '').join(', ');
+        const { said, behind, where, names } = describeAlternative(build, one, lead, i, goals);
         const tag = (i === 0 ? 'Best found' : 'Alt ' + i)
           + (i && behind ? ' <u>' + (behind > 0 ? '+' : '') + behind + '%</u>' : '');
         return '<button type="button" class="tc-alts-pick' + (i === at ? ' is-on' : '') + '"'
@@ -4658,10 +4567,7 @@ const TINT = {
         const name = build.name;
         for (const one of ranked.list) one.state.name = name;
         tabs[onTab] = build = ranked.list[0].state;
-        alternatives = ranked.list.length > 1 ? {
-          list: ranked.list.map(one => ({ key: one.key, gear: JSON.parse(JSON.stringify(one.state.gear)), score: one.score })),
-          at: 0, view: 1, context: alternativeContext(build), goal: aim
-        } : null;
+        alternatives = rememberAlternatives(ranked, build, aim);
         keep(); paint();
         /*
          * Where each thing asked for started and where it got to. Measured as
@@ -4675,9 +4581,7 @@ const TINT = {
          * price.
          */
         said.innerHTML = wanted.map((one, i) => {
-          const now = scoreOf(build, one);
-          const moved = was[i] && isFinite(was[i]) && was[i] !== 0
-            ? Math.round(((now - was[i]) / Math.abs(was[i])) * 100) : null;
+          const { now, moved } = resultCalculations.goalChange(build, one, was[i]);
           return '<span class="figure"><b style="color:' + esc(one.tint) + '">'
             + esc(sayGoal(one, was[i])) + ' <i class="tc-arrow">→</i> '
             + esc(sayGoal(one, now)) + '</b><small>' + esc(one.say.toLowerCase())

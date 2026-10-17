@@ -732,7 +732,9 @@ assert(
     && theory.includes('const { optimiseSteps } = TheoryEngine.createOptimiser({')
     && theory.includes('async function runOptimiserStepsAsync(')
     && /yield;\s*(?:const|let)\s+\w+\s*=\s*scoreOf\(/.test(theoryEngine)
-    && theory.includes('yield* optimiseSteps(trial, goal, null);')
+    && theoryEngine.includes('yield* optimiseSteps(trial, goal, null);')
+    && theory.includes('const resultCalculations = TheoryEngine.createResults({')
+    && theory.includes('enchantFitsItem, optimiseSteps: (...args) => optimiseSteps(...args), scoreOf, sayGoal,')
     && theory.includes('await optimiseAsync(plain, aim, null, gather);')
     && theory.includes('await optimiseAsync(build, aim, null, gather);')
     && theory.includes('await alternativesOfAsync(got, gather, aim);'),

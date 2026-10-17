@@ -370,7 +370,9 @@ for (const one of raw.classes) {
   assert.equal(t.alternativesOf(run.got, new Map(), dps).list.length, 1,
     'THEORY-ALT-011 an empty table gives the answer alone');
   const page = fs.readFileSync(path.join(root, 'web', 'theorycraft.js'), 'utf8');
-  assert(page.includes('alternatives = ranked.list.length > 1 ?')
+  const engine = fs.readFileSync(path.join(root, 'web', 'theory-engine.js'), 'utf8');
+  assert(engine.includes('return ranked.list.length > 1 ?')
+    && page.includes('alternatives = rememberAlternatives(ranked, build, aim);')
     && page.includes("if (!alternativesLive()) { box.hidden = true; box.innerHTML = ''; return; }")
     && !page.includes('data-alt-step'),
     'THEORY-ALT-011 the page draws no alternatives when there are none');
