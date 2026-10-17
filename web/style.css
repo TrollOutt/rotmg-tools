@@ -2749,6 +2749,8 @@ button.pn-open { background: none; color: var(--accent); cursor: pointer; font: 
 .st-bonus th { font-family: var(--mono); font-weight: 400; font-size: .86em; padding: 2px 10px; text-align: right; }
 .st-bonus td { padding: 3px 10px; text-align: right; }
 .st-bonus td:first-child, .st-bonus th:first-child { text-align: left; padding-left: 0; color: var(--muted); }
+.st-bonus tr.is-total td { border-top: 1px solid rgb(var(--s-lo) / .5); font-weight: 650; padding-top: 6px; }
+.st-bonus tr.is-total td:first-child { color: var(--text); }
 .st-set.is-bare { grid-template-columns: minmax(0, 1fr); }
 .st-set.is-price { border-color: rgb(221 75 90 / .35); }
 .st-note { margin: 6px 0 0; font-size: .78em; color: var(--dim); }

@@ -613,13 +613,17 @@ var WhatsNew = (function () {
     // Steps that only take away are a price for wearing the pieces together, and they add up.
     const price = steps.length > 0 && steps.every(([, w]) => Object.values(w).every(v => v < 0));
     const say = n => price ? ({ 2: 'Two worn', 3: 'Three worn', 4: 'Four worn' })[n] || n + ' worn' : n === '4' ? 'Full set' : n + ' pieces';
+    const total = {};
+    for (const [, w] of steps) for (const [k, v] of Object.entries(w)) total[k] = (total[k] || 0) + v;
     const cell = (w, s) => { const v = w[statKey(s)]; return '<td style="color:' + TINT[s] + '">' + (v ? signed(v) : '') + '</td>'; };
     // Once the story has a stage, the sets in it leave their skin to the stage.
     const skinI = !staged && skin && named(skin.said || skin.name);
     return '<article class="st-set' + (price ? ' is-price' : '') + (skin ? '' : ' is-bare') + '">' + (skinI ? '<div class="st-setskin"><span class="st-tile"><span class="st-pic">' + picture(skinI.t, 96, 6) + '</span><b>' + esc(nameOf(skinI.t)) + '</b><small>the full set</small></span></div>' : '')
       + '<div class="st-setbody"><h4>' + esc(r.said || r.name) + '</h4>' + (price || bonusOnly ? '' : '<div class="st-things is-small">' + (r.pieces || []).map(n => tile(n)).join('') + '</div>')
       + '<table class="st-bonus"><tr><th></th>' + used.map(s => '<th style="color:' + TINT[s] + '">' + s + '</th>').join('') + '</tr>'
-      + steps.map(([n, w]) => '<tr><td>' + say(n) + '</td>' + used.map(s => cell(w, s)).join('') + '</tr>').join('') + '</table>'
+      + steps.map(([n, w]) => '<tr><td>' + say(n) + '</td>' + used.map(s => cell(w, s)).join('') + '</tr>').join('')
+      // The steps add up: what the whole set gives, or what wearing them all costs, in one line.
+      + (steps.length > 1 ? '<tr class="is-total"><td>' + (price ? 'In all' : 'Total set bonus') + '</td>' + used.map(s => cell(total, s)).join('') + '</tr>' : '') + '</table>'
       + (price ? '<p class="st-note">Each line adds to the one above it.</p>' : '') + '</div></article>';
   }
   const BLOCKS = {

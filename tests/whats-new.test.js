@@ -57,6 +57,51 @@ for (const season of index.ritual.seasons) {
     'a ritual season is one the Crucible knows: ' + season.season);
 }
 
+/* ---- cumulative set bonuses, using the page's own renderer ---- */
+{
+  const vm = require('vm');
+  const source = read('web/whats-new.js');
+  const marker = '  return { init };';
+  assert.strictEqual(source.split(marker).length, 2, 'the renderer test has one export marker');
+  const exported = { exports: {} };
+  vm.runInNewContext(source.replace(marker,
+    '  return { setBlock, setIndex(value) { ix = value; } };'),
+  { module: exported, window: { addEventListener() {} }, document: {}, console });
+  const news = exported.exports;
+  function render(steps, bonusOnly = true) {
+    news.setIndex({ all: new Map([['set:Test', { name: 'Test', steps, pieces: ['Piece'] }]]) });
+    return news.setBlock('Test', bonusOnly);
+  }
+  const cells = row => [...row.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(m => m[1]);
+  const rows = html => [...html.matchAll(/<tr[^>]*>(.*?)<\/tr>/g)].slice(1).map(m => cells(m[1]));
+  const positive = render({ 2: { MAXHP: 10, ATT: 2 }, 3: { MAXMP: 5, ATT: 3 }, 4: { MAXHP: 20, DEF: 0 } });
+  assert.deepStrictEqual(rows(positive), [
+    ['2 pieces', '+10', '', '+2', ''],
+    ['3 pieces', '', '+5', '+3', ''],
+    ['Full set', '+20', '', '', ''],
+    ['Total set bonus', '+30', '+5', '+5', '']
+  ], 'HP/MP keys, partial sums and zero cells preserve every ordinary row');
+  assert.strictEqual((positive.match(/class="is-total"/g) || []).length, 1);
+  assert(positive.indexOf('class="is-total"') > positive.indexOf('Full set'), 'the total is last');
+  const negative = render({ 2: { ATT: -2 }, 3: { ATT: -3, DEF: -1 }, 4: { DEF: -4 } }, false);
+  assert.deepStrictEqual(rows(negative), [
+    ['Two worn', '\u22122', ''], ['Three worn', '\u22123', '\u22121'], ['Four worn', '', '\u22124'], ['In all', '\u22125', '\u22125']
+  ]);
+  assert(negative.includes('is-price') && negative.includes('Each line adds to the one above it.'));
+  assert(!negative.includes('st-things'), 'a price still omits the pieces');
+  for (const steps of [{}, { 4: { MAXHP: 10 } }, { 2: { ATT: -2 } }]) {
+    assert(!render(steps).includes('is-total'), 'zero or one step has no total');
+  }
+  assert.deepStrictEqual(rows(render({ 2: { ATT: 2, DEF: null }, 3: { ATT: -2, DEF: 0 } })), [
+    ['2 pieces', '+2', ''], ['3 pieces', '\u22122', ''], ['Total set bonus', '', '']
+  ], 'cancellation, zero and null values stay blank, as in ordinary cells');
+  assert(render({ 2: { ATT: 1 }, 4: { ATT: 2 } }, false).includes('Piece'), 'ordinary pieces remain visible');
+  assert(!positive.includes('st-things'), 'bonusOnly still omits the pieces');
+  const css = read('web/style.css').replace(/\r\n/g, '\n');
+  assert(css.includes('.st-bonus tr.is-total td { border-top: 1px solid rgb(var(--s-lo) / .5); font-weight: 650; padding-top: 6px; }\n'
+    + '.st-bonus tr.is-total td:first-child { color: var(--text); }'), 'the total has the requested separator and emphasis');
+}
+
 /* ---- the page, drawn from that file alone ---- */
 function element(id) {
   return { id, innerHTML: '', textContent: '', hidden: false, dataset: {}, listeners: {},
