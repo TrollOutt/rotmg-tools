@@ -336,19 +336,24 @@
     isGear: r => IX.isGear(r)
   }).search;
 
-  /* Shared display classifiers remain live; selection owns no UI state. */
-  const selectRows = IndexFilter.createFilter({
+  /* Shared display classifiers remain live; selection and options own no UI state. */
+  const filterModel = IndexFilter.createFilter({
     getState: () => S,
     getRecord: id => IX.records.get(id),
     getSidePortals: () => IX.sidePortals,
     getTags: () => TAGS,
+    getClasses: () => IX.domain('classes').ids.map(id => IX.records.get(id)),
+    getHands: () => Object.keys(HAND_SAY),
+    rankOfPlace: p => rankOfPlace(p),
     tierOf: r => tierOf(r),
     statusesOf: (r, hows) => statusesOf(r, hows),
     setClass: r => setClass(r),
     scalesOf: r => scalesOf(r),
     placeOf: r => placeOf(r),
     gaveTo: (r, cls, hand) => gaveTo(r, cls, hand)
-  }).select;
+  });
+  const selectRows = filterModel.select;
+  const prepareFacets = filterModel.options;
 
   /* Grouping owns ordered data; classifiers and catalogue lookups stay live. */
   const grouped = IndexGrouping.createGrouping({
@@ -652,16 +657,7 @@
     const bys = groupsFor(d.id, g);
     const by = bys.includes(S.by) ? S.by : defaultBy(d, g);
     const pic = IX.records.get(g ? g.pic : d.pic);
-    // Offer only the narrowing that would leave something, with the counts it would leave.
-    const inflicted = count(all.flatMap(r => statusesOf(r, ['inflicts', 'inflicts on players'])));
-    const granted = count(all.flatMap(r => statusesOf(r, ['grants'])));
-    const tiers = count(all.map(tierOf).filter(Boolean));
-    const classes = d.id === 'sets' ? count(all.map(setClass).filter(Boolean)) : new Map();
-    const scaled = d.id === 'gear' ? count(all.flatMap(scalesOf)) : new Map();
-    // Where the creatures live, biomes first, rookie to seasonal, then the dungeons from the easiest.
-    const homes = d.id === 'enemies' ? count(all.map(placeOf).filter(Boolean).map(p => p.id)) : new Map();
-    const homesOrdered = [...homes].sort((a, b) => rankOfPlace(IX.records.get(a[0])) - rankOfPlace(IX.records.get(b[0])) || IX.records.get(a[0]).name.localeCompare(IX.records.get(b[0]).name));
-    const tags = Object.entries(TAGS).filter(([k, t]) => t.fams.includes(d.id) && (S.tags.has(k) || all.some(t.test)));
+    const { inflicted, granted, tiers, classes, scaled, homes, homesOrdered, tags, dungeonClasses, handsLeft } = prepareFacets(d, all);
     // The first option names the filter, so no label is needed beside it.
     // A tint gives each option, and the chosen select, the colour of what it names.
     const select = (key, any, map, label = x => x, ordered, tint) => map.size < 2 && !S[key] ? '' : '<select data-sel="' + key + '" class="' + (S[key] ? 'is-set' : '') + '" title="' + esc(any) + '"'
@@ -692,12 +688,9 @@
     })() : '';
     // Dungeons by what they give: a class, and the kind of gear it holds. Each menu counts the dungeons that would be left.
     const giving = d.id === 'dungeons' ? (() => {
-      const ofClass = IX.domain('classes').ids.map(id => IX.records.get(id));
-      const classes = ofClass.map(c => [c.id, all.filter(r => gaveTo(r, c.id, S.dh).length).length]).filter(([, n]) => n);
-      const handsLeft = Object.keys(HAND_SAY).map(h => [h, all.filter(r => gaveTo(r, S.dcls, h).length).length]).filter(([, n]) => n);
       const classSay = v => { const c = IX.records.get(v); return IX.art(c, 16) + '<span>' + esc(c ? c.name : v) + '</span>'; };
       const handSay = v => { const p = IX.records.get((IX.slots[HAND_PIC[v]] || [])[1]); return (p ? IX.art(p, 16) : '') + '<span>' + esc(HAND_SAY[v] || v) + '</span>'; };
-      return menu('dcls', 'Any class', classes, classSay) + menu('dh', 'Any gear', handsLeft, handSay);
+      return menu('dcls', 'Any class', dungeonClasses, classSay) + menu('dh', 'Any gear', handsLeft, handSay);
     })() : '';
     const filters = giving + kindMenu + (d.id === 'gear' || d.id === 'skins' ? select('tier', 'Any tier', tiers, tierSay, TIERS.filter(t => tiers.has(t)).map(t => [t, tiers.get(t)])) : '')
       + (d.id === 'sets' ? select('cls', 'Any class', classes, v => (IX.records.get(v) || {}).name || v) : '')

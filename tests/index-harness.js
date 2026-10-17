@@ -31,11 +31,12 @@ module.exports = async function (engine, browseSource = read('web/index-browse.j
   const resultMarker = 'results(box, { d, g, all, rows });';
   assert(browseSource.includes(marker) && browseSource.includes(resultMarker), 'Index browse harness markers moved');
   let captured;
+  let filterDependencies;
   let creations = 0, filterCreations = 0, groupingCreations = 0, familyCreations = 0, familyDependencies;
   const browse = {
     window: {}, document: { getElementById: () => null }, module: { exports: {} }, clearTimeout,
     IndexSearch: { createSearch(deps) { creations++; return engine.createSearch(deps); } },
-    IndexFilter: { createFilter(deps) { filterCreations++; return require('../web/index-filter').createFilter(deps); } },
+    IndexFilter: { createFilter(deps) { filterCreations++; filterDependencies = deps; return require('../web/index-filter').createFilter(deps); } },
     IndexGrouping: { createGrouping(deps) { groupingCreations++; return require('../web/index-grouping').createGrouping(deps); } },
     IndexFamilies: { createFamilies(deps) { familyCreations++; familyDependencies = deps; return require('../web/index-families').createFamilies(deps); } },
     capture: value => { captured = value; }
@@ -45,7 +46,7 @@ module.exports = async function (engine, browseSource = read('web/index-browse.j
     .replace(/(const fams = \[...per.keys\(\)\];)\n[\s\S]*?(    const parts = new Map\(\);)/, '$1\n$2')
     .replace('    const ctx = { d: null };', '    capture({ all: hits, rows: shownHits, groups: pending }); return; const ctx = { d: null };')
     .replace(marker, `window.RealmIndexBrowse = {
-      IX, grouped, groupsFor, buildDomains, readRecords, readArchive,
+      IX, facetOptions: prepareFacets, grouped, groupsFor, buildDomains, readRecords, readArchive,
       dungeonGives, gaveTo, classHolds, sampleOf, isKind,
       familyMembership: families.familyMembership, eventFaces: families.eventFaces,
       configure(data) { D = data; readRecords(); buildDomains(); },
@@ -57,5 +58,5 @@ module.exports = async function (engine, browseSource = read('web/index-browse.j
     };`), browse);
   const api = browse.window.RealmIndexBrowse;
   api.configure(data);
-  return { ...api, select(state) { api.select(state); return captured; }, familyDependencies: () => familyDependencies, familyCreations: () => familyCreations, groupingCreations: () => groupingCreations, filterCreations: () => filterCreations, creations: () => creations };
+  return { ...api, select(state) { api.select(state); return captured; }, filterDependencies: () => filterDependencies, familyDependencies: () => familyDependencies, familyCreations: () => familyCreations, groupingCreations: () => groupingCreations, filterCreations: () => filterCreations, creations: () => creations };
 };
