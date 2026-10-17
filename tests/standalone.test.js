@@ -153,7 +153,7 @@ assert(served.html.includes('<script type="module" src="skins/app.js">'),
   'The served page must still load the Skin Viewer module');
 assert(served.html.includes('data-go="skins"'),
   'The served page must still offer the Skin Viewer');
-for (const absent of ['skin-viewer-data.js', 'var SkinViewerData =', 'skins/app.js', 'data-go="skins"', 'id="skinViewerRoot"']) {
+for (const absent of ['skin-viewer-data.js', 'var SkinViewerData =', 'skin-viewer-animation.js', 'var SkinViewerAnimation =', 'skins/app.js', 'data-go="skins"', 'id="skinViewerRoot"']) {
   assert(!offline.html.includes(absent),
     'The downloadable copy must not carry ' + absent + ': it cannot load it from disk');
 }

@@ -8,6 +8,7 @@ const root = path.join(__dirname, '..');
 const classic = [
   'web/atlas-data.js',
   'web/skin-viewer-data.js',
+  'web/skin-viewer-animation.js',
   'web/fiches-data.js', 'web/fiches-c.js', 'web/i18n.js', 'web/outline.js', 'web/app.js', 'web/app-data.js', 'web/fame-page.js', 'web/index-page.js', 'web/index-search.js', 'web/index-filter.js', 'web/index-grouping.js', 'web/index-families.js', 'web/index-browse.js',
   'web/theory-engine.js', 'web/theorycraft.js', 'tools/build-i18n.js', 'tools/check-i18n.js', 'tests/i18n.test.js'
 ];

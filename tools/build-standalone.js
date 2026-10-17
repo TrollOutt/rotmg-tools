@@ -640,6 +640,8 @@ delete served.realmLootText;
  * exactly the bug this exists to prevent.
  */
 const SKIN_VIEWER_PARTS = [
+  ['the sequence playback it uses',
+    /\n<script src="skin-viewer-animation\.js"><\/script>/],
   ['the catalogue projection it uses',
     /\n<script src="skin-viewer-data\.js"><\/script>/],
   ['the card on the front page',
@@ -847,6 +849,7 @@ fs.writeFileSync(
  * and the generated client data/textures beside the generated Pages document.
  */
 fs.copyFileSync(path.join(web, 'skin-viewer-data.js'), path.join(pagesDir, 'skin-viewer-data.js'));
+fs.copyFileSync(path.join(web, 'skin-viewer-animation.js'), path.join(pagesDir, 'skin-viewer-animation.js'));
 carryAcross(path.join(web, 'skins'), path.join(pagesDir, 'skins'));
 carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'skins'));
 fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));

@@ -10,13 +10,22 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const app = read('web/app.js');
 const sourceHtml = read('web/index.html');
 const skinDataTag = '<script src="skin-viewer-data.js"></script>';
+const skinAnimationTag = '<script src="skin-viewer-animation.js"></script>';
 const skinModuleTag = '<script type="module" src="skins/app.js"></script>';
+assert(sourceHtml.indexOf(skinAnimationTag) > sourceHtml.indexOf(skinDataTag)
+  && sourceHtml.indexOf(skinAnimationTag) < sourceHtml.indexOf(skinModuleTag),
+  'Skin playback module executes after catalogue data and before its adapter');
 assert(sourceHtml.indexOf(skinDataTag) >= 0
   && sourceHtml.indexOf(skinDataTag) < sourceHtml.indexOf(skinModuleTag),
   'Skin Viewer catalogue module executes before its ES module adapter');
 assert.equal((read('web/skins/app.js').match(/SkinViewerData\.createCatalogueData\(/g) || []).length, 1,
   'Each viewer mount creates one shared catalogue factory');
 const servedSkinHtml = read('docs/index.html');
+assert(servedSkinHtml.indexOf(skinAnimationTag) > servedSkinHtml.indexOf(skinDataTag)
+  && servedSkinHtml.indexOf(skinAnimationTag) < servedSkinHtml.indexOf(skinModuleTag),
+  'HTTP build preserves playback script order');
+assert.equal(read('docs/skin-viewer-animation.js'), read('web/skin-viewer-animation.js'),
+  'HTTP build serves the exact playback module');
 assert(servedSkinHtml.indexOf(skinDataTag) >= 0
   && servedSkinHtml.indexOf(skinDataTag) < servedSkinHtml.indexOf(skinModuleTag),
   'HTTP build preserves catalogue script order');

@@ -138,6 +138,7 @@ const canvas=$('canvas'),worldBg=$('worldBg'),fxCanvas=$('fxCanvas'),renderer=ne
 classes.sort((a,b)=>{const ai=CLASS_ORDER.indexOf(a.name),bi=CLASS_ORDER.indexOf(b.name);return(ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name)});
 const S={skin:null,seq:null,index:0,left:false,dyes:{clothing:null,accessory:null},last:0,facingRaw:FACE_YOU,attackUntil:0,shooting:false,attackStart:0,attackSpeed:1,nextShotAt:0,projectiles:[],keys:new Set(),world:{x:canvas.width/2,y:canvas.height/2,scale:4},player:{x:0,y:0},spawn:{x:0,y:0},camera:{scale:realmAtlas.px*4},playArea:null,beachArea:null,studioArea:{x0:-20,y0:-13,x1:20,y1:13},beachBeacon:null,modeState:{beach:null,studio:{player:{x:0,y:0},spawn:{x:0,y:0},scale:realmAtlas.px*4}},mapDirty:true,lastMapDraw:0,pointer:{x:canvas.width/2,y:canvas.height/2},className:'',family:'',skinFilterMode:storageGet('skinViewerSkinFilterMode')==='family'?'family':'class',dyeTarget:'clothing',dyeCategory:'all',classOpen:true,familyOpen:true,dyeCategoryOpen:true};
 S.attackSpeed=Math.max(.25,Math.min(4,Number(storageGet('skinViewerAttackSpeed'))||1));
+const playback=SkinViewerAnimation.createSequencePlayback({getAttackPeriod:()=>attackPeriod()});
 /* V312_COMBO_FAVORITES: exact local skin + dye combinations, user-named. */
 const COMBO_FAVORITES_KEY='skinViewerComboFavoritesV1';
 function normalizeComboDyeRef(ref){
@@ -439,12 +440,12 @@ function attackPeriod(){
 function attackShotsPerSecond(){
   return 1000/attackPeriod();
 }
-function attackFrame(now){if(S.seq?.actionRaw!==2)return;const playable=[];for(let i=0;i<S.seq.frames.length;i++)if(S.seq.frames[i].spriteAvailable)playable.push(i);if(!playable.length)return;const period=attackPeriod(),elapsed=Math.max(0,now-S.attackStart),phase=(elapsed%period)/period,next=playable[Math.min(playable.length-1,Math.floor(phase*playable.length))];if(next!==S.index)S.index=next}
-function sequence(actionRaw=activityRaw(),directionRaw=S.facingRaw,set=S.seq?.set??0){const pool=S.skin?.sequences||[];return pool.find(q=>q.set===set&&q.actionRaw===actionRaw&&q.directionRaw===directionRaw&&q.frames.some(f=>f.spriteAvailable))||pool.find(q=>q.set===set&&q.actionRaw===actionRaw&&q.frames.some(f=>f.spriteAvailable))||pool.find(q=>q.set===set&&q.actionRaw===0&&q.directionRaw===directionRaw&&q.frames.some(f=>f.spriteAvailable))||pool.find(q=>q.set===set&&q.frames.some(f=>f.spriteAvailable))||pool[0]}
+function attackFrame(now){const next=playback.attackFrameIndex(S.seq,S.index,now,S.attackStart);if(next!==S.index)S.index=next}
+function sequence(actionRaw=activityRaw(),directionRaw=S.facingRaw,set=S.seq?.set??0){return playback.sequence(S.skin?.sequences||[],actionRaw,directionRaw,set)}
 function useSequence(q,reset=true){if(!q)return;if(S.seq!==q){S.seq=q;if(reset){S.index=0;S.last=performance.now()}renderFrameState()}else if(reset){S.index=0;S.last=performance.now();renderFrameState()}}
 function syncActivity(now=performance.now(),reset=true){const q=sequence(activityRaw(now),S.facingRaw,S.seq?.set??0);useSequence(q,reset)}
 function select(s){if(!s)return;S.skin=s;const q=initialSequence(s.sequences);S.seq=q;S.facingRaw=q?.directionRaw??FACE_YOU;S.left=false;S.index=0;S.attackUntil=0;S.shooting=false;S.attackStart=0;S.nextShotAt=0;S.projectiles.length=0;syncRenderScale();syncActivity(performance.now(),true);renderFrameState();syncSkinCatalogueSelection();scheduleSelectedIndexPanel();try{renderAttackSpeed()}catch{}}
-function current(){return S.seq?.frames[S.index%Math.max(1,S.seq.frames.length)]}
+function current(){return playback.current(S.seq,S.index)}
 function visibleSkins(){
   const q=$('search').value.toLowerCase();
 
@@ -1992,7 +1993,7 @@ function applyMovementFacing(){return applyFacing(movementDirection())}
 function aimAttackPoint(p){S.pointer=p;const target=directionFromPointer(p.x,p.y,S.world.x,S.world.y),changed=applyFacing(target);if(!S.shooting||!changed)return;const q=sequence(2,S.facingRaw,S.seq?.set??0);if(q?.actionRaw===2&&q!==S.seq){const i=S.index;S.seq=q;S.index=i%Math.max(1,q.frames.length);renderFrameState()}}
 function attack(e){if(e.button!==undefined&&e.button!==0)return;const now=performance.now(),p=rememberPointer(e);applyFacing(directionFromPointer(p.x,p.y,S.world.x,S.world.y));const q=sequence(2,S.facingRaw,S.seq?.set??0);if(!q||q.actionRaw!==2)return;S.shooting=true;S.attackStart=now;S.attackUntil=Infinity;S.nextShotAt=now;S.facingRaw=q.directionRaw;S.left=q.directionRaw===FACE_SIDE?(p.x<S.world.x):false;S.seq=q;S.index=0;S.last=now;renderFrameState();if(e.pointerId!==undefined)canvas.setPointerCapture?.(e.pointerId)}
 function releaseAttack(e){if(!S.shooting)return;const now=performance.now(),period=attackPeriod(S.seq),elapsed=Math.max(0,now-S.attackStart);S.shooting=false;S.attackUntil=S.attackStart+(Math.floor(elapsed/period)+1)*period;if(e?.pointerId!==undefined&&canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId)}
-function advance(){if(!S.seq?.frames.length)return;let n=(S.index+1)%S.seq.frames.length;if(S.seq.frames.some(x=>x.spriteAvailable)){let guard=0;while(!S.seq.frames[n].spriteAvailable&&guard++<S.seq.frames.length)n=(n+1)%S.seq.frames.length}S.index=n}
+function advance(){if(!S.seq?.frames.length)return;S.index=playback.nextIndex(S.seq,S.index)}
 function updateMovement(dt){let x=0,y=0;if(S.keys.has('ArrowLeft')||S.keys.has('KeyA'))x--;if(S.keys.has('ArrowRight')||S.keys.has('KeyD'))x++;if(S.keys.has('ArrowUp')||S.keys.has('KeyW'))y--;if(S.keys.has('ArrowDown')||S.keys.has('KeyS'))y++;if(!x&&!y)return;if(x&&y){x*=Math.SQRT1_2;y*=Math.SQRT1_2}const speed=6,a=S.playArea,b=realmAtlas.bounds||{},minX=(a?.x0??b.minX??-Infinity)+1,maxX=(a?.x1??b.maxX??Infinity)-1,minY=(a?.y0??b.minY??-Infinity)+1,maxY=(a?.y1??b.maxY??Infinity)-1;S.player.x=Math.max(minX,Math.min(maxX,S.player.x+x*speed*dt));S.player.y=Math.max(minY,Math.min(maxY,S.player.y+y*speed*dt));S.mapDirty=true;syncRenderScale()}
 /* A key typed into any field of the page - the Feedback box, a search - is that field's, not the viewer's: look at where the key was pressed, not only inside this shadow root. */
 function typingInto(e){const at=(e.composedPath&&e.composedPath()[0])||e.target;return Boolean(at&&(/^(INPUT|SELECT|TEXTAREA)$/.test(at.tagName||'')||at.isContentEditable))}
