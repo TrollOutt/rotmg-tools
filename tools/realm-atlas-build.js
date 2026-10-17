@@ -1614,9 +1614,11 @@ if (!template.includes('/*LOOTKIN*/null')) throw new Error('the page has lost it
 if (!template.includes('/*OUTLINE*/')) throw new Error('the page has lost its place for the outline');
 const outlineSource = fs.readFileSync(path.join(root, 'web', 'outline.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 if (!template.includes('/*ATLAS_DATA*/')) throw new Error('the page has lost its place for Atlas data');
+if (!template.includes('/*ATLAS_GEOMETRY*/')) throw new Error('the page has lost its place for Atlas geometry');
+const atlasGeometrySource = fs.readFileSync(path.join(root, 'web', 'atlas-geometry.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 const atlasDataSource = fs.readFileSync(path.join(root, 'web', 'atlas-data.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 fs.writeFileSync(path.join(OUT, 'index.html'),
-  template.replace('/*OUTLINE*/', () => outlineSource).replace('/*ATLAS_DATA*/', () => atlasDataSource)
+  template.replace('/*OUTLINE*/', () => outlineSource).replace('/*ATLAS_DATA*/', () => atlasDataSource).replace('/*ATLAS_GEOMETRY*/', () => atlasGeometrySource)
     .replace('/*ATLAS*/null', JSON.stringify(summary))
     .replace('/*LOOTKIN*/null', JSON.stringify(lootKin())).replace(/\r\n/g, '\n'));
 }

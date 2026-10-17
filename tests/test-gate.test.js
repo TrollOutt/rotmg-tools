@@ -14,6 +14,7 @@ const deployCritical = [
   'source-slice.test.js',
   'atlas-combat.test.js',
   'atlas-data.test.js',
+  'atlas-geometry.test.js',
   'build-handover.test.js',
   'engine.test.js',
   'enchant-optimization.test.js',
