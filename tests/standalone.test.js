@@ -12,6 +12,25 @@ function bundle(file) {
   return { html, data: JSON.parse(match[1]) };
 }
 const served = bundle('docs/index.html'), offline = bundle('docs/Realm-Tools.html');
+// Generated HTTP artifacts are checked here, after build-standalone.js writes docs/.
+const skinDataTag = '<script src="skin-viewer-data.js"></script>';
+const skinAnimationTag = '<script src="skin-viewer-animation.js"></script>';
+const skinModuleTag = '<script type="module" src="skins/app.js"></script>';
+const servedSkinHtml = served.html;
+assert(servedSkinHtml.indexOf(skinAnimationTag) > servedSkinHtml.indexOf(skinDataTag)
+  && servedSkinHtml.indexOf(skinAnimationTag) < servedSkinHtml.indexOf(skinModuleTag),
+  'HTTP build preserves playback script order');
+assert.equal(read('docs/skin-viewer-animation.js'), read('web/skin-viewer-animation.js'),
+  'HTTP build serves the exact playback module');
+assert(servedSkinHtml.indexOf(skinDataTag) >= 0
+  && servedSkinHtml.indexOf(skinDataTag) < servedSkinHtml.indexOf(skinModuleTag),
+  'HTTP build preserves catalogue script order');
+assert.equal(read('docs/skin-viewer-data.js'), read('web/skin-viewer-data.js'),
+  'HTTP build serves the exact catalogue module');
+const atlasBuilt = read('web/assets/atlas/index.html');
+assert.equal(read('docs/assets/atlas/index.html'), atlasBuilt,
+  'HTTP build serves the current generated Atlas page');
+console.log('HTTP build: 5 Skin Viewer script order, exact module and Atlas page checks passed.');
 const { modulesFor } = require('./home-navigation.test');
 for (const [version, skins] of [[served, true], [offline, false]]) {
   const ring = modulesFor(version.html, version.html);

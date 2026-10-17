@@ -86,6 +86,13 @@ for (const file of buildCritical) {
   );
 }
 
+assert(!commandHas('test', 'standalone.test.js'),
+  'CI-GATE: generated artifact checks must not run before the build');
+const buildCommands = scripts.build.split(' && ');
+assert(buildCommands.indexOf('node tools/build-standalone.js') >= 0
+  && buildCommands.indexOf('node tests/standalone.test.js') > buildCommands.indexOf('node tools/build-standalone.js'),
+  'CI-GATE: standalone artifact checks must run after build-standalone.js');
+
 for (const [file, script] of Object.entries(special)) {
   assert(
     commandHas(script, file),

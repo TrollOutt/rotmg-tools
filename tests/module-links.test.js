@@ -20,17 +20,6 @@ assert(sourceHtml.indexOf(skinDataTag) >= 0
   'Skin Viewer catalogue module executes before its ES module adapter');
 assert.equal((read('web/skins/app.js').match(/SkinViewerData\.createCatalogueData\(/g) || []).length, 1,
   'Each viewer mount creates one shared catalogue factory');
-const servedSkinHtml = read('docs/index.html');
-assert(servedSkinHtml.indexOf(skinAnimationTag) > servedSkinHtml.indexOf(skinDataTag)
-  && servedSkinHtml.indexOf(skinAnimationTag) < servedSkinHtml.indexOf(skinModuleTag),
-  'HTTP build preserves playback script order');
-assert.equal(read('docs/skin-viewer-animation.js'), read('web/skin-viewer-animation.js'),
-  'HTTP build serves the exact playback module');
-assert(servedSkinHtml.indexOf(skinDataTag) >= 0
-  && servedSkinHtml.indexOf(skinDataTag) < servedSkinHtml.indexOf(skinModuleTag),
-  'HTTP build preserves catalogue script order');
-assert.equal(read('docs/skin-viewer-data.js'), read('web/skin-viewer-data.js'),
-  'HTTP build serves the exact catalogue module');
 assert(sourceHtml.indexOf('<script src="app-data.js"></script>') >= 0
   && sourceHtml.indexOf('<script src="app-data.js"></script>') < sourceHtml.indexOf('<script src="app.js"></script>'),
   'Calculator data module loads before its adapters');
@@ -568,5 +557,3 @@ assert.equal((atlasTemplate.match(/AtlasGeometry\.createProjection\(/g) || []).l
   'Atlas camera adapters share one geometry factory');
 assert(atlasTemplate.indexOf('/*ATLAS_GEOMETRY*/') < atlasTemplate.indexOf('AtlasGeometry.createProjection('),
   'Atlas geometry executes before its adapter');
-assert.equal(read('docs/assets/atlas/index.html'), atlasBuilt,
-  'HTTP build serves the current generated Atlas page');
