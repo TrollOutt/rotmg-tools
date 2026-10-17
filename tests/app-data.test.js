@@ -20,25 +20,29 @@ items.loadClient(sources.clientItemText);
 const state = { data };
 let catalogue = items;
 const api = AppData.createItemResolver({ getData: () => state.data, getItems: () => catalogue });
-const adapter = harness(state, () => catalogue);
+const source = read('web/app.js').replace(/\r\n/g, '\n');
+const adapters = [source, source.replace(/\n/g, '\r\n')].map(text => harness(state, () => catalogue, text));
+const [adapter] = adapters;
 let cases = 0;
 function parity(actual, expected, label) { assert.deepEqual(actual, expected, label); cases++; }
 for (const [name, expected] of corpus.resolve) parity(capture(() => api.resolveItem(name)), expected, 'item: ' + name);
 for (const [name, expected] of corpus.enchant) parity(capture(() => api.handoverEnchantName(name)), expected, 'enchant: ' + name);
 for (const [said, expected] of corpus.handover) parity(capture(() => api.handoverSetup(said)), expected, 'handover: ' + said.item);
 parity(plain(api.knownItemNames()), corpus.names, 'ordered, deduplicated picker names');
-// App callers retain their names and signatures and share exactly one factory.
-for (const [name, expected] of corpus.resolve.filter((_, i) => i % 97 === 0)) {
-  assert.deepEqual(capture(() => adapter.resolveItem(name)), expected);
+// Both line endings retain all frozen results and exactly one shared factory.
+for (const adapter of adapters) {
+  for (const [name, expected] of corpus.resolve) {
+    assert.deepEqual(capture(() => adapter.resolveItem(name)), expected);
+  }
+  for (const [said, expected] of corpus.handover) {
+    assert.deepEqual(capture(() => adapter.handoverSetup(said)), expected);
+  }
+  for (const [name, expected] of corpus.enchant) {
+    assert.deepEqual(capture(() => adapter.handoverEnchantName(name)), expected);
+  }
+  assert.deepEqual(plain(adapter.knownItemNames()), corpus.names);
+  assert.equal(adapter.creations(), 1);
 }
-for (const [said, expected] of corpus.handover.filter((_, i) => i % 113 === 0)) {
-  assert.deepEqual(capture(() => adapter.handoverSetup(said)), expected);
-}
-for (const [name, expected] of corpus.enchant.filter((_, i) => i % 29 === 0)) {
-  assert.deepEqual(capture(() => adapter.handoverEnchantName(name)), expected);
-}
-assert.deepEqual(plain(adapter.knownItemNames()), corpus.names);
-assert.equal(adapter.creations(), 1);
 
 // Fresh results, original awakening arrays, and no memoized names or lookups.
 for (const [name, awakening] of data.awakenings) {

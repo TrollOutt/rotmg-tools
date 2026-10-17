@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const assert = require('assert/strict');
+const { normalizeSource } = require('./source-slice');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.resolve(root, file), 'utf8');
 
@@ -9,6 +10,7 @@ const read = file => fs.readFileSync(path.resolve(root, file), 'utf8');
 // loadArchive=false models the true pre-overlay catalogue; archive=false alone
 // retains the historical aggregate-map suppression used by the older corpora.
 module.exports = async function (engine, browseSource = read('web/index-browse.js'), { archive = false, loadArchive = true } = {}) {
+  browseSource = normalizeSource(browseSource);
   const pageMarker = 'return { start, show, open, card, door, close, data, __test: { createOpenController } };';
   const page = read('web/index-page.js');
   assert(page.includes(pageMarker), 'Index data-loader export marker moved');

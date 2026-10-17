@@ -17,6 +17,13 @@ async function run() {
   assert(!/\b(?:document|window|localStorage|RealmIndex)\b/.test(source));
   assert.equal((read('web/index-browse.js').match(/IndexFilter\.createFilter\(/g) || []).length, 1);
   let api;
+  const browse = read('web/index-browse.js').replace(/\r\n/g, '\n');
+  const selections = [];
+  for (const text of [browse, browse.replace(/\n/g, '\r\n')]) {
+    const adapter = await require('./index-harness')(IndexSearch, text);
+    selections.push(summary(adapter.select({ q: 'sword' }).rows));
+  }
+  assert.deepEqual(selections[0], selections[1], 'LF and CRLF preserve ordered search results');
   for (const archive of [false, true]) {
     api = await require('./index-harness')(IndexSearch, undefined, { archive, loadArchive: archive });
     const search = api.IX.search, cache = new Map();

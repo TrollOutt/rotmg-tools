@@ -10,6 +10,7 @@ const scripts = pkg.scripts || {};
 
 const deployCritical = [
   'app-data.test.js',
+  'source-slice.test.js',
   'atlas-combat.test.js',
   'atlas-data.test.js',
   'build-handover.test.js',
