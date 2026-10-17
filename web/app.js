@@ -3148,7 +3148,8 @@ function applySetup(saved) {
   $('dustType').value = saved.dust || '';
   $('awakenedItem').value = saved.item || '';
   renderSubtypes();
-  for (const box of document.querySelectorAll('#subtypePanel input')) box.checked = (saved.subtypes || []).includes(box.value);
+  const subtypes = saved.subtypes || [];
+  for (const box of document.querySelectorAll('#subtypePanel input')) box.checked = typeof subtypes.includes === 'function' && subtypes.includes(box.value);
   for (const box of document.querySelectorAll('#tiers input')) box.checked = !saved.tiers || saved.tiers.includes(box.value);
   state.artifactBlacklist = new Set(Array.isArray(saved.artifactBlacklist) ? saved.artifactBlacklist : []);
   state.slots.forEach(slot => { slot.name = ''; slot.locked = false; });
@@ -3188,20 +3189,30 @@ function labelForSetup(setup) {
 
 const newTab = setup => ({ id: `t${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`, setup: setup || {}, label: labelForSetup(setup) });
 
+// Keep rejected storage untouched until the recovery button preserves its raw
+// contents. Editor changes, tab switches and reset can still work in memory.
+let rejectedTabs = null;
+
 function persistTabs() {
+  if (rejectedTabs !== null) return;
   try {
     localStorage.setItem(TABS_KEY, JSON.stringify({ tabs: state.tabs, active: state.activeTab }));
   } catch (error) { /* storage unavailable — the app still works, it just forgets */ }
 }
 
 function loadTabs() {
-  let stored = null;
-  try { stored = JSON.parse(localStorage.getItem(TABS_KEY) || 'null'); } catch (error) { stored = null; }
+  let stored = null, raw;
+  rejectedTabs = null;
+  try { raw = localStorage.getItem(TABS_KEY); stored = JSON.parse(raw || 'null'); } catch (error) { stored = null; }
   if (stored && Array.isArray(stored.tabs) && stored.tabs.length) {
     state.tabs = stored.tabs.filter(tab => tab && tab.id);
+    if (state.tabs.length !== stored.tabs.length) rejectedTabs = raw;
+    if (!state.tabs.length) state.tabs = [newTab({})];
     state.activeTab = state.tabs.some(tab => tab.id === stored.active) ? stored.active : state.tabs[0].id;
     return;
   }
+  // Malformed JSON or an unusable envelope can also contain recoverable data.
+  rejectedTabs = raw;
   // Carry over the single setup saved by earlier versions.
   let legacy = null;
   try { legacy = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (error) { legacy = null; }
@@ -3220,8 +3231,46 @@ function loadFilters() {
   }
 }
 
+function resumeTabSaving() {
+  if (rejectedTabs === null) return;
+  const recoveryKey = TABS_KEY + '/recovery';
+  try {
+    // Never replace a different backup, or data another tab has since changed.
+    if (localStorage.getItem(TABS_KEY) !== rejectedTabs) throw Error('Saved tabs changed');
+    const backup = localStorage.getItem(recoveryKey);
+    if (backup !== null && backup !== rejectedTabs) throw Error('Recovery backup exists');
+    if (backup === null) localStorage.setItem(recoveryKey, rejectedTabs);
+    if (localStorage.getItem(recoveryKey) !== rejectedTabs
+      || localStorage.getItem(TABS_KEY) !== rejectedTabs) throw Error('Backup not verified');
+  } catch (error) {
+    const notice = $('tabRecovery');
+    if (notice) notice.querySelector('span').textContent = 'Could not preserve the original saved tabs. Saving remains paused. ';
+    return;
+  }
+  rejectedTabs = null;
+  persistTabs();
+  renderTabs();
+}
+
 function renderTabs() {
   const bar = $('tabBar');
+  let notice = $('tabRecovery');
+  if (rejectedTabs === null) {
+    if (notice) notice.remove();
+  } else if (!notice) {
+    notice = document.createElement('p');
+    notice.id = 'tabRecovery';
+    notice.className = 'note warn';
+    notice.setAttribute('role', 'status');
+    const message = document.createElement('span');
+    message.textContent = 'Some saved tabs could not be restored. Changes stay temporary until you back up the original saved tabs and enable saving. ';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Back up original tabs and enable saving';
+    button.addEventListener('click', resumeTabSaving);
+    notice.append(message, button);
+    bar.before(notice);
+  }
   bar.replaceChildren();
   /*
    * A build sent over from Theory Crafting arrives as a group: its tabs stand
@@ -3483,7 +3532,7 @@ function clearResults() {
   $('results').tBodies[0].innerHTML = '<tr><td colspan="6" class="empty">Choose an item, a rarity, and what you want on it.</td></tr>';
 }
 
-// Wipes every tab, not just the one on screen, and leaves no stored trace.
+// Wipes every tab, unless rejected storage is still awaiting recovery.
 function resetSetup() {
   state.tabs = [newTab({})];
   state.activeTab = state.tabs[0].id;
@@ -3493,6 +3542,7 @@ function resetSetup() {
   clearResults();
   renderTabs();
   refresh();
+  if (rejectedTabs !== null) return;
   try {
     localStorage.removeItem(SAVE_KEY);
     localStorage.removeItem(TABS_KEY);
