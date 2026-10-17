@@ -23,6 +23,7 @@
     "web/app-data.js",
     "web/fiches-data.js",
     "web/skin-viewer-data.js",
+    "web/atlas-data.js",
     "web/progression-module.d.ts"
   ]
 }

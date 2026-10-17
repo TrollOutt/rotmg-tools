@@ -351,6 +351,7 @@
   <span id="hint">drag to pan · wheel to zoom · a/e to turn · double-click to fit</span>
 </div>
 <script>/*OUTLINE*/</script>
+<script>/*ATLAS_DATA*/</script>
 <script>
 const A = /*ATLAS*/null;
 
@@ -5628,24 +5629,13 @@ let known = null, knownAsked = false;
  * then every one of those is simply said by name.
  */
 const KIN = /*LOOTKIN*/null;
-const kinOf = (() => {
-  let groups = null, mundane = null;
-  return {
-    group(name) {
-      if (!groups) {
-        groups = new Map();
-        for (const [kind, list] of Object.entries((KIN && KIN.groups) || {})) groups.set(knownName(kind), list);
-      }
-      return groups.get(knownName(name)) || null;
-    },
-    mundane(name) {
-      if (!mundane) mundane = new Set(((KIN && KIN.mundane) || []).map(knownName));
-      return mundane.has(knownName(name));
-    }
-  };
-})();
-const knownName = name => String(name || '').replace(/[‘’]/g, "'")
-  .replace(/\s+/g, ' ').trim().toLowerCase();
+const atlasData = AtlasData.createPanelData({
+  getKnown: () => known,
+  getKinds: () => KIN,
+  getAtlas: () => (typeof A !== 'undefined' ? A : null)
+});
+const kinOf = atlasData.kinOf;
+const knownName = atlasData.knownName;
 function hostBundle() {
   try { return window.parent !== window ? window.parent.ROTMG_BUNDLE || null : null; }
   catch (e) { return null; }
@@ -5667,29 +5657,8 @@ function askKnown(then) {
     readKnown(sources.realmLootText, BASE + '../../realmeye-data.json'),
     readKnown(bundle && bundle.itemArt, BASE + '../index/item-art.json')
   ]).then(([join, reference, art]) => {
-    const ids = new Map();
-    for (const id of (join && join.ids) || []) {
-      // A variant (enemy:Name#phase) is not the thing a panel names.
-      if (typeof id !== 'string' || id.includes('#')) continue;
-      const split = id.indexOf(':');
-      if (split > 0) ids.set(id.slice(0, split) + ':' + knownName(id.slice(split + 1)), id);
-    }
-    const drops = new Map();
-    for (const one of Object.values((reference && reference.creatures) || {})) {
-      const list = ((one.detail || {}).drops || []).map(drop => drop && drop.name).filter(Boolean);
-      if (one.name && list.length) drops.set(knownName(one.name), list);
-    }
-    const pics = new Map(), named = new Map();
-    for (const [name, rect] of Object.entries((art && art.art) || {})) {
-      pics.set(knownName(name), rect);
-      named.set(knownName(name), name);
-    }
-    known = {
-      ids, drops, pics, named,
-      sheet: (bundle && bundle.indexSheet) || BASE + '../index/sheet.png',
-      wide: (art && art.sheet && art.sheet.wide) || 1024,
-      tall: (art && art.sheet && art.sheet.tall) || 1280
-    };
+    known = atlasData.projectKnown(join, reference, art,
+      () => (bundle && bundle.indexSheet) || BASE + '../index/sheet.png');
     if (then) then();
   });
 }
@@ -5701,17 +5670,7 @@ function askKnown(then) {
  * is written from those records under their exact names. So an item the
  * picture map holds is an item the Index holds, under the name it holds it by.
  */
-function knownId(name, kinds) {
-  if (!known) return '';
-  for (const kind of kinds) {
-    const id = known.ids.get(kind + ':' + knownName(name));
-    if (id) return id;
-    if (kind === 'item' && known.named && known.named.has(knownName(name))) {
-      return 'item:' + known.named.get(knownName(name));
-    }
-  }
-  return '';
-}
+function knownId(name, kinds) { return atlasData.knownId(name, kinds); }
 const quoted = text => String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 /* The way to the Index page about it, or nothing. */
 function indexButton(name, kinds) {
@@ -5750,30 +5709,14 @@ function kindPic(name, size) {
  * A dungeon it opens, as the portal the zone's own loot already draws it by.
  * Asked of the atlas itself, so a panel without the atlas has none.
  */
-let portalArt = null;
-function portalOf(name) {
-  if (!portalArt) {
-    portalArt = new Map();
-    const zones = (typeof A !== 'undefined' && A && A.zones) || [];
-    for (const zone of zones) {
-      for (const one of ((zone.loot || {}).dungeons || [])) {
-        if (one && one.name && one.art) portalArt.set(knownName(one.name), one.art);
-      }
-    }
-  }
-  return portalArt.get(knownName(name)) || '';
-}
+function portalOf(name) { return atlasData.portalOf(name); }
 /*
  * The item a blueprint unlocks, among the things that fall beside it: the one
  * named after it - "Juggernaut Blueprint" and "Helm of the Juggernaut". Which
  * is how the game names them; a blueprint whose item is not beside it stands
  * on its own rather than being guessed a partner.
  */
-function blueprintFor(blueprint, beside) {
-  const stem = knownName(String(blueprint).replace(/ Blueprint$/, ''));
-  if (!stem || stem === knownName(blueprint)) return '';
-  return beside.find(one => !/ Blueprint$/.test(one) && knownName(one).includes(stem)) || '';
-}
+function blueprintFor(blueprint, beside) { return atlasData.blueprintFor(blueprint, beside); }
 /* One drop as its square: a picture that opens it in the Index when it can. */
 function dropCell(drop, note) {
   const title = quoted(drop + (note ? ' — ' + note : ''));

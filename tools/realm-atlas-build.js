@@ -1613,9 +1613,12 @@ if (!template.includes('/*LOOTKIN*/null')) throw new Error('the page has lost it
 // The one line every page lays round a character (web/outline.js), carried inside the page so it stands alone.
 if (!template.includes('/*OUTLINE*/')) throw new Error('the page has lost its place for the outline');
 const outlineSource = fs.readFileSync(path.join(root, 'web', 'outline.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
+if (!template.includes('/*ATLAS_DATA*/')) throw new Error('the page has lost its place for Atlas data');
+const atlasDataSource = fs.readFileSync(path.join(root, 'web', 'atlas-data.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 fs.writeFileSync(path.join(OUT, 'index.html'),
-  template.replace('/*OUTLINE*/', () => outlineSource).replace('/*ATLAS*/null', JSON.stringify(summary))
-    .replace('/*LOOTKIN*/null', JSON.stringify(lootKin())));
+  template.replace('/*OUTLINE*/', () => outlineSource).replace('/*ATLAS_DATA*/', () => atlasDataSource)
+    .replace('/*ATLAS*/null', JSON.stringify(summary))
+    .replace('/*LOOTKIN*/null', JSON.stringify(lootKin())).replace(/\r\n/g, '\n'));
 }
 
 /*

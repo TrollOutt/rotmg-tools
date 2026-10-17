@@ -11,6 +11,7 @@ const scripts = pkg.scripts || {};
 const deployCritical = [
   'app-data.test.js',
   'atlas-combat.test.js',
+  'atlas-data.test.js',
   'build-handover.test.js',
   'engine.test.js',
   'enchant-optimization.test.js',

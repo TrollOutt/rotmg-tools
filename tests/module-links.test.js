@@ -35,6 +35,7 @@ assert.equal((read('web/fiches-c.js').match(/FichesData\.createCardData\(/g) || 
   'Card layouts share one data factory');
 
 const atlasTemplate = read('tools/atlas-viewer.html');
+const atlasDataSource = read('web/atlas-data.js').replace(/\r\n/g, '\n');
 const css = read('web/style.css');
 const indexPageSource = read('web/index-page.js');
 const atlasBuilt = read('web/assets/atlas/index.html');
@@ -112,7 +113,7 @@ function normalizedPublishedAtlas(source) {
     out = out.replace(cut, '');
   }
 
-  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
+  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS_DATA*/', '__ATLAS_DATA__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
 }
 
 // The one line every page lays round a character (web/outline.js), carried inside the page.
@@ -122,6 +123,7 @@ function normalizedBuiltAtlas(source) {
   return source
     .replace(/\r\n/g, '\n')
     .replace(outlineSource, '__OUTLINE__')
+    .replace(atlasDataSource, '__ATLAS_DATA__')
     .replace(
       /^const A = \{.*\};$/m,
       'const A = __ATLAS__;'
@@ -220,7 +222,7 @@ for (const [where, source] of [['template', atlasTemplate], ['published', atlasB
     panelBody: { addEventListener() {} }, module: { exports: {} }
   };
   context.window.parent = context.window;
-  vm.runInNewContext(atlasTemplate.slice(start, end)
+  vm.runInNewContext(atlasDataSource + '\n' + atlasTemplate.slice(start, end)
     + '\nmodule.exports = { askKnown, knownId, indexButton, dropsOf };', context);
   const k = context.module.exports;
   assert.equal(k.indexButton('Sea Dragon', ['enemy']), '', 'LINK-031 nothing is offered before the Index has been read');
@@ -268,7 +270,7 @@ for (const [where, source] of [['template', atlasTemplate], ['published', atlasB
     };
     kinContext.window.parent = kinContext.window;
     assert(atlasTemplate.includes('const KIN = /*LOOTKIN*/null;'), 'LINK-045 the page build has a place to write the kinds of drop');
-    vm.runInNewContext(atlasTemplate.slice(start, end).replace('/*LOOTKIN*/null', JSON.stringify(kin))
+    vm.runInNewContext(atlasDataSource + '\n' + atlasTemplate.slice(start, end).replace('/*LOOTKIN*/null', JSON.stringify(kin))
       + '\nmodule.exports = { askKnown, dropsOf };', kinContext);
     const kk = kinContext.module.exports;
     new Promise(resolve => kk.askKnown(resolve)).then(() => {
@@ -546,3 +548,10 @@ run().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+
+assert.equal((atlasTemplate.match(/AtlasData\.createPanelData\(/g) || []).length, 1,
+  'Atlas panel adapters share one data factory');
+assert(atlasTemplate.indexOf('/*ATLAS_DATA*/') < atlasTemplate.indexOf('AtlasData.createPanelData('),
+  'Atlas data executes before its adapter');
+assert.equal(read('docs/assets/atlas/index.html'), atlasBuilt,
+  'HTTP build serves the current generated Atlas page');
