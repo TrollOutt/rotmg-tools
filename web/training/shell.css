@@ -1,0 +1,40 @@
+@font-face{font-family:Inter;src:url(fonts/inter-latin.woff2) format('woff2');font-weight:400 800;font-display:swap}
+@font-face{font-family:'Press Start 2P';src:url(fonts/ps2p-latin.woff2) format('woff2');font-display:swap}
+:root{color-scheme:dark;--acc:#e2b86e;--accHi:#f2d29c;--violet:#b9a2e4;--r:10px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#080b14;color:#ece7dc;overflow:hidden;font-family:Inter,'Segoe UI',sans-serif}
+body{display:flex;align-items:center;justify-content:center;padding-top:52px}
+.training-top{position:fixed;inset:0 0 auto;min-height:52px;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 22px;background:#10131eeF;border-bottom:1px solid #ffffff18;font-size:13px}
+.training-top a{color:#e2b86e;text-decoration:none;white-space:nowrap}
+.training-top span{color:#aaa5b7}.training-top b{font-weight:500;color:#ece7dc}
+.training-top button{border:1px solid #ffffff28;border-radius:6px;background:#ffffff08;color:#ece7dc;padding:7px 12px;cursor:pointer}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #e2b86e;outline-offset:3px}
+#c{max-width:100vw;max-height:calc(100dvh - 52px);width:auto;height:auto;aspect-ratio:1288/1008;image-rendering:pixelated;outline:none}
+#menu{top:52px}.wrap{padding-top:24px}#menu header{margin-bottom:22px}
+.training-kicker{color:#e2b86e;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin:0 0 12px}
+#menu h1{font-size:clamp(23px,4vw,36px);font-weight:550;letter-spacing:.02em;margin:0}
+.training-sub{font-size:13px;color:#a9a3b8;margin:12px 0 0;line-height:1.6}
+#titleCanvas{display:none}.training-seed{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;color:var(--dim);font-size:13px}
+.training-seed input{width:160px;border:1px solid var(--line2);background:#0a0c14;color:var(--txt);padding:9px;border-radius:6px;font:inherit}
+.training-help{margin:14px 0 0;color:var(--dim);font-size:12px;line-height:1.6}
+footer a{color:var(--acc)}.ov{top:52px}.ov-card{max-height:calc(100dvh - 85px);overflow:auto}
+#loadStatus{position:fixed;z-index:45;background:#10131e;padding:14px;border-radius:8px}
+#loadStatus[hidden]{display:none}
+@media(max-width:600px){.training-top{padding:9px 12px;font-size:11px;gap:8px}.training-top b{display:none}.training-top button{padding:7px}.wrap{padding:16px 12px 28px}#menu h1{font-size:25px}.training-sub{font-size:12px}.training-top span{white-space:nowrap}.steps button{min-width:0}.training-seed input{width:138px}footer{line-height:1.6}.ov-head{flex-wrap:wrap}.ov-actions{flex-wrap:wrap}}
+/* The archive assumes a landscape window. Narrow settings scroll as a page,
+   so neither the summary nor the launch button can be clipped by a pane. */
+@media(max-width:760px){
+  #menu{overflow:auto}
+  #menu .wrap{height:auto;min-height:100%;padding:18px 12px 24px}
+  .panes{flex:none;min-width:0}.pane,.pane .card,.pane .one{height:auto;overflow:visible;min-width:0}
+  .pane .two,.pane[data-pane="5"] .two{grid-template-columns:minmax(0,1fr);height:auto}
+  .navbar{flex-wrap:wrap;gap:10px}.navbar .navmid{flex:1 1 100%;order:3;overflow-wrap:anywhere}
+  #start{min-width:0;flex:1;padding:14px 20px}#start .big{font-size:27px}
+  .navbar button.ghost,.navbar button.next{padding:12px 20px}
+  .rc{grid-template-columns:76px minmax(0,1fr) auto;font-size:13px;gap:8px;padding:10px}
+  .rc .rv{overflow-wrap:anywhere}.card h2{flex-wrap:wrap}
+  .gctl .seg{flex-wrap:wrap}.gctl .seg button{white-space:normal;min-width:80px}
+  .row{flex-wrap:wrap}.row .seg{max-width:100%;min-width:0}.seg button{font-size:13px}
+  .steps{justify-content:space-between}.steps button{gap:5px;padding:4px 6px;font-size:12px}
+  .steps button+button::before{width:10px;left:-9px}.ov-card{padding:20px;width:calc(100% - 24px)}
+}

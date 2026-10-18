@@ -9,6 +9,7 @@ const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
 const scripts = pkg.scripts || {};
 
 const deployCritical = [
+  'training-ground.test.js',
   'app-data.test.js',
   'app-storage.test.js',
   'source-slice.test.js',

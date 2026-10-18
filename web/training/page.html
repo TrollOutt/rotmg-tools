@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Test of Patience — Training Ground · Realm Tools</title>
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="shell.css">
+</head>
+<body>
+  <nav class="training-top" aria-label="Training Ground navigation">
+    <a href="../#home">← All tools</a>
+    <span>Training Ground <b>/ Test of Patience</b></span>
+    <button id="gameMenu" type="button">Settings / pause</button>
+  </nav>
+  <p id="loadStatus" role="status">Loading training…</p>
+  <!--TRAINING_UI-->
+  <canvas id="c" class="dim" width="1288" height="1008" tabindex="0" aria-label="Test of Patience arena. Keyboard required."></canvas>
+  <script src="data.js"></script>
+  <script src="engine.js"></script>
+  <script src="renderer.js"></script>
+  <script src="ui_code.js"></script>
+  <script src="ui_game.js"></script>
+  <script src="ui_gear.js"></script>
+  <script src="ui_bg.js"></script>
+  <script src="loop.js"></script>
+</body>
+</html>

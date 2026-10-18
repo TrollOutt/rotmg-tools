@@ -12,6 +12,20 @@ function bundle(file) {
   return { html, data: JSON.parse(match[1]) };
 }
 const served = bundle('docs/index.html'), offline = bundle('docs/Realm-Tools.html');
+// The standard HTTP build always includes the independent training page.
+assert(fs.existsSync(path.join(root, 'docs/training/index.html')), 'standard build emits Training Ground');
+assert(served.html.includes('class="training-entry"'), 'standard home offers Training Ground');
+assert(!offline.html.includes('class="training-entry"'), 'single-file download cannot load the HTTP training page');
+assert(!served.html.includes('var PatienceEngine'), 'training engine must not increase home startup');
+{
+  const training = read('docs/training/index.html');
+  assert(training.includes('Seed (blank = random)') && !training.includes('<!--TRAINING_UI-->'));
+  for (const match of training.matchAll(/<script src="([^"]+)"/g)) {
+    const source = read('docs/training/' + match[1]);
+    new vm.Script(source);
+    if (match[1] !== 'data.js') assert.equal(source, read('web/training/' + match[1]).replace(/\r\n/g, '\n'));
+  }
+}
 // Generated HTTP artifacts are checked here, after build-standalone.js writes docs/.
 const skinDataTag = '<script src="skin-viewer-data.js"></script>';
 const skinAnimationTag = '<script src="skin-viewer-animation.js"></script>';

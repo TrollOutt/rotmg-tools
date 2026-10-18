@@ -675,6 +675,8 @@ function withoutSkinViewer(html) {
 
 const dress = (bundleSources, { skins = true } = {}) =>
   (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
+  .replace('<!--TRAINING_ENTRY-->', () => skins
+    ? `<style>${readWeb('training/entry.css')}</style>\n${readWeb('training/entry.html')}` : '')
   .replace('</title>', `</title>\n  ${faviconTag}`)
   .replace(styleTag, `<style>\n${css}\n</style>`)
   .replace(cardStyleTag, () => `<style>\n${bundleSources.indexText
@@ -727,6 +729,7 @@ if (missing.length) {
 fs.mkdirSync(pagesDir, { recursive: true });
 fs.writeFileSync(outFile, page, 'utf8');
 fs.writeFileSync(path.join(pagesDir, 'Realm-Tools.html'), kept, 'utf8');
+require('./build-training').buildTraining(root, pagesDir);
 // Without this GitHub Pages runs Jekyll over the folder, which ignores files
 // and folders starting with an underscore and rewrites some content.
 fs.writeFileSync(path.join(pagesDir, '.nojekyll'), '');

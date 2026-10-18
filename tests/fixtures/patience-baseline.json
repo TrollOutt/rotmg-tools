@@ -1,0 +1,22 @@
+{
+  "source": "User-supplied generated TPGsim-web.html, numerical checkpoints; captured before integration",
+  "sourceSha256": "a6412b3da9e09a57e5172976de3f09d254e04d66ad74dabb83ba1a35358f8d42",
+  "hashes": {
+    "solo-normal-42": "2f6b74f94a43c8e7784eda5990ba63c98ccc20f802b68c0835f99d3be135330c",
+    "solo-normal-4294967295": "ea02a50fa8ce5f273c39ad595ba1cfab56045d7e3702c66bad84ab2567ae2b43",
+    "solo-hard-42": "d2eb92d8acd99ecae10d73ffdae4d09f0e037443fe8f7abd5a5b9f300c9fe6de",
+    "solo-hard-4294967295": "7b455373a5f0c6eb6387306a34ad83df63d16336223e8caa4e1ec4c75b767d36",
+    "group-normal-42": "2ef2e6d9d23bc8657f0fb1fdd71ad7c9ad53a19b37f0c5be9535172ff16bb473",
+    "group-normal-4294967295": "e711ebae7d7a6dadd2461a2b6270c2145258d116a1c31e36e6138f185b97c025",
+    "group-hard-42": "d3a19d0a387b287d8cd8dcfe2b33c0aca5eec94ebb6cc5cb9967753ddf3a0e9b",
+    "group-hard-4294967295": "55027ba6ea2e0bd3f4b50bf75e6eee11d4ca7ce575d96be4bc69696a8f1b5420",
+    "rails-normal-42": "a71dee828f7ae1f3ba6a6c4ce8a9ba959fc15676ed755c82743a4b70cec87846",
+    "rails-normal-4294967295": "0f565bb7edd4fded097ff374e4889d52ae92977c2ae3dc2e003e6c32effa3345",
+    "rails-hard-42": "a638fcae0f684b9cba9a2291ae1ae05fb299c5d1129249f06ff4ce21cfdce71f",
+    "rails-hard-4294967295": "6db1620097edda6b5bf06f41bee343c7c7bdf10da968256bb1d7a44a74b3551a",
+    "stationary-defeat": "f6c504c7f586eb1807c2487475f073889432d914bf04a50f2d9fa8c795c49ac6",
+    "hit-handicap": "c46260153568e2d396c415d8d19a51cd5a9d93701bd173063872fba10393ff2f",
+    "hp-handicap": "01215aa12d60020e08f93ec3130bc93395baf40500229eb35321e249347bb98c",
+    "special-gear": "b42a0cdbf0d616ef38035686f4e8c7f2e51448996345ecb76cb26324134c9571"
+  }
+}

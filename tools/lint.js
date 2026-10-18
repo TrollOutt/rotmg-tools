@@ -6,6 +6,9 @@ const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const classic = [
+  'tools/build-training.js', 'web/training/engine.js', 'web/training/renderer.js',
+  'web/training/ui_code.js', 'web/training/ui_game.js', 'web/training/ui_gear.js',
+  'web/training/ui_bg.js', 'web/training/loop.js',
   'web/atlas-data.js',
   'web/atlas-geometry.js',
   'web/atlas-spatial.js',
