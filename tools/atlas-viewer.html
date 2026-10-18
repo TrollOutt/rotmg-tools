@@ -3889,7 +3889,9 @@ const shots = [];
 const sparks = [];
 
 /* Atlas local search indices. Narrow-phase tests and source order stay unchanged. */
-const folkSpace = AtlasSpatial.createGrid(16);
+// Characters are sparse across the realm. Wider cells make the many 18-tile
+// observed-target searches visit fewer empty buckets; exact tests still decide.
+const folkSpace = AtlasSpatial.createGrid(64);
 const hostileShotSpace = AtlasSpatial.createGrid(16);
 const hostileShot = shot => !shot.mine;
 
