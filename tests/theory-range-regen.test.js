@@ -17,55 +17,70 @@ const near = (got, want) => assert(Math.abs(got - want) < 1e-8, `${got} != ${wan
 // Exercise the actual delegated input handler, storage, shared-link codec and
 // control synchronisation. Native keyboard/pointer behaviour is browser QA.
 {
-  const storage = new Map(), nodes = new Map(), labels = ['melee', 'mid', 'long'].map(id => ({
-    dataset: { distanceLabel: id }, classList: { toggle(_, value) { this.on = value; } }
-  }));
+  const storage = new Map(), nodes = new Map();
   const slider = { value: '', attrs: {}, style: { setProperty() {} },
     setAttribute(key, value) { this.attrs[key] = value; } };
   nodes.set('tcDistance', slider);
-  nodes.set('tcGoals', { querySelectorAll: () => labels });
+  nodes.set('tcDistanceValue', {});
   const globals = {
     document: { getElementById: id => nodes.get(id) },
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     btoa: value => Buffer.from(value, 'binary').toString('base64'),
-    atob: value => Buffer.from(value, 'base64').toString('binary')
+    atob: value => Buffer.from(value, 'base64').toString('binary'),
+    RealmI18n: {
+      number: (value, options) => new Intl.NumberFormat('en', options).format(value),
+      t: (key, params) => params.distance + (key.endsWith('.tile') ? ' tile' : ' tiles')
+    }
   };
   const t = harness(sources, raw, true, globals), state = t.fresh('Wizard');
   t.use(state);
   const html = t.distanceControl();
   assert.match(html, /label for="tcDistance"/);
-  assert.match(html, /type="range" min="0" max="2" step="1"/);
+  assert.match(html, /type="range" min="0" max="10" step="0.5"/);
   assert.match(html, /aria-valuetext=/);
   let input, changes = 0;
   t.wireDistance({ addEventListener(type, fn) { assert.equal(type, 'input'); input = fn; } }, () => {
     changes++; t.keep(); t.syncDistance();
   });
   const move = value => input({ target: { id: 'tcDistance', value: String(value) } });
-  for (const [position, id, distance] of [[0, 'melee', 0], [1, 'mid', 4.5], [2, 'long', 7.5]]) {
-    move(position); t.syncDistance();
-    assert.equal(t.rangePosition(state), position);
+  for (let half = 0; half <= 20; half++) {
+    const distance = half / 2;
+    move(distance); t.syncDistance();
+    assert.equal(t.distanceOf(state), distance);
     assert.equal(t.standOf(state).d, distance);
-    assert.equal(slider.value, String(position));
-    assert(labels[position].classList.on);
-    assert(slider.attrs['aria-valuetext'].startsWith(['Melee', 'Mid range', 'Long range'][position]));
-    move(position); move(position); // no duplicate heavy callback
-    const saved = clone(state); saved.range = id;
-    assert.equal(t.unpackBuild(t.packBuild(saved)).range, id);
+    assert.equal(slider.value, String(distance));
+    assert.equal(slider.attrs['aria-valuenow'], String(distance));
+    assert.equal(slider.attrs['aria-valuetext'], distance + (distance === 1 ? ' tile' : ' tiles'));
+    assert.equal(nodes.get('tcDistanceValue').textContent, slider.attrs['aria-valuetext']);
+    move(distance); move(distance); // no duplicate heavy callback
+    assert.equal(t.unpackBuild(t.packBuild(state)).range, distance);
     t.keep();
     const reloaded = harness(sources, raw, true, globals);
     assert(reloaded.recall());
-    assert.equal(reloaded.rangePosition(reloaded.recalled()), position);
+    assert.equal(reloaded.recalled().range, distance);
   }
-  assert.equal(changes, 2);
-  move(1.5); move(-1); move(3); assert.equal(changes, 2);
-  // A short-range weapon really stops hitting; no continuous distance formula.
-  const weapon = { shots: [{ low: 100, reach: 5 }], rate: 1 };
-  state.range = 'mid'; assert(t.weaponRate(weapon, { att: 25, dex: 50 }, 0, null, null, null, t.standOf(state)).dps > 0);
-  state.range = 'long'; assert.equal(t.weaponRate(weapon, { att: 25, dex: 50 }, 0, null, null, null, t.standOf(state)).dps, 0);
-  const legacyLink = globals.btoa(JSON.stringify({ v: 1, k: 'Wizard', g: [], m: 1, e: 1 }));
-  assert.equal(t.rangePosition(t.unpackBuild(legacyLink)), 0);
-  const invalidLink = globals.btoa(JSON.stringify({ v: 1, k: 'Wizard', r: 'bogus', g: [] }));
-  assert.equal(t.rangePosition(t.unpackBuild(invalidLink)), 0);
+  assert.equal(changes, 20);
+  move(10); move(10.1); move('bogus'); assert.equal(changes, 20);
+  // Numeric values are validated, clamped and rounded at every read boundary.
+  const cases = [['melee', 0], ['mid', 4.5], ['long', 7.5], [6.24, 6], [6.25, 6.5],
+    [6.76, 7], [-2, 0], [99, 10], ['6.5', 6.5], ['bogus', 0], ['', 0],
+    [null, 0], [false, 0], [{}, 0], [[], 0], [undefined, 0]];
+  for (const [inputValue, expected] of cases) {
+    assert.equal(t.normaliseDistance(inputValue), expected);
+    const token = globals.btoa(JSON.stringify({ v: 1, k: 'Wizard', g: [], r: inputValue }));
+    assert.equal(t.unpackBuild(token).range, expected);
+    assert.equal(t.unpackBuild(t.packBuild({ ...state, range: inputValue })).range, expected);
+    const old = { ...clone(state), range: inputValue };
+    storage.set('rotmg.theorycraft.v1', JSON.stringify({ tabs: [old], onTab: 0 }));
+    const reloaded = harness(sources, raw, true, globals); assert(reloaded.recall());
+    assert.equal(reloaded.recalled().range, expected);
+  }
+  for (const value of [NaN, Infinity, -Infinity]) assert.equal(t.normaliseDistance(value), 0);
+  // The complete calculation retains exactly the historical three answers.
+  for (const [old, distance] of [['melee', 0], ['mid', 4.5], ['long', 7.5]]) {
+    assert.deepEqual(clone(t.numbersFor({ ...state, range: old }, 0)),
+      clone(t.numbersFor({ ...state, range: distance }, 0)));
+  }
 
   const saved = { ...clone(state), goals: ['stat:vit', 'stat:wis', 'dps'],
     share: { 'stat:vit': 25, 'stat:wis': 35, dps: 40 }, pinned: { 'stat:wis': true }, locked: { armor: true } };
@@ -76,15 +91,41 @@ const near = (got, want) => assert(Math.abs(got - want) < 1e-8, `${got} != ${wan
   near(t.scoreOf(restored, t.GOALS.find(g => g.id === 'stat:wis')), t.statsOf(restored).now.wis);
   const single = clone(restored); delete single.goals; single.goal = 'stat:wis';
   assert.deepEqual(Array.from(t.goalsOf(single), g => g.id), ['stat:wis']);
-  const legacyNodes = new Map(['stat:vit', 'stat:wis'].map(id => [id, {}]));
-  nodes.set('tcGoals', { querySelector: selector => legacyNodes.get(/data-goal="([^"]+)"/.exec(selector)[1]) });
-  nodes.set('tcLegacyGoals', {}); t.syncLegacyGoals();
-  assert.equal(nodes.get('tcLegacyGoals').hidden, false);
-  assert.equal(legacyNodes.get('stat:wis').hidden, false);
-  restored.goals = ['regen:mp']; t.syncLegacyGoals();
-  assert.equal(nodes.get('tcLegacyGoals').hidden, true);
-  assert.equal(legacyNodes.get('stat:wis').hidden, true);
+  restored.goals = ['regen:mp'];
   t.keep(); assert(t.recall()); assert.equal(t.recalled().goals[0], 'regen:mp');
+  // Numeric text uses the application formatter rather than decimal literals.
+  globals.RealmI18n.number = (value, options) => new Intl.NumberFormat('fr', options).format(value);
+  t.use({ ...state, range: 6.5 }); t.syncDistance();
+  assert.equal(slider.attrs['aria-valuetext'], '6,5 tiles');
+}
+
+// A known straight volley against radius 0.5: closed-form angular threshold
+// independently predicts how many of its 21 shots hit, then reach gates DPS.
+// Plateaus are expected for integer hits; the lateral offset varies at all 21
+// distances. No interpolation or category conversion is involved.
+const distanceEvidence = [];
+{
+  const t = harness(sources, raw), state = t.fresh('Wizard');
+  const info = new Map(); info.targets = { [state.boss]: 0.5 }; t.setGearInfo(info);
+  const weapon = { many: 21, fan: 3, shots: [{ low: 100, reach: 8 }], rate: 1 };
+  for (let half = 0; half <= 20; half++) {
+    state.range = half / 2;
+    const stand = t.standOf(state);
+    const hits = stand.d === 0 ? 21 : Math.min(21, 2 * Math.floor(Math.atan(0.5 / stand.d) / (3 * Math.PI / 180)) + 1);
+    const calculatedHits = require('../web/theory-engine').fanHits(21, 3, false, stand);
+    assert.equal(calculatedHits, hits);
+    const numbers = t.weaponRate(weapon, { att: 25, dex: 75 }, 0, null, null, null, stand);
+    const inReach = stand.gap <= 8;
+    near(numbers.dps, inReach ? 100 * 8 * hits : 0);
+    distanceEvidence.push({ tiles: stand.d, gap: stand.gap,
+      lateralAt12Degrees: Number((stand.d * Math.tan(12 * Math.PI / 180)).toFixed(4)),
+      hits: inReach ? hits : 0, dps: numbers.dps });
+  }
+  assert.equal(new Set(distanceEvidence.map(row => row.lateralAt12Degrees)).size, 21);
+  assert(distanceEvidence[19].dps === 0 && distanceEvidence[17].dps > 0);
+  const noReach = { ...weapon, shots: [{ low: 100 }] };
+  assert(t.weaponRate(noReach, { att: 25, dex: 75 }, 0, null, null, null, t.standOf(state)).dps > 0,
+    'missing client reach retains the established unconstrained behaviour');
 }
 
 // A deliberately small shelf makes the optimum independently enumerable.
@@ -136,6 +177,18 @@ const near = (got, want) => assert(Math.abs(got - want) < 1e-8, `${got} != ${wan
     return t.scoreOf(trial, mixed);
   });
   near(mixedResult.score, Math.max(...exhaustive));
+  state.goals = ['stat:vit', 'stat:wis', 'regen:hp', 'regen:mp'];
+  state.share = { 'stat:vit': 20, 'stat:wis': 30, 'regen:hp': 25, 'regen:mp': 25 };
+  state.pinned = { 'stat:wis': true };
+  assert.deepEqual(Array.from(t.goalsOf(state), g => g.id), state.goals);
+  const fourGoals = t.aimOf(state), fourResult = t.optimise(state, fourGoals);
+  const allScores = small.items.filter(i => i.hand === 'ring').map(item => {
+    const trial = clone(state); trial.gear.ring.name = item.name;
+    return t.scoreOf(trial, fourGoals);
+  });
+  near(fourResult.score, Math.max(...allScores));
+  assert.deepEqual(clone(fourResult.state.share), state.share);
+  assert.deepEqual(clone(fourResult.state.pinned), state.pinned);
 }
 
 // Real client-projected enchantments, evaluated and selected by the real
@@ -201,8 +254,8 @@ const near = (got, want) => assert(Math.abs(got - want) < 1e-8, `${got} != ${wan
   near(t.scoreOf(state, goal('regen:mp')), mpBase);
 }
 const en = JSON.parse(read('web/locales/en/common.json'));
-for (const text of ['HP Regeneration (HP/s)', 'MP Regeneration (MP/s)',
-  'Melee \u2014 on the target', 'Mid range \u2014 3 to 6 tiles away', 'Long range \u2014 6 to 9 tiles away']) {
+for (const text of ['HP Regeneration (HP/s)', 'MP Regeneration (MP/s)', '{distance} tiles', '{distance} tile']) {
   assert(Object.values(en).includes(text), `UI text is catalogued exactly: ${text}`);
 }
-console.log('Theory range/regeneration: discrete input, persistence, legacy objectives, passive scoring, gear/enchant optima, locks, shares and rankings pass.');
+if (process.argv.includes('--distance-table')) console.log(JSON.stringify({ distanceEvidence }));
+console.log('Theory range/regeneration: 21 numeric distances, geometric effects, persistence, VIT/WIS plus regeneration, optima, locks, shares and rankings pass.');

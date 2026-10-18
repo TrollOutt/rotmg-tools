@@ -15,7 +15,7 @@ const raw = JSON.parse(read('TheoryCraft/theorycraft.json'));
 const data = engine.buildDataset(sources);
 const t = require('./theory-harness')(sources, raw);
 // Keep the historical business oracle byte-for-byte. New regeneration goals
-// have their own fixtures; all ten original objectives, including legacy
+// have their own fixtures; all ten original objectives, including
 // VIT/WIS, must still reproduce their original scores and search results.
 const baselineGoals = t.GOALS.filter(goal => !goal.id.startsWith('regen:'));
 function clean(value) {

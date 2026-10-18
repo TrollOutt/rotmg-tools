@@ -68,7 +68,7 @@
  */
 /**
  * @typedef {TheoryStatState & {boss?: string, assume?: Record<string, boolean>,
- *   using?: string, damage?: string, range?: string}} TheoryNumbersState
+ *   using?: string, damage?: string, range?: number | string}} TheoryNumbersState
  * @typedef {number} TheoryNumbersDefence
  * @typedef {TheoryStatResult & {now: Record<TheoryStatKey, number>}} TheoryNumbersStats
  * @typedef {TheoryWeapon & {mp?: number, cool?: number,

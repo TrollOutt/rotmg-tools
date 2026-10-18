@@ -13,7 +13,7 @@ module.exports = function(sources, raw, withEngine = true, globals = {}) {
     numbersFor, optimiseSteps, optimise, optimiseAsync, scoreOf, goalsOf, bestAlone, shareOf, sharesOf, aimOf, accessible, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
     setGearInfo(value) { gearInfo = value; },
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
-    distanceControl, wireDistance, syncDistance, rangePosition, packBuild, unpackBuild, recall, keep, syncLegacyGoals, sayGoal,
+    distanceControl, wireDistance, syncDistance, normaliseDistance, distanceOf, packBuild, unpackBuild, recall, keep, sayGoal,
     recalled() { build = tabs[onTab]; return build; },
     setStatusInfo(value) { statusInfo = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,

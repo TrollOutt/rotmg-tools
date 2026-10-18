@@ -822,33 +822,40 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   /*
    * Where the fighter stands.
    *
-   * Melee is on top of the target. Mid range is three to six tiles away and long range six to nine, taken at the
-   * middle of the band: 4.5 and 7.5. A shot lands if it flies far enough to reach the target's edge, which is its
+   * Distance is measured from the target's middle, in half-tile steps from zero to ten.
+   * Old builds used melee, mid and long, at 0, 4.5 and 7.5 respectively.
+   * A shot lands if it flies far enough to reach the target's edge, which is its
    * size away from its middle (tools/build-gear-effects.js reads the size off the client); one that falls short
    * does nothing. What the shot does on the way is not part of the figure.
    */
-  const RANGES = [['melee', 'Melee', 0], ['mid', 'Mid range', 4.5], ['long', 'Long range', 7.5]];
-  const RANGE_SAYS = { melee: 'on the target', mid: '3 to 6 tiles away', long: '6 to 9 tiles away' };
-  const rangePosition = state => Math.max(0, RANGES.findIndex(one => one[0] === state.range));
-  const rangeText = position => RANGES[position][1] + ' — ' + RANGE_SAYS[RANGES[position][0]];
+  const OLD_DISTANCES = { melee: 0, mid: 4.5, long: 7.5 };
+  function normaliseDistance(value) {
+    if (typeof value === 'string' && Object.prototype.hasOwnProperty.call(OLD_DISTANCES, value)) return OLD_DISTANCES[value];
+    if (typeof value === 'string' && /^-?(?:\d+\.?\d*|\.\d+)$/.test(value)) value = Number(value);
+    if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+    return Math.round(Math.max(0, Math.min(10, value)) * 2) / 2;
+  }
+  const distanceOf = state => normaliseDistance(state.range);
+  const distanceText = distance => RealmI18n.t(distance === 1 ? 'theory.distance.tile' : 'theory.distance.tiles',
+    { distance: RealmI18n.number(distance, { maximumFractionDigits: 1 }) });
 
   function distanceControl() {
     return '<div class="tc-goal-row"><label for="tcDistance">Distance</label>'
-      + '<div class="tc-distance"><input id="tcDistance" type="range" min="0" max="2" step="1" value="0"'
-      + ' aria-valuetext="' + esc(rangeText(0)) + '">'
-      + '<div class="tc-distance-labels" aria-hidden="true">' + RANGES.map(([id, say]) =>
-        '<span data-distance-label="' + id + '">' + esc(say) + '</span>').join('')
+      + '<div class="tc-distance"><output id="tcDistanceValue" for="tcDistance" aria-live="off">' + esc(distanceText(0)) + '</output>'
+      + '<input id="tcDistance" type="range" min="0" max="10" step="0.5" value="0"'
+      + ' aria-valuenow="0" aria-valuetext="' + esc(distanceText(0)) + '">'
+      + '<div class="tc-distance-labels" aria-hidden="true">' + [0, 5, 10].map(distance =>
+        '<span>' + esc(RealmI18n.number(distance)) + '</span>').join('')
       + '</div></div></div>';
   }
 
   function syncDistance() {
-    const position = rangePosition(build), slider = el('tcDistance');
-    slider.value = String(position);
-    slider.setAttribute('aria-valuetext', rangeText(position));
-    slider.style.setProperty('--distance-progress', (position * 50) + '%');
-    for (const node of el('tcGoals').querySelectorAll('[data-distance-label]')) {
-      node.classList.toggle('is-on', node.dataset.distanceLabel === RANGES[position][0]);
-    }
+    const distance = distanceOf(build), slider = el('tcDistance');
+    slider.value = String(distance);
+    slider.setAttribute('aria-valuenow', String(distance));
+    slider.setAttribute('aria-valuetext', distanceText(distance));
+    slider.style.setProperty('--distance-progress', (distance * 10) + '%');
+    el('tcDistanceValue').textContent = distanceText(distance);
   }
 
   // A native range emits input while dragging. Repeated events inside the same
@@ -856,15 +863,17 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
   function wireDistance(container, changed) {
     container.addEventListener('input', event => {
       if (event.target.id !== 'tcDistance') return;
-      const position = Number(event.target.value);
-      if (!Number.isInteger(position) || !RANGES[position] || position === rangePosition(build)) return;
-      build.range = RANGES[position][0];
+      const value = Number(event.target.value);
+      if (!Number.isFinite(value)) return;
+      const distance = normaliseDistance(value);
+      if (distance === distanceOf(build)) return;
+      build.range = distance;
       changed();
     });
   }
   // Where the fighter stands against the target: how far off its middle, how big it is, and how far a shot must fly to touch its edge.
   function standOf(state) {
-    const d = (RANGES.find(one => one[0] === (state.range || 'melee')) || RANGES[0])[2];
+    const d = distanceOf(state);
     const boss = data.byBoss[state.boss];
     const size = (boss && gearInfo && gearInfo.targets && gearInfo.targets[boss.name]);
     const radius = Math.max(0.3, size === undefined ? 0.5 : size);
@@ -1590,7 +1599,6 @@ const TINT = {
       return -boss.hp / n.chosen;
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
-      legacy: key === 'vit' || key === 'wis',
       tint: TINT[key], of: n => n.stats.now[key] })),
     ...['hp', 'mp'].map(key => ({ group: 'Stats', id: 'regen:' + key,
       say: key.toUpperCase() + ' Regeneration (' + key.toUpperCase() + '/s)',
@@ -1602,16 +1610,6 @@ const TINT = {
   ];
 
   const REGEN_SAYS = 'Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.';
-  const LEGACY_SAYS = 'Saved VIT/WIS objectives still maximise the raw stat. Select a regeneration objective to optimise HP/s or MP/s.';
-
-  function syncLegacyGoals() {
-    const selected = goalsOf(build).map(one => one.id);
-    for (const one of GOALS.filter(one => one.legacy)) {
-      el('tcGoals').querySelector('[data-goal="' + one.id + '"]').hidden = !selected.includes(one.id);
-    }
-    el('tcLegacyGoals').hidden = !GOALS.some(one => one.legacy && selected.includes(one.id));
-  }
-
   const scoreOf = TheoryEngine.createScore({
     getData: () => data,
     numbersFor: numberCalculations.numbersFor
@@ -3370,8 +3368,8 @@ const TINT = {
     const side = Math.min(52 * k, tall * 0.4);
     const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
     /*
-     * Where they stand is the distance the reader chose: on the target, three to six tiles off or six to nine, measured
-     * from the target's middle (mid range at 4.5, long range at 7.5). A tile is thirty pixels unless the frame is too
+     * Where they stand is the chosen numeric distance from the target's middle, from zero to ten tiles.
+     * A tile is thirty pixels unless the frame is too
      * narrow for that, and every length below - shots, reach - is drawn at the same scale, so what passes a target and
      * what reaches it can be seen.
      */
@@ -3815,7 +3813,7 @@ const TINT = {
     });
     const say = {
       v: SHARE_V, k: state.klass, g: gear, t: state.boss,
-      r: RANGES[rangePosition(state)][0],
+      r: distanceOf(state),
       m: state.maxed ? 1 : 0, e: state.exalt ? 1 : 0
     };
     const raw = JSON.stringify(say);
@@ -3833,7 +3831,7 @@ const TINT = {
     } catch (e) { return null; }
     if (!said || said.v !== SHARE_V || !data.byClass[said.k]) return null;
     const start = fresh(said.k);
-    if (RANGES.some(one => one[0] === said.r)) start.range = said.r;
+    start.range = normaliseDistance(said.r);
     start.maxed = said.m !== 0;
     start.exalt = said.e !== 0;
     if (data.byBoss[said.t]) start.boss = said.t;
@@ -3867,6 +3865,7 @@ const TINT = {
   const STORE = 'rotmg.theorycraft.v1';
 
   function keep() {
+    build.range = distanceOf(build);
     tabs[onTab] = build;
     try {
       localStorage.setItem(STORE, JSON.stringify({ tabs, onTab }));
@@ -3877,7 +3876,7 @@ const TINT = {
     try {
       const was = JSON.parse(localStorage.getItem(STORE) || 'null');
       if (was && Array.isArray(was.tabs) && was.tabs.length) {
-        tabs = was.tabs;
+        tabs = was.tabs.map(one => ({ ...one, range: distanceOf(one) }));
         onTab = Math.min(was.onTab || 0, tabs.length - 1);
         return true;
       }
@@ -3978,7 +3977,6 @@ const TINT = {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
     }
     syncDistance();
-    syncLegacyGoals();
     for (const node of el('tcGoals').querySelectorAll('[data-damage]')) {
       node.classList.toggle('is-on', node.dataset.damage === (build.damage || 'weapon'));
     }
@@ -4225,12 +4223,11 @@ const TINT = {
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
       + '<span>' + GOALS.filter(one => one.group === name).map(one =>
         '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
-        + (one.legacy ? ' hidden title="' + esc(LEGACY_SAYS) + '"' : one.id.startsWith('regen:') ? ' title="' + esc(REGEN_SAYS) + '"' : '')
+        + (one.id.startsWith('regen:') ? ' title="' + esc(REGEN_SAYS) + '"' : '')
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
-        + '<i class="tc-dot"></i>' + esc(one.say) + (one.legacy ? ' (legacy)' : '') + '</button>').join('')
+        + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
       + '</span></div>').join('')
       + '<small class="tc-objective-note">' + esc(REGEN_SAYS) + '</small>'
-      + '<small id="tcLegacyGoals" class="tc-objective-note" hidden>' + esc(LEGACY_SAYS) + '</small>'
       + distanceControl()
       + '<div class="tc-goal-row"><i>Damage counts</i><span>' + DAMAGES.map(([id, say]) =>
         '<button type="button" class="tc-goal" data-damage="' + id + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>';
