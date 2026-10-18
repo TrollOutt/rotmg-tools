@@ -26,6 +26,7 @@
     "web/skin-viewer-animation.js",
     "web/atlas-data.js",
     "web/atlas-geometry.js",
+    "web/atlas-spatial.js",
     "web/progression-module.d.ts"
   ]
 }

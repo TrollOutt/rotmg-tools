@@ -353,6 +353,7 @@
 <script>/*OUTLINE*/</script>
 <script>/*ATLAS_DATA*/</script>
 <script>/*ATLAS_GEOMETRY*/</script>
+<script>/*ATLAS_SPATIAL*/</script>
 <script>
 const A = /*ATLAS*/null;
 
@@ -3209,7 +3210,7 @@ function stepObserved(one, delta) {
   const clips = observedCombat.get(one.kind.type);
   if (!clips || !clips.length) return false;
   let target = null, nearest = 18 * 18;
-  for (const player of folk) {
+  for (const player of folkSpace.query(one.x, one.y, 18)) {
     if (player.down > 0) continue;
     if (one.reactor && Math.hypot(player.x - one.reactor.x, player.y - one.reactor.y)
       > one.leash + 5) continue;
@@ -3257,6 +3258,7 @@ function stepObserved(one, delta) {
 }
 
 function stepLife(delta) {
+  folkSpace.rebuild(folk);
   for (const one of alive) {
     /*
      * A creature that has been killed is gone for a few seconds and then
@@ -3885,6 +3887,11 @@ const TO_LEVEL = 55;                     // mine: experience a level costs, time
 const folk = [];
 const shots = [];
 const sparks = [];
+
+/* Atlas local search indices. Narrow-phase tests and source order stay unchanged. */
+const folkSpace = AtlasSpatial.createGrid(16);
+const hostileShotSpace = AtlasSpatial.createGrid(16);
+const hostileShot = shot => !shot.mine;
 
 /*
  * What a character is at a given level.
@@ -4621,7 +4628,7 @@ function volley(one, beast, shot, hurt, by) {
  */
 function dodge(one) {
   let px = 0, py = 0;
-  for (const s of shots) {
+  for (const s of hostileShotSpace.query(one.x, one.y, DODGE_SEE)) {
     if (s.mine) continue;
     const dx = one.x - s.x, dy = one.y - s.y;
     const far = Math.hypot(dx, dy);
@@ -4699,6 +4706,10 @@ function stepWorld(delta) {
 
 function stepFolk(delta) {
   if (!folk.length) return;
+  folkSpace.rebuild(folk);
+  // Only hostile shots already in flight can affect this step's steering.
+  // Character volleys appended below are friendly; enemy volleys follow it.
+  hostileShotSpace.rebuild(shots, hostileShot);
 
   // Keep encounter supply correlated with the people currently standing in
   // each zone, including after a party crosses a zone boundary.
@@ -4729,6 +4740,7 @@ function stepFolk(delta) {
         const fresh = newFolk(one.kind, beaconFor(1) || one.beacon, 1);
         for (const k of Object.keys(fresh)) one[k] = fresh[k];
         one.name = name;
+        folkSpace.update(one);
       }
       continue;
     }
@@ -4890,7 +4902,7 @@ function stepFolk(delta) {
     // Separation applies during travel, loot runs and combat alike. It is
     // deliberately stronger than target steering at close range so two
     // characters cannot occupy the same visible tile.
-    for (const other of folk) {
+    for (const other of folkSpace.query(one.x, one.y, 3.5)) {
       if (other === one || other.down > 0) continue;
       const ox = one.x - other.x, oy = one.y - other.y;
       const apart = Math.hypot(ox, oy);
@@ -4928,6 +4940,9 @@ function stepFolk(delta) {
       }
     } else one.roamBlocked = 0;
 
+    // Later characters observe this move during the same ordered step.
+    folkSpace.update(one);
+
     if (one.hp <= 0 && one.down <= 0) {
       graveFor(one);
       speak('death', one);
@@ -4959,7 +4974,7 @@ function stepFolk(delta) {
     const shot = all[beast.which];
     const reach = shot.reach || 5;
     let mark = null, near = reach * reach;
-    for (const one of folk) {
+    for (const one of folkSpace.query(beast.x, beast.y, reach)) {
       if (one.down > 0) continue;
       if (beast.reactor && Math.hypot(one.x - beast.reactor.x, one.y - beast.reactor.y)
         > beast.leash + 5) continue;
@@ -5022,13 +5037,18 @@ function stepShots(delta) {
           beast.dying = DYING;
           burst(beast);
           dropFrom(beast);
-          if (s.by) { reward(s.by, beast); if (Math.random() < 0.04) speak('loot', s.by); }
+          if (s.by) {
+            reward(s.by, beast);
+            // Progression can teleport the owner before the next shot tests it.
+            folkSpace.update(s.by);
+            if (Math.random() < 0.04) speak('loot', s.by);
+          }
         }
         // A shot that carries through does not stop in what it hits.
         if (!s.through) { gone = true; break; }
       }
     } else if (!gone) {
-      for (const one of folk) {
+      for (const one of folkSpace.query(s.x, s.y, span)) {
         if (one.down > 0) continue;
         if (Math.abs(one.x - s.x) > span || Math.abs(one.y - s.y) > span) continue;
         one.hp -= s.hurt;

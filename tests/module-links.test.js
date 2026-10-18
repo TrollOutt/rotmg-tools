@@ -34,6 +34,7 @@ assert.equal((read('web/fiches-c.js').match(/FichesData\.createCardData\(/g) || 
 
 const atlasTemplate = read('tools/atlas-viewer.html');
 const atlasGeometrySource = read('web/atlas-geometry.js').replace(/\r\n/g, '\n');
+const atlasSpatialSource = read('web/atlas-spatial.js').replace(/\r\n/g, '\n');
 const atlasDataSource = read('web/atlas-data.js').replace(/\r\n/g, '\n');
 const css = read('web/style.css');
 const indexPageSource = read('web/index-page.js');
@@ -112,7 +113,7 @@ function normalizedPublishedAtlas(source) {
     out = out.replace(cut, '');
   }
 
-  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS_DATA*/', '__ATLAS_DATA__').replace('/*ATLAS_GEOMETRY*/', '__ATLAS_GEOMETRY__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
+  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS_DATA*/', '__ATLAS_DATA__').replace('/*ATLAS_GEOMETRY*/', '__ATLAS_GEOMETRY__').replace('/*ATLAS_SPATIAL*/', '__ATLAS_SPATIAL__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
 }
 
 // The one line every page lays round a character (web/outline.js), carried inside the page.
@@ -124,6 +125,7 @@ function normalizedBuiltAtlas(source) {
     .replace(outlineSource, '__OUTLINE__')
     .replace(atlasDataSource, '__ATLAS_DATA__')
     .replace(atlasGeometrySource, '__ATLAS_GEOMETRY__')
+    .replace(atlasSpatialSource, '__ATLAS_SPATIAL__')
     .replace(
       /^const A = \{.*\};$/m,
       'const A = __ATLAS__;'
@@ -557,3 +559,7 @@ assert.equal((atlasTemplate.match(/AtlasGeometry\.createProjection\(/g) || []).l
   'Atlas camera adapters share one geometry factory');
 assert(atlasTemplate.indexOf('/*ATLAS_GEOMETRY*/') < atlasTemplate.indexOf('AtlasGeometry.createProjection('),
   'Atlas geometry executes before its adapter');
+assert.equal((atlasTemplate.match(/AtlasSpatial\.createGrid\(/g) || []).length, 2,
+  'Atlas simulation owns one ordered grid per searched population');
+assert(atlasTemplate.indexOf('/*ATLAS_SPATIAL*/') < atlasTemplate.indexOf('AtlasSpatial.createGrid('),
+  'Atlas spatial module executes before its simulation adapters');
