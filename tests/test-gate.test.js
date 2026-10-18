@@ -53,6 +53,7 @@ const deployCritical = [
   'storage-contract.test.js',
   'test-gate.test.js',
   'theory-optimization.test.js',
+  'theory-range-regen.test.js',
   'theory-results.test.js',
   'theory-sheet-style.test.js',
   'theory-oracle.test.js',

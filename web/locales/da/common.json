@@ -624,5 +624,14 @@
   "static.open.in.the.index": "Åbn i Index",
   "static.reading.the.index": "Læser Index…",
   "static.index.record": "Index-post",
-  "static.leave.the.atlas.for.index": "Forlad atlasset for denne posts Index-side"
+  "static.leave.the.atlas.for.index": "Forlad atlasset for denne posts Index-side",
+  "theory.regen.hp": "HP Regeneration (HP/s)",
+  "theory.regen.mp": "MP Regeneration (MP/s)",
+  "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
+  "theory.regen.legacy": "Saved VIT/WIS objectives still maximise the raw stat. Select a regeneration objective to optimise HP/s or MP/s.",
+  "theory.distance.meleeValue": "Melee — on the target",
+  "theory.distance.midValue": "Mid range — 3 to 6 tiles away",
+  "theory.distance.longValue": "Long range — 6 to 9 tiles away",
+  "theory.regen.legacyVit": "Vitality (legacy)",
+  "theory.regen.legacyWis": "Wisdom (legacy)"
 }

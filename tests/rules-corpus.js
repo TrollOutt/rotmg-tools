@@ -14,6 +14,10 @@ const sources = {
 const raw = JSON.parse(read('TheoryCraft/theorycraft.json'));
 const data = engine.buildDataset(sources);
 const t = require('./theory-harness')(sources, raw);
+// Keep the historical business oracle byte-for-byte. New regeneration goals
+// have their own fixtures; all ten original objectives, including legacy
+// VIT/WIS, must still reproduce their original scores and search results.
+const baselineGoals = t.GOALS.filter(goal => !goal.id.startsWith('regen:'));
 function clean(value) {
   if (typeof value === 'number' && !Number.isFinite(value)) return String(value);
   if (value === undefined) return null;
@@ -52,7 +56,7 @@ for (const klass of raw.classes) {
       weapon: t.weaponRate(weapon, stats.now, state.against, scale, sub),
       ability: t.abilityRate(ability, stats.now, state.against),
       numbers: t.numbersFor(state, state.against),
-      scores: t.GOALS.map(goal => [goal.id, t.scoreOf(state, goal)]),
+      scores: baselineGoals.map(goal => [goal.id, t.scoreOf(state, goal)]),
       eligible: hands.map(hand => t.enchantsFor(state.gear[hand].name, state.gear[hand].ench, 3).map(x => [x.id, x.roll])) });
   }
   // A real search over a bounded shelf: every class and goal, without making
@@ -61,7 +65,7 @@ for (const klass of raw.classes) {
   state.scope = 'gear'; state.locked = { weapon: true, ability: true, armor: true };
   const candidates = new Set(t.itemsFor('ring', klass.name).filter((_, n) => n % 50 === 0).map(x => x.name));
   state.banned = Object.fromEntries(raw.items.filter(x => x.hand === 'ring' && !candidates.has(x.name)).map(x => [x.name, true]));
-  for (const goal of t.GOALS) {
+  for (const goal of baselineGoals) {
     const result = t.optimise(state, goal);
     corpus.searches.push({ klass: klass.name, goal: goal.id, ...result });
   }
@@ -112,7 +116,7 @@ for (let n = 0; n < 12; n++) {
 }
 const f = fame.parse(read('Fame/client-fame.txt'), read('Fame/availability-overrides.txt'));
 corpus.fame = f.dungeons.map(d => [d.name, d.availability, fame.firstCompletion(d)]);
-corpus.coverage = { classes: raw.classes.length, items: itemNames.size, goals: t.GOALS.map(g => g.id), enchantments: data.enchants.length, theoryCases: corpus.theory.length, searches: corpus.searches.length };
+corpus.coverage = { classes: raw.classes.length, items: itemNames.size, goals: baselineGoals.map(g => g.id), enchantments: data.enchants.length, theoryCases: corpus.theory.length, searches: corpus.searches.length };
 const result = JSON.parse(JSON.stringify(clean(corpus))), file = path.join(__dirname, 'rules-corpus.json');
 function difference(a, b, at = 'corpus') {
   if (Object.is(a, b)) return null;

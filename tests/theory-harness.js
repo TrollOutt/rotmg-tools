@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 // Test-only access to the UI closure, with the arithmetic engine supplied below.
-module.exports = function(sources, raw, withEngine = true) {
+module.exports = function(sources, raw, withEngine = true, globals = {}) {
   const file = path.join(__dirname, '../web/theorycraft.js');
   const original = fs.readFileSync(file, 'utf8');
   const marker = 'return { start, share, open, put };';
@@ -13,6 +13,8 @@ module.exports = function(sources, raw, withEngine = true) {
     numbersFor, optimiseSteps, optimise, optimiseAsync, scoreOf, goalsOf, bestAlone, shareOf, sharesOf, aimOf, accessible, beatenOnes, enchantsFor, itemsFor, compatibleItemsFor,
     setGearInfo(value) { gearInfo = value; },
     indexItemAliases, fresh, GOALS, loadStatusInfo, effectsFor, fxOf, durationOf,
+    distanceControl, wireDistance, syncDistance, rangePosition, packBuild, unpackBuild, recall, keep, syncLegacyGoals, sayGoal,
+    recalled() { build = tabs[onTab]; return build; },
     setStatusInfo(value) { statusInfo = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,
     progression(catalogue, saved) { access = catalogue; profile = saved; beatenSearch.invalidate(); },
@@ -28,7 +30,7 @@ module.exports = function(sources, raw, withEngine = true) {
   const context = { window: { ROTMG_BUNDLE: { sources } }, module: { exports: {} }, console,
     performance: require('perf_hooks').performance, setTimeout,
     TheoryEngine: require('../web/theory-engine'),
-    BuildProgression: require('../web/progression') };
+    BuildProgression: require('../web/progression'), ...globals };
   if (withEngine) context.EnchantEngine = require('../web/engine');
   vm.runInNewContext(script, context, { filename: file });
   const api = context.module.exports;

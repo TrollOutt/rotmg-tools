@@ -203,7 +203,7 @@
  * @property {(a: TheoryOptimiserOffer, b: TheoryOptimiserOffer) => number} byScoreThenSignature
  * @property {(state: TheoryOptimiserState) => string} gearSignature
  * @property {(state: TheoryOptimiserState) => TheoryOptimiserState} prepareSearchable Retains live catalogue, progression and search filters.
- * @property {(hand: string, klass: string, state: TheoryOptimiserState) => TheoryOptimiserCandidate[]} searchItems
+ * @property {(hand: string, klass: string, state: TheoryOptimiserState, goal?: TheoryScoreGoal) => TheoryOptimiserCandidate[]} searchItems
  * @property {(name: string, already: TheoryOptimiserSlots, at: number) => TheoryOptimiserEnchantCandidate[]} searchEnchants
  * @property {(name: string, already: TheoryOptimiserSlots, at: number) => boolean} enchantFitsItem
  * @property {(one: TheoryCharm | undefined) => number} worth
@@ -1322,7 +1322,7 @@ var TheoryEngine = (function () {
       /** @param {string} hand */
       const candidatesForHand = hand => {
         if (!candidatesByHand.has(hand)) {
-          candidatesByHand.set(hand, searchItems(hand, work.klass, work));
+          candidatesByHand.set(hand, searchItems(hand, work.klass, work, goal));
         }
         return /** @type {TheoryOptimiserCandidate[]} */ (candidatesByHand.get(hand));
       };

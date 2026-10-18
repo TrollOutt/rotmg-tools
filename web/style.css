@@ -5838,6 +5838,35 @@ button.tc-loot-place:hover, button.tc-loot-place:focus-visible { border-color: v
   display: grid; grid-template-columns: 4.6em minmax(0, 1fr); align-items: start; column-gap: 8px;
 }
 .tc-optimize .tc-goal-row > i { padding-top: 5px; }
+.tc-optimize .tc-goal-row > label {
+  padding-top: 5px; font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: .8px; font-weight: 700; color: var(--dim);
+}
+.tc-distance { width: min(100%, 320px); min-width: 0; }
+.tc-distance input {
+  display: block; width: 100%; height: 30px; margin: 0;
+  appearance: none; background: transparent; cursor: pointer; accent-color: var(--accent);
+}
+.tc-distance input::-webkit-slider-runnable-track {
+  height: 6px; border: 1px solid var(--line); border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent) 0 var(--distance-progress, 0%), var(--panel-2) var(--distance-progress, 0%) 100%);
+}
+.tc-distance input::-webkit-slider-thumb {
+  appearance: none; width: 20px; height: 20px; margin-top: -8px;
+  border: 2px solid var(--text); border-radius: 50%; background: var(--accent-deep);
+}
+.tc-distance input::-moz-range-track { height: 6px; border-radius: 999px; background: var(--line); }
+.tc-distance input::-moz-range-progress { height: 6px; background: var(--accent); }
+.tc-distance input::-moz-range-thumb {
+  width: 18px; height: 18px; border: 2px solid var(--text); border-radius: 50%; background: var(--accent-deep);
+}
+.tc-distance input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 5px; }
+.tc-distance-labels { display: flex; justify-content: space-between; gap: 4px; color: var(--dim); font-size: 11px; }
+.tc-distance-labels > span { flex: 1; }
+.tc-distance-labels > span:nth-child(2) { text-align: center; }
+.tc-distance-labels > span:last-child { text-align: right; }
+.tc-distance-labels .is-on { color: var(--text); font-weight: 700; }
+.tc-objective-note { color: var(--dim); font-size: 11px; line-height: 1.4; }
 /* What each goal stands at now, side by side rather than stacked into a
    tower beside the button - and not at all once the search has reported,
    since its report says the same numbers with where they came from. */

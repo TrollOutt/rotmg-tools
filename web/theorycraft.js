@@ -829,6 +829,39 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    */
   const RANGES = [['melee', 'Melee', 0], ['mid', 'Mid range', 4.5], ['long', 'Long range', 7.5]];
   const RANGE_SAYS = { melee: 'on the target', mid: '3 to 6 tiles away', long: '6 to 9 tiles away' };
+  const rangePosition = state => Math.max(0, RANGES.findIndex(one => one[0] === state.range));
+  const rangeText = position => RANGES[position][1] + ' — ' + RANGE_SAYS[RANGES[position][0]];
+
+  function distanceControl() {
+    return '<div class="tc-goal-row"><label for="tcDistance">Distance</label>'
+      + '<div class="tc-distance"><input id="tcDistance" type="range" min="0" max="2" step="1" value="0"'
+      + ' aria-valuetext="' + esc(rangeText(0)) + '">'
+      + '<div class="tc-distance-labels" aria-hidden="true">' + RANGES.map(([id, say]) =>
+        '<span data-distance-label="' + id + '">' + esc(say) + '</span>').join('')
+      + '</div></div></div>';
+  }
+
+  function syncDistance() {
+    const position = rangePosition(build), slider = el('tcDistance');
+    slider.value = String(position);
+    slider.setAttribute('aria-valuetext', rangeText(position));
+    slider.style.setProperty('--distance-progress', (position * 50) + '%');
+    for (const node of el('tcGoals').querySelectorAll('[data-distance-label]')) {
+      node.classList.toggle('is-on', node.dataset.distanceLabel === RANGES[position][0]);
+    }
+  }
+
+  // A native range emits input while dragging. Repeated events inside the same
+  // discrete stop must not save, repaint the duel or recompute the build.
+  function wireDistance(container, changed) {
+    container.addEventListener('input', event => {
+      if (event.target.id !== 'tcDistance') return;
+      const position = Number(event.target.value);
+      if (!Number.isInteger(position) || !RANGES[position] || position === rangePosition(build)) return;
+      build.range = RANGES[position][0];
+      changed();
+    });
+  }
   // Where the fighter stands against the target: how far off its middle, how big it is, and how far a shot must fly to touch its edge.
   function standOf(state) {
     const d = (RANGES.find(one => one[0] === (state.range || 'melee')) || RANGES[0])[2];
@@ -1458,11 +1491,14 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     return true;
   }
 
-  const searchItems = (hand, klass, state) =>
+  const searchItems = (hand, klass, state, goal) =>
     itemsFor(hand, klass, state).filter(one =>
       searchAllowsItem(one, state)
       // A stronger item outside this profile must never prune an accessible one.
       && ((profile && profile.mode === 'personal')
+        // Raw-stat dominance cannot compare combat penalties. Retain the full
+        // eligible shelf for regeneration, including combined objectives.
+        || (goal && goal.id.split('+').some(id => id.startsWith('regen:')))
         || !beatenOnes().gear.has(one.name)));
 
   /*
@@ -1554,8 +1590,27 @@ const TINT = {
       return -boss.hp / n.chosen;
     } },
     ...STATS.map(([key, say]) => ({ group: 'Stats', id: 'stat:' + key, say,
-      tint: TINT[key], of: n => n.stats.now[key] }))
+      legacy: key === 'vit' || key === 'wis',
+      tint: TINT[key], of: n => n.stats.now[key] })),
+    ...['hp', 'mp'].map(key => ({ group: 'Stats', id: 'regen:' + key,
+      say: key.toUpperCase() + ' Regeneration (' + key.toUpperCase() + '/s)',
+      tint: TINT[key === 'hp' ? 'vit' : 'wis'],
+      // Reuse the established passive formula and combat penalties. The fight's
+      // aggregate regen also contains triggered recovery and temporary boosts;
+      // neither those nor an assumed party Healing status is passive regen.
+      of: (n, s) => regenOf(n.stats, {}, fightOf(s, n.stats))[key].combat }))
   ];
+
+  const REGEN_SAYS = 'Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.';
+  const LEGACY_SAYS = 'Saved VIT/WIS objectives still maximise the raw stat. Select a regeneration objective to optimise HP/s or MP/s.';
+
+  function syncLegacyGoals() {
+    const selected = goalsOf(build).map(one => one.id);
+    for (const one of GOALS.filter(one => one.legacy)) {
+      el('tcGoals').querySelector('[data-goal="' + one.id + '"]').hidden = !selected.includes(one.id);
+    }
+    el('tcLegacyGoals').hidden = !GOALS.some(one => one.legacy && selected.includes(one.id));
+  }
 
   const scoreOf = TheoryEngine.createScore({
     getData: () => data,
@@ -2495,6 +2550,7 @@ const TINT = {
   function sayGoal(goal, value) {
     if (!Number.isFinite(value)) return '\u2014';
     if (goal.id === 'kill') return round(-value) + 's';
+    if (goal.id && goal.id.indexOf('regen:') === 0) return RealmI18n.number(value, { maximumFractionDigits: 2 }) + ' ' + goal.id.slice(6).toUpperCase() + '/s';
     if (goal.id && goal.id.indexOf('stat:') === 0) return round(value);
     return commas(value);
   }
@@ -3759,6 +3815,7 @@ const TINT = {
     });
     const say = {
       v: SHARE_V, k: state.klass, g: gear, t: state.boss,
+      r: RANGES[rangePosition(state)][0],
       m: state.maxed ? 1 : 0, e: state.exalt ? 1 : 0
     };
     const raw = JSON.stringify(say);
@@ -3776,6 +3833,7 @@ const TINT = {
     } catch (e) { return null; }
     if (!said || said.v !== SHARE_V || !data.byClass[said.k]) return null;
     const start = fresh(said.k);
+    if (RANGES.some(one => one[0] === said.r)) start.range = said.r;
     start.maxed = said.m !== 0;
     start.exalt = said.e !== 0;
     if (data.byBoss[said.t]) start.boss = said.t;
@@ -3919,9 +3977,8 @@ const TINT = {
     for (const node of el('tcGoals').querySelectorAll('[data-goal]')) {
       node.classList.toggle('is-on', asked.includes(node.dataset.goal));
     }
-    for (const node of el('tcGoals').querySelectorAll('[data-range]')) {
-      node.classList.toggle('is-on', node.dataset.range === (build.range || 'melee'));
-    }
+    syncDistance();
+    syncLegacyGoals();
     for (const node of el('tcGoals').querySelectorAll('[data-damage]')) {
       node.classList.toggle('is-on', node.dataset.damage === (build.damage || 'weapon'));
     }
@@ -4168,11 +4225,13 @@ const TINT = {
       '<div class="tc-goal-row"><i>' + esc(name) + '</i>'
       + '<span>' + GOALS.filter(one => one.group === name).map(one =>
         '<button type="button" class="tc-goal" data-goal="' + one.id + '"'
+        + (one.legacy ? ' hidden title="' + esc(LEGACY_SAYS) + '"' : one.id.startsWith('regen:') ? ' title="' + esc(REGEN_SAYS) + '"' : '')
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
-        + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
+        + '<i class="tc-dot"></i>' + esc(one.say) + (one.legacy ? ' (legacy)' : '') + '</button>').join('')
       + '</span></div>').join('')
-      + '<div class="tc-goal-row"><i>Distance</i><span>' + RANGES.map(([id, say]) =>
-        '<button type="button" class="tc-goal" data-range="' + id + '" title="' + RANGE_SAYS[id] + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>'
+      + '<small class="tc-objective-note">' + esc(REGEN_SAYS) + '</small>'
+      + '<small id="tcLegacyGoals" class="tc-objective-note" hidden>' + esc(LEGACY_SAYS) + '</small>'
+      + distanceControl()
       + '<div class="tc-goal-row"><i>Damage counts</i><span>' + DAMAGES.map(([id, say]) =>
         '<button type="button" class="tc-goal" data-damage="' + id + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>';
   }
@@ -4265,9 +4324,8 @@ const TINT = {
       keep(); paint();
     });
 
+    wireDistance(el('tcGoals'), () => { keep(); paint(); });
     el('tcGoals').addEventListener('click', event => {
-      const range = event.target.closest('[data-range]');
-      if (range) { build.range = range.dataset.range; keep(); paint(); return; }
       const damage = event.target.closest('[data-damage]');
       if (damage) { build.damage = damage.dataset.damage; keep(); paint(); return; }
       const pick = event.target.closest('[data-goal]');
