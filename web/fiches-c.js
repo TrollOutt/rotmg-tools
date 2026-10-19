@@ -3181,20 +3181,25 @@
     RealmIndex.close();
     setTimeout(() => RealmIndex.open(id), 0);
   });
+  /* The Index page, the Atlas drawer and What's New draw the same card: each host is laid out the same way. */
+  const HOST_IDS = ['ixCard', 'atlasIndexCard', 'newsIndexCard'];
+  const laidHosts = new WeakSet();
   const wait = setInterval(() => {
-    const box = document.getElementById('ixCard');
-    if (!box) return;
-    clearInterval(wait);
-    new MutationObserver(() => apply(box)).observe(box, { childList: true });
-    apply(box);
-    // A card laid out for one width is laid out again for another (half window to full screen).
-    let wasWide = 0;
-    new ResizeObserver(() => {
-      const w = Math.round(box.clientWidth / 40);
-      if (w === wasWide) return;
-      wasWide = w;
-      const card = box.querySelector('.pc');
-      if (card) requestAnimationFrame(() => balanceColumns(card));
-    }).observe(box);
+    for (const box of HOST_IDS.map(id => document.getElementById(id)).filter(Boolean)) {
+      if (laidHosts.has(box)) continue;
+      laidHosts.add(box);
+      new MutationObserver(() => apply(box)).observe(box, { childList: true });
+      apply(box);
+      // A card laid out for one width is laid out again for another (half window to full screen).
+      let wasWide = 0;
+      new ResizeObserver(() => {
+        const w = Math.round(box.clientWidth / 40);
+        if (w === wasWide) return;
+        wasWide = w;
+        const card = box.querySelector('.pc');
+        if (card) requestAnimationFrame(() => balanceColumns(card));
+      }).observe(box);
+    }
+    if (HOST_IDS.every(id => document.getElementById(id))) clearInterval(wait);
   }, 200);
 })();
