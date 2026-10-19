@@ -1,7 +1,7 @@
 <div id="menu">
  <canvas class="bgart" id="bgart"></canvas><div class="vignette"></div>
  <div class="wrap">
-  <header><p class="training-kicker">The Shatters · Local prototype</p><h1>Test of Patience</h1><p class="training-sub">Practise the Forgotten King’s survival phase.<br>Keyboard required. Touch controls are not available.</p><canvas id="titleCanvas" width="1100" height="80"></canvas></header>
+  <header><p class="training-kicker">The Shatters · Local prototype</p><h1>Test of Patience</h1><p class="training-sub">Practise the Forgotten King’s survival phase.<br>Keyboard, or touch with four arrows: choose in Launch.</p><canvas id="titleCanvas" width="1100" height="80"></canvas></header>
   <nav class="steps" id="steps">
    <button data-step="1" class="on"><b>1</b><span>Character</span></button>
    <button data-step="2"><b>2</b><span>Equipment</span></button>
@@ -62,10 +62,12 @@
    <div class="pane" data-pane="5"><div class="two">
     <section class="card"><h2>Your run</h2><div id="recap"></div><details class="training-help"><summary>Legacy records (preserved)</summary><div id="legacyRecords"></div></details><div class="facts" id="facts"></div></section>
     <section class="card">
-     <h2>Keyboard</h2>
-     <div class="seg" data-set="layout"><button data-v="azerty">AZERTY</button><button data-v="qwerty">QWERTY</button></div>
+     <h2>Controls</h2>
+     <div class="row"><span>Play with</span><div class="seg" data-set="controls"><button data-v="keyboard">keyboard</button><button data-v="touch">touch</button></div></div>
+     <p class="training-help touch-only">Four arrows appear under the arena; slide between two of them for a diagonal. Pause with the button at the top.</p>
+     <div class="seg kbd-only" data-set="layout"><button data-v="azerty">AZERTY</button><button data-v="qwerty">QWERTY</button></div>
      <label class="training-seed">Seed (blank = random)<input id="seed" type="number" min="0" max="4294967295" step="1" placeholder="Random"></label><p class="training-help">A fixed seed repeats the same run with the same settings and inputs. R restarts with that seed.</p>
-     <div class="kbd-layout">
+     <div class="kbd-layout kbd-only">
       <div class="cluster" id="cluster"></div>
       <div class="binds" id="binds"></div>
      </div>

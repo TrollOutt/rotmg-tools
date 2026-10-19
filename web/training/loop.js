@@ -106,3 +106,16 @@ function loop(t){
  if(scene==='arena')drawArena();else if(scene==='menu')drawBg(t);
  requestAnimationFrame(loop)}
 Promise.all([loadAll(),document.fonts.load('700 20px Inter'),document.fonts.load('28px "Press Start 2P"')]).then(()=>{clampSettings();bindMenu();document.getElementById('loadStatus').hidden=true;requestAnimationFrame(loop)}).catch(error=>{document.getElementById('loadStatus').textContent=error.message;console.error(error)});
+// Touch: one pad, four arrows. The finger's direction from the pad's centre holds the arrow keys,
+// two of them on a diagonal, exactly as held keys would.
+const pad=document.getElementById('touchPad');
+if(pad){let finger=null;
+ const hold=(dx,dy)=>{const far=Math.hypot(dx,dy)>pad.offsetWidth*.1,ax=Math.abs(dx),ay=Math.abs(dy);
+  const want={arrowright:far&&dx>0&&ay<ax*2.414,arrowleft:far&&dx<0&&ay<ax*2.414,arrowdown:far&&dy>0&&ax<ay*2.414,arrowup:far&&dy<0&&ax<ay*2.414};
+  for(const k in want){if(want[k]&&!keys[k]){pAnim+=1;ghostAnim=ghostAnim.map(a=>a+1)}keys[k]=want[k];pad.querySelector('[data-dir="'+k.slice(5)+'"]').classList.toggle('on',want[k])}};
+ const at=e=>{if(scene!=='arena'||paused||!g||g.ended)return hold(0,0);const r=pad.getBoundingClientRect();hold(e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2)};
+ pad.addEventListener('pointerdown',e=>{e.preventDefault();finger=e.pointerId;try{pad.setPointerCapture(finger)}catch(_){}at(e)});
+ pad.addEventListener('pointermove',e=>{if(e.pointerId===finger)at(e)});
+ const lift=e=>{if(e.pointerId===finger){finger=null;hold(0,0)}};
+ pad.addEventListener('pointerup',lift);pad.addEventListener('pointercancel',lift);pad.addEventListener('contextmenu',e=>e.preventDefault());
+}

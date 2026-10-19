@@ -1,7 +1,8 @@
 // ------------------------------------------------------------------ state
 const DEFAULTS={seed:'',spd:57,hp:1245,def:43,lvl:5,mode:0,hard:false,rspeed:0,chases:4,layout:'azerty',ghost:1,
  hLose:false,loseAt:20,hDmg:false,dmgMult:1.5,hHits:false,maxHits:10,
- classId:'',swaps:{},consumableId:''};
+ classId:'',swaps:{},consumableId:'',
+ controls:typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches?'touch':'keyboard'};
 const SETTINGS=JSON.parse(JSON.stringify(DEFAULTS));
 let RETURNING=false,selectionMessage='';
 try{const raw=localStorage.getItem('rotmg:training:patience:settings:v3')||localStorage.getItem('rotmg:training:patience:settings:v2')||localStorage.getItem('rotmg:training:patience:settings:v1');RETURNING=!!raw;
@@ -19,7 +20,7 @@ let pAnim=0,ghostAnim=[0,0,0],countdown=0;
 const FIXED_LEVEL=5; // engine constant, no longer a player setting: in the engine it sets the interval and size of the tendril arrow salvos, so it stays at the historical default 5
 const LIM={spd:[0,100,1],def:[0,100,1],hp:[5,2000,1],loseAt:[5,95,5],dmgMult:[.25,4,.25],maxHits:[1,99,1],chases:[3,6,1]};
 function clampSettings(){SETTINGS.lvl=FIXED_LEVEL;for(const k in LIM){const [a,b,s]=LIM[k];let v=+SETTINGS[k];if(!isFinite(v))v=DEFAULTS[k];v=Math.round(v/s)*s;SETTINGS[k]=Math.round(Math.max(a,Math.min(b,v))*100)/100}
- if(SETTINGS.layout!=='qwerty')SETTINGS.layout='azerty';validateSelections()}
+ if(SETTINGS.layout!=='qwerty')SETTINGS.layout='azerty';if(SETTINGS.controls!=='touch')SETTINGS.controls='keyboard';validateSelections()}
 function save(){try{localStorage.setItem('rotmg:training:patience:settings:v3',JSON.stringify(SETTINGS))}catch(e){}}
 // key map, by the letter printed on the key (event.key)
 const KEYMAPS={
@@ -34,11 +35,11 @@ function startGame(){clampSettings();save();KM=KEYMAPS[SETTINGS.layout];
   loseAt:SETTINGS.hLose?SETTINGS.loseAt/100:0,dmgMult:SETTINGS.hDmg?SETTINGS.dmgMult:1,maxHits:SETTINGS.hHits?SETTINGS.maxHits:0});
  g.seed=runSeed;document.getElementById('gameMenu').textContent='Pause';
  for(const k in keys)keys[k]=false;for(const k in pressed)pressed[k]=false;
- scene='arena';countdown=180;pAnim=0;ghostAnim=[0,0,0];zoom=1;acc=0;prevPx=null;prevPy=null;drawGameBack();beginRun();
+ scene='arena';document.body?.classList.toggle('touch-play',SETTINGS.controls==='touch');countdown=180;pAnim=0;ghostAnim=[0,0,0];zoom=1;acc=0;prevPx=null;prevPy=null;drawGameBack();beginRun();
  menuEl.hidden=true;cv.classList.remove('dim');cv.focus()}
 function showMenu(){
  document.getElementById('gameMenu').textContent='Settings';
- scene='menu';paused=false;ovEl.hidden=true;menuEl.hidden=false;showStep(5);cv.classList.add('dim');for(const k in keys)keys[k]=false;refreshMenu()}
+ scene='menu';document.body?.classList.remove('touch-play');paused=false;ovEl.hidden=true;menuEl.hidden=false;showStep(5);cv.classList.add('dim');for(const k in keys)keys[k]=false;refreshMenu()}
 function mousePos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*GW/r.width,(e.clientY-r.top)*GH/r.height]}
 cv.addEventListener('mousedown',()=>{cv.focus()});
 // ------------------------------------------------------------------ HTML menu
@@ -59,7 +60,8 @@ function refreshMenu(){
   if(k==='dmgMult')s=on?'blue arrow '+Math.round((45+hb)*SETTINGS.dmgMult)+' · red spike '+Math.round(Math.max(100+hb-SETTINGS.def,(100+hb)/10)*SETTINGS.dmgMult):'';
   if(k==='maxHits')s=on?'defeat at la '+SETTINGS.maxHits+' hits':'';
   $('.sum',el).textContent=s}
- // keyboard
+ // controls
+ menuEl.classList.toggle('touch',SETTINGS.controls==='touch');
  const m=KEYMAPS[SETTINGS.layout];
  $('#cluster').innerHTML=cap(m.rotL,'cam')+cap(m.up,'mv')+cap(m.rotR,'cam')+cap(m.left,'mv')+cap(m.down,'mv')+cap(m.right,'mv');
  $('#binds').innerHTML=
@@ -126,7 +128,7 @@ function bindMenu(){
   inp.addEventListener('wheel',e=>{e.preventDefault();SETTINGS[k]=+SETTINGS[k]-Math.sign(e.deltaY)*LIM[k][2]*(e.shiftKey?5:1);refreshMenu()},{passive:false});
   $('input[type=range]',el).addEventListener('input',e=>{SETTINGS[k]=+e.target.value;refreshMenu()})}
  for(const s of $$('.seg'))for(const b of $$('button',s))b.addEventListener('click',()=>{const key=s.dataset.set,v=b.dataset.v;
-  if(key==='hard')SETTINGS.hard=v==='1';else if(key==='layout')SETTINGS.layout=v;else SETTINGS[key]=+v;refreshMenu()});
+  if(key==='hard')SETTINGS.hard=v==='1';else if(key==='layout'||key==='controls')SETTINGS[key]=v;else SETTINGS[key]=+v;refreshMenu()});
  for(const el of $$('.hc')){const on=el.dataset.on,k=el.dataset.key;
   $('.hc-head',el).addEventListener('click',()=>{SETTINGS[on]=!SETTINGS[on];refreshMenu()});
   $('input[type=range]',el).addEventListener('input',e=>{SETTINGS[k]=+e.target.value;refreshMenu()})}
