@@ -2466,6 +2466,8 @@ const TINT = {
    * The bargain, as a row of sliders - and only when there is a bargain to
    * strike. One thing asked for has nothing to trade against.
    */
+  // How much of a share's track is filled, for the track drawn in its colour.
+  const mixFill = (value, most) => (most > 1 ? Math.round((value - 1) / (most - 1) * 1000) / 10 : 100);
   function drawMix() {
     const box = el('tcMix');
     if (!box) return;
@@ -2478,7 +2480,8 @@ const TINT = {
       + '<i>' + esc(one.goal.say) + '</i>'
       + '<input type="range" min="1" max="' + (100 - parts.length + 1)
       + '" value="' + Math.round(one.part * 100)
-      + '" data-mix="' + esc(one.goal.id) + '">'
+      + '" data-mix="' + esc(one.goal.id) + '" aria-label="' + esc(one.goal.say) + '"'
+      + ' style="--mix-fill:' + mixFill(Math.round(one.part * 100), 100 - parts.length + 1) + '%">'
       + '<b>' + Math.round(one.part * 100) + '%</b>'
       + '<button type="button" class="tc-hold" data-pin="' + esc(one.goal.id)
       + '" title="hold this share while the others move">'
@@ -2498,6 +2501,7 @@ const TINT = {
       if (!bar) continue;
       const pct = Math.round(one.part * 100);
       if (bar !== dragged) bar.value = String(pct);
+      bar.style.setProperty('--mix-fill', mixFill(Number(bar.value), Number(bar.max)) + '%');
       const said = bar.parentElement && bar.parentElement.querySelector('b');
       if (said) said.textContent = pct + '%';
     }
@@ -3534,7 +3538,7 @@ const TINT = {
     const edge = 22 * say, low = tall - 25 * say, line = 12 * say;
     pen.font = small;
     pen.textAlign = 'right';
-    pen.fillStyle = 'rgba(255,255,255,.6)';
+    pen.fillStyle = 'rgba(255,255,255,.78)';
     pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - edge, low);
     /*
      * And what it is wearing, beside what it has left. Every number under
@@ -3543,11 +3547,11 @@ const TINT = {
      * hides the armour shows half of what decides the fight.
      */
     if (boss) {
-      pen.fillStyle = 'rgba(255,255,255,.38)';
+      pen.fillStyle = 'rgba(255,255,255,.5)';
       pen.fillText(boss.def + ' armour', wide - edge, low - line);
     }
     pen.textAlign = 'left';
-    pen.fillStyle = 'rgba(255,255,255,.45)';
+    pen.fillStyle = 'rgba(255,255,255,.62)';
     pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', edge, low);
 
     /* And how long it took, said once and said large. */
@@ -4226,8 +4230,11 @@ const TINT = {
         + (one.id.startsWith('regen:') ? ' title="' + esc(REGEN_SAYS) + '"' : '')
         + (one.tint ? ' style="--tint:' + one.tint + '"' : '') + '>'
         + '<i class="tc-dot"></i>' + esc(one.say) + '</button>').join('')
+      // What the regeneration goals count, under the row that holds them and
+      // in its column, rather than loose between two rows.
+      + (GOALS.some(one => one.group === name && one.id.startsWith('regen:'))
+        ? '<small class="tc-objective-note">' + esc(REGEN_SAYS) + '</small>' : '')
       + '</span></div>').join('')
-      + '<small class="tc-objective-note">' + esc(REGEN_SAYS) + '</small>'
       + distanceControl()
       + '<div class="tc-goal-row"><i>Damage counts</i><span>' + DAMAGES.map(([id, say]) =>
         '<button type="button" class="tc-goal" data-damage="' + id + '"><i class="tc-dot"></i>' + esc(say) + '</button>').join('') + '</span></div>';
@@ -4637,10 +4644,13 @@ const TINT = {
          */
         said.innerHTML = wanted.map((one, i) => {
           const { now, moved } = resultCalculations.goalChange(build, one, was[i]);
-          return '<span class="figure"><b style="color:' + esc(one.tint) + '">'
-            + esc(sayGoal(one, was[i])) + ' <i class="tc-arrow">→</i> '
-            + esc(sayGoal(one, now)) + '</b><small>' + esc(one.say.toLowerCase())
-            + (moved ? ' · ' + (moved > 0 ? '+' : '') + moved + '%' : '')
+          // A goal the search left where it was says so once, not as "x → x".
+          const same = sayGoal(one, was[i]) === sayGoal(one, now);
+          return '<span class="figure' + (same ? ' is-same' : '') + '"><b style="color:' + esc(one.tint) + '">'
+            + esc(sayGoal(one, was[i]))
+            + (same ? '' : ' <i class="tc-arrow">→</i> ' + esc(sayGoal(one, now)))
+            + '</b><small>' + esc(one.say.toLowerCase())
+            + (same ? ' · unchanged' : moved ? ' · ' + (moved > 0 ? '+' : '') + moved + '%' : '')
             + '</small></span>';
         }).join('')
           + '<span class="figure"><b>' + RealmI18n.number(got.looked)
