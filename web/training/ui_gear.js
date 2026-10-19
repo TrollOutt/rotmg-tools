@@ -23,8 +23,11 @@ function iconHtml(it){if(!it.icon)return '<span class="index-icon missing" aria-
 function itemHtml(it){return '<div class="index-item">'+iconHtml(it)+'<div><b>'+escapeText(it.name)+'</b><p>'+escapeText(effectDescription(it))+'</p></div></div>'}
 function buildGear(){
  const cl=$('#trainingClass');cl.innerHTML='<option value="">Choose a class...</option>'+TRAINING_CATALOG.classes.map(c=>'<option value="'+escapeText(c.id)+'">'+escapeText(c.name)+'</option>').join('');
- cl.addEventListener('change',()=>{SETTINGS.classId=cl.value;selectionMessage='Class changed. Your character stats are unchanged.';validateSelections();refreshMenu();fitMenu()});
- $('#classDefaults').addEventListener('click',()=>{const c=chosenClass();if(!c)return;for(const key of ['hp','def','spd'])if(Number.isFinite(c.stats[key+'Top']))SETTINGS[key]=c.stats[key+'Top'];refreshMenu()});
+ // A class brings its Index stat caps with it; the totals stay editable afterwards.
+ const applyCaps=()=>{const c=chosenClass();if(!c)return false;for(const key of ['hp','def','spd'])if(Number.isFinite(c.stats[key+'Top']))SETTINGS[key]=c.stats[key+'Top'];return true};
+ cl.addEventListener('change',()=>{SETTINGS.classId=cl.value;const capped=applyCaps();selectionMessage=capped?'Class changed. Index stat caps applied.':'';
+  const removed=validateSelections();if(capped&&removed.length)selectionMessage='Index stat caps applied. Ignored incompatible choices: '+removed.join(', ')+'. Choose compatible swaps in Equipment.';refreshMenu();fitMenu()});
+ $('#classDefaults').addEventListener('click',()=>{if(applyCaps())refreshMenu()});
  const grid=$('#gearGrid');grid.innerHTML=EQUIPMENT_HANDS.map(hand=>'<label class="index-field">'+({ability:'Ability',armor:'Armor',ring:'Ring'})[hand]+'<select data-hand="'+hand+'" aria-label="'+hand+' swap"></select><span class="index-effect"></span></label>').join('');
  for(const el of $$('#gearGrid select'))el.addEventListener('change',()=>{if(el.value)SETTINGS.swaps[el.dataset.hand]=el.value;else delete SETTINGS.swaps[el.dataset.hand];refreshMenu()});
  $('#trainingConsumable').addEventListener('change',e=>{SETTINGS.consumableId=e.target.value;refreshMenu()});
@@ -32,7 +35,7 @@ function buildGear(){
 }
 function refreshGear(){
  const c=chosenClass();$('#trainingClass').value=c?.id||'';
- $('#classInfo').textContent=c?'Index stat caps: '+['hp','def','spd'].map(k=>k.toUpperCase()+' '+(c.stats[k+'Top']??'unknown')).join(' · ')+'. Apply these explicitly or keep your editable totals.':'Choose one of the 19 ROTMG classes before starting. Your class determines the available swaps.';
+ $('#classInfo').textContent=c?'Index stat caps: '+['hp','def','spd'].map(k=>k.toUpperCase()+' '+(c.stats[k+'Top']??'unknown')).join(' · ')+'. Applied when the class is chosen; the totals stay editable.':'Choose one of the 19 ROTMG classes before starting. Your class determines the available swaps.';
  $('#classDefaults').disabled=!c;$('#start').disabled=!c;stepGate();
  $('#launchNotice').textContent=c?'':'Choose a ROTMG class in Character before starting training.';
  $('#selectionNotice').textContent=selectionMessage;$('#equipmentNotice').textContent=selectionMessage;
