@@ -44,7 +44,8 @@ function drawArena(){
  const offx=L*Math.cos(ang),offy=-L*Math.sin(ang);
  const camx=ipx+offx,camy=ipy+offy;
  cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#000';cx.fillRect(0,0,GW,GH);
- const sx=GW/VW[zoom],sy=GH/VH[zoom];
+ // whatever the canvas's shape, the view keeps the 1288x1008 frame's area of ground and its pixel shape
+ const k=Math.sqrt(GW*GH/(1288*1008)),sx=1288*k/VW[zoom],sy=1008*k/VH[zoom];
  cx.setTransform(sx,0,0,sy,GW/2,GH/2);cx.rotate(-rot);cx.translate(-camx,-camy);cx.imageSmoothingEnabled=false;
  // fog centre (o_fog Step)
  let fx=ipx+offx,fy=ipy+offy;fx-=((fx%8)+8)%8;fy-=((fy%8)+8)%8;
@@ -83,6 +84,12 @@ function drawArena(){
 
 }
 let VIGNETTE=null;
+// Touch play upright: the arena takes the phone's shape and fills the screen under the top bar,
+// showing a little less to the sides and more ahead and behind. Everywhere else it stays 1288x1008.
+function sizeArena(){const w=innerWidth,h=innerHeight-52,tall=scene==='arena'&&SETTINGS.controls==='touch'&&h>w;
+ const W=tall?Math.round(1288*w/h):1288,H=tall?1288:1008;
+ if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;GW=W;GH=H;VIGNETTE=null}cv.style.aspectRatio=W+'/'+H}
+addEventListener('resize',sizeArena);
 function n2(v){return String(Math.round(v*100)/100)}
 function drawEnd(){
  cx.globalAlpha=.8;cx.fillStyle='#000';cx.fillRect(GW/2-300,GH/2-400,600,800);cx.globalAlpha=1;

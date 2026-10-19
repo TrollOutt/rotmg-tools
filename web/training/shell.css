@@ -234,16 +234,15 @@ footer a{color:var(--acc)}.ov{top:52px}.ov-card{max-height:calc(100dvh - 85px);o
   .ov-card{zoom:var(--fit,1);max-height:calc((100dvh - 85px) / var(--fit,1))}
 }
 
-/* ---------- touch play: four arrows, under the arena upright, beside it on its side ---------- */
+/* ---------- touch play: four arrows laid lightly over the bottom of the arena ---------- */
 #menu.touch .kbd-only,#menu:not(.touch) .touch-only{display:none!important}
 .touch-pad{display:none}
 body.touch-play{touch-action:none}
-body.touch-play .touch-pad{display:grid;position:fixed;z-index:15;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);
-  width:min(52vw,210px);aspect-ratio:1;grid-template:repeat(3,1fr)/repeat(3,1fr);gap:6px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.touch-pad b{display:grid;place-items:center;border-radius:14px;background:rgba(13,15,24,.62);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.touch-pad b::before{content:'';width:40%;aspect-ratio:1;background:#f3efe6;clip-path:polygon(50% 10%,94% 84%,6% 84%)}
-.touch-pad b.on{background:rgba(242,193,78,.88);border-color:transparent}.touch-pad b.on::before{background:#2b2108}
+body.touch-play .touch-pad{display:grid;position:fixed;z-index:15;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  width:min(44vw,180px);aspect-ratio:1;grid-template:repeat(3,1fr)/repeat(3,1fr);gap:8px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.touch-pad b{display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.22)}
+.touch-pad b::before{content:'';width:36%;aspect-ratio:1;background:rgba(255,255,255,.5);clip-path:polygon(50% 10%,94% 84%,6% 84%)}
+.touch-pad b.on{background:rgba(242,193,78,.32);border-color:rgba(242,193,78,.6)}.touch-pad b.on::before{background:rgba(255,216,119,.85)}
 .touch-pad [data-dir=up]{grid-area:1/2}.touch-pad [data-dir=left]{grid-area:2/1}.touch-pad [data-dir=right]{grid-area:2/3}.touch-pad [data-dir=down]{grid-area:3/2}
 .touch-pad [data-dir=right]::before{transform:rotate(90deg)}.touch-pad [data-dir=down]::before{transform:rotate(180deg)}.touch-pad [data-dir=left]::before{transform:rotate(-90deg)}
-@media(orientation:portrait){body.touch-play{align-items:flex-start}body.touch-play #c{margin-top:8px}}
-@media(orientation:landscape){body.touch-play .touch-pad{left:max(18px,env(safe-area-inset-left));transform:none;width:min(42vh,200px)}}
+@media(orientation:landscape){body.touch-play .touch-pad{left:max(14px,env(safe-area-inset-left));transform:none;width:min(46vh,180px)}}

@@ -35,11 +35,11 @@ function startGame(){clampSettings();save();KM=KEYMAPS[SETTINGS.layout];
   loseAt:SETTINGS.hLose?SETTINGS.loseAt/100:0,dmgMult:SETTINGS.hDmg?SETTINGS.dmgMult:1,maxHits:SETTINGS.hHits?SETTINGS.maxHits:0});
  g.seed=runSeed;document.getElementById('gameMenu').textContent='Pause';
  for(const k in keys)keys[k]=false;for(const k in pressed)pressed[k]=false;
- scene='arena';document.body?.classList.toggle('touch-play',SETTINGS.controls==='touch');countdown=180;pAnim=0;ghostAnim=[0,0,0];zoom=1;acc=0;prevPx=null;prevPy=null;drawGameBack();beginRun();
+ scene='arena';document.body?.classList.toggle('touch-play',SETTINGS.controls==='touch');if(typeof sizeArena==='function')sizeArena();countdown=180;pAnim=0;ghostAnim=[0,0,0];zoom=1;acc=0;prevPx=null;prevPy=null;drawGameBack();beginRun();
  menuEl.hidden=true;cv.classList.remove('dim');cv.focus()}
 function showMenu(){
  document.getElementById('gameMenu').textContent='Settings';
- scene='menu';document.body?.classList.remove('touch-play');paused=false;ovEl.hidden=true;menuEl.hidden=false;showStep(5);cv.classList.add('dim');for(const k in keys)keys[k]=false;refreshMenu()}
+ scene='menu';document.body?.classList.remove('touch-play');sizeArena();paused=false;ovEl.hidden=true;menuEl.hidden=false;showStep(5);cv.classList.add('dim');for(const k in keys)keys[k]=false;refreshMenu()}
 function mousePos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*GW/r.width,(e.clientY-r.top)*GH/r.height]}
 cv.addEventListener('mousedown',()=>{cv.focus()});
 // ------------------------------------------------------------------ HTML menu

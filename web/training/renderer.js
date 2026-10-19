@@ -4,7 +4,7 @@ const Game = TrainingCombat.createGame(HistoricalGame, TRAINING_CATALOG);
 // ------------------------------------------------------------------ loading
 const IMG={};
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
-const GW=1288,GH=1008;
+let GW=1288,GH=1008;
 function loadAll(){return Promise.all(Object.entries(ASSETS).map(([k,src])=>new Promise((res,reject)=>{const i=new Image();i.onerror=()=>reject(new Error('Unable to load '+src));i.onload=()=>{IMG[k]=i;res()};i.src=src})))}
 const FSTACK='Inter,"Segoe UI",system-ui,sans-serif';
 let TK=null,TW=null;
