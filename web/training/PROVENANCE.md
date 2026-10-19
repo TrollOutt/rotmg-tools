@@ -32,10 +32,54 @@ Collision masks, random salvo colour and GameMaker iteration semantics are port
 approximations, documented in the supplied REPORT.md. Passing comparison tests
 against this port does not establish fidelity to the live game.
 
-This is a closed historical training fixture, not a new Index catalogue. Special
-item stats remain the archive's configurable approximations. They do not feed
-Theory Crafting or the Enchant Calculator. A future client-driven update should
-project canonical records and artwork from the Index per HANDOVER-SOURCE.md.
+The historical engine and its sixteen golden scenarios remain unchanged,
+including the archived special-gear scenario. Its hardcoded items are retained
+only for that historical comparison; the browser no longer offers them.
+
+## Index connection (Training Ground 2)
+
+`tools/training-catalog.js` projects `data/Index/index.json` at site build time.
+Only classes, compatible self-Invulnerable equipment and exclusion explanations
+reach `training/catalog.js`. Names, client aliases/types, source XML filenames,
+slots, durations, cooldowns and activation attributes retain Index provenance.
+`build-training.js` cuts a small icon sheet from `web/assets/index/sheet.png`.
+No full Index or client extraction is loaded by Training Ground or its home link.
+
+`index-combat.js` wraps the supplied engine without replacing its simulation.
+The three Matrix armour types (and their Neo variants) and Amulet of Restoration
+use the user's explicitly approved historical convention: apply the hit first,
+then test the surviving player's HP against the strict threshold. The Index does
+not establish the live game's threshold ordering. Minimum damage and cooldown
+come from its activation attributes. This is playable training, not verified
+live-client proc fidelity. Dazed has no consequence without shooting; the amulet's
+On Shoot effects never fire because this survival fixture has no player shooting.
+Royal Guard's Cuirass needs shooting and In Combat and is excluded, not guessed.
+Conqueror's Crown is hidden as unavailable to players; shiny twins are folded.
+
+Seal of Blasphemous Prayer is a Paladin ability: Space, 120 MP, 2.2 seconds
+Invulnerable, 5 seconds cooldown (all from the Index). MP starts at the class's
+Index cap; regeneration is deliberately not modelled because its formula is not
+in these declarations. Healing uses `data/Items/status-effects.txt` (20 HP/s),
+its Index duration/scaling and the class WIS cap. The aura includes its caster;
+ghost allies and offensive Damaging have no simulated effect. The status catalogue
+also establishes that Invulnerable does not block Bleeding/status damage.
+HP/DEF/SPD are editable equipped totals: selecting gear does not add worn stats
+again. An explicit button applies the Index's class caps rather than silently
+overwriting user totals on a class change.
+
+The current Index has only StatBoostSelf/StatBoostAura verbs for consumables:
+it does not preserve their stat, amount or duration. Thus **no consumable is
+selectable**, including Blood Nildrop, Tincture of Life and Effusion of Life.
+Neither a description nor the archive's guessed +150 HP is a substitute. The
+one-dose, pre-combat, timed-max-HP lifecycle is implemented and tested with
+explicitly synthetic fixtures, but no real item's missing values are invented.
+Enabling real consumables requires a source-level Index extraction of those
+attributes and a reviewed targeted projection, not an independent item list.
+
+Settings v2 reads compatible v1 values without overwriting the old save. Records
+v2 include class, canonical gear, consumable, seed selection and scenario settings.
+The v1 key function and stored values remain readable, including in the legacy
+records panel. No destructive migration is performed.
 
 ## Artwork
 

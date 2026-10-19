@@ -20,6 +20,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 footer a{color:var(--acc)}.ov{top:52px}.ov-card{max-height:calc(100dvh - 85px);overflow:auto}
 #loadStatus{position:fixed;z-index:45;background:#10131e;padding:14px;border-radius:8px}
 #loadStatus[hidden]{display:none}
+.index-field{display:flex;flex-direction:column;gap:9px;margin:16px 0;color:var(--txt);font-size:13px}
+.index-field select{width:100%;min-height:42px;padding:10px;border:1px solid var(--line2);border-radius:6px;background:#10131e;color:var(--txt);font:inherit}
+.index-field select:disabled{color:var(--dim);opacity:.8}
+.index-gear{display:grid;gap:4px}.index-effect{font-size:12px;color:var(--dim);line-height:1.6}
+.index-item{display:flex;gap:12px;align-items:flex-start;padding:12px;background:#ffffff04;border:1px solid var(--line);border-radius:6px}
+.index-item b{color:var(--txt);font-weight:550}.index-item p{margin:5px 0}.index-item small{overflow-wrap:anywhere}
+.index-icon{display:block;flex:none;background-image:url(icons.png);background-size:384px auto;image-rendering:pixelated}
+.index-warning{padding:12px;border-left:2px solid var(--acc);background:#e2b86e0a;color:#ddc698;font-size:12px;line-height:1.6}
+.index-warning[hidden]{display:none}#legacyRecords{overflow-wrap:anywhere;font-size:11px}
+.training-help summary{cursor:pointer;color:var(--acc)}.card h3{margin:26px 0 8px;font-size:14px;font-weight:600}.card h3 small{color:var(--dim);font-weight:400}
+.pane[data-pane="1"] .one{max-width:1000px}.index-gear{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media(max-width:760px){.index-gear{grid-template-columns:1fr;gap:0}}
 @media(max-width:600px){.training-top{padding:9px 12px;font-size:11px;gap:8px}.training-top b{display:none}.training-top button{padding:7px}.wrap{padding:16px 12px 28px}#menu h1{font-size:25px}.training-sub{font-size:12px}.training-top span{white-space:nowrap}.steps button{min-width:0}.training-seed input{width:138px}footer{line-height:1.6}.ov-head{flex-wrap:wrap}.ov-actions{flex-wrap:wrap}}
 /* The archive assumes a landscape window. Narrow settings scroll as a page,
    so neither the summary nor the launch button can be clipped by a pane. */

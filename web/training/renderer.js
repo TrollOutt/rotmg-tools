@@ -1,5 +1,6 @@
 'use strict';
-const {Game, ITEMS, TENDRILS, FOG_HB, hitRect} = PatienceEngine.createEngine(ROOM);
+const {Game: HistoricalGame, TENDRILS, FOG_HB, hitRect} = PatienceEngine.createEngine(ROOM);
+const Game = TrainingCombat.createGame(HistoricalGame, TRAINING_CATALOG);
 // ------------------------------------------------------------------ loading
 const IMG={};
 const cv=document.getElementById('c'),cx=cv.getContext('2d');

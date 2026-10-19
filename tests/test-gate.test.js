@@ -10,6 +10,7 @@ const scripts = pkg.scripts || {};
 
 const deployCritical = [
   'training-ground.test.js',
+  'training-index.test.js',
   'app-data.test.js',
   'app-storage.test.js',
   'source-slice.test.js',

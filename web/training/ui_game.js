@@ -1,7 +1,11 @@
 // ------------------------------------------------------------------ run flow: pause, end screens, best-run ghost
 let paused=false,runShown=false,rec=[],recIdx=0,bestRun=null,newRecord=false;
 const ovEl=document.getElementById('overlay');
-function recKey(o){return 'rotmg:training:patience:best:v1:'+(o.hard?'hard':'normal')+':'+o.mode+':'+(o.chases||(o.hard?4:3))+':'+JSON.stringify([o.hp,o.def,o.spd,o.lvl,o.rspeed,o.loseAt||0,o.dmgMult||1,o.maxHits||0,o.gear||{},o.cur||{}])}
+function recKey(o){
+ if(o.classId)return 'rotmg:training:patience:best:v2:'+JSON.stringify([o.rules||'index-v2-postHit',o.catalogBuild||'',o.classId,
+  Object.entries(o.equipment||{}).filter(([,id])=>id).sort(([a],[b])=>a.localeCompare(b)),o.consumableId||'',String(o.seedKey??''),
+  !!o.hard,o.mode,o.chases||(o.hard?4:3),o.hp,o.def,o.spd,o.lvl,o.rspeed,o.loseAt||0,o.dmgMult||1,o.maxHits||0]);
+ return 'rotmg:training:patience:best:v1:'+(o.hard?'hard':'normal')+':'+o.mode+':'+(o.chases||(o.hard?4:3))+':'+JSON.stringify([o.hp,o.def,o.spd,o.lvl,o.rspeed,o.loseAt||0,o.dmgMult||1,o.maxHits||0,o.gear||{},o.cur||{}])}
 function loadBest(o){try{return JSON.parse(localStorage.getItem(recKey(o))||'null')}catch(e){return null}}
 // a win beats any defeat; between wins the least damage taken wins; between defeats the longest survival
 function better(a,b){if(!b)return true;if(a.win!==b.win)return a.win;return a.win?a.lost<b.lost:a.frames>b.frames}

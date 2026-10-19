@@ -1,10 +1,8 @@
 'use strict';
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();
  if(k==='f11'){e.preventDefault();if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen();return}
- if(scene==='menu'){if(k==='enter'&&!(e.target&&e.target.tagName==='INPUT')){e.preventDefault();startGame()}return}
+ if(scene==='menu'){if(k==='enter'&&!(e.target&&/^(INPUT|SELECT|BUTTON|SUMMARY)$/.test(e.target.tagName))){e.preventDefault();startGame()}return}
  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
- const dg={Digit1:'armor',Digit2:'ring',Digit3:'nild',Numpad1:'armor',Numpad2:'ring',Numpad3:'nild'}[e.code];
- if(dg&&!e.repeat&&!paused&&!g.ended){if(g.useSlot(dg))gearPump();return}
  if(e.repeat)return;
  if(g.ended){if(runShown&&(k==='r'||k==='enter'))startGame();else if(k==='escape')overlayAction('menu');return}
  if(paused){if(k==='escape'||k==='enter')setPause(false);else if(k==='r')startGame();else if(k==='m')overlayAction('menu');return}
@@ -21,7 +19,7 @@ let acc=0,last=performance.now(),fpsCount=0,fpsT=0,fps=60;
 function stepGame(pre){
  const hd=(down(KM.right,'arrowright')?1:0)-(down(KM.left,'arrowleft')?1:0),vd=(down(KM.down,'arrowdown')?1:0)-(down(KM.up,'arrowup')?1:0);
  const rot=(down(KM.rotR)?1:0)-(down(KM.rotL)?1:0);
- const ctl={resetRot:pressed[KM.resetRot],resetAll:pressed[KM.resetAll],offset:pressed[KM.offset],pre:!!pre};
+ const ctl={resetRot:pressed[KM.resetRot],resetAll:pressed[KM.resetAll],offset:pressed[KM.offset],pre:!!pre,ability:!pre&&!!pressed[' ']};
  if(pressed[KM.zoomIn])zoom=Math.max(0,Math.min(2,zoom-1));if(pressed[KM.zoomOut])zoom=Math.max(0,Math.min(2,zoom+1));
  for(const k in pressed)pressed[k]=false;
  g.tick(hd,vd,rot,ctl);

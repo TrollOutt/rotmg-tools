@@ -23,8 +23,32 @@ assert(!served.html.includes('var PatienceEngine'), 'training engine must not in
   for (const match of training.matchAll(/<script src="([^"]+)"/g)) {
     const source = read('docs/training/' + match[1]);
     new vm.Script(source);
-    if (match[1] !== 'data.js') assert.equal(source, read('web/training/' + match[1]).replace(/\r\n/g, '\n'));
+    if (!['data.js', 'catalog.js'].includes(match[1])) assert.equal(source, read('web/training/' + match[1]).replace(/\r\n/g, '\n'));
   }
+  const sourceCatalog = require('../tools/training-catalog').readTrainingCatalog(root);
+  const projected = read('docs/training/catalog.js');
+  assert(Buffer.byteLength(projected) < 65536, 'training catalogue stays under 64 KiB');
+  const context = vm.createContext({});
+  vm.runInContext(projected + ';globalThis.catalog=TRAINING_CATALOG;', context);
+  const generatedCatalog = JSON.parse(JSON.stringify(context.catalog));
+  const { readPng } = require('../tools/png');
+  const originalIcons = readPng(fs.readFileSync(path.join(root, 'web/assets/index/sheet.png')));
+  const smallIcons = readPng(fs.readFileSync(path.join(root, 'docs/training/icons.png')));
+  for (const list of ['equipment', 'excluded']) {
+    for (let i = 0; i < generatedCatalog[list].length; i++) {
+      // Icon coordinates are deliberately repacked into the small training sheet.
+      assert.equal(!!generatedCatalog[list][i].icon, !!sourceCatalog[list][i].icon);
+      const a = generatedCatalog[list][i].icon, b = sourceCatalog[list][i].icon;
+      if (a) for (let y = 0; y < b[3]; y++) {
+        const from = ((b[1] + y) * originalIcons.width + b[0]) * 4;
+        const to = ((a[1] + y) * smallIcons.width + a[0]) * 4;
+        assert.deepEqual(smallIcons.pixels.subarray(to, to + b[2] * 4), originalIcons.pixels.subarray(from, from + b[2] * 4), 'Index icon pixels are preserved');
+      }
+      generatedCatalog[list][i].icon = sourceCatalog[list][i].icon;
+    }
+  }
+  assert.deepEqual(generatedCatalog, sourceCatalog, 'served training is the exact Index projection');
+  assert(!served.html.includes('const TRAINING_CATALOG='), 'home does not load training catalogue');
 }
 // Generated HTTP artifacts are checked here, after build-standalone.js writes docs/.
 const skinDataTag = '<script src="skin-viewer-data.js"></script>';

@@ -3,21 +3,36 @@
  <div class="wrap">
   <header><p class="training-kicker">The Shatters · Local prototype</p><h1>Test of Patience</h1><p class="training-sub">Practise the Forgotten King’s survival phase.<br>Keyboard required. Touch controls are not available.</p><canvas id="titleCanvas" width="1100" height="80"></canvas></header>
   <nav class="steps" id="steps">
-   <button data-step="1" class="on"><b>1</b><span>Character</span></button>
-   <button data-step="2"><b>2</b><span>Mode</span></button>
-   <button data-step="3"><b>3</b><span>Handicap</span><em>optional</em></button>
-   <button data-step="4"><b>4</b><span>Equipment</span><em>optional</em></button>
+   <button data-step="1" class="on"><b>1</b><span>Loadout</span></button>
+   <button data-step="2"><b>2</b><span>Character</span></button>
+   <button data-step="3"><b>3</b><span>Mode</span></button>
+   <button data-step="4"><b>4</b><span>Handicap</span><em>optional</em></button>
    <button data-step="5"><b>5</b><span>Launch</span></button>
   </nav>
   <div class="panes">
    <div class="pane on" data-pane="1"><div class="one"><section class="card">
-    <h2>Character <span class="presets"><button class="chip" data-preset="game">game defaults</button><button class="chip" data-preset="mine">my defaults</button></span></h2>
-    <div class="stat" data-key="spd"><label>Speed</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
-    <div class="stat" data-key="hp"><label>Base HP</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
-    <div class="stat" data-key="def"><label>Defence</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
-    <div class="stat" data-key="lvl"><label>Level</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <h2>Class &amp; equipment <small>Index</small></h2>
+    <label class="index-field" for="trainingClass">ROTMG class<select id="trainingClass"></select></label>
+    <p class="training-help" id="classInfo"></p><button type="button" class="chip" id="classDefaults">Apply Index stat caps</button>
+    <p id="selectionNotice" role="status" class="training-help"></p>
+    <h3>Temporary invulnerability <small>optional</small></h3>
+    <div id="gearGrid" class="index-gear"></div>
+    <p id="gearEmpty" class="training-help">No compatible simulatable equipment. You can train without equipment.</p>
+    <p id="thresholdNote" class="index-warning">Hit effects use the historical simulator convention: HP thresholds are evaluated AFTER damage, on a surviving hit. The Index does not establish this ordering in the live game.</p>
+    <div id="unsupportedGear" class="training-help"></div>
+    <h3>Temporary max HP consumable <small>optional</small></h3>
+    <label class="index-field" for="trainingConsumable">One consumable, before combat<select id="trainingConsumable"></select></label>
+    <p id="consumableInfo" class="training-help"></p>
+    <details class="training-help"><summary>Simulation scope &amp; resources</summary><p id="resourceInfo"></p><p>Matrix Dazed and the amulet's On Shoot Healing / Berserk / Armored do not affect this survival-only training: there is no shooting. Invulnerable blocks attacks during its window; Bleeding still deals damage.</p></details>
    </section></div></div>
    <div class="pane" data-pane="2"><div class="one"><section class="card">
+    <h2>Character totals <span class="presets"><button class="chip" data-preset="game">game defaults</button><button class="chip" data-preset="mine">my defaults</button></span></h2>
+    <div class="stat" data-key="spd"><label>SPD (gear included)</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <div class="stat" data-key="hp"><label>Max HP (gear included)</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <div class="stat" data-key="def"><label>DEF (gear included)</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <div class="stat" data-key="lvl"><label>Level</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+   </section></div></div>
+   <div class="pane" data-pane="3"><div class="one"><section class="card">
      <h2>Mode</h2>
      <div class="row"><span>Party</span><div class="seg" data-set="mode"><button data-v="0">solo</button><button data-v="1">group</button><button data-v="2">rails</button></div></div>
      <div class="row"><span>Difficulty</span><div class="seg hard" data-set="hard"><button data-v="0">normal</button><button data-v="1">hard</button></div></div>
@@ -25,20 +40,14 @@
      <div class="row"><span>Rotation</span><div class="seg" data-set="rspeed"><button data-v="0">slow</button><button data-v="1">normal</button><button data-v="2">fast</button></div></div>
      <div class="row"><span>Best-run ghost</span><div class="seg" data-set="ghost"><button data-v="1">shown</button><button data-v="0">hidden</button></div></div>
     </section></div></div>
-   <div class="pane" data-pane="3"><div class="one"><section class="card" id="handicaps">
+   <div class="pane" data-pane="4"><div class="one"><section class="card" id="handicaps">
     <h2>Handicap <small>optional</small></h2>
     <div class="hc" data-on="hLose" data-key="loseAt"><div class="hc-head"><button class="switch"></button><span class="t">HP threshold</span><span class="v"></span></div><div class="sum"></div><input type="range"></div>
     <div class="hc" data-on="hDmg" data-key="dmgMult"><div class="hc-head"><button class="switch"></button><span class="t">Damage taken</span><span class="v"></span></div><div class="sum"></div><input type="range"></div>
     <div class="hc" data-on="hHits" data-key="maxHits"><div class="hc-head"><button class="switch"></button><span class="t">Hit limit</span><span class="v"></span></div><div class="sum"></div><input type="range"></div>
    </section></div></div>
-   <div class="pane" data-pane="4"><section class="card gear" id="gearCard">
-   <h2>Special equipment <small>optional</small></h2>
-   <div class="gctl"><span>When to equip?</span>
-    <div class="seg" id="gearCtl"><button data-v="manual">Moi, with 1 · 2 · 3</button><button data-v="auto">Automatic at HP threshold</button><button data-v="start">Before the run</button></div></div>
-   <div class="gear-grid" id="gearGrid"></div>
-  </section></div>
    <div class="pane" data-pane="5"><div class="two">
-    <section class="card"><h2>Your run</h2><div id="recap"></div><div class="facts" id="facts"></div></section>
+    <section class="card"><h2>Your run</h2><div id="recap"></div><details class="training-help"><summary>Legacy records (preserved)</summary><div id="legacyRecords"></div></details><div class="facts" id="facts"></div></section>
     <section class="card">
      <h2>Keyboard</h2>
      <div class="seg" data-set="layout"><button data-v="azerty">AZERTY</button><button data-v="qwerty">QWERTY</button></div>
