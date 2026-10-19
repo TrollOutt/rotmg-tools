@@ -1,15 +1,30 @@
 'use strict';
 const assert = require('assert/strict'), fs = require('fs'), path = require('path');
-const vm = require('vm'), zlib = require('zlib'), crypto = require('crypto');
+const vm = require('vm'), crypto = require('crypto');
 const { createGrid } = require('../web/atlas-spatial');
 const { simulation } = require('./atlas-spatial-harness');
 const { graph } = require('./atlas-data-harness');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const source = read('tools/atlas-viewer.html'), moduleSource = read('web/atlas-spatial.js');
 const frozen = require('./atlas-spatial-corpus.json');
-const reference = zlib.gunzipSync(Buffer.from(frozen.source, 'base64')).toString();
-assert.equal(crypto.createHash('sha256').update(reference).digest('hex'), frozen.sha256);
-assert.equal(frozen.base, '8f9c2cb17563cb0ad2daaf8ca104b58d6d837e5b');
+/*
+ * The reference is the simulation as it stands, searching a grid that files
+ * nothing: every query hands back everything still in it, in source order -
+ * the linear scan the grid replaced. The indexed grid must step the realm
+ * exactly as that does. (It was a frozen copy of the simulation from before
+ * the grid, until the combat itself was changed on purpose: what it pinned
+ * then was the old fighting as much as the grid.)
+ */
+const oracleSource = `var AtlasSpatial = { createGrid() {
+  let order = [], member = new Set(), include = () => true;
+  return {
+    rebuild(list, filter) { order = Array.from(list); include = filter || (() => true); member = new Set(order.filter(e => include(e))); },
+    update(e) { if (!order.includes(e)) order.push(e); if (include(e)) member.add(e); else member.delete(e); },
+    remove(e) { member.delete(e); },
+    query() { return order.filter(e => member.has(e)); },
+    queryBox() { return order.filter(e => member.has(e)); }
+  };
+} };`;
 
 let seed = 4402;
 const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
@@ -67,10 +82,10 @@ let profiles = 0;
 const hashes = [];
 for (const multiplier of [1, 2, 4]) for (const seed of [1, 0x2c2026, 0x44c2026]) {
   for (const edge of [false, true]) {
-    const expected = simulation(reference, '', frozen.markers, multiplier, seed, edge);
+    const expected = simulation(source.replace(/\r\n/g, '\n'), oracleSource, frozen.markers, multiplier, seed, edge);
     if (edge) {
       const tie = expected.sample.find(e => e[0] === 'tie');
-      assert.equal(tie[1], tie[2], 'Frozen reference selects the first equidistant player');
+      assert.equal(tie[1], tie[2], 'The reference selects the first equidistant player');
       const impact = expected.sample.find(e => e[0] === 'teleport-impact');
       assert.equal(impact[1], 48);
       assert(impact[2] < 100, 'Hostile projectile hits the teleported owner in the same shot iteration');

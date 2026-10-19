@@ -191,6 +191,11 @@
     width: 11px; height: 11px; image-rendering: pixelated; opacity: .95;
   }
   #hint { margin-left: auto; opacity: .5; }
+  #watching { color: #cfd6e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  /* Spectating, the line says who is being watched instead of how to drive. */
+  body.watching #hint { display: none; }
+  body.watching #watching { margin-left: auto; }
+  #knobs button[aria-pressed="true"] { color: #ffe9a8; }
 
   /* The panel a zone opens into. */
   /* As wide as it was last pulled to, never narrower than it reads at and
@@ -341,14 +346,16 @@
 <div id="bar">
   <div id="knobs">
     <button id="chatKnob" type="button">chat</button>
+    <button id="watchKnob" type="button" aria-pressed="false" title="follow the fighting (f)">spectate</button>
   </div>
   <span id="where">—</span>
   <span id="zone"></span>
   <span id="count"></span>
+  <span id="watching" hidden></span>
   <span id="seen" hidden><b id="seenAll">&ndash;</b> <i>visitors total</i>
     <b id="seenToday">&ndash;</b> <i>today</i>
     <b id="seenNow">&ndash;</b> <i>here now</i></span>
-  <span id="hint">drag to pan · wheel to zoom · a/e to turn · double-click to fit</span>
+  <span id="hint">drag to pan · wheel to zoom · a/e to turn · f to spectate · double-click to fit</span>
 </div>
 <script>/*OUTLINE*/</script>
 <script>/*ATLAS_DATA*/</script>
@@ -3258,6 +3265,72 @@ function stepObserved(one, delta) {
   return true;
 }
 
+/*
+ * A creature that has seen somebody.
+ *
+ * The ones the recordings caught fighting replay what they did (stepObserved).
+ * The rest used to drift on their random walk while they shot at whoever came
+ * close, so a fight was a character walking up to something that did not know
+ * it was there. Now a wanderer notices the nearest character within sight,
+ * comes in to the range of its own first shot and circles there, the way the
+ * game's chase-and-orbit creatures do, and turns back once it has followed
+ * them a leash's length from where it first saw them - walking home and
+ * ignoring them for a moment, so it does not hang at the end of its leash.
+ */
+const BEAST_SIGHT = 11;                  // mine: tiles at which a creature notices a character
+const BEAST_LEASH = 14;                  // mine: tiles it follows one from where it noticed them
+const BEAST_CALM = 3;                    // mine: seconds it ignores them after giving up
+
+function beastPace(kind) {
+  return Math.max(1.6, Math.min(5.2, 5.2 - Math.log10(Math.max(10, kind.hp || 200)) * 0.85));
+}
+
+function foeOf(one, delta) {
+  if (one.foe && (one.foe.down > 0 || one.foe.hp <= 0)) one.foe = null;
+  if (one.calm > 0) { one.calm -= delta; one.foe = null; return null; }
+  one.look = (one.look || 0) - delta;
+  if (one.look > 0) return one.foe;
+  one.look = 0.4;
+  let best = null, nearest = BEAST_SIGHT * BEAST_SIGHT;
+  for (const player of folkSpace.query(one.x, one.y, BEAST_SIGHT)) {
+    if (player.down > 0) continue;
+    const dx = player.x - one.x, dy = player.y - one.y, far = dx * dx + dy * dy;
+    if (far < nearest) { nearest = far; best = player; }
+  }
+  if (best && one.noticedX === undefined) { one.noticedX = one.x; one.noticedY = one.y; }
+  one.foe = best;
+  return best;
+}
+
+/* Steers a wanderer at its foe, or home again. False when it has neither to do. */
+function engage(one, delta) {
+  const foe = foeOf(one, delta);
+  const pace = beastPace(one.kind);
+  const grip = Math.min(1, delta * 4);
+  if (foe && Math.hypot(one.x - one.noticedX, one.y - one.noticedY) > BEAST_LEASH) {
+    one.foe = null; one.calm = BEAST_CALM;
+  } else if (foe) {
+    const shot = (one.kind.shots || [])[0];
+    const hold = Math.max(1.5, ((shot && shot.reach) || 5) * 0.7);
+    const dx = foe.x - one.x, dy = foe.y - one.y, far = Math.hypot(dx, dy) || 1;
+    const pull = far > hold ? 1 : (far < hold * 0.6 ? -0.6 : 0);
+    one.side = one.side || (Math.random() < 0.5 ? -1 : 1);
+    if (Math.random() < delta * 0.3) one.side = -one.side;
+    const wx = (dx / far) * pull - (dy / far) * one.side * 0.5;
+    const wy = (dy / far) * pull + (dx / far) * one.side * 0.5;
+    const length = Math.hypot(wx, wy) || 1;
+    one.vx += ((wx / length) * pace - one.vx) * grip;
+    one.vy += ((wy / length) * pace - one.vy) * grip;
+    return true;
+  }
+  if (one.noticedX === undefined) return false;
+  const dx = one.noticedX - one.x, dy = one.noticedY - one.y, far = Math.hypot(dx, dy);
+  if (far < 1.5) { one.noticedX = undefined; one.noticedY = undefined; return false; }
+  one.vx += ((dx / far) * pace - one.vx) * grip;
+  one.vy += ((dy / far) * pace - one.vy) * grip;
+  return true;
+}
+
 function stepLife(delta) {
   folkSpace.rebuild(folk);
   for (const one of alive) {
@@ -3278,6 +3351,7 @@ function stepLife(delta) {
       one.down -= delta;
       if (one.down <= 0) {
         one.hp = one.full;
+        one.foe = null; one.noticedX = undefined; one.noticedY = undefined; one.calm = 0;
         /* A defeated wanderer is restocked elsewhere in its own zone. This
          * keeps its old corpse position visibly empty after the explosion. */
         if (!one.stationary && !one.reactor) {
@@ -3295,11 +3369,13 @@ function stepLife(delta) {
       one.observed = null; one.vx = 0; one.vy = 0; continue;
     }
     if (stepObserved(one, delta)) continue;
-    const turn = (Math.random() - 0.5) * 0.4 * delta;
-    const cos = Math.cos(turn), sin = Math.sin(turn);
-    const vx = one.vx * cos - one.vy * sin;
-    const vy = one.vx * sin + one.vy * cos;
-    one.vx = vx; one.vy = vy;
+    if (!(one.wanderer && engage(one, delta))) {
+      const turn = (Math.random() - 0.5) * 0.4 * delta;
+      const cos = Math.cos(turn), sin = Math.sin(turn);
+      const vx = one.vx * cos - one.vy * sin;
+      const vy = one.vx * sin + one.vy * cos;
+      one.vx = vx; one.vy = vy;
+    }
     const anchor = one.reactor || one.landmarkAnchor;
     if (anchor && Math.hypot(one.x - anchor.x, one.y - anchor.y) > one.leash) {
       const homeAngle = Math.atan2(anchor.y - one.y, anchor.x - one.x);
@@ -4311,7 +4387,7 @@ function newFolk(kind, beacon, level) {
      * would make dying free, and every gravestone would be the same one.
      */
     level, exp: 0, kills: 0,
-    target: null,
+    target: null, fleeing: false,
     cool: Math.random() * 0.5,
     spell: 1 + Math.random(),
     down: 0,
@@ -4496,6 +4572,7 @@ function placeReinforcement(beast, at) {
   beast.hp = beast.full; beast.down = 0; beast.dying = 0;
   beast.vx = Math.cos(angle) * pace; beast.vy = Math.sin(angle) * pace;
   beast.observed = null;
+  beast.foe = null; beast.noticedX = undefined; beast.noticedY = undefined; beast.calm = 0;
   return beast;
 }
 
@@ -4707,6 +4784,25 @@ function stepWorld(delta) {
   }
 }
 
+/*
+ * How a character fights, beyond walking to the edge of its reach.
+ *
+ * Badly hurt (under FOLK_FLEE of their life) they back away from what they
+ * are fighting, still shooting, and only go in again once they have healed
+ * past FOLK_BRAVE. And they aim where a moving thing will be when the shot
+ * gets there rather than where it is, as anybody who plays the game does -
+ * not all the way, because nobody leads perfectly.
+ */
+const FOLK_FLEE = 0.25;                  // mine: share of life at which they back off
+const FOLK_BRAVE = 0.5;                  // mine: share of life at which they go back in
+const FOLK_LEAD = 0.8;                   // mine: how much of a target's movement they allow for
+
+function lead(from, target, shot) {
+  const fast = Math.max(0.5, Number.isFinite(shot.fast) ? shot.fast : 8);
+  const time = Math.min(1.2, Math.hypot(target.x - from.x, target.y - from.y) / fast) * FOLK_LEAD;
+  return { id: target.id, x: target.x + (target.vx || 0) * time, y: target.y + (target.vy || 0) * time };
+}
+
 function stepFolk(delta) {
   if (!folk.length) return;
   folkSpace.rebuild(folk);
@@ -4859,14 +4955,18 @@ function stepFolk(delta) {
       const dx = beast.x - one.x, dy = beast.y - one.y;
       const far = Math.hypot(dx, dy) || 1;
       const hold = reach * FOLK_HOLD;
-      const pull = far > hold ? 1 : (far < hold * 0.65 ? -0.9 : 0);
+      // Badly hurt, they back off and keep shooting until they have healed.
+      if (one.hp < one.full * FOLK_FLEE) one.fleeing = true;
+      else if (one.fleeing && one.hp >= one.full * FOLK_BRAVE) one.fleeing = false;
+      const pull = one.fleeing ? -1.2 : (far > hold ? 1 : (far < hold * 0.65 ? -0.9 : 0));
       wx += (dx / far) * pull;
       wy += (dy / far) * pull;
       if (!ducked) {
         // Circling, so a standing target cannot simply lead them.
         one.strafe = one.strafe || (Math.random() < 0.5 ? -1 : 1);
-        wx += (-dy / far) * one.strafe * 0.55;
-        wy += (dx / far) * one.strafe * 0.55;
+        const circle = one.fleeing ? 0.25 : 0.55;
+        wx += (-dy / far) * one.strafe * circle;
+        wy += (dx / far) * one.strafe * circle;
         if (Math.random() < delta * 0.35) one.strafe = -one.strafe;
       }
 
@@ -4889,7 +4989,7 @@ function stepFolk(delta) {
           const off = round
             ? (n / many) * Math.PI * 2
             : (n - (many - 1) / 2) * 12 * Math.PI / 180;
-          fire(one, beast, spell.shot,
+          fire(one, round ? beast : lead(one, beast, spell.shot), spell.shot,
             hurtOf(spell.shot, one.at.att, beast.kind.def), true, one, off);
         }
       }
@@ -4898,7 +4998,7 @@ function stepFolk(delta) {
         one.cool = 1 / (SHOTS_AT(one.at.dex) * (gun.rate || 1));
         // The client holds the attack pose for the whole gap between shots.
         SpriteAnimation.startAttack(one, Math.atan2(beast.y - one.y, beast.x - one.x), one.cool);
-        volley(one, beast, gun, hurtOf(gun, one.at.att, beast.kind.def), one);
+        volley(one, lead(one, beast, gun), gun, hurtOf(gun, one.at.att, beast.kind.def), one);
       }
     }
 
@@ -4977,7 +5077,10 @@ function stepFolk(delta) {
     const shot = all[beast.which];
     const reach = shot.reach || 5;
     let mark = null, near = reach * reach;
-    for (const one of folkSpace.query(beast.x, beast.y, reach)) {
+    // The one it is after, if it is in range; otherwise whoever is nearest.
+    const foe = beast.foe;
+    if (foe && foe.down <= 0 && (foe.x - beast.x) ** 2 + (foe.y - beast.y) ** 2 <= near) mark = foe;
+    if (!mark) for (const one of folkSpace.query(beast.x, beast.y, reach)) {
       if (one.down > 0) continue;
       if (beast.reactor && Math.hypot(one.x - beast.reactor.x, one.y - beast.reactor.y)
         > beast.leash + 5) continue;
@@ -5091,7 +5194,7 @@ function drawFolk(box) {
     if (one.x < seen.x0 || one.x > seen.x1 || one.y < seen.y0 || one.y > seen.y1) continue;
     drawn += drawOneLife(one, box);
     if (one.hp < one.full * 0.97) drawThread(one, box, '#7fd08a');
-    if (one === chosenFolk) drawRing(one, box);
+    if (one === chosenFolk || (watch.on && one === watch.subject)) drawRing(one, box);
   }
 
   /*
@@ -6495,6 +6598,100 @@ function turnTo(t) {
 }
 function turnBy(by) { turnTo(TUNE.turn + by); }
 
+/* --------------------------------------------------------------------
+ * Spectating.
+ *
+ * The camera follows a fight the way a spectator does in the game: it picks
+ * the fight most worth watching, frames the character and what it is
+ * fighting, and moves on when that fight is over or a better one has been
+ * going for a while. Worth is reckoned from what is there to see - how big
+ * the thing being fought is, a hero of Oryx or an encounter above all, how
+ * close the character is to dying, how many are on it - and a fight is kept
+ * for at least WATCH_LEAST seconds, so the camera does not flit.
+ *
+ * On from its knob or the f key. The wheel still zooms, closer or further
+ * than the framing; clicking a character watches that one instead; a drag,
+ * a double-click or Escape gives the camera back.
+ * ------------------------------------------------------------------ */
+const WATCH_LEAST = 8;                   // seconds a fight keeps the camera before another may take it
+const WATCH_AFTER = 1.6;                 // seconds the camera stays on a fight that has ended
+const WATCH_LOOK = 0.5;                  // seconds between looks for a better fight
+const watch = { on: false, subject: null, held: 0, idle: 0, look: 0, zoom: 1 };
+const watchKnob = document.getElementById('watchKnob');
+const watchSaid = document.getElementById('watching');
+
+function fightWorth(one) {
+  const beast = one.target;
+  if (one.down > 0 || !beast || beast.down > 0 || beast.dying > 0 || beast.hp <= 0) return 0;
+  const gun = one.kind.weapon && one.kind.weapon.shot;
+  const far = Math.hypot(beast.x - one.x, beast.y - one.y);
+  if (far > ((gun && gun.reach) || 4) * 1.6) return 0.2;      // still walking up to it
+  let worth = 1 + Math.log10(Math.max(10, beast.full || 200));
+  if (beast.kind.role === 'hero' || beast.kind.role === 'encounter' || beast.reactorCore) worth += 4;
+  worth += (1 - Math.max(0, one.hp) / one.full) * 3;
+  worth += Math.min(3, (beast.onIt || 1) - 1);
+  return worth;
+}
+
+function watchSubject(one) {
+  if (!one || one === watch.subject) return;
+  const far = watch.subject
+    ? Math.hypot(one.x - watch.subject.x, one.y - watch.subject.y) : Infinity;
+  watch.subject = one; watch.held = 0; watch.idle = 0;
+  // Across the realm it travels there; next door it simply swings round.
+  if (far > 30) {
+    tripAt = { x: view.x, y: view.y, scale: view.scale };
+    tripFrom = performance.now(); tripFor = 1100;
+  }
+}
+
+function setWatch(on) {
+  if (on === watch.on || (on && bare)) return;
+  watch.on = on;
+  watch.subject = null; watch.zoom = 1; watch.look = 0;
+  watchKnob.setAttribute('aria-pressed', on ? 'true' : 'false');
+  watchKnob.textContent = on ? 'spectating' : 'spectate';
+  watchSaid.hidden = !on;
+  document.body.classList.toggle('watching', on);
+  if (!on) watchSaid.textContent = '';
+}
+
+function stepWatch(box, delta) {
+  if (!watch.on) return;
+  watch.held += delta;
+  watch.look -= delta;
+  const was = watch.subject;
+  const standing = was && was.down <= 0 && folk.includes(was);
+  const fighting = standing && fightWorth(was) > 0.2;
+  watch.idle = fighting ? 0 : watch.idle + delta;
+  if (watch.look <= 0) {
+    watch.look = WATCH_LOOK;
+    if (!standing || watch.idle > WATCH_AFTER || watch.held > WATCH_LEAST) {
+      let best = null, bestWorth = 0;
+      for (const one of folk) {
+        const worth = fightWorth(one);
+        if (worth > bestWorth) { bestWorth = worth; best = one; }
+      }
+      const now = fighting ? fightWorth(was) : 0;
+      if (best && (!standing || !fighting || bestWorth > now * 1.4)) watchSubject(best);
+    }
+  }
+  const one = watch.subject;
+  if (!one) return;
+  const beast = one.target && !(one.target.down > 0) && !(one.target.dying > 0) ? one.target : null;
+  // The character a little off the middle, towards what it is fighting, and both in the frame.
+  const span = beast ? Math.hypot(beast.x - one.x, beast.y - one.y) : 0;
+  want.x = beast ? one.x + (beast.x - one.x) * 0.35 : one.x;
+  want.y = beast ? one.y + (beast.y - one.y) * 0.35 : one.y;
+  want.scale = holdZoom(Math.max(14, Math.min(40, Math.min(box.w, box.h) / (span + 16))) * watch.zoom, box);
+  walkingHome = false; resting = 0;
+  const said = one.name + ', ' + one.kind.name + ' lv ' + one.level
+    + (beast ? ' · ' + (beast.kind.displayName || beast.kind.name) : '');
+  if (watchSaid.textContent !== said) watchSaid.textContent = said;
+}
+
+watchKnob.addEventListener('click', () => setWatch(!watch.on));
+
 /*
  * The turn only lives close in, and lets go as you pull back.
  *
@@ -7246,6 +7443,7 @@ function frame(now) {
   if (!(want.scale > 0.001)) want.scale = 0.02;
   const box = size();
   if (settleFor > 0) { settleFor--; settleInto(box); }
+  stepWatch(box, delta);
   keepInSight(box, delta);
   unwindTurn(delta);
   warmAhead(box);
@@ -7356,6 +7554,7 @@ window.addEventListener('message', event => {
   const said = event.data;
   if (!said || said.rotmg !== 'bare') return;
   bare = said.on !== false;
+  if (bare) setWatch(false);
   if (!bare) ensureMask();
   /* Said, and said as nothing, are different: `of: null` gives the framing
      back to the ordinary fit, which is how the ring hands the atlas over to
@@ -7411,6 +7610,11 @@ const holdZoom = (scale, box) => Math.max(floorZoom(box), Math.min(40, scale));
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
   const box = size();
+  if (watch.on) {
+    const notch = Math.max(-1.5, Math.min(1.5, event.deltaY / 100));
+    watch.zoom = Math.max(0.35, Math.min(2.5, watch.zoom * Math.pow(WHEEL, -notch)));
+    return;
+  }
   /*
    * Reckoned where the view is going rather than where it is, so that a quick
    * roll of several notches still leaves the thing under the pointer under
@@ -7607,7 +7811,11 @@ canvas.addEventListener('pointermove', event => {
     }
     return;
   }
-  if (from) carryTo(event.offsetX, event.offsetY);
+  if (from) {
+    // Taking the map by hand gives the camera back.
+    if (watch.on && moved > TAP_SLOP) setWatch(false);
+    carryTo(event.offsetX, event.offsetY);
+  }
 });
 /*
  * A pointer lifted, or taken away by the browser. Only the last one off the
@@ -7658,7 +7866,7 @@ function letGo(event, lifted) {
    * once they are drawn large enough to be aimed at.
    */
   const who = folkUnder(event.offsetX, event.offsetY, box);
-  if (who) { openFolk(who); return; }
+  if (who) { if (watch.on) watchSubject(who); openFolk(who); return; }
   const near = beaconUnder(event.offsetX, event.offsetY, box);
   if (near) { openBeacon(near); return; }
   const zone = zoneOf(t.x, t.y);
@@ -7672,14 +7880,15 @@ if (matchMedia('(pointer: coarse)').matches) {
   document.getElementById('hint').textContent =
     'drag to pan · pinch to zoom · twist to turn · double-tap to fit';
 }
-canvas.addEventListener('dblclick', () => { shutPanel(); fit(); });
+canvas.addEventListener('dblclick', () => { setWatch(false); shutPanel(); fit(); });
 addEventListener('resize', () => { if (!from) size(); });
 addEventListener('keydown', event => {
-  if (event.key === 'Escape') { shutPanel(); return; }
+  if (event.key === 'Escape') { setWatch(false); shutPanel(); return; }
   const on = event.target;
   if (on && (on.tagName === 'INPUT' || on.tagName === 'TEXTAREA')) return;
   if (event.key === 'a' || event.key === 'A') { turnBy(-TURN_STEP); event.preventDefault(); }
   else if (event.key === 'e' || event.key === 'E') { turnBy(TURN_STEP); event.preventDefault(); }
+  else if (event.key === 'f' || event.key === 'F') { setWatch(!watch.on); event.preventDefault(); }
 });
 
 /* --------------------------------------------------------------------
