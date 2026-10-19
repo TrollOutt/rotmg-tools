@@ -3259,6 +3259,15 @@ const TINT = {
     return c;
   }
 
+  // A filled bar with round ends. The bars used to call round(), which is the
+  // number rounder, so they drew nothing at all.
+  function pill(pen, x, y, w, h, r) {
+    pen.beginPath();
+    if (pen.roundRect) pen.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2));
+    else pen.rect(x, y, w, h);
+    pen.fill();
+  }
+
   function drawDuel() {
     const canvas = el('tcDuel');
     if (!canvas) return;
@@ -3355,12 +3364,21 @@ const TINT = {
      * Only the drawing changes: the fight itself runs on seconds and tiles.
      */
     const k = Math.max(1, Math.min(2.4, tall / 170, wide / 480));
-    const floor = tall - 30 * k;
-    pen.drawImage(groundOf(wide, tall, dpr, k, floor), 0, 0, wide, tall);
+    /*
+     * The two figures may grow with the frame's height even where its width
+     * keeps the tiles small: a half-page card is tall and narrow, and drew
+     * two small figures at the bottom of a frame of dark.
+     */
+    const kFig = Math.max(k, Math.min(2.4, tall / 200, wide / 330));
+    // The writing grows more gently than the figures: it is read, not seen.
+    const say = Math.min(kFig, 1.6);
+    // The target's life, over its head: a line of figures and a bar.
+    const barH = Math.round(5 * say), hud = Math.round(11 * say + 5 * say + barH + 7 * say);
+    const groundLeast = 30 * k;
 
     const PX_TILE = 30 * k;
     const piece = pieceOf(boss && boss.pic);
-    const room = Math.min(88 * k, tall * 0.64);
+    const room = Math.max(24, Math.min(88 * kFig, tall * 0.6, tall - groundLeast - hud - 10 * say));
     // The room goes to what the target draws, not to the rectangle that
     // carries its swing - see targetFit. A piece with no measured window
     // measures as its rectangle, which is what it always was.
@@ -3368,8 +3386,15 @@ const TINT = {
     const fit = piece ? targetFit(piece, room, targetRun) : null;
     const big = fit ? fit.height : room;
     const across = fit ? fit.width : room;
+    /*
+     * The floor where the scene - the target, its life over its head - sits
+     * in the middle of the frame, with as much ground under it as dark above,
+     * and never less ground than a strip.
+     */
+    const floor = Math.round(Math.min(tall - groundLeast, Math.max(big + hud + 6 * say, (tall + big + hud) / 2)));
+    pen.drawImage(groundOf(wide, tall, dpr, k, floor), 0, 0, wide, tall);
     const me = pieceOf((kind && kind.pic) || '');
-    const side = Math.min(52 * k, tall * 0.4);
+    const side = Math.min(52 * kFig, tall * 0.4);
     const mine = me ? side * (me.w / Math.max(1, me.h)) : side * 0.6;
     /*
      * Where they stand is the chosen numeric distance from the target's middle, from zero to ten tiles.
@@ -3497,26 +3522,40 @@ const TINT = {
       pen.stroke();
     }
 
-    /* The thing's life, and what has been taken off it. */
-    const barW = wide - 44;
+    /*
+     * The thing's life, over its head, the way the game draws it: a bar the
+     * width of the target, and what it has left written above the bar. It was
+     * a bar across the whole floor with its figures under the target's feet,
+     * where they ran into the picture.
+     */
     const part = duel.full ? Math.max(0, duel.hp / duel.full) : 0;
-    pen.fillStyle = 'rgba(255,255,255,.08)';
-    round(pen, 22, tall - 20, barW, 7, 3.5); pen.fill();
-    pen.fillStyle = part > 0.35 ? '#8fd08a' : '#d4685f';
-    round(pen, 22, tall - 20, Math.max(0, barW * part), 7, 3.5); pen.fill();
+    const middle = bossX + across / 2;
+    const barW = Math.min(wide * 0.5, Math.max(across * 1.05, 96 * say));
+    const barX = Math.max(8, Math.min(wide - 8 - barW, middle - barW / 2));
+    const barY = floor - big - 7 * say - barH;
+    pen.fillStyle = 'rgba(0,0,0,.45)';
+    pill(pen, barX - 1, barY - 1, barW + 2, barH + 2, (barH + 2) / 2);
+    pen.fillStyle = 'rgba(255,255,255,.1)';
+    pill(pen, barX, barY, barW, barH, barH / 2);
+    if (part > 0) {
+      pen.fillStyle = part > 0.35 ? '#8fd08a' : '#d4685f';
+      pill(pen, barX, barY, Math.max(barH, barW * part), barH, barH / 2);
+    }
 
-    /* And the magic left, which is what paces the ability. */
+    /* And the magic left, which is what paces the ability - over the
+       character's head, since it is the character's. */
     if (duel.mpFull && build.using !== 'gun') {
-      const mine = Math.max(0, Math.min(1, duel.mp / duel.mpFull));
-      pen.fillStyle = 'rgba(255,255,255,.07)';
-      round(pen, 22, tall - 11, barW, 3, 1.5); pen.fill();
+      const full = Math.max(0, Math.min(1, duel.mp / duel.mpFull));
+      const mpW = Math.max(24 * say, side * 0.8), mpH = Math.max(3, Math.round(3 * say));
+      const mpX = Math.max(4, left + side / 2 - mpW / 2), mpY = floor - side - 6 * say - mpH;
+      pen.fillStyle = 'rgba(255,255,255,.1)';
+      pill(pen, mpX, mpY, mpW, mpH, mpH / 2);
       pen.fillStyle = '#5b8cd9';
-      round(pen, 22, tall - 11, Math.max(0, barW * mine), 3, 1.5); pen.fill();
+      pill(pen, mpX, mpY, Math.max(0, mpW * full), mpH, mpH / 2);
     }
 
     /* Whatever is left of it, on its way outward. */
     if (duel.bits.length) {
-      const middle = bossX + across / 2;
       for (const one of duel.bits) {
         pen.globalAlpha = Math.max(0, one.left / one.full);
         pen.fillStyle = one.left > 0.6 ? '#fff2cf' : '#e0a13a';
@@ -3532,14 +3571,14 @@ const TINT = {
      * running total sit on the other side where the fight is being counted
      * rather than suffered.
      */
-    // The writing grows more gently than the figures: it is read, not seen.
-    const say = Math.min(k, 1.6);
     const small = Math.round(11 * say) + 'px ui-monospace, monospace';
-    const edge = 22 * say, low = tall - 25 * say, line = 12 * say;
+    const edge = 12 * say;
     pen.font = small;
     pen.textAlign = 'right';
-    pen.fillStyle = 'rgba(255,255,255,.78)';
-    pen.fillText(commas(duel.hp) + ' / ' + commas(duel.full), wide - edge, low);
+    const lifeSaid = commas(duel.hp) + ' / ' + commas(duel.full);
+    const textY = barY - 5 * say;
+    pen.fillStyle = 'rgba(255,255,255,.82)';
+    pen.fillText(lifeSaid, barX + barW, textY);
     /*
      * And what it is wearing, beside what it has left. Every number under
      * this frame is read against that armour - it is subtracted from each
@@ -3548,21 +3587,29 @@ const TINT = {
      */
     if (boss) {
       pen.fillStyle = 'rgba(255,255,255,.5)';
-      pen.fillText(boss.def + ' armour', wide - edge, low - line);
+      pen.fillText(boss.def + ' armour · ', barX + barW - pen.measureText(lifeSaid).width, textY);
     }
+    /* The clock and the running total, in the corner, away from both. */
     pen.textAlign = 'left';
     pen.fillStyle = 'rgba(255,255,255,.62)';
-    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', edge, low);
+    pen.fillText(round(duel.at) + 's · ' + commas(duel.dealt) + ' dealt', edge, edge + 9 * say);
 
     /* And how long it took, said once and said large. */
     if (duel.hp <= 0) {
+      const loud = '600 ' + Math.round(20 * say) + 'px ui-monospace, monospace';
+      const head = 'dead in ' + round(duel.over) + 's', foot = commas(duel.dealt) + ' damage';
+      const deadY = floor - big * 0.55;
+      // On a plate of its own, since it is written over the scene.
+      pen.font = loud;
+      const plateW = pen.measureText(head).width + 28 * say;
+      pen.fillStyle = 'rgba(8,8,14,.78)';
+      pill(pen, wide / 2 - plateW / 2, deadY - 22 * say, plateW, 44 * say, 8 * say);
       pen.textAlign = 'center';
       pen.fillStyle = '#f0c274';
-      pen.font = '600 ' + Math.round(20 * k) + 'px ui-monospace, monospace';
-      pen.fillText('dead in ' + round(duel.over) + 's', wide / 2, tall * 0.42);
+      pen.fillText(head, wide / 2, deadY);
       pen.font = small;
-      pen.fillStyle = 'rgba(255,255,255,.45)';
-      pen.fillText(commas(duel.dealt) + ' damage', wide / 2, tall * 0.42 + 16 * say);
+      pen.fillStyle = 'rgba(255,255,255,.6)';
+      pen.fillText(foot, wide / 2, deadY + 15 * say);
       pen.textAlign = 'left';
     }
   }
