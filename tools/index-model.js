@@ -53,6 +53,8 @@ function attach(records, mechanics, objects) {
     assign(r, 'items', mechanics.itemOf(one, r.hand, r.slot, (r.labels || []).join(',')));
     const conditions = require('./item-conditions')(one.body);
     if (conditions.length) r.conditions = conditions;
+    const statBoosts = require('./item-stat-boosts')(one.body);
+    if (statBoosts.length) r.statBoosts = statBoosts;
   }
   /*
    * And the creatures: what their shots put on a player, and what the client

@@ -16,7 +16,7 @@ function buildTraining(root, pagesDir) {
   // Cut only the projected icons from the canonical Index sheet.
   const { readPng, writePng } = require('./png');
   const sheet = readPng(fs.readFileSync(path.join(root, 'web/assets/index/sheet.png')));
-  const icons = [...catalog.equipment, ...catalog.excluded].filter(it => it.icon);
+  const icons = [...catalog.equipment, ...catalog.consumables, ...catalog.excluded].filter(it => it.icon);
   const cell = 16, wide = 128, tall = Math.max(cell, Math.ceil(icons.length / 8) * cell);
   const pixels = Buffer.alloc(wide * tall * 4);
   for (const [i, it] of icons.entries()) {

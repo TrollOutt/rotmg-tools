@@ -30,6 +30,21 @@ overwrite Theory Crafting independently. A build without `--sprites` retains
 existing rectangles for matching record ids. No picture means a fallback icon,
 not a missing item. No installed client is needed to project data or build the site.
 
+For a same-build stat-boost enrichment, after an isolated comparison:
+
+```sh
+node tools/build-index.js --enrich-stat-boosts --sprites
+```
+
+Set `ROTMG_CLIENT_DATA` to the verified extraction (XML and textures from the
+same build). This mode rebuilds artwork in a temporary directory and refuses
+any change to existing JSON facts or either sprite sheet. Only `statBoosts`
+and `statBoostSource` are added. The latter records the actual re-extraction
+date and XML hashes; the existing catalogue provenance is retained when the
+build GUID is unchanged. This avoids relabelling every catalogue when a launcher
+rewrites the same build's asset with a new modification date. No scrape or wiki
+crawl is required. Ordinary full client updates still use the normal pipeline.
+
 The Index card's extras are the one step of `npm run scrape` that needs the
 installed client as well as `client-data/`: `npm run index-extras`
 (`tools/build-index-extras.js`) writes the forge data, the projectiles each item

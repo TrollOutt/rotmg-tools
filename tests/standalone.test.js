@@ -34,7 +34,7 @@ assert(!served.html.includes('var PatienceEngine'), 'training engine must not in
   const { readPng } = require('../tools/png');
   const originalIcons = readPng(fs.readFileSync(path.join(root, 'web/assets/index/sheet.png')));
   const smallIcons = readPng(fs.readFileSync(path.join(root, 'docs/training/icons.png')));
-  for (const list of ['equipment', 'excluded']) {
+  for (const list of ['equipment', 'consumables', 'excluded']) {
     for (let i = 0; i < generatedCatalog[list].length; i++) {
       // Icon coordinates are deliberately repacked into the small training sheet.
       assert.equal(!!generatedCatalog[list][i].icon, !!sourceCatalog[list][i].icon);
@@ -141,6 +141,7 @@ function publicIndexProjection(source) {
 
   delete out.files;
   delete out.from;
+  delete out.statBoostSource;
 
   for (const one of out.records || []) {
     delete one.from;
@@ -174,6 +175,7 @@ for (const [where, index] of [
 ]) {
   assert(!Object.hasOwn(index, 'files'), where + ': client file table must stay private');
   assert(!Object.hasOwn(index, 'from'), where + ': build source metadata must stay private');
+  assert(!Object.hasOwn(index, 'statBoostSource'), where + ': boost extraction metadata must stay private');
 
   for (const one of index.records || []) {
     assert(!Object.hasOwn(one, 'from'), where + ': record source address must stay private');

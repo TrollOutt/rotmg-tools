@@ -115,6 +115,7 @@ function publicIndexText() {
 
   delete index.files;
   delete index.from;
+  delete index.statBoostSource;
 
   for (const one of index.records || []) {
     delete one.from;

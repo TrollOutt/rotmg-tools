@@ -10,6 +10,7 @@ export interface Equipment {
 }
 export interface Consumable {
   id: string; name: string; bonus: number; duration: number;
+  icon?: number[] | null; clientId?: string; clientType?: string; sourceFile?: string;
 }
 export interface Character {
   id: string; name: string; slots: number[]; stats: Record<string, number | undefined>;

@@ -14,7 +14,7 @@ const index = require('../data/Index/index.json');
 const byId = new Map(index.records.map(r => [r.id, r]));
 assert.equal(catalog.classes.length, 19);
 assert.equal(catalog.equipment.length, 8);
-assert.equal(catalog.consumables.length, 0, 'missing temporary stat values must never become guessed consumables');
+assert(catalog.consumables.length > 0, 'real consumables require extracted temporary MAXHP values');
 assert.equal(catalog.healingPerSecond, 20);
 for (const item of catalog.equipment) {
   const source = byId.get(item.id);
@@ -33,8 +33,8 @@ for (const item of catalog.equipment) {
 }
 assert(catalog.excluded.some(it => it.id === "item:Royal Guard's Cuirass" && /conditions/.test(it.reason)));
 assert(catalog.excluded.some(it => it.id === "item:Conqueror's Crown" && /not available/.test(it.reason)));
-for (const name of ['Tincture of Life', 'Effusion of Life', 'Blood Nildrop']) {
-  assert(catalog.excluded.some(it => it.id === 'item:' + name && /stat, amount and duration/.test(it.reason)));
+for (const name of ['Effusion of Life', 'Blood Nildrop']) {
+  assert(catalog.excluded.some(it => it.id === 'item:' + name && /Aura recipients/.test(it.reason)));
 }
 // Mutate real declarations as counterexamples, rather than maintaining another item list.
 const sealSource = byId.get('item:Seal of Blasphemous Prayer');
@@ -107,8 +107,8 @@ assert(!paladin.activateAbility(), 'MP cost is required, no invented regeneratio
 const invalid = new Game(42, { ...options, equipment: { ability: seal.id, armor: 'item:Wretched Rags' }, consumableId: 'item:Blood Nildrop', gear: { nild: { id: 'blood', mode: 'start', at: 1 } } });
 assert.equal(invalid.selectedItems.length, 0); assert.equal(invalid.maxHp, 1000, 'invalid and archive gear cannot bypass the Index boundary');
 
-// No eligible real consumable has complete values in this Index. The lifecycle is
-// verified using explicitly synthetic normalized test data, never shipped to players.
+// A short synthetic duration isolates the exact boundary; real XML-derived
+// consumables and their full durations are tested in training-consumables.test.js.
 const fixture = { id: 'test:temporary-maxhp', name: 'Synthetic test bonus', bonus: 150, duration: 1 };
 const FixtureGame = combat.createGame(HistoricalGame, { ...catalog, consumables: [fixture] });
 const consume = () => new FixtureGame(42, { ...options, consumableId: fixture.id });
@@ -167,4 +167,7 @@ assert(!Object.hasOwn(settingsContext.saved, 'armor'), 'archive-only equipment i
 vm.runInContext("SETTINGS.classId='class:Paladin';SETTINGS.equipment={ability:'item:Seal of Blasphemous Prayer',armor:'item:Heavy Protective Matrix'};SETTINGS.classId='class:Wizard';globalThis.removed=validateSelections();", settingsContext);
 assert.equal(settingsContext.removed.length, 2);
 assert.deepEqual(JSON.parse(JSON.stringify(settingsContext.saved.equipment)), {});
+vm.runInContext('SETTINGS.consumableId=TRAINING_CATALOG.consumables[0].id;clampSettings();save();', settingsContext);
+assert.equal(JSON.parse(saves.get('rotmg:training:patience:settings:v2')).consumableId, catalog.consumables[0].id,
+  'a validated real consumable is preserved in settings for the next attempt');
 console.log('Training Index: classes/slots, source filters, real timed protection, thresholds, MP, synthetic consumable lifecycle, unchanged physics and legacy records passed.');

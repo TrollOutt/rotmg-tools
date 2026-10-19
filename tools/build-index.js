@@ -40,6 +40,10 @@ const sourceAt = process.argv.indexOf('--sqlite-source');
 const sqliteSource = sourceAt >= 0 ? process.argv[sourceAt + 1] : null;
 if (sourceAt >= 0 && !sqliteSource) throw new Error('--sqlite-source requires an output path');
 const sqliteSourceMode = Boolean(sqliteSource);
+const enrichStatBoosts = process.argv.includes('--enrich-stat-boosts');
+if (enrichStatBoosts && (sqliteSourceMode || !process.argv.includes('--sprites'))) {
+  throw new Error('--enrich-stat-boosts requires --sprites and cannot be combined with --sqlite-source');
+}
 const XML = process.env.ROTMG_CLIENT_DATA || path.join(root, 'client-data');
 const OUT = path.join(root, 'data', 'Index');
 /*
@@ -61,7 +65,7 @@ const SERVED = path.join(root, 'web', 'assets', 'index');
  * at somebody who has just pulled the project onto a new machine.
  */
 if (!fs.existsSync(XML)) {
-  if (sqliteSourceMode) {
+  if (sqliteSourceMode || enrichStatBoosts) {
     console.error('\n  SQLite source build requires client data at ' + XML + '.');
     console.error('  Set ROTMG_CLIENT_DATA or run node tools/extract-client.js.\n');
     process.exit(1);
@@ -1435,7 +1439,7 @@ for (const [id, record] of records) {
 /* ---------------- written down ---------------- */
 if (!sqliteSourceMode) fs.mkdirSync(OUT, { recursive: true });
 const all = [...records.values()];
-const result = {
+let result = {
   ...meta,
   views: { theory: theoryView },
   catalogues,
@@ -1450,6 +1454,7 @@ const result = {
   records: all
 };
 const priorFile = path.join(OUT, 'index.json');
+let enrichmentAssets;
 if (process.argv.includes('--sprites') || sqliteSourceMode) {
   const assets = new Map();
   const readAsset = name => {
@@ -1460,7 +1465,9 @@ if (process.argv.includes('--sprites') || sqliteSourceMode) {
     return assets.get(name);
   };
   if (!readAsset('spritesheet.bin')) throw new Error('Sprite registry missing; extract client textures first.');
-  const assetRoot = sqliteSourceMode ? path.join(path.dirname(path.resolve(sqliteSource)), 'assets') : root;
+  const assetRoot = enrichStatBoosts
+    ? (enrichmentAssets = fs.mkdtempSync(path.join(require('os').tmpdir(), 'rotmg-index-enrichment-')))
+    : sqliteSourceMode ? path.join(path.dirname(path.resolve(sqliteSource)), 'assets') : root;
   require('./index-sprites')({root: assetRoot, documents, readAsset, facts: result});
   const theory = require('./index-model').project(result);
   require('./theory-sprites')({root: assetRoot, documents, readAsset, facts: theory});
@@ -1477,6 +1484,15 @@ if (process.argv.includes('--sprites') || sqliteSourceMode) {
   if (prior.theorySheet) result.theorySheet = prior.theorySheet;
 }
 require('./biome-art')(result, { root });
+if (enrichStatBoosts) {
+  for (const file of ['web/assets/index/sheet.png', 'web/assets/theory/sheet.png']) {
+    if (!fs.readFileSync(path.join(root, file)).equals(fs.readFileSync(path.join(enrichmentAssets, file)))) {
+      throw new Error('Refusing stat-boost enrichment: rebuilt artwork differs at ' + file);
+    }
+  }
+  const prior = JSON.parse(fs.readFileSync(priorFile, 'utf8'));
+  result = require('./index-stat-boost-enrichment')(prior, result, documents);
+}
 if (sqliteSourceMode) {
   // Biome decoration is normally appended after link decoration. Keep the
   // public place-field order stable without consulting a prior Index file.
@@ -1502,7 +1518,7 @@ fs.mkdirSync(SERVED, { recursive: true });
 fs.copyFileSync(path.join(OUT, 'index.json'), path.join(SERVED, 'index.json'));
 
 /* And the light list, which is what a search box needs and nothing more. */
-fs.writeFileSync(path.join(OUT, 'search.json'), JSON.stringify({ ...meta, records: all.map(one => [
+fs.writeFileSync(path.join(OUT, 'search.json'), JSON.stringify({ built: result.built, from: result.from, tool: result.tool, records: all.map(one => [
   one.id, one.said || one.name, one.kind, one.alias || '', one.hidden ? 1 : 0
 ]) }) + '\n');
 

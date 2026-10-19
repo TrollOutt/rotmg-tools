@@ -67,14 +67,53 @@ HP/DEF/SPD are editable equipped totals: selecting gear does not add worn stats
 again. An explicit button applies the Index's class caps rather than silently
 overwriting user totals on a class change.
 
-The current Index has only StatBoostSelf/StatBoostAura verbs for consumables:
-it does not preserve their stat, amount or duration. Thus **no consumable is
-selectable**, including Blood Nildrop, Tincture of Life and Effusion of Life.
-Neither a description nor the archive's guessed +150 HP is a substitute. The
-one-dose, pre-combat, timed-max-HP lifecycle is implemented and tested with
-explicitly synthetic fixtures, but no real item's missing values are invented.
-Enabling real consumables requires a source-level Index extraction of those
-attributes and a reviewed targeted projection, not an independent item list.
+## Temporary max-HP consumables (Training Ground 3)
+
+The official client build is `f1f479830bae49808b3d9927e8ad8fa1`, the same GUID
+as the committed October 14 Index. XML was re-extracted on October 19 with
+`tools/extract-client.js`. The launcher's asset modification date is October 19;
+it is not a different build or a claim of a new patch. A complete isolated
+rebuild compared all existing Index facts and both sprite sheets: unchanged.
+Only `statBoosts` and dedicated `statBoostSource` provenance were added by
+`tools/build-index.js --enrich-stat-boosts --sprites`. The original catalogue
+date remains October 14; the enrichment records its actual October 19 source
+date and XML SHA-256 hashes. No October 6 client cache or archive consumable
+values are used.
+
+`tools/item-stat-boosts.js` preserves every StatBoostSelf / StatBoostAura,
+its trigger, raw attributes and the presence of other activation verbs.
+The Training projection accepts only one unconditional, fixed, positive MAXHP
+StatBoostSelf on Activate, in the `statConsumables` channel, with an exact
+60 Hz duration, no additional activations/statuses and no hidden/unreleased flag.
+Names, types, icons and values are projected from the Index, never an item list.
+
+The accepted declarations are in `Objects.135.xml` (SHA-256
+`f212c7bbbf4ec9435705c8005d967a94147989f874cdec8c5433604395f093e2`):
+
+| Client declaration | MAXHP amount | Duration (seconds) |
+| --- | ---: | ---: |
+| Tincture of Life (`0xb0d`) | 100 | 30 |
+| Minor Teal Nildrop (`0xb569`) | 66 | 300 |
+| Mistletoe (`0x2047`) | 150 | 900 |
+
+These are fixed MAXHP amounts, not current-HP healing or VIT. A single selected
+dose is applied at construction; current HP is unchanged. Duration runs in
+combat ticks only (not countdown or pause). Expiry restores the original maximum
+and caps current HP. Restart constructs a fresh dose from the saved selection;
+there is no mid-run consumable API. The existing adapter's lifecycle is reused.
+
+Effusion of Life, Teal Nildrop, Blood Nildrop, Teal Treat and Royal Jelly declare
+auras; the XML does not explicitly establish caster inclusion, so they are
+excluded rather than treating the party target as proof. Blood Nildrop also
+declares VIT; Royal Jelly adds Healing. Bahama Sunrise / Blue Paradise add
+Drunk and other stats, and Cerveza has multiple stats and a different channel:
+their complete effects are not modelled. Food / Tofu declarations retain their
+existing Index hidden reasons. Pure healing, permanent potions and non-MAXHP
+boosts are excluded. The catalogue carries each exclusion reason.
+
+Local acceptance tests reread the real XML and compare all 324 extracted item
+declarations against the generated Index. CI uses the committed projection and
+clearly synthetic parser counterexamples, with full real-item duration tests.
 
 Settings v2 reads compatible v1 values without overwriting the old save. Records
 v2 include class, canonical gear, consumable, seed selection and scenario settings.

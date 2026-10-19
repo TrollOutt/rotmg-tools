@@ -13,17 +13,30 @@ function projectTraining(index, statusText) {
   for (const r of index.records) {
     if (r.kind !== 'item' || r.twin || r.folded) continue;
     const protection = (r.conditions || []).filter(c => c.effect === 'Invulnerable' && c.target === 'self');
-    const boosts = /^StatBoost(Self|Aura)$/.test(r.activate || '');
-    if (!protection.length && !(r.use && boosts)) continue;
+    const boosts = r.statBoosts || [];
+    if (!protection.length && !(r.use && (boosts.length || /^StatBoost(Self|Aura)$/.test(r.activate || '')))) continue;
     const base = identity(r);
     if (r.hidden?.length || r.availability) {
       excluded.push({ ...base, reason: [r.availability, ...(r.hidden || [])].filter(Boolean).join('; ') });
       continue;
     }
     if (r.use) {
-      // Current Index preserves only the activation verb, not stat/amount/duration.
-      // Even a suggestive name or description cannot establish a temporary MAXHP boost.
-      excluded.push({ ...base, category: 'consumable', reason: 'Index lacks structured stat, amount and duration for this stat boost.' });
+      const hp = boosts.filter(b => b.attributes?.stat === 'MAXHP');
+      const b = hp[0], a = b?.attributes || {};
+      const bonus = Number(a.amount), duration = Number(a.duration);
+      const allowed = new Set(['stat', 'amount', 'duration', 'channel']);
+      let reason = '';
+      if (!boosts.length) reason = 'Index lacks structured stat, amount and duration for this stat boost.';
+      else if (!hp.length) reason = 'No temporary MAXHP boost (current HP, VIT and other statistics are excluded).';
+      else if (b.on !== 'StatBoostSelf') reason = 'Aura recipients are not established by these XML declarations; caster inclusion is unverified.';
+      else if (hp.length !== 1 || boosts.length !== 1 || b.otherActivations?.length || r.conditions?.length) reason = 'Additional effects are not modelled by this max-HP-only consumable.';
+      else if (b.trigger !== 'Activate' || r.activate !== 'StatBoostSelf' || Object.keys(a).some(k => !allowed.has(k))
+        || a.channel !== 'statConsumables') reason = 'Unmodelled activation restriction, relative scaling or stacking channel.';
+      else if (!(bonus > 0) || !Number.isFinite(bonus) || !(duration > 0) || !Number.isFinite(duration)
+        || !Number.isInteger(duration * 60)) reason = 'Missing finite positive bonus or exact 60 Hz duration.';
+      if (reason) excluded.push({ ...base, category: 'consumable', reason });
+      else consumables.push({ ...base, bonus, duration, stat: a.stat, trigger: b.trigger, channel: a.channel,
+        source: index.statBoostSource || { built: index.built, from: index.from } });
       continue;
     }
     let reason = '';
@@ -51,7 +64,7 @@ function projectTraining(index, statusText) {
   return { built: index.built, from: index.from, tool: 'tools/training-catalog.js',
     thresholdConvention: 'after-damage (historical simulator convention; live-game ordering unverified)',
     healingPerSecond: healing ? Number(healing[1]) : null,
-    classes, equipment, consumables, excluded };
+    classes, equipment, consumables: consumables.sort((a, b) => a.name.localeCompare(b.name)), excluded };
 }
 
 function readTrainingCatalog(root) {

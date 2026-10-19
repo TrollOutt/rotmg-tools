@@ -11,6 +11,7 @@ const scripts = pkg.scripts || {};
 const deployCritical = [
   'training-ground.test.js',
   'training-index.test.js',
+  'training-consumables.test.js',
   'app-data.test.js',
   'app-storage.test.js',
   'source-slice.test.js',
@@ -29,6 +30,7 @@ const deployCritical = [
   'fiches-forge.test.js',
   'home-navigation.test.js',
   'index-quality.test.js',
+  'index-stat-boosts.test.js',
   'index-search.test.js',
   'index-filter.test.js',
   'index-facets.test.js',
