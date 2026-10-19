@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 // A separate HTTP page. Nothing from the engine is embedded in home or download.
 function buildTraining(root, pagesDir) {
@@ -8,7 +9,6 @@ function buildTraining(root, pagesDir) {
   const target = path.join(pagesDir, 'training');
   fs.mkdirSync(target, { recursive: true });
   const read = file => fs.readFileSync(path.join(source, file), 'utf8').replace(/\r\n/g, '\n');
-  fs.writeFileSync(path.join(target, 'index.html'), read('page.html').replace('<!--TRAINING_UI-->', () => read('ui.html')));
   const assets = Object.fromEntries(['floor', 's_shade', 's_tendril', 's_arrow_blue', 's_arrow_red', 's_spike_blue', 's_spike_red', 's_fog',
     's_player_right', 's_player_up', 's_player_left', 's_player_down'].map(name => [name, `assets/${name}.png`]));
   fs.writeFileSync(path.join(target, 'data.js'), `const ROOM=${read('room.json')};\nconst SPRITES=${read('assets/sprites.json')};\nconst ASSETS=${JSON.stringify(assets)};\n`);
@@ -32,6 +32,14 @@ function buildTraining(root, pagesDir) {
     fs.writeFileSync(path.join(target, file), read(file));
   }
   for (const folder of ['assets', 'fonts']) fs.cpSync(path.join(source, folder), path.join(target, folder), { recursive: true });
+  // The page loads its parts as separate files. Each URL carries a digest of its content,
+  // so a browser holding an older part cannot run it beside newer ones.
+  const page = read('page.html').replace('<!--TRAINING_UI-->', () => read('ui.html'))
+    .replace(/(src|href)="([\w.-]+\.(?:js|css))"/g, (all, attr, file) => {
+      const digest = crypto.createHash('sha256').update(fs.readFileSync(path.join(target, file))).digest('hex').slice(0, 10);
+      return `${attr}="${file}?v=${digest}"`;
+    });
+  fs.writeFileSync(path.join(target, 'index.html'), page);
 }
 
 module.exports = { buildTraining };

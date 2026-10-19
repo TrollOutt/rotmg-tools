@@ -140,56 +140,23 @@ footer{margin-top:16px;display:flex;justify-content:space-between;color:var(--fa
 .ov-actions button.pri:hover{filter:brightness(1.06)}
 kbd{font-family:inherit;font-size:11px;padding:1px 6px;border-radius:5px;margin-left:6px;border:1px solid currentColor;opacity:.6}
 .rec{font-size:13px;color:var(--faint);margin-top:4px;display:flex;align-items:center;gap:8px;justify-content:space-between}
-/* special gear */
-.gear{margin-top:18px}
-.gear-note{color:var(--dim);font-size:13.5px;line-height:1.5;margin:-4px 0 14px;max-width:980px}
-.gear-note b{color:var(--txt)}
-.gear-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-@media (max-width:1060px){.gear-grid{grid-template-columns:1fr}}
-.gcol{background:rgba(0,0,0,.26);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
-.gcol.off .gbody{opacity:.35;pointer-events:none}
-.ghead{display:flex;align-items:center;justify-content:space-between}
-.gt{font-size:16px;font-weight:600;color:var(--txt)}
-.gsel{all:unset;box-sizing:border-box;cursor:pointer;width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line2);background:rgba(0,0,0,.4);color:var(--txt);font-size:15px;
-  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-.gsel option{background:#14172a;color:#f3efe6}
-.gsel:focus{border-color:var(--acc)}
-.ginfo{min-height:96px}
-.gtag{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin-bottom:4px}
-.gtext{margin:0 0 8px;font-size:13.5px;line-height:1.45;color:var(--dim)}
-.gchips{display:flex;flex-wrap:wrap;gap:5px}
-.gchips i{font-style:normal;font-size:12px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
-.gchips i.g{background:rgba(110,224,122,.12);border-color:rgba(110,224,122,.4);color:#a8f0b0}
-.gbody{display:flex;flex-direction:column;gap:10px}
-.gfield{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;color:var(--dim)}
-.gfield input{all:unset;box-sizing:border-box;width:84px;text-align:center;padding:6px;border-radius:8px;border:1px solid var(--line2);background:rgba(0,0,0,.4);font-family:'Inter','Segoe UI',system-ui,Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:12px;color:var(--txt)}
-.gfield input:focus{border-color:var(--acc)}
-.gmode button{font-size:13.5px}
-.gmode button:disabled{opacity:.5}
-.gat[hidden]{display:none}
-.gat-l{font-size:13.5px;color:var(--dim);margin-bottom:2px}
-.gat-l b{color:var(--acc);font-weight:600}.gat-l em{font-style:normal;color:var(--faint)}
-.gana{font-size:13px;line-height:1.5;color:#d9c98d;min-height:60px}
+/* Effect event log */
+
 .evs{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
 .evt{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
 .ev{display:flex;gap:10px;font-size:13px;color:var(--dim);padding:2px 0}
 .ev b{font-family:'Inter','Segoe UI',system-ui,Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:10px;color:var(--txt);min-width:58px;font-weight:400;padding-top:3px}
 
-.grec{font-size:12.5px;line-height:1.5;color:#a8f0b0;background:rgba(110,224,122,.07);border:1px solid rgba(110,224,122,.25);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
-.grec[hidden]{display:none}
-.grec .chip[hidden]{display:none}
-.grec.ok{opacity:.85}
-
 /* readable type: Inter everywhere in the HTML, tabular digits for every number */
 #menu,.ov{font-variant-numeric:tabular-nums;letter-spacing:0}
 #menu{font-size:15px}
 .card h2{font-size:14px;letter-spacing:.12em;font-weight:700}
-.stat label,.hc-head .t,.gt{font-weight:600}
+.stat label,.hc-head .t{font-weight:600}
 .num input{font-size:20px!important;font-weight:700;width:72px}
 .num button{font-size:20px;width:38px}
 .fact b{font-size:24px!important;font-weight:700;line-height:1.25}
 .hc-head .v{font-size:19px!important;font-weight:700}
-.gfield input{font-size:16px!important;font-weight:700;width:90px}
+
 .dr b,.ev b{font-size:14px!important;font-weight:700}
 .ev b{min-width:62px;padding-top:0}
 #ovPct{font-size:13px!important;font-weight:700}
@@ -198,20 +165,10 @@ kbd{font-family:inherit;font-size:11px;padding:1px 6px;border-radius:5px;margin-
 #start .big{font-size:36px;font-weight:800;letter-spacing:.1em}
 .cap{font-weight:700}
 .cluster .cap{font-size:18px}
-.gat-l b{font-weight:700}
+
 .chip{font-weight:500}
-.gana,.grec,.gtext,.sum,.hint,.gear-note{font-size:14px}
+.sum,.hint{font-size:14px}
 .hc .sum{font-size:13.5px}
-
-.glab{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:2px 0 -4px;font-weight:600}
-.gcur{opacity:.9}
-.gwait{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--dim);cursor:pointer}
-.gwait[hidden]{display:none}
-.gwait input{accent-color:#f2c14e;width:16px;height:16px}
-
-.gctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 14px}
-.gctl>span{color:var(--dim);font-size:14px;font-weight:600}
-.gctl .seg{flex:1;min-width:300px;max-width:640px}
 
 /* ---------- one-screen layout: tabs, no page scroll ---------- */
 #menu{overflow:hidden;display:block}
@@ -231,9 +188,7 @@ header .sub{font-size:13px}
 .pane .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:100%}
 .pane .one{max-width:780px;margin:0 auto;height:100%}
 .pane .card{height:100%;box-sizing:border-box;overflow:auto;margin:0}
-.pane[data-pane=gear] .card{display:flex;flex-direction:column}
-.pane[data-pane=gear] .gear-grid{flex:1;min-height:0}
-.pane[data-pane=gear] .gcol{overflow:auto}
+
 .bottom{margin-top:0;flex:none;grid-template-columns:1fr auto}
 .bottom .card{padding:10px 14px}
 .facts{gap:8px}
@@ -245,14 +200,8 @@ header .sub{font-size:13px}
 footer{margin:0;flex:none}
 .stat{padding:9px 0}
 .hc{padding:14px 0}
-.gear-note{font-size:13px;margin:-6px 0 10px}
-.gctl{margin-bottom:10px}
-.gcol{padding:12px;gap:8px}
-.ginfo{min-height:0}
-.gtext{font-size:13px;margin-bottom:6px}
-.gana,.grec{font-size:13px}
-.gana{min-height:0}
-@media (max-width:980px){.pane .two{grid-template-columns:1fr;height:auto}.pane .card{height:auto}.gear-grid{grid-template-columns:1fr!important}}
+
+@media (max-width:980px){.pane .two{grid-template-columns:1fr;height:auto}.pane .card{height:auto}}
 @media (max-height:860px){
   header .sub{display:none}
   #titleCanvas{max-height:40px}
@@ -261,25 +210,13 @@ footer{margin:0;flex:none}
   .card{padding:14px 16px 12px}.card h2{margin-bottom:8px}
   .row{margin:6px 0}
   .tabs button{padding:8px 16px}
-  .gear-note{display:none}
-  .gtext{display:none}
+
 }
 @media (max-height:720px){
   .facts .fact span{display:none}.fact b{font-size:17px!important}
   .last{display:none}
   #start .small{display:none}
 }
-.gcol>*{flex:none}
-.gcol .gbody>*{flex:none}
-@media (max-height:860px){.gana{display:none}.glab{font-size:11px;margin:0 0 -4px}.grec{font-size:12.5px;padding:7px 9px}.gcol{padding:10px;gap:7px}.gtag{margin-bottom:0}.gchips i{font-size:11px;padding:2px 7px}}
-.gcur{all:unset;box-sizing:border-box;cursor:pointer;width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.28);color:var(--dim);font-size:13.5px;
-  background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-.gcur option{background:#14172a;color:#f3efe6}
-.gcur:focus{border-color:var(--acc);color:var(--txt)}
-.gfield{font-size:13px}.gfield input{padding:4px;width:78px}
-@media (max-height:900px){.gsel{padding:7px 12px}.gfield{margin-top:-2px}.gcol .gmode button{padding:5px 4px}.gwait{font-size:12.5px}}
-@media (max-height:1020px){.gana{display:none}.gtext{display:none}.gear-note{display:none}.glab{font-size:11px;margin:0 0 -4px}.grec{font-size:12.5px;padding:7px 9px}.gcol{padding:10px;gap:7px}.gtag{margin-bottom:0}.gchips i{font-size:11px;padding:2px 7px}.gsel{padding:7px 12px}.gcol .gmode button{padding:5px 4px}}
-@media (max-height:1020px){.pane[data-pane=gear] .card{padding:12px 14px 10px}.pane[data-pane=gear] .card h2{margin-bottom:6px}.gctl{margin-bottom:6px}.gear-grid{gap:10px}.gcol{gap:5px;padding:9px}.gbody{gap:6px}.grec{padding:6px 8px;font-size:12px;gap:4px}.gwait{font-size:12px}.gfield{margin-top:-4px}.gat-l{font-size:12.5px}.gat input[type=range]{height:18px}}
 
 /* generated menu background, credits */
 #menu .bgart{position:fixed;inset:0;width:100%;height:100%;z-index:-2;filter:none;transform:none;background:none}
@@ -328,8 +265,6 @@ footer a:hover{color:var(--acc)}
 .hc .sum{margin-left:52px}
 .hc.off .sum{display:none}
 .hc-head{cursor:pointer}
-.gcol .ginfo:empty{display:none}
-.grec{background:transparent;border:0;padding:0;color:#a8f0b0;font-size:13px}
-.grec .chip{align-self:flex-start}
+
 @media (max-height:860px){.steps button{padding:4px 10px}.steps button em{display:none}}
 @media (max-width:760px){.steps button span,.steps button em{display:none}.steps button.on span{display:inline}}

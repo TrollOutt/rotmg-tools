@@ -12,6 +12,8 @@ const deployCritical = [
   'training-ground.test.js',
   'training-index.test.js',
   'training-consumables.test.js',
+  'training-swaps.test.js',
+  'training-layout.test.js',
   'app-data.test.js',
   'app-storage.test.js',
   'source-slice.test.js',

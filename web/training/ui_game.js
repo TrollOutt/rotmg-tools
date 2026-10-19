@@ -2,8 +2,8 @@
 let paused=false,runShown=false,rec=[],recIdx=0,bestRun=null,newRecord=false;
 const ovEl=document.getElementById('overlay');
 function recKey(o){
- if(o.classId)return 'rotmg:training:patience:best:v2:'+JSON.stringify([o.rules||'index-v2-postHit',o.catalogBuild||'',o.classId,
-  Object.entries(o.equipment||{}).filter(([,id])=>id).sort(([a],[b])=>a.localeCompare(b)),o.consumableId||'',String(o.seedKey??''),
+ if(o.classId)return 'rotmg:training:patience:best:v2:'+JSON.stringify([o.rules||(o.swaps?'index-v3-swaps-postHit':'index-v2-postHit'),o.catalogBuild||'',o.classId,
+  Object.entries(o.swaps??o.equipment??{}).filter(([,id])=>id).sort(([a],[b])=>a.localeCompare(b)),o.consumableId||'',String(o.seedKey??''),
   !!o.hard,o.mode,o.chases||(o.hard?4:3),o.hp,o.def,o.spd,o.lvl,o.rspeed,o.loseAt||0,o.dmgMult||1,o.maxHits||0]);
  return 'rotmg:training:patience:best:v1:'+(o.hard?'hard':'normal')+':'+o.mode+':'+(o.chases||(o.hard?4:3))+':'+JSON.stringify([o.hp,o.def,o.spd,o.lvl,o.rspeed,o.loseAt||0,o.dmgMult||1,o.maxHits||0,o.gear||{},o.cur||{}])}
 function loadBest(o){try{return JSON.parse(localStorage.getItem(recKey(o))||'null')}catch(e){return null}}
@@ -25,7 +25,7 @@ function dmgRows(){const d=g.dmg;const im=n=>'<img src="'+ASSETS[n]+'" alt="">';
 function bestLine(b){if(!b)return 'No best run for this setup yet';
  return b.win?'Best: won with '+b.hp+' / '+b.max+' HP ('+b.lost+' lost)':'Best: '+fmtS(b.frames)+' survived out of '+fmtS(b.goal)}
 function evHtml(){if(!g.events.length&&!g.blocked&&!(g.clipped>.5))return '';
- return '<div class="evs"><div class="evt">Equipment</div>'+g.events.map(e=>'<div class="ev"><b>'+fmtS(e.f)+'</b><span>'+e.text+'</span></div>').join('')+(g.blocked?'<div class="ev"><b>·</b><span>'+g.blocked+' hit'+(g.blocked>1?'s':'')+' blocked'+(g.blocked>1?'s':'')+' by invulnerability</span></div>':'')+(g.healed?'<div class="ev"><b>·</b><span>'+Math.round(g.healed)+' HP healed</span></div>':'')+(g.clipped>.5?'<div class="ev"><b>·</b><span>'+Math.round(g.clipped)+' HP lost to the max HP cap</span></div>':'')+'</div>'}
+ return '<div class="evs"><div class="evt">Prepared effects</div>'+g.events.map(e=>'<div class="ev"><b>'+fmtS(e.f)+'</b><span>'+e.text+'</span></div>').join('')+(g.blocked?'<div class="ev"><b>·</b><span>'+g.blocked+' hit'+(g.blocked>1?'s':'')+' blocked'+(g.blocked>1?'s':'')+' by invulnerability</span></div>':'')+(g.healed?'<div class="ev"><b>·</b><span>'+Math.round(g.healed)+' HP healed</span></div>':'')+(g.clipped>.5?'<div class="ev"><b>·</b><span>'+Math.round(g.clipped)+' HP lost to the max HP cap</span></div>':'')+'</div>'}
 function showOverlay(kind){
  const o=g.o,goal=g.goal,frames=Math.min(g.frames,goal),lost=Math.round(g.totalLost()),hpLeft=Math.max(0,Math.round(g.hp));
  ovEl.className='ov '+kind;ovEl.hidden=false;

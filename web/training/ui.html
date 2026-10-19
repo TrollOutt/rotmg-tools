@@ -3,34 +3,47 @@
  <div class="wrap">
   <header><p class="training-kicker">The Shatters · Local prototype</p><h1>Test of Patience</h1><p class="training-sub">Practise the Forgotten King’s survival phase.<br>Keyboard required. Touch controls are not available.</p><canvas id="titleCanvas" width="1100" height="80"></canvas></header>
   <nav class="steps" id="steps">
-   <button data-step="1" class="on"><b>1</b><span>Loadout</span></button>
-   <button data-step="2"><b>2</b><span>Character</span></button>
+   <button data-step="1" class="on"><b>1</b><span>Character</span></button>
+   <button data-step="2"><b>2</b><span>Equipment</span></button>
    <button data-step="3"><b>3</b><span>Mode</span></button>
    <button data-step="4"><b>4</b><span>Handicap</span><em>optional</em></button>
    <button data-step="5"><b>5</b><span>Launch</span></button>
   </nav>
   <div class="panes">
    <div class="pane on" data-pane="1"><div class="one"><section class="card">
-    <h2>Class &amp; equipment <small>Index</small></h2>
+    <h2>Character <small>Index</small></h2>
+    <div class="cols">
+    <div class="col">
     <label class="index-field" for="trainingClass">ROTMG class<select id="trainingClass"></select></label>
     <p class="training-help" id="classInfo"></p><button type="button" class="chip" id="classDefaults">Apply Index stat caps</button>
     <p id="selectionNotice" role="status" class="training-help"></p>
-    <h3>Temporary invulnerability <small>optional</small></h3>
+    </div>
+    <div class="col">
+    <h3>Character totals <small>gear included</small> <span class="presets"><button class="chip" data-preset="game">game defaults</button><button class="chip" data-preset="mine">my defaults</button></span></h3>
+    <div class="stat" data-key="spd"><label>SPD</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <div class="stat" data-key="hp"><label>Max HP</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <div class="stat" data-key="def"><label>DEF</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    </div>
+    </div>
+   </section></div></div>
+   <div class="pane" data-pane="2"><div class="one"><section class="card">
+    <h2>Equipment <small>Index</small></h2>
+    <div class="cols eq">
+    <div class="col">
+    <h3>Invulnerability swaps <small>optional</small></h3>
+    <p class="training-help opt">Choose up to one item per slot, or None. Swaps are prepared before combat; their triggers activate invulnerability. Item stats and secondary effects are excluded.</p>
     <div id="gearGrid" class="index-gear"></div>
     <p id="gearEmpty" class="training-help">No compatible simulatable equipment. You can train without equipment.</p>
     <p id="thresholdNote" class="index-warning">Hit effects use the historical simulator convention: HP thresholds are evaluated AFTER damage, on a surviving hit. The Index does not establish this ordering in the live game.</p>
-    <div id="unsupportedGear" class="training-help"></div>
+    <p id="equipmentNotice" role="status" class="training-help"></p>
+    </div>
+    <div class="col">
     <h3>Temporary max HP consumable <small>optional</small></h3>
     <label class="index-field" for="trainingConsumable">One consumable, before combat<select id="trainingConsumable"></select></label>
     <div id="consumableInfo" class="training-help"></div>
-    <details class="training-help"><summary>Simulation scope &amp; resources</summary><p id="resourceInfo"></p><p>Matrix Dazed and the amulet's On Shoot Healing / Berserk / Armored do not affect this survival-only training: there is no shooting. Invulnerable blocks attacks during its window; Bleeding still deals damage.</p></details>
-   </section></div></div>
-   <div class="pane" data-pane="2"><div class="one"><section class="card">
-    <h2>Character totals <span class="presets"><button class="chip" data-preset="game">game defaults</button><button class="chip" data-preset="mine">my defaults</button></span></h2>
-    <div class="stat" data-key="spd"><label>SPD (gear included)</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
-    <div class="stat" data-key="hp"><label>Max HP (gear included)</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
-    <div class="stat" data-key="def"><label>DEF (gear included)</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
-    <div class="stat" data-key="lvl"><label>Level</label><div class="num"><button data-d="-1">−</button><input inputmode="numeric"><button data-d="1">+</button></div><input type="range"></div>
+    <details class="training-help"><summary>Simulation scope &amp; resources</summary><p id="resourceInfo"></p><p>Only invulnerability is modelled, including for the seal: no Healing, stat bonuses or other secondary effects. Invulnerable blocks attacks during its window; Bleeding still deals damage.</p></details>
+    </div>
+    </div>
    </section></div></div>
    <div class="pane" data-pane="3"><div class="one"><section class="card">
      <h2>Mode</h2>
@@ -63,7 +76,8 @@
    <button id="navBack" class="ghost" hidden>← Back</button>
    <span class="navmid"><span id="recInfo"></span> <button class="chip" id="recClear" hidden>clear</button><span class="last" id="last"></span></span>
    <button id="navNext" class="next">Next →</button>
-   <button id="start"><span class="big">START</span><span class="small">Enter</span></button>
+   <p id="launchNotice" role="status" class="training-help"></p>
+   <button id="start" aria-describedby="launchNotice"><span class="big">START</span><span class="small">Enter</span></button>
   </div>
   <footer><span>Based on <a href="https://github.com/Mxple/TPGsim" target="_blank" rel="noopener">TPGsim</a> by Mxple · sprites and data © DECA, Realm of the Mad God · Inter and Press Start 2P fonts (SIL OFL) · <a href="fonts/Inter-OFL.txt">Inter licence</a> · <a href="fonts/PressStart2P-OFL.txt">Press Start 2P licence</a> · <a href="PROVENANCE.md">Credits &amp; provenance</a></span><span>Esc: pause · F11: fullscreen</span></footer>
  </div>

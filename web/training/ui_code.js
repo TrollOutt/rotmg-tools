@@ -1,34 +1,40 @@
 // ------------------------------------------------------------------ state
 const DEFAULTS={seed:'',spd:57,hp:1245,def:43,lvl:5,mode:0,hard:false,rspeed:0,chases:4,layout:'azerty',ghost:1,
  hLose:false,loseAt:20,hDmg:false,dmgMult:1.5,hHits:false,maxHits:10,
- classId:TRAINING_CATALOG.classes.find(c=>c.name==='Wizard')?.id||TRAINING_CATALOG.classes[0].id,equipment:{},consumableId:''};
+ classId:'',swaps:{},consumableId:''};
 const SETTINGS=JSON.parse(JSON.stringify(DEFAULTS));
-let RETURNING=false;
-try{const raw=localStorage.getItem('rotmg:training:patience:settings:v2')||localStorage.getItem('rotmg:training:patience:settings:v1');RETURNING=!!raw;
+let RETURNING=false,selectionMessage='';
+try{const raw=localStorage.getItem('rotmg:training:patience:settings:v3')||localStorage.getItem('rotmg:training:patience:settings:v2')||localStorage.getItem('rotmg:training:patience:settings:v1');RETURNING=!!raw;
  const sv=JSON.parse(raw||'{}');if(sv&&typeof sv==='object')for(const k of Object.keys(DEFAULTS))if(Object.hasOwn(sv,k))SETTINGS[k]=sv[k];
+ if(sv&&!Object.hasOwn(sv,'swaps')){
+  SETTINGS.swaps=sv.equipment||Object.fromEntries(['ability','armor','ring'].filter(h=>sv[h]?.id).map(h=>[h,sv[h].id]));
+  if(sv.equipment||sv.armor||sv.ring||sv.nild)selectionMessage='Previous setup converted to prepared swaps. Invalid choices are ignored; old saves and records are preserved.';
+ }
 }catch(e){}
 const MODES=['solo','group','rails'];
 let scene='menu',g=null,zoom=1,lastResult=null;
 const VW=[18.23*8,23.5*8,31*8],VH=[12.8*8,16.5*8,21.77*8];
 const keys={},pressed={};
 let pAnim=0,ghostAnim=[0,0,0],countdown=0;
-const LIM={spd:[0,100,1],def:[0,100,1],hp:[5,2000,1],lvl:[1,10,1],loseAt:[5,95,5],dmgMult:[.25,4,.25],maxHits:[1,99,1],chases:[3,6,1]};
-function clampSettings(){for(const k in LIM){const [a,b,s]=LIM[k];let v=+SETTINGS[k];if(!isFinite(v))v=DEFAULTS[k];v=Math.round(v/s)*s;SETTINGS[k]=Math.round(Math.max(a,Math.min(b,v))*100)/100}
+const FIXED_LEVEL=5; // engine constant, no longer a player setting: in the engine it sets the interval and size of the tendril arrow salvos, so it stays at the historical default 5
+const LIM={spd:[0,100,1],def:[0,100,1],hp:[5,2000,1],loseAt:[5,95,5],dmgMult:[.25,4,.25],maxHits:[1,99,1],chases:[3,6,1]};
+function clampSettings(){SETTINGS.lvl=FIXED_LEVEL;for(const k in LIM){const [a,b,s]=LIM[k];let v=+SETTINGS[k];if(!isFinite(v))v=DEFAULTS[k];v=Math.round(v/s)*s;SETTINGS[k]=Math.round(Math.max(a,Math.min(b,v))*100)/100}
  if(SETTINGS.layout!=='qwerty')SETTINGS.layout='azerty';validateSelections()}
-function save(){try{localStorage.setItem('rotmg:training:patience:settings:v2',JSON.stringify(SETTINGS))}catch(e){}}
+function save(){try{localStorage.setItem('rotmg:training:patience:settings:v3',JSON.stringify(SETTINGS))}catch(e){}}
 // key map, by the letter printed on the key (event.key)
 const KEYMAPS={
  azerty:{up:'z',left:'q',down:'s',right:'d',rotL:'a',rotR:'e',resetAll:'w',resetRot:'c',offset:'x',zoomIn:'p',zoomOut:'o'},
  qwerty:{up:'w',left:'a',down:'s',right:'d',rotL:'q',rotR:'e',resetAll:'z',resetRot:'c',offset:'x',zoomIn:'p',zoomOut:'o'}};
 let KM=KEYMAPS[SETTINGS.layout]||KEYMAPS.azerty;
 function startGame(){clampSettings();save();KM=KEYMAPS[SETTINGS.layout];
+ if(!chosenClass()){selectionMessage='Choose a ROTMG class in Character before starting training.';refreshMenu();showStep(1);$('#trainingClass').focus();return false}
  const rawSeed=String(SETTINGS.seed ?? '').trim();
  const runSeed=rawSeed!=='' && /^\d+$/.test(rawSeed) && Number(rawSeed)<=4294967295 ? Number(rawSeed) : Math.floor(Math.random()*4294967295);
  g=new Game(runSeed,{hp:SETTINGS.hp,def:SETTINGS.def,spd:SETTINGS.spd,lvl:SETTINGS.lvl,hard:SETTINGS.hard,mode:MODES[SETTINGS.mode],rspeed:SETTINGS.rspeed,chases:SETTINGS.chases,...selectionOptions(),
   loseAt:SETTINGS.hLose?SETTINGS.loseAt/100:0,dmgMult:SETTINGS.hDmg?SETTINGS.dmgMult:1,maxHits:SETTINGS.hHits?SETTINGS.maxHits:0});
  g.seed=runSeed;document.getElementById('gameMenu').textContent='Pause';
  for(const k in keys)keys[k]=false;for(const k in pressed)pressed[k]=false;
- scene='arena';countdown=180;pAnim=0;ghostAnim=[0,0,0];zoom=1;acc=0;beginRun();
+ scene='arena';countdown=180;pAnim=0;ghostAnim=[0,0,0];zoom=1;acc=0;prevPx=null;prevPy=null;drawGameBack();beginRun();
  menuEl.hidden=true;cv.classList.remove('dim');cv.focus()}
 function showMenu(){
  document.getElementById('gameMenu').textContent='Settings';
@@ -38,7 +44,7 @@ cv.addEventListener('mousedown',()=>{cv.focus()});
 // ------------------------------------------------------------------ HTML menu
 const menuEl=document.getElementById('menu');
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
-const fmt={spd:v=>v,hp:v=>v,def:v=>v,lvl:v=>v,loseAt:v=>v+' %',dmgMult:v=>'×'+String(v),maxHits:v=>v};
+const fmt={spd:v=>v,hp:v=>v,def:v=>v,loseAt:v=>v+' %',dmgMult:v=>'×'+String(v),maxHits:v=>v};
 function setRange(r,key){const [a,b,s]=LIM[key];r.min=a;r.max=b;r.step=s;r.value=SETTINGS[key];r.style.setProperty('--p',((SETTINGS[key]-a)/(b-a)*100)+'%')}
 function cap(t,cls=''){return '<span class="cap '+cls+'">'+t.toUpperCase()+'</span>'}
 function refreshMenu(){
@@ -60,7 +66,7 @@ function refreshMenu(){
   '<span class="k">'+cap(m.up)+cap(m.left)+cap(m.down)+cap(m.right)+'</span><span>move</span>'+
   '<span class="k">'+cap(m.rotL)+cap(m.rotR)+'</span><span>rotate camera</span>'+
   '<span class="k">'+cap(m.zoomOut)+cap(m.zoomIn)+'</span><span>zoom</span>'+
-  '<span class="k">'+cap('Space')+'</span><span>ability (when equipped)</span>'+
+  '<span class="k">'+cap('Space')+'</span><span>activate prepared ability</span>'+
   '<span class="k">'+cap('r')+cap('Esc')+'</span><span>restart · pause</span>';
  // facts
  const mult=SETTINGS.hDmg?SETTINGS.dmgMult:1,goal=SETTINGS.chases;
@@ -77,10 +83,10 @@ function refreshMenu(){
  refreshGear();
  const hl=[SETTINGS.hLose?'HP threshold '+SETTINGS.loseAt+' %':'',SETTINGS.hDmg?'damage ×'+String(SETTINGS.dmgMult):'',SETTINGS.hHits?SETTINGS.maxHits+' max hits':''].filter(Boolean);
  const gl=selectionSummary().map(escapeText);
- const rc=[['2','Character',escapeText(chosenClass().name)+' · Speed <b>'+SETTINGS.spd+'</b> · HP <b>'+SETTINGS.hp+'</b> · DEF <b>'+SETTINGS.def+'</b> · Lv <b>'+SETTINGS.lvl+'</b>'],
+ const rc=[['1','Character',escapeText(chosenClass()?.name||'Choose a class')+' · Speed <b>'+SETTINGS.spd+'</b> · HP <b>'+SETTINGS.hp+'</b> · DEF <b>'+SETTINGS.def+'</b>'],
   ['3','Mode','<b>'+(SETTINGS.hard?'hard':'normal')+'</b> · '+MODES[SETTINGS.mode]+' · <b>'+SETTINGS.chases+'</b> chases'],
   ['4','Handicap',hl.length?hl.join(' · '):'<span class="no">none</span>'],
-  ['1','Loadout',gl.length?gl.join(' · '):'<span class="no">none</span>']];
+  ['2','Equipment',gl.length?gl.join(' · '):'<span class="no">none</span>']];
  $('#recap').innerHTML=rc.map(([n,t,v])=>'<button class="rc" data-step="'+n+'"><span class="rt">'+t+'</span><span class="rv">'+v+'</span><i>edit</i></button>').join('');
  const L=$('#last');
  if(!lastResult)L.innerHTML='&nbsp;';
@@ -88,7 +94,11 @@ function refreshMenu(){
  else L.innerHTML='<span class="lose">Last run: '+(lastResult.lost==='hp'?'defeat below HP threshold':lastResult.lost==='hits'?'hit-limit defeat':'death')+'</span> at '+lastResult.secs+' s, '+lastResult.hits+' hits';
 }
 let step=1;
-function showStep(n){step=Math.max(1,Math.min(5,n));
+// Without a class nothing after Character is meaningful: later steps and Next stay greyed.
+function stepGate(){const locked=!chosenClass();
+ for(const b of $$('#steps button')){const off=locked&&+b.dataset.step>1;b.disabled=off;b.title=off?'Choose a ROTMG class first':''}
+ $('#navNext').disabled=locked;$('#navNext').title=locked?'Choose a ROTMG class first':'';return locked}
+function showStep(n){step=Math.max(1,Math.min(5,n));if(stepGate())step=1;
  for(const b of $$('#steps button')){const k=+b.dataset.step;b.classList.toggle('on',k===step);b.classList.toggle('done',k<step)}
  for(const p of $$('.pane'))p.classList.toggle('on',+p.dataset.pane===step);
  $('#navBack').hidden=step===1;$('#navNext').hidden=step===5;menuEl.classList.toggle('s5',step===5)}
@@ -96,7 +106,7 @@ function bindMenu(){
  for(const b of $$('#steps button'))b.setAttribute('aria-label',b.dataset.step+'. '+$('span',b).textContent);
  menuEl.addEventListener('click',e=>{const b=e.target.closest('[data-step]');if(b)showStep(+b.dataset.step)});
  $('#navBack').addEventListener('click',()=>showStep(step-1));$('#navNext').addEventListener('click',()=>showStep(step+1));
- showStep(RETURNING?5:1);
+ showStep(RETURNING&&chosenClass()?5:1);
  for(const el of $$('.stat')){const k=el.dataset.key;
   for(const b of $$('.num button',el)){let t=null,iv=null;
    const step=e=>{SETTINGS[k]=+SETTINGS[k]+(+b.dataset.d)*LIM[k][2]*(e&&e.shiftKey?5:1);refreshMenu()};
@@ -112,7 +122,7 @@ function bindMenu(){
  for(const el of $$('.hc')){const on=el.dataset.on,k=el.dataset.key;
   $('.hc-head',el).addEventListener('click',()=>{SETTINGS[on]=!SETTINGS[on];refreshMenu()});
   $('input[type=range]',el).addEventListener('input',e=>{SETTINGS[k]=+e.target.value;refreshMenu()})}
- for(const c of $$('.chip[data-preset]'))c.addEventListener('click',()=>{Object.assign(SETTINGS,c.dataset.preset==='game'?{spd:60,hp:800,def:40,lvl:5}:{spd:57,hp:1245,def:43,lvl:5});refreshMenu()});
+ for(const c of $$('.chip[data-preset]'))c.addEventListener('click',()=>{Object.assign(SETTINGS,c.dataset.preset==='game'?{spd:60,hp:800,def:40}:{spd:57,hp:1245,def:43});refreshMenu()});
  $('#start').addEventListener('click',startGame);
  $('#recClear').addEventListener('click',()=>{try{localStorage.removeItem(recKey(recordOptions()))}catch(e){}refreshMenu()});
  // title in the game's own pixel font

@@ -15,7 +15,8 @@ const byId = new Map(index.records.map(r => [r.id, r]));
 assert.equal(catalog.classes.length, 19);
 assert.equal(catalog.equipment.length, 8);
 assert(catalog.consumables.length > 0, 'real consumables require extracted temporary MAXHP values');
-assert.equal(catalog.healingPerSecond, 20);
+assert(!Object.hasOwn(catalog, 'healingPerSecond'), 'the projection models invulnerability only');
+assert(catalog.equipment.every(it => it.conditions.every(c => c.effect === 'Invulnerable')));
 for (const item of catalog.equipment) {
   const source = byId.get(item.id);
   const c = source.conditions.find(c => c.effect === 'Invulnerable');
@@ -95,8 +96,8 @@ assert.equal(paladin.mana, 300); assert.equal(paladin.activeUntil, 0, 'countdown
 paladin.hp = 500;
 paladin.tick(0, 0, 0, { ability: true });
 assert.equal(paladin.activeUntil, 132); assert.equal(paladin.mana, 180);
-assert.equal(paladin.healingUntil, 450, '5 s + (75 WIS - 50) * 0.1 s');
-assert(paladin.hp > 500, 'Healing uses the repository status model');
+assert.equal(paladin.hp, 500, 'the seal does not heal in the invulnerability-only model');
+assert.equal(paladin.healed, 0);
 assert(!paladin.activateAbility(), 'manual cooldown is enforced');
 for (let i = 1; i < 132; i++) paladin.tick(0, 0);
 const preHit = paladin.hp; hit(paladin); assert.equal(paladin.hp, preHit - 45, 'no damage reduction after manual protection expires');
@@ -162,12 +163,12 @@ vm.runInContext(fs.readFileSync(path.join(root, 'web/training/ui_code.js'), 'utf
   + '\nclampSettings();save();globalThis.saved=SETTINGS;', settingsContext);
 for (const key of ['hp', 'def', 'spd', 'seed', 'mode', 'hard', 'layout']) assert.equal(settingsContext.saved[key], JSON.parse(oldSave)[key]);
 assert.equal(saves.get('rotmg:training:patience:settings:v1'), oldSave);
-assert(saves.has('rotmg:training:patience:settings:v2'));
+assert(saves.has('rotmg:training:patience:settings:v3'));
 assert(!Object.hasOwn(settingsContext.saved, 'armor'), 'archive-only equipment is not silently remapped');
-vm.runInContext("SETTINGS.classId='class:Paladin';SETTINGS.equipment={ability:'item:Seal of Blasphemous Prayer',armor:'item:Heavy Protective Matrix'};SETTINGS.classId='class:Wizard';globalThis.removed=validateSelections();", settingsContext);
+vm.runInContext("SETTINGS.classId='class:Paladin';SETTINGS.swaps={ability:'item:Seal of Blasphemous Prayer',armor:'item:Heavy Protective Matrix'};SETTINGS.classId='class:Wizard';globalThis.removed=validateSelections();", settingsContext);
 assert.equal(settingsContext.removed.length, 2);
-assert.deepEqual(JSON.parse(JSON.stringify(settingsContext.saved.equipment)), {});
+assert.deepEqual(JSON.parse(JSON.stringify(settingsContext.saved.swaps)), {});
 vm.runInContext('SETTINGS.consumableId=TRAINING_CATALOG.consumables[0].id;clampSettings();save();', settingsContext);
-assert.equal(JSON.parse(saves.get('rotmg:training:patience:settings:v2')).consumableId, catalog.consumables[0].id,
+assert.equal(JSON.parse(saves.get('rotmg:training:patience:settings:v3')).consumableId, catalog.consumables[0].id,
   'a validated real consumable is preserved in settings for the next attempt');
 console.log('Training Index: classes/slots, source filters, real timed protection, thresholds, MP, synthetic consumable lifecycle, unchanged physics and legacy records passed.');

@@ -17,7 +17,6 @@ export interface Character {
 }
 export interface Catalog {
   classes: Character[]; equipment: Equipment[]; consumables: Consumable[];
-  healingPerSecond: number | null;
 }
-export interface Selection { classId?: string; equipment?: Record<string, string>; consumableId?: string }
+export interface Selection { classId?: string; swaps?: Record<string, string>; equipment?: Record<string, string>; consumableId?: string }
 export type TrainingOptions = Partial<import('./types').Options> & Selection;

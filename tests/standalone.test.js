@@ -20,7 +20,13 @@ assert(!served.html.includes('var PatienceEngine'), 'training engine must not in
 {
   const training = read('docs/training/index.html');
   assert(training.includes('Seed (blank = random)') && !training.includes('<!--TRAINING_UI-->'));
-  for (const match of training.matchAll(/<script src="([^"]+)"/g)) {
+  // Every part is requested under a digest of its served bytes, so a browser never mixes two builds.
+  for (const match of training.matchAll(/(?:src|href)="([\w.-]+\.(?:js|css))\?v=([0-9a-f]{10})"/g)) {
+    const digest = require('crypto').createHash('sha256').update(fs.readFileSync(path.join(root, 'docs/training', match[1]))).digest('hex');
+    assert.equal(match[2], digest.slice(0, 10), match[1] + ' version matches its content');
+  }
+  assert(!/(?:src|href)="[\w.-]+\.(?:js|css)"/.test(training), 'no unversioned training script or stylesheet');
+  for (const match of training.matchAll(/<script src="([^"?]+)\?v=[0-9a-f]{10}"/g)) {
     const source = read('docs/training/' + match[1]);
     new vm.Script(source);
     if (!['data.js', 'catalog.js'].includes(match[1])) assert.equal(source, read('web/training/' + match[1]).replace(/\r\n/g, '\n'));

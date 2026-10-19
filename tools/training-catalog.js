@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-function projectTraining(index, statusText) {
+function projectTraining(index) {
   const classes = index.records.filter(r => r.kind === 'class' && !r.hidden?.length && !r.availability)
     .map(r => ({ id: r.id, name: r.name, slots: r.slots.slice(0, 4), stats: r.stats, clientType: r.from?.[1] }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -45,7 +45,8 @@ function projectTraining(index, statusText) {
     const manual = c.trigger === 'Activate' && r.hand === 'ability';
     const hit = c.trigger === 'OnPlayerHitActivate';
     const allowed = new Set(['effect', 'on', 'target', 'trigger', 'duration', 'cooldown', 'proc', 'hpMinThresholdRelative', 'damageThreshold']);
-    if (protection.length !== 1 || Object.keys(c).some(k => !allowed.has(k))) reason = 'Unmodelled activation conditions (shooting, combat status, scaling or another requirement).';
+    if (!['ability', 'armor', 'ring'].includes(r.hand)) reason = 'Only Ability, Armor and Ring swaps are modelled.';
+    else if (protection.length !== 1 || Object.keys(c).some(k => !allowed.has(k))) reason = 'Unmodelled activation conditions (shooting, combat status, scaling or another requirement).';
     else if (!(duration > 0) || !Number.isFinite(duration) || !(cooldown > 0) || !Number.isFinite(cooldown)) reason = 'Missing finite duration or cooldown.';
     else if (c.on !== 'ConditionEffectSelf' || (!manual && !hit)) reason = 'Activation trigger is not modelled by this survival simulator.';
     else if (c.proc !== undefined && Number(c.proc) !== 1) reason = 'Random activation probability is not modelled.';
@@ -54,21 +55,17 @@ function projectTraining(index, statusText) {
     else if (!classes.some(cl => cl.slots.includes(r.slot))) reason = 'No compatible Index class.';
     const item = { ...base, slot: r.slot, hand: r.hand, duration, cooldown, trigger: c.trigger,
       cost: manual ? r.mp : 0, below: hit ? Number(c.hpMinThresholdRelative) : null,
-      damageThreshold: hit ? Number(c.damageThreshold) : null, conditions: r.conditions,
+      damageThreshold: hit ? Number(c.damageThreshold) : null, conditions: [c],
       simulation: reason ? null : manual ? 'manual' : 'postHit', reason };
     if (reason) excluded.push(item);
     else equipment.push(item);
   }
-  // The status catalogue supplies the meaning, unlike XML which only names Healing.
-  const healing = /^Healing\|[^\n]*\|hpregen \+([\d.]+)\|/m.exec(statusText);
   return { built: index.built, from: index.from, tool: 'tools/training-catalog.js',
     thresholdConvention: 'after-damage (historical simulator convention; live-game ordering unverified)',
-    healingPerSecond: healing ? Number(healing[1]) : null,
     classes, equipment, consumables: consumables.sort((a, b) => a.name.localeCompare(b.name)), excluded };
 }
 
 function readTrainingCatalog(root) {
-  return projectTraining(JSON.parse(fs.readFileSync(path.join(root, 'data/Index/index.json'), 'utf8')),
-    fs.readFileSync(path.join(root, 'data/Items/status-effects.txt'), 'utf8'));
+  return projectTraining(JSON.parse(fs.readFileSync(path.join(root, 'data/Index/index.json'), 'utf8')));
 }
 module.exports = { projectTraining, readTrainingCatalog };

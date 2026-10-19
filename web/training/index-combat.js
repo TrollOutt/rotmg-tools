@@ -4,9 +4,12 @@ var TrainingCombat = (function () {
   const ticks = (/** @type {number} */ seconds) => Math.round(seconds * 60);
   /** @param {import('./catalog-types').Catalog} catalog @param {import('./catalog-types').Selection} o */
   function selection(catalog, o) {
-    const character = catalog.classes.find(c => c.id === o.classId) || catalog.classes[0];
-    const equipment = catalog.equipment.filter(it => character && character.slots.includes(it.slot)
-      && o.equipment?.[it.hand] === it.id && (it.simulation !== 'manual' || Number.isFinite(character.stats.mpTop ?? character.stats.mp)));
+    const character = catalog.classes.find(c => c.id === o.classId);
+    // Fixed order, independent of catalogue or saved-property order.
+    const choices = o.swaps ?? o.equipment;
+    const equipment = ['ability', 'armor', 'ring'].flatMap(hand => catalog.equipment.filter(it => it.hand === hand
+      && character && character.slots[['ability', 'armor', 'ring'].indexOf(hand) + 1] === it.slot && choices?.[hand] === it.id
+      && (it.simulation !== 'manual' || Number.isFinite(character.stats.mpTop ?? character.stats.mp))));
     const consumable = catalog.consumables.find(it => it.id === o.consumableId && it.bonus > 0 && it.duration > 0
       && Number.isFinite(it.bonus) && Number.isFinite(it.duration)) || null;
     return { character, equipment, consumable };
@@ -17,11 +20,12 @@ var TrainingCombat = (function () {
       /** @param {number} seed @param {import('./catalog-types').TrainingOptions} options */
       constructor(seed, options = {}) {
         const chosen = selection(catalog, options);
-        const equipment = Object.fromEntries(chosen.equipment.map(it => [it.hand, it.id]));
-        super(seed, { ...options, gear: {}, cur: {} });
+        const swaps = Object.fromEntries(chosen.equipment.map(it => [it.hand, it.id]));
+        const { equipment: legacyEquipment, ...preparedOptions } = options;
+        super(seed, { ...preparedOptions, gear: {}, cur: {} });
         // Persist only validated identities; old archive swaps can never enter this path.
-        this.o = Object.assign(this.o, { classId: chosen.character?.id || '', equipment,
-          consumableId: chosen.consumable?.id || '', rules: 'index-v2-postHit', seed });
+        this.o = Object.assign(this.o, { classId: chosen.character?.id || '', swaps,
+          consumableId: chosen.consumable?.id || '', rules: 'index-v3-swaps-postHit', seed });
         this.selectedItems = chosen.equipment;
         this.selectedConsumable = chosen.consumable;
         this.indexTick = 0;
@@ -29,8 +33,6 @@ var TrainingCombat = (function () {
         /** @type {Record<string, number>} */
         this.cooldownUntil = {};
         this.mana = chosen.character?.stats.mpTop ?? chosen.character?.stats.mp ?? 0;
-        this.wisdom = chosen.character?.stats.wisTop ?? chosen.character?.stats.wis;
-        this.healingUntil = 0;
         this.consumableUntil = chosen.consumable ? ticks(chosen.consumable.duration) : 0;
         this.consumableUsed = !!chosen.consumable;
         this.maxHp = this.o.hp;
@@ -41,6 +43,13 @@ var TrainingCombat = (function () {
           this.log(chosen.consumable.name + ': +' + chosen.consumable.bonus + ' max HP for ' + chosen.consumable.duration + ' s (current HP unchanged)');
         }
       }
+      // Archive equipment transitions are inaccessible to live attempts.
+      // The frozen base engine retains them only for historical regression tests.
+      equip() { return false; }
+      unequip() { return false; }
+      useSlot() { return false; }
+      autoGear() {}
+      procs() {}
       /** @param {import('./catalog-types').Equipment} item */
       cooldown(item) { return Math.max(0, (this.cooldownUntil[item.id] || 0) - this.indexTick); }
       /** @param {import('./catalog-types').Equipment} item @param {number} at */
@@ -56,15 +65,6 @@ var TrainingCombat = (function () {
         if (this.mana < item.cost) { this.log('Not enough MP (' + item.cost + ' required)'); return false; }
         this.mana -= item.cost;
         this.protect(item);
-        for (const c of item.conditions) {
-          if (c.effect !== 'Healing' || c.trigger !== 'Activate' || !['self', 'allies'].includes(c.target) || !catalog.healingPerSecond) continue;
-          let duration = Number(c.duration);
-          if (c.statModDuration !== undefined) {
-            if (c.scalingStat !== 'WIS' || this.wisdom === undefined) continue;
-            duration += Math.max(0, this.wisdom - Number(c.statModScalingMin)) * Number(c.statModDuration);
-          }
-          if (duration > 0 && Number.isFinite(duration)) this.healingUntil = Math.max(this.healingUntil, this.indexTick + ticks(duration));
-        }
         return true;
       }
       /** @param {import('./types').Projectile} p */
@@ -100,10 +100,6 @@ var TrainingCombat = (function () {
         // Let the unchanged engine process statuses; onHit handles attack protection.
         this.invuln = 0;
         super.tick(hd, vd, rot, ctl);
-        if (!this.ended && this.hp > 0 && this.healingUntil > this.indexTick && catalog.healingPerSecond) {
-          const amount = Math.min(catalog.healingPerSecond / 60, this.maxHp - this.hp);
-          this.hp += amount; this.healed += amount;
-        }
         this.indexTick = this.frames;
         if (this.consumableUntil > 0 && this.indexTick >= this.consumableUntil) {
           this.maxHp = this.baseMaxHp; this.clip(); this.consumableUntil = 0;

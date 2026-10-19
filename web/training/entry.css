@@ -1,12 +1,35 @@
-.training-entry{position:relative;z-index:2;display:flex;align-items:center;gap:16px;width:min(380px,calc(100% - 32px));min-height:78px;margin:8px auto 20px;padding:14px 18px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgb(var(--panel-rgb) / .93),rgb(var(--bg-2-rgb) / .96));color:var(--text);text-decoration:none;font:inherit;box-shadow:inset 0 1px 0 rgb(var(--hi-rgb) / .06),0 8px 28px rgb(var(--shade) / .3);transition:border-color .18s ease,box-shadow .18s ease}
-.training-entry .ring-copy{gap:2px}.training-entry .ring-copy .t{font-size:17px;font-weight:600}.training-entry .ring-copy .s{font-size:12px;color:var(--muted);margin:0}
-.training-entry-mark{flex:none;width:40px;height:40px;background:url(training/assets/s_shade.png) no-repeat 0 0;background-size:auto 40px;image-rendering:pixelated;filter:drop-shadow(0 2px 3px rgb(var(--shade) / .7))}
-.training-entry-open{margin-left:auto;color:var(--accent);font-size:20px;transition:transform .18s ease}
-.training-entry:hover{border-color:var(--accent);box-shadow:inset 0 1px 0 rgb(var(--hi-rgb) / .1),0 8px 28px rgb(var(--shade) / .4)}.training-entry:hover .training-entry-open{transform:translateX(3px)}.training-entry:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-body[data-home="ring"][data-ring="wheel"] .training-entry{position:fixed;left:50%;top:calc(50% + var(--core-room,328px) / 2 + 22px);transform:translateX(-50%);margin:0;z-index:41}
+/* Training Ground on the home page: a card under the world that sizes with the window and
+   answers the same moments as the modules round it (cursor near the world, a band open, leaving). */
+.training-entry{--tg-ease:cubic-bezier(.22,.7,.3,1);position:relative;z-index:2;display:flex;align-items:center;gap:clamp(12px,1.1vw,18px);
+  width:min(clamp(300px,27vw,460px),calc(100% - 32px));min-height:clamp(66px,7.4vh,88px);margin:8px auto 20px;padding:clamp(10px,1.3vh,16px) clamp(14px,1.3vw,20px);
+  border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgb(var(--panel-rgb) / .93),rgb(var(--bg-2-rgb) / .96));
+  color:var(--text);text-decoration:none;font:inherit;
+  box-shadow:inset 0 1px 0 rgb(var(--hi-rgb) / .06),0 8px 28px rgb(var(--shade) / .3);
+  transition:border-color .22s ease,box-shadow .22s ease,opacity .3s ease,translate .42s var(--tg-ease),transform .42s var(--tg-ease);
+  animation:trainingIn .6s var(--tg-ease) backwards .15s}
+.training-entry .ring-copy{gap:2px}
+.training-entry .ring-copy .t{font-size:clamp(15px,1.25vw,19px);font-weight:600;transition:color .22s ease}
+.training-entry .ring-copy .s{font-size:clamp(11.5px,.9vw,13.5px);color:var(--muted);margin:0}
+.training-entry-mark{flex:none;width:clamp(36px,3.3vw,54px);aspect-ratio:1;background:url(training/assets/s_shade.png) no-repeat 0 0/400% 100%;image-rendering:pixelated;filter:drop-shadow(0 0 5px rgba(180,60,255,.6)) drop-shadow(0 2px 5px #000);animation:trainingShade .67s steps(4) infinite;transition:scale .3s var(--tg-ease)}
+/* s_shade.png is a strip of four frames (6 per second in the client): show one at a time and walk the strip */
+@keyframes trainingShade{to{background-position:133.333% 0}}
+.training-entry:hover,.training-entry:focus-visible{border-color:var(--accent);translate:0 -3px;
+  box-shadow:inset 0 0 0 1px var(--accent),inset 0 1px 0 rgb(var(--hi-rgb) / .1),0 0 26px rgb(var(--ui-glow, 96 168 236) / .3),0 12px 32px rgb(var(--shade) / .45)!important}
+.training-entry:hover .ring-copy .t,.training-entry:focus-visible .ring-copy .t{color:var(--ring-lit,var(--accent))}
+.training-entry:hover .training-entry-mark{scale:1.1}
+.training-entry:active{translate:0 0;transition-duration:.08s}
+.training-entry:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+@keyframes trainingIn{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
+/* Under the world, below the world's own name ("Realm Atlas" shows 30px under it while the cursor is near). */
+body[data-home="ring"][data-ring="wheel"] .training-entry{position:fixed;left:50%;margin:0;z-index:41;transform:translateX(-50%);
+  top:calc(50% + max(var(--core-room,328px) / 2,var(--core,282px) / 2 + 48px) + 12px)}
+/* The world comes forward under the cursor: step back like the bands do, still reachable. */
+body.ring-near[data-ring="wheel"] .training-entry{opacity:.3;transform:translate(-50%,10px)}
+body.ring-open[data-ring="wheel"] .training-entry{opacity:.45}
+body.ring-near[data-ring="wheel"] .training-entry:hover,body.ring-open[data-ring="wheel"] .training-entry:hover{opacity:1}
 body[data-ring="list"] .training-entry{width:min(760px,calc(100% - max(28px,8vw)));margin:-22px auto 36px;padding:14px 16px;min-height:100px;gap:18px}
-body[data-ring="list"] .training-entry-mark{width:64px;height:64px;background-size:auto 64px}
-body.globe-wide .training-entry,body.ring-away .training-entry{visibility:hidden;pointer-events:none}
+body[data-ring="list"] .training-entry-mark{width:64px}
+body.globe-wide .training-entry,body.ring-away .training-entry,body.ring-coming .training-entry{visibility:hidden;pointer-events:none;opacity:0}
 @media(max-width:560px){body[data-ring="list"] .training-entry{padding:11px 12px;gap:12px;min-height:96px}.training-entry .ring-copy .t{font-size:15px}.training-entry .ring-copy .s{font-size:11.5px}}
-@media(max-height:650px) and (min-width:761px){body[data-home="ring"][data-ring="wheel"] .training-entry{top:auto;bottom:16px;padding:8px 16px;min-height:64px}}
-@media(prefers-reduced-motion:reduce){.training-entry,.training-entry-open{transition:none}}
+@media(max-height:650px) and (min-width:761px){body[data-home="ring"][data-ring="wheel"] .training-entry{top:auto;bottom:14px;min-height:60px}}
+@media(prefers-reduced-motion:reduce){.training-entry,.training-entry-mark{transition:none;animation:none}}

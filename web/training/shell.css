@@ -30,7 +30,7 @@ footer a{color:var(--acc)}.ov{top:52px}.ov-card{max-height:calc(100dvh - 85px);o
 .index-warning{padding:12px;border-left:2px solid var(--acc);background:#e2b86e0a;color:#ddc698;font-size:12px;line-height:1.6}
 .index-warning[hidden]{display:none}#legacyRecords{overflow-wrap:anywhere;font-size:11px}
 .training-help summary{cursor:pointer;color:var(--acc)}.card h3{margin:26px 0 8px;font-size:14px;font-weight:600}.card h3 small{color:var(--dim);font-weight:400}
-.pane[data-pane="1"] .one{max-width:1000px}.index-gear{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pane[data-pane="2"] .one{max-width:1000px}.index-gear{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media(max-width:760px){.index-gear{grid-template-columns:1fr;gap:0}}
 @media(max-width:600px){.training-top{padding:9px 12px;font-size:11px;gap:8px}.training-top b{display:none}.training-top button{padding:7px}.wrap{padding:16px 12px 28px}#menu h1{font-size:25px}.training-sub{font-size:12px}.training-top span{white-space:nowrap}.steps button{min-width:0}.training-seed input{width:138px}footer{line-height:1.6}.ov-head{flex-wrap:wrap}.ov-actions{flex-wrap:wrap}}
 /* The archive assumes a landscape window. Narrow settings scroll as a page,
@@ -45,8 +45,160 @@ footer a{color:var(--acc)}.ov{top:52px}.ov-card{max-height:calc(100dvh - 85px);o
   .navbar button.ghost,.navbar button.next{padding:12px 20px}
   .rc{grid-template-columns:76px minmax(0,1fr) auto;font-size:13px;gap:8px;padding:10px}
   .rc .rv{overflow-wrap:anywhere}.card h2{flex-wrap:wrap}
-  .gctl .seg{flex-wrap:wrap}.gctl .seg button{white-space:normal;min-width:80px}
   .row{flex-wrap:wrap}.row .seg{max-width:100%;min-width:0}.seg button{font-size:13px}
   .steps{justify-content:space-between}.steps button{gap:5px;padding:4px 6px;font-size:12px}
   .steps button+button::before{width:10px;left:-9px}.ov-card{padding:20px;width:calc(100% - 24px)}
 }
+
+.index-field[hidden]{display:none}
+#start:disabled{opacity:.45;cursor:not-allowed}
+#launchNotice:empty{display:none}
+#launchNotice{max-width:250px;margin:0;color:var(--acc)}
+
+/* ---------- no inner scrolling: every step fits the window ----------
+   Desktop and tablet panels share the height left by header, steps and navbar.
+   Two-column cards, one-line stat rows and size tokens tied to the viewport
+   height keep each step inside that space; only narrow phones scroll, as one page. */
+@media(min-width:761px){
+  #menu{font-size:clamp(12px,1.75vh,15px)}
+  #menu .wrap{padding:10px 24px 8px;gap:clamp(4px,1.2vh,10px)}
+  #menu header{margin:0}
+  .training-kicker{margin:0 0 4px}
+  .panes{overflow:hidden}
+  .pane{overflow:hidden;padding:0}
+  .pane .card,.pane .one{overflow:visible;height:auto;max-height:100%}
+  .pane .one{display:flex;flex-direction:column}
+  .card{padding:clamp(8px,1.6vh,16px) clamp(12px,1.6vw,18px)}
+  .card h2{margin-bottom:clamp(4px,1vh,10px)}
+  .card h3{margin:clamp(6px,1.4vh,16px) 0 clamp(3px,.8vh,8px)}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:clamp(12px,2vw,28px);align-items:start}
+  .cols .col>*:first-child{margin-top:0}
+  .index-field{margin:clamp(4px,1vh,12px) 0;gap:clamp(3px,.6vh,8px)}
+  .index-field select{min-height:clamp(32px,4.6vh,42px);padding:6px 10px}
+  .training-help{margin:clamp(4px,.9vh,10px) 0 0;font-size:clamp(11px,1.5vh,12.5px);line-height:1.45}
+  /* stats: label, number box and slider on one line */
+  .stat{grid-template-columns:minmax(6.5em,.9fr) auto minmax(90px,1.6fr);padding:clamp(4px,1vh,9px) 0}
+  .stat label{font-size:1.05em}
+  .stat input[type=range]{grid-column:auto}
+  .stat .num input{width:4.2em}
+  .num button{height:clamp(28px,4.2vh,36px)}
+  .row{margin:clamp(4px,1vh,10px) 0}
+  .seg button{padding:clamp(4px,.9vh,7px) 4px}
+  .hc{padding:clamp(6px,1.2vh,12px) 0}
+  .hc .sum{margin-top:2px}
+  #recap{gap:clamp(4px,.8vh,8px);margin-bottom:clamp(4px,1vh,10px)}
+  .rc{padding:clamp(5px,1vh,10px) 12px}
+  .navbar{min-height:0;padding-bottom:0}
+  .navbar button.ghost,.navbar button.next{padding:clamp(8px,1.4vh,12px) 26px}
+  #start{padding:clamp(6px,1.2vh,10px) 26px}
+  footer{font-size:11px}
+  /* Equipment: swaps stacked on the left (one line each), consumable on the right */
+  .pane[data-pane="2"] .one{max-width:1040px}
+  .cols.eq{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .index-gear{grid-template-columns:1fr;gap:clamp(2px,.6vh,6px)}
+  .index-gear .index-field{display:grid;grid-template-columns:5.2em minmax(0,1fr);align-items:center;column-gap:10px;margin:2px 0}
+  .index-gear .index-field .index-effect{grid-column:2}
+  .index-gear .index-item{padding:clamp(4px,.8vh,10px) 10px}
+  .index-gear .index-item p{margin:2px 0 0}
+  .index-warning{padding:clamp(5px,1vh,10px) 12px;line-height:1.45}
+  #consumableInfo .index-item{margin-bottom:6px}
+  /* Launch: recap and keyboard side by side, keyboard clusters in a row */
+  .pane[data-pane="5"] .two{height:auto;align-items:start}
+  .kbd-layout{flex-direction:row;align-items:center;justify-content:space-between;gap:clamp(8px,1.4vw,18px);margin-top:clamp(6px,1.2vh,14px)}
+  .training-seed{margin-top:clamp(6px,1.2vh,16px)}
+  .pane[data-pane="5"] .facts{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .fact{padding:5px 8px}.fact b{font-size:1.2em!important}
+}
+/* short windows: keep only what the choice needs */
+@media(min-width:761px) and (max-height:820px){
+  .training-kicker,.training-sub{display:none}
+  #menu h1{font-size:clamp(18px,3.2vh,26px)}
+  .steps button{padding:3px 10px}.steps button b{width:22px;height:22px}
+  .card h2 small{display:none}
+  .training-help.opt,.pane[data-pane="5"] .training-help{font-size:11px}
+  details.training-help{margin-top:4px}
+  footer{display:none!important}
+}
+@media(min-width:761px) and (max-height:700px){
+  #classInfo{display:none}
+  .kbd-layout .binds{font-size:12px;gap:4px 8px}
+  .cluster{grid-template-columns:repeat(3,30px);grid-template-rows:30px 30px}
+}
+@media(min-width:761px) and (max-width:900px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .pane[data-pane="5"] .two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .pane[data-pane="5"] .kbd-layout{flex-direction:column;align-items:stretch}
+  .pane[data-pane="5"] .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pane[data-pane="5"] .rc{grid-template-columns:70px minmax(0,1fr) auto}
+}
+@media(min-width:761px){.pane[data-pane="1"] .one{max-width:900px}.card h3 .presets{margin-left:auto}.card h3{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}}
+@media(min-width:761px) and (max-height:820px){.card h3 small{display:inline}}
+
+/* phones: one portrait page without panel scrolling. The game needs a keyboard, so the key map is dropped
+   here and the long explanations collapse; every choice and the summary stay on screen. */
+@media(max-width:760px){
+  #menu{font-size:14px}
+  .training-kicker,.training-sub{display:none}
+  #menu .wrap{padding:8px 12px 10px;gap:6px}
+  #menu h1{font-size:20px}
+  #menu header{margin:0}
+  .card{padding:10px 12px}.card h2{margin-bottom:6px}.card h2 small{display:none}
+  .card h3{margin:8px 0 4px}
+  .cols,.cols.eq{display:block}
+  .stat{grid-template-columns:3.6em auto minmax(64px,1fr);gap:6px 8px;padding:5px 0}
+  .stat input[type=range]{grid-column:auto}
+  .stat .num input{width:3.3em}.num button{width:30px;height:30px}
+  .index-field{margin:6px 0;gap:4px}.index-field select{min-height:34px;padding:5px 8px}
+  .training-help{margin:6px 0 0;font-size:11.5px}
+  #classInfo,.training-help .opt,.training-help.opt,details.training-help,.pane[data-pane="5"] .kbd-layout,.pane[data-pane="5"] #recap+details{display:none}
+  #consumableInfo .opt,.opt{display:none}
+  .pane[data-pane="5"] details.training-help{display:block}
+  .index-gear{grid-template-columns:1fr;gap:2px}
+  .index-gear .index-field{margin:3px 0}
+  .index-item{padding:6px 8px;gap:8px}.index-item p{margin:2px 0 0;font-size:11.5px;line-height:1.35}
+  .index-warning{padding:6px 10px;font-size:11px;line-height:1.35}
+  .row{margin:6px 0}.hc{padding:8px 0}
+  #recap{gap:5px;margin-bottom:6px}.rc{padding:6px 10px}
+  .pane[data-pane="5"] .two{gap:8px}
+  .pane[data-pane="5"] .facts{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .fact{padding:4px 6px}.fact span{font-size:10.5px}.fact b{font-size:15px!important}
+  .training-seed{margin-top:6px}
+  .navbar{gap:8px}.navbar .navmid{display:none}
+  footer{display:none!important}
+}
+@media(max-width:760px){
+  .index-gear .index-item b{display:none}
+  .index-gear .index-item .index-icon{zoom:.7}
+  .index-gear .index-item p{font-size:11px;margin:0}
+  .index-gear .index-item{padding:4px 8px}
+  #consumableInfo .index-item{padding:4px 8px;margin:0}
+  #consumableInfo .index-icon{zoom:.7}
+  .pane[data-pane="2"] .card h3{margin:6px 0 2px}
+}
+
+/* the select already shows the item's name: keep only icon, trigger, duration and cooldown under it */
+.index-gear .index-item b{display:none}
+@media(min-width:761px) and (max-height:820px){#consumableInfo .opt{display:none}}
+@media(max-width:760px){
+  .card h2{display:none}
+  .index-field select{min-height:32px}
+  .cols.eq{display:block}
+}
+@media(min-width:761px) and (max-height:700px){
+  .index-gear .index-item .index-icon,#consumableInfo .index-icon{zoom:.75}
+  .index-gear .index-item{padding:3px 8px}
+  .index-warning{font-size:10.5px;padding:4px 10px}
+  .pane[data-pane="2"] .card h3{margin-top:4px}
+  .training-help{margin-top:3px}
+}
+
+/* no class yet: the path ahead is visibly closed */
+.navbar button.next:disabled,.steps button:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.7)}
+.navbar button.next:disabled:hover{filter:grayscale(.7)}
+.steps button:disabled:hover{color:var(--dim)}
+/* an empty slot is not offered at all (the grid rule above would otherwise show it) */
+.index-gear .index-field[hidden]{display:none!important}
+
+/* the scene around the arena while playing (drawn by ui_bg.js), and a soft frame on the arena itself */
+#gameBack{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+#c{box-shadow:0 0 0 1px rgba(255,255,255,.06),0 18px 60px rgba(0,0,0,.6),0 0 90px rgba(140,60,220,.12);border-radius:4px}

@@ -36,4 +36,10 @@ function drawBg(now){
   bx.save();bx.shadowColor='rgba(180,60,255,.55)';bx.shadowBlur=18*u/2;bgSpr('s_shade',(t*6+si)%4,sx,sy+Math.sin(t*1.4+si)*3*u,1.3*u,1.3*u,0,1);bx.restore();
  });
  bx.globalAlpha=1}
+// Behind the arena while playing: the menu's own blurred floor, a shade darker, so the frame
+// around the game belongs to the same scene instead of a flat colour.
+const gbc=document.getElementById('gameBack'),gbx=gbc&&gbc.getContext('2d');
+function drawGameBack(){if(!gbx)return;gbc.width=Math.max(320,innerWidth);gbc.height=Math.max(240,innerHeight);
+ if(!bgFloor)bgFloor=bgMakeFloor();gbx.drawImage(bgFloor,0,0,gbc.width,gbc.height);gbx.fillStyle='rgba(4,3,10,.45)';gbx.fillRect(0,0,gbc.width,gbc.height)}
+addEventListener('resize',()=>{if(scene==='arena')drawGameBack()});
 bgResize();

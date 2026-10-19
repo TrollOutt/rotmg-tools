@@ -62,7 +62,7 @@ try {
   const html = fs.readFileSync(path.join(temp, 'training/index.html'), 'utf8');
   assert(!html.includes('<!--TRAINING_UI-->'));
   assert(html.includes('href="../#home"') && html.includes('Touch controls are not available.'));
-  const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
+  const scripts = [...html.matchAll(/<script src="([^"?]+)\?v=[0-9a-f]{10}"/g)].map(m => m[1]);
   assert.deepEqual(scripts, ['data.js', 'engine.js', 'catalog.js', 'index-combat.js', 'renderer.js', 'ui_code.js', 'ui_game.js', 'ui_gear.js', 'ui_bg.js', 'loop.js']);
   const combined = scripts.map(file => fs.readFileSync(path.join(temp, 'training', file), 'utf8')).join('\n');
   new vm.Script(combined);

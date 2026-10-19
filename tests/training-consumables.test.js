@@ -67,7 +67,10 @@ const noBoost = { ...original }; delete noBoost.statBoosts;
 assert.equal(projectTraining({ ...index, records: [noBoost] }, '').consumables.length, 0);
 
 // Exercise the actual pause switch and frame-loop guard around a real dose.
-const game = new Game(42, { ...options, consumableId: catalog.consumables[0].id });
+const game = new Game(42, { ...options, classId: 'class:Paladin', swaps: {
+  ability: 'item:Seal of Blasphemous Prayer', armor: 'item:Heavy Protective Matrix', ring: 'item:Amulet of Restoration'
+}, consumableId: catalog.consumables[0].id });
+assert(game.activateAbility());
 const values = new Map();
 const context = { g: game, scene: 'arena', keys: {}, cv: { focus() {} }, acc: 0, last: 0, fps: 60, countdown: 0,
   performance: { now: () => 0 }, requestAnimationFrame() {}, setTimeout() {},
@@ -81,7 +84,10 @@ const loop = fs.readFileSync(path.join(root, 'web/training/loop.js'), 'utf8');
 vm.runInContext(loop.slice(loop.indexOf('let fpsFrames=0'), loop.indexOf('Promise.all')), context);
 context.setPause(true); context.loop(1000);
 assert.equal(game.frames, 0); assert.equal(game.consumableUntil, catalog.consumables[0].duration * 60);
+assert.equal(game.invuln, 0); assert.equal(game.activeUntil, 132);
+assert.equal(game.cooldown(game.selectedItems[0]), 300, 'pause freezes the prepared ability cooldown too');
 context.setPause(false); context.loop(1017); assert.equal(game.frames, 1);
+assert.equal(game.invuln, 131); assert.equal(game.cooldown(game.selectedItems[0]), 299);
 const plain = { ...game.o, consumableId: '' };
 for (const item of catalog.consumables) {
   const key = context.recKey({ ...plain, consumableId: item.id });

@@ -59,10 +59,10 @@ Conqueror's Crown is hidden as unavailable to players; shiny twins are folded.
 Seal of Blasphemous Prayer is a Paladin ability: Space, 120 MP, 2.2 seconds
 Invulnerable, 5 seconds cooldown (all from the Index). MP starts at the class's
 Index cap; regeneration is deliberately not modelled because its formula is not
-in these declarations. Healing uses `data/Items/status-effects.txt` (20 HP/s),
-its Index duration/scaling and the class WIS cap. The aura includes its caster;
-ghost allies and offensive Damaging have no simulated effect. The status catalogue
-also establishes that Invulnerable does not block Bleeding/status damage.
+in these declarations. Since Training Ground 4, only invulnerability is modelled:
+Healing, Damaging, Dazed, Armored and every secondary item effect are excluded.
+The Index status catalogue establishes that Invulnerable does not block
+Bleeding/status damage; that existing engine behaviour is preserved.
 HP/DEF/SPD are editable equipped totals: selecting gear does not add worn stats
 again. An explicit button applies the Index's class caps rather than silently
 overwriting user totals on a class change.
@@ -115,10 +115,47 @@ Local acceptance tests reread the real XML and compare all 324 extracted item
 declarations against the generated Index. CI uses the committed projection and
 clearly synthetic parser counterexamples, with full real-item duration tests.
 
-Settings v2 reads compatible v1 values without overwriting the old save. Records
-v2 include class, canonical gear, consumable, seed selection and scenario settings.
-The v1 key function and stored values remain readable, including in the legacy
-records panel. No destructive migration is performed.
+## Prepared invulnerability swaps (Training Ground 4)
+
+Character requires an explicit valid Index class (19 choices), with no fallback.
+A valid saved class is retained. Equipment offers only compatible client Ability,
+Armor and Ring slots, with one optional swap per slot; empty slots are hidden.
+No currently worn equipment, equip-time rule, item stat adjustment or in-combat
+equipment transition is simulated. Preparing a swap never activates protection.
+The frozen engine's archive equipment code remains only for its sixteen historical
+comparison scenarios; the live adapter disables those transition/proc entry points.
+
+The existing eight Index items retain their invulnerability declarations:
+
+| Item | Trigger | Invulnerable | Cooldown |
+| --- | --- | ---: | ---: |
+| Seal of Blasphemous Prayer | Paladin ability, Space, 120 MP | 2.2 s | 5 s |
+| Fitted / Magic / Heavy Protective Matrix, each with its Neo variant | Surviving hit of at least 2 damage, HP strictly below 50% after damage | 1.4 s | 180 s |
+| Amulet of Restoration | Surviving hit of at least 2 damage, HP strictly below 20% after damage | 2 s | 1800 s |
+
+The six matrices use their corresponding client Armor slot. The amulet fits all
+classes. The seal fits Paladin only. Its MP reserve is the Index cap (300), with
+no regeneration: two activations at most per attempt. No Healing is required to
+model its independently declared self-Invulnerable activation, so Healing is
+explicitly omitted. This is a deliberate simplification from TG2/TG3, not a claim
+that the live item has lost that effect.
+
+Ability input is evaluated before the combat tick. A protected attack is blocked
+and cannot trigger hit effects. An unprotected surviving hit evaluates Armor then
+Ring from the same post-damage HP, even if Armor just started protection. Each item
+has its own cooldown. Overlap uses the latest expiry, never summed durations;
+this deterministic convention is not proof of live-client concurrent proc order.
+Thresholds use the temporary max HP while a consumable is active. Countdown and
+pause consume no duration/cooldown; restarts rebuild all state from saved choices.
+
+Settings v3 reads v2/v1 without changing their storage keys. Canonical compatible
+choices become prepared swaps; invalid class/slot/item choices are ignored with
+a visible notice. Numeric totals and the selected TG3 consumable are retained.
+Records still use the v2 namespace, with `index-v3-swaps-postHit`, class, canonical
+Ability/Armor/Ring swaps, consumable, seed, build and existing scenario parameters.
+The rules discriminator separates TG4 results because Healing has been removed.
+The previous v1 and TG2/TG3 v2 keys remain unchanged and readable in Legacy records;
+no old record is overwritten or destructively migrated.
 
 ## Artwork
 
@@ -143,6 +180,23 @@ their complete copyright notices and SIL Open Font License 1.1 texts:
 
 The archive did not include those licence texts. No RIN picture or ChronoType
 font is carried.
+
+## Level and menu layout
+
+The archive's menu let the player set a "Level". It is not an in-game character
+setting in this simulator: the engine uses it only to pace the tendril arrow
+salvos (the interval between salvos is `31 - 3 x level` ticks plus a random
+spread, and a salvo holds up to `10 + level` arrows). The setting was removed
+from the menu as too subjective. The engine keeps the archive's default of 5,
+and saved settings are forced to it, so every scenario, fixture and best-run key
+keeps its previous meaning. Older saves that stored another level are read with
+that field ignored; their records stay under their existing keys.
+
+The five settings steps are laid out to fit the window without a scrollbar of
+their own (two-column cards, one-line stat rows, text that collapses on short
+windows). On phones the key map and the long explanations are dropped because the
+game itself needs a keyboard. These are interface changes only: no rule, damage,
+collision or timing value is touched.
 
 ## Build
 
