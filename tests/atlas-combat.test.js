@@ -116,7 +116,7 @@ for (const phrase of ['function equipLoot(', 'one.lootGoal = usefulLootFor(one)'
   'one.target.hp <= one.target.full * 0.22',
   'if (!one.target) one.target = reinforcementFor(one, false)',
   'const STARTING_SHARE = { Rookie: 0.20, Adept: 0.50, Veteran: 0.30 };',
-  'const MAX_FOLK = 120;', 'const MAX_LOOT_BAGS = 100;', 'function leaveBag(bit)',
+  'const MAX_FOLK = 80;', 'const MAX_LOOT_BAGS = 100;', 'function leaveBag(bit)',
   'function usefulLootFor(one)', 'const populations = new Map();',
   'const TYPE_CHARS_PER_SECOND = 14;', 'function beginSpeech(who, filled)',
   'function finishSpeech(who)', 'who.speechQueue.push(filled)',

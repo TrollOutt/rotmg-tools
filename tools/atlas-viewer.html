@@ -3877,7 +3877,7 @@ const HEAL_AT = vit => 1 + 0.12 * vit;            // hit points a second
 const MANA_AT = wis => 0.5 + 0.06 * wis;          // magic a second
 
 const FOLK_AT_A_BEACON = 4;              // keeps the established realm-wide headcount
-const MAX_FOLK = 120;
+const MAX_FOLK = 80;                     // characters in the realm at once
 const STARTING_SHARE = { Rookie: 0.20, Adept: 0.50, Veteran: 0.30 };
 const FOLK_BACK = 9;                     // mine: seconds before a dead one returns
 const FOLK_SEEK = 26;                    // mine: tiles they will cross for a fight
@@ -5377,10 +5377,13 @@ function drawOneLife(one, box) {
     ? at.y - h2 + (view.scale / 2 - foot) * at.k
     : at.y - h2 + (foot + view.scale / 2) * at.k;
   /*
-   * A wide frame keeps the body in its first square and the reach beyond it,
-   * so it is the body that is stood on the spot, not the middle of the frame.
+   * A wide frame keeps the body on its left and the reach beyond it, so it is
+   * the body that is stood on the spot, not the middle of the frame: a
+   * class's body is its first square, a creature's is as wide as its
+   * narrowest frame (`body`, from tools/recut-life.js).
    */
-  const left = cls && sw > sh ? -(sh / 2) * unit * at.k : -w2 / 2;
+  const body = cls ? (sw > sh ? sh : sw) : (sprite.body || sw);
+  const left = -(body / 2) * unit * at.k;
   // A combat picture arrives with its own line; every other creature is given one as it is drawn.
   const inked = cls || !(sprite.combat && carriesLine.has(sprite.file));
   // The doubled sheets are two pictures pixels to a pixel of art; a boss's picture is the enlargement it was cut at.

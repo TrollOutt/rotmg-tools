@@ -2009,8 +2009,13 @@ function main() {
    * and none of it has to be invented - it is the animation the game itself
    * plays.
    *
-   * There is no facing for east. The client stores west and mirrors it, so
+   * There is no facing for west. The client stores east and mirrors it, so
    * the page mirrors it too.
+   *
+   * A frame keeps the body on its left: an attack that reaches out is wider
+   * than the body, and the reach goes to the right of it. The narrowest
+   * frame's width is kept as `body`, and the page stands that on the spot.
+   * tools/recut-life.js cuts the strips already on disk the same way.
    */
   const artOf = readArt();
   const lifeDir = path.join(OUT, 'life');
@@ -2059,11 +2064,12 @@ function main() {
           const PAD = 1;
           const w = Math.max(...usable.map(r => r.w)) + PAD * 2;
           const h = Math.max(...usable.map(r => r.h)) + PAD * 2;
+          const body = Math.min(...usable.map(r => r.w)) + PAD * 2;
           const stride = w * usable.length;
           const strip = Buffer.alloc(stride * h * 4);
           usable.forEach((r, slot) => {
             const sheet = sheetFor(r.sheet);
-            const ox = slot * w + ((w - r.w) >> 1);
+            const ox = slot * w + PAD;
             const oy = h - PAD - r.h;
             for (let y = 0; y < r.h; y++) {
               for (let x = 0; x < r.w; x++) {
@@ -2108,6 +2114,7 @@ function main() {
             fs.writeFileSync(path.join(lifeDir, file), writePng(stride, h, strip));
             made = { file, tile: w, height: h, frames: usable.length,
               size: (artOf.get(type) || {}).size || 100 };
+            if (body !== w) made.body = body;
             /*
              * And which slots are which, renumbered against the frames that
              * actually survived - a pose whose rectangle fell outside its

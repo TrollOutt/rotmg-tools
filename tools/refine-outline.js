@@ -357,14 +357,14 @@ for (const owners of [atlas.zones, atlas.biomes]) {
   for (const owner of owners || []) {
     for (const one of owner.lives || []) {
       if (!one.sprite) continue;
-      one.sprite.tile *= SS; one.sprite.height *= SS; sprites++;
+      one.sprite.tile *= SS; one.sprite.height *= SS; if (one.sprite.body) one.sprite.body *= SS; sprites++;
     }
   }
 }
 for (const beacon of atlas.beacons || []) {
   for (const guard of beacon.guards || []) {
     if (!guard.sprite) continue;
-    guard.sprite.tile *= SS; guard.sprite.height *= SS; sprites++;
+    guard.sprite.tile *= SS; guard.sprite.height *= SS; if (guard.sprite.body) guard.sprite.body *= SS; sprites++;
   }
 }
 /*
@@ -377,12 +377,12 @@ for (const beacon of atlas.beacons || []) {
  */
 for (const one of atlas.folk || []) {
   if (!one.sprite) continue;
-  one.sprite.tile *= SS; one.sprite.height *= SS; sprites++;
+  one.sprite.tile *= SS; one.sprite.height *= SS; if (one.sprite.body) one.sprite.body *= SS; sprites++;
 }
 for (const kept of Object.values(atlas.marks || {})) {
   for (const one of kept || []) {
     if (!one.sprite) continue;
-    one.sprite.tile *= SS; one.sprite.height *= SS; sprites++;
+    one.sprite.tile *= SS; one.sprite.height *= SS; if (one.sprite.body) one.sprite.body *= SS; sprites++;
   }
 }
 atlas.ss = SS;
