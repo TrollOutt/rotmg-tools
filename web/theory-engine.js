@@ -1299,9 +1299,12 @@ var TheoryEngine = (function () {
      * @param {TheoryOptimiserState} state @param {TheoryScoreGoal} goal
      * @param {TheoryOptimiserReport | null} [report]
      * @param {TheoryOptimiserGather} [gather]
+     * @param {{keepEnchants?: boolean}} [options] keepEnchants: start from the
+     *   enchantments the state already wears instead of empty slots - for a
+     *   search refining a build another search found.
      * @returns {Generator<void, TheoryOptimiserResult, unknown>}
      */
-    function* optimiseSteps(state, goal, report, gather) {
+    function* optimiseSteps(state, goal, report, gather, options) {
       if (!getProfile() || (/** @type {{mode: string}} */ (getProfile()).mode === 'personal' && !getAccess())) throw new Error('Set up your progression before crafting.');
       const work = prepareSearchable(state);
       // Cache compatibility only for this search, including the full slot state.
@@ -1367,6 +1370,7 @@ var TheoryEngine = (function () {
          * nothing; what is kept is kept, and the rest has to earn its place.
          */
         for (let at = 0; at < many; at++) {
+          if (options && options.keepEnchants) break;
           if (!work.locked[hand + ':' + at]) work.gear[hand].ench[at] = null;
         }
       }

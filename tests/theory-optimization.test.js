@@ -70,15 +70,47 @@ for (const klass of ['Wizard', 'Archer', 'Warrior']) {
  * Full catalogue search budget                                        *
  * ------------------------------------------------------------------ */
 
+/*
+ * Regeneration is searched three times over - plainly, then from the best
+ * build for the maximum it reads, dressed and refined (see searchSteps) - so
+ * it has a budget of its own rather than the ordinary one raised for all.
+ */
+const REGEN_BUDGET = 20000;
 for (const one of raw.classes) {
   for (const goal of t.GOALS) {
     const result = t.optimise(clone(t.fresh(one.name)), goal);
+    const budget = goal.id.startsWith('regen:') ? REGEN_BUDGET : 10000;
 
     assert(
-      result.looked > 0 && result.looked < 10000,
+      result.looked > 0 && result.looked < budget,
       `PERF-THEORY-002 ${one.name}/${goal.id}: full-catalogue search stays inside budget (${result.looked})`
     );
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * Regeneration is never beaten by asking for something else          *
+ * ------------------------------------------------------------------ */
+
+/*
+ * THEORY-REGEN-SEED: the regeneration a percentage enchantment gives is a share
+ * of the maximum, and the best maximum is a combination no single step reaches.
+ * Asking for 99% life and 1% regeneration used to find 47.22 HP/s on this
+ * Wizard where regeneration alone stopped at 44.61, on VIT gear.
+ */
+for (const kind of ['hp', 'mp']) {
+  const base = t.fresh('Wizard');
+  Object.assign(base, { boss: 'Factory Control Core', range: 0, damage: 'all', scope: 'helps', searchSets: false });
+  const regen = t.GOALS.find(one => one.id === 'regen:' + kind);
+  const alone = t.scoreOf(t.optimise(t.prepareAccessible(clone(base)), regen).state, regen);
+  const mixed = clone(base);
+  mixed.goals = ['stat:' + kind, 'regen:' + kind];
+  mixed.share = { ['stat:' + kind]: 99, ['regen:' + kind]: 1 };
+  t.use(mixed);
+  const got = t.optimise(t.prepareAccessible(mixed), t.aimOf(t.prepareAccessible(mixed)));
+  const viaMix = t.scoreOf(got.state, regen);
+  assert(alone >= viaMix - 1e-9,
+    `THEORY-REGEN-SEED Wizard ${kind}: regeneration alone (${alone}) must not lose to a 99/1 mix (${viaMix})`);
 }
 
 /* ------------------------------------------------------------------ *

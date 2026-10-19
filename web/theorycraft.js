@@ -1839,9 +1839,61 @@ const TINT = {
     return step.value;
   }
 
+  /*
+   * Regeneration is not one statistic but several multiplied together.
+   *
+   * What VIT or WIS gives is only part of it: the percentage enchantments give
+   * a share of the maximum, and the maximum itself is built by items that
+   * turn magic into life (a share of MAXMP as MAXHP) and by enchantments that
+   * add to either. The best regeneration is therefore a whole combination -
+   * a life build wearing the percentage enchantments - and the search, which
+   * changes one thing at a time from empty slots, stops at the VIT gear long
+   * before it: every single step towards the combination costs regeneration
+   * on its own. Asking for 99% life and 1% regeneration found more
+   * regeneration than asking for regeneration alone.
+   *
+   * So a goal that reads the maximum is also searched from the best build for
+   * that maximum, refined for the goal itself with that build's enchantments
+   * kept as the starting point, and the better of the answers stands.
+   */
+  const SEEDS_FOR = { 'regen:hp': ['stat:hp'], 'regen:mp': ['stat:mp'] };
+  function seedsFor(goal) {
+    const ids = new Set();
+    for (const part of String((goal && goal.id) || '').split('+')) {
+      for (const id of SEEDS_FOR[part] || []) ids.add(id);
+    }
+    return [...ids].map(id => GOALS.find(one => one.id === id)).filter(Boolean);
+  }
+  function* searchSteps(state, goal, report, gather) {
+    let best = yield* optimiseSteps(state, goal, report, gather);
+    let looked = best.looked;
+    for (const seed of seedsFor(goal)) {
+      const start = yield* optimiseSteps(state, seed, null, null);
+      /*
+       * Then the enchantments, on the seed's own items. Left free to change
+       * the items too, the first thing the search does is trade the seed's
+       * gear for VIT gear, which pays at once, before the percentage
+       * enchantments that make the seed's maximum worth having are on - and
+       * it is back where the plain search ended. Once they are on, the items
+       * are free again: from there a swap is judged with them worn.
+       */
+      const held = JSON.parse(JSON.stringify(start.state));
+      held.locked = Object.assign({}, held.locked);
+      for (const [hand] of HANDS) held.locked[hand] = true;
+      const dressed = yield* optimiseSteps(held, goal, null, gather, { keepEnchants: true });
+      // The answer keeps the reader's own padlocks, not the ones put on here.
+      dressed.state.locked = Object.assign({}, start.state.locked);
+      const refined = yield* optimiseSteps(dressed.state, goal, null, gather, { keepEnchants: true });
+      looked += start.looked + dressed.looked + refined.looked;
+      const better = refined.score >= dressed.score ? refined : dressed;
+      if (better.score > best.score + 1e-9) best = better;
+    }
+    return Object.assign({}, best, { looked });
+  }
+
   function optimise(state, goal, report, gather) {
     return runOptimiserSteps(
-      optimiseSteps(
+      searchSteps(
         state,
         goal,
         report,
@@ -1852,7 +1904,7 @@ const TINT = {
 
   function optimiseAsync(state, goal, report, gather) {
     return runOptimiserStepsAsync(
-      optimiseSteps(
+      searchSteps(
         state,
         goal,
         report,
