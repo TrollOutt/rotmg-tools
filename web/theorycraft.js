@@ -4763,11 +4763,10 @@ const TINT = {
          */
         said.innerHTML = wanted.map((one, i) => {
           const { now, moved } = resultCalculations.goalChange(build, one, was[i]);
-          // A goal the search left where it was says so once, not as "x → x".
+          // A goal the search left where it was says so once.
           const same = sayGoal(one, was[i]) === sayGoal(one, now);
           return '<span class="figure' + (same ? ' is-same' : '') + '"><b style="color:' + esc(one.tint) + '">'
-            + esc(sayGoal(one, was[i]))
-            + (same ? '' : ' <i class="tc-arrow">→</i> ' + esc(sayGoal(one, now)))
+            + esc(sayGoal(one, now))
             + '</b><small>' + esc(one.say.toLowerCase())
             + (same ? ' · unchanged' : moved ? ' · ' + (moved > 0 ? '+' : '') + moved + '%' : '')
             + '</small></span>';
