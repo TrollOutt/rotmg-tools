@@ -430,6 +430,7 @@ if (fs.existsSync(realmAnimationIndex)) {
 // or artifact turns up in the data, a missing sprite fails the build.
 const readWeb = file => fs.readFileSync(path.join(web, file), 'utf8').replace(/\r\n/g, '\n');
 const outlineSource = readWeb('outline.js');
+const spriteAnimationSource = readWeb('sprite-animation.js');
 const engineSource = readWeb('engine.js');
 const itemsSource = readWeb('items.js');
 const fameSource = readWeb('fame.js');
@@ -569,7 +570,7 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"sprite-animation.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardDataTag) || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
   || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
@@ -695,6 +696,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(localesSource)}\n</script>`,
     `<script>\n${safe(i18nSource)}\n</script>`,
     `<script>\n${safe(outlineSource)}\n</script>`,
+    `<script>\n${safe(spriteAnimationSource)}\n</script>`,
     `<script>\n${safe(engineSource)}\n</script>`,
     `<script>\n${safe(itemsSource)}\n</script>`,
     `<script>\n${safe(fameSource)}\n</script>`,

@@ -984,8 +984,12 @@
     return { x, y };
   }
 
-  /* Une image d'un sprite animé de Theory Crafting : les poses sont rangées « orientation/action ». */
-  const poseFrames = (pic, doing) => (pic && pic.poses && (pic.poses['0/' + doing] || pic.poses['0/0'])) || [0];
+  /* Une image d'un sprite animé de Theory Crafting : les poses sont rangées « orientation/action » (web/sprite-animation.js). */
+  const poseFrames = (pic, doing) => (pic && pic.poses && SpriteAnimation.framesOf(pic.poses, 0, doing)) || [0];
+  /* L'image d'une pose à cet instant : une attaque se joue une fois sur sa durée, comme dans le client et sur la carte. */
+  const frameAt = (list, state, doing) => doing === 2
+    ? SpriteAnimation.attackFrame(list, SpriteAnimation.attackProgress(state) || 0)
+    : SpriteAnimation.loopFrame(list, state.clock, doing);
 
   function bootSims(box) {
     for (const host of box.querySelectorAll('.fc2-sim:not([data-on])')) {
@@ -1446,14 +1450,14 @@
             doing === 2 && setAttackFrames.length
               ? setAttackFrames
               : setIdleFrames;
-          const f = list[Math.floor(state.clock * 8) % list.length];
+          const f = frameAt(list, state, list === setAttackFrames ? 2 : 0);
           if (f) {
             const z = T / 8 * (setData.skinSize || 100) / 100;
             RealmOutline.draw(pen, skins, f.x, f.y, f.w, f.h, x0 - T / 2, floor - f.h * z, f.w * z, f.h * z);
           }
         } else if (classPic && theory.complete) {
           const list = poseFrames(classPic, doing);
-          const f = list[Math.floor(state.clock * 8) % list.length];
+          const f = frameAt(list, state, doing);
           RealmOutline.draw(pen, theory, classPic.x + f * classPic.w, classPic.y, classPic.w, classPic.h, x0 - T / 2, floor - classPic.h * T / 8, classPic.w * T / 8, classPic.h * T / 8);
         }
 
@@ -1461,7 +1465,7 @@
           v.cool -= dt;
           if (v.cool > 0) continue;
           const every = everyOf(v);
-          v.cool += every; state.swing = Math.min(every, 0.25);
+          v.cool += every; SpriteAnimation.startAttack(state, 0, every);
           const a = v.patterns ? v.patterns[v.at++ % v.patterns.length] : v;
           const spec = specOf(a.pid || v.pid);
           // Un motif qui ne tire rien (la pause de la Razorthorn) compte quand même son tour.

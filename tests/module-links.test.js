@@ -32,10 +32,17 @@ assert(sourceHtml.indexOf('<script src="fiches-data.js"></script>') >= 0
 assert.equal((read('web/fiches-c.js').match(/FichesData\.createCardData\(/g) || []).length, 1,
   'Card layouts share one data factory');
 
+const spriteAnimationTag = '<script src="sprite-animation.js"></script>';
+assert(sourceHtml.indexOf(spriteAnimationTag) >= 0
+  && sourceHtml.indexOf(spriteAnimationTag) < sourceHtml.indexOf('<script data-lazy-src="theorycraft.js"></script>')
+  && sourceHtml.indexOf(spriteAnimationTag) < sourceHtml.indexOf('<script src="fiches-c.js"></script>'),
+  'Sprite animation loads before Theory Crafting and the cards that animate with it');
+
 const atlasTemplate = read('tools/atlas-viewer.html');
 const atlasGeometrySource = read('web/atlas-geometry.js').replace(/\r\n/g, '\n');
 const atlasSpatialSource = read('web/atlas-spatial.js').replace(/\r\n/g, '\n');
 const atlasDataSource = read('web/atlas-data.js').replace(/\r\n/g, '\n');
+const spriteAnimationSource = read('web/sprite-animation.js').replace(/\r\n/g, '\n');
 const css = read('web/style.css');
 const indexPageSource = read('web/index-page.js');
 const atlasBuilt = read('web/assets/atlas/index.html');
@@ -113,7 +120,7 @@ function normalizedPublishedAtlas(source) {
     out = out.replace(cut, '');
   }
 
-  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS_DATA*/', '__ATLAS_DATA__').replace('/*ATLAS_GEOMETRY*/', '__ATLAS_GEOMETRY__').replace('/*ATLAS_SPATIAL*/', '__ATLAS_SPATIAL__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
+  return out.replace('/*OUTLINE*/', '__OUTLINE__').replace('/*ATLAS_DATA*/', '__ATLAS_DATA__').replace('/*ATLAS_GEOMETRY*/', '__ATLAS_GEOMETRY__').replace('/*ATLAS_SPATIAL*/', '__ATLAS_SPATIAL__').replace('/*SPRITE_ANIMATION*/', '__SPRITE_ANIMATION__').replace('/*CLASSPICS*/null', '__CLASSPICS__').replace('/*ATLAS*/null', '__ATLAS__').replace('/*LOOTKIN*/null', '__LOOTKIN__');
 }
 
 // The one line every page lays round a character (web/outline.js), carried inside the page.
@@ -126,6 +133,9 @@ function normalizedBuiltAtlas(source) {
     .replace(atlasDataSource, '__ATLAS_DATA__')
     .replace(atlasGeometrySource, '__ATLAS_GEOMETRY__')
     .replace(atlasSpatialSource, '__ATLAS_SPATIAL__')
+    .replace(spriteAnimationSource, '__SPRITE_ANIMATION__')
+    // Where each class stands on the Theory sheet, from the Index: a table, or null without one.
+    .replace(/^const CLASS_PICS = (?:\{.*\}|null);$/m, 'const CLASS_PICS = __CLASSPICS__;')
     .replace(
       /^const A = \{.*\};$/m,
       'const A = __ATLAS__;'

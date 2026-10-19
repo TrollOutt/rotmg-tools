@@ -2959,34 +2959,24 @@ const TINT = {
 
   /*
    * Which frame of a thing to show. The registry files them by facing and
-   * action - nought standing, one walking, two swinging - so a target that
-   * has a swing plays its swing when it is being hit and stands the rest of
-   * the time. None of it is animation I wrote.
+   * action - nought standing, one walking, two swinging - and which of them
+   * plays when is web/sprite-animation.js's to say, as it is on the map and
+   * on the Index cards. None of it is animation I wrote.
    */
   function frameOf(piece, doing, clock) {
     if (!piece) return 0;
     const poses = piece.poses;
     if (!poses) return piece.frames > 1 ? Math.floor(clock * 4) % piece.frames : 0;
-    const list = poses['0/' + doing] || poses['3/' + doing] || poses['0/0']
-      || poses[Object.keys(poses)[0]];
-    return list[Math.floor(clock * (doing === 1 ? 6 : 3)) % list.length];
+    return SpriteAnimation.loopFrame(SpriteAnimation.framesOf(poses, 0, doing), clock, doing);
   }
 
   /*
-   * The frame of a swing at a given moment of it, 0 at the shot and 1 when it is over.
-   *
-   * The attack pose used to be picked from the clock the whole fight runs on, so
-   * a swing that lasts a fifth of a second showed whichever of its frames the
-   * clock happened to be on - not the first at the shot, and sometimes not the
-   * second at all. The frames are spread over the swing itself instead: the
-   * first as the shot leaves, the last as it ends.
+   * The frame of a swing at a given moment of it, 0 at the shot and 1 when it
+   * is over: the first frame as the shot leaves, the last as it ends.
    */
   function swingFrame(piece, progress) {
-    if (!piece) return 0;
-    const poses = piece.poses;
-    if (!poses) return 0;
-    const list = poses['0/2'] || poses['3/2'] || poses['0/0'] || poses[Object.keys(poses)[0]];
-    return list[Math.max(0, Math.min(list.length - 1, Math.floor(progress * list.length)))];
+    if (!piece || !piece.poses) return 0;
+    return SpriteAnimation.attackFrame(SpriteAnimation.framesOf(piece.poses, 0, 2), progress);
   }
 
   /*
@@ -3088,7 +3078,8 @@ const TINT = {
         } else {
           duel.cool += 1 / gun.rate;
         }
-        duel.swingFor = duel.swing = Math.min(0.22, 1 / gun.rate * 0.7);
+        // Held for the whole gap to the next shot, as the client holds it.
+        SpriteAnimation.startAttack(duel, 0, 1 / gun.rate);
         loose(weapon, gun, true);
       }
     }

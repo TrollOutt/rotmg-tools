@@ -43,7 +43,7 @@ assert(read('tools/atlas-viewer.html').includes('<script>/*OUTLINE*/</script>') 
   'tools/atlas-viewer.html must take web/outline.js at build time, not carry a rule of its own');
 assert(read('web/assets/atlas/index.html').includes('const RATIO = 2 / 15;') && read('web/assets/atlas/index.html').includes('function card(img, sx, sy, sw, sh, k, t)'),
   'web/assets/atlas/index.html does not carry the current web/outline.js: node tools/realm-atlas-build.js --page-only --publish');
-assert(read('web/assets/atlas/index.html').includes('drawInked(img, frame * tile, 0, tile, height'),
+assert(read('web/assets/atlas/index.html').includes('if (inked) drawInked(img, sx, sy, sw, sh, left, top, w2, h2, artPixel);'),
   'web/assets/atlas/index.html is not built from tools/atlas-viewer.html: node tools/realm-atlas-build.js --page-only --publish');
 
 /* ---------------- every place that draws someone lays the line on ---------------- */
@@ -83,9 +83,8 @@ assert(read('web/whats-new.js').includes("t.__kind === 'Creature'") && read('web
   'What\'s New: a skin and a creature wear the line');
 
 const atlas = read('tools/atlas-viewer.html');
-assert(/if \(inked\) drawInked\(img, frame \* tile, 0, tile, height/.test(atlas)
-  && /if \(inked\) drawInked\(img, frame \* sprite\.tile, 0, sprite\.tile, sprite\.height/.test(atlas)
-  && atlas.includes('const inked = !(sprite.combat && carriesLine.has(sprite.file));'),
+assert(atlas.includes('if (inked) drawInked(img, sx, sy, sw, sh, left, top, w2, h2, artPixel);')
+  && atlas.includes('const inked = cls || !(sprite.combat && carriesLine.has(sprite.file));'),
 'the Atlas draws every creature but a combat picture that still carries a line through drawInked');
 assert(atlas.includes('drawInked(held.img, held.box.x, held.box.y, held.box.w, held.box.h,'),
   'the Atlas draws a landmark boss inked');

@@ -1619,10 +1619,34 @@ if (!template.includes('/*ATLAS_SPATIAL*/')) throw new Error('the page has lost 
 const atlasGeometrySource = fs.readFileSync(path.join(root, 'web', 'atlas-geometry.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 const atlasSpatialSource = fs.readFileSync(path.join(root, 'web', 'atlas-spatial.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 const atlasDataSource = fs.readFileSync(path.join(root, 'web', 'atlas-data.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
+// How every page animates a client picture (web/sprite-animation.js), carried inside the page like the rest.
+if (!template.includes('/*SPRITE_ANIMATION*/')) throw new Error('the page has lost its place for sprite animation');
+if (!template.includes('/*CLASSPICS*/null')) throw new Error('the page has lost its place for the class pictures');
+const spriteAnimationSource = fs.readFileSync(path.join(root, 'web', 'sprite-animation.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 fs.writeFileSync(path.join(OUT, 'index.html'),
-  template.replace('/*OUTLINE*/', () => outlineSource).replace('/*ATLAS_DATA*/', () => atlasDataSource).replace('/*ATLAS_GEOMETRY*/', () => atlasGeometrySource).replace('/*ATLAS_SPATIAL*/', () => atlasSpatialSource)
+  template.replace('/*OUTLINE*/', () => outlineSource).replace('/*ATLAS_DATA*/', () => atlasDataSource).replace('/*ATLAS_GEOMETRY*/', () => atlasGeometrySource).replace('/*ATLAS_SPATIAL*/', () => atlasSpatialSource).replace('/*SPRITE_ANIMATION*/', () => spriteAnimationSource)
     .replace('/*ATLAS*/null', JSON.stringify(summary))
-    .replace('/*LOOTKIN*/null', JSON.stringify(lootKin())).replace(/\r\n/g, '\n'));
+    .replace('/*LOOTKIN*/null', JSON.stringify(lootKin())).replace('/*CLASSPICS*/null', () => JSON.stringify(classPics(summary))).replace(/\r\n/g, '\n'));
+}
+
+/*
+ * Where each class stands on the Theory sheet (web/assets/theory/sheet.png),
+ * by type, as the Index lays it out in its theorySheet: the same frames
+ * Theory Crafting and the Index cards draw, at the client's own widths. Null
+ * without an Index, and the page keeps its own strips.
+ */
+function classPics(summary) {
+  const at = path.join(root, 'web', 'assets', 'index', 'index.json');
+  if (!fs.existsSync(at)) return null;
+  const sheet = JSON.parse(fs.readFileSync(at, 'utf8')).theorySheet;
+  if (!sheet || !sheet.pics) return null;
+  const out = {};
+  for (const one of summary.folk || []) {
+    const pic = sheet.pics['c:' + one.name];
+    if (!pic || !pic.poses || one.type === undefined) continue;
+    out[one.type] = { x: pic.x, y: pic.y, w: pic.w, h: pic.h, size: pic.size || 100, poses: pic.poses };
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 /*

@@ -91,9 +91,10 @@ assert(
  * The simulation has its own fixed clock; this only caps presentation.
  */
 assert(
-  atlasSource.includes("pace = said.pace === 'still'")
-    && /\?\s*Infinity\s*:\s*12/.test(atlasSource),
-  'PERF: active Atlas rendering must cap high-refresh displays'
+  atlasSource.includes('const FRAME_MS = 1000 / 60;')
+    && atlasSource.includes("pace = said.pace === 'still' ? Infinity : FRAME_MS;")
+    && atlasSource.includes('let pace = FRAME_MS;'),
+  'PERF: active Atlas rendering must cap high-refresh displays at sixty frames a second'
 );
 
 /* MEM/PERF: embedded Atlas owns no RAF while still or backgrounded. */

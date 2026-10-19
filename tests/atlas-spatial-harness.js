@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs'), path = require('path');
 const vm = require('vm');
 const { sourceSlice } = require('./source-slice');
 const { digest } = require('./atlas-data-harness');
@@ -105,6 +106,8 @@ function simulation(source, moduleSource, markers, multiplier, seed, edge = fals
   vm.createContext(c);
   if (moduleSource) {
     vm.runInContext(moduleSource, c);
+    // The page carries web/sprite-animation.js beside the simulation; an attack is started through it.
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'web', 'sprite-animation.js'), 'utf8'), c);
     const bindings = sourceSlice(source, 'tools/atlas-viewer.html')(
       '/* Atlas local search indices.', '/*\n * What a character is at a given level.');
     vm.runInContext(bindings, c);

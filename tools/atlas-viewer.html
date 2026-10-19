@@ -354,6 +354,7 @@
 <script>/*ATLAS_DATA*/</script>
 <script>/*ATLAS_GEOMETRY*/</script>
 <script>/*ATLAS_SPATIAL*/</script>
+<script>/*SPRITE_ANIMATION*/</script>
 <script>
 const A = /*ATLAS*/null;
 
@@ -4597,7 +4598,7 @@ function fireObserved(beast) {
     const at = { x: from.x + Math.cos(angle), y: from.y + Math.sin(angle) };
     const raw = Number.isFinite(event[7]) ? event[7] : shot.hurt;
     const hurt = shot.pierce ? raw : Math.max(raw * 0.15, raw - state.target.at.def);
-    startSwing(beast, angle, ATTACK_PERIOD);
+    SpriteAnimation.startAttack(beast, angle);
     for (let n = 0; n < Math.max(1, event[2]); n++) {
       fire(from, at, shot, hurt, false, null, n * event[4]);
     }
@@ -4646,19 +4647,6 @@ function dodge(one) {
   if (!px && !py) return null;
   const far = Math.hypot(px, py) || 1;
   return { x: px / far, y: py / far };
-}
-
-/*
- * An attack, as the client times it: a character holds the pose for the whole
- * gap between two shots, a creature for GameObject.ATTACK_PERIOD, and both
- * turn to face what they shoot at. Only the picture reads any of this.
- */
-const ATTACK_PERIOD = 0.3;               // seconds a creature's attack is shown
-
-function startSwing(one, aim, period) {
-  one.aim = aim;
-  one.swingFor = Math.max(0.05, period || ATTACK_PERIOD);
-  one.swing = one.swingFor;
 }
 
 /* ------------------------------------------------------------------ *
@@ -4909,7 +4897,7 @@ function stepFolk(delta) {
       if (gun && far <= reach && one.cool <= 0) {
         one.cool = 1 / (SHOTS_AT(one.at.dex) * (gun.rate || 1));
         // The client holds the attack pose for the whole gap between shots.
-        startSwing(one, Math.atan2(beast.y - one.y, beast.x - one.x), one.cool);
+        SpriteAnimation.startAttack(one, Math.atan2(beast.y - one.y, beast.x - one.x), one.cool);
         volley(one, beast, gun, hurtOf(gun, one.at.att, beast.kind.def), one);
       }
     }
@@ -4998,7 +4986,7 @@ function stepFolk(delta) {
       if (far < near) { near = far; mark = one; }
     }
     if (mark) {
-      startSwing(beast, Math.atan2(mark.y - beast.y, mark.x - beast.x), ATTACK_PERIOD);
+      SpriteAnimation.startAttack(beast, Math.atan2(mark.y - beast.y, mark.x - beast.x));
       const many = Math.max(1, Number(shot.many) || 1);
       const hurt = shot.pierce
         ? shot.hurt : Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def);
@@ -5316,66 +5304,62 @@ function drawLandmarks(box) {
   return drawn;
 }
 
-// One creature where it stands. Drawn either on its own, far out, or sorted
-// in among the scenery close up.
 /*
- * Which of a thing's pictures to show.
- *
- * The client keeps them filed by which way the thing faces and what it is
- * doing - nought standing, one walking, two attacking. Its sideways pictures
- * face east (the Archer's bow, the Rebel Commander's blast are on the right)
- * and west is the same picture turned over, so a thing is mirrored when it
- * faces west, not east. The facing comes off which way the thing is
- * travelling, or, while it attacks, off where it is shooting - the client
- * turns an attacker to its target whichever way it walks.
- *
- * An attack is played the way the client plays it: the pose runs once over
- * the attack's own length (startSwing), its frames picked by how far through
- * it is, so a swing always starts on its first frame and ends on its last,
- * and when it is over the thing is back to walking or standing.
+ * A character is drawn from the same sheet Theory Crafting and the Index draw
+ * it from (web/assets/theory/sheet.png, laid out in the Index's theorySheet).
+ * Its frames are as wide as the client's: an attack that reaches out - a
+ * Wizard's staff, a Warrior's sword - is twice the width of the body, and the
+ * atlas's own strips were cut a body wide, which took the reach off the
+ * attack and, for the casters, the whole of its second frame. The sheet is
+ * the parent page's when there is one (a kept copy carries it inline), the
+ * served file otherwise, and the old strip if neither can be had.
  */
-function poseOf(one, sprite) {
-  const poses = sprite.poses;
-  const vx = one.vx || 0, vy = one.vy || 0;
-  const going = Math.hypot(vx, vy);
-  const swinging = one.swing > 0;
-  const dx = swinging && Number.isFinite(one.aim) ? Math.cos(one.aim) : vx;
-  const dy = swinging && Number.isFinite(one.aim) ? Math.sin(one.aim) : vy;
-  const turned = swinging || going > 0.35;
-  let facing = 0, flip = false;
-  if (turned && Math.abs(dy) > Math.abs(dx)) facing = dy < 0 ? 2 : 3;
-  else if (turned) flip = dx < 0;
-  const doing = swinging ? 2 : (going > 0.35 ? 1 : 0);
-  // How far through the attack it is, nought to just under one.
-  const through = swinging
-    ? Math.min(0.9999, Math.max(0, 1 - one.swing / (one.swingFor || ATTACK_PERIOD))) : 0;
-  if (!poses) {
-    return { list: null, flip, beat: doing === 1 ? 6 : 4 };
-  }
-  let list = poses[facing + '/' + doing];
-  if (!list && flip && poses['1/' + doing]) { list = poses['1/' + doing]; flip = false; }
-  list = list || poses['0/' + doing]
-    || poses[facing + '/0'] || poses['0/0'] || poses[Object.keys(poses)[0]];
-  // A walk is a walk; standing does not need a beat.
-  return { list, flip, beat: doing === 1 ? 6 : 2, through: doing === 2 ? through : null };
+const CLASS_PICS = /*CLASSPICS*/null;
+let classSheetImg = null;
+function classSheet() {
+  if (classSheetImg) return classSheetImg;
+  let src = '../theory/sheet.png';
+  try {
+    const kept = window.parent !== window && window.parent.ROTMG_BUNDLE;
+    if (kept && kept.theorySheet) src = kept.theorySheet;
+  } catch (_) { /* a parent on another origin keeps its bundle to itself */ }
+  classSheetImg = new Image();
+  classSheetImg.decoding = 'async';
+  classSheetImg.src = src;
+  return classSheetImg;
+}
+function classPicOf(kind) {
+  const pic = CLASS_PICS && kind && kind.type !== undefined && CLASS_PICS[kind.type];
+  if (!pic) return null;
+  const img = classSheet();
+  return img.complete && img.naturalWidth ? { pic, img } : null;
 }
 
+// One creature where it stands. Drawn either on its own, far out, or sorted
+// in among the scenery close up. Which pose, which way and which frame are
+// web/sprite-animation.js's to say, as they are on every other page.
 function drawOneLife(one, box) {
-  const img = artFor(one.kind.sprite);
-  if (!img.complete || !img.naturalWidth) return 0;
   const sprite = one.kind.sprite;
-  const tile = sprite.tile || img.naturalWidth;
-  const height = sprite.height || img.naturalHeight;
-  const pose = poseOf(one, sprite);
-  const frame = !pose.list
-    ? (sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0)
-    : pose.through !== null
-      ? pose.list[Math.floor(pose.through * pose.list.length)]
-      : pose.list[Math.floor(one.phase * pose.beat) % pose.list.length];
+  const cls = classPicOf(one.kind);
+  const img = cls ? cls.img : artFor(sprite);
+  if (!img.complete || !img.naturalWidth) return 0;
+  const poses = cls ? cls.pic.poses : sprite.poses;
+  const pose = poses ? SpriteAnimation.pose(one, poses) : null;
+  const frame = pose ? pose.frame
+    : (sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0);
+  const flip = pose ? pose.flip : false;
+  // Where the frame is cut from, and how many sheet pixels make a pixel of art.
+  let sx, sy, sw, sh, perArt;
+  if (cls) {
+    sw = cls.pic.w; sh = cls.pic.h; sx = cls.pic.x + frame * sw; sy = cls.pic.y; perArt = 1;
+  } else {
+    sw = sprite.tile || img.naturalWidth; sh = sprite.height || img.naturalHeight;
+    sx = frame * sw; sy = 0; perArt = SS;
+  }
   // At the size the client draws it, not all at one size.
-  const k = 1.5 * ((sprite.size || 100) / 100);
-  const wide = (tile / (A.px * SS)) * view.scale * k;
-  const tall = (height / (A.px * SS)) * view.scale * k;
+  const k = 1.5 * (((cls ? cls.pic.size : sprite.size) || 100) / 100);
+  const unit = view.scale * k / (A.px * perArt);       // screen pixels to a sheet pixel
+  const wide = sw * unit, tall = sh * unit;
   /*
    * The line took a pixel of art under its feet, so it is put back down by
    * that much - one pixel of the drawing, which since the drawings were
@@ -5388,25 +5372,26 @@ function drawOneLife(one, box) {
   const at = place(one.x, one.y, box);
   if (!at) return 0;
   const w2 = wide * at.k, h2 = tall * at.k;
-  const top = at.y - h2 + (foot + view.scale / 2) * at.k;
+  // The Theory sheet has no room round its frames; the strips have a pixel of it under the feet.
+  const top = cls
+    ? at.y - h2 + (view.scale / 2 - foot) * at.k
+    : at.y - h2 + (foot + view.scale / 2) * at.k;
+  /*
+   * A wide frame keeps the body in its first square and the reach beyond it,
+   * so it is the body that is stood on the spot, not the middle of the frame.
+   */
+  const left = cls && sw > sh ? -(sh / 2) * unit * at.k : -w2 / 2;
   // A combat picture arrives with its own line; every other creature is given one as it is drawn.
-  const inked = !(sprite.combat && carriesLine.has(sprite.file));
+  const inked = cls || !(sprite.combat && carriesLine.has(sprite.file));
   // The doubled sheets are two pictures pixels to a pixel of art; a boss's picture is the enlargement it was cut at.
-  const artPixel = sprite.boss ? enlargementOf(bossFor(sprite.file)) : (sprite.combat ? 1 : SS);
-  if (pose.flip) {
-    // The client has no eastward picture; it keeps west and turns it over.
-    ctx.save();
-    ctx.translate(at.x, 0);
-    ctx.scale(-1, 1);
-    if (inked) drawInked(img, frame * sprite.tile, 0, sprite.tile, sprite.height, -w2 / 2, top, w2, h2, artPixel);
-    else ctx.drawImage(img, frame * sprite.tile, 0, sprite.tile, sprite.height,
-      -w2 / 2, top, w2, h2);
-    ctx.restore();
-    return 1;
-  }
-  if (inked) drawInked(img, frame * tile, 0, tile, height, at.x - w2 / 2, top, w2, h2, artPixel);
-  else ctx.drawImage(img, frame * tile, 0, tile, height,
-    at.x - w2 / 2, top, w2, h2);
+  const artPixel = cls ? 1 : (sprite.boss ? enlargementOf(bossFor(sprite.file)) : (sprite.combat ? 1 : SS));
+  ctx.save();
+  ctx.translate(at.x, 0);
+  // The client's sideways pictures face east; west is the same picture turned over.
+  if (flip) ctx.scale(-1, 1);
+  if (inked) drawInked(img, sx, sy, sw, sh, left, top, w2, h2, artPixel);
+  else ctx.drawImage(img, sx, sy, sw, sh, left, top, w2, h2);
+  ctx.restore();
   return 1;
 }
 
@@ -7086,7 +7071,14 @@ window.addEventListener('message', event => {
  * picture in the corner, still while it is covered or off the screen - and a
  * frame that is not due is dropped before anything is drawn.
  */
-let pace = 0;                            // milliseconds between frames
+/*
+ * Sixty frames a second, on every screen: the rate the game itself is drawn
+ * at. A faster screen does not get more of them - it buys nothing anyone can
+ * see in a crowd of pixel figures and costs the same again - and the opened
+ * page is held to it as well as the page in the frame.
+ */
+const FRAME_MS = 1000 / 60;
+let pace = FRAME_MS;                     // milliseconds between frames
 /*
  * frontResting: the world standing on the front page, neither chosen nor moving.
  *
@@ -7102,7 +7094,7 @@ let pace = 0;                            // milliseconds between frames
  */
 let frontResting = false;
 let baseKey = '', baseAt = -1e9, baseKept = null, skyOnGlass = false;
-let drawnAt = -1e9;
+let dueAt = -1e9;                        // when the next frame is to be drawn
 let frameClock = 0;
 
 function frameWanted() {
@@ -7146,23 +7138,12 @@ window.addEventListener('message', event => {
    * is 0.41 ms a frame at full size and full rate, which is not worth
    * degrading in either direction.
    *
-   * Rendering still follows the display, but not beyond the point where
-   * another complete Atlas frame buys visible smoothness. The simulation has
-   * its own fixed 30 Hz clock, so limiting high-refresh drawing does not slow
-   * the realm itself.
-   *
-   * Twelve milliseconds deliberately fits between common display rates:
-   * a 60 Hz screen keeps every frame while a 144 Hz screen draws about every
-   * other refresh. 'still' remains a complete stop.
+   * Rendering is held to sixty frames a second whatever the display runs
+   * at (FRAME_MS). The simulation has its own fixed 30 Hz clock, so limiting
+   * the drawing does not slow the realm itself. 'still' remains a complete
+   * stop.
    */
-  /*
-   * PERF:
-   * Do not render the complete Atlas at unrestricted high-refresh rates.
-   * The realm simulation remains independently stepped at 30 Hz.
-   */
-  pace = said.pace === 'still'
-    ? Infinity
-    : 12;
+  pace = said.pace === 'still' ? Infinity : FRAME_MS;
   /* 'slow' is the world on the front page, not chosen and not moving. */
   frontResting = said.pace === 'slow';
   if (frameWanted()) startFrame();
@@ -7208,8 +7189,16 @@ function frame(now) {
    * speed of the game. A long gap is still a step rather than a leap; the
    * clamp below sees to that.
    */
-  if (now - drawnAt < pace) return;
-  drawnAt = now;
+  /*
+   * Due on a schedule of its own rather than counted from the last frame, so
+   * that a 144 Hz screen, which can only draw every second or third refresh,
+   * averages sixty rather than settling on forty-eight. A millisecond early
+   * still counts: a 60 Hz screen's own refreshes jitter by about that much,
+   * and refusing one would drop it to thirty. A schedule left far behind - a
+   * slow frame, a tab brought back - starts again from now.
+   */
+  if (now < dueAt - 1) return;
+  dueAt = now - dueAt > pace ? now + pace : dueAt + pace;
   /*
    * Never negative. Everything downstream of this multiplies by it - the
    * easing, the walk home, the creatures' step - so a clock that went
