@@ -841,7 +841,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     { distance: RealmI18n.number(distance, { maximumFractionDigits: 1 }) });
 
   function distanceControl() {
-    return '<div class="tc-goal-row"><label for="tcDistance">Distance</label>'
+    return '<div class="tc-goal-row"><label for="tcDistance">Range</label>'
       + '<div class="tc-distance"><output id="tcDistanceValue" for="tcDistance" aria-live="off">' + esc(distanceText(0)) + '</output>'
       + '<input id="tcDistance" type="range" min="0" max="10" step="0.5" value="0"'
       + ' aria-valuenow="0" aria-valuetext="' + esc(distanceText(0)) + '">'
