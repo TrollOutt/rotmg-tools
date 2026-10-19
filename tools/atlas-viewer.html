@@ -4597,7 +4597,7 @@ function fireObserved(beast) {
     const at = { x: from.x + Math.cos(angle), y: from.y + Math.sin(angle) };
     const raw = Number.isFinite(event[7]) ? event[7] : shot.hurt;
     const hurt = shot.pierce ? raw : Math.max(raw * 0.15, raw - state.target.at.def);
-    beast.swing = 0.3;
+    startSwing(beast, angle, ATTACK_PERIOD);
     for (let n = 0; n < Math.max(1, event[2]); n++) {
       fire(from, at, shot, hurt, false, null, n * event[4]);
     }
@@ -4646,6 +4646,19 @@ function dodge(one) {
   if (!px && !py) return null;
   const far = Math.hypot(px, py) || 1;
   return { x: px / far, y: py / far };
+}
+
+/*
+ * An attack, as the client times it: a character holds the pose for the whole
+ * gap between two shots, a creature for GameObject.ATTACK_PERIOD, and both
+ * turn to face what they shoot at. Only the picture reads any of this.
+ */
+const ATTACK_PERIOD = 0.3;               // seconds a creature's attack is shown
+
+function startSwing(one, aim, period) {
+  one.aim = aim;
+  one.swingFor = Math.max(0.05, period || ATTACK_PERIOD);
+  one.swing = one.swingFor;
 }
 
 /* ------------------------------------------------------------------ *
@@ -4895,8 +4908,8 @@ function stepFolk(delta) {
 
       if (gun && far <= reach && one.cool <= 0) {
         one.cool = 1 / (SHOTS_AT(one.at.dex) * (gun.rate || 1));
-        // Long enough for the swing to be seen, never longer than the gap.
-        one.swing = Math.min(0.32, one.cool * 0.8);
+        // The client holds the attack pose for the whole gap between shots.
+        startSwing(one, Math.atan2(beast.y - one.y, beast.x - one.x), one.cool);
         volley(one, beast, gun, hurtOf(gun, one.at.att, beast.kind.def), one);
       }
     }
@@ -4985,7 +4998,7 @@ function stepFolk(delta) {
       if (far < near) { near = far; mark = one; }
     }
     if (mark) {
-      beast.swing = Math.min(0.35, beast.cool * 0.7);
+      startSwing(beast, Math.atan2(mark.y - beast.y, mark.x - beast.x), ATTACK_PERIOD);
       const many = Math.max(1, Number(shot.many) || 1);
       const hurt = shot.pierce
         ? shot.hurt : Math.max(shot.hurt * 0.15, shot.hurt - mark.at.def);
@@ -5309,28 +5322,42 @@ function drawLandmarks(box) {
  * Which of a thing's pictures to show.
  *
  * The client keeps them filed by which way the thing faces and what it is
- * doing - nought standing, one walking, two attacking - and there is no
- * eastward facing at all: the game stores west and mirrors it. So the facing
- * comes off which way the thing is actually travelling, the action off
- * whether it is moving and whether it has just let a shot go, and the frame
- * off how long it has been doing it. Nothing here is drawn that the game
- * does not draw.
+ * doing - nought standing, one walking, two attacking. Its sideways pictures
+ * face east (the Archer's bow, the Rebel Commander's blast are on the right)
+ * and west is the same picture turned over, so a thing is mirrored when it
+ * faces west, not east. The facing comes off which way the thing is
+ * travelling, or, while it attacks, off where it is shooting - the client
+ * turns an attacker to its target whichever way it walks.
+ *
+ * An attack is played the way the client plays it: the pose runs once over
+ * the attack's own length (startSwing), its frames picked by how far through
+ * it is, so a swing always starts on its first frame and ends on its last,
+ * and when it is over the thing is back to walking or standing.
  */
 function poseOf(one, sprite) {
   const poses = sprite.poses;
   const vx = one.vx || 0, vy = one.vy || 0;
   const going = Math.hypot(vx, vy);
+  const swinging = one.swing > 0;
+  const dx = swinging && Number.isFinite(one.aim) ? Math.cos(one.aim) : vx;
+  const dy = swinging && Number.isFinite(one.aim) ? Math.sin(one.aim) : vy;
+  const turned = swinging || going > 0.35;
   let facing = 0, flip = false;
-  if (Math.abs(vy) > Math.abs(vx) && going > 0.35) facing = vy < 0 ? 2 : 3;
-  else if (going > 0.35) flip = vx > 0;
-  const doing = one.swing > 0 ? 2 : (going > 0.35 ? 1 : 0);
+  if (turned && Math.abs(dy) > Math.abs(dx)) facing = dy < 0 ? 2 : 3;
+  else if (turned) flip = dx < 0;
+  const doing = swinging ? 2 : (going > 0.35 ? 1 : 0);
+  // How far through the attack it is, nought to just under one.
+  const through = swinging
+    ? Math.min(0.9999, Math.max(0, 1 - one.swing / (one.swingFor || ATTACK_PERIOD))) : 0;
   if (!poses) {
     return { list: null, flip, beat: doing === 1 ? 6 : 4 };
   }
-  const list = poses[facing + '/' + doing] || poses['0/' + doing]
+  let list = poses[facing + '/' + doing];
+  if (!list && flip && poses['1/' + doing]) { list = poses['1/' + doing]; flip = false; }
+  list = list || poses['0/' + doing]
     || poses[facing + '/0'] || poses['0/0'] || poses[Object.keys(poses)[0]];
-  // A swing is quick and a walk is a walk; standing does not need a beat.
-  return { list, flip, beat: doing === 2 ? 9 : (doing === 1 ? 6 : 2) };
+  // A walk is a walk; standing does not need a beat.
+  return { list, flip, beat: doing === 1 ? 6 : 2, through: doing === 2 ? through : null };
 }
 
 function drawOneLife(one, box) {
@@ -5340,9 +5367,11 @@ function drawOneLife(one, box) {
   const tile = sprite.tile || img.naturalWidth;
   const height = sprite.height || img.naturalHeight;
   const pose = poseOf(one, sprite);
-  const frame = pose.list
-    ? pose.list[Math.floor(one.phase * pose.beat) % pose.list.length]
-    : (sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0);
+  const frame = !pose.list
+    ? (sprite.frames > 1 ? Math.floor(one.phase * 4) % sprite.frames : 0)
+    : pose.through !== null
+      ? pose.list[Math.floor(pose.through * pose.list.length)]
+      : pose.list[Math.floor(one.phase * pose.beat) % pose.list.length];
   // At the size the client draws it, not all at one size.
   const k = 1.5 * ((sprite.size || 100) / 100);
   const wide = (tile / (A.px * SS)) * view.scale * k;
@@ -7171,11 +7200,15 @@ function frame(now) {
   if (!frameWanted()) { last = now; return; }
   frameClock = requestAnimationFrame(frame);
   /*
-   * Nothing at all while the frame is not due. The clock is moved on with it,
-   * so the first frame back is a step rather than a leap - everything
-   * downstream multiplies by that gap.
+   * Nothing at all while the frame is not due - and the clock is left where
+   * it was, so the next drawn frame is handed all of the time that went by.
+   * Moving it on here threw that time away: on a 120 or 144 Hz screen every
+   * other refresh is skipped, each drawn frame was given only the few
+   * milliseconds since the skipped one, and the whole realm ran at half the
+   * speed of the game. A long gap is still a step rather than a leap; the
+   * clamp below sees to that.
    */
-  if (now - drawnAt < pace) { last = now; return; }
+  if (now - drawnAt < pace) return;
   drawnAt = now;
   /*
    * Never negative. Everything downstream of this multiplies by it - the

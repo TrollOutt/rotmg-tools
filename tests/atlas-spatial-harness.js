@@ -6,6 +6,21 @@ const { digest } = require('./atlas-data-harness');
 // Exercise the actual changed simulation functions, not a rewritten old engine.
 // Unchanged world/loot/progression dependencies are deterministic test doubles.
 // Full-corpus browser replay separately covers the real application adapters.
+// What an attack looks like - how long its pose is held and which way it
+// faces - is read only by the drawing, never by a decision. It is left out of
+// the pinned state so the picture can follow the client without moving the
+// frozen simulation.
+const POSE = ['swing', 'swingFor', 'aim'];
+function withoutPose(entities, read) {
+  const kept = entities.map(one => POSE.map(key => [key in one, one[key]]));
+  for (const one of entities) for (const key of POSE) delete one[key];
+  try { return read(); } finally {
+    entities.forEach((one, i) => kept[i].forEach(([had, value], k) => {
+      if (had) one[POSE[k]] = value;
+    }));
+  }
+}
+
 function simulation(source, moduleSource, markers, multiplier, seed, edge = false) {
   const events = [], random = [], states = [];
   let rng = seed >>> 0, serial = 0, tick = 0;
@@ -124,14 +139,18 @@ function simulation(source, moduleSource, markers, multiplier, seed, edge = fals
     c.api.stepFolk(1 / 30);
     events.push(['teleport-impact', c.folk[0].x, c.folk[0].hp]);
   }
+  const everyone = new Set();
   for (tick = 0; tick < 120; tick++) {
     // Array mutations at the next step boundary must not retain stale ranks.
     if (tick === 24) { const fresh = makeFolk(0); c.folk.push(fresh); events.push(['join', fresh.id]); }
     if (tick === 48) { const gone = c.folk.splice(2, 1)[0]; events.push(['leave', gone.id]); }
     if (tick === 60) { c.folk.reverse(); events.push(['reorder']); }
     c.api.stepWorld(tick === 80 ? 0.4 : 1 / 30);
-    states.push(digest({ alive: c.alive, folk: c.folk, shots: c.shots,
-      sparks: c.sparks, litter: c.litter, clock: c.simState(), rng }));
+    // Everyone ever stepped: one who has left can still be someone's target.
+    for (const one of [...c.alive, ...c.folk]) everyone.add(one);
+    states.push(withoutPose([...everyone], () => digest({ alive: c.alive,
+      folk: c.folk, shots: c.shots, sparks: c.sparks, litter: c.litter,
+      clock: c.simState(), rng })));
   }
   return { states, state: states.at(-1), events: digest(events), random: digest(random),
     eventCount: events.length, randomCount: random.length, sample: events.filter(e =>
