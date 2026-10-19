@@ -1723,7 +1723,17 @@ var TheoryEngine = (function () {
       const probe = JSON.parse(JSON.stringify(build));
       probe.gear = JSON.parse(JSON.stringify(one.gear));
       const said = goals.map(goal => goal.say + ' ' + sayGoal(goal, scoreOf(probe, goal))).join(' · ');
-      const behind = lead.score && i ? Math.round((one.score - lead.score) / Math.abs(lead.score) * 1000) / 10 : 0;
+      /*
+       * One goal scores in its own units, and a share of the leader's score is
+       * a share of something. Several goals score as how far short of each
+       * goal's best the build falls, as a fraction of the room that goal has:
+       * nought is every goal at its best, so the leader sits near nought and a
+       * share of it read as minus fifteen thousand per cent. There the gap is
+       * said in that fraction's own units - points of the room.
+       */
+      const behind = !i ? 0
+        : goals.length > 1 ? Math.round((one.score - lead.score) * 1000) / 10
+          : lead.score ? Math.round((one.score - lead.score) / Math.abs(lead.score) * 1000) / 10 : 0;
       const where = i === 0 ? 'Best found' : 'Alternative ' + i;
       const names = HANDS.map(([hand]) => one.gear[hand].name || '').join(', ');
       return { said, behind, where, names };

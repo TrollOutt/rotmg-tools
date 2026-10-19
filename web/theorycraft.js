@@ -2640,8 +2640,11 @@ const TINT = {
     const often = spellOnly
       ? (hand.every ? round(1 / hand.every) : 0)
       : round(hand.rate);
+    // A nought that comes from standing too far away says so, rather than reading as a broken figure.
+    const tooFar = !(numbers.chosen > 0) && distanceOf(build) > 0
+      ? ' · nothing reaches at ' + esc(distanceText(distanceOf(build))) : '';
     const rows = [
-      [(DAMAGE_SAYS[build.damage] || DAMAGE_SAYS.weapon) + ' a second', commas(numbers.chosen), true],
+      [(DAMAGE_SAYS[build.damage] || DAMAGE_SAYS.weapon) + ' a second' + tooFar, commas(numbers.chosen), true],
       [spellOnly ? 'casts a second' : 'shots a second', often],
       [spellOnly ? 'each cast' : 'each shot', commas(hand.each)
         + (hand.many > 1 ? ' x ' + hand.many : '')]
@@ -4176,11 +4179,16 @@ const TINT = {
     box.innerHTML = '<span class="tc-alts-label" title="Whole builds the last search found, ranked by the same goal">Alt</span>'
       + list.map((one, i) => {
         const { said, behind, where, names } = describeAlternative(build, one, lead, i, goals);
+        // Several goals at once are compared in points of the room each has, not per cent.
+        const unit = goals.length > 1 ? ' pts' : '%';
+        const gap = (behind > 0 ? '+' : '') + behind + unit;
         const tag = (i === 0 ? 'Best found' : 'Alt ' + i)
-          + (i && behind ? ' <u>' + (behind > 0 ? '+' : '') + behind + '%</u>' : '');
+          + (i && behind ? ' <u>' + gap + '</u>' : '');
         return '<button type="button" class="tc-alts-pick' + (i === at ? ' is-on' : '') + '"'
           + ' data-alt-apply="' + i + '" aria-pressed="' + (i === at) + '"'
-          + ' title="' + esc(where + ' · ' + said + (i ? ' · ' + (behind > 0 ? '+' : '') + behind + '% against the best found' : '')
+          + ' title="' + esc(where + ' · ' + said + (i ? ' · ' + gap + (goals.length > 1
+            ? ' against the best found, in points of the way from the starting build to each goal\'s best'
+            : ' against the best found') : '')
             + '\n' + names + (i === at ? '\nworn now' : '\nclick to wear it')) + '">'
           + '<span class="tc-alts-tag">' + tag + '</span><span class="tc-alts-cells">'
           + HANDS.map(([hand]) => {
