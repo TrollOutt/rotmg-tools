@@ -228,7 +228,7 @@
   "static.click.the.padlock.to.keep.one": "нажмите на замок, чтобы сохранить его",
   "static.close": "закрыть",
   "static.copy.a.link": "скопировать ссылку",
-  "static.drag.to.pan.wheel.to.zoom.a": "перетаскивание для панорамирования · колесико для масштабирования · a/e для поворота · двойной щелчок для подгонки",
+  "static.drag.to.pan.wheel.to.zoom.a": "перетаскивание для панорамирования · колесико для масштабирования · a/e для поворота · f для наблюдения · двойной щелчок для подгонки",
   "static.here.now": "здесь и сейчас",
   "static.hold.click": "удерживать щелчок",
   "static.local.skin.viewer.client.data.only": "локальный просмотрщик скинов · только данные клиента",
@@ -631,5 +631,7 @@
   "theory.regen.mp": "MP Regeneration (MP/s)",
   "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
   "theory.distance.tiles": "{distance} tiles",
-  "theory.distance.tile": "{distance} tile"
+  "theory.distance.tile": "{distance} tile",
+  "static.spectate": "наблюдать",
+  "static.follow.the.fighting.f": "следить за боями (f)"
 }

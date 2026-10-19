@@ -228,7 +228,7 @@
   "static.click.the.padlock.to.keep.one": "fare clic sul lucchetto per mantenerne uno",
   "static.close": "chiudere",
   "static.copy.a.link": "copiare un collegamento",
-  "static.drag.to.pan.wheel.to.zoom.a": "trascinare per eseguire la panoramica · rotella per ingrandire · a/e per ruotare · fare doppio clic per adattare",
+  "static.drag.to.pan.wheel.to.zoom.a": "trascinare per eseguire la panoramica · rotella per ingrandire · a/e per ruotare · f per guardare · fare doppio clic per adattare",
   "static.here.now": "qui adesso",
   "static.hold.click": "tenere premuto il clic",
   "static.local.skin.viewer.client.data.only": "visualizzatore skin locale · solo dati cliente",
@@ -631,5 +631,7 @@
   "theory.regen.mp": "MP Regeneration (MP/s)",
   "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
   "theory.distance.tiles": "{distance} tiles",
-  "theory.distance.tile": "{distance} tile"
+  "theory.distance.tile": "{distance} tile",
+  "static.spectate": "spettatore",
+  "static.follow.the.fighting.f": "seguire i combattimenti (f)"
 }

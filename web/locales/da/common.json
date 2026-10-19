@@ -228,7 +228,7 @@
   "static.click.the.padlock.to.keep.one": "klik på hængelåsen for at beholde en",
   "static.close": "tæt på",
   "static.copy.a.link": "kopiere et link",
-  "static.drag.to.pan.wheel.to.zoom.a": "træk for at panorere · hjul for at zoome · a/e for at dreje · dobbeltklik for at passe",
+  "static.drag.to.pan.wheel.to.zoom.a": "træk for at panorere · hjul for at zoome · a/e for at dreje · f for at se på · dobbeltklik for at passe",
   "static.here.now": "her nu",
   "static.hold.click": "hold klik",
   "static.local.skin.viewer.client.data.only": "lokal hudfremviser · kun klientdata",
@@ -631,5 +631,7 @@
   "theory.regen.mp": "MP Regeneration (MP/s)",
   "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
   "theory.distance.tiles": "{distance} tiles",
-  "theory.distance.tile": "{distance} tile"
+  "theory.distance.tile": "{distance} tile",
+  "static.spectate": "se på",
+  "static.follow.the.fighting.f": "følg kampene (f)"
 }

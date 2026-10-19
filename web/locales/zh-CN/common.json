@@ -228,7 +228,7 @@
   "static.click.the.padlock.to.keep.one": "单击挂锁以保留一个",
   "static.close": "关闭",
   "static.copy.a.link": "复制链接",
-  "static.drag.to.pan.wheel.to.zoom.a": "拖动进行平移 · 滚轮进行缩放 · a/e 进行旋转 · 双击进行调整",
+  "static.drag.to.pan.wheel.to.zoom.a": "拖动进行平移 · 滚轮进行缩放 · a/e 进行旋转 · f 观战 · 双击进行调整",
   "static.here.now": "现在在这里",
   "static.hold.click": "按住单击",
   "static.local.skin.viewer.client.data.only": "本地皮肤查看器 · 仅客户端数据",
@@ -631,5 +631,7 @@
   "theory.regen.mp": "MP Regeneration (MP/s)",
   "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
   "theory.distance.tiles": "{distance} tiles",
-  "theory.distance.tile": "{distance} tile"
+  "theory.distance.tile": "{distance} tile",
+  "static.spectate": "观战",
+  "static.follow.the.fighting.f": "跟随战斗 (f)"
 }

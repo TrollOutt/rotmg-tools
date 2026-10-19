@@ -228,7 +228,7 @@
   "static.click.the.padlock.to.keep.one": "birini tutmak için asma kilide tıklayın",
   "static.close": "kapat",
   "static.copy.a.link": "bağlantıyı kopyala",
-  "static.drag.to.pan.wheel.to.zoom.a": "kaydırmak için sürükleyin · yakınlaştırmak için tekerlek · döndürmek için a/e · sığdırmak için çift tıklayın",
+  "static.drag.to.pan.wheel.to.zoom.a": "kaydırmak için sürükleyin · yakınlaştırmak için tekerlek · döndürmek için a/e · izlemek için f · sığdırmak için çift tıklayın",
   "static.here.now": "şimdi burada",
   "static.hold.click": "basılı tut tıkla",
   "static.local.skin.viewer.client.data.only": "yerel dış görünüm görüntüleyici · yalnızca istemci verileri",
@@ -631,5 +631,7 @@
   "theory.regen.mp": "MP Regeneration (MP/s)",
   "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
   "theory.distance.tiles": "{distance} tiles",
-  "theory.distance.tile": "{distance} tile"
+  "theory.distance.tile": "{distance} tile",
+  "static.spectate": "izle",
+  "static.follow.the.fighting.f": "çatışmaları izle (f)"
 }

@@ -228,7 +228,7 @@
   "static.click.the.padlock.to.keep.one": "napsauta riippulukkoa säilyttääksesi sen",
   "static.close": "sulje",
   "static.copy.a.link": "kopioi linkki",
-  "static.drag.to.pan.wheel.to.zoom.a": "panoroi vetämällä · zoomaa pyörällä · käännä a/e · sovita kaksoisnapsauttamalla",
+  "static.drag.to.pan.wheel.to.zoom.a": "panoroi vetämällä · zoomaa pyörällä · käännä a/e · katsele f · sovita kaksoisnapsauttamalla",
   "static.here.now": "tässä nyt",
   "static.hold.click": "pidä napsautus painettuna",
   "static.local.skin.viewer.client.data.only": "paikallinen skin viewer · vain asiakastiedot",
@@ -631,5 +631,7 @@
   "theory.regen.mp": "MP Regeneration (MP/s)",
   "theory.regen.context": "Passive regeneration in combat, including gear and enchantments. Excludes Healing, triggered recovery, abilities, consumables and pets.",
   "theory.distance.tiles": "{distance} tiles",
-  "theory.distance.tile": "{distance} tile"
+  "theory.distance.tile": "{distance} tile",
+  "static.spectate": "katsele",
+  "static.follow.the.fighting.f": "seuraa taisteluja (f)"
 }
