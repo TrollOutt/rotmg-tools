@@ -159,6 +159,7 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
           '../data/Index/realmeye-enrichment.json']).catch(() => null)
       ]);
       itemSearchAliases = indexItemAliases(index);
+      limitedNames = limitedFrom(community);
       access = BuildProgression.catalogue(index, wiki, data.items, realm, ratings, community);
     } catch (_) {
       itemSearchAliases = new Map();
@@ -1485,9 +1486,29 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
    * A set piece belongs to the Sets switch even when it has no tier. That
    * keeps Sets and Untiered independent: turning UTs off does not silently
    * turn set pieces off as well.
+   *
+   * Limited cuts across both. The client does not say which gear was sold or
+   * given for a while and then withdrawn; RealmEye does, writing its tier as
+   * "UT (Limited)", "ST (Limited)" or "AT (Limited)". Its pages are already
+   * read for the progression, and the names are taken from there.
    */
+  let limitedNames = new Set();
+  function limitedFrom(community) {
+    const records = community && community.records;
+    const list = Array.isArray(records) ? records : Object.values(records || {});
+    const out = new Set();
+    for (const one of list) {
+      const tier = one && one.facts && one.facts.tier;
+      if (typeof tier === 'string' && /\(Limited\)/.test(tier) && /^item:/.test(one.id || '')) {
+        out.add(one.id.slice(5));
+      }
+    }
+    return out;
+  }
   function searchAllowsItem(one, state) {
     if (!one) return false;
+
+    if (state && state.searchLimited === false && limitedNames.has(one.name)) return false;
 
     if (one.set) {
       return !state || state.searchSets !== false;

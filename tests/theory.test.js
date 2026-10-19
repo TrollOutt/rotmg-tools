@@ -2063,6 +2063,27 @@ console.log('All class pickers include the three Venerable rings; shared enchant
     ),
     'missing search filter flags must mean included for old saved builds'
   );
+
+  // Limited: RealmEye's "(Limited)" tier, cutting across Sets and Untiered.
+  const limitedName = untieredCase.item.name;
+  ruled.setLimited(ruled.limitedFrom({ records: [
+    { id: 'item:' + limitedName, facts: { tier: 'UT (Limited)' } },
+    { id: 'item:Not Limited At All', facts: { tier: 'UT' } }
+  ] }));
+  const limitedState = ruled.fresh(untieredCase.klass);
+  limitedState.searchLimited = false;
+  assert(
+    !ruled.searchItems(untieredCase.hand, untieredCase.klass, limitedState)
+      .some(one => one.name === limitedName),
+    'disabling Limited must remove the items RealmEye marks Limited'
+  );
+  delete limitedState.searchLimited;
+  assert(
+    ruled.searchItems(untieredCase.hand, untieredCase.klass, limitedState)
+      .some(one => one.name === limitedName),
+    'a missing Limited flag must mean included for old saved builds'
+  );
+  ruled.setLimited(new Set());
 }
 
 

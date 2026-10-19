@@ -16,6 +16,7 @@ module.exports = function(sources, raw, withEngine = true, globals = {}) {
     distanceControl, wireDistance, syncDistance, normaliseDistance, distanceOf, packBuild, unpackBuild, recall, keep, sayGoal,
     recalled() { build = tabs[onTab]; return build; },
     setStatusInfo(value) { statusInfo = value; },
+    limitedFrom, setLimited(value) { limitedNames = value; },
     prepareAccessible, searchItems, handoverFor, buildHandover, gearSignature, alternativesOf, bareOf,
     progression(catalogue, saved) { access = catalogue; profile = saved; beatenSearch.invalidate(); },
     configure(raw) {
