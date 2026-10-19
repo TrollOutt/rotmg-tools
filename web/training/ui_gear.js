@@ -23,7 +23,7 @@ function iconHtml(it){if(!it.icon)return '<span class="index-icon missing" aria-
 function itemHtml(it){return '<div class="index-item">'+iconHtml(it)+'<div><b>'+escapeText(it.name)+'</b><p>'+escapeText(effectDescription(it))+'</p></div></div>'}
 function buildGear(){
  const cl=$('#trainingClass');cl.innerHTML='<option value="">Choose a class...</option>'+TRAINING_CATALOG.classes.map(c=>'<option value="'+escapeText(c.id)+'">'+escapeText(c.name)+'</option>').join('');
- cl.addEventListener('change',()=>{SETTINGS.classId=cl.value;selectionMessage='Class changed. Your character stats are unchanged.';validateSelections();refreshMenu()});
+ cl.addEventListener('change',()=>{SETTINGS.classId=cl.value;selectionMessage='Class changed. Your character stats are unchanged.';validateSelections();refreshMenu();fitMenu()});
  $('#classDefaults').addEventListener('click',()=>{const c=chosenClass();if(!c)return;for(const key of ['hp','def','spd'])if(Number.isFinite(c.stats[key+'Top']))SETTINGS[key]=c.stats[key+'Top'];refreshMenu()});
  const grid=$('#gearGrid');grid.innerHTML=EQUIPMENT_HANDS.map(hand=>'<label class="index-field">'+({ability:'Ability',armor:'Armor',ring:'Ring'})[hand]+'<select data-hand="'+hand+'" aria-label="'+hand+' swap"></select><span class="index-effect"></span></label>').join('');
  for(const el of $$('#gearGrid select'))el.addEventListener('change',()=>{if(el.value)SETTINGS.swaps[el.dataset.hand]=el.value;else delete SETTINGS.swaps[el.dataset.hand];refreshMenu()});

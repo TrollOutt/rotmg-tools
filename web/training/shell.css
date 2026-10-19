@@ -202,3 +202,34 @@ footer a{color:var(--acc)}.ov{top:52px}.ov-card{max-height:calc(100dvh - 85px);o
 /* the scene around the arena while playing (drawn by ui_bg.js), and a soft frame on the arena itself */
 #gameBack{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 #c{box-shadow:0 0 0 1px rgba(255,255,255,.06),0 18px 60px rgba(0,0,0,.6),0 0 90px rgba(140,60,220,.12);border-radius:4px}
+
+/* ---------- the window's space, and type that can be read ----------
+   ui_code.js (fitMenu) sets --fit: each step's content is scaled by it to fill the
+   panel, the same factor for every step and never past what the tallest one allows.
+   No text in the menu goes under 13px before that scaling. */
+@media(min-width:761px){
+  #menu .wrap{max-width:1600px}
+  .pane>.one,.pane>.two{zoom:var(--fit,1)}
+  .pane.on{display:flex;flex-direction:column;justify-content:safe center}
+  .pane.on>*{width:100%}
+  .pane[data-pane="5"] .two{max-width:1100px;margin:0 auto}
+  .training-top{font-size:14px}
+  .training-kicker{font-size:12px}
+  .training-sub{font-size:14px}
+  .steps button{font-size:16px}.steps button em{font-size:12px}
+  .training-help,.training-help.opt,.pane[data-pane="5"] .training-help{font-size:13.5px;line-height:1.5}
+  .index-field{font-size:14px}
+  .index-effect,.index-warning{font-size:13px}
+  .chip{font-size:13px}
+  .card h2 small,.card h3 small{font-size:13px}
+  .hc .sum{font-size:14px}
+  .rc .rt{font-size:14px}.rc i{font-size:13px}
+  .fact span{font-size:13px}
+  .binds{font-size:14px}
+  #legacyRecords{font-size:13px}
+  .navbar .navmid{font-size:15px}
+  #launchNotice{font-size:14px}
+  footer{font-size:12.5px}
+  .navbar,footer{width:100%;max-width:calc(1100px * var(--fit,1));margin-left:auto;margin-right:auto}
+  .ov-card{zoom:var(--fit,1);max-height:calc((100dvh - 85px) / var(--fit,1))}
+}

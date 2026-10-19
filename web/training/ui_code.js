@@ -101,7 +101,15 @@ function stepGate(){const locked=!chosenClass();
 function showStep(n){step=Math.max(1,Math.min(5,n));if(stepGate())step=1;
  for(const b of $$('#steps button')){const k=+b.dataset.step;b.classList.toggle('on',k===step);b.classList.toggle('done',k<step)}
  for(const p of $$('.pane'))p.classList.toggle('on',+p.dataset.pane===step);
- $('#navBack').hidden=step===1;$('#navNext').hidden=step===5;menuEl.classList.toggle('s5',step===5)}
+ $('#navBack').hidden=step===1;$('#navNext').hidden=step===5;menuEl.classList.toggle('s5',step===5);fitMenu()}
+// The steps are laid out for a small window, then scaled to fit this one: every step by the same
+// factor, so the type does not change size between steps, and never past what the tallest step allows.
+function fitMenu(){if(typeof innerWidth!=='number'||menuEl.hidden)return;const root=document.documentElement.style;
+ if(innerWidth<761){root.removeProperty('--fit');return}
+ root.setProperty('--fit','1');const box=$('.panes');let fit=1.6;
+ for(const p of $$('.pane')){const shown=p.classList.contains('on');p.classList.add('on');const c=p.firstElementChild,wide=parseFloat(getComputedStyle(c).maxWidth);
+  fit=Math.min(fit,box.clientHeight*.97/c.scrollHeight,wide?box.clientWidth/wide:fit);if(!shown)p.classList.remove('on')}
+ root.setProperty('--fit',Math.max(.8,fit).toFixed(3))}
 function bindMenu(){
  for(const b of $$('#steps button'))b.setAttribute('aria-label',b.dataset.step+'. '+$('span',b).textContent);
  menuEl.addEventListener('click',e=>{const b=e.target.closest('[data-step]');if(b)showStep(+b.dataset.step)});
@@ -131,7 +139,8 @@ function bindMenu(){
 
  const seedInput=$('#seed');seedInput.value=SETTINGS.seed || (SETTINGS.seed===0?'0':'');seedInput.addEventListener('change',()=>{SETTINGS.seed=seedInput.value;save()});
  $('#gameMenu').addEventListener('click',()=>{if(scene==='arena'){if(g.ended)showMenu();else setPause(!paused)}});
- buildGear();refreshMenu();
+ buildGear();refreshMenu();fitMenu();
+ addEventListener('resize',fitMenu);document.fonts?.ready.then(fitMenu);
 }
 
 function recordOptions(){return {hard:SETTINGS.hard,mode:MODES[SETTINGS.mode],chases:SETTINGS.chases,hp:SETTINGS.hp,def:SETTINGS.def,spd:SETTINGS.spd,lvl:SETTINGS.lvl,rspeed:SETTINGS.rspeed,loseAt:SETTINGS.hLose?SETTINGS.loseAt/100:0,dmgMult:SETTINGS.hDmg?SETTINGS.dmgMult:1,maxHits:SETTINGS.hHits?SETTINGS.maxHits:0,...selectionOptions()}}
