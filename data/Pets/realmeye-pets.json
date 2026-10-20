@@ -1,0 +1,61 @@
+{
+  "source": "RealmEye wiki: pet-yard, pet-feeding, pet-fusing, pet-abilities, pet-food, pet-food-guide, pet-saddlebag (fetched 2026-10-20; pages last updated Exalt 2.2.1.0 Jan 2022 to 5.9.0.0 Mar 2025)",
+  "rarities": ["Common", "Uncommon", "Rare", "Legendary", "Divine"],
+  "abilityCap": { "Common": 30, "Uncommon": 50, "Rare": 70, "Legendary": 90, "Divine": 100 },
+  "abilitiesUnlocked": { "Common": 1, "Uncommon": 2, "Rare": 2, "Legendary": 3, "Divine": 3 },
+  "feedCost": {
+    "Common": { "fame": 15, "gold": 5 }, "Uncommon": { "fame": 50, "gold": 12 }, "Rare": { "fame": 175, "gold": 30 },
+    "Legendary": { "fame": 625, "gold": 60 }, "Divine": { "fame": 1750, "gold": 150 },
+    "note": "paid per item fed, up to 8 items per action"
+  },
+  "fuseCost": {
+    "Common": { "fame": 525, "gold": 100 }, "Uncommon": { "fame": 1750, "gold": 240 },
+    "Rare": { "fame": 7000, "gold": 600 }, "Legendary": { "fame": 26250, "gold": 1800 },
+    "note": "key = rarity of the two pets fused; result is the next rarity. Pet yard must be one tier above the pets fused."
+  },
+  "yardUpgrade": { "Uncommon": { "fame": 525, "gold": 150 }, "Rare": { "fame": 3500, "gold": 400 }, "Legendary": { "fame": 43750, "gold": 1200 }, "Divine": { "fame": 87500, "gold": 2000 }, "note": "identical to client YardUpgrader 1-4; hatching an egg needs a yard one tier below the egg's rarity" },
+  "wardrobe": { "sameFamily": { "fame": 200, "gold": 20 }, "changeFamily": { "fame": 1000, "gold": 100 } },
+  "saddlebagSlotGold": [100, 150, 200, 250, 300, 350, 400, 450],
+  "saddlebagNote": "total 2200 gold per pet; first slot free once per account via Tinkerer quest",
+  "feedPowerNeeded": {
+    "rule": "feed power to go from level L to L+1 of ability n = base[n] * 1.08^(L-1); base = [20, 400/13, 200/3]. Reproduces every wiki cumulative figure to within 1.",
+    "base": [20, 30.76923076923077, 66.66666666666667],
+    "wikiCumulative": {
+      "ability1": { "1-30": 2080, "30-50": 8527, "50-70": 39747, "70-90": 185256, "90-100": 273344, "total": 508954 },
+      "ability2": { "1-50": 16319, "50-70": 61148, "70-90": 285010, "90-100": 420530, "total": 783007 },
+      "ability3": { "1-90": 785367, "90-100": 911147, "total": 1696514 }
+    }
+  },
+  "fusion": {
+    "levelOfResult": "each ability = floor(average of the two pets' same ability)",
+    "capOfResult": "floor((first ability A + first ability B) / 2) + 20 for Common/Uncommon/Rare; +10 when fusing Legendary; capped at the rarity maximum",
+    "example": "Common 30+30 -> Uncommon 30/1 cap 50/50; Common 30+20 -> 25/1 cap 45/45"
+  },
+  "abilityEffect": {
+    "Heal": { "HP": [10, 14, 23, 40, 69, 90], "delay": [10, 3.82, 2.66, 1.96, 1.42, 1], "breakpointsAtLevel": [1, 30, 50, 70, 90, 100] },
+    "MagicHeal": { "MP": [1, 3, 8, 17, 33, 45], "delay": [10, 3.82, 2.66, 1.96, 1.42, 1], "breakpointsAtLevel": [1, 30, 50, 70, 90, 100] },
+    "AttackClose": { "power": [7, 17, 39, 80, 130, 200], "delay": [5, 2, 1, 0.6, 0.4, 0.2], "range": 4.5 },
+    "AttackMid": { "power": [5, 12, 25, 60, 121, 150], "delay": [5, 2, 1, 0.6, 0.4, 0.2], "range": 6.75 },
+    "AttackFar": { "power": [3, 8, 19, 40, 76, 100], "delay": [5, 2, 1, 0.6, 0.4, 0.2], "range": 9 },
+    "note": "approximate; other abilities incomplete on the wiki - the client PetBehavior min/max + curve is the authoritative source"
+  },
+  "foodGold": {
+    "note": "Gold shop price of pet food (Nexus shop / Bazaar). FP matches client feedPower.",
+    "items": {
+      "Soft Drink": [150, 15], "Cranberries": [250, 30], "Drowned Shamrock": [250, 30], "Fries": [300, 35], "Ear of Corn": [350, 40],
+      "Great Taco": [550, 75], "Sliced Yam": [600, 80], "Pumpkin Pie": [650, 85], "Gingerbread House": [800, 105], "Power Pizza": [800, 105],
+      "Chocolate Cream Sandwich Cookie": [1300, 200], "Thanksgiving Turkey": [1621, 270], "Grapes of Wrath": [1700, 285],
+      "Christmas Tree Cupcake": [1700, 285], "Droplet of Ambrosia": [1800, 305], "Droplet of Bloody Ambrosia": [1800, 305],
+      "Strawberry Milkshake": [2100, 370], "Superburger": [2300, 415], "Vial of Pure Ambrosia": [2400, 435], "Vial of Bloody Ambrosia": [2400, 435],
+      "Christmas Turkey Leg": [2500, 460], "Pumpkin Spice Latte": [2500, 460], "Bagel Sandwich": [3000, 565], "Dumplings": [3000, 565],
+      "Double Cheeseburger Deluxe": [3500, 675], "Baguette": [3500, 675], "Chalice of Bloody Ambrosia": [3700, 720], "Mashed Potatoes": [3800, 740],
+      "Pecan Pie": [4500, 890], "Ambrosia": [5000, 1000], "Bloody Ambrosia": [5000, 1000], "Apple Pie": [5000, 1000], "Glazed Apple": [5000, 1000],
+      "Veggie Burger": [5000, 1000], "Beef Burger": [5000, 1000], "Cornbread": [7000, 1435], "Mouthwatering Melon": [7500, 1540], "Rice Bowl": [7500, 1540],
+      "Space Jam": [8000, 1650], "Energy Potato": [10000, 2085], "Chocolate Bar": [10000, 2085], "Turkey Cake": [10000, 2085],
+      "Reindeer Food": [15000, 3165], "Protein Shake": [18000, 3815], "Solar Energy Drink": [20000, 4250], "Shrimp Fried Rice": [20000, 4250],
+      "Chocolate Cake": [20000, 4250], "Solar Potato": [22500, 4790]
+    },
+    "format": "name: [feedPower, gold]; formula 'gold ratio' on the wiki ~ FP/gold; efficiency = FP / (gold price + feeding gold cost) when paying in gold"
+  },
+  "forgeBestFeedPower": { "D": 350, "C": 750, "B": 1000, "A": 1250, "S": 1300, "SS": 1500 }
+}
