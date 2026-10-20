@@ -3662,6 +3662,8 @@ function initVoucher() {
   const note = document.getElementById('voucherNote');
   if (!note || !VOUCHER.code) return;
   const key = 'voucher-seen-' + VOUCHER.id;
+  const copiedKey = 'voucher-copied-' + VOUCHER.id;
+  const wasCopied = () => { try { return localStorage.getItem(copiedKey) === '1'; } catch (_) { return false; } };
   const seen = () => { try { return localStorage.getItem(key) === '1'; } catch (_) { return false; } };
   note.hidden = false;
   note.classList.toggle('is-new', !seen());
@@ -3694,6 +3696,7 @@ function initVoucher() {
     }
     button.textContent = RealmI18n.t(ok ? 'voucher.copied' : 'voucher.press');
     button.classList.toggle('is-done', ok);
+    if (ok) { button.classList.add('is-spent'); try { localStorage.setItem(copiedKey, '1'); } catch (_) { /* greyed for this visit only */ } }
     setTimeout(() => { button.textContent = RealmI18n.t('voucher.copy'); button.classList.remove('is-done'); }, 1800);
   };
   const build = () => {
@@ -3707,6 +3710,7 @@ function initVoucher() {
       + '<h3>' + esc(RealmI18n.t('voucher.rewards')) + '</h3><div class="voucher-rewards">' + VOUCHER.rewards.map(([name, n]) =>
         '<button type="button" class="voucher-reward" data-name="' + esc(name) + '"><span class="voucher-art"></span><span>' + esc(name) + ' <b>×' + n + '</b></span></button>').join('') + '</div>'
       + '<p class="voucher-how">' + esc(RealmI18n.t('voucher.how')) + '</p></div>';
+    if (wasCopied()) veil.querySelector('.voucher-copy').classList.add('is-spent');
     document.body.appendChild(veil);
     veil.addEventListener('click', event => {
       if (event.target === veil || event.target.closest('.voucher-x')) return close();
