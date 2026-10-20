@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "观战",
-  "static.follow.the.fighting.f": "跟随战斗 (f)"
+  "static.follow.the.fighting.f": "跟随战斗 (f)",
+  "voucher.kicker": "免费礼券",
+  "voucher.intro": "游戏送出的免费礼券，过期前记得领取。",
+  "voucher.copy": "复制",
+  "voucher.copied": "已复制 ✓",
+  "voucher.press": "请按 Ctrl+C",
+  "voucher.rewards": "奖励",
+  "voucher.how": "游戏内：商店 → 礼券标签页 → 输入代码（区分大小写）。奖励会发送到礼物箱。",
+  "voucher.close": "关闭"
 }

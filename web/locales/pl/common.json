@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "obserwuj",
-  "static.follow.the.fighting.f": "śledź walki (f)"
+  "static.follow.the.fighting.f": "śledź walki (f)",
+  "voucher.kicker": "Darmowy voucher",
+  "voucher.intro": "Darmowy voucher z gry. Odbierz go, zanim zniknie.",
+  "voucher.copy": "Kopiuj",
+  "voucher.copied": "Skopiowano ✓",
+  "voucher.press": "Naciśnij Ctrl+C",
+  "voucher.rewards": "Nagrody",
+  "voucher.how": "W grze: Sklep → karta Vouchery → wpisz kod (wielkość liter ma znaczenie). Nagrody trafiają do skrzyni prezentów.",
+  "voucher.close": "Zamknij"
 }

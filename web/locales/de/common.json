@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "zuschauen",
-  "static.follow.the.fighting.f": "den Kämpfen folgen (f)"
+  "static.follow.the.fighting.f": "den Kämpfen folgen (f)",
+  "voucher.kicker": "Gratis-Gutschein",
+  "voucher.intro": "Ein kostenloser Gutschein aus dem Spiel. Löse ihn ein, bevor er weg ist.",
+  "voucher.copy": "Kopieren",
+  "voucher.copied": "Kopiert ✓",
+  "voucher.press": "Strg+C drücken",
+  "voucher.rewards": "Belohnungen",
+  "voucher.how": "Im Spiel: Shop → Reiter Gutscheine → Code eingeben (Groß-/Kleinschreibung beachten). Die Belohnungen landen in der Geschenktruhe.",
+  "voucher.close": "Schließen"
 }

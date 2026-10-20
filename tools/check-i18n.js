@@ -26,7 +26,7 @@ for (const locale of locales) {
 const covered = new Set(Object.values(source));
 const exempt = new Set(['I','II','III','IV','WASD','GPL-3.0','Realm Tools','Realm of the Mad God',
   'Month of the Mad God','rotmg-enchant-calculator','by brendanbrubacher ·',', modified',
-  '(optional)','have?','your copy','Open →']);
+  '(optional)','have?','your copy','Open →','Happy Halloween 1']);
 const htmlFiles = ['web/index.html','web/skins/view.html','web/assets/atlas/index.html'];
 const uncatalogued = new Set();
 for (const relative of htmlFiles) {

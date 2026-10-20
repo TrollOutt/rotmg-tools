@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "katsele",
-  "static.follow.the.fighting.f": "seuraa taisteluja (f)"
+  "static.follow.the.fighting.f": "seuraa taisteluja (f)",
+  "voucher.kicker": "Ilmainen kuponki",
+  "voucher.intro": "Ilmainen kuponki pelistä. Lunasta se ennen kuin se katoaa.",
+  "voucher.copy": "Kopioi",
+  "voucher.copied": "Kopioitu ✓",
+  "voucher.press": "Paina Ctrl+C",
+  "voucher.rewards": "Palkinnot",
+  "voucher.how": "Pelissä: Kauppa → Kupongit-välilehti → kirjoita koodi (isot ja pienet kirjaimet ovat eri asia). Palkinnot tulevat lahjaarkkuun.",
+  "voucher.close": "Sulje"
 }

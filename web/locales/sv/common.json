@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "åskåda",
-  "static.follow.the.fighting.f": "följ striderna (f)"
+  "static.follow.the.fighting.f": "följ striderna (f)",
+  "voucher.kicker": "Gratis voucher",
+  "voucher.intro": "En gratis voucher från spelet. Lös in den innan den är borta.",
+  "voucher.copy": "Kopiera",
+  "voucher.copied": "Kopierad ✓",
+  "voucher.press": "Tryck Ctrl+C",
+  "voucher.rewards": "Belöningar",
+  "voucher.how": "I spelet: Butik → fliken Vouchers → skriv koden (skiftlägeskänslig). Belöningarna hamnar i presentkistan.",
+  "voucher.close": "Stäng"
 }

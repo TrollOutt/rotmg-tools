@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "se på",
-  "static.follow.the.fighting.f": "følg kampene (f)"
+  "static.follow.the.fighting.f": "følg kampene (f)",
+  "voucher.kicker": "Gratis voucher",
+  "voucher.intro": "En gratis voucher fra spillet. Indløs den, før den er væk.",
+  "voucher.copy": "Kopiér",
+  "voucher.copied": "Kopieret ✓",
+  "voucher.press": "Tryk Ctrl+C",
+  "voucher.rewards": "Belønninger",
+  "voucher.how": "I spillet: Butik → fanen Vouchers → skriv koden (der skelnes mellem store og små bogstaver). Belønningerne lander i gavekisten.",
+  "voucher.close": "Luk"
 }

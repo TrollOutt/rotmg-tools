@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "izle",
-  "static.follow.the.fighting.f": "çatışmaları izle (f)"
+  "static.follow.the.fighting.f": "çatışmaları izle (f)",
+  "voucher.kicker": "Ücretsiz kupon",
+  "voucher.intro": "Oyundan ücretsiz bir kupon. Kaybolmadan önce kullan.",
+  "voucher.copy": "Kopyala",
+  "voucher.copied": "Kopyalandı ✓",
+  "voucher.press": "Ctrl+C’ye bas",
+  "voucher.rewards": "Ödüller",
+  "voucher.how": "Oyunda: Mağaza → Kuponlar sekmesi → kodu yaz (büyük/küçük harfe duyarlıdır). Ödüller Hediye sandığına gider.",
+  "voucher.close": "Kapat"
 }

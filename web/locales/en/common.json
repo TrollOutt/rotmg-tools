@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "spectate",
-  "static.follow.the.fighting.f": "follow the fighting (f)"
+  "static.follow.the.fighting.f": "follow the fighting (f)",
+  "voucher.kicker": "Free voucher",
+  "voucher.intro": "A free voucher from the game. Claim it before it is gone.",
+  "voucher.copy": "Copy",
+  "voucher.copied": "Copied ✓",
+  "voucher.press": "Press Ctrl+C",
+  "voucher.rewards": "Rewards",
+  "voucher.how": "In the game: Shop → Vouchers tab → type the code (it is case sensitive). Rewards go to the Gift chest.",
+  "voucher.close": "Close"
 }

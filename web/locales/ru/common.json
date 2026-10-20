@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "наблюдать",
-  "static.follow.the.fighting.f": "следить за боями (f)"
+  "static.follow.the.fighting.f": "следить за боями (f)",
+  "voucher.kicker": "Бесплатный ваучер",
+  "voucher.intro": "Бесплатный ваучер от игры. Активируйте его, пока он не исчез.",
+  "voucher.copy": "Копировать",
+  "voucher.copied": "Скопировано ✓",
+  "voucher.press": "Нажмите Ctrl+C",
+  "voucher.rewards": "Награды",
+  "voucher.how": "В игре: Магазин → вкладка «Ваучеры» → введите код (регистр важен). Награды приходят в подарочный сундук.",
+  "voucher.close": "Закрыть"
 }

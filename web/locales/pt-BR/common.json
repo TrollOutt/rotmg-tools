@@ -633,5 +633,13 @@
   "theory.distance.tiles": "{distance} tiles",
   "theory.distance.tile": "{distance} tile",
   "static.spectate": "assistir",
-  "static.follow.the.fighting.f": "acompanhar os combates (f)"
+  "static.follow.the.fighting.f": "acompanhar os combates (f)",
+  "voucher.kicker": "Voucher grátis",
+  "voucher.intro": "Um voucher grátis do jogo. Resgate antes que acabe.",
+  "voucher.copy": "Copiar",
+  "voucher.copied": "Copiado ✓",
+  "voucher.press": "Pressione Ctrl+C",
+  "voucher.rewards": "Recompensas",
+  "voucher.how": "No jogo: Loja → aba Vouchers → digite o código (diferencia maiúsculas de minúsculas). As recompensas vão para o baú de presentes.",
+  "voucher.close": "Fechar"
 }
