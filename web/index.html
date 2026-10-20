@@ -129,11 +129,19 @@
     </p>
   </header>
 
-  <button type="button" class="news-bell" data-go="news">
-    <span class="news-bell-glyph" aria-hidden="true">🔔</span>
-    <span class="news-bell-words"><span class="news-bell-kick"></span><span class="news-bell-text">What's New</span></span>
-    <span class="news-bell-dot" aria-hidden="true"></span>
-  </button>
+  <div class="home-notes">
+    <button type="button" class="news-bell" data-go="news">
+      <span class="news-bell-glyph" aria-hidden="true">🔔</span>
+      <span class="news-bell-words"><span class="news-bell-kick"></span><span class="news-bell-text">What's New</span></span>
+      <span class="news-bell-dot" aria-hidden="true"></span>
+    </button>
+    <!-- A free voucher while one is running: the code to copy and what it gives (voucher-note in app.js). -->
+    <button type="button" class="news-bell voucher-note" id="voucherNote" aria-haspopup="dialog" hidden>
+      <span class="news-bell-glyph" aria-hidden="true">🎃</span>
+      <span class="news-bell-words"><span class="news-bell-kick">Free voucher</span><span class="news-bell-text">Happy Halloween 1</span></span>
+      <span class="news-bell-dot" aria-hidden="true"></span>
+    </button>
+  </div>
 
   <!--
     The ring, which is the same ways in as the cards below and the same atlas

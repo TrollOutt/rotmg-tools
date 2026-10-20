@@ -3614,6 +3614,134 @@ function dressNewsBell(index) {
   if (kick && notes.subtitle) kick.textContent = notes.subtitle.split(' — ')[0];
 }
 
+/*
+ * The free voucher on the way in. The note beside the bell glows until it has
+ * been opened once (remembered in this browser); opening it shows the code,
+ * to copy, and what it gives. Each reward that the Index holds shows its card
+ * on hover and opens its record on click. To retire the voucher, delete the
+ * note from index.html (or empty VOUCHER.code).
+ */
+const VOUCHER = {
+  id: 'happy-halloween-1',
+  code: 'HALLOWEEN2026',
+  title: 'Happy Halloween 1',
+  rewards: [
+    ['Halloween Mystery Bag', 3], ['Candy of Extreme Attack', 1], ['Candy of Extreme Defense', 1],
+    ['Candy of Extreme Speed', 1], ['Candy of Extreme Dexterity', 1], ['Droplet of Bloody Ambrosia', 1]
+  ]
+};
+let voucherRecords = null;
+function voucherIndex() {
+  if (voucherRecords) return voucherRecords;
+  voucherRecords = (async () => {
+    const shared = window.ROTMG_SHARED_DATA || (window.ROTMG_SHARED_DATA = {});
+    let said = shared.index || null;
+    if (!said) {
+      let raw = BUNDLE && BUNDLE.sources && BUNDLE.sources.indexText;
+      if (!raw) raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.text()).catch(() => '');
+      if (!raw) return new Map();
+      said = JSON.parse(raw);
+      shared.index = said;
+    }
+    const wanted = new Set(VOUCHER.rewards.map(r => 'item:' + r[0]));
+    const found = new Map();
+    for (const one of said.records) if (wanted.has(one.id)) found.set(one.id, one);
+    await ensureItemArt();
+    return found;
+  })().catch(() => new Map());
+  return voucherRecords;
+}
+function voucherArt(one, side) {
+  if (!one || !one.art || !state.itemArt) return '';
+  const [x, y, w, h] = one.art, zoom = side / Math.max(w, h), sheet = state.itemArt.sheet;
+  return '<span class="ix-cell"><span class="ix-art" style="width:' + w * zoom + 'px;height:' + h * zoom
+    + 'px;background-image:var(--ix-sheet,var(--sheet));background-size:' + sheet.wide * zoom + 'px ' + sheet.tall * zoom
+    + 'px;background-position:' + -x * zoom + 'px ' + -y * zoom + 'px"></span></span>';
+}
+function initVoucher() {
+  const note = document.getElementById('voucherNote');
+  if (!note || !VOUCHER.code) return;
+  const key = 'voucher-seen-' + VOUCHER.id;
+  const seen = () => { try { return localStorage.getItem(key) === '1'; } catch (_) { return false; } };
+  note.hidden = false;
+  note.classList.toggle('is-new', !seen());
+  const esc = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  let veil = null, tip = null, records = new Map();
+
+  const hideTip = () => { if (tip) tip.hidden = true; };
+  const showTip = from => {
+    const one = records.get('item:' + from.dataset.name);
+    if (!one) return;
+    if (!tip) { tip = document.createElement('div'); tip.className = 'voucher-tip'; tip.hidden = true; document.body.appendChild(tip); }
+    const about = String(one.about || '').replace(/\\n|\n/g, ' ').replace(/\s+/g, ' ').trim();
+    const facts = (one.does || []).map(d => d.join(': ')).join(' · ');
+    tip.innerHTML = voucherArt(one, 48) + '<div><p class="k">' + esc(one.family || 'Consumable') + '</p><b>' + esc(one.said || one.name) + '</b>'
+      + (about ? '<p class="d">' + esc(about) + '</p>' : '') + (facts ? '<p class="f">' + esc(facts) + '</p>' : '') + '</div>';
+    tip.hidden = false;
+    const at = from.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, at.left + at.width / 2 - w / 2)) + 'px';
+    tip.style.top = (at.bottom + 8 + h < innerHeight ? at.bottom + 8 : Math.max(8, at.top - 8 - h)) + 'px';
+  };
+
+  const close = () => { hideTip(); if (veil) veil.hidden = true; note.focus(); };
+  const copy = async button => {
+    let ok = false;
+    try { await navigator.clipboard.writeText(VOUCHER.code); ok = true; } catch (_) {
+      const range = document.createRange();
+      range.selectNodeContents(veil.querySelector('code'));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      try { ok = document.execCommand('copy'); } catch (__) { /* the code stays selected for ctrl+C */ }
+    }
+    button.textContent = ok ? 'Copied ✓' : 'Press Ctrl+C';
+    button.classList.toggle('is-done', ok);
+    setTimeout(() => { button.textContent = 'Copy'; button.classList.remove('is-done'); }, 1800);
+  };
+  const build = () => {
+    veil = document.createElement('div');
+    veil.className = 'voucher-veil'; veil.hidden = true;
+    veil.innerHTML = '<div class="voucher-panel" role="dialog" aria-modal="true" aria-labelledby="voucherTitle">'
+      + '<button type="button" class="voucher-x" aria-label="Close">×</button>'
+      + '<h2 id="voucherTitle">' + esc(VOUCHER.title) + '</h2>'
+      + '<p>A free voucher from the game. Claim it before it is gone.</p>'
+      + '<div class="voucher-code"><code>' + esc(VOUCHER.code) + '</code><button type="button" class="voucher-copy">Copy</button></div>'
+      + '<h3>Rewards</h3><div class="voucher-rewards">' + VOUCHER.rewards.map(([name, n]) =>
+        '<button type="button" class="voucher-reward" data-name="' + esc(name) + '"><span class="voucher-art"></span><span>' + esc(name) + ' <b>×' + n + '</b></span></button>').join('') + '</div>'
+      + '<p class="voucher-how">In the game: Shop → Vouchers tab → type the code (it is case sensitive). Rewards go to the Gift chest.</p></div>';
+    document.body.appendChild(veil);
+    veil.addEventListener('click', event => {
+      if (event.target === veil || event.target.closest('.voucher-x')) return close();
+      const button = event.target.closest('.voucher-copy');
+      if (button) return copy(button);
+      const reward = event.target.closest('.voucher-reward.has-card');
+      if (reward) { close(); location.hash = RealmRoutes.indexHash('item:' + reward.dataset.name); routeFromHash(); }
+    });
+    veil.addEventListener('mouseover', event => { const r = event.target.closest('.voucher-reward'); if (r && !r.contains(event.relatedTarget)) showTip(r); });
+    veil.addEventListener('mouseout', event => { const r = event.target.closest('.voucher-reward'); if (r && !r.contains(event.relatedTarget)) hideTip(); });
+    veil.addEventListener('focusin', event => { const r = event.target.closest('.voucher-reward'); if (r) showTip(r); });
+    veil.addEventListener('focusout', hideTip);
+    veil.addEventListener('scroll', hideTip, true);
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && veil && !veil.hidden) close(); });
+  };
+  /* What the Index holds of each reward: its picture now, its card on hover. */
+  const dress = () => voucherIndex().then(found => {
+    records = found;
+    veil.querySelectorAll('.voucher-reward').forEach(button => {
+      const one = found.get('item:' + button.dataset.name);
+      if (!one) return;
+      button.querySelector('.voucher-art').innerHTML = voucherArt(one, 40);
+      button.classList.add('has-card');
+    });
+  });
+
+  note.addEventListener('click', () => {
+    if (!veil) { build(); dress(); }
+    veil.hidden = false;
+    veil.querySelector('.voucher-copy').focus();
+    note.classList.remove('is-new');
+    try { localStorage.setItem(key, '1'); } catch (_) { /* it simply glows again next visit */ }
+  });
+}
+
 async function loadUpdateMade() {
   if (BUNDLE) {
     state.updateMade = newsMadeOn((BUNDLE.whatsNew || {}).index);
@@ -4059,6 +4187,7 @@ async function load() {
     state.data = EnchantEngine.buildDataset(sources);
     EnchantItems.loadClient(sources.clientItemText);
     await loadUpdateMade();
+    initVoucher();
     if (document.body.dataset.page === 'enchant') await ensureItemArt();
     renderModifiedDate();
     $('itemEmptyCount').textContent = `Search ${RealmI18n.number(knownItemNames().length)} items — the slot, dust and base come with it`;

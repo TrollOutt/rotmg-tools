@@ -1553,7 +1553,7 @@ table.mini td { padding: 3px 8px; border: 0; }
   min-height: 100dvh; display: flex; flex-direction: column;
   gap: clamp(10px, 2vh, 22px);
 }
-#pageHome > .home-head, #pageHome > .home-cards, #pageHome > .news-bell { flex: none; }
+#pageHome > .home-head, #pageHome > .home-cards, #pageHome > .home-notes { flex: none; }
 #pageHome > .app-foot {
   flex: none; margin-top: 0; text-align: center; font-size: 10.5px; opacity: .45;
 }
@@ -2389,6 +2389,64 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 @media (prefers-reduced-motion: reduce) {
   .news-bell-glyph, .news-bell-dot, .news-bell-dot::after { animation: none; }
 }
+
+/*
+ * The notes over the cards: the bell, and beside it a voucher while one is
+ * running. One box, so the arrangements that place the bell place both.
+ */
+.home-notes { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin: 0 auto 18px; }
+.home-notes .news-bell { margin: 0; }
+body[data-home="ring"] #pageHome .home-notes { width: max-content; max-width: calc(100vw - 24px); }
+.voucher-note[hidden] { display: none; }
+.voucher-note { position: relative; }
+/* Until it has been opened it glows; the glow is a fixed shadow whose opacity breathes, which the compositor can do alone. */
+.voucher-note::before {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 20px 3px rgba(255,150,40,.75), inset 0 0 12px rgba(255,170,60,.3);
+  opacity: 0;
+}
+.voucher-note.is-new { border-color: rgba(255,170,60,.85); }
+.voucher-note.is-new::before { animation: voucher-glow 2s ease-in-out infinite; will-change: opacity; }
+.voucher-note:not(.is-new) .news-bell-dot, .voucher-note:not(.is-new) .news-bell-glyph { animation: none; }
+.voucher-note:not(.is-new) .news-bell-dot { visibility: hidden; }
+@keyframes voucher-glow { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .voucher-note.is-new::before { animation: none; opacity: .7; } }
+body.globe-wide .voucher-note::before { animation: none !important; }
+
+.voucher-veil { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / .55); }
+.voucher-veil[hidden] { display: none; }
+.voucher-panel {
+  position: relative; width: min(460px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto;
+  padding: 22px 22px 18px; border-radius: 14px; text-align: center;
+  background: rgb(var(--panel-rgb) / .98); color: var(--text);
+  border: 1px solid rgba(255,170,60,.55); box-shadow: 0 18px 50px rgb(0 0 0 / .6);
+}
+.voucher-panel h2 { margin: 0 0 4px; font-size: 1.25rem; color: var(--title); }
+.voucher-panel p { margin: 0 0 14px; font-size: .88rem; line-height: 1.45; color: var(--muted); }
+.voucher-x { position: absolute; top: 8px; right: 10px; width: 30px; height: 30px; border: 0; background: none; color: var(--muted); font-size: 1.3rem; line-height: 1; cursor: pointer; border-radius: 8px; }
+.voucher-x:hover { color: var(--text); background: rgb(255 255 255 / .08); }
+.voucher-code { display: flex; align-items: stretch; margin: 0 0 16px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: rgb(0 0 0 / .28); }
+.voucher-code code { flex: 1; min-width: 0; padding: 11px 12px; font-family: var(--mono); font-size: 1.1rem; letter-spacing: .08em; user-select: all; overflow-wrap: anywhere; }
+.voucher-copy { flex: none; padding: 0 16px; border: 0; border-left: 1px solid var(--line); background: rgba(255,170,60,.18); color: #ffcb70; font: inherit; font-weight: 600; cursor: pointer; }
+.voucher-copy:hover { background: rgba(255,170,60,.3); }
+.voucher-copy.is-done { color: #8fe08f; }
+.voucher-panel h3 { margin: 0 0 8px; font-size: .68rem; font-family: var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #ffcb70; font-weight: 400; }
+.voucher-rewards { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; margin: 0 0 14px; }
+.voucher-reward { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px; border: 1px solid var(--line-soft, var(--line)); border-radius: 10px; background: rgb(0 0 0 / .22); color: inherit; font: inherit; font-size: .8rem; line-height: 1.25; cursor: default; }
+.voucher-reward.has-card { cursor: pointer; }
+.voucher-reward.has-card:hover, .voucher-reward.has-card:focus-visible { border-color: rgba(255,170,60,.7); background: rgba(255,170,60,.1); outline: none; }
+.voucher-reward .ix-cell { width: 40px; height: 40px; }
+.voucher-reward b { color: #ffe08a; font-weight: 600; }
+.voucher-how { margin: 0 !important; font-size: .78rem !important; color: var(--dim) !important; }
+.voucher-tip { position: fixed; z-index: 90; width: min(300px, calc(100vw - 16px)); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: start; padding: 10px 12px; border-radius: 12px; text-align: left;
+  background: rgb(18 15 24 / .98); color: #e8e4ee; border: 1px solid rgba(255,170,60,.55); box-shadow: 0 14px 40px rgb(0 0 0 / .55); pointer-events: none; }
+.voucher-tip[hidden] { display: none; }
+.voucher-tip .ix-cell { width: 48px; height: 48px; }
+.voucher-tip b { display: block; font-size: 1.02em; line-height: 1.25; margin: 1px 0 3px; }
+.voucher-tip .k { margin: 0 0 3px; font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: #ffcb70; }
+.voucher-tip .d { margin: 0 0 4px; font-size: .82em; line-height: 1.4; opacity: .85; }
+.voucher-tip .f { margin: 0; font-size: .78em; opacity: .7; }
+:root[data-theme="light"] .voucher-tip { background: rgb(252 250 246 / .98); color: #2a2430; }
 
 /*
  * What's New: one place with a few ways through it (web/whats-new.js).
@@ -4415,7 +4473,7 @@ body[data-home="ring"] #pageHome .home-head .seen {
   text-shadow: 0 1px 8px #000, 0 0 18px rgb(var(--shade) / calc(.95 * var(--shade-k)));
 }
 
-body[data-home="ring"] #pageHome .news-bell {
+body[data-home="ring"] #pageHome .home-notes {
   position: fixed; left: 50%; z-index: 40;
   /* Just clear of the world's own edge, so it moves with the world when the
      world comes forward - and never up into the name above it. */
@@ -4433,7 +4491,7 @@ body[data-home="ring"] #pageHome .news-bell {
 /* And all of it goes when the map takes the window, on the same breath as the
    modules rather than being switched off. */
 body.ring-away .home-head,
-body.ring-away .news-bell,
+body.ring-away .home-notes,
 body.ring-away .corner {
   opacity: 0; pointer-events: none;
 }
@@ -4780,7 +4838,7 @@ body.ring-coming[data-ring="wheel"] .ring-item {
    and would otherwise keep its own timing however specific this got - which
    is exactly how the name came back before the world had left. */
 body.ring-coming #pageHome .home-head,
-body.ring-coming #pageHome .news-bell,
+body.ring-coming #pageHome .home-notes,
 body.ring-coming .corner {
   transition: opacity .55s ease var(--trip, 3000ms);
 }
@@ -5179,7 +5237,7 @@ body[data-home="ring"][data-ring="list"] #pageHome .home-head h1.home-mark img {
 body[data-home="ring"][data-ring="list"] #pageHome .home-head .seen {
   flex-wrap: wrap; row-gap: 4px; column-gap: 14px; margin: 8px auto 0; max-width: none;
 }
-body[data-home="ring"][data-ring="list"] #pageHome .news-bell {
+body[data-home="ring"][data-ring="list"] #pageHome .home-notes {
   position: relative; z-index: 1; left: auto; top: auto; transform: none;
   align-self: center; margin: 0 auto;
 }
