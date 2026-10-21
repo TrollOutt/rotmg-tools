@@ -667,6 +667,5 @@
   "static.fp.given": "Annettu FP",
   "static.search.a.pet": "Hae lemmikkiä…",
   "static.the.yard.you.already.own.it.rises": "Tarha, joka sinulla jo on. Se nousee tien mukana: yhdistäminen harvinaisuuteen vaatii kyseisen harvinaisuuden tarhan.",
-  "static.by.family": "Heimoittain",
-  "static.by.rarity": "Harvinaisuuden mukaan"
+  "static.narrow.the.pets.to.a.rarity": "Rajaa lemmikit yhteen harvinaisuuteen"
 }

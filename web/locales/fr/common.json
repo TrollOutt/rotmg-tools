@@ -667,6 +667,5 @@
   "static.fp.given": "PA donnée",
   "static.search.a.pet": "Chercher un familier…",
   "static.the.yard.you.already.own.it.rises": "L’enclos que vous possédez déjà. Il monte avec la route : fusionner vers une rareté demande l’enclos de cette rareté.",
-  "static.by.family": "Par famille",
-  "static.by.rarity": "Par rareté"
+  "static.narrow.the.pets.to.a.rarity": "Limiter les familiers à une rareté"
 }

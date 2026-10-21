@@ -667,6 +667,5 @@
   "static.fp.given": "Verilen FP",
   "static.search.a.pet": "Evcil hayvan ara…",
   "static.the.yard.you.already.own.it.rises": "Zaten sahip olduğunuz alan. Yolla birlikte yükselir: bir nadirliğe birleştirmek o nadirliğin alanını gerektirir.",
-  "static.by.family": "Aileye göre",
-  "static.by.rarity": "Nadirliğe göre"
+  "static.narrow.the.pets.to.a.rarity": "Evcil hayvanları bir nadirliğe göre daralt"
 }

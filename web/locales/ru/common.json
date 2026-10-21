@@ -667,6 +667,5 @@
   "static.fp.given": "Дано FP",
   "static.search.a.pet": "Найти питомца…",
   "static.the.yard.you.already.own.it.rises": "Загон, который у вас уже есть. Он растёт вместе с путём: для слияния до редкости нужен загон этой редкости.",
-  "static.by.family": "По семействам",
-  "static.by.rarity": "По редкости"
+  "static.narrow.the.pets.to.a.rarity": "Показать питомцев одной редкости"
 }

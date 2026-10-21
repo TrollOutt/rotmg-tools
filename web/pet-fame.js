@@ -30,8 +30,10 @@ var PetFame = (function () {
     foodSort: 'value',                             // food order: value, feed power or price
     pet: A.pets.find(p => p.n === 'Black Cat'),   // the pet last picked in the list
     locked: false,                                 // locked: that pet everywhere; unlocked: the road's own look
-    group: 'family',                               // the list of pets by 'family' or by 'rarity'
-    fam: 'Feline', open: new Set(['Feline']),      // the family followed, and the families unfolded in the list
+    rar: new Set(),                                // the rarity the list is narrowed to (one at most); none: every pet
+    skinOnly: false,                               // lit: only the pets that cannot be hatched or fused (skins)
+    folded: new Set(),                             // families folded by hand while a search or a rarity has unfolded them all
+    fam: 'Feline', open: new Set(),                // the family followed, and the families unfolded in the list: none, at first
     abil: ['Heal', 'Magic Heal', 'Electric'],
     fp: 0, upTo: 3, pay: 'fame', mode: 'action', yard: 0,   // yard: the tier already bought
     // The food the whole road is priced with: a 750 feed power item to begin with (Cloak of the Planewalker).
@@ -115,62 +117,109 @@ var PetFame = (function () {
   const fams = [...new Set(A.pets.map(p => p.f || '?'))].sort((a, b) => a.localeCompare(b));
   fams.forEach(f => $('pfFam').add(new Option(f, f)));
   /*
-   * The list of pets, by family or by rarity of look. Either way a group folds when its title is
-   * clicked, a search unfolds what it finds, and a family can be picked to show only that one.
+   * The list of pets, always by family. The gems above it are filters: click one to keep only the
+   * pets with that rarity, click it again to let it go, and with none lit the list is every pet.
+   *
+   * The client gives a pet skin only three looks - Common, Rare and Divine - so there are three
+   * gems, and no Legendary one: a pet changes how it looks only when it is fused into Rare and into
+   * Divine. The first gem, Uncommon, is the Common looks, which have no gem of their own.
    */
-  const LOOKS = ['Common', 'Rare', 'Divine'];
-  const LOOK_NAME = { Common: 'Common', Rare: 'Rare', Divine: 'Divine' };
+  const LOOK_TIERS = { Common: [0, 1], Rare: [2], Divine: [4] };
+  const ORDER = { Common: 0, Rare: 1, Divine: 2 };
+  function buildRarityFilter() {
+    $('pfRarity').innerHTML = [1, 2, 4].map(k => '<button type="button" class="filter-chip gembtn" data-k="' + k + '" aria-pressed="false" title="' +
+      PE.RARITY[k] + (k === 1 ? ' (the Common looks)' : '') + '">' + gem(k) + '</button>').join('');
+    // And a padlock of its own, apart from the gems: the pets that cannot be hatched or fused, which the game
+    // only gives as skins. Lit, the list is those only; it works on top of a rarity.
+    $('pfRarity').insertAdjacentHTML('beforeend', '<button type="button" class="filter-chip gembtn skinbtn" data-lock="1" aria-pressed="false" title="Locked: the pets that cannot be hatched or fused, only unlocked as skins. Click to show them; without it, a rarity shows only the pets that can be hatched.">🔒</button>');
+    $('pfRarity').onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.lock) {
+        S.skinOnly = !S.skinOnly;
+        b.classList.toggle('on', S.skinOnly); b.setAttribute('aria-pressed', String(S.skinOnly));
+        S.folded.clear();
+        renderPets();
+        return;
+      }
+      const k = +b.dataset.k;
+      // One rarity or none: lighting one lets the other go, lighting the same one again lets it go too.
+      const was = S.rar.has(k);
+      S.rar.clear();
+      if (!was) S.rar.add(k);
+      S.folded.clear();                       // what the new rarity finds starts unfolded
+      [...$('pfRarity').children].forEach(x => { if (x.dataset.lock) return; const on = S.rar.has(+x.dataset.k); x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); });
+      renderPets();
+    };
+  }
+  /*
+   * What a tile wears in its corner is the filter that picks it: a gem for a pet that can be hatched, a padlock for a
+   * skin only. With a gem lit, only the pets with that gem; with the padlock lit, only the padlocks; with both, the two
+   * together; with neither, every pet. So a rarity alone never lets the padlocked ones in.
+   */
+  const wanted = p => {
+    if (!S.rar.size && !S.skinOnly) return true;
+    return Boolean(p.h && S.rar.size && (LOOK_TIERS[p.r] || []).some(k => S.rar.has(k))) || Boolean(S.skinOnly && !p.h);
+  };
+  // Which tile is the picked one, and which family it is in: only classes and a padlock change.
+  function markPets() {
+    for (const tile of $('pfPetList').querySelectorAll('.pf-tile')) {
+      const p = tile.__pet, locked = S.locked && p === S.pet;
+      tile.classList.toggle('is-on', locked);
+      tile.title = p.n + ' — ' + (p.f || '?') + ', ' + p.r + ' look' + (p.h ? '' : ', a skin only') + (locked ? ' · picked, click to let the road choose the look' : '');
+    }
+    for (const head of $('pfPetList').querySelectorAll('.fam')) head.classList.toggle('cur', head.dataset.family === S.fam);
+  }
   function renderPets() {
     const q = $('pfQ').value.trim().toLowerCase(), fam = $('pfFam').value, list = $('pfPetList');
-    const byRarity = S.group === 'rarity';
     list.innerHTML = '';
-    const matches = A.pets.filter(p => (!fam || (p.f || '?') === fam) && (!q || p.n.toLowerCase().includes(q)));
-    const groups = byRarity
-      ? LOOKS.map(r => ({ key: 'r:' + r, title: r, gem: gem(LOOK[r]), cur: S.pet && S.pet.r === r, pets: matches.filter(p => p.r === r).sort((x, y) => (x.f || '').localeCompare(y.f || '') || x.n.localeCompare(y.n)) }))
-      : fams.map(f => ({ key: f, title: f, cur: f === S.fam, pets: matches.filter(p => (p.f || '?') === f).sort((x, y) => (ORDER[x.r] ?? 3) - (ORDER[y.r] ?? 3) || x.n.localeCompare(y.n)) }));
+    const keep = list.scrollTop;               // a rebuilt list must stay where the reader had it
+    const matches = A.pets.filter(p => (!fam || (p.f || '?') === fam) && (!q || p.n.toLowerCase().includes(q)) && wanted(p));
     let n = 0;
-    groups.forEach(g => {
-      if (!g.pets.length) return;
-      n += g.pets.length;
-      // A search unfolds what it finds; otherwise a group shows its pets only once unfolded.
-      const open = q || S.open.has(g.key);
+    fams.forEach(f => {
+      const pets = matches.filter(p => (p.f || '?') === f)
+        .sort((x, y) => (ORDER[x.r] ?? 3) - (ORDER[y.r] ?? 3) || x.n.localeCompare(y.n));
+      if (!pets.length) return;
+      n += pets.length;
+      // A search or a rarity unfolds what it finds, and a family can still be folded by hand;
+      // otherwise a family shows its pets only once unfolded.
+      const narrowed = Boolean(q || S.rar.size || S.skinOnly);
+      const open = narrowed ? !S.folded.has(f) : S.open.has(f);
       const head = document.createElement('div');
-      head.className = 'fam' + (open ? ' open' : '') + (g.cur ? ' cur' : '');
-      head.innerHTML = '<span><span class="tw">▸</span>' + (g.gem || '') + ' ' + g.title + '</span><b>' + g.pets.length + '</b>';
-      head.onclick = () => { S.open.has(g.key) ? S.open.delete(g.key) : S.open.add(g.key); renderPets(); };
+      head.className = 'fam' + (open ? ' open' : '') + (f === S.fam ? ' cur' : '');
+      head.dataset.family = f;
+      head.innerHTML = '<span><span class="tw">▸</span>' + f + '</span><b>' + pets.length + '</b>';
+      head.onclick = () => { const set = narrowed ? S.folded : S.open, wasOpen = narrowed ? !S.folded.has(f) : S.open.has(f); wasOpen === narrowed ? set.add(f) : set.delete(f); renderPets(); };
       list.appendChild(head);
       if (!open) return;
-      g.pets.forEach(p => {
-        const row = document.createElement('div');
-        const locked = S.locked && p === S.pet;
-        row.className = 'pet' + (locked ? ' on' : '');
-        row.title = locked ? 'Locked — click again to let the road choose the look' : 'Lock this pet';
-        row.appendChild(petThumb(p, 34));
-        // By family the look is the badge; by rarity the family is, since the look is already the title.
-        row.insertAdjacentHTML('beforeend', '<span>' + p.n + '</span>' + (locked ? '<span class="lock">🔒</span>' : byRarity ? '<span class="famtag">' + (p.f || '?') + '</span>' : gem(LOOK[p.r])));
-        row.onclick = () => {
-          if (locked) S.locked = false;
-          else { S.pet = p; S.fam = p.f || '?'; S.locked = true; S.open.add(byRarity ? 'r:' + p.r : S.fam); }
-          renderPets(); render();
+      // The pets of a family as a grid of pictures, the way Theory Crafting lays out its targets: the name is
+      // in the tooltip, the one picked is lit, and locked it carries a padlock.
+      const grid = document.createElement('div');
+      grid.className = 'pf-tiles';
+      pets.forEach(p => {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'pf-tile';
+        tile.__pet = p;
+        tile.appendChild(petThumb(p, 40));
+        // In the corner, what kind of pet it is: a padlock when it can only be had as a skin (it cannot be hatched or
+        // fused), otherwise the gem of its rarity. Which one is picked is said by the ring, not by a padlock.
+        const mark = p.h ? gem(LOOK[p.r]) : '🔒';
+        if (mark) tile.insertAdjacentHTML('beforeend', '<span class="kind">' + mark + '</span>');
+        // Picking changes the marks on the tiles, not the list: nothing is rebuilt, so nothing moves.
+        tile.onclick = () => {
+          if (S.locked && p === S.pet) S.locked = false;
+          else { S.pet = p; S.fam = p.f || '?'; S.locked = true; }
+          markPets(); render();
         };
-        list.appendChild(row);
+        grid.appendChild(tile);
       });
+      list.appendChild(grid);
     });
+    markPets();
+    list.scrollTop = keep;
     $('pfPetCount').textContent = n + ' / ' + A.pets.length;
   }
-  // Common first, then Rare, then Divine, inside a family.
-  const ORDER = { Common: 0, Rare: 1, Divine: 2 };
-  $('pfGroup').onclick = e => {
-    const g = e.target.dataset.g;
-    if (!g || g === S.group) return;
-    S.group = g;
-    if (g === 'rarity' && !S.open.has('r:' + S.pet.r)) S.open.add('r:' + S.pet.r);
-    [...$('pfGroup').children].forEach(b => b.classList.toggle('on', b.dataset.g === g));
-    renderPets();
-    const on = $('pfPetList').querySelector('.pet.on, .fam.cur');
-    if (on) on.scrollIntoView({ block: 'start' });
-  };
-  ['pfQ', 'pfFam'].forEach(id => $(id).addEventListener('input', renderPets));
+  ['pfQ', 'pfFam'].forEach(id => $(id).addEventListener('input', () => { S.folded.clear(); renderPets(); }));
 
   /* ---------- 2 · your pet: three levels that are the timeline ---------- */
   function buildAbilities() {
@@ -214,7 +263,7 @@ var PetFame = (function () {
         '<span class="rar" style="--c:' + RCOL(h.k) + '">' + gem(h.k) + PE.RARITY[h.k] + '</span>');
       $('pfWho').querySelector('.lockbtn').onclick = () => {
         if (!S.locked) { S.pet = shownPet(); S.fam = S.pet.f || '?'; }
-        S.locked = !S.locked; renderPets(); render();
+        S.locked = !S.locked; markPets(); render();
       };
     }
     const g = segs[h.k], done = g.fp ? Math.round(100 * h.fpIn / g.fp) : 100;
@@ -695,10 +744,10 @@ var PetFame = (function () {
       foodSheet.src = kept ? BUNDLE.petImages.foods : 'assets/pets/foods.png';
       build();
       S.fp = fpForLevel(0, 42);          // open on an uncommon pet at 42, mid-road
-      renderPets(); buildAbilities(); fit(); render();
+      buildRarityFilter(); renderPets(); buildAbilities(); fit(); render();
       started = ready.then(() => {
         render(); renderPets();
-        const on = $('pfPetList').querySelector('.pet.on, .fam.cur');
+        const on = $('pfPetList').querySelector('.pf-tile.is-on, .fam.cur');
         if (on) on.scrollIntoView({ block: 'start' });
         return true;
       });

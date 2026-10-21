@@ -667,6 +667,5 @@
   "static.fp.given": "Dane FP",
   "static.search.a.pet": "Szukaj zwierzaka…",
   "static.the.yard.you.already.own.it.rises": "Zagroda, którą już masz. Rośnie wraz z drogą: fuzja do danej rzadkości wymaga zagrody tej rzadkości.",
-  "static.by.family": "Wg rodziny",
-  "static.by.rarity": "Wg rzadkości"
+  "static.narrow.the.pets.to.a.rarity": "Pokaż zwierzaki jednej rzadkości"
 }

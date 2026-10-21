@@ -667,6 +667,5 @@
   "static.fp.given": "提供的 FP",
   "static.search.a.pet": "搜索宠物…",
   "static.the.yard.you.already.own.it.rises": "你已拥有的围场。它随道路提升：融合到某个稀有度需要该稀有度的围场。",
-  "static.by.family": "按家族",
-  "static.by.rarity": "按稀有度"
+  "static.narrow.the.pets.to.a.rarity": "按稀有度筛选宠物"
 }

@@ -169,8 +169,11 @@ body.pets-dragging, body.pets-dragging * { user-select: none !important; -webkit
 #pagePets .who .rar { flex: none; white-space: nowrap; min-width: 8em; justify-content: center; margin-left: 0; }
 #pagePets .ab .cap, #pagePets .hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.3em; }
 #pagePets .ab { min-height: calc(var(--u) * 3.6); }
-#pagePets .pet .famtag { color: var(--dim); font-size: calc(var(--u) * .8); }
-#pagePets #pfGroup { flex: none; }
+#pagePets .gems { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 5px; flex: none; }
+#pagePets .gembtn.skinbtn { margin-left: 8px; padding: 4px 12px; font-size: calc(var(--u) * 1.1); position: relative; }
+#pagePets .gembtn.skinbtn::before { content: ''; position: absolute; left: -7px; top: 15%; bottom: 15%; border-left: 1px solid var(--line); }
+#pagePets .gembtn { display: grid; place-items: center; padding: 4px 0; margin: 0; }
+#pagePets .gembtn .gem { height: calc(var(--u) * 1.5); }
 
 /* The readout and the legend under the chart are one line of one height each, whatever the numbers are: when one of them
    wrapped to a second line, the chart above it lost that height, and everything moved while you dragged. */
@@ -179,3 +182,15 @@ body.pets-dragging, body.pets-dragging * { user-select: none !important; -webkit
 #pagePets .readout div { min-width: 0; overflow: hidden; }
 #pagePets .readout b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
 #pagePets .readout span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; height: 1.3em; }
+
+/* The pets as pictures: the same cell as Theory Crafting's targets (a square well, an amber glow for the one picked). */
+#pagePets .pf-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 4px; padding: 5px 2px 6px; }
+#pagePets .pf-tile { position: relative; display: inline-flex; align-items: center; justify-content: center; aspect-ratio: 1; padding: 0; cursor: pointer; min-width: 0; overflow: hidden; 
+  background: linear-gradient(180deg, rgb(var(--hi-rgb) / .04), rgb(var(--shade) / calc(.16 * var(--shade-k)))), rgb(var(--well-rgb) / .6);
+  border: 1px solid rgb(var(--hi-rgb) / .08); border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgb(var(--hi-rgb) / .07), inset 0 -5px 10px rgb(var(--shade) / calc(.4 * var(--shade-k))); }
+#pagePets .pf-tile:hover { border-color: rgb(var(--hi-rgb) / .22); }
+#pagePets .pf-tile.is-on { border-color: rgba(224, 161, 58, .7); box-shadow: inset 0 1px 0 rgb(var(--hi-rgb) / .1), 0 0 12px rgba(224, 161, 58, .22); }
+#pagePets .pf-tile canvas { width: 82%; height: 82%; image-rendering: pixelated; background: none; border-radius: 0; }
+#pagePets .pf-tile .kind { position: absolute; right: 2px; bottom: 1px; display: flex; font-size: calc(var(--u) * .78); line-height: 1; filter: drop-shadow(0 1px 1px #000); }
+#pagePets .pf-tile .kind .gem { height: calc(var(--u) * 1); }
