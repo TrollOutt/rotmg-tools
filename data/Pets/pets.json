@@ -1,11 +1,11 @@
 {
- "built": "2026-10-20T16:04:37.346Z",
- "client": {
-  "kind": "client",
+ "built": "2026-10-21T12:09:38.332Z",
+ "tool": "tools/extract-pets.js",
+ "from": {
+  "kind": "client-extract",
   "build": "35b35f4a4feb47f98290e2f7628e90d8",
   "date": "2026-10-06"
  },
- "tool": "tools/extract-pets.js",
  "counts": {
   "pets": 704,
   "skins": 706,

@@ -6,6 +6,7 @@
   <title>Realm Tools</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="fiches-c.css">
+  <link rel="stylesheet" href="pet-fame.css">
   <link rel="stylesheet" href="ui-style.css" data-ui-style>
   <!-- Theme UI (Halloween) switched off for now; uncomment here and at the end of the body to bring it back.
   <link rel="stylesheet" href="./theme-ui-test.css"> -->
@@ -237,6 +238,14 @@
       <em class="home-card-go">Open →</em>
     </button>
 
+    <button type="button" class="home-card" data-go="pets" style="--i:5">
+      <img class="home-card-art" data-art="Page Art/Pet Fame.png" alt="">
+      <span class="home-card-title">Pet Fame Calculator</span>
+      <span class="home-card-line">What feeding a pet really costs.</span>
+      <small>Pick a pet and its three abilities, drag along the road to Divine, and see what each level does, what the yard and the fusions cost, and which food is the cheapest way there.</small>
+      <em class="home-card-go">Open →</em>
+    </button>
+
   </div>
 
   <!--
@@ -285,6 +294,77 @@
     by brendanbrubacher ·
     <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, modified<span id="modifiedOnHome"></span>.
   </footer>
+</div>
+
+<!-- Pet Fame Calculator -------------------------------------------- -->
+<div id="pagePets" class="app page" hidden>
+  <header class="masthead">
+    <button type="button" class="link-button back" data-go="home">← All tools</button>
+    <h1>Pet Fame Calculator</h1>
+    <div class="masthead-row">
+      <span class="lbl">Level to max</span>
+    <span class="fame-avail" id="pfUpTo"><button class="filter-chip" data-v="1">1st ability</button><button class="filter-chip" data-v="2">1st + 2nd</button><button class="filter-chip on" data-v="3">All 3</button></span>
+    <span class="lbl">Your yard</span>
+    <select id="pfYard" class="yard-sel" title="The yard you already own. It rises with the road: fusing into a rarity needs that rarity's yard."><option value="0">Common</option><option value="1">Uncommon</option><option value="2">Rare</option><option value="3">Legendary</option><option value="4">Divine</option></select>
+    <span class="lbl">Pay with</span>
+    <span class="fame-avail" id="pfPay"><button class="filter-chip on" data-v="fame">Fame</button><button class="filter-chip" data-v="gold">Gold</button></span>
+    </div>
+  </header>
+  <div class="pf-grid">
+    <div class="pf-main">
+    <section class="card">
+      <header><span class="step-badge">1</span><h2>Pets</h2><span class="header-aside" id="pfPetCount"></span></header>
+      <div class="pf-body">
+        <span class="fame-avail" id="pfGroup"><button class="filter-chip on" data-g="family">By family</button><button class="filter-chip" data-g="rarity">By rarity</button></span>
+        <input type="search" id="pfQ" placeholder="Search a pet…" autocomplete="off">
+        <select id="pfFam"><option value="">Every family</option></select>
+        <div class="pf-scroll" id="pfPetList" style="flex:1"></div>
+      </div>
+    </section>
+
+    <div class="pf-col pf-center">
+      <div class="pf-top">
+        <section class="card">
+          <header><h2>In the yard</h2><span class="fame-avail" id="pfModes" style="margin-left:auto"><button class="filter-chip on" data-m="action">Action</button><button class="filter-chip" data-m="walk">Walk</button><button class="filter-chip" data-m="attack">Attack</button></span></header>
+          <div class="arena"><canvas id="pfArena"></canvas><span class="tag" id="pfArenaTag"></span></div>
+        </section>
+        <section class="card">
+          <header><span class="step-badge">2</span><h2>Your pet</h2><span class="header-aside">drag a level — the road follows</span></header>
+          <div class="pf-body">
+            <div class="who" id="pfWho"></div>
+            <div id="pfAbs" style="display:grid;gap:4px"></div>
+            <p class="hint" id="pfHint"></p>
+          </div>
+        </section>
+      </div>
+      <section class="card">
+        <header><span class="step-badge">3</span><h2>Road to Divine</h2><span class="header-aside">drag the white line — the levels follow</span></header>
+        <div class="pf-body">
+          <div class="road" id="pfRoad"></div>
+          <div class="chart"><svg id="pfChart"></svg></div>
+          <div class="legend" id="pfLegend"></div>
+          <div class="readout" id="pfReadout"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="pf-col pf-right">
+      <section class="card">
+        <header><span class="step-badge">4</span><h2>What it does</h2><span class="header-aside">at your level · at level 100</span></header>
+        <div class="eff" id="pfEff"></div>
+      </section>
+      <section class="card">
+        <header><span class="step-badge">5</span><h2>Food</h2><span class="header-aside" id="pfFoodHead"></span></header>
+        <div class="pf-body">
+          <div class="used" id="pfUsed"></div>
+          <div class="sortbar"><span>Sort by</span><span class="fame-avail" id="pfFoodSort"><button class="filter-chip" data-s="value"></button><button class="filter-chip" data-s="fp">FP given</button></span></div>
+          <div class="pf-scroll" style="flex:1"><div class="slots" id="pfFoods"></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  </div>
+  <div class="tip" id="pfTip" hidden></div>
 </div>
 
 <!-- Skin Viewer ------------------------------------------------------ -->
@@ -831,6 +911,9 @@
 <script data-lazy-src="index-families.js"></script>
 <script data-lazy-src="index-page.js"></script>
 <script data-lazy-src="index-browse.js"></script>
+<script data-lazy-src="pet-fame-engine.js"></script>
+<script data-lazy-src="pet-fame-data.js"></script>
+<script data-lazy-src="pet-fame.js"></script>
 <script src="router-contract.js"></script>
 <script src="app-data.js"></script>
 <script src="app.js"></script>

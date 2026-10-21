@@ -93,7 +93,11 @@ const consumables = equipment.filter(o => /Pet Saddlebag|Pet Form Stone|Mystery 
 const prov = (() => { try { return JSON.parse(fs.readFileSync(path.join(XML, 'provenance.json'), 'utf8')); } catch (e) { return null; } })();
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify({
-  built: new Date().toISOString(), client: prov && prov.from, tool: 'tools/extract-pets.js',
+  built: new Date().toISOString(), tool: 'tools/extract-pets.js',
+  /* Read from whatever client is in client-data/, which is not always the build the catalogues were made from:
+     it is stamped 'client-extract', not 'client', so the one-build check for the catalogues leaves it out, and
+     says which build it did come from. Re-run it after npm run extract-client-data. */
+  from: Object.assign({ kind: 'client-extract' }, prov && prov.from ? { build: prov.from.build, date: prov.from.date } : {}),
   counts: { pets: pets.length, skins: skins.length, abilities: abilities.length, behaviors: behaviors.length,
     feedable: feedable.length, petFood: petFood.length, eggs: eggs.length, stones: stones.length },
   yardUpgraders, abilities, behaviors, pets, skins, eggs, petFood, stones, consumables, feedable

@@ -49,6 +49,7 @@ const deployCritical = [
   'router-contract.test.js',
   'module-links.test.js',
   'outline.test.js',
+  'pet-fame.test.js',
   'runtime-lifecycle.test.js',
   'skin-viewer-data.test.js',
   'skin-viewer-animation.test.js',

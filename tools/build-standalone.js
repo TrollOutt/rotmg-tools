@@ -444,6 +444,17 @@ const indexGroupingSource = readWeb('index-grouping.js');
 const indexFamiliesSource = readWeb('index-families.js');
 const indexSource = readWeb('index-page.js');
 const browseSource = readWeb('index-browse.js');
+// The Pet Fame Calculator: its arithmetic, what the client says about pets and food, and the page.
+const petEngineSource = readWeb('pet-fame-engine.js');
+const petDataSource = readWeb('pet-fame-data.js');
+const petPageSource = readWeb('pet-fame.js');
+const petCss = readWeb('pet-fame.css');
+const petStyleTag = '<link rel="stylesheet" href="pet-fame.css">';
+// Its two sheets of pictures. The kept copy carries them inside; the served page fetches them from assets/pets.
+const petImages = {
+  pets: 'data:image/png;base64,' + fs.readFileSync(path.join(web, 'assets', 'pets', 'pets.png')).toString('base64'),
+  foods: 'data:image/png;base64,' + fs.readFileSync(path.join(web, 'assets', 'pets', 'foods.png')).toString('base64')
+};
 const routerSource = readWeb('router-contract.js');
 const whatsNewSource = readWeb('whats-new.js');
 const localesSource = readWeb('locales.js');
@@ -570,10 +581,10 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"sprite-animation.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"sprite-animation.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script data-lazy-src=\"pet-fame-engine.js\"></script>\n<script data-lazy-src=\"pet-fame-data.js\"></script>\n<script data-lazy-src=\"pet-fame.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardDataTag) || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
-  || !page.includes(lookStyleTag) || !page.includes(lookScriptTag)) {
+  || !page.includes(lookStyleTag) || !page.includes(lookScriptTag) || !page.includes(petStyleTag)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
 }
@@ -684,6 +695,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
   .replace(cardStyleTag, () => `<style>\n${bundleSources.indexText
     ? cardCss.replace(/url\(([^)]+)\)/g, (whole, file) => cardImages[file] ? 'url(' + cardImages[file] + ')' : whole)
     : cardCss}\n</style>`)
+  .replace(petStyleTag, () => `<style>\n${petCss}\n</style>`)
   .replace(cardDataTag, () => `<script>\n${safe(cardDataSource)}\n</script>`)
   .replace(cardScriptTag, () => `<script>\n${safe(cardSource)}\n</script>`)
   .replace(lookStyleTag, () => `<style data-ui-style>\n${lookCss}\n</style>`)
@@ -692,7 +704,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
       theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '',
       statusSheet: bundleSources.statusText ? statusSheet : '',
-      ...(bundleSources.indexText ? { cardFiles, cardImages } : {}) })};</script>`,
+      ...(bundleSources.indexText ? { cardFiles, cardImages, petImages } : {}) })};</script>`,
     `<script>\n${safe(localesSource)}\n</script>`,
     `<script>\n${safe(i18nSource)}\n</script>`,
     `<script>\n${safe(outlineSource)}\n</script>`,
@@ -711,6 +723,9 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(indexFamiliesSource)}\n</script>`,
     `<script>\n${safe(indexSource)}\n</script>`,
     `<script>\n${safe(browseSource)}\n</script>`,
+    `<script>\n${safe(petEngineSource)}\n</script>`,
+    `<script>\n${safe(petDataSource)}\n</script>`,
+    `<script>\n${safe(petPageSource)}\n</script>`,
     `<script>\n${safe(routerSource)}\n</script>`,
     `<script>\n${safe(appDataSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`
@@ -861,6 +876,8 @@ carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'sk
 fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));
 fs.copyFileSync(path.join(web, 'i18n.js'), path.join(pagesDir, 'i18n.js'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
+// The pet and food pictures the Pet Fame Calculator draws with.
+carryAcross(path.join(web, 'assets', 'pets'), path.join(pagesDir, 'assets', 'pets'));
 // The creatures' walking loops, which an Index card fetches by their index.json.
 carryAcross(path.join(web, 'assets', 'realm-monster-animations'), path.join(pagesDir, 'assets', 'realm-monster-animations'));
 // The stone the boxes are laid on by default: five small pictures, one per shape of box.

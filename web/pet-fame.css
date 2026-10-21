@@ -1,0 +1,181 @@
+/*
+ * The Pet Fame Calculator, in the site's own skin: its cards, chips and step badges are
+ * style.css's. Only what a calculator that must fit one window needs is written here, and
+ * every selector is under #pagePets so nothing leaks into another page.
+ */
+#pagePets { --s1: #ffcb70; --s2: #79c5e8; --s3: #e98bd8; --fame: #ffcb70; --gold: #ffd026; --u: clamp(11px, 1.45vh, 14px); --common: #d8d2e3; }
+body[data-page="pets"] { overflow: hidden; }
+/* The page is exactly one window high: its header, then a grid that takes whatever is left. */
+#pagePets:not([hidden]) { display: flex; flex-direction: column; height: 100vh; max-width: 1880px; padding-top: 12px; padding-bottom: 12px; gap: 8px; }
+#pagePets .masthead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0; flex: none; }
+#pagePets .masthead .back { margin: 0; }
+#pagePets .masthead h1 { margin: 0; font-size: calc(var(--u) * 1.8); }
+#pagePets .masthead-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#pagePets .lbl { color: var(--muted); font-size: calc(var(--u) * .95); }
+#pagePets .pf-grid { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); position: relative; z-index: 1; }
+#pagePets .fame-avail .filter-chip { font-size: calc(var(--u) * .9); padding: 3px 11px; }
+#pagePets .fame-avail { flex-wrap: nowrap; }
+#pagePets .pf-main { display: grid; grid-template-columns: clamp(200px, 18vw, 280px) minmax(0, 1fr) clamp(320px, 28vw, 440px); gap: 10px; min-height: 0; }
+#pagePets .pf-col { display: grid; gap: 10px; min-height: 0; }
+#pagePets .pf-center { grid-template-rows: minmax(0, 40fr) minmax(0, 60fr); }
+/* The food has the larger half: it is the one thing on the page that is picked from a crowd. */
+#pagePets .pf-right { grid-template-rows: auto minmax(0, 1fr); }
+#pagePets .pf-right > .card:first-child { overflow: hidden; }
+#pagePets .pf-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 10px; min-height: 0; }
+/* The site's card, packed tighter so a whole calculator fits one window. */
+#pagePets section.card { padding: 9px 12px 10px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+#pagePets .card > header { margin-bottom: 7px; flex: none; gap: 8px; }
+#pagePets .card > header h2 { font-size: calc(var(--u) * 1.05); }
+#pagePets .header-aside { font-size: calc(var(--u) * .85); }
+#pagePets .pf-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+#pagePets .pf-scroll { overflow: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+#pagePets input[type=search], #pagePets select { flex: none; height: auto; background: rgb(var(--chip-rgb) / .8); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font: inherit; padding: 4px 8px; min-width: 0; }
+#pagePets input[type=range] { width: 100%; margin: 0; accent-color: var(--c, var(--accent)); }
+#pagePets .gem { height: calc(var(--u) * 1.05); image-rendering: pixelated; vertical-align: -2px; }
+/* pets */
+#pagePets .fam { cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; padding: 3px 6px; font-size: calc(var(--u) * .85); letter-spacing: .4px; text-transform: uppercase; color: var(--accent); background: rgb(var(--bg-2-rgb) / .96); border-bottom: 1px solid var(--line-soft); }
+#pagePets .fam b { color: var(--dim); }
+#pagePets .fam:hover { color: var(--text); }
+#pagePets .fam .tw { display: inline-block; width: 1em; transition: transform .12s; }
+#pagePets .fam.open .tw { transform: rotate(90deg); }
+#pagePets .fam.cur { color: var(--locked); }
+#pagePets .pet .lock { font-size: calc(var(--u) * .9); }
+#pagePets .who .lockbtn { font: inherit; font-size: calc(var(--u) * .82); cursor: pointer; border-radius: 999px; padding: 2px 10px; border: 1px solid var(--line); background: rgb(var(--chip-rgb) / .8); color: var(--muted); }
+#pagePets .who .lockbtn.on { color: var(--on-locked); background: var(--locked); border-color: var(--locked); font-weight: 700; }
+#pagePets .pet { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 2px 6px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; }
+#pagePets .pet:hover { background: rgb(var(--hi-rgb) / .04); }
+#pagePets .pet.on { border-color: rgb(255 208 38 / .55); background: var(--locked-soft); }
+#pagePets .pet canvas { width: 34px; height: 34px; image-rendering: pixelated; background: rgb(var(--well-rgb) / .6); border-radius: 6px; }
+/* Rows out of sight are not laid out at all: 706 of them made every redraw slow. */
+#pagePets .pet { content-visibility: auto; contain-intrinsic-size: auto 38px; }
+#pagePets .pet span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the yard */
+#pagePets .arena { position: relative; flex: 1; min-height: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--line-soft); }
+#pagePets .arena canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+#pagePets .arena .tag { position: absolute; left: 7px; right: 7px; bottom: 5px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; font-size: calc(var(--u) * .82); color: var(--text); text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+/* your pet */
+#pagePets .who { display: flex; align-items: center; gap: 10px; }
+#pagePets .who canvas { width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); image-rendering: pixelated; background: rgb(var(--well-rgb) / .6); border: 1px solid var(--line-soft); border-radius: 8px; }
+#pagePets .who b { font-size: calc(var(--u) * 1.2); color: var(--title); }
+#pagePets .who i { font-style: normal; color: var(--muted); }
+#pagePets .who .lockbtn { margin-left: auto; }
+#pagePets .who .rar { display: flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); color: var(--c); font-weight: 700; }
+#pagePets .ab { display: grid; grid-template-columns: calc(var(--u) * 2.2) minmax(0, 9em) minmax(0, 1fr) calc(var(--u) * 3.4); gap: 2px 8px; align-items: center; padding: 3px 8px; border-radius: 8px; background: rgb(var(--well-rgb) / .45); border: 1px solid var(--line-soft); }
+#pagePets .ab .ord { color: var(--c); font-weight: 800; }
+#pagePets .ab input[type=number] { width: 100%; background: rgb(var(--chip-rgb)); border: 1px solid var(--line); color: var(--title); border-radius: 6px; font: inherit; font-family: var(--mono); text-align: center; padding: 1px 2px; }
+#pagePets .ab.closed input[type=number] { color: var(--dim); }
+#pagePets .ab .cap { grid-column: 3 / 5; font-size: calc(var(--u) * .78); color: var(--dim); margin-top: -2px; }
+#pagePets .hint { margin: 0; font-size: calc(var(--u) * .85); color: var(--dim); }
+/* road */
+#pagePets .road { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); flex: none; }
+#pagePets .node { display: grid; justify-items: center; gap: 1px; text-align: center; position: relative; padding-top: 3px; }
+#pagePets .node .pad { width: clamp(32px, 7vh, 76px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 62%, color-mix(in srgb, var(--c) 22%, transparent), rgb(var(--well-rgb) / .9) 70%); border: 2px solid color-mix(in srgb, var(--c) 50%, transparent); }
+#pagePets .node.here .pad { box-shadow: 0 0 0 3px rgb(var(--bg-rgb)), 0 0 0 5px var(--c), 0 0 22px color-mix(in srgb, var(--c) 45%, transparent); }
+#pagePets .node.done { opacity: .5; }
+#pagePets .node .pad canvas { width: 72%; height: 72%; image-rendering: pixelated; }
+#pagePets .node b { color: var(--c); display: flex; align-items: center; gap: 4px; font-size: calc(var(--u) * .95); }
+#pagePets .node span { color: var(--muted); font-size: calc(var(--u) * .82); }
+#pagePets .node .cost { font-family: var(--mono); color: var(--fame); }
+#pagePets .node .cost.g { color: var(--gold); }
+#pagePets .node .whole { color: var(--muted); font-size: calc(var(--u) * .82); }
+#pagePets .node .whole.g { color: var(--muted); }
+#pagePets .node .unlock { color: var(--dim); font-size: calc(var(--u) * .74); }
+#pagePets .node .unlock em { font-style: normal; color: var(--fame); }
+#pagePets .node .unlock.g em { color: var(--gold); }
+#pagePets .node .pad { order: -1; }
+/* Every line of a phase is one line of one height, whatever it says: the road is exactly as tall in every state,
+   so the chart under it keeps its size while you drag. */
+#pagePets .node b, #pagePets .node span:not(.tagx) { display: block; max-width: 100%; height: 1.35em; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pagePets .node b { display: flex; }
+#pagePets .node .looks { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(var(--u) * .72); color: var(--muted); font-style: italic; }
+#pagePets select.yard-sel { flex: none; }
+#pagePets .node .tagx { position: absolute; top: -2px; font-size: calc(var(--u) * .7); letter-spacing: .1em; text-transform: uppercase; background: var(--c); color: #111; padding: 0 6px; border-radius: 999px; font-weight: 800; }
+#pagePets .chart { flex: 1; min-height: 0; position: relative; }
+/* Dragging the white line or a level must not select the text it passes over. */
+#pagePets .chart, #pagePets .chart svg, #pagePets .chart text, #pagePets .road, #pagePets .legend, #pagePets .readout, #pagePets .ab, #pagePets .ab .cap { user-select: none; -webkit-user-select: none; }
+body.pets-dragging, body.pets-dragging * { user-select: none !important; -webkit-user-select: none !important; cursor: ew-resize !important; }
+#pagePets input[type=range] { touch-action: none; }
+#pagePets .chart svg { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: ew-resize; }
+#pagePets .chart text { fill: var(--muted); font-size: calc(var(--u) * .82); font-family: "Segoe UI", system-ui, sans-serif; }
+#pagePets .legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; flex: none; color: var(--muted); font-size: calc(var(--u) * .88); }
+#pagePets .legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; background: var(--c); vertical-align: middle; margin-right: 5px; }
+#pagePets .readout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; flex: none; }
+#pagePets .readout div { background: rgb(var(--well-rgb) / .55); border: 1px solid var(--line-soft); border-radius: 8px; padding: 4px 10px; }
+#pagePets .readout b { display: block; font-size: calc(var(--u) * 1.35); color: var(--title); font-variant-numeric: tabular-nums; }
+#pagePets .readout b.f { color: var(--fame); }
+#pagePets .readout b.g { color: var(--gold); }
+#pagePets .readout span { color: var(--muted); font-size: calc(var(--u) * .82); }
+/* effects */
+#pagePets .eff { display: grid; gap: 5px; }
+#pagePets .eff > div { border: 1px solid var(--line-soft); border-left: 3px solid var(--c); border-radius: 8px; padding: 3px 9px 4px; background: rgb(var(--well-rgb) / .45); }
+#pagePets .eff > div.off { opacity: .4; }
+#pagePets .eff h3 { margin: 0 0 2px; font-size: var(--u); display: flex; gap: 6px; }
+#pagePets .eff h3 em { font-style: normal; color: var(--muted); font-weight: 500; margin-left: auto; }
+#pagePets .eff .st { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px 14px; color: var(--muted); font-size: calc(var(--u) * .88); }
+#pagePets .eff .st > div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0 6px; align-items: baseline; min-width: 0; }
+#pagePets .eff .st span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pagePets .eff .st b { color: var(--text-strong); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+#pagePets .eff .st i { font-style: normal; color: var(--dim); font-size: .92em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#pagePets .eff .ap { color: var(--dim); font-size: .85em; }
+/* food */
+#pagePets .sortbar { display: flex; align-items: center; gap: 8px; flex: none; color: var(--muted); font-size: calc(var(--u) * .85); }
+#pagePets .sortbar .filter-chip { padding: 2px 9px; font-size: calc(var(--u) * .82); }
+#pagePets .rars { display: grid; grid-template-columns: .8fr repeat(5, minmax(0, 1fr)); gap: 4px; flex: none; }
+#pagePets .rars .filter-chip { padding: 3px 2px; font-size: calc(var(--u) * .78); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
+#pagePets .why { margin: 0; color: var(--muted); font-size: calc(var(--u) * .88); flex: none; }
+#pagePets .why b { color: var(--text); }
+#pagePets .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--u) * 4.4), 1fr)); gap: 6px; align-content: start; padding: 4px 3px; }
+#pagePets .it { position: relative; aspect-ratio: 1; display: grid; place-items: center; cursor: pointer; border-radius: 8px; background: rgb(var(--tile-rgb) / .9); border: 1px solid var(--line-soft); }
+#pagePets .it:hover { border-color: var(--line); background: rgb(var(--hi-rgb) / .06); }
+#pagePets .it.on { border-color: var(--locked); box-shadow: 0 0 0 2px var(--locked), 0 0 14px rgba(255, 208, 38, .45); background: var(--locked-soft); }
+#pagePets .it .ck { position: absolute; top: -5px; right: -5px; width: calc(var(--u) * 1.3); height: calc(var(--u) * 1.3); display: grid; place-items: center; border-radius: 50%; background: var(--locked); color: var(--on-locked); font-size: calc(var(--u) * .85); font-weight: 900; }
+/* The food that sets every number on the page, said at the top of its list. */
+#pagePets .used { flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 8px; border: 1px solid rgb(255 208 38 / .5); background: var(--locked-soft); }
+#pagePets .used canvas { width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); image-rendering: pixelated; flex: none; }
+#pagePets .used span { display: grid; min-width: 0; line-height: 1.25; }
+#pagePets .used small { color: var(--locked); font-size: calc(var(--u) * .78); letter-spacing: .08em; text-transform: uppercase; }
+#pagePets .used b { color: var(--title); font-size: calc(var(--u) * 1.1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pagePets .used em { font-style: normal; color: var(--muted); font-size: calc(var(--u) * .88); margin-left: auto; text-align: right; white-space: nowrap; line-height: 1.25; }
+#pagePets .usedfood { color: var(--locked); }
+#pagePets .detail.chosen { border-color: rgb(255 208 38 / .45); }
+#pagePets .it.no { opacity: .3; }
+#pagePets .it canvas { width: 78%; height: 78%; image-rendering: pixelated; }
+#pagePets .it .rk { position: absolute; top: -4px; left: -4px; font-size: calc(var(--u) * .72); font-weight: 800; background: var(--locked); color: var(--on-locked); border-radius: 999px; padding: 0 5px; }
+#pagePets .it .fp { position: absolute; right: 3px; bottom: 1px; font-size: calc(var(--u) * .78); color: var(--text); text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+#pagePets .detail { flex: none; display: grid; grid-template-columns: calc(var(--u) * 2.8) minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 6px 9px; border-radius: 8px; background: rgb(var(--well-rgb) / .55); border: 1px solid var(--line-soft); }
+#pagePets .detail canvas { grid-row: span 2; width: 100%; image-rendering: pixelated; }
+#pagePets .detail b { color: var(--title); }
+#pagePets .detail span { color: var(--muted); font-size: calc(var(--u) * .88); }
+#pagePets .tip { position: fixed; z-index: 10; pointer-events: none; padding: 6px 10px; max-width: 250px; border-radius: 8px; background: rgb(var(--panel-rgb) / .97); border: 1px solid var(--line); box-shadow: 0 6px 18px rgb(0 0 0 / .5); font-size: calc(var(--u) * .9); }
+#pagePets .tip[hidden] { display: none; }
+#pagePets .tip b { display: block; color: var(--title); }
+#pagePets .tip span { color: var(--muted); }
+@media (max-height: 760px) {
+  #pagePets .ab .cap { display: none; }
+  #pagePets .ab { padding: 2px 8px; }
+}
+@media (max-width: 900px) {
+  body[data-page="pets"] { overflow: auto; }
+  #pagePets .pf-main, #pagePets .pf-top { grid-template-columns: 1fr; }
+  #pagePets .pf-center { grid-template-rows: auto 70vh; }
+}
+
+/* Nothing in "Your pet" changes size when the pet, the rarity or the level does: names are cut with an ellipsis
+   rather than wrapped, and the two badges have a width of their own, so the card never moves while you drag. */
+#pagePets .who { flex: none; height: calc(var(--u) * 3.4); min-width: 0; }
+#pagePets .who > div { flex: 1; min-width: 0; line-height: 1.25; }
+#pagePets .who b, #pagePets .who i { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pagePets .who .lockbtn { flex: none; white-space: nowrap; min-width: 10.5em; text-align: center; margin-left: 0; }
+#pagePets .who .rar { flex: none; white-space: nowrap; min-width: 8em; justify-content: center; margin-left: 0; }
+#pagePets .ab .cap, #pagePets .hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.3em; }
+#pagePets .ab { min-height: calc(var(--u) * 3.6); }
+#pagePets .pet .famtag { color: var(--dim); font-size: calc(var(--u) * .8); }
+#pagePets #pfGroup { flex: none; }
+
+/* The readout and the legend under the chart are one line of one height each, whatever the numbers are: when one of them
+   wrapped to a second line, the chart above it lost that height, and everything moved while you dragged. */
+#pagePets .legend { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; height: 1.6em; }
+#pagePets .legend > span:last-child { margin-left: auto; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#pagePets .readout div { min-width: 0; overflow: hidden; }
+#pagePets .readout b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+#pagePets .readout span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; height: 1.3em; }

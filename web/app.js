@@ -4229,7 +4229,7 @@ async function load() {
  * and 'realm' means the way in with that frame opened out.
  */
 const PAGES = { home: 'pageHome', enchant: 'pageEnchant', fame: 'pageFame',
-  news: 'pageNews', theory: 'pageTheory', index: 'pageIndex', skins: 'pageSkins' };
+  news: 'pageNews', theory: 'pageTheory', index: 'pageIndex', skins: 'pageSkins', pets: 'pagePets' };
 
 /*
  * Pointed at the atlas once, and not before the way in has painted.
@@ -5563,6 +5563,26 @@ function loadLateScript(placeholder, onload, onerror) {
   fetch(src, { cache: 'no-cache' }).catch(() => {}).then(add);
 }
 
+/*
+ * The Pet Fame Calculator reads three files the first time it is opened - its arithmetic,
+ * what the client says about pets and food, and the page itself - and nobody who came for
+ * another tool pays for them. They go in that order, each needing the one before.
+ */
+let petsScriptLoading = null;
+function ensurePetsPage() {
+  const run = () => (typeof PetFame === 'undefined' ? false : PetFame.start());
+  if (typeof PetFame !== 'undefined') return Promise.resolve(run());
+  if (!petsScriptLoading) {
+    const names = ['pet-fame-engine.js', 'pet-fame-data.js', 'pet-fame.js'];
+    const holders = names.map(name => document.querySelector('script[data-lazy-src="' + name + '"]'));
+    if (holders.some(holder => !holder)) return Promise.reject(new Error('A Pet Fame script placeholder is missing.'));
+    petsScriptLoading = holders.reduce((chain, holder) => chain.then(() => new Promise((resolve, reject) => {
+      loadLateScript(holder, resolve, () => { petsScriptLoading = null; reject(new Error('Could not load the Pet Fame Calculator.')); });
+    })), Promise.resolve());
+  }
+  return petsScriptLoading.then(run);
+}
+
 let indexScriptLoading = null;
 function ensureIndexPage(open) {
   const run = () => {
@@ -5722,6 +5742,12 @@ function showPage(name) {
    * the first time somebody asks for it and not a moment before, the same way
    * the other two heavy pages are.
    */
+  if (page === 'pets') {
+    pageLoading = ensurePetsPage().catch(error => {
+      console.error(error);
+      return false;
+    });
+  }
   if (page === 'index') {
     pageLoading = ensureIndexPage().catch(error => {
       console.error(error);
@@ -6198,7 +6224,7 @@ const MODULES = [
    * exist is a better thing to put in a hole than a hole, and a greyed one
    * that cannot be pressed says what it is without a word of explanation.
    */
-  { side: 1, row: 2, soon: true, name: 'Pet Fame Calculator',
+  { side: 1, row: 2, go: 'pets', name: 'Pet Fame Calculator',
     line: 'What feeding a pet really costs.',
     detail: 'Work out what a feed is worth at each rank, what carrying a pet '
           + 'to the next one takes, and which food is the cheapest way there.',
