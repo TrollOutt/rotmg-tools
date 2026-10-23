@@ -2249,18 +2249,16 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 }
 .base-fame input::placeholder { color: var(--dim); font-weight: 400; }
 
-/* ------------------------------------------------------------------ *
- * Fame Sweep, on a screen with room to spare                          *
- * ------------------------------------------------------------------ *
- * The Dungeons card follows its content instead of stretching to fill
- * the remaining viewport height.
- *
- * Filtering the dungeon list therefore naturally makes the card shorter
- * or taller. The surrounding Fame Sweep layout keeps its normal flow.
- */
+/* Fame Sweep needs document scrolling when the masthead wraps or the window
+   is short. Its dungeon card grows with the grid instead of being clipped by
+   the fixed-height shell used by the calculator. */
 @media (min-width: 1041px) and (min-height: 700px) {
+  body[data-page="fame"] { overflow-y: auto; }
+  #pageFame.app { height: auto; min-height: 100%; }
+  #pageFame .layout { flex: none; min-height: auto; align-items: start; }
+  #pageFame .column { overflow: visible; }
+
   #pageFame .column.results {
-    overflow: visible;
     align-self: start;
   }
 
