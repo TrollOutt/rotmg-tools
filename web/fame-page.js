@@ -147,11 +147,16 @@ var FamePage = (function () {
 
   // The portal is a GIF where the game draws it moving, a PNG otherwise; which
   // is which comes from data/Fame/dungeon-pages.txt rather than being guessed.
+  // The client counts Mad God Mayhem under its internal name; the player knows
+  // it by the event's own name and portal.  Saved ticks stay keyed by the old one.
+  const SHOWN = { 'Oryx Pandemonium Decaract': 'Mad God Mayhem' };
+  const shown = name => SHOWN[name] || name;
+
   function spriteFor(name) {
-    const kind = (state.info.get(name) || {}).picture || 'png';
-    const key = SPRITES + '/' + name + '.' + kind;
+    const kind = SHOWN[name] ? 'png' : (state.info.get(name) || {}).picture || 'png';
+    const key = SPRITES + '/' + shown(name) + '.' + kind;
     if (state.assets) return state.assets[key] || null;
-    return '../data/' + esc(SPRITES).replace(/%2F/g, '/') + '/' + esc(name) + '.' + kind;
+    return '../data/' + esc(SPRITES).replace(/%2F/g, '/') + '/' + esc(shown(name)) + '.' + kind;
   }
 
   function difficultyOf(name) {
@@ -426,14 +431,14 @@ var FamePage = (function () {
       <div class="fame-next-row" style="--i:${index}">
         <button type="button" class="fame-next-pick" data-tick="${html(entry.name)}">
           ${tile(entry.name, 'fame-next-icon')}
-          <span class="fame-next-name">${html(entry.name)}</span>
+          <span class="fame-next-name">${html(shown(entry.name))}</span>
           <span class="fame-next-gain">${count(entry.first)}<small>fame</small></span>
           <small class="fame-next-why">${entry.unlocks.length
             ? `finishes ${names(entry.unlocks)}`
             : `ticks ${entry.ticks === 1 ? 'a box in' : `${entry.ticks} boxes:`} ${names(entry.towards)}`}</small>
         </button>
         <button type="button" class="fame-next-skip" data-skip="${html(entry.name)}"
-          title="Not this one — take it off the list" aria-label="Take ${html(entry.name)} off the list">✕</button>
+          title="Not this one — take it off the list" aria-label="Take ${html(shown(entry.name))} off the list">✕</button>
       </div>`).join('') + aside,
       // Sorted, not in the order shown: ticking a dungeon somewhere else in
       // the realm shuffles what these four are worth relative to each other,
@@ -466,7 +471,8 @@ var FamePage = (function () {
 
     let rows = state.data.dungeons
       .filter(dungeon => state.avail.has(dungeon.availability))
-      .filter(dungeon => !term || dungeon.name.toLowerCase().includes(term));
+      .filter(dungeon => !term || dungeon.name.toLowerCase().includes(term)
+        || shown(dungeon.name).toLowerCase().includes(term));
     if (state.sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
     else if (state.sort === 'hard') {
       // RealmEye's 1-to-10 rating. Easiest first, because that is the order
@@ -520,11 +526,11 @@ var FamePage = (function () {
       return `
         <button type="button" class="fame-tile${on ? ' is-done' : ''}${needed ? ' is-wanted' : ''}${
           dimmed ? ' is-dim' : ''}" data-dungeon="${html(dungeon.name)}" style="--i:${index}"
-          aria-pressed="${on}" title="${html(dungeon.name)} — ${
+          aria-pressed="${on}" title="${html(shown(dungeon.name))} — ${
             count(EnchantFame.firstCompletion(dungeon))} fame the first time${difficultyOf(dungeon.name)
             ? `, rated ${difficultyOf(dungeon.name)} out of 10` : ''}">
           ${tile(dungeon.name, 'fame-tile-art')}
-          <span class="fame-tile-name">${html(dungeon.name)}</span>
+          <span class="fame-tile-name">${html(shown(dungeon.name))}</span>
           <span class="fame-tile-check">✓</span>
         </button>`;
     }).join('') : '<p class="note">No dungeon matches that.</p>', signature);
