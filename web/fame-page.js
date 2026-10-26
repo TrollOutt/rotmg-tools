@@ -825,7 +825,7 @@ var FamePage = (function () {
       }
       render();
     });
-    document.querySelector('.fame-avail').addEventListener('click', event => {
+    document.querySelector('#pageFame .fame-avail').addEventListener('click', event => {
       const button = event.target.closest('[data-avail]');
       if (!button) return;
       const kind = button.dataset.avail;
