@@ -4010,7 +4010,8 @@ const TINT = {
       + '" data-tab="' + i + '">' + esc(one.name)
       + (tabs.length > 1 ? '<u data-shut="' + i + '">×</u>' : '')
       + '</button>').join('')
-      + '<button type="button" class="tab tab-new" data-tab="new">+ New</button>';
+      + '<button type="button" class="tab tab-new" data-tab="new" title="Start from a blank build">+ New</button>'
+      + '<button type="button" class="tab tab-new" data-tab="copy" title="Copy the build on screen into a new tab">⧉ Duplicate</button>';
   }
 
   /* ---------------- putting it on the screen ---------------- */
@@ -4694,6 +4695,13 @@ const TINT = {
       if (tab.dataset.tab === 'new') {
         tabs.push(fresh(build.klass));
         onTab = tabs.length - 1;
+        before = null;
+      } else if (tab.dataset.tab === 'copy') {
+        const twin = JSON.parse(JSON.stringify(build));
+        twin.name = build.name + ' copy';
+        tabs.splice(onTab + 1, 0, twin);
+        onTab += 1;
+        before = null;
       } else {
         onTab = Number(tab.dataset.tab);
       }
