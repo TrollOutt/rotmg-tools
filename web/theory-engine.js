@@ -136,7 +136,8 @@
  * @typedef {{name: string, hand: string, slot?: number}} TheorySearchItem
  * @typedef {{items: TheorySearchItem[],
  *   byClass: Record<string, {slots: number[]} | undefined>}} TheoryItemSearchCatalogue
- * @typedef {{banned?: Record<string, unknown>}} TheoryItemSearchState
+ * @typedef {{banned?: Record<string, unknown>, owned?: Record<string, boolean>,
+ *   searchOwned?: boolean}} TheoryItemSearchState
  * @typedef {{getData: () => TheoryItemSearchCatalogue, hands: readonly (readonly string[])[],
  *   accessible: (name: string) => boolean}} TheoryItemSearchDependencies
  */
@@ -165,7 +166,8 @@
  */
 /**
  * @typedef {TheoryScoreState & {goals?: string[], goal?: string,
- *   locked: Record<string, boolean>, share?: Record<string, unknown> | null}} TheoryGoalState
+ *   locked: Record<string, boolean>, share?: Record<string, unknown> | null,
+ *   owned?: Record<string, boolean>, searchOwned?: boolean}} TheoryGoalState
  * @typedef {TheoryScoreGoal & {say: string}} TheoryGoal
  * @typedef {{goal: TheoryGoal, raw: number, part: number}} TheoryGoalShare
  * @typedef {Record<string, number>} TheoryGoalBest
