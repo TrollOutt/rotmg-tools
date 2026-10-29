@@ -43,7 +43,13 @@ var AppData = (function () {
       const known = deps.getItems() !== undefined ? items().lookup(name) : null;
 
       // Match the awakenable list case-insensitively too.
-      let awokenKey = data().awakenings.has(name) ? name : null;
+      // The plain name of an item split into colours takes the awakenings of
+      // the colour it found ("Beehemoth Armor" -> "Beehemoth Armor (Blue)").
+      const colour = known && typeof known.name === 'string'
+        && known.name.toLowerCase().startsWith(name.trim().toLowerCase() + ' (')
+        ? known.name : null;
+      let awokenKey = data().awakenings.has(name) ? name
+        : colour && data().awakenings.has(colour) ? colour : null;
       if (!awokenKey) {
         const target = name.trim().toLowerCase();
         for (const key of data().awakenings.keys()) if (key.toLowerCase() === target) { awokenKey = key; break; }

@@ -210,7 +210,9 @@ function buildProjectiles() {
         mag: num(p, 'Magnitude') || 3,
         wavy: flag(p, 'Wavy'), param: flag(p, 'Parametric'), boom: flag(p, 'Boomerang'),
         multi: flag(p, 'MultiHit'), pierce: flag(p, 'ArmorPiercing'), cover: flag(p, 'PassesCover'),
-        accel: num(p, 'Acceleration'), accelDelay: num(p, 'AccelerationDelay'), speedClamp: num(p, 'SpeedClamp')
+        accel: num(p, 'Acceleration'), accelDelay: num(p, 'AccelerationDelay'), speedClamp: num(p, 'SpeedClamp'),
+        // From this many ms on, the shot flies at this angle to the line back to its origin.
+        circleDelay: num(p, 'CircleTurnDelay'), circleAngle: num(p, 'CircleTurnAngle')
       });
     }
     if (!shots.length) continue;

@@ -209,8 +209,12 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     if (profile && profile.mode === 'personal') {
       for (const [hand] of HANDS) {
         if (out.locked[hand] || accessible(out.gear[hand].name)) continue;
+        if (out.searchOwned && out.owned && out.owned[out.gear[hand].name]) continue;
         const first = itemsFor(hand, out.klass, out)[0];
-        out.gear[hand] = { name: first ? first.name : null, slots: 4, ench: [null, null, null, null] };
+        // Kept enchantments stay; the search finds them an item that fits.
+        const had = out.gear[hand].ench || [];
+        out.gear[hand] = { name: first ? first.name : null, slots: 4,
+          ench: [0, 1, 2, 3].map(at => (out.locked[hand + ':' + at] && had[at]) || null) };
       }
     }
     return out;
@@ -1505,8 +1509,26 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
     }
     return out;
   }
+  /*
+   * Only the items I have.
+   *
+   * A reader comparing what is in their vault marks those items with the
+   * star in the picker and turns on "Only my items": in every slot where
+   * they marked something, the search chooses among those and nothing
+   * else, whatever their tier, set or progression. A slot where nothing is
+   * marked stays open to the usual pool.
+   */
+  function ownsIn(state, hand) {
+    for (const name of Object.keys(state.owned || {})) {
+      const item = data.byItem[name];
+      if (item && item.hand === hand) return true;
+    }
+    return false;
+  }
   function searchAllowsItem(one, state) {
     if (!one) return false;
+
+    if (state && state.searchOwned && ownsIn(state, one.hand)) return !!state.owned[one.name];
 
     if (state && state.searchLimited === false && limitedNames.has(one.name)) return false;
 
@@ -1526,6 +1548,8 @@ const exaltOf = key => EXALT_EACH * (EXALT_STEP[key] || 1);
       searchAllowsItem(one, state)
       // A stronger item outside this profile must never prune an accessible one.
       && ((profile && profile.mode === 'personal')
+        // Nor may one the reader does not own prune one they do.
+        || (state && state.searchOwned)
         // Raw-stat dominance cannot compare combat penalties. Retain the full
         // eligible shelf for regeneration, including combined objectives.
         || (goal && goal.id.split('+').some(id => id.startsWith('regen:')))
@@ -2610,6 +2634,26 @@ const TINT = {
         }).join('')
         : '';
     }
+    const mineBox = el('tcOwned');
+    if (mineBox) {
+      const names = Object.keys(build.owned || {});
+      mineBox.hidden = !names.length;
+      mineBox.innerHTML = names.length
+        ? '<i>My items</i>'
+          + '<button type="button" class="tc-search-filter tc-owned-only' + (build.searchOwned ? ' is-on' : '')
+          + '" data-owned-only aria-pressed="' + !!build.searchOwned + '"'
+          + ' title="Search only among the items marked ★ in each slot where you marked some">Only my items</button>'
+          + names.map(name => {
+            const item = data.byItem[name];
+            const art = item && item.icon && indexIcon(item.icon, 24, '');
+            return '<button type="button" class="tc-aside-one" data-unown="' + esc(name)
+              + '" title="Unmark it">'
+              + (art ? '<span class="tc-aside-art">' + art + '</span>' : '')
+              + '<span class="tc-aside-name">' + esc(name) + '</span>'
+              + '<span class="tc-aside-x" aria-hidden="true">×</span></button>';
+          }).join('')
+        : '';
+    }
     const kept = el('tcKept');
     if (kept) {
       const many = Object.values(build.locked).filter(Boolean).length;
@@ -2956,6 +3000,51 @@ const TINT = {
   }
 
   const pieceOf = key => (key && data.sheet && data.sheet.pics[key]) || null;
+
+  /*
+   * A full set wears its own look, as it does on the set's Index card: the
+   * skin the card extras give the set, side-on, standing and swinging, off
+   * the skins sheet. Read once, the first time a fight is drawn; until then,
+   * and for any build that is not one whole set, the class stands there.
+   */
+  let setLooks = null;
+  const setFrames = new Map();
+  function setLookOf(state) {
+    if (setLooks === null) {
+      setLooks = false;
+      const read = window.RealmCardExtras && window.RealmCardExtras.read;
+      if (read) {
+        Promise.all([read('assets/index/projectiles.json'), read('assets/skins/generated/looks.json')])
+          .then(([shots, looks]) => {
+            const parsed = JSON.parse(looks);
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = window.RealmCardExtras.asset('assets/skins/textures/looks.png'
+              + (parsed.built ? '?v=' + encodeURIComponent(parsed.built) : ''));
+            setLooks = { sets: JSON.parse(shots).sets || {}, skins: parsed.skins || {}, img };
+          })
+          .catch(() => {});
+      }
+    }
+    if (!setLooks || !state || !state.gear) return null;
+    const names = HANDS.map(([hand]) => state.gear[hand] && state.gear[hand].name);
+    const kit = (data.sets || []).find(set => names.every(name => name && set.pieces.includes(name)));
+    const extra = kit && setLooks.sets['set:' + kit.name];
+    const skin = extra && extra.skin && setLooks.skins[extra.skin];
+    if (!skin) return null;
+    if (!setFrames.has(kit.name)) {
+      const idle = [], swing = [];
+      for (const f of skin.frames) {
+        if (f[2] !== 0) continue;
+        const frame = { x: f[3], y: f[4], w: f[5], h: f[6] };
+        if (f[1] === 0) idle.push(frame);
+        else if (f[1] === 2) swing.push(frame);
+      }
+      setFrames.set(kit.name, { idle, swing, size: extra.skinSize || 100 });
+    }
+    const look = setFrames.get(kit.name);
+    return look.idle.length ? Object.assign({ img: setLooks.img }, look) : null;
+  }
 
   /*
    * Which frame of a thing to show. The registry files them by facing and
@@ -3475,8 +3564,16 @@ const TINT = {
     const bossX = wide - across - 14 * k;
     const left = Math.max(6, bossX + across / 2 - dist * tilePx - mine * 0.9);
 
-    /* The one on the left, in whichever pose it is in. */
-    if (me) {
+    /* The one on the left, in whichever pose it is in - in its set's look if it wears a whole one. */
+    const look = setLookOf(build);
+    if (look && look.img.complete && look.img.naturalWidth) {
+      const swinging = duel.swing > 0 && duel.swingFor > 0 && look.swing.length;
+      const f = swinging
+        ? SpriteAnimation.attackFrame(look.swing, 1 - duel.swing / duel.swingFor)
+        : SpriteAnimation.loopFrame(look.idle, duel.at, 0);
+      const z = side / 8 * look.size / 100;
+      if (f) inkedDraw(pen, look.img, f.x, f.y, f.w, f.h, left, floor - f.h * z, f.w * z, f.h * z, true);
+    } else if (me) {
       drawPiece(pen, me, duel.swing > 0 && duel.swingFor > 0
         ? swingFrame(me, 1 - duel.swing / duel.swingFor) : frameOf(me, 0, duel.at),
         left, floor, side);
@@ -3772,7 +3869,8 @@ const TINT = {
         search: [one.name, ...aliases, bits.join(' ')].join(' '),
         note: outside ? 'outside progression' : '',
         art: true,
-        ban: true
+        ban: true,
+        own: true
       };
     }), 'nothing');
   }
@@ -3865,10 +3963,16 @@ const TINT = {
      * - the search box is how you get to the rest.
      */
     for (const one of rows.slice(0, 120)) {
+      const mine = !!(one.own && build.owned && build.owned[one.id]);
       out.push((one.ban
         ? '<span class="tc-row-pair"><button type="button" class="tc-ban" data-ban="'
           + esc(one.id) + '" title="Set this aside - the search will not offer it">'
           + '⊘</button>'
+          + (one.own
+            ? '<button type="button" class="tc-own" data-own="' + esc(one.id) + '" aria-pressed="' + mine
+              + '" title="' + (mine ? 'One of my items - click to unmark it' : 'I have this - compare it with my other items') + '">'
+              + (mine ? '★' : '☆') + '</button>'
+            : '')
         : '')
         + '<button type="button" class="tc-row" data-choose="' + esc(one.id) + '">'
         + (one.art ? itemIcon(one.id)
@@ -4442,6 +4546,20 @@ const TINT = {
     });
 
     el('tcBody').addEventListener('click', event => {
+      if (event.target.closest('[data-owned-only]')) {
+        if (build.searchOwned) delete build.searchOwned;
+        else build.searchOwned = true;
+        keep(); paint();
+        return;
+      }
+      const gone = event.target.closest('[data-unown]');
+      if (!gone) return;
+      delete (build.owned || {})[gone.dataset.unown];
+      if (build.owned && !Object.keys(build.owned).length) { delete build.owned; delete build.searchOwned; }
+      keep(); paint();
+    });
+
+    el('tcBody').addEventListener('click', event => {
       const back = event.target.closest('[data-unban]');
       if (!back) return;
       delete (build.banned || {})[back.dataset.unban];
@@ -4621,21 +4739,10 @@ const TINT = {
         const on = !build.locked[which];
         build.locked[which] = on;
         /*
-         * An enchantment cannot be kept on an item that is free to change.
-         *
-         * Keeping a slot and leaving the item open meant the search could
-         * swap the item out from under it, and the enchantment kept was one
-         * that may not even fit what took its place - so keeping a slot keeps
-         * the thing it is in, and letting the item go lets go of everything
-         * in it.
+         * Each padlock holds only what it is on. A kept enchantment leaves
+         * the item free: the search swaps it only for items that can carry
+         * the enchantment, so an exclusive one keeps its item by itself.
          */
-        const at = which.indexOf(':');
-        if (at > 0 && on) build.locked[which.slice(0, at)] = true;
-        if (at < 0 && !on) {
-          for (const key of Object.keys(build.locked)) {
-            if (key.indexOf(which + ':') === 0) delete build.locked[key];
-          }
-        }
         keep(); drawSlots();
       }
     });
@@ -4650,6 +4757,22 @@ const TINT = {
     });
 
     el('tcPicker').addEventListener('click', event => {
+      const own = event.target.closest('[data-own]');
+      if (own) {
+        event.stopPropagation();
+        const name = own.dataset.own;
+        build.owned = build.owned || {};
+        if (build.owned[name]) delete build.owned[name];
+        else build.owned[name] = true;
+        if (!Object.keys(build.owned).length) delete build.owned;
+        keep();
+        const mine = !!(build.owned && build.owned[name]);
+        own.setAttribute('aria-pressed', String(mine));
+        own.textContent = mine ? '★' : '☆';
+        own.title = mine ? 'One of my items - click to unmark it' : 'I have this - compare it with my other items';
+        drawSearch();
+        return;
+      }
       const ban = event.target.closest('[data-ban]');
       if (ban) {
         event.stopPropagation();

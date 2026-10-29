@@ -222,12 +222,14 @@ assert(/function procRows/.test(read('web/fiches-c.js')) && read('web/fiches-c.j
     near(dps({ d: 7.5, radius: 1.4, gap: 6.1 }), one, 1e-6, 'from far off only the middle one');
     near(dps({ d: 3, radius: 1.4, gap: 1.6 }), 3 * one - 0 * one, 1e-6, '3 tiles off the +-20 degrees are 1.09 tiles to the side, inside the target');
   }
-  // Earthen Ward's three shots leave 120 degrees apart but circle round (CircleTurnAngle): all three land, near or far.
+  // Earthen Ward's three shots leave 120 degrees apart but circle round (CircleTurnAngle): all three land, near or far
+  // - within the 6 tiles they reach before they start to circle (RealmEye: "furthest reach 6 tiles").
   {
     const ward = raw.items.find(i => i.name === 'Earthen Ward');
     assert(gear.items['Earthen Ward'].curves, 'the client says its shots turn');
+    assert.equal(ward.shots[0].reach, 6, 'a circling shot reaches as far as it flew before it turned');
     const dps = aim => t.weaponRate(ward, { att: 75, dex: 75 }, 0, null, null, null, aim).dps;
-    near(dps({ d: 7.5, radius: 1.4, gap: 6.1 }), dps({ d: 0, radius: 1.4, gap: 0 }), 1e-6, 'a turning volley is not thinned by distance');
+    near(dps({ d: 5.5, radius: 1.4, gap: 4.1 }), dps({ d: 0, radius: 1.4, gap: 0 }), 1e-6, 'a turning volley is not thinned by distance');
   }
   // The size of the target counts: its edge is closer than its middle.
   // And the page's own choice: a short sword does nothing from long range, and a bit more of the target is reached from mid range.

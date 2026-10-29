@@ -1407,7 +1407,7 @@ for (const it of gear) {
     delete record.fight;
     out.add(id);
   }
-  mechanics.items = mechanics.items.filter(one => !out.has('item:' + one.name));
+  mechanics.items = mechanics.items.filter(one => !out.has('item:' + (one.base || one.name)));
   mechanics.bosses = mechanics.bosses.filter(one => !out.has('enemy:' + one.name));
   catalogues.items = catalogues.items.filter(one => !out.has('item:' + one.name));
 }

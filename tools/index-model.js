@@ -88,6 +88,8 @@ function attach(records, mechanics, objects) {
       if (!r) throw new Error('No index record for ' + group + ': ' + (value.id || value.name));
       assign(r, group, value);
       if (group === 'items') r.bench = 1;
+      // One of several items under one name, told apart on the bench by this word.
+      if (group === 'items' && value.variant) r.variant = value.variant;
       return r.id;
     });
   }
@@ -135,6 +137,7 @@ function project(index, runtime = false) {
         if (group === 'enchants' && ['fits', 'notFits', 'notWith', 'notOn'].includes(field)) v ||= undefined;
         if (v !== undefined) value[field] = v;
       }
+      if (group === 'items' && r.variant) value.name = r.name + ' (' + r.variant + ')';
       if (runtime && group === 'items') delete value.id;
       return value;
     });

@@ -2994,6 +2994,17 @@ button.pn-open { background: none; color: var(--accent); cursor: pointer; font: 
   border: 1px solid transparent; border-radius: var(--radius-sm);
 }
 .tc-ban:hover { color: #d4685f; border-color: rgba(212, 104, 95, .4); background: rgba(212, 104, 95, .08); }
+/* And the way to mark it as one of mine, for "Only my items". */
+.tc-own {
+  flex: none; width: 30px; font: inherit; font-size: 15px; cursor: pointer;
+  color: var(--dim); background: transparent;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+}
+.tc-own:hover, .tc-own[aria-pressed="true"] { color: #e0b84a; }
+.tc-own:hover { border-color: rgba(224, 184, 74, .4); background: rgba(224, 184, 74, .08); }
+.tc-owned .tc-owned-only { margin-right: 4px; }
+.tc-owned .tc-aside-one { background: rgba(224, 184, 74, .1); border-color: rgba(224, 184, 74, .3); }
+.tc-owned .tc-aside-one:hover { border-color: #e0b84a; }
 .tc-slot-ban {
   align-self: center;
   height: 30px;

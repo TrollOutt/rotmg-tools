@@ -136,6 +136,18 @@ var EnchantItems = (function () {
     }
 
     for (const [name, entry] of index) byNormalised.set(normalise(name), entry);
+    /*
+     * The plain name of an item split into colours still finds one of them:
+     * "Beehemoth Armor" is the first of "Beehemoth Armor (Blue)", "(Green)"...
+     * so a saved build or an Index link from before the split still opens.
+     * The colours share their enchantment rules; only their bonuses differ.
+     */
+    for (const [name, entry] of index) {
+      const plain = /^(.*) \([A-Za-z ]+\)$/.exec(name);
+      if (plain && !index.has(plain[1]) && !byNormalised.has(normalise(plain[1]))) {
+        byNormalised.set(normalise(plain[1]), entry);
+      }
+    }
     return index;
   }
 

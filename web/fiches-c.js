@@ -964,6 +964,7 @@
    * d'amplitude A et de fréquence F cycles par durée de vie.
    */
   function shotAt(s, o) {
+    if (o.r !== undefined) return { x: o.r * Math.cos(o.th), y: o.r * Math.sin(o.th) };
     const cos = Math.cos(o.angle), sin = Math.sin(o.angle);
     if (s.param) {
       const t = o.age / s.life * 2 * Math.PI;
@@ -1202,15 +1203,18 @@
 
       const fitSim = width => {
         const W = Math.max(1, Math.round(width || 360));
+        // A shot that circles goes as far above and below as it goes ahead.
+        const circles = used.some(s => s.circleDelay !== undefined);
         const T = Math.max(
           14,
           Math.min(
             40,
-            Math.floor((W - 40) / (range + 2.5))
+            Math.floor((W - 40) / (range + 2.5)),
+            circles ? Math.floor(180 / (2 * range + 3.5)) : Infinity
           )
         );
 
-        const reachY = Math.max(0, ...(used.length ? used : [base]).map(s => (s.param ? s.mag : Math.abs(s.amp || 0))))
+        const reachY = Math.max(0, ...(used.length ? used : [base]).map(s => (s.param ? s.mag : Math.abs(s.amp || 0))), circles ? range : 0)
           + Math.max(0, ...volleys.map(v => Math.abs((v.offset && v.offset[0]) || 0)));
 
         const H = Math.max(
@@ -1491,6 +1495,21 @@
             if (spec.speedClamp) o.v = spec.accel > 0 ? Math.min(o.v, spec.speedClamp / 10) : Math.max(o.v, spec.speedClamp / 10);
           }
           o.dist += o.v * dt;
+          /*
+           * Un tir qui tourne (CircleTurnDelay) vole ensuite à CircleTurnAngle
+           * de la ligne qui le ramène au tireur : à 90° il orbite à la distance
+           * atteinte (l'enclume du Fury Flail), à moins il s'éloigne en spirale.
+           */
+          if (spec.circleDelay !== undefined && o.age * 1000 >= spec.circleDelay) {
+            if (o.r === undefined) {
+              const at = shotAt(spec, o);
+              o.r = Math.hypot(at.x, at.y); o.th = Math.atan2(at.y, at.x);
+            }
+            const turn = (spec.circleAngle || 0) * Math.PI / 180;
+            const step = o.v * dt;
+            o.r += step * Math.cos(turn);
+            if (o.r > 1e-3) o.th += step * Math.sin(turn) / o.r;
+          }
           const pic = projData.pics[bullet ? setData.bullet : spec.pic];
           if (!pic) continue;
           const size = bullet && !spec.sizeDeclared ? setData.bulletSize : spec.size;

@@ -23,6 +23,7 @@ const DUST = { greenDust: 'Green', redDust: 'Red', purpleDust: 'Purple' };
  * 1. Read every enchantable item                                    *
  * ---------------------------------------------------------------- */
 const items = [];
+const bodies = new Map();
 for (const file of [...documents.keys()].filter(f => /^Objects\./.test(f))) {
   const xml = documents.get(file);
   for (const m of xml.matchAll(/<Object[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/Object>/g)) {
@@ -30,6 +31,7 @@ for (const file of [...documents.keys()].filter(f => /^Objects\./.test(f))) {
     const slots = /<EnchantmentSlots\b([^>]*)\/>/.exec(body);
     if (!slots) continue;
     const labels = (tag(body, 'Labels') || '').split(',').filter(Boolean);
+    bodies.set(m[1], body);
     items.push({
       id: m[1],
       name: tag(body, 'DisplayId') || m[1],
@@ -163,6 +165,13 @@ const unlisted = items
   .filter(item => !DEVELOPER_ITEMS.has(item.name) && DEVELOPER_NAME.test(item.name + ' ' + item.id))
   .map(item => item.name);
 
+// The Beehemoth Armor's four colours are four items (tools/item-variants.js).
+{
+  const { variantsOf, variantName } = require('./item-variants');
+  const variants = variantsOf(items.map(item => ({ id: item.id, name: item.name,
+    body: bodies.get(item.id) || '', shiny: item.labels.includes('SHINY') })));
+  for (const item of items) item.name = variantName(item.name, variants.get(item.id));
+}
 const byName = new Map();
 for (const item of items) {
   if (DEVELOPER_ITEMS.has(item.name)) continue;

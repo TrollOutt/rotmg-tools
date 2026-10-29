@@ -74,10 +74,30 @@ function withoutSubattacks(body) {
  * General's Arsenal's 4.25 tiles (15 tiles/s for 0.2 s, then 5 tiles/s),
  * where speed times life said 6.75.
  */
+/*
+ * And a shot that starts to circle. From CircleTurnDelay on it flies at
+ * CircleTurnAngle to the line back to where it was fired: at 90 degrees it
+ * orbits there at the distance it had reached, at less it spirals outward.
+ * So only the part of its speed that still points away counts. RealmEye
+ * agrees: the Fury Flail's anvil reaches 4.6 tiles (23 tiles/s for 0.2 s,
+ * where speed times life said 23), Earthen Ward 6, Kaiken 4.48.
+ */
 function reachOf(inner) {
-  const speed = num(inner, 'Speed');
+  const circle = num(inner, 'CircleTurnDelay');
   const lives = num(inner, 'LifetimeMS');
-  if (speed === undefined || lives === undefined) return undefined;
+  if (circle === undefined || lives === undefined || circle >= lives) return straightReachOf(inner);
+  const before = straightReachOf(inner, circle);
+  const after = straightReachOf(inner);
+  if (before === undefined || after === undefined) return undefined;
+  const outward = Math.max(0, Math.cos((num(inner, 'CircleTurnAngle') || 0) * Math.PI / 180));
+  return Math.round((before + outward * Math.max(0, after - before)) * 10 + 1e-9) / 10;
+}
+
+function straightReachOf(inner, untilMs) {
+  const speed = num(inner, 'Speed');
+  const lived = num(inner, 'LifetimeMS');
+  if (speed === undefined || lived === undefined) return undefined;
+  const lives = untilMs === undefined ? lived : Math.min(lived, untilMs);
   const v0 = speed / 10, life = lives / 1000;
   const acc = num(inner, 'Acceleration');
   const boomerang = /<Boomerang\s*\/>/.test(inner);
@@ -632,6 +652,18 @@ for (const [, one] of byType) {
    * trusts. The one with the most on it stays, since a copy stripped of its
    * projectile or its bonuses is the placeholder of the set.
    */
+  // Except where the copies are different items under one name: the Beehemoth
+  // Armor's four colours each give their own bonus (tools/item-variants.js).
+  const { variantsOf, variantName } = require('./item-variants');
+  const variants = variantsOf(items.map(one => {
+    const source = byName.get(one.id);
+    return { id: one.id, name: one.name, body: source ? source.body : '',
+      shiny: /\bSHINY\b/.test((one.labels || '')) };
+  }));
+  for (const one of items) {
+    const variant = variants.get(one.id);
+    if (variant) { one.variant = variant; one.base = one.name; one.name = variantName(one.name, variant); }
+  }
   const worth = one => (one.worn ? Object.keys(one.worn).length : 0)
     + (one.shots ? one.shots.length * 2 : 0) + (one.rel ? one.rel.length : 0)
     + (one.share ? one.share.length : 0) + (one.does ? 1 : 0);

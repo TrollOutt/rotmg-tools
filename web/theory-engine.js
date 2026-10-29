@@ -943,6 +943,7 @@ var TheoryEngine = (function () {
     function bestAlone(state, list) {
       const key = JSON.stringify([state.klass, state.level, state.boss, state.against,
         state.gear, state.locked, state.exalt, getBanned() || null,
+        (state.searchOwned && state.owned) || null,
         state.range, state.damage,
         list.map(one => one.id)]);
       if (ideals.key === key) return ideals.best;
@@ -1150,8 +1151,10 @@ var TheoryEngine = (function () {
      * @returns {TheorySearchItem[]}
      */
     function itemsFor(hand, klass, state) {
+      // What the reader says they own is theirs whatever the progression says.
+      const owned = state && state.searchOwned && state.owned;
       return compatibleItemsFor(hand, klass, state)
-        .filter(one => accessible(one.name));
+        .filter(one => accessible(one.name) || !!(owned && owned[one.name]));
     }
     return { compatibleItemsFor, itemsFor };
   }
@@ -1330,6 +1333,29 @@ var TheoryEngine = (function () {
         return /** @type {TheoryOptimiserCandidate[]} */ (candidatesByHand.get(hand));
       };
       /*
+       * A kept enchantment travels with its slot, not with the item.
+       *
+       * Keeping an enchantment used to keep the item under it as well, so
+       * that the search could not swap the item for one the enchantment does
+       * not fit. Players asked for the opposite: keep the roll, let the item
+       * change. So an item may now be swapped for any other that can carry
+       * every kept enchantment on it, and for no other. An exclusive one - an
+       * awakening, an engraving's, a subtype's - fits only the items that
+       * can wear it, which is often the one already there, so it still holds
+       * the item without anybody having to say so.
+       */
+      /** @param {TheoryOptimiserState} one @param {string} hand
+       * @param {string} name @param {TheoryOptimiserSlots} kept
+       * @returns {TheoryOptimiserSlots | null} the slots on `name`, or null
+       *   when a kept enchantment cannot go on it */
+      const carried = (one, hand, name, kept) => {
+        const held = kept.map((id, i) => one.locked[hand + ':' + i] ? id : null);
+        for (let i = 0; i < held.length; i++) {
+          if (held[i] && !enchantFits(name, held, i)) return null;
+        }
+        return kept.map((id, i) => held[i] ? id : (id && enchantFits(name, kept, i)) ? id : null);
+      };
+      /*
        * Each padlock holds the one thing it is on.
        *
        * It used to be that holding an item held everything on it too, on the
@@ -1373,6 +1399,21 @@ var TheoryEngine = (function () {
           if (options && options.keepEnchants) break;
           if (!work.locked[hand + ':' + at]) work.gear[hand].ench[at] = null;
         }
+        /*
+         * A free item that cannot carry what is kept on it - the plainest
+         * item a fresh search starts from, or one the progression put in
+         * place of the reader's - gives way to the first that can. If none
+         * can, the reader's own item stays: it carried the enchantment when
+         * the padlock went on, and no swap below will be allowed to drop it.
+         */
+        const worn = work.gear[hand];
+        if (held || !worn.ench.some((id, at) => id && work.locked[hand + ':' + at])) continue;
+        if (worn.name && carried(work, hand, worn.name, worn.ench)) continue;
+        const fit = candidatesForHand(hand).find(one => carried(work, hand, one.name, worn.ench));
+        const own = state.gear[hand] && state.gear[hand].name;
+        const name = fit ? fit.name : own;
+        if (name) worn.ench = carried(work, hand, name, worn.ench) || worn.ench;
+        if (name) worn.name = name;
       }
       yield;
       let score = scoreOf(work, goal);
@@ -1442,11 +1483,13 @@ var TheoryEngine = (function () {
           const was = work.gear[hand].name;
           let best = was;
           for (const one of candidatesForHand(hand)) {
-            work.gear[hand].name = one.name;
-            // An enchantment that no longer fits the item cannot be counted.
+            // An enchantment that no longer fits the item cannot be counted,
+            // and an item that cannot carry a kept one is not a candidate.
             const kept = work.gear[hand].ench.slice();
-            work.gear[hand].ench = kept.map((id, i) =>
-              (id && enchantFits(one.name, kept, i)) ? id : null);
+            const next = carried(work, hand, one.name, kept);
+            if (!next) continue;
+            work.gear[hand].name = one.name;
+            work.gear[hand].ench = next;
             yield;
             const now = scoreOf(work, goal);
             looked++;
@@ -1492,6 +1535,7 @@ var TheoryEngine = (function () {
             const mine = new Set(kit.pieces);
             for (const one of candidatesForHand(hand)) {
               if (!mine.has(one.name)) continue;
+              if (!carried(trial, hand, one.name, trial.gear[hand].ench)) continue;
               const was = trial.gear[hand].name;
               trial.gear[hand].name = one.name;
               yield;
@@ -1503,9 +1547,8 @@ var TheoryEngine = (function () {
             if (!best) continue;
             trial.gear[hand].name = best;
             // An enchantment that no longer fits the item cannot be counted.
-            const kept = trial.gear[hand].ench.slice();
-            trial.gear[hand].ench = kept.map((id, i) =>
-              (id && enchantFits(best, kept, i)) ? id : null);
+            trial.gear[hand].ench = carried(trial, hand, best, trial.gear[hand].ench.slice())
+              || trial.gear[hand].ench;
             put++;
           }
           if (put < 2) continue;

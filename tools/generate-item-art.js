@@ -30,6 +30,8 @@ const art = {};
 for (const record of index.records) {
   if (record.kind !== 'item' || !record.art) continue;
   if (!art[record.name]) art[record.name] = record.art;
+  // Each colour of the Beehemoth Armor under its own name (tools/item-variants.js).
+  if (record.variant) art[record.name + ' (' + record.variant + ')'] = record.art;
 }
 
 const out = { ...meta, sheet: index.sheet, art };
