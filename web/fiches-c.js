@@ -1016,6 +1016,12 @@
       /* La portée de l'Index, qui suit l'accélération et le retour d'un boomerang ; le trajet brut sinon. */
       const range = Math.max(0, ...(r.fires || []).map(f => f.reach || 0))
         || Math.max(0, ...used.map(s => s.speed * s.life)) || base.speed * base.life;
+      /*
+       * Un tir qui tourne autour du tireur va aussi loin derrière, au-dessus et
+       * en dessous que devant : le tireur passe au milieu et le cadre grandit.
+       */
+      const circles = used.some(s => s.circleDelay !== undefined);
+      const shooterX = (W, T) => circles ? Math.max(14 + T, Math.round(W / 2 - T * 0.4)) : 14 + T;
       const fan = Math.max(0, ...volleys.flatMap(v => (v.patterns || [v]).map(a => (a.many || 1) * gapOf(a, v) + 2 * Math.abs(turnOf(a, v)))));
       const state = { speed: 1, withSet: false, shots: [], fired: 0, clock: 0, swing: 0, hit: 0 };
       host.addEventListener('click', e => {
@@ -1127,7 +1133,7 @@
           false;
 
         const x0 =
-          14 + T;
+          shooterX(W, T);
 
         const y0 =
           Math.round(H / 2);
@@ -1203,14 +1209,13 @@
 
       const fitSim = width => {
         const W = Math.max(1, Math.round(width || 360));
-        // A shot that circles goes as far above and below as it goes ahead.
-        const circles = used.some(s => s.circleDelay !== undefined);
+        const tallest = circles ? 280 : 180;
         const T = Math.max(
           14,
           Math.min(
             40,
-            Math.floor((W - 40) / (range + 2.5)),
-            circles ? Math.floor(180 / (2 * range + 3.5)) : Infinity
+            Math.floor((W - 40) / (circles ? 2 * range + 2.5 : range + 2.5)),
+            circles ? Math.floor(tallest / (2 * range + 3.5)) : Infinity
           )
         );
 
@@ -1220,7 +1225,7 @@
         const H = Math.max(
           96,
           Math.min(
-            180,
+            tallest,
             Math.round(
               T * (
                 3.5
@@ -1439,7 +1444,7 @@
         );
 
         const x0 =
-          14 + T;
+          shooterX(W, T);
 
         const y0 =
           Math.round(H / 2);
