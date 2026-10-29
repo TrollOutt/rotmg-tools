@@ -1341,7 +1341,7 @@ p.set_defaults(func=cmd_review_ready)
 
 p = sub.add_parser("review-record")
 p.add_argument("task_id")
-p.add_argument("--reviewer", required=True, choices=["claude", "codex"])
+p.add_argument("--reviewer", required=True, choices=["claude", "codex", "deepseek"])
 p.add_argument("--profile", required=True, choices=["fast", "standard", "expert"])
 p.add_argument("--commit", required=True)
 p.add_argument(

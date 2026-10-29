@@ -15,3 +15,6 @@ Usage, session, rate, and transport failures must be recorded as temporary avail
 ## 2026-09-22 - context synchronization
 
 Copying mutable canonical `STATE.md` into a worker dirtied a tracked file outside narrow task scope and caused false scope rejections. Keep state canonical and regression-test that synchronization stays clean while an ignored out-of-scope write is still rejected.
+
+## 2026-09-22 — index regeneration vs projections
+`node tools/build-index.js --sprites` writes a real `built` timestamp into `data/Index/index.json`, while the client projections (item-art, items, enchantments, artifacts, fame, skins) keep the older fixed date they were committed with. `tests/projections.test.js` then fails on `Index/item-art.json: committed projection drifted`. Regenerating the index alone is not enough: run the official `npm run project-data` afterwards so every projection is rebuilt from the same index before running the suite, or the mismatch is mistaken for a product defect.
