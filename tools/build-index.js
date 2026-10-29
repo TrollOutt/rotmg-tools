@@ -1453,6 +1453,22 @@ let result = {
   slots: slotNames,
   records: all
 };
+/*
+ * Where the records' statBoosts were read, which every build extracts. It was
+ * written only by the --enrich-stat-boosts pass, so an ordinary scrape dropped
+ * it and the Training tools lost their check that boosts and Index share a
+ * client build. An enrichment still replaces it with its own account.
+ */
+{
+  const boostsOf = require('./item-stat-boosts');
+  const { createHash } = require('crypto');
+  result.statBoostSource = {
+    built: result.built, from: result.from, tool: 'tools/build-index.js',
+    documents: [...documents].filter(([, xml]) => boostsOf(xml).length).map(([file, xml]) => ({
+      file, sha256: createHash('sha256').update(xml).digest('hex')
+    }))
+  };
+}
 const priorFile = path.join(OUT, 'index.json');
 let enrichmentAssets;
 if (process.argv.includes('--sprites') || sqliteSourceMode) {
