@@ -2410,6 +2410,10 @@ body[data-home="ring"] #pageHome .home-notes { width: max-content; max-width: ca
 @keyframes voucher-glow { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .voucher-note.is-new::before { animation: none; opacity: .7; } }
 body.globe-wide .voucher-note::before { animation: none !important; }
+/* A code not yet copied here says it is new: on the note, and by the title in the panel. */
+.voucher-new { flex: none; padding: 2px 7px; border-radius: 999px; background: #ffaa3c; color: #1a1208; font-family: var(--mono); font-size: .6rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; line-height: 1.4; }
+.voucher-note.is-copied .voucher-new { display: none; }
+.voucher-panel h2 .voucher-new { position: relative; top: -3px; margin-left: 4px; }
 
 .voucher-veil { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / .55); }
 .voucher-veil[hidden] { display: none; }
@@ -2432,6 +2436,12 @@ body.globe-wide .voucher-note::before { animation: none !important; }
 .voucher-copy.is-spent { background: rgb(255 255 255 / .06); color: var(--dim); }
 .voucher-copy.is-spent:hover { background: rgb(255 255 255 / .1); }
 .voucher-copy.is-spent.is-done { color: #8fe08f; }
+/* The voucher before this one: dimmed, its code struck, so it is not taken for the new one. */
+.voucher-old { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: -6px 0 16px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 10px; text-align: left; opacity: .8; }
+.voucher-old-k { flex-basis: 100%; font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.voucher-old code { font-family: var(--mono); font-size: .9rem; letter-spacing: .06em; color: var(--muted); text-decoration: line-through; }
+.voucher-old-done { font-size: .78rem; color: var(--dim); }
+.voucher-panel .voucher-old p { flex-basis: 100%; margin: 2px 0 0; font-size: .8rem; color: var(--text); }
 .voucher-panel h3 { margin: 0 0 8px; font-size: .68rem; font-family: var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #ffcb70; font-weight: 400; }
 .voucher-rewards { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; margin: 0 0 14px; }
 .voucher-reward { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px; border: 1px solid var(--line-soft, var(--line)); border-radius: 10px; background: rgb(0 0 0 / .22); color: inherit; font: inherit; font-size: .8rem; line-height: 1.25; cursor: default; }

@@ -3618,13 +3618,15 @@ function dressNewsBell(index) {
  * The free voucher on the way in. The note beside the bell glows until it has
  * been opened once (remembered in this browser); opening it shows the code,
  * to copy, and what it gives. Each reward that the Index holds shows its card
- * on hover and opens its record on click. To retire the voucher, delete the
- * note from index.html (or empty VOUCHER.code).
+ * on hover and opens its record on click. The voucher before it is shown
+ * below the code, dimmed, so whoever copied that one sees this code is not it.
+ * To retire the voucher, delete the note from index.html (or empty VOUCHER.code).
  */
 const VOUCHER = {
   id: 'happy-halloween-2',
   code: 'SPOOKYREALM',
   title: 'Happy Halloween 2',
+  previous: { id: 'happy-halloween-1', code: 'HALLOWEEN2026', title: 'Happy Halloween 1' },
   rewards: [
     ['Halloween Mystery Bag', 3], ['Candy of Extreme Wisdom', 1], ['Candy of Extreme Life', 1],
     ['Candy of Extreme Mana', 1], ['Candy of Extreme Vitality', 1], ['Droplet of Bloody Ambrosia', 1]
@@ -3665,8 +3667,11 @@ function initVoucher() {
   const copiedKey = 'voucher-copied-' + VOUCHER.id;
   const wasCopied = () => { try { return localStorage.getItem(copiedKey) === '1'; } catch (_) { return false; } };
   const seen = () => { try { return localStorage.getItem(key) === '1'; } catch (_) { return false; } };
+  const prev = VOUCHER.previous;
+  const prevCopied = () => { try { return !!prev && localStorage.getItem('voucher-copied-' + prev.id) === '1'; } catch (_) { return false; } };
   note.hidden = false;
   note.classList.toggle('is-new', !seen());
+  note.classList.toggle('is-copied', wasCopied());
   const esc = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   let veil = null, tip = null, records = new Map();
 
@@ -3696,7 +3701,7 @@ function initVoucher() {
     }
     button.textContent = RealmI18n.t(ok ? 'voucher.copied' : 'voucher.press');
     button.classList.toggle('is-done', ok);
-    if (ok) { button.classList.add('is-spent'); try { localStorage.setItem(copiedKey, '1'); } catch (_) { /* greyed for this visit only */ } }
+    if (ok) { button.classList.add('is-spent'); note.classList.add('is-copied'); try { localStorage.setItem(copiedKey, '1'); } catch (_) { /* greyed for this visit only */ } }
     setTimeout(() => { button.textContent = RealmI18n.t('voucher.copy'); button.classList.remove('is-done'); }, 1800);
   };
   const build = () => {
@@ -3704,9 +3709,12 @@ function initVoucher() {
     veil.className = 'voucher-veil'; veil.hidden = true;
     veil.innerHTML = '<div class="voucher-panel" role="dialog" aria-modal="true" aria-labelledby="voucherTitle">'
       + '<button type="button" class="voucher-x" aria-label="' + esc(RealmI18n.t('voucher.close')) + '">×</button>'
-      + '<h2 id="voucherTitle">' + esc(VOUCHER.title) + '</h2>'
+      + '<h2 id="voucherTitle">' + esc(VOUCHER.title) + (prev ? ' <span class="voucher-new">' + esc(RealmI18n.t('voucher.new')) + '</span>' : '') + '</h2>'
       + '<p>' + esc(RealmI18n.t('voucher.intro')) + '</p>'
       + '<div class="voucher-code"><code>' + esc(VOUCHER.code) + '</code><button type="button" class="voucher-copy">' + esc(RealmI18n.t('voucher.copy')) + '</button></div>'
+      + (prev ? '<div class="voucher-old"><span class="voucher-old-k">' + esc(RealmI18n.t('voucher.previous')) + ' · ' + esc(prev.title) + '</span>'
+        + '<code>' + esc(prev.code) + '</code>' + (prevCopied() ? '<span class="voucher-old-done">' + esc(RealmI18n.t('voucher.copied')) + '</span>'
+        + '<p>' + esc(RealmI18n.t('voucher.previousCopied')) + '</p>' : '') + '</div>' : '')
       + '<h3>' + esc(RealmI18n.t('voucher.rewards')) + '</h3><div class="voucher-rewards">' + VOUCHER.rewards.map(([name, n]) =>
         '<button type="button" class="voucher-reward" data-name="' + esc(name) + '"><span class="voucher-art"></span><span>' + esc(name) + ' <b>×' + n + '</b></span></button>').join('') + '</div>'
       + '<p class="voucher-how">' + esc(RealmI18n.t('voucher.how')) + '</p></div>';
