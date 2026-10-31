@@ -3622,12 +3622,12 @@ function dressNewsBell(index) {
  * note from index.html (or empty VOUCHER.code).
  */
 const VOUCHER = {
-  id: 'happy-halloween-1',
-  code: 'HALLOWEEN2026',
-  title: 'Happy Halloween 1',
+  id: 'happy-halloween-2',
+  code: 'SPOOKYREALM',
+  title: 'Happy Halloween 2',
   rewards: [
-    ['Halloween Mystery Bag', 3], ['Candy of Extreme Attack', 1], ['Candy of Extreme Defense', 1],
-    ['Candy of Extreme Speed', 1], ['Candy of Extreme Dexterity', 1], ['Droplet of Bloody Ambrosia', 1]
+    ['Halloween Mystery Bag', 3], ['Candy of Extreme Wisdom', 1], ['Candy of Extreme Life', 1],
+    ['Candy of Extreme Mana', 1], ['Candy of Extreme Vitality', 1], ['Droplet of Bloody Ambrosia', 1]
   ]
 };
 let voucherRecords = null;
