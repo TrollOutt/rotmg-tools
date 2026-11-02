@@ -43,10 +43,7 @@ const option = name => { const at = args.indexOf(name); return at >= 0 ? args[at
 const SNAPSHOT = path.join(root, 'data', 'client-snapshot.txt');
 const CHANGES = path.join(root, 'data', 'client-changes.txt');
 
-const DEFAULT_CLIENTS = [
-  path.join(process.env.LOCALAPPDATA || '', 'RealmOfTheMadGod', 'Production'),
-  'C:/Program Files (x86)/Steam/steamapps/common/Realm of the Mad God Exalt'
-];
+const DEFAULT_CLIENTS = require('./client-dirs');
 
 function findClient() {
   const given = option('--client');

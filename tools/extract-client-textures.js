@@ -33,10 +33,7 @@ const root = path.join(__dirname, '..');
 const CLIENT_DATA = process.env.ROTMG_CLIENT_DATA || path.join(root, 'client-data');
 const OUT = path.join(CLIENT_DATA, 'textures');
 
-const DEFAULT_CLIENTS = [
-  path.join(process.env.LOCALAPPDATA || '', 'RealmOfTheMadGod', 'Production'),
-  'C:/Program Files (x86)/Steam/steamapps/common/Realm of the Mad God Exalt'
-];
+const DEFAULT_CLIENTS = require('./client-dirs');
 const WANTED = ['groundTiles', 'mapObjects', 'characters', 'characters_masks'];
 
 /* ---------------------------------------------------------------- *

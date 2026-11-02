@@ -19,10 +19,7 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const OUT = process.env.ROTMG_CLIENT_DATA || path.join(root, 'client-data');
 
-const DEFAULT_CLIENTS = [
-  path.join(process.env.LOCALAPPDATA || '', 'RealmOfTheMadGod', 'Production'),
-  'C:/Program Files (x86)/Steam/steamapps/common/Realm of the Mad God Exalt'
-];
+const DEFAULT_CLIENTS = require('./client-dirs');
 
 function findClient(given) {
   for (const base of given ? [given] : DEFAULT_CLIENTS) {

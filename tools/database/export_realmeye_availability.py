@@ -62,8 +62,8 @@ def listed(page_html: str) -> list[tuple[str, str]]:
 
 def export(archive: Path, enrichment: Path, output: Path) -> None:
     if not archive.exists():
-        print(f"  no local RealmEye archive at {archive}; keeping {output.relative_to(ROOT)}")
-        return
+        # Keeping the old list would let a new build's unreleased content into the tools.
+        raise SystemExit(f"  no local RealmEye archive at {archive}; the Unreleased list cannot be refreshed")
     page_index = json.loads(enrichment.read_text(encoding="utf-8")).get("pageIndex", {})
     con = sqlite3.connect(archive)
     con.row_factory = sqlite3.Row

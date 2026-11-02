@@ -24,6 +24,19 @@ npm test
 npm run build
 ```
 
+To update without an installed client, fetch the build from the game's CDN:
+
+```sh
+node tools/fetch-client.js            # local/client, only if the build is new
+node tools/fetch-client.js --scrape   # then npm run scrape on it, if the data is on another build
+```
+
+It needs the launcher's key in `local/rotmg-app-key.txt`, which stays out of the
+repository. `ROTMG_CLIENT=<dir>` points every client-reading tool at one folder,
+with no fallback on an installed client. The scrape stops with an error when
+`local/realmeye-monitor/processed/realmeye.sqlite` is missing, because without
+it the Unreleased list goes stale and the RealmEye enrichment comes out empty.
+
 The two sprite modules now decorate in-memory records supplied by the index
 builder. They write their PNG sheets; they cannot delete catalogue members or
 overwrite Theory Crafting independently. A build without `--sprites` retains

@@ -27,6 +27,7 @@ const deployCritical = [
   'enchant-optimization.test.js',
   'i18n.test.js',
   'index-extras.test.js',
+  'fetch-client.test.js',
   'fiches-data.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',

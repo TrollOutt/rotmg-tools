@@ -527,6 +527,8 @@ def export(db: Path, output: Path, served: Path | None):
     archive_pages = con.execute(
         "SELECT COUNT(*) FROM source_records WHERE record_type='realmeye_archive_page'"
     ).fetchone()[0]
+    if not archive_pages:
+        raise RuntimeError(f"no RealmEye archive pages in {db}; refusing to overwrite {output.name} with an empty one")
     runtime, entity_meta = runtime_entities(con)
 
     local_art_runtime = set()
