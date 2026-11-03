@@ -27,7 +27,7 @@
      },
      {
       "kind": "things",
-      "args": "Miss Cancan;Pearl-Adorned Seahorse;Glowlamp Nautilus;Siren Call Entrance::player entrance;Last Breath Thessal::skin"
+      "args": "Miss Cancan Pet Skin;Pearl-Adorned Seahorse Pet Skin;Glowlamp Nautilus Pet Skin;Siren Call Entrance::player entrance;Last Breath Thessal::skin"
      }
     ],
     "flow": [
@@ -64,7 +64,7 @@
      {
       "show": {
        "kind": "things",
-       "args": "Miss Cancan;Pearl-Adorned Seahorse;Glowlamp Nautilus;Siren Call Entrance::player entrance;Last Breath Thessal::skin"
+       "args": "Miss Cancan Pet Skin;Pearl-Adorned Seahorse Pet Skin;Glowlamp Nautilus Pet Skin;Siren Call Entrance::player entrance;Last Breath Thessal::skin"
       }
      },
      {
@@ -1506,7 +1506,11 @@
     {
      "id": "Legacy Coral Ring",
      "type": "0xd245",
-     "art": null,
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 8
+     },
      "description": "A ring crafted from the dangerous Fire Coral.",
      "labels": [
       "EQUIPMENT",
@@ -1529,12 +1533,27 @@
       "on equip DEX": 5,
       "on equip WIS": 5,
       "on equip MAXMP": 90
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-coral-ring.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
      }
     },
     {
      "id": "Coral Ring",
      "type": "0xd24a",
-     "art": null,
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 593
+     },
      "description": "A ring crafted from the dangerous Fire Coral.",
      "labels": [
       "EQUIPMENT",
@@ -1560,7 +1579,18 @@
       "on equip WIS": 5,
       "on equip MAXMP": 90
      },
-     "clientId": "Legacy Coral Ring Shiny"
+     "clientId": "Legacy Coral Ring Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-coral-ring-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
     },
     {
      "id": "Esben's Wedding Ring",
@@ -1612,7 +1642,11 @@
     {
      "id": "Magical Lodestone",
      "type": "0x1A08",
-     "art": null,
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1042
+     },
      "description": "The source of power for the Marble Colossus found within his core. It is intended to give life to golems, but it can provide benefits to the living as well.",
      "labels": [
       "EQUIPMENT",
@@ -1639,14 +1673,29 @@
       "on equip ATT": 6,
       "on equip SPD": 6
      },
-     "clientId": "Magical Lodestone Shiny"
+     "clientId": "Magical Lodestone Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "magical-lodestone-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
     }
    ],
    "changed": [
     {
      "id": "Superior Mask of Anubis",
      "type": "0xD87C",
-     "art": null,
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 1431
+     },
      "description": "An even more ancient relic of the Tomb of the Ancients, once used by holy worshippers in ceremonies. It turns your character into the Pharaoh Necromancer upon equip!",
      "labels": [
       "EQUIPMENT",
@@ -1675,7 +1724,18 @@
        "was": null,
        "now": true
       }
-     ]
+     ],
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "superior-mask-of-anubis.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
     },
     {
      "id": "Superior Mask of Lightning",

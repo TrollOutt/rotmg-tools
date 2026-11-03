@@ -61,8 +61,14 @@ var WhatsNew = (function () {
 
   const bundle = () => (typeof window !== 'undefined' && window.ROTMG_BUNDLE) || null;
   const stripUrl = file => (art && art[file]) ? art[file] : 'assets/whats-new/' + file;
-  const sheetUrl = () => (bundle() && bundle().indexSheet) || 'assets/index/sheet.png';
-  const statusUrl = () => (bundle() && bundle().statusSheet) || 'assets/index/status-icons.png';
+  // Asked for by the Index's own build, as the Index page does, so a cached sheet from another build never lends its pictures.
+  const marked = file => {
+    const shared = typeof window !== 'undefined' && window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index;
+    const mark = shared && (shared.built || (shared.from && shared.from.build));
+    return file + (mark ? '?v=' + encodeURIComponent(mark) : '');
+  };
+  const sheetUrl = () => (bundle() && bundle().indexSheet) || marked('assets/index/sheet.png');
+  const statusUrl = () => (bundle() && bundle().statusSheet) || marked('assets/index/status-icons.png');
 
   /* ---------------- what the Index says a thing is ---------------- */
   const HAND = { weapon: 'weapons', ability: 'abilities', armor: 'armour', ring: 'rings' };
@@ -972,8 +978,9 @@ var WhatsNew = (function () {
   function onInput(e) { if (e.target.id === 'newsFind') { q = e.target.value; draw(true); } }
   function onClick(e) {
     const el = e.target.closest('[data-skin-launch],[data-skin-pick],[data-menu],[data-upd],[data-card],[data-page],[data-at],[data-step],[data-story],[data-why],[data-sort],tr.pl-row,' + POINT);
-    // The page's own body carries a data-page: only what is inside the module counts.
-    if (!el || !app.contains(el)) return;
+    // The page's own body carries a data-page: only what is inside the module, or its header (the update menu), counts.
+    const top = $('newsTop');
+    if (!el || !(app.contains(el) || (top && top.contains(el)))) return;
     if (el.dataset.skinLaunch !== undefined) { stageOn = true; const v = $('newsStoryViewer'); if (v) v.innerHTML = '<p class="pm-wait">Loading the stage</p>'; stageSkin(); return; }
     if (el.dataset.skinPick !== undefined) { pickSkin(+el.dataset.skinPick); return; }
     if (el.dataset.menu !== undefined) { menuOpen = !menuOpen; draw(true); return; }

@@ -1115,7 +1115,8 @@ for (const it of gear) {
     const m = [one.name, one.alias].filter(Boolean)
       .map(name => /^(.*[^\s])\s*x\s*(\d+)$/i.exec(name)).find(Boolean);
     if (!m) continue;
-    const key = one.kind + '|' + m[1];
+    // The quantity may come from the working id, the name never does: "OT Fire Coral Branch x3" shows as "Fire Coral Branch".
+    const key = one.kind + '|' + (m.input === one.name ? m[1] : one.name);
     if (!stacks.has(key)) stacks.set(key, []);
     stacks.get(key).push(one);
     one.many = Number(m[2]);

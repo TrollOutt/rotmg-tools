@@ -225,7 +225,8 @@ const num = value => (value === null || value === '' ? null : Number(value));
 
 function artOf(body) {
   for (const kind of ['AnimatedTexture', 'Texture', 'RandomTexture']) {
-    const block = new RegExp('<' + kind + '>([\\s\\S]*?)</' + kind + '>').exec(body);
+    // Two thousand textures carry an offset: <Texture xOffset="-2" yOffset="0">.
+    const block = new RegExp('<' + kind + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + kind + '>').exec(body);
     if (!block) continue;
     const file = /<File>([^<]+)<\/File>/.exec(block[1]);
     const index = /<Index>([^<]+)<\/Index>/.exec(block[1]);

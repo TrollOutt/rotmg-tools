@@ -30,7 +30,7 @@ show|things|Squidver::reskins the Huntsman's Volley;Coral Juice Refinery::a reus
 point|The Squidver is the Huntsman's Volley with the trench's look: the client gives both the same shot, mana cost and speed bonus. The Fire Coral Branch weighs Wisdom and Mana enchantments seven times heavier and the Coral Volley awakened fifteen times — though the client's pool names that enchantment AWAKENED_CORAL_BOW, which no enchantment carries, so the calculator cannot apply the last part.
 show|things|Coral Bow;Coral Venom Trap;Coral Silk Armor;Coral Ring
 point|The Coral set and its Shinies have new sprites. The client also declares a Legacy copy of each piece, each with its Shiny, and a Legacy Ocean Trench Portal; the notes say nothing of them.
-show|things|Miss Cancan;Pearl-Adorned Seahorse;Glowlamp Nautilus;Siren Call Entrance::player entrance;Last Breath Thessal::skin
+show|things|Miss Cancan Pet Skin;Pearl-Adorned Seahorse Pet Skin;Glowlamp Nautilus Pet Skin;Siren Call Entrance::player entrance;Last Breath Thessal::skin
 point|Three sea pets, a Thessal skin and an entrance arrive in the client with the rework, also unmentioned.
 
 part|Return of the White Snake
