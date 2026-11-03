@@ -3624,7 +3624,7 @@ function dressNewsBell(index) {
  */
 const VOUCHER = {
   id: 'happy-halloween-2',
-  code: 'SPOOKYREALM',
+  code: '', // SPOOKYREALM ran out with the 2026-11-03 update.
   title: 'Happy Halloween 2',
   previous: { id: 'happy-halloween-1', code: 'HALLOWEEN2026', title: 'Happy Halloween 1' },
   rewards: [
