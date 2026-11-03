@@ -32,6 +32,7 @@ const deployCritical = [
   'fiches-community.test.js',
   'fiches-forge.test.js',
   'home-navigation.test.js',
+  'home-snake.test.js',
   'index-quality.test.js',
   'index-stat-boosts.test.js',
   'index-search.test.js',

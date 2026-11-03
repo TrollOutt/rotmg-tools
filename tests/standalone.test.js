@@ -71,6 +71,9 @@ assert(servedSkinHtml.indexOf(skinDataTag) >= 0
   'HTTP build preserves catalogue script order');
 assert.equal(read('docs/skin-viewer-data.js'), read('web/skin-viewer-data.js'),
   'HTTP build serves the exact catalogue module');
+assert.deepEqual(fs.readFileSync(path.join(root, 'docs/assets/home/white-snake.png')),
+  fs.readFileSync(path.join(root, 'web/assets/home/white-snake.png')),
+  'HTTP build serves the client White Snake sprite');
 const atlasBuilt = read('web/assets/atlas/index.html');
 assert.equal(read('docs/assets/atlas/index.html'), atlasBuilt,
   'HTTP build serves the current generated Atlas page');
@@ -90,6 +93,9 @@ for (const name of ['indexText', 'wikiText', 'theoryText', 'realmLootText', 'cli
 assert.equal(offline.data.sources.clientForgeText.trim(), read('web/assets/index/client-forge.json').trim());
 assert(!served.data.cardFiles && !served.data.cardImages, 'Card extras must stay out of served startup');
 assert(offline.data.cardImages['assets/ui/backgrounds/facets.webp'], 'The default Style background must travel with the download');
+assert.deepEqual(Buffer.from(offline.data.homeSnake.split(',')[1], 'base64'),
+  fs.readFileSync(path.join(root, 'web/assets/home/white-snake.png')),
+  'The downloadable copy carries the White Snake sprite');
 for (const file of ['assets/index/projectiles.json', 'assets/index/collection-icons.json',
   'assets/realm-monster-animations/index.json', 'assets/realm-biomes/index.json',
   'assets/skins/generated/looks.json', 'assets/skins/generated/skins.json', 'assets/skins/generated/dyes.json']) {

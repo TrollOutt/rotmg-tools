@@ -538,6 +538,9 @@ const jsonForScript = value => JSON.stringify(value)
 const css = readWeb('style.css');
 const appDataSource = readWeb('app-data.js');
 const appSource = readWeb('app.js');
+const homeSnakeSource = readWeb('home-snake.js');
+const homeSnakeImage = 'data:image/png;base64,'
+  + fs.readFileSync(path.join(web, 'assets', 'home', 'white-snake.png')).toString('base64');
 // The Index card, drawn over the one index-page.js writes: inlined like the rest.
 const cardCss = readWeb('fiches-c.css');
 // The redesigned cards read these alongside the Index. The kept HTML needs
@@ -581,7 +584,7 @@ const lookScriptTag = '<script src="ui-style.js"></script>';
 let page = readWeb('index.html');
 
 const styleTag = '<link rel="stylesheet" href="style.css">';
-const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"sprite-animation.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script data-lazy-src=\"pet-fame-engine.js\"></script>\n<script data-lazy-src=\"pet-fame-data.js\"></script>\n<script data-lazy-src=\"pet-fame.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>";
+const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"sprite-animation.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script data-lazy-src=\"pet-fame-engine.js\"></script>\n<script data-lazy-src=\"pet-fame-data.js\"></script>\n<script data-lazy-src=\"pet-fame.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>\n<script src=\"home-snake.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardDataTag) || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
   || !page.includes(lookStyleTag) || !page.includes(lookScriptTag) || !page.includes(petStyleTag)) {
@@ -704,6 +707,7 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>window.ROTMG_BUNDLE=${jsonForScript({ built, changes, sources: bundleSources, assets, itemArt, whatsNew,
       theorySheet, indexSheet: bundleSources.indexText ? indexSheet : '',
       statusSheet: bundleSources.statusText ? statusSheet : '',
+      homeSnake: bundleSources.indexText ? homeSnakeImage : '',
       ...(bundleSources.indexText ? { cardFiles, cardImages, petImages } : {}) })};</script>`,
     `<script>\n${safe(localesSource)}\n</script>`,
     `<script>\n${safe(i18nSource)}\n</script>`,
@@ -728,7 +732,8 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(petPageSource)}\n</script>`,
     `<script>\n${safe(routerSource)}\n</script>`,
     `<script>\n${safe(appDataSource)}\n</script>`,
-    `<script>\n${safe(appSource)}\n</script>`
+    `<script>\n${safe(appSource)}\n</script>`,
+    `<script>\n${safe(homeSnakeSource)}\n</script>`
   ].join('\n'))
   .replace('</head>', `  <meta name="generator" content="rotmg-enchant-calculator standalone build ${built}">\n</head>`);
 
@@ -855,6 +860,7 @@ const carried = carryAcross(path.join(web, 'assets', 'atlas'), path.join(pagesDi
  * one thing on the site that lives beside the page instead of inside it.
  */
 carryAcross(path.join(web, 'assets', 'index'), path.join(pagesDir, 'assets', 'index'));
+carryAcross(path.join(web, 'assets', 'home'), path.join(pagesDir, 'assets', 'home'));
 
 /*
  * carryAcross copied the development Index. Replace it with the public
