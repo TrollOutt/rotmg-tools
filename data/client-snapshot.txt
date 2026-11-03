@@ -1,4 +1,4 @@
-## provenance: {"built":"2026-10-14T17:47:18.651Z","from":{"kind":"client","build":"f1f479830bae49808b3d9927e8ad8fa1","date":"2026-10-14"},"tool":"tools/read-client.js"}
+## provenance: {"built":"2026-11-03T12:09:26.131Z","from":{"kind":"client","build":"730b86d6dab64c41a24f1be50ef46862","date":"2026-11-03"},"tool":"tools/read-client.js"}
 ## What an installed RotMG client says about enchanting, as of the build below.
 ##
 ## Written by tools/read-client.js --snapshot. Its only purpose is to be
@@ -8,7 +8,7 @@
 ## One sorted line per fact, so git can diff it as well.
 ## Format: kind|name|fields…
 
-build|f1f479830bae49808b3d9927e8ad8fa1
+build|730b86d6dab64c41a24f1be50ef46862
 ench|ALIEN_NEO_ONSHOOT_ATTACK|Neo Alien OnShoot Attack Boost|7500||ALIEN,ARMOR,ATTACK,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCATTACK,RING,STATBOOST,WEAPON|ONSHOOTSTAT,PROCATTACK|EQUIPMENT|ABILITY,NEO_ALIEN
 ench|ALIEN_NEO_ONSHOOT_ATTACK_ROLLABLE|Neo Alien OnShoot Attack Boost|10000||ALIEN,ARMOR,ATTACK,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCATTACK,RING,ROLLABLE,STATBOOST,WEAPON|ONSHOOTSTAT,PROCATTACK|EQUIPMENT,NEO_ALIEN|ABILITY
 ench|ALIEN_NEO_ONSHOOT_DEFENSE|Neo Alien OnShoot Defense Boost|7500||ALIEN,ARMOR,DEFENSE,NEO_ALIEN,ONSHOOT,ONSHOOTSTAT,PROC,PROCDEFENSE,RING,STATBOOST,WEAPON|ONSHOOTSTAT,PROCDEFENSE|EQUIPMENT|ABILITY,NEO_ALIEN
@@ -212,7 +212,7 @@ ench|LIVING_HIVE_BEEHEMOTH|Living Hive|7500||AWAKENED,DUALSTAT,ROLLABLE,SUMMON|A
 ench|LIVING_HIVE_NORMAL|Living Hive (Legacy)|0||LEGACY,UNIQUE|UNIQUE|ARMOR,LOD,UT|ABILITY,RING,WEAPON
 ench|Loot_Bonus|Loot Bonus|200000|0.35000 0.30000 0.20000 0.15000|LOOT,REWARD,REWARDBONUS,ROLLABLE|REWARDBONUS|EQUIPMENT|
 ench|LUCKY_STREAK|Lucky Streak|2000||DUALREWARDBONUS,REWARD,ROLLABLE,UNIQUE|DUALREWARDBONUS,UNIQUE|RING|ABILITY,ARMOR,WEAPON
-ench|Mana_Attack_Tradeoff|Mana -AttackTradeoff|12500|0.35000 0.30000 0.20000 0.15000|ATTACK,DUALSTAT,MANA,ROLLABLE,STAT,TRADEOFF|DUALSTAT|EQUIPMENT|
+ench|Mana_Attack_Tradeoff|Mana -Attack Tradeoff|12500|0.35000 0.30000 0.20000 0.15000|ATTACK,DUALSTAT,MANA,ROLLABLE,STAT,TRADEOFF|DUALSTAT|EQUIPMENT|
 ench|Mana_Bonus|Mana Bonus|100000|0.35000 0.30000 0.20000 0.15000|FLATBONUS,MANA,ROLLABLE,SINGLESTAT,STAT|SINGLESTAT|EQUIPMENT|
 ench|Mana_Defense_Tradeoff|Mana -Defense Tradeoff|12500|0.35000 0.30000 0.20000 0.15000|DEFENSE,DUALSTAT,MANA,ROLLABLE,STAT,TRADEOFF|DUALSTAT|EQUIPMENT|
 ench|Mana_Dexterity_Tradeoff|Mana -Dexterity Tradeoff|12500|0.35000 0.30000 0.20000 0.15000|DEXTERITY,DUALSTAT,MANA,ROLLABLE,STAT,TRADEOFF|DUALSTAT|EQUIPMENT|
@@ -277,7 +277,7 @@ ench|ORYXMAS_ICE_RUSH|Ice Rush|1000||FROST,SINGLESTAT,UNIQUE,WEAPONRANGE|SINGLES
 ench|ORYXMAS_SNOWSTORM|Snowstorm|1000||DUALSTAT,FROST,UNIQUE|DUALSTAT,UNIQUE|ARMOR,EQUIPMENT,FROST_ENCHANTABLE,TAB_UT,UT|ABILITY,RING,WEAPON
 ench|ORYXMAS_WEAPON_NAUGHTY|Naughty|1000||ORYXMAS2023,UNIQUE,WEAPONDAMAGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE|EQUIPMENT,ORYXMAS_ENCHANTABLE,TAB_UT,UT,WEAPON|ABILITY,ARMOR,RING
 ench|ORYXMAS_WEAPON_NICE|Nice|1000||ORYXMAS2023,UNIQUE,WEAPONRANGE|UNIQUE,WEAPONRANGE|EQUIPMENT,ORYXMAS_ENCHANTABLE,TAB_UT,UT,WEAPON|ABILITY,ARMOR,RING
-ench|OVERWHEMLING_STRIKES|Overwhelming Strikes|2000||DAMAGE,ROLLABLE,TRADEOFF,UNIQUE,WEAPON,WEAPONDAMAGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE|WEAPON|ABILITY,ARMOR,RING
+ench|OVERWHELMING_STRIKES|Overwhelming Strikes|2000||DAMAGE,ROLLABLE,TRADEOFF,UNIQUE,WEAPON,WEAPONDAMAGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE|WEAPON|ABILITY,ARMOR,RING
 ench|PATH_OF_THE_MAGUS_ARMOR|Path of the Magus|1000||DUALSTAT,MAGUS,UNIQUE|DUALSTAT,UNIQUE|ARMOR,MOTMG2023,UT|ABILITY,RING,WEAPON
 ench|PATH_OF_THE_MAGUS_BOW|Path of the Magus|1000||MAGUS,UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|BOW,MOTMG2023,UT,WEAPON|ABILITY,ARMOR,RING
 ench|PATH_OF_THE_MAGUS_DAGGER|Path of the Magus|1000||MAGUS,UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|DAGGER,MOTMG2023,UT,WEAPON|ABILITY,ARMOR,RING
@@ -353,8 +353,8 @@ ench|STELLAR_ASCEND|Stellar Ascend|1000||DUALSTAT,STELLARASCEND,UNIQUE|DUALSTAT,
 ench|STHENOS_SWIFTNESS|Stheno's Swiftness|2000||FLATBONUS,ROLLABLE,SINGLESTAT,SPEED,STAT,UNIQUE|SINGLESTAT,UNIQUE|EQUIPMENT|
 ench|SummonPower_StatMod_Tradeoff|Summon Power -StatMod Mult Tradeoff|180000|0.33333 0.27778 0.22222 0.16667|DUALSTAT,MPCOSTREDUCTION,ROLLABLE,STAT,STATMODMULT,SUMMONPOWER,TRADEOFF|MPCOSTREDUCTION,STATMODMULT|SUMMONPOWERED|
 ench|SWARM_TREE_WRATH|Swarm Tree's Wrath|7500||AWAKENED,ROLLABLE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|AWAKENED,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|LEAFBOW,WEAPON|ABILITY,ARMOR,RING
-ench|THANNKSGIVING_GIVER|Giver|1000||SINGLESTAT,THANKSGIVING,UNIQUE|SINGLESTAT,UNIQUE|ARMOR,EQUIPMENT,TAB_UT,THANKSGIVING_ENCHANTABLE,UT|ABILITY,RING,WEAPON
-ench|THANNKSGIVING_THANKFUL|Thankful|1000||THANKSGIVING,UNIQUE|UNIQUE|ARMOR,EQUIPMENT,TAB_UT,THANKSGIVING_ENCHANTABLE,UT|ABILITY,RING,WEAPON
+ench|THANKSGIVING_GIVER|Giver|1000||SINGLESTAT,THANKSGIVING,UNIQUE|SINGLESTAT,UNIQUE|ARMOR,EQUIPMENT,TAB_UT,THANKSGIVING_ENCHANTABLE,UT|ABILITY,RING,WEAPON
+ench|THANKSGIVING_THANKFUL|Thankful|1000||THANKSGIVING,UNIQUE|UNIQUE|ARMOR,EQUIPMENT,TAB_UT,THANKSGIVING_ENCHANTABLE,UT|ABILITY,RING,WEAPON
 ench|UNHOLY_SPIRITS|Unholy Spirits|2000||DAMAGE,ROLLABLE,SUMMON,TRADEOFF,UNIQUE,WEAPON,WEAPONFIRERATE|SUMMON,UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE|WEAPON|ABILITY,ARMOR,RING
 ench|VALENTINES_ADONIS_SHOT_BOW|Adonis' Shot|1000||ADONIS,UNIQUE,VALENTINES,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|BOW,EQUIPMENT,TAB_UT,UT,VALENTINE_ENCHANTABLE,WEAPON|ABILITY,ARMOR,RING
 ench|VALENTINES_ADONIS_SHOT_DAGGER|Adonis' Shot|1000||ADONIS,UNIQUE,VALENTINES,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|DAGGER,EQUIPMENT,TAB_UT,UT,VALENTINE_ENCHANTABLE,WEAPON|ABILITY,ARMOR,RING
@@ -381,7 +381,7 @@ ench|VALENTINES_APHRODITE_SHOT_SWORD|Aphrodite's Shot|1000||APHRODITE,UNIQUE,VAL
 ench|VALENTINES_APHRODITE_SHOT_TACHI|Aphrodite's Shot|1000||APHRODITE,UNIQUE,VALENTINES,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|EQUIPMENT,TAB_UT,TACHI,UT,VALENTINE_ENCHANTABLE,WEAPON|ABILITY,ARMOR,RING
 ench|VALENTINES_APHRODITE_SHOT_WAND|Aphrodite's Shot|1000||APHRODITE,UNIQUE,VALENTINES,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|EQUIPMENT,TAB_UT,UT,VALENTINE_ENCHANTABLE,WAND,WEAPON|ABILITY,ARMOR,RING
 ench|VALENTINES_ROSE_THORNS|Rose Thorns|1000||ROSETHORNS,UNIQUE,VALENTINES,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|UNIQUE,WEAPONDAMAGE,WEAPONFIRERATE,WEAPONRANGE|EQUIPMENT,TAB_UT,UT,VALENTINE_ENCHANTABLE,WEAPON|ABILITY,ARMOR,RING
-ench|VAMPRIC_LIFEFORCE|Vampric Lifeforce|2000||FLATBONUS,LIFE,ROLLABLE,SINGLESTAT,STAT,UNIQUE|SINGLESTAT,UNIQUE|EQUIPMENT|
+ench|VAMPIRIC_LIFEFORCE|Vampiric Lifeforce|2000||FLATBONUS,LIFE,ROLLABLE,SINGLESTAT,STAT,UNIQUE|SINGLESTAT,UNIQUE|EQUIPMENT|
 ench|Vitality_Attack_Tradeoff|Vitality -Attack Tradeoff|12500|0.35000 0.30000 0.20000 0.15000|ATTACK,DUALSTAT,ROLLABLE,STAT,TRADEOFF,VITALITY|DUALSTAT|EQUIPMENT|
 ench|Vitality_Bonus|Vitality Bonus|100000|0.35000 0.30000 0.20000 0.15000|FLATBONUS,ROLLABLE,SINGLESTAT,STAT,VITALITY|SINGLESTAT|EQUIPMENT|
 ench|Vitality_Defense_Tradeoff|Vitality -Defense Tradeoff|12500|0.35000 0.30000 0.20000 0.15000|DEFENSE,DUALSTAT,ROLLABLE,STAT,TRADEOFF,VITALITY|DUALSTAT|EQUIPMENT|
@@ -451,23 +451,27 @@ pool|Aphrodite's Shot Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,VAL
 pool|Aphrodite's Shot Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=LIFE,VIALITY mult=9
 pool|Aphrodite's Shot Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=APHRODITE mult=100000000
 pool|Chariot Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Chariot Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=SPEED mult=4.5
-pool|Chariot Pool #3|ModifyEnchantmentWeight id=STHENOS_SWIFTNESS mult=15
+pool|Chariot Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=SPEED mult=4.5
+pool|Chariot Pool #3|ModifyEnchantmentWeight id=STHENOS_SWIFTNESS mult=3.33
 pool|Cool Protection Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,FROST
 pool|Cool Protection Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=DEFENSE,SPEED mult=9
 pool|Cool Protection Pool #3|ModifyEnchantmentWeight id=ORYXMAS_COOL_PROTECTION mult=100000000
 pool|Death Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Death Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=DEFENSE mult=4.5
-pool|Death Pool #3|ModifyEnchantmentWeight id=SANDSTONE_RESILIENCE mult=15
+pool|Death Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=DEFENSE mult=4.5
+pool|Death Pool #3|ModifyEnchantmentWeight id=SANDSTONE_RESILIENCE mult=3.33
 pool|Default Enchantment Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
 pool|Devil Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Devil Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=ATTACK mult=4.5
-pool|Devil Pool #3|ModifyEnchantmentWeight id=SHAITANS_MIGHT mult=15
+pool|Devil Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK mult=4.5
+pool|Devil Pool #3|ModifyEnchantmentWeight id=SHAITANS_MIGHT mult=3.33
 pool|Eggsposing Shot Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,EASTER
 pool|Eggsposing Shot Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK,WISDOM,SPEED mult=9
 pool|Eggsposing Shot Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=EASTER mult=100000000
+pool|Fire Coral Branch Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
+pool|Fire Coral Branch Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=WISDOM mult=7
+pool|Fire Coral Branch Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=MANA mult=7
+pool|Fire Coral Branch Pool #4|ModifyEnchantmentWeight id=AWAKENED_CORAL_BOW mult=15
 pool|Fool Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Fool Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=ATTACK,DEXTERITY,SPEED,LIFE,MANA,DEFENSE,WISDOM,VITALITY mult=0.2
+pool|Fool Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK,DEXTERITY,SPEED,LIFE,MANA,DEFENSE,WISDOM,VITALITY mult=0.2
 pool|Fool Pool #3|ModifyEnchantmentWeight id=JESTERS_TRICK mult=15
 pool|Freezing Core Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
 pool|Freezing Core Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=SPEED,DEXTERITY,BERSERK,WEAPONFIRERATE mult=0
@@ -480,7 +484,7 @@ pool|Frozen Blast Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=DEFENSE,S
 pool|Frozen Blast Pool #3|ModifyEnchantmentWeight id=ORYXMAS_FROZEN_BLAST mult=100000000
 pool|Giver Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,THANKSGIVING
 pool|Giver Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK,VITALITY mult=9
-pool|Giver Pool #3|ModifyEnchantmentWeight id=THANNKSGIVING_GIVER mult=100000000
+pool|Giver Pool #3|ModifyEnchantmentWeight id=THANKSGIVING_GIVER mult=100000000
 pool|Glorious Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,GLORIOUS
 pool|Glorious Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK,DURABILITY mult=9
 pool|Glorious Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=GLORIOUS mult=100000000
@@ -515,17 +519,17 @@ pool|LOD Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=DAMAGE,DURABILITY,
 pool|LOD Pool #3|ModifyEnchantmentWeight id=DRAKE_WARDEN mult=15
 pool|LOD Pool #4|ModifyEnchantmentWeight id=AWAKENED_SNAKE_EYE_RING mult=15
 pool|Lucky Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Lucky Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=REWARD mult=4.5
-pool|Lucky Pool #3|ModifyEnchantmentWeight id=LUCKY_STREAK mult=15
+pool|Lucky Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=REWARD mult=4.5
+pool|Lucky Pool #3|ModifyEnchantmentWeight id=LUCKY_STREAK mult=3.33
 pool|Magician Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Magician Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=WISDOM mult=4.5
-pool|Magician Pool #3|ModifyEnchantmentWeight id=AVALONS_INTELLECT mult=15
+pool|Magician Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=WISDOM mult=4.5
+pool|Magician Pool #3|ModifyEnchantmentWeight id=AVALONS_INTELLECT mult=3.33
 pool|Magus Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,MAGUS
 pool|Magus Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=WISDOM,MANA mult=9
 pool|Magus Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=MAGUS mult=100000000
 pool|Moon Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Moon Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=MANA mult=4.5
-pool|Moon Pool #3|ModifyEnchantmentWeight id=MERMAID_MAGIC mult=15
+pool|Moon Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=MANA mult=4.5
+pool|Moon Pool #3|ModifyEnchantmentWeight id=MERMAID_MAGIC mult=3.33
 pool|Naughty Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,ORYXMAS2023
 pool|Naughty Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=LIFE,MANA mult=9
 pool|Naughty Pool #3|ModifyEnchantmentWeight id=ORYXMAS_WEAPON_NAUGHTY mult=100000000
@@ -587,8 +591,8 @@ pool|Stellar Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,STELLARASCEN
 pool|Stellar Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK,WISDOM,SPEED mult=9
 pool|Stellar Pool #3|ModifyEnchantmentWeight id=STELLAR_ASCEND mult=100000000
 pool|Sun Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Sun Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=DEXTERITY mult=4.5
-pool|Sun Pool #3|ModifyEnchantmentWeight id=PIRATES_EXPERTISE mult=15
+pool|Sun Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=DEXTERITY mult=4.5
+pool|Sun Pool #3|ModifyEnchantmentWeight id=PIRATES_EXPERTISE mult=3.33
 pool|Swiftblade Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,SWIFTBLADE
 pool|Swiftblade Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=DEXTERITY,SPEED mult=9
 pool|Swiftblade Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=SWIFTBLADE mult=100000000
@@ -599,21 +603,21 @@ pool|Test Unique Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
 pool|Test Unique Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=UNIQUE mult=9999.0
 pool|Thankful Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,THANKSGIVING
 pool|Thankful Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=ATTACK,VITALITY mult=9
-pool|Thankful Pool #3|ModifyEnchantmentWeight id=THANNKSGIVING_THANKFUL mult=100000000
+pool|Thankful Pool #3|ModifyEnchantmentWeight id=THANKSGIVING_THANKFUL mult=100000000
 pool|Tomb Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
 pool|Tomb Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=LIFE,DEXTERITY,DEFENSE mult=7
 pool|Tomb Pool #3|ModifyEnchantmentWeightLabel includeLabelsOR=DUALSTAT mult=3
 pool|Tomb Pool #4|ModifyEnchantmentWeight id=ANCIENTS_BLESSING mult=15
 pool|Tomb Pool #5|ModifyEnchantmentWeight id=ANCIENT_ARTIFACTS mult=15
 pool|Tower Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|Tower Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=LIFE mult=4.5
-pool|Tower Pool #3|ModifyEnchantmentWeight id=VAMPRIC_LIFEFORCE mult=15
+pool|Tower Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=LIFE mult=4.5
+pool|Tower Pool #3|ModifyEnchantmentWeight id=VAMPIRIC_LIFEFORCE mult=3.33
 pool|Warm and Cozy Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE,ORYXMAS2023
 pool|Warm and Cozy Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=LIFE,MANA mult=9
 pool|Warm and Cozy Pool #3|ModifyEnchantmentWeight id=ORYXMAS_ABILITY_WARM_AND_COZY mult=100000000
 pool|World Pool #1|EnchantmentEntryLabel includeLabelsOR=ROLLABLE
-pool|World Pool #2|ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=VITALITY mult=4.5
-pool|World Pool #3|ModifyEnchantmentWeight id=CRYSTALLINE_VIGOR mult=15
+pool|World Pool #2|ModifyEnchantmentWeightLabel includeLabelsOR=VITALITY mult=4.5
+pool|World Pool #3|ModifyEnchantmentWeight id=CRYSTALLINE_VIGOR mult=3.33
 artifact|Adamantine Ingot|IAbyss Pool|0.5|redDust|30
 artifact|Adonis' Shot Engraving|Adonis' Shot Pool|1|redDust|0
 artifact|Amber Honeycomb|Nest Pool|0.5|purpleDust|35
@@ -623,6 +627,7 @@ artifact|Awakened Test Artifact|Test Awakened Pool|0|purpleDust|0
 artifact|Cool Protection Engraving|Cool Protection Pool|1|redDust|0
 artifact|Death Tarot Card|Death Pool|0.5|greenDust|25
 artifact|Eggsposing Shot Engraving|Eggsposing Shot Pool|1|redDust|0
+artifact|Fire Coral Branch|Fire Coral Branch Pool|0.5|redDust|30
 artifact|Forax Technology|AI Forax Pool|0.5|redDust|30
 artifact|Freezing Core|Freezing Core Pool|0.5|redDust|25
 artifact|Frozen Blast Engraving|Frozen Blast Pool|1|redDust|0
@@ -1392,6 +1397,7 @@ item|Esben's Shattered Heart Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default E
 item|Esben's Vows|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Esben's Vows Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Esben's Wedding Ring|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Esben's Wedding Ring Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Esoteric Buckler|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Essence Tap Skull|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Essence Tap Skull (SB)|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1708,6 +1714,7 @@ item|K.I.D.D. Force|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantm
 item|K.I.D.D. Force 2.0|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Kagebooshi|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Kageboshi|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Kageboshi Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Kagenohikari|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Kaiju Skull|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Kaiken|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1745,6 +1752,14 @@ item|Leaf Bow Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Leaf Dragon Hide Armor|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Leaf Dragon Hide Armor Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Leather Armor|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Bow|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Bow Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Ring|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Ring Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Silk Armor|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Silk Armor Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Venom Trap|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Legacy Coral Venom Trap Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Legion Elite Bow|purpleDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Legion Elite Cloak|redDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Legion Elite Dagger|purpleDust|1,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1821,6 +1836,7 @@ item|Magic Nova Spell DamageNova|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Defau
 item|Magic Protective Matrix|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Magic Protective Matrix Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Magical Lodestone|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Magical Lodestone Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Makakoyumi|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Makakoyumi 2|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Mantle of the Monarchy|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -1869,6 +1885,7 @@ item|Moonbeam Blade|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantmen
 item|Moonbeam Blade Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Moonstone Blades|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Morning Square|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Morning Square Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Morning Star of Conjuration|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Morning Star of Harrowing Memories|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Morning Star of Hidden Secrets|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2350,6 +2367,7 @@ item|Shield of Ogmur Shiny|greenDust|1,1,0.25,0.125|50,65,80,100|Default Enchant
 item|Shield of Orcish Regalia|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Shield of Pogmur|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Shifting Shroud|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Shifting Shroud Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Shining Blade|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Shiny EH Queen's Stinger Dagger|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Shiny Kaiken|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2472,6 +2490,7 @@ item|Sprite Wand|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment
 item|Sprite Wand Shiny|greenDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Spriteful Shield|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Squadron Sheathing|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|Squidver|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|St. Abraham's Wand|greenDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|St. Abraham's Wand Shiny|greenDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|Staff of Adoration|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
@@ -2591,6 +2610,7 @@ item|The North Star|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantmen
 item|The Right Hook|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|The Right Hook Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|The Triangle|redDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
+item|The Triangle Shiny|redDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|The Twilight Gemstone|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|The Twilight Gemstone (Rehearsal)|purpleDust|0.5,0.375,0.25,0.125|50,65,80,100|Default Enchantment Pool
 item|The Twilight Gemstone Shiny|purpleDust|1,1,0.25,0.125|50,65,80,100|Default Enchantment Pool

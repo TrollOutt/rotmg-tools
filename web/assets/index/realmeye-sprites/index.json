@@ -2471,6 +2471,51 @@
       "file": "f045566df2d455cd75fa6a1b.png",
       "source": "https://www.realmeye.com/s/a/img/wiki/i/lRg5c3U.png",
       "name": "Loot Elf"
+    },
+    "enemy:Ancient Stone Sword (Purple)": {
+      "file": "59dd6ad4772f0834a581752e.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/A4k7dP8.png",
+      "name": "Ancient Stone Sword (Purple)"
+    },
+    "enemy:Ancient Stone Sword (Red)": {
+      "file": "7329926a7805ce4641676066.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/F52teg4.png",
+      "name": "Ancient Stone Sword (Red)"
+    },
+    "enemy:Assimilation Chest": {
+      "file": "00c6a90f028f4b92a99a8051.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/Rzyyf85.png",
+      "name": "Assimilation Chest"
+    },
+    "enemy:Ghost Slurp": {
+      "file": "f479c317d48d1c1a3c4d1ae3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/CQD3VNU.png",
+      "name": "Ghost Slurp"
+    },
+    "enemy:Uninfected Archer": {
+      "file": "ece8835a70ef12f5b0cf23d7.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/dtIgWSo.png",
+      "name": "Uninfected Archer"
+    },
+    "enemy:Uninfected Priest": {
+      "file": "181ba3b9824863c92a923ab3.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/or2GSOx.png",
+      "name": "Uninfected Priest"
+    },
+    "enemy:Uninfected Rogue": {
+      "file": "2324f89a9b07c7d3bcfb2113.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/KzZtBYb.png",
+      "name": "Uninfected Rogue"
+    },
+    "enemy:Uninfected Warrior": {
+      "file": "e9e6cb83d5acee87a7a70790.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/KuNiotc.png",
+      "name": "Uninfected Warrior"
+    },
+    "enemy:Uninfected Wizard": {
+      "file": "80d887d7cc394008f94fa237.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/niAgsqp.png",
+      "name": "Uninfected Wizard"
     }
   }
 }

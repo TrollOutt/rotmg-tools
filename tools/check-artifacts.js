@@ -39,13 +39,11 @@ const engine = require(path.join(root, 'web', 'engine.js'));
 const snapshot = fs.readFileSync(path.join(root, 'data', 'client-snapshot.txt'), 'utf8')
   .split(/\r?\n/).filter(line => line && !line.startsWith('##'));
 
-// The client's own display names, which are not always ours: four are its
+// The client's own display names, which are not always ours: two are its
 // typos, and it gives the Alien and Neo forms of two enchantments one name
 // apiece. The id is what actually separates those.
 const SPELLING = {
-  'Mana -Attack Tradeoff': 'Mana -AttackTradeoff',
   "Pirate's Expertise": 'Pirates Expertise',
-  'Vampiric Lifeforce': 'Vampric Lifeforce',
   'MP Cost Reduction': 'Mp Cost Reduction',
   'Acid Guardian (Neo)': 'Acid Guardian',
   'Solar Mastery (Neo)': 'Solar Mastery'

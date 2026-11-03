@@ -29,17 +29,15 @@ const timesNamed = new Map();
 for (const shown of nameOf.values()) timesNamed.set(shown, (timesNamed.get(shown) || 0) + 1);
 
 /*
- * Four display names in the client are typos — a missing space, a missing
- * apostrophe, a dropped letter, a lowercase initialism. They are corrected
+ * Two display names in the client are typos — a missing apostrophe and a
+ * lowercase initialism (the 2026-11-03 build fixed two more). They are corrected
  * here, at the one place names cross from the client into our data, so nothing
  * downstream has to know about them. Getting this wrong is not cosmetic: a
  * rule that names an enchantment we spell differently simply never matches,
  * and The Sun's x15 on Pirate's Expertise quietly stops applying.
  */
 const TYPOS = {
-  'Mana -AttackTradeoff': 'Mana -Attack Tradeoff',
   'Pirates Expertise': "Pirate's Expertise",
-  'Vampric Lifeforce': 'Vampiric Lifeforce',
   'Mp Cost Reduction': 'MP Cost Reduction'
 };
 

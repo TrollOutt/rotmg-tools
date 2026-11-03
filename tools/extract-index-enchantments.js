@@ -13,15 +13,13 @@ const tag = (text, name) => {
 const list = (text, name) => tag(text, name).split(',').map(s => s.trim()).filter(Boolean);
 
 /*
- * Four display names in the client are typos — a missing space, a missing
- * apostrophe, a dropped letter, a lowercase initialism. Corrected at the one
+ * Two display names in the client are typos — a missing apostrophe and a
+ * lowercase initialism (the 2026-11-03 build fixed two more). Corrected at the one
  * place names cross from the client into our data. Not cosmetic: an artifact
  * rule that names an enchantment we spell differently never matches.
  */
 const TYPOS = {
-  'Mana -AttackTradeoff': 'Mana -Attack Tradeoff',
   'Pirates Expertise': "Pirate's Expertise",
-  'Vampric Lifeforce': 'Vampiric Lifeforce',
   'Mp Cost Reduction': 'MP Cost Reduction'
 };
 

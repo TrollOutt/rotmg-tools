@@ -1,4 +1,4 @@
-## provenance: {"built":"2026-10-14T00:00:00.000Z","from":{"build":"f1f479830bae49808b3d9927e8ad8fa1","date":"2026-10-14","kind":"client"},"tool":"tools/generate-artifacts.js"}
+## provenance: {"built":"2026-11-03T00:00:00.000Z","from":{"build":"730b86d6dab64c41a24f1be50ef46862","date":"2026-11-03","kind":"client"},"tool":"tools/generate-artifacts.js"}
 ## Every artifact an installed RotMG client defines, and the rules of the
 ## pool each one draws from.
 ##
@@ -48,12 +48,17 @@ artifact|Cool Protection Engraving|Cool Protection Pool|redDust|0|1|MATERIAL,ENG
   weight-name|Cool Protection|mult=100000000
 artifact|Death Tarot Card|Death Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|Death - Card XIII of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|DEFENSE|UNIQUE|mult=4.5
-  weight-name|Sandstone Resilience|mult=15
+  weight|DEFENSE||mult=4.5
+  weight-name|Sandstone Resilience|mult=3.33
 artifact|Eggsposing Shot Engraving|Eggsposing Shot Pool|redDust|0|1|MATERIAL,ENGRAVING,ARTIFACT,FORGESTORE|Eggsposing Shot Engraving unlocker
   entry|ROLLABLE,EASTER|
   weight|ATTACK,WISDOM,SPEED||mult=9
   weight|EASTER||mult=100000000
+artifact|Fire Coral Branch|Fire Coral Branch Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A branch of Fire Coral. It's warm to the touch.
+  entry|ROLLABLE|
+  weight|WISDOM||mult=7
+  weight|MANA||mult=7
+  weight-name|AWAKENED_CORAL_BOW|mult=15
 artifact|Forax Technology|AI Forax Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A piece of Vylarian technology found on the planet Forax. While it is too advanced to properly understand, it appears to be able to enhance equipment.
   entry|ROLLABLE,ALIEN|
   weight|SPEED,LIFE,HEAL||mult=7
@@ -206,40 +211,40 @@ artifact|Thankful Engraving|Thankful Pool|redDust|50|1|MATERIAL,ENGRAVING,ARTIFA
   weight-name|Thankful|mult=100000000
 artifact|The Chariot Tarot Card|Chariot Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Chariot - Card VII of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|SPEED|UNIQUE|mult=4.5
-  weight-name|Stheno's Swiftness|mult=15
+  weight|SPEED||mult=4.5
+  weight-name|Stheno's Swiftness|mult=3.33
 artifact|The Devil Tarot Card|Devil Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Devil - Card XV of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|ATTACK|UNIQUE|mult=4.5
-  weight-name|Shaitan's Might|mult=15
+  weight|ATTACK||mult=4.5
+  weight-name|Shaitan's Might|mult=3.33
 artifact|The Fool Tarot Card|Fool Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Fool - Card 0 or XXII of the Major Arcana. The fool represents innocence, it is the beginning. When inverted, the fool represents recklessness.
   entry|ROLLABLE|
-  weight|ATTACK,DEXTERITY,SPEED,LIFE,MANA,DEFENSE,WISDOM,VITALITY|UNIQUE|mult=0.2
+  weight|ATTACK,DEXTERITY,SPEED,LIFE,MANA,DEFENSE,WISDOM,VITALITY||mult=0.2
   weight-name|Jester's Trick|mult=15
 artifact|The Magician Tarot Card|Magician Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Magician - Card I of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|WISDOM|UNIQUE|mult=4.5
-  weight-name|Avalon's Intellect|mult=15
+  weight|WISDOM||mult=4.5
+  weight-name|Avalon's Intellect|mult=3.33
 artifact|The Moon Tarot Card|Moon Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Moon - Card XVIII of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|MANA|UNIQUE|mult=4.5
-  weight-name|Mermaid Magic|mult=15
+  weight|MANA||mult=4.5
+  weight-name|Mermaid Magic|mult=3.33
 artifact|The Sun Tarot Card|Sun Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Sun - Card XIX of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|DEXTERITY|UNIQUE|mult=4.5
-  weight-name|Pirate's Expertise|mult=15
+  weight|DEXTERITY||mult=4.5
+  weight-name|Pirate's Expertise|mult=3.33
 artifact|The Tower Tarot Card|Tower Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The Tower - Card XVI of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|LIFE|UNIQUE|mult=4.5
-  weight-name|Vampiric Lifeforce|mult=15
+  weight|LIFE||mult=4.5
+  weight-name|Vampiric Lifeforce|mult=3.33
 artifact|The Wheel of Fortune Tarot Card|Lucky Pool|greenDust|30|0.5|ARTIFACT,FORGESTORE|The Wheel of Fortune - Card X of the Major Arcana.
   entry|ROLLABLE|
-  weight|REWARD|UNIQUE|mult=4.5
-  weight-name|Lucky Streak|mult=15
+  weight|REWARD||mult=4.5
+  weight-name|Lucky Streak|mult=3.33
 artifact|The World Tarot Card|World Pool|greenDust|25|0.5|ARTIFACT,FORGESTORE|The World - Card XXI of the Major Arcana.\n\nSprite Credits: Dappertron
   entry|ROLLABLE|
-  weight|VITALITY|UNIQUE|mult=4.5
-  weight-name|Crystalline Vigor|mult=15
+  weight|VITALITY||mult=4.5
+  weight-name|Crystalline Vigor|mult=3.33
 artifact|Untaris Technology|AI Untaris Pool|redDust|30|0.5|ARTIFACT,FORGESTORE|A piece of Vylarian technology found on the remains of the planet Untaris. While it is too advanced to properly understand, it appears to be able to enhance equipment.
   entry|ROLLABLE,ALIEN|
   weight|WISDOM,MANA,MAGIC||mult=7

@@ -1,15 +1,17 @@
 {
- "made": "2026-10-14",
+ "made": "2026-11-03",
  "notes": {
   "parts": [
    {
-    "title": "Memories and Heirlooms",
+    "title": "The Ocean Trench, reworked",
     "points": [
-     "Memories are short, lore-driven solo dungeons, part of the core game from now on. They drop as solo keys you open from your vault; how to come by one is left for players to find.",
-     "An Heirloom is a UT built to carry a build, crafted from three other UTs once you hold its blueprint — as many times as you have the materials. Strong enough that wearing two of them costs you:",
-     "The client already counts seven Heirlooms in that set; these two are the first."
+     "The rework comes from the Craig's Builders program: led by CaptainDagaz, with sprites by Sheepsmall and DynamoX and music by ENNWAY. The trench is now one of the most decorated dungeons in the game — plants, rocks, coral, critters, and the ruins of an older society beside the fishmen's.",
+     "Every existing enemy has new attacks. Thessal keeps the feel of her old fight with more phases and more variety.",
+     "The Squidver is the Huntsman's Volley with the trench's look: the client gives both the same shot, mana cost and speed bonus. The Fire Coral Branch weighs Wisdom and Mana enchantments seven times heavier and the Coral Volley awakened fifteen times — though the client's pool names that enchantment AWAKENED_CORAL_BOW, which no enchantment carries, so the calculator cannot apply the last part.",
+     "The Coral set and its Shinies have new sprites. The client also declares a Legacy copy of each piece, each with its Shiny, and a Legacy Ocean Trench Portal; the notes say nothing of them.",
+     "Three sea pets, a Thessal skin and an entrance arrive in the client with the rework, also unmentioned."
     ],
-    "blurb": "Short solo dungeons, and the new kind of UT they pay out.",
+    "blurb": "New art, new music, new enemies, and Thessal fought in phases.",
     "shows": [
      {
       "kind": "places",
@@ -17,11 +19,15 @@
      },
      {
       "kind": "things",
-      "args": "Teratoma::the infected orb;Stoneborn Husk::the heavy armour"
+      "args": "Squidver::reskins the Huntsman's Volley;Coral Juice Refinery::a reusable Coral Juice, every 15 seconds;Fire Coral Branch::the new artifact"
      },
      {
-      "kind": "set",
-      "args": "Heirlooms"
+      "kind": "things",
+      "args": "Coral Bow;Coral Venom Trap;Coral Silk Armor;Coral Ring"
+     },
+     {
+      "kind": "things",
+      "args": "Miss Cancan;Pearl-Adorned Seahorse;Glowlamp Nautilus;Siren Call Entrance::player entrance;Last Breath Thessal::skin"
      }
     ],
     "flow": [
@@ -32,690 +38,489 @@
       }
      },
      {
-      "point": "Memories are short, lore-driven solo dungeons, part of the core game from now on. They drop as solo keys you open from your vault; how to come by one is left for players to find."
+      "point": "The rework comes from the Craig's Builders program: led by CaptainDagaz, with sprites by Sheepsmall and DynamoX and music by ENNWAY. The trench is now one of the most decorated dungeons in the game — plants, rocks, coral, critters, and the ruins of an older society beside the fishmen's."
+     },
+     {
+      "point": "Every existing enemy has new attacks. Thessal keeps the feel of her old fight with more phases and more variety."
      },
      {
       "show": {
        "kind": "things",
-       "args": "Teratoma::the infected orb;Stoneborn Husk::the heavy armour"
+       "args": "Squidver::reskins the Huntsman's Volley;Coral Juice Refinery::a reusable Coral Juice, every 15 seconds;Fire Coral Branch::the new artifact"
       }
      },
      {
-      "point": "An Heirloom is a UT built to carry a build, crafted from three other UTs once you hold its blueprint — as many times as you have the materials. Strong enough that wearing two of them costs you:"
+      "point": "The Squidver is the Huntsman's Volley with the trench's look: the client gives both the same shot, mana cost and speed bonus. The Fire Coral Branch weighs Wisdom and Mana enchantments seven times heavier and the Coral Volley awakened fifteen times — though the client's pool names that enchantment AWAKENED_CORAL_BOW, which no enchantment carries, so the calculator cannot apply the last part."
      },
      {
       "show": {
-       "kind": "set",
-       "args": "Heirlooms"
+       "kind": "things",
+       "args": "Coral Bow;Coral Venom Trap;Coral Silk Armor;Coral Ring"
       }
      },
      {
-      "point": "The client already counts seven Heirlooms in that set; these two are the first."
+      "point": "The Coral set and its Shinies have new sprites. The client also declares a Legacy copy of each piece, each with its Shiny, and a Legacy Ocean Trench Portal; the notes say nothing of them."
+     },
+     {
+      "show": {
+       "kind": "things",
+       "args": "Miss Cancan;Pearl-Adorned Seahorse;Glowlamp Nautilus;Siren Call Entrance::player entrance;Last Breath Thessal::skin"
+      }
+     },
+     {
+      "point": "Three sea pets, a Thessal skin and an entrance arrive in the client with the rework, also unmentioned."
      }
     ]
    },
    {
-    "title": "Pumpkin Shrine Groove",
+    "title": "Return of the White Snake",
     "points": [
-     "Free rewards at every milestone, more with Battle Pass Exalt: bloody snacks, Halloween skins, and Halloween ST sets and items to open the season with."
+     "Clear the featured dungeons and hunt snakes to open the White Snake's temples, then face the Serpent itself.",
+     "Three Steam achievements go with the three dungeons: Ssspiritual Pesst Control, Temple Exorcissst, and The White Snake Has Retreated."
     ],
-    "blurb": "The season's first Battle Pass, from 6 October to 3 November.",
+    "blurb": "Defeated at a Lunar New Year, healed, and back.",
     "shows": [
      {
-      "kind": "skins",
-      "args": "Hollow Harvest Huntress::to stay with the fall;Lantern Shade Trickster::or to have more fun"
+      "kind": "things",
+      "args": "The White Snake::the Serpent itself"
+     },
+     {
+      "kind": "checks",
+      "args": "Every invasion dungeon has a 60% chance to drop a portal to the next tier, as Stromwell's Rift does;;White Snake II has a 50% chance of a random exalt; White Snake III a 50% chance each at up to two;;The White Snake's larger attacks have hitboxes 25% smaller;;Many drop rates are higher, the Eden's Embrace's much higher, and it always drops Rare or better;;White Snake III drops dust;;White Snake Invasion I no longer opens several realm portals when it is done;;The Primal Snake of White Snake Invasion II is down to 80,000 health and has a boss health bar"
      }
     ],
     "flow": [
      {
       "show": {
-       "kind": "skins",
-       "args": "Hollow Harvest Huntress::to stay with the fall;Lantern Shade Trickster::or to have more fun"
+       "kind": "things",
+       "args": "The White Snake::the Serpent itself"
       }
      },
      {
-      "point": "Free rewards at every milestone, more with Battle Pass Exalt: bloody snacks, Halloween skins, and Halloween ST sets and items to open the season with."
+      "point": "Clear the featured dungeons and hunt snakes to open the White Snake's temples, then face the Serpent itself."
+     },
+     {
+      "show": {
+       "kind": "checks",
+       "args": "Every invasion dungeon has a 60% chance to drop a portal to the next tier, as Stromwell's Rift does;;White Snake II has a 50% chance of a random exalt; White Snake III a 50% chance each at up to two;;The White Snake's larger attacks have hitboxes 25% smaller;;Many drop rates are higher, the Eden's Embrace's much higher, and it always drops Rare or better;;White Snake III drops dust;;White Snake Invasion I no longer opens several realm portals when it is done;;The Primal Snake of White Snake Invasion II is down to 80,000 health and has a boss health bar"
+      }
+     },
+     {
+      "point": "Three Steam achievements go with the three dungeons: Ssspiritual Pesst Control, Temple Exorcissst, and The White Snake Has Retreated."
      }
     ]
    },
    {
-    "title": "Celestial Stones and quests",
+    "title": "White Snake rewards",
     "points": [
-     "Stones come from the Battle Pass and the Celestial Stones Mystery Box. The Tinkerer's quests can be done once per account."
+     "The notes call the first skin plain \"Primal Snake Pet Skin\"; the client's is the Silver one.",
+     "The chest drops from Spirit Snakes (very rarely), missions, the three invasions, Primal Snakes and the Tinkerer. It holds one of:"
     ],
-    "blurb": "A Masquerade Archer for sixty stones, and a quest list rebuilt.",
+    "blurb": "A ring, two snakes and a chest of old favourites.",
     "shows": [
      {
-      "kind": "skins",
-      "args": "Gothic Masquerade Archer::60 Celestial Stones, at the Tinkerer"
+      "kind": "things",
+      "args": "Eden's Embrace::White Snake Invasion III, solo or not;Silver Primal Snake Pet Skin::from Primal Snakes in the realm;Gold Primal Snake Pet Skin::the rare one"
+     },
+     {
+      "kind": "things",
+      "args": "Legend of the White Snake Mystery Chest"
      },
      {
       "kind": "list",
-      "args": "New this season|Exquisite Masquerade Archer; Exquisite Voodoo Bat Pet Stone; Voodoo Witcher Assassin; Voodoo Queen Mystic; Pumpkin Head Warrior; Ghostly Archer; Vampire King Kensei; Haunted Skull Necromancer; Vampire Bat Pet Stone; Cursed Raven Pet Stone; Spider Rider Mystic; Voodoo Witch Necromancer; Witch Doctor Wizard"
+      "args": "In the chest|Pecan Pie; Mystery Stat Pot; Agents of Oryx Shard x15; Medium Dust Chest; Superior Sulphur; Coral Bow; Coral Venom Trap; Coral Silk Armor; Coral Ring; Hivemind Mace; Blue Bee Armor; Red Bee Armor; Yellow Bee Armor; Queen's Stinger Dagger; Hivemaster Helm; Beekeeper's Flamethrower; Combcutter Kunai; Pirate King's Cutlass; Wavecrest Concertina; Sword of the Colossus; Marble Seal; Breastplate of New Life; Magical Lodestone; Leaf Bow; Wakizashi of Eastern Winds; Labyrinth Dweller's Sheath; Elder Staff; Flowering Kimono; Sage's Wakibiki; Ethereal Happi; Elegant Parasol; Rain Maker; Taiko Drums; Recurring Terror Spell; Scepter of Devastation; Tome of Pain; Maw of Malignance; The Forgotten Crown; Noble Mandolin; Warmonger; Peacekeeper; The Twilight Gemstone; Polarity Poison; Dusky Catalyst; Primal Arcana; Royal Guard's Cuirass; Mantle of the Monarchy; Vest of Abandoned Shadows; Bracer of the Guardian; Vanguard's Visage; Sentinel's Sidearm; Valor"
+     },
+     {
+      "kind": "things",
+      "args": "Divine Coin x1::from event chests, missions, and White Snake III as a Crucible character;Divine Snake Oil::from Spirit Snake swarms and the Battle Pass"
+     },
+     {
+      "kind": "things",
+      "args": "Comfy Beach Snake (emote);Freaky Stheno (emote);Confused White Snake (emote);Drooling White Snake (emote);Thinking White Snake (emote);Bonked White Snake (emote)"
      }
     ],
     "flow": [
      {
       "show": {
-       "kind": "skins",
-       "args": "Gothic Masquerade Archer::60 Celestial Stones, at the Tinkerer"
+       "kind": "things",
+       "args": "Eden's Embrace::White Snake Invasion III, solo or not;Silver Primal Snake Pet Skin::from Primal Snakes in the realm;Gold Primal Snake Pet Skin::the rare one"
       }
      },
      {
-      "point": "Stones come from the Battle Pass and the Celestial Stones Mystery Box. The Tinkerer's quests can be done once per account."
+      "point": "The notes call the first skin plain \"Primal Snake Pet Skin\"; the client's is the Silver one."
+     },
+     {
+      "show": {
+       "kind": "things",
+       "args": "Legend of the White Snake Mystery Chest"
+      }
+     },
+     {
+      "point": "The chest drops from Spirit Snakes (very rarely), missions, the three invasions, Primal Snakes and the Tinkerer. It holds one of:"
      },
      {
       "show": {
        "kind": "list",
-       "args": "New this season|Exquisite Masquerade Archer; Exquisite Voodoo Bat Pet Stone; Voodoo Witcher Assassin; Voodoo Queen Mystic; Pumpkin Head Warrior; Ghostly Archer; Vampire King Kensei; Haunted Skull Necromancer; Vampire Bat Pet Stone; Cursed Raven Pet Stone; Spider Rider Mystic; Voodoo Witch Necromancer; Witch Doctor Wizard"
+       "args": "In the chest|Pecan Pie; Mystery Stat Pot; Agents of Oryx Shard x15; Medium Dust Chest; Superior Sulphur; Coral Bow; Coral Venom Trap; Coral Silk Armor; Coral Ring; Hivemind Mace; Blue Bee Armor; Red Bee Armor; Yellow Bee Armor; Queen's Stinger Dagger; Hivemaster Helm; Beekeeper's Flamethrower; Combcutter Kunai; Pirate King's Cutlass; Wavecrest Concertina; Sword of the Colossus; Marble Seal; Breastplate of New Life; Magical Lodestone; Leaf Bow; Wakizashi of Eastern Winds; Labyrinth Dweller's Sheath; Elder Staff; Flowering Kimono; Sage's Wakibiki; Ethereal Happi; Elegant Parasol; Rain Maker; Taiko Drums; Recurring Terror Spell; Scepter of Devastation; Tome of Pain; Maw of Malignance; The Forgotten Crown; Noble Mandolin; Warmonger; Peacekeeper; The Twilight Gemstone; Polarity Poison; Dusky Catalyst; Primal Arcana; Royal Guard's Cuirass; Mantle of the Monarchy; Vest of Abandoned Shadows; Bracer of the Guardian; Vanguard's Visage; Sentinel's Sidearm; Valor"
+      }
+     },
+     {
+      "show": {
+       "kind": "things",
+       "args": "Divine Coin x1::from event chests, missions, and White Snake III as a Crucible character;Divine Snake Oil::from Spirit Snake swarms and the Battle Pass"
+      }
+     },
+     {
+      "show": {
+       "kind": "things",
+       "args": "Comfy Beach Snake (emote);Freaky Stheno (emote);Confused White Snake (emote);Drooling White Snake (emote);Thinking White Snake (emote);Bonked White Snake (emote)"
       }
      }
     ]
    },
    {
-    "title": "Queen Tiramisu",
+    "title": "The Altar and the way in",
     "points": [
-     "Few of these skins will ever exist. A hint may drop in the Discord's #rotmg channel before an arena opens — and no support ticket brings an arena character back."
+     "Once found, the Altar's place stays revealed in every later realm. Ten Divine Coins there open a portal to White Snake Invasion III."
     ],
-    "blurb": "The Community Manager's own skin: won, never sold.",
-    "shows": [
-     {
-      "kind": "skins",
-      "args": "Tiramisu Queen Mystic::as the client calls it"
-     },
-     {
-      "kind": "cards",
-      "args": "9 winners::Caption contest::A screenshot on the official socials, sometime this season. The nine favourite captions win.;;10 winners::Drawing contest::Anything RotMG with a costume or dress-up theme, in MS Paint. Five chosen, five drawn at random; the date comes on Discord.;;Last one standing::Surprise arenas::Twenty-five players, at random moments. Enemies may not behave as usual, and a death there is final."
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "skins",
-       "args": "Tiramisu Queen Mystic::as the client calls it"
-      }
-     },
-     {
-      "show": {
-       "kind": "cards",
-       "args": "9 winners::Caption contest::A screenshot on the official socials, sometime this season. The nine favourite captions win.;;10 winners::Drawing contest::Anything RotMG with a costume or dress-up theme, in MS Paint. Five chosen, five drawn at random; the date comes on Discord.;;Last one standing::Surprise arenas::Twenty-five players, at random moments. Enemies may not behave as usual, and a death there is final."
-      }
-     },
-     {
-      "point": "Few of these skins will ever exist. A hint may drop in the Discord's #rotmg channel before an arena opens — and no support ticket brings an arena character back."
-     }
-    ]
-   },
-   {
-    "title": "Crucible and Blood Ritual",
-    "points": [
-     "The Crucible holds for the whole season; apply at its NPC in the Nexus. It gives vitality and wisdom and takes a third of the healing you receive from anything but yourself.",
-     "Each step of the Ritual trades health for damage, or damage for health. Only giving health up pays in loot."
-    ],
-    "blurb": "One modifier for the season, and the Ritual's trade, back again.",
-    "shows": [
-     {
-      "kind": "crucible",
-      "args": ""
-     },
-     {
-      "kind": "ritual",
-      "args": ""
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "crucible",
-       "args": ""
-      }
-     },
-     {
-      "point": "The Crucible holds for the whole season; apply at its NPC in the Nexus. It gives vitality and wisdom and takes a third of the healing you receive from anything but yourself."
-     },
-     {
-      "show": {
-       "kind": "ritual",
-       "args": ""
-      }
-     },
-     {
-      "point": "Each step of the Ritual trades health for damage, or damage for health. Only giving health up pays in loot."
-     }
-    ]
-   },
-   {
-    "title": "Whispers of Skuld",
-    "points": [
-     "Whispers of Skuld is the mission tree of this season: missions to complete, each paying its reward. These are the rewards the notes name.",
-     "The older Halloween UTs and their ST reskins are in the tree too, with the older cosmetics; the notes do not list which."
-    ],
-    "blurb": "The season's mission tree — where most of the Halloween gear is earned.",
-    "shows": [
-     {
-      "kind": "group",
-      "args": "The new Halloween gear|Sweettreats Sword;Sweettreats Dagger;Sweettreats Bow;Sweettreats Wand;Sweettreats Katana;Sweettreats Staff;Sweettreats Ring"
-     },
-     {
-      "kind": "group",
-      "args": "The Druid's ST reskin, in its own Druid missions|Aeonic Talon;Jurassic Sigil;Primal Padding;Storied Fossil"
-     },
-     {
-      "kind": "group",
-      "args": "The Halloween costumes of past years|Red Riding Dress;Holy Order's Habit;Bachelor's Tuxedo;Haori of the Wind;Platinum Segmentata;Big Bad Fursuit"
-     },
-     {
-      "kind": "group",
-      "args": "Three of the new emotes|Flame Skull (emote);Sad Ghost Bride (emote);Drooling Horseman (emote)"
-     }
-    ],
-    "flow": [
-     {
-      "point": "Whispers of Skuld is the mission tree of this season: missions to complete, each paying its reward. These are the rewards the notes name."
-     },
-     {
-      "show": {
-       "kind": "group",
-       "args": "The new Halloween gear|Sweettreats Sword;Sweettreats Dagger;Sweettreats Bow;Sweettreats Wand;Sweettreats Katana;Sweettreats Staff;Sweettreats Ring"
-      }
-     },
-     {
-      "show": {
-       "kind": "group",
-       "args": "The Druid's ST reskin, in its own Druid missions|Aeonic Talon;Jurassic Sigil;Primal Padding;Storied Fossil"
-      }
-     },
-     {
-      "show": {
-       "kind": "group",
-       "args": "The Halloween costumes of past years|Red Riding Dress;Holy Order's Habit;Bachelor's Tuxedo;Haori of the Wind;Platinum Segmentata;Big Bad Fursuit"
-      }
-     },
-     {
-      "show": {
-       "kind": "group",
-       "args": "Three of the new emotes|Flame Skull (emote);Sad Ghost Bride (emote);Drooling Horseman (emote)"
-      }
-     },
-     {
-      "point": "The older Halloween UTs and their ST reskins are in the tree too, with the older cosmetics; the notes do not list which."
-     }
-    ]
-   },
-   {
-    "title": "Shinies for everyone",
-    "points": [
-     "Six new Shinies arrive with the season. For this event, the weekly event chests drop every older Shiny of their dungeon to every character, seasonal or not.",
-     "The lasting change follows: Shinies dropping for regular characters from their own boss or entity, released in batches, oldest first. Shinies of the current season stay out of the event chests."
-    ],
-    "blurb": "Event Shinies, open to regular characters at last.",
+    "blurb": "How to reach each invasion.",
     "shows": [
      {
       "kind": "things",
-      "args": "Flowering Kimono::Shiny;Sage's Wakibiki::Shiny;Ethereal Happi::Shiny;Overwhelming Axehead::Shiny;Draconic Insignia::Shiny;Irradiance Sheath::Shiny"
+      "args": "Altar of the White Snake::once per realm, in the Carboniferous biome"
+     },
+     {
+      "kind": "steps",
+      "args": "Invasion I — guaranteed after a featured dungeon of difficulty 5 or more;;Invasion II — guaranteed after difficulty 7 or more, or from the Primal Snakes near the Altar;;Invasion III — guaranteed after a featured dungeon of difficulty 8.5, or ten Divine Coins at the Altar"
      }
     ],
     "flow": [
      {
       "show": {
        "kind": "things",
-       "args": "Flowering Kimono::Shiny;Sage's Wakibiki::Shiny;Ethereal Happi::Shiny;Overwhelming Axehead::Shiny;Draconic Insignia::Shiny;Irradiance Sheath::Shiny"
+       "args": "Altar of the White Snake::once per realm, in the Carboniferous biome"
       }
      },
      {
-      "point": "Six new Shinies arrive with the season. For this event, the weekly event chests drop every older Shiny of their dungeon to every character, seasonal or not."
+      "point": "Once found, the Altar's place stays revealed in every later realm. Ten Divine Coins there open a portal to White Snake Invasion III."
      },
-     {
-      "point": "The lasting change follows: Shinies dropping for regular characters from their own boss or entity, released in batches, oldest first. Shinies of the current season stay out of the event chests."
-     }
-    ]
-   },
-   {
-    "title": "The Infested Castle",
-    "points": [
-     "The barrel is the Parasite Chamber's mechanic. Oryx 2 drops the Halloween event white reskins, at a low chance; Oryx 1 drops the Tome of Holy Furor, as every year."
-    ],
-    "blurb": "The realm closes, the earth shakes, and Oryx's Castle is infested.",
-    "shows": [
-     {
-      "kind": "steps",
-      "args": "Close the realm and fight Oryx's quest monsters;;Two minutes later, an earthquake;;Everyone lands in the Infested Oryx's Castle;;Barrels open the way — the only way through the Stone Guardians and Oryx"
-     },
-     {
-      "kind": "things",
-      "args": "Tome of Holy Furor::from Oryx 1"
-     }
-    ],
-    "flow": [
      {
       "show": {
        "kind": "steps",
-       "args": "Close the realm and fight Oryx's quest monsters;;Two minutes later, an earthquake;;Everyone lands in the Infested Oryx's Castle;;Barrels open the way — the only way through the Stone Guardians and Oryx"
-      }
-     },
-     {
-      "point": "The barrel is the Parasite Chamber's mechanic. Oryx 2 drops the Halloween event white reskins, at a low chance; Oryx 1 drops the Tome of Holy Furor, as every year."
-     },
-     {
-      "show": {
-       "kind": "things",
-       "args": "Tome of Holy Furor::from Oryx 1"
+       "args": "Invasion I — guaranteed after a featured dungeon of difficulty 5 or more;;Invasion II — guaranteed after difficulty 7 or more, or from the Primal Snakes near the Altar;;Invasion III — guaranteed after a featured dungeon of difficulty 8.5, or ten Divine Coins at the Altar"
       }
      }
     ]
    },
    {
-    "title": "Costumes in the realm",
+    "title": "Featured dungeons",
     "points": [
-     "The Cube God wears a costume too. Each of these reskins now drops from its encounter, alongside the original:"
+     "Each featured boss leaves an event chest with a chance at Divine Coins, then two portals to any White Snake Invasion."
     ],
-    "blurb": "Quest monsters in Halloween dress — and the reskins they drop.",
-    "shows": [
-     {
-      "kind": "pairs",
-      "args": "Grand Sphinx>Withered Sphinx;Hermit God>Reanimated Hermit God;Ghost Ship>The Flying Dutchman;Jade Statue>Blue Oni;Garnet Statue>Red Oni;Skull Shrine>Pumpkin Shrine"
-     },
-     {
-      "kind": "things",
-      "args": "Helm of the Jack-o'-naut;Spooky Smasher;Cloak of Eerie Trepidation;Phantasm Dirk;Trap of the Blood Spirit;Orb of Terror;Longbow of Spirits and Shadows;Shield of Jawgmur;Kagebooshi"
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "pairs",
-       "args": "Grand Sphinx>Withered Sphinx;Hermit God>Reanimated Hermit God;Ghost Ship>The Flying Dutchman;Jade Statue>Blue Oni;Garnet Statue>Red Oni;Skull Shrine>Pumpkin Shrine"
-      }
-     },
-     {
-      "point": "The Cube God wears a costume too. Each of these reskins now drops from its encounter, alongside the original:"
-     },
-     {
-      "show": {
-       "kind": "things",
-       "args": "Helm of the Jack-o'-naut;Spooky Smasher;Cloak of Eerie Trepidation;Phantasm Dirk;Trap of the Blood Spirit;Orb of Terror;Longbow of Spirits and Shadows;Shield of Jawgmur;Kagebooshi"
-      }
-     }
-    ]
-   },
-   {
-    "title": "Returning encounters",
-    "points": [
-     "Totalia haunts the Haunted Hallows, and once each Ship Wreck and Dead Church. She drops the previous Halloween UTs and costumes, a chance at the SweetTreats weapons and Ring, and her four emotes.",
-     "The Zombie Hordes keep to the Haunted Hallows. Among your zombie counterparts, Bonegrind the Undead Butcher drops T11 weapon reskins and a chance at the Infected Assassin skin.",
-     "Candy piles spawn by themselves in Adept and Veteran biomes: old Halloween UTs, consumables, cloths and costumes, stat pots and candies, the Soul Collector Engraving, and their biome's own UTs."
-    ],
-    "blurb": "Totalia, the Zombie Horde and the candy piles.",
-    "shows": [
-     {
-      "kind": "scores",
-      "args": "Totalia the Malevolent:15,50,85;Zombie Horde:40,60,80"
-     },
-     {
-      "kind": "things",
-      "args": "Bonegrind the Undead Butcher;Infected Assassin Skin;Soul Collector Engraving"
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "scores",
-       "args": "Totalia the Malevolent:15,50,85;Zombie Horde:40,60,80"
-      }
-     },
-     {
-      "point": "Totalia haunts the Haunted Hallows, and once each Ship Wreck and Dead Church. She drops the previous Halloween UTs and costumes, a chance at the SweetTreats weapons and Ring, and her four emotes."
-     },
-     {
-      "point": "The Zombie Hordes keep to the Haunted Hallows. Among your zombie counterparts, Bonegrind the Undead Butcher drops T11 weapon reskins and a chance at the Infected Assassin skin."
-     },
-     {
-      "show": {
-       "kind": "things",
-       "args": "Bonegrind the Undead Butcher;Infected Assassin Skin;Soul Collector Engraving"
-      }
-     },
-     {
-      "point": "Candy piles spawn by themselves in Adept and Veteran biomes: old Halloween UTs, consumables, cloths and costumes, stat pots and candies, the Soul Collector Engraving, and their biome's own UTs."
-     }
-    ]
-   },
-   {
-    "title": "SweetTreats",
-    "points": [
-     "Wear the Sweettreats Ring with any of the six and a Halloween armour, and the set wakes. They come from event chests, missions and Totalia.",
-     "The Halloween costumes return from Totalia and the realm's candies, and as mission rewards:"
-    ],
-    "blurb": "Six sweet weapons, a ring to bind them, and the costumes.",
-    "shows": [
-     {
-      "kind": "things",
-      "args": "Sweettreats Sword::reskins the Pirate King's Cutlass;Sweettreats Dagger::the Corruption Cutter;Sweettreats Bow::the Spider Silk Bow;Sweettreats Wand::the Wand of the Fallen;Sweettreats Katana::the Celestial Blade;Sweettreats Staff::the Staff of Esben;Sweettreats Ring::the new ring"
-     },
-     {
-      "kind": "set",
-      "args": "Sweettreats Set|bonus"
-     },
-     {
-      "kind": "things",
-      "args": "Red Riding Dress;Holy Order's Habit;Bachelor's Tuxedo;Haori of the Wind;Platinum Segmentata;Big Bad Fursuit"
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "things",
-       "args": "Sweettreats Sword::reskins the Pirate King's Cutlass;Sweettreats Dagger::the Corruption Cutter;Sweettreats Bow::the Spider Silk Bow;Sweettreats Wand::the Wand of the Fallen;Sweettreats Katana::the Celestial Blade;Sweettreats Staff::the Staff of Esben;Sweettreats Ring::the new ring"
-      }
-     },
-     {
-      "point": "Wear the Sweettreats Ring with any of the six and a Halloween armour, and the set wakes. They come from event chests, missions and Totalia."
-     },
-     {
-      "show": {
-       "kind": "set",
-       "args": "Sweettreats Set|bonus"
-      }
-     },
-     {
-      "point": "The Halloween costumes return from Totalia and the realm's candies, and as mission rewards:"
-     },
-     {
-      "show": {
-       "kind": "things",
-       "args": "Red Riding Dress;Holy Order's Habit;Bachelor's Tuxedo;Haori of the Wind;Platinum Segmentata;Big Bad Fursuit"
-      }
-     }
-    ]
-   },
-   {
-    "title": "Druid sets",
-    "points": [
-     "Pulsating Wand — shots that swell and shrink, fast, and bleed whatever they touch. Swampy Sigil — become a swamp monster with Berserk and dexterity, healed as you cast.",
-     "Mossy Guard — instant healing on the first hit taken from full health. Willow Sprout — health from your dexterity bonus: an HP ring for any class.",
-     "The Skeletosaur reawakens the Mechanical Raptor set's ancient model. Both come from the Druid missions and the event chests.",
-     "The client also carries this Extra Dimensional set, which the patch notes do not mention."
-    ],
-    "blurb": "The Swamp Hermit and the Skeletosaur — and a third the notes leave out.",
-    "shows": [
-     {
-      "kind": "set",
-      "args": "Swamp Hermit Druid Set"
-     },
-     {
-      "kind": "set",
-      "args": "Skeletosaur Druid Set"
-     },
-     {
-      "kind": "set",
-      "args": "Extra Dimensional Druid Set"
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "set",
-       "args": "Swamp Hermit Druid Set"
-      }
-     },
-     {
-      "point": "Pulsating Wand — shots that swell and shrink, fast, and bleed whatever they touch. Swampy Sigil — become a swamp monster with Berserk and dexterity, healed as you cast."
-     },
-     {
-      "point": "Mossy Guard — instant healing on the first hit taken from full health. Willow Sprout — health from your dexterity bonus: an HP ring for any class."
-     },
-     {
-      "show": {
-       "kind": "set",
-       "args": "Skeletosaur Druid Set"
-      }
-     },
-     {
-      "point": "The Skeletosaur reawakens the Mechanical Raptor set's ancient model. Both come from the Druid missions and the event chests."
-     },
-     {
-      "show": {
-       "kind": "set",
-       "args": "Extra Dimensional Druid Set"
-      }
-     },
-     {
-      "point": "The client also carries this Extra Dimensional set, which the patch notes do not mention."
-     }
-    ]
-   },
-   {
-    "title": "Emotes and cosmetics",
-    "points": [
-     "The first three are mission rewards; the Loot Broom drops the other three.",
-     "The cosmetics pack stays in the shop for the season."
-    ],
-    "blurb": "Six horrific emotes, and a pack for the shop.",
-    "shows": [
-     {
-      "kind": "things",
-      "args": "Flame Skull (emote);Sad Ghost Bride (emote);Drooling Horseman (emote);Judgmental Beholder (emote);Cheeky Possessed Pumpkin (emote);Handsome Ruthven (emote)"
-     },
-     {
-      "kind": "things",
-      "args": "Soul-Fire Arrival::player entrance;Hollow Key Keeper Pet Skin;Grave Bell Poltergeist Pet Skin;Masquerade of the Departed Grave Unlocker::gravestone"
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "things",
-       "args": "Flame Skull (emote);Sad Ghost Bride (emote);Drooling Horseman (emote);Judgmental Beholder (emote);Cheeky Possessed Pumpkin (emote);Handsome Ruthven (emote)"
-      }
-     },
-     {
-      "point": "The first three are mission rewards; the Loot Broom drops the other three."
-     },
-     {
-      "show": {
-       "kind": "things",
-       "args": "Soul-Fire Arrival::player entrance;Hollow Key Keeper Pet Skin;Grave Bell Poltergeist Pet Skin;Masquerade of the Departed Grave Unlocker::gravestone"
-      }
-     },
-     {
-      "point": "The cosmetics pack stays in the shop for the season."
-     }
-    ]
-   },
-   {
-    "title": "Weekly rotation",
-    "points": [
-     "Every event chest can hold the SweetTreats weapons, the new Druid reskin set, and — in the second dungeon of each week — the Sweettreats Ring."
-    ],
-    "blurb": "Four weeks of event dungeons, each with its modifier and its Shinies.",
+    "blurb": "Four weeks, one Adept and one Veteran dungeon each.",
     "shows": [
      {
       "kind": "week",
-      "args": "6 – 13 October|High Tech Terror::Experienced · +100% XP::B.O.W., S.T.A.F.F., Q.U.I.V.E.R., S.H.E.A.T.H., E.Y.E.|Fungal Cavern & Crystal Cavern::Powered Up · the Dwarf Miner's drill starts fully charged::Ring of Decades, Fungal Breastplate, Crystallized Worm Spellblade, Crystal Shield, Sporous Spray Spell, Tome of the Mushroom Tribes, Cave Dweller Trap, Fractal Blades, Cloak of Reflection, Fractured Gemstone Wakizashi, Star of Enlightenment, Crystalline Sigil"
+      "args": "Week 1|Ocean Trench::1.5× loot and XP::|The Nest::1.5× loot and XP::"
      },
      {
       "kind": "week",
-      "args": "13 – 20 October|Infernal Abyss of Demons::Found Treasure · treasure rooms revealed::Demon Blade, Volcanic Sheath, Berserker's Breastplate, Adamantine Helm|Plagued Nest::Dust Storm · +50% dust::Queen's Stinger, Swarmlord's Sigil, Green Beehemoth Quiver, Hivemaster Helm, Beekeeper's Flamethrower"
+      "args": "Week 2|Deadwater Docks::1.5× loot and XP::|Lost Halls::1.5× loot and XP::"
      },
      {
       "kind": "week",
-      "args": "20 – 27 October|Heroic Undead Lair::Found Treasure · treasure rooms revealed::Doom Bow, Spectral Sword, Wandering Souls Spell, Ring of Skeletal Specters|Advanced Kogbold Steamworks::Steamworks Maintenance · turrets disabled::Overclocking Amulet, Steam Pipe, Chain Dagger, Laser Pointer, Scepter of Rust, Brain Cube, Kogbold Multitool, Kogbold Enhancement Core"
+      "args": "Week 3|Woodland Labyrinth::1.5× loot and XP::|Moonlight Village::1.5× loot and XP::"
      },
      {
       "kind": "week",
-      "args": "27 October – 3 November|Haunted Cemetery::Looting · +50% loot, and the Pumpkin Master as the last boss::Soul's Guidance, Plague Poison, Resurrected Warrior's Armor|Spectral Penitentiary::Rewarding · +25% XP, loot and dust::Tools of the Tarnished, Wretched Rags, Cackling Straitjacket, Ocular Entrapment, Motivational Megaphone, Damnation, Vial of Soul Extract"
-     }
-    ],
-    "flow": [
-     {
-      "show": {
-       "kind": "week",
-       "args": "6 – 13 October|High Tech Terror::Experienced · +100% XP::B.O.W., S.T.A.F.F., Q.U.I.V.E.R., S.H.E.A.T.H., E.Y.E.|Fungal Cavern & Crystal Cavern::Powered Up · the Dwarf Miner's drill starts fully charged::Ring of Decades, Fungal Breastplate, Crystallized Worm Spellblade, Crystal Shield, Sporous Spray Spell, Tome of the Mushroom Tribes, Cave Dweller Trap, Fractal Blades, Cloak of Reflection, Fractured Gemstone Wakizashi, Star of Enlightenment, Crystalline Sigil"
-      }
-     },
-     {
-      "show": {
-       "kind": "week",
-       "args": "13 – 20 October|Infernal Abyss of Demons::Found Treasure · treasure rooms revealed::Demon Blade, Volcanic Sheath, Berserker's Breastplate, Adamantine Helm|Plagued Nest::Dust Storm · +50% dust::Queen's Stinger, Swarmlord's Sigil, Green Beehemoth Quiver, Hivemaster Helm, Beekeeper's Flamethrower"
-      }
-     },
-     {
-      "show": {
-       "kind": "week",
-       "args": "20 – 27 October|Heroic Undead Lair::Found Treasure · treasure rooms revealed::Doom Bow, Spectral Sword, Wandering Souls Spell, Ring of Skeletal Specters|Advanced Kogbold Steamworks::Steamworks Maintenance · turrets disabled::Overclocking Amulet, Steam Pipe, Chain Dagger, Laser Pointer, Scepter of Rust, Brain Cube, Kogbold Multitool, Kogbold Enhancement Core"
-      }
-     },
-     {
-      "show": {
-       "kind": "week",
-       "args": "27 October – 3 November|Haunted Cemetery::Looting · +50% loot, and the Pumpkin Master as the last boss::Soul's Guidance, Plague Poison, Resurrected Warrior's Armor|Spectral Penitentiary::Rewarding · +25% XP, loot and dust::Tools of the Tarnished, Wretched Rags, Cackling Straitjacket, Ocular Entrapment, Motivational Megaphone, Damnation, Vial of Soul Extract"
-      }
-     },
-     {
-      "point": "Every event chest can hold the SweetTreats weapons, the new Druid reskin set, and — in the second dungeon of each week — the Sweettreats Ring."
-     }
-    ]
-   },
-   {
-    "title": "Loot Brooms",
-    "points": [
-     "Catch it. It drops the Halloween reskin UTs of 2025:"
-    ],
-    "blurb": "A harmless enemy that pays, in every event dungeon.",
-    "shows": [
-     {
-      "kind": "things",
-      "args": "Loot Broom::in a room, or after the boss"
-     },
-     {
-      "kind": "things",
-      "args": "The Crimson Blade;Blood Coated Dirk;Ceremonial Wand;Blood Siphoning Katana;Scarlet Etched Branch;Occult Bow;Sacramental Crossbow;Scepter of the Transgressor;Esoteric Buckler::also from Janus the Doorwarden;Blood Ritual Tools;The Hemomancer's Ring"
+      "args": "Week 4|Parasite Chambers::1.5× loot and XP::|The Shatters::1.5× loot and XP::"
      },
      {
       "kind": "list",
-      "args": "And|Halloween ST crates — Demon Pumpkin, Witch's Skull, Haunted Tombstone, Cursed Grimoire, Eerie Music Box, Silver Urn; Halloween consumables and cloths; new and old Halloween emotes, Jack O Lantern and Lit O Lantern among them; a Mystery Stat Pot"
+      "args": "Divine Tokens per run|Difficulty 5+: 1, and 25% for a second; Difficulty 7+: 1, and 50% for a second; Difficulty 8.5+: 2, and 50% for a third"
      }
     ],
     "flow": [
      {
       "show": {
-       "kind": "things",
-       "args": "Loot Broom::in a room, or after the boss"
+       "kind": "week",
+       "args": "Week 1|Ocean Trench::1.5× loot and XP::|The Nest::1.5× loot and XP::"
       }
      },
      {
-      "point": "Catch it. It drops the Halloween reskin UTs of 2025:"
+      "show": {
+       "kind": "week",
+       "args": "Week 2|Deadwater Docks::1.5× loot and XP::|Lost Halls::1.5× loot and XP::"
+      }
+     },
+     {
+      "show": {
+       "kind": "week",
+       "args": "Week 3|Woodland Labyrinth::1.5× loot and XP::|Moonlight Village::1.5× loot and XP::"
+      }
+     },
+     {
+      "show": {
+       "kind": "week",
+       "args": "Week 4|Parasite Chambers::1.5× loot and XP::|The Shatters::1.5× loot and XP::"
+      }
+     },
+     {
+      "point": "Each featured boss leaves an event chest with a chance at Divine Coins, then two portals to any White Snake Invasion."
+     },
+     {
+      "show": {
+       "kind": "list",
+       "args": "Divine Tokens per run|Difficulty 5+: 1, and 25% for a second; Difficulty 7+: 1, and 50% for a second; Difficulty 8.5+: 2, and 50% for a third"
+      }
+     }
+    ]
+   },
+   {
+    "title": "Solo leaderboard and the Tinkerer",
+    "points": [
+     "Only Solo White Snake Invasion III counts for the season's leaderboard, which weighs both your participation and your seasonal character. Its key costs ten Divine Coins at the Tinkerer, once a day. The rewards — the Golden Primal Snake Pet Skin, the blue title \"the Snake Charmer\" and a new character skin — arrive when the next season starts."
+    ],
+    "blurb": "Divine Coins, traded at the Tinkerer.",
+    "shows": [
+     {
+      "kind": "things",
+      "args": "Solo White Snake Invasion III Key"
+     },
+     {
+      "kind": "list",
+      "args": "At the Tinkerer|10 Divine Coins: Solo White Snake Invasion Key, once a day; 30 Divine Coins: Legend of the White Snake Mystery Chest, once a day; 30 Divine Coins: a Quest Chest of your choice, once a day; 50 Divine Coins: a new emote, three of them, once per account each"
+     }
+    ],
+    "flow": [
+     {
+      "point": "Only Solo White Snake Invasion III counts for the season's leaderboard, which weighs both your participation and your seasonal character. Its key costs ten Divine Coins at the Tinkerer, once a day. The rewards — the Golden Primal Snake Pet Skin, the blue title \"the Snake Charmer\" and a new character skin — arrive when the next season starts."
      },
      {
       "show": {
        "kind": "things",
-       "args": "The Crimson Blade;Blood Coated Dirk;Ceremonial Wand;Blood Siphoning Katana;Scarlet Etched Branch;Occult Bow;Sacramental Crossbow;Scepter of the Transgressor;Esoteric Buckler::also from Janus the Doorwarden;Blood Ritual Tools;The Hemomancer's Ring"
+       "args": "Solo White Snake Invasion III Key"
       }
      },
      {
       "show": {
        "kind": "list",
-       "args": "And|Halloween ST crates — Demon Pumpkin, Witch's Skull, Haunted Tombstone, Cursed Grimoire, Eerie Music Box, Silver Urn; Halloween consumables and cloths; new and old Halloween emotes, Jack O Lantern and Lit O Lantern among them; a Mystery Stat Pot"
+       "args": "At the Tinkerer|10 Divine Coins: Solo White Snake Invasion Key, once a day; 30 Divine Coins: Legend of the White Snake Mystery Chest, once a day; 30 Divine Coins: a Quest Chest of your choice, once a day; 50 Divine Coins: a new emote, three of them, once per account each"
       }
      }
     ]
    },
    {
-    "title": "Fixes",
+    "title": "Battle Pass and Celestial Stones",
+    "points": [
+     "The Battle Pass carries snake items at every milestone; only its Exalt tiers give Celestial Stones.",
+     "Stones come from the shop and the Battle Pass; the Tinkerer is in the Daily Quest Rooms off the Nexus. A new branch joins the mission tree, and either faction's missions advance the Community Contest.",
+     "The client carries these two skins as well; the notes do not say where they come from."
+    ],
+    "blurb": "Fangs and reptiles, and a dancer for a hundred stones.",
+    "shows": [
+     {
+      "kind": "skins",
+      "args": "Cursed Paladin::a very dark Paladin;Snake Flower Kensei::covered in flowers"
+     },
+     {
+      "kind": "skins",
+      "args": "Snake Dancer Mystic::100 Celestial Stones, at the Tinkerer"
+     },
+     {
+      "kind": "skins",
+      "args": "Tiramisu King Knight;Mollusk Wizard"
+     }
+    ],
+    "flow": [
+     {
+      "show": {
+       "kind": "skins",
+       "args": "Cursed Paladin::a very dark Paladin;Snake Flower Kensei::covered in flowers"
+      }
+     },
+     {
+      "point": "The Battle Pass carries snake items at every milestone; only its Exalt tiers give Celestial Stones."
+     },
+     {
+      "show": {
+       "kind": "skins",
+       "args": "Snake Dancer Mystic::100 Celestial Stones, at the Tinkerer"
+      }
+     },
+     {
+      "point": "Stones come from the shop and the Battle Pass; the Tinkerer is in the Daily Quest Rooms off the Nexus. A new branch joins the mission tree, and either faction's missions advance the Community Contest."
+     },
+     {
+      "show": {
+       "kind": "skins",
+       "args": "Tiramisu King Knight;Mollusk Wizard"
+      }
+     },
+     {
+      "point": "The client carries these two skins as well; the notes do not say where they come from."
+     }
+    ]
+   },
+   {
+    "title": "Shinies",
     "points": [],
-    "blurb": "Five repairs that came with the release.",
+    "blurb": "Six more, for seasonal characters.",
+    "shows": [
+     {
+      "kind": "things",
+      "args": "Shifting Shroud::Shiny;Kageboshi::Shiny;Morning Square::Shiny;The Triangle::Shiny;Esben's Wedding Ring::Shiny;Magical Lodestone::Shiny"
+     }
+    ],
+    "flow": [
+     {
+      "show": {
+       "kind": "things",
+       "args": "Shifting Shroud::Shiny;Kageboshi::Shiny;Morning Square::Shiny;The Triangle::Shiny;Esben's Wedding Ring::Shiny;Magical Lodestone::Shiny"
+      }
+     }
+    ]
+   },
+   {
+    "title": "Mechanical Raptor Druid Set",
+    "points": [
+     "It drops in the Kogbold Steamworks; the Advanced Steamworks drops its pieces with one enchantment slot or more. The notes name the pieces after Steamworks enemies — Factory Control Core, Kogbold Flying Machine, Kogbold Battlesmith, Kogbold Steamwalker; the client's are the four above."
+    ],
+    "blurb": "The Druid's ST set, from the Kogbold Steamworks.",
+    "shows": [
+     {
+      "kind": "set",
+      "args": "Mechanical Raptor Druid Set"
+     }
+    ],
+    "flow": [
+     {
+      "show": {
+       "kind": "set",
+       "args": "Mechanical Raptor Druid Set"
+      }
+     },
+     {
+      "point": "It drops in the Kogbold Steamworks; the Advanced Steamworks drops its pieces with one enchantment slot or more. The notes name the pieces after Steamworks enemies — Factory Control Core, Kogbold Flying Machine, Kogbold Battlesmith, Kogbold Steamwalker; the client's are the four above."
+     }
+    ]
+   },
+   {
+    "title": "Quality of life",
+    "points": [],
+    "blurb": "What changes in the game's own screens.",
     "shows": [
      {
       "kind": "checks",
-      "args": "Hovering over Command Cornea no longer causes an error;;The Forge buff now applies to the Demon Lord's Skull;;The Venerable Doom Bow's arrow no longer flies backwards;;The first section of the tutorial dungeon has its text again;;The Teratoma has its stat-modifier enchantment label"
+      "args": "A new Crucible screen: two columns, boosts, debuffs and restrictions by colour, details on hover;;A new Wardrobe title screen: Full and Modular tabs, progress shown as current/goal, unobtainable titles hidden;;Party leaders choose whether members may invite (off by default);;Private notes on friends, up to 100 characters, shown on hover;;Holding the interaction key over a player shows their core attributes;;The graveyard draws each dead character in black and white, with skin, dyes and accessories;;Storage grouped by type is sorted alphabetically inside each group;;A Claim All button for mission rewards, pausing on choices;;The mission tree remembers Graph or List view;;A setting for the height of the minimized chat;;A setting to always show items above loot bags (off by default);;Borderless windowed display;;A slider for the camera's off-centre shift;;The vault chest turns green when the vault is seasonal"
      }
     ],
     "flow": [
      {
       "show": {
        "kind": "checks",
-       "args": "Hovering over Command Cornea no longer causes an error;;The Forge buff now applies to the Demon Lord's Skull;;The Venerable Doom Bow's arrow no longer flies backwards;;The first section of the tutorial dungeon has its text again;;The Teratoma has its stat-modifier enchantment label"
+       "args": "A new Crucible screen: two columns, boosts, debuffs and restrictions by colour, details on hover;;A new Wardrobe title screen: Full and Modular tabs, progress shown as current/goal, unobtainable titles hidden;;Party leaders choose whether members may invite (off by default);;Private notes on friends, up to 100 characters, shown on hover;;Holding the interaction key over a player shows their core attributes;;The graveyard draws each dead character in black and white, with skin, dyes and accessories;;Storage grouped by type is sorted alphabetically inside each group;;A Claim All button for mission rewards, pausing on choices;;The mission tree remembers Graph or List view;;A setting for the height of the minimized chat;;A setting to always show items above loot bags (off by default);;Borderless windowed display;;A slider for the camera's off-centre shift;;The vault chest turns green when the vault is seasonal"
       }
+     }
+    ]
+   },
+   {
+    "title": "Fixes",
+    "points": [
+     "A few of these can be read in the client. The Legion Elite Skull's +90 health and the four masks' soulbinding are in the item data, and the enchantment typos are fixed in the ids too — Vampiric Lifeforce, Overwhelming Strikes, the two Thanksgiving enchantments. The Tarot change is the one that moves the calculator: the cards' ×4.5 on a stat now reaches the unique enchantment of that stat, and its own bonus drops from ×15 to ×3.33."
+    ],
+    "blurb": "What the release repaired.",
+    "shows": [
+     {
+      "kind": "checks",
+      "args": "Earthen Bulwark summons no longer disconnect when lasers hit them in the Advanced Kogbold Steamworks;;Pet eggs no longer vanish when used while holding the interact key;;Tooltips scroll while a trade is open;;The Neo Blazon Bow's tooltip gives the right bleed damage;;Exaltation slots list every dungeon that applies;;The Tome of Holy Guidance's tooltip says its damage pierces armour;;The Magic Woods credits highlight their headings;;Summoner summons spawn more evenly around the cursor while moving;;Item tooltips show decimals, not only enchantment descriptions;;Boss bars show 1M rather than 1000K;;The Enchant button stays active with too little gold for dust;;Consumables in the pet bag work with the pet far away;;Dalvar's Battle Axe shots no longer turn back after a Bard buff;;Moonlight Village's spotlight appears with its modifier;;The Legion Elite Skull shows one health bonus, +90;;The Enchanter's map icon is back;;The Prism of Phantoms (T5) no longer looks bleached with equipment glow on;;Ctrl-clicking a server message opens no player menu;;Craig's Gift shows the right gold value in the Nexus;;Long dungeon names no longer overlap the player list;;Slaughterer completes at 10,000 beach kills, The Adversary at 1,000;;The invincible icon and health bar ignore opacity;;Beam damage counts Crucible damage;;Big Berdtha has the right collection and craft icons;;The Nest's encounter counts as a Veteran encounter in missions;;Orbs affect every enemy;;The Battle Pass title no longer overlaps its timer;;The Forge shows and gives the right rarity for low-tier dungeon UTs;;Seal tooltips show their full effect with another seal worn;;Potions can no longer be drunk twice from the rack;;The Superior Masks of Anubis, Cnidaria, Lightning and Mucus are soulbound;;The Legion Elite Trap has a different effect;;Tidal Wave Kensei ST shows its generation icon;;Dungeon music is as loud as the realm's;;The Dragon's Treasure quest waits for level 20;;Retainer's Battlesuit drops from the three minor creepy dark manifestations in the Ice Citadel;;The Cavalry Lance needs a full dash;;The Crystal Shield's retaliation shot scales with Defense, and its bonus damage with enchantments and the Crucible;;Effect icons sit right on skins with idle animations;;The launcher's blog link and update button work again;;Items stack from any loot bag slot;;Daily quests paid from the pet inventory no longer disconnect;;The potion vault's Max button counts in one click;;Campaign points show on every shop item;;The Killer Bee's health scales with nearby players;;Several enchantment typos are fixed;;Sunken Treasure and Jewel Anglers spawn in the Deep Sea Abyss;;The UFO spawns with players standing on its spot;;Neo Reality and Neo Entropy Reactors trigger Dark Matter and Power;;The Neo Reality Reactor restores 200 health and 100 magic below 300 health;;Golden Sphinx Mk II is named right in Neo Katalund death messages;;Swapping two full Druid sigils and transforming uses the right ability;;Mad Lab turrets show when they are about to fire;;Unique enchantments take the Tarot Cards' multipliers in the Enchanter"
+     }
+    ],
+    "flow": [
+     {
+      "show": {
+       "kind": "checks",
+       "args": "Earthen Bulwark summons no longer disconnect when lasers hit them in the Advanced Kogbold Steamworks;;Pet eggs no longer vanish when used while holding the interact key;;Tooltips scroll while a trade is open;;The Neo Blazon Bow's tooltip gives the right bleed damage;;Exaltation slots list every dungeon that applies;;The Tome of Holy Guidance's tooltip says its damage pierces armour;;The Magic Woods credits highlight their headings;;Summoner summons spawn more evenly around the cursor while moving;;Item tooltips show decimals, not only enchantment descriptions;;Boss bars show 1M rather than 1000K;;The Enchant button stays active with too little gold for dust;;Consumables in the pet bag work with the pet far away;;Dalvar's Battle Axe shots no longer turn back after a Bard buff;;Moonlight Village's spotlight appears with its modifier;;The Legion Elite Skull shows one health bonus, +90;;The Enchanter's map icon is back;;The Prism of Phantoms (T5) no longer looks bleached with equipment glow on;;Ctrl-clicking a server message opens no player menu;;Craig's Gift shows the right gold value in the Nexus;;Long dungeon names no longer overlap the player list;;Slaughterer completes at 10,000 beach kills, The Adversary at 1,000;;The invincible icon and health bar ignore opacity;;Beam damage counts Crucible damage;;Big Berdtha has the right collection and craft icons;;The Nest's encounter counts as a Veteran encounter in missions;;Orbs affect every enemy;;The Battle Pass title no longer overlaps its timer;;The Forge shows and gives the right rarity for low-tier dungeon UTs;;Seal tooltips show their full effect with another seal worn;;Potions can no longer be drunk twice from the rack;;The Superior Masks of Anubis, Cnidaria, Lightning and Mucus are soulbound;;The Legion Elite Trap has a different effect;;Tidal Wave Kensei ST shows its generation icon;;Dungeon music is as loud as the realm's;;The Dragon's Treasure quest waits for level 20;;Retainer's Battlesuit drops from the three minor creepy dark manifestations in the Ice Citadel;;The Cavalry Lance needs a full dash;;The Crystal Shield's retaliation shot scales with Defense, and its bonus damage with enchantments and the Crucible;;Effect icons sit right on skins with idle animations;;The launcher's blog link and update button work again;;Items stack from any loot bag slot;;Daily quests paid from the pet inventory no longer disconnect;;The potion vault's Max button counts in one click;;Campaign points show on every shop item;;The Killer Bee's health scales with nearby players;;Several enchantment typos are fixed;;Sunken Treasure and Jewel Anglers spawn in the Deep Sea Abyss;;The UFO spawns with players standing on its spot;;Neo Reality and Neo Entropy Reactors trigger Dark Matter and Power;;The Neo Reality Reactor restores 200 health and 100 magic below 300 health;;Golden Sphinx Mk II is named right in Neo Katalund death messages;;Swapping two full Druid sigils and transforming uses the right ability;;Mad Lab turrets show when they are about to fire;;Unique enchantments take the Tarot Cards' multipliers in the Enchanter"
+      }
+     },
+     {
+      "point": "A few of these can be read in the client. The Legion Elite Skull's +90 health and the four masks' soulbinding are in the item data, and the enchantment typos are fixed in the ids too — Vampiric Lifeforce, Overwhelming Strikes, the two Thanksgiving enchantments. The Tarot change is the one that moves the calculator: the cards' ×4.5 on a stat now reaches the unique enchantment of that stat, and its own bonus drops from ×15 to ×3.33."
      }
     ]
    }
   ],
-  "title": "Twilight of the Mad God",
-  "subtitle": "Season 31, Part 1 — Halloween",
-  "date": "2026-10-06",
-  "lede": "The Time Chamber closes and the Nexus dresses for Halloween. Memories — short, lore-driven solo dungeons — bring the first Heirlooms; two Druid sets and a basket of SweetTreats join them, and event Shinies finally reach regular characters. The Blood Ritual, the Infested Castle, Totalia and the Zombie Hordes return for four weeks.",
+  "title": "White Snake Invasion",
+  "subtitle": "Season 31, Part 2",
+  "date": "2026-11-03",
+  "lede": "The Ocean Trench is rebuilt from the sea floor up, with a new Thessal fight and three new rewards. The White Snake comes back for four weeks of featured dungeons, Divine Coins and a solo leaderboard; six Shinies, a Druid ST set and a long list of fixes come with it.",
   "places": {
-   "Stoneborn Memory Portal": {
-    "inside": "The Red and the Purple Stone Guardian, taking turns. Each one beaten throws its blade into the arena, a hazard for the rest of the fight.",
-    "loot": "A blueprint toward the Stoneborn Husk, guaranteed"
-   },
-   "Infected Memory Portal": {
-    "inside": "The Founder, in a guild hall that is no longer yours, leading an infected horde against the Nexus's old heroes.",
-    "loot": "A blueprint toward the Teratoma, guaranteed"
+   "Ocean Trench Portal": {
+    "inside": "Thessal the Mermaid Goddess, in a fight rebuilt in phases around her coral bombs, her deep-sea beasts, her coral bow and her siren song. On the way: several kinds of slurps, Hermit God minions, new fishmen and coral turrets.",
+    "loot": "The Squidver, the Coral Juice Refinery, the Fire Coral Branch and the Coral set"
    }
   }
  },
  "upcoming": [],
- "before": "15a3ce058fe946c792c23558bdb10e2c",
+ "before": "f1f479830bae49808b3d9927e8ad8fa1",
  "counts": {
   "added": 225,
-  "changed": 5,
+  "changed": 10,
   "gone": 0
  },
  "tally": {
   "pets": {
-   "added": 6,
+   "added": 9,
    "changed": 0,
    "gone": 0
   },
   "abilities": {
-   "added": 7,
+   "added": 5,
+   "changed": 2,
+   "gone": 0
+  },
+  "backstage": {
+   "added": 100,
    "changed": 0,
    "gone": 0
   },
   "consumables": {
-   "added": 21,
+   "added": 19,
    "changed": 1,
-   "gone": 0
-  },
-  "armour": {
-   "added": 7,
-   "changed": 1,
-   "gone": 0
-  },
-  "skins": {
-   "added": 21,
-   "changed": 0,
-   "gone": 0
-  },
-  "backstage": {
-   "added": 82,
-   "changed": 0,
-   "gone": 0
-  },
-  "equipment": {
-   "added": 47,
-   "changed": 0,
    "gone": 0
   },
   "weapons": {
-   "added": 9,
-   "changed": 1,
+   "added": 3,
+   "changed": 0,
+   "gone": 0
+  },
+  "armour": {
+   "added": 3,
+   "changed": 0,
    "gone": 0
   },
   "rings": {
    "added": 4,
-   "changed": 2,
+   "changed": 4,
    "gone": 0
   },
-  "creatures": {
-   "added": 19,
+  "skins": {
+   "added": 12,
    "changed": 0,
    "gone": 0
   },
   "places": {
-   "added": 2,
+   "added": 1,
    "changed": 0,
+   "gone": 0
+  },
+  "equipment": {
+   "added": 28,
+   "changed": 0,
+   "gone": 0
+  },
+  "creatures": {
+   "added": 41,
+   "changed": 3,
    "gone": 0
   }
  },
@@ -723,8 +528,8 @@
   "pets": {
    "added": [
     {
-     "id": "Grave Bell Poltergeist",
-     "type": "0x9E0A",
+     "id": "Miss Cancan",
+     "type": "0x9E49",
      "art": {
       "kind": "still",
       "atlas": "lofiObj2",
@@ -739,7 +544,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "grave-bell-poltergeist.png",
+        "file": "miss-cancan.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -748,36 +553,36 @@
      }
     },
     {
-     "id": "Grave Bell Poltergeist Pet Skin",
-     "type": "0x9E0B",
+     "id": "Miss Cancan Pet Skin",
+     "type": "0x9E4A",
      "art": {
       "kind": "moving",
       "atlas": "petsDivine",
-      "index": 408
+      "index": 410
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "PetSkin",
-      "tier": 4
+      "tier": 5
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "grave-bell-poltergeist-pet-skin-stand.png",
+        "file": "miss-cancan-pet-skin-stand.png",
         "tile": 16,
         "height": 16,
-        "frames": 1
+        "frames": 8
        },
        "walk": {
-        "file": "grave-bell-poltergeist-pet-skin-walk.png",
+        "file": "miss-cancan-pet-skin-walk.png",
         "tile": 16,
         "height": 16,
         "frames": 4
        },
        "attack": {
-        "file": "grave-bell-poltergeist-pet-skin-attack.png",
+        "file": "miss-cancan-pet-skin-attack.png",
         "tile": 32,
         "height": 16,
         "frames": 4
@@ -786,42 +591,42 @@
      }
     },
     {
-     "id": "Grave Bell Poltergeist Pet Skin",
-     "type": "0x9E0C",
+     "id": "Miss Cancan Pet Skin",
+     "type": "0x9E4B",
      "art": {
       "kind": "moving",
       "atlas": "petsDivine",
-      "index": 408
+      "index": 410
      },
-     "description": "A mischievous spirit haunting an ancient grave bell, ringing out an eerie chime wherever it goes.\\n\\nUnlocks the Grave Bell Poltergeist Pet Skin of the Spooky family. The skin will be added to your Pet Wardrobe in the Pet Yard and can be used to change the appearance of your pet!",
+     "description": "A little tiramisu dog who believes every problem can be solved with a cancan kick. Her best friends Bing Cat and Bunshaker have yet to convince her otherwise. Oryx is rather fond of her, though he’ll deny it if you ask.\\n\\nUnlocks the Miss Cancan Pet Skin of the Canine family. The skin will be added to your Pet Wardrobe in the Pet Yard and can be used to change the appearance of your pet!",
      "labels": [],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "tier": 4,
+      "tier": 5,
       "feed power": 1000,
       "bag": 7,
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Grave Bell Poltergeist Pet Stone",
+     "clientId": "Miss Cancan Pet Stone",
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "grave-bell-poltergeist-pet-stone-stand.png",
+        "file": "miss-cancan-pet-stone-stand.png",
         "tile": 16,
         "height": 16,
-        "frames": 1
+        "frames": 8
        },
        "walk": {
-        "file": "grave-bell-poltergeist-pet-stone-walk.png",
+        "file": "miss-cancan-pet-stone-walk.png",
         "tile": 16,
         "height": 16,
         "frames": 4
        },
        "attack": {
-        "file": "grave-bell-poltergeist-pet-stone-attack.png",
+        "file": "miss-cancan-pet-stone-attack.png",
         "tile": 32,
         "height": 16,
         "frames": 4
@@ -830,8 +635,8 @@
      }
     },
     {
-     "id": "Hollow Key Keeper",
-     "type": "0x9E0F",
+     "id": "Pearl-Adorned Seahorse",
+     "type": "0x9E52",
      "art": {
       "kind": "still",
       "atlas": "lofiObj2",
@@ -846,7 +651,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "hollow-key-keeper.png",
+        "file": "pearl-adorned-seahorse.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -855,83 +660,190 @@
      }
     },
     {
-     "id": "Hollow Key Keeper Pet Skin",
-     "type": "0x9E10",
+     "id": "Pearl-Adorned Seahorse Pet Skin",
+     "type": "0x9E53",
      "art": {
       "kind": "moving",
       "atlas": "petsDivine",
-      "index": 409
+      "index": 411
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "PetSkin",
-      "tier": 4
+      "tier": 3
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "hollow-key-keeper-pet-skin-stand.png",
+        "file": "pearl-adorned-seahorse-pet-skin-stand.png",
         "tile": 16,
         "height": 16,
         "frames": 1
        },
        "walk": {
-        "file": "hollow-key-keeper-pet-skin-walk.png",
+        "file": "pearl-adorned-seahorse-pet-skin-walk.png",
         "tile": 16,
         "height": 16,
-        "frames": 4
+        "frames": 2
        },
        "attack": {
-        "file": "hollow-key-keeper-pet-skin-attack.png",
+        "file": "pearl-adorned-seahorse-pet-skin-attack.png",
         "tile": 32,
         "height": 16,
-        "frames": 4
+        "frames": 2
        }
       }
      }
     },
     {
-     "id": "Hollow Key Keeper Pet Skin",
-     "type": "0x9E11",
+     "id": "Pearl-Adorned Seahorse Pet Skin",
+     "type": "0x9E54",
      "art": {
       "kind": "moving",
       "atlas": "petsDivine",
-      "index": 409
+      "index": 411
      },
-     "description": "A mysterious key with a taste for secrets and souls.\\n\\nUnlocks the Hollow Key Keeper Pet Skin of the Spooky family. The skin will be added to your Pet Wardrobe in the Pet Yard and can be used to change the appearance of your pet!",
+     "description": "Her crown was hatched from an oyster who swallowed a ring. Be mindful of where you drop your undesirables.\\n\\nUnlocks the Pearl-Adorned Seahorse Pet Skin of the Aquatic family. The skin will be added to your Pet Wardrobe in the Pet Yard and can be used to change the appearance of your pet!",
      "labels": [],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "tier": 4,
+      "tier": 3,
       "feed power": 1000,
       "bag": 7,
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Hollow Key Keeper Pet Stone",
+     "clientId": "Pearl-Adorned Seahorse Pet Stone",
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "hollow-key-keeper-pet-stone-stand.png",
+        "file": "pearl-adorned-seahorse-pet-stone-stand.png",
         "tile": 16,
         "height": 16,
         "frames": 1
        },
        "walk": {
-        "file": "hollow-key-keeper-pet-stone-walk.png",
+        "file": "pearl-adorned-seahorse-pet-stone-walk.png",
         "tile": 16,
         "height": 16,
-        "frames": 4
+        "frames": 2
        },
        "attack": {
-        "file": "hollow-key-keeper-pet-stone-attack.png",
+        "file": "pearl-adorned-seahorse-pet-stone-attack.png",
         "tile": 32,
         "height": 16,
-        "frames": 4
+        "frames": 2
+       }
+      }
+     }
+    },
+    {
+     "id": "Glowlamp Nautilus",
+     "type": "0x9E55",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 50
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Pet"
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "glowlamp-nautilus.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Glowlamp Nautilus Pet Skin",
+     "type": "0x9E56",
+     "art": {
+      "kind": "moving",
+      "atlas": "petsDivine",
+      "index": 412
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "PetSkin",
+      "tier": 3
+     },
+     "sprite": {
+      "moving": true,
+      "clips": {
+       "stand": {
+        "file": "glowlamp-nautilus-pet-skin-stand.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       },
+       "walk": {
+        "file": "glowlamp-nautilus-pet-skin-walk.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 2
+       },
+       "attack": {
+        "file": "glowlamp-nautilus-pet-skin-attack.png",
+        "tile": 32,
+        "height": 16,
+        "frames": 2
+       }
+      }
+     }
+    },
+    {
+     "id": "Glowlamp Nautilus Pet Skin",
+     "type": "0x9E57",
+     "art": {
+      "kind": "moving",
+      "atlas": "petsDivine",
+      "index": 412
+     },
+     "description": "Lucent and translucent!\\n\\nUnlocks the Glowlamp Nautilus Pet Skin of the Aquatic family. The skin will be added to your Pet Wardrobe in the Pet Yard and can be used to change the appearance of your pet!",
+     "labels": [],
+     "facts": {
+      "class": "Equipment",
+      "slot": 10,
+      "tier": 3,
+      "feed power": 1000,
+      "bag": 7,
+      "soulbound": true,
+      "consumable": true
+     },
+     "clientId": "Glowlamp Nautilus Pet Stone",
+     "sprite": {
+      "moving": true,
+      "clips": {
+       "stand": {
+        "file": "glowlamp-nautilus-pet-stone-stand.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 1
+       },
+       "walk": {
+        "file": "glowlamp-nautilus-pet-stone-walk.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 2
+       },
+       "attack": {
+        "file": "glowlamp-nautilus-pet-stone-attack.png",
+        "tile": 32,
+        "height": 16,
+        "frames": 2
        }
       }
      }
@@ -943,171 +855,90 @@
   "abilities": {
    "added": [
     {
-     "id": "Teratoma",
-     "type": "0xbefa",
+     "id": "Squidver",
+     "type": "0xadce",
      "art": {
       "kind": "still",
-      "atlas": "memoriesObjects8x8",
-      "index": 18
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 680
      },
-     "description": "A living mass of teeth and eyes that seeks to prolong its user's suffering.",
+     "description": "Many fishmen refashion select breeds of Deep Sea Beasts into portable accessories for their weapons. They are fed a strict diet of poisonous urchins, which helps keeps any stashed items particularly deadly.",
      "labels": [
       "EQUIPMENT",
       "ABILITY",
-      "ORB",
+      "QUIVER",
       "UT",
       "TAB_UT",
       "POWERTIER_A",
       "XPBONUS",
-      "COOLDOWN",
+      "MPCOST",
+      "STATMOD",
+      "ORG_OTRENCH"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 15,
+      "feed power": 950,
+      "bag": 6,
+      "XP bonus": 7,
+      "mp cost": 105,
+      "shots": 1,
+      "arc gap": 7,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "damage": "450-500",
+      "range": 8.5,
+      "pierces": true,
+      "on equip SPD": 5
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "squidver.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Legacy Coral Venom Trap",
+     "type": "0xd243",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 27
+     },
+     "description": "A trap imbued with deadly venom from the coral of the Ocean Trench.",
+     "labels": [
+      "EQUIPMENT",
+      "ABILITY",
+      "TRAP",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_A",
+      "XPBONUS",
+      "MPCOST",
       "STATMOD"
      ],
      "facts": {
       "class": "Equipment",
-      "slot": 21,
+      "slot": 20,
       "feed power": 800,
-      "bag": 8,
-      "XP bonus": 6,
-      "mp cost": 0,
-      "slot odds": "50% · 37.5% · 25% · 12.5%"
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "teratoma.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Jurassic Sigil",
-     "type": "0xF98D",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1091
-     },
-     "description": "A decayed charm relighting only a fraction of a primal beast’s flame.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SIGIL",
-      "ST",
-      "MPCOST",
-      "STATMOD",
-      "RESKIN",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 31,
-      "feed power": 900,
-      "bag": 8,
+      "bag": 6,
       "XP bonus": 7,
       "mp cost": 100,
-      "rate of fire": 1,
-      "shots": 2,
-      "arc gap": 15,
-      "soulbound": true,
       "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "275-350",
-      "range": 11.2,
-      "pierces": true,
-      "subattacks": 2,
-      "on equip DEX": 5
-     },
-     "clientId": "HDruidST1",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "hdruidst1.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Swampy Sigil",
-     "type": "0xbc47",
-     "art": null,
-     "description": "There were dark things in that water, even before the Wetlands' corruption. Only a druid could harness such power without being corrupted themself.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SIGIL",
-      "ST",
-      "MPCOST",
-      "STATMOD",
-      "STGEN_2"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 31,
-      "feed power": 900,
-      "bag": 8,
-      "XP bonus": 7,
-      "mp cost": 100,
-      "rate of fire": 1,
-      "shots": 1,
-      "arc gap": 0,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "1100-1300",
-      "range": 8.3,
-      "pierces": true,
-      "subattacks": 2,
-      "on equip MAXHP": 45,
-      "on equip VIT": 5
-     },
-     "clientId": "2DruidST1"
-    },
-    {
-     "id": "Hyper Sigil",
-     "type": "0xbebf",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 477
-     },
-     "description": "A three-dimensional slice of a fourth-dimensional object, fashioned into a sigil.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SIGIL",
-      "ST",
-      "MPCOST",
-      "STATMOD",
-      "STGEN_3"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 31,
-      "feed power": 900,
-      "bag": 8,
-      "XP bonus": 7,
-      "mp cost": 100,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "115-135",
-      "range": 0,
-      "pierces": true,
-      "passes cover": true,
-      "on equip MAXMP": 20,
+      "on equip DEX": 4,
       "on equip SPD": 4
      },
-     "clientId": "3DruidST1",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "3druidst1.png",
+        "file": "legacy-coral-venom-trap.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -1116,477 +947,147 @@
      }
     },
     {
-     "id": "Overwhelming Axehead",
-     "type": "0x1674",
+     "id": "Coral Venom Trap",
+     "type": "0xd248",
      "art": {
       "kind": "still",
       "atlas": "lofiObjShiny",
-      "index": 1027
+      "index": 362
      },
-     "description": "An extremely heavy axehead salvaged from Griefkeeper Zole's rather bulky choice of weaponry. Throwing it takes a tremendous amount of effort, but it has the capacity to obliterate everything in its path.",
+     "description": "A trap imbued with deadly venom from the coral of the Ocean Trench.",
+     "labels": [
+      "EQUIPMENT",
+      "ABILITY",
+      "TRAP",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_A",
+      "XPBONUS",
+      "MPCOST",
+      "STATMOD",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 20,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "mp cost": 100,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "on equip DEX": 4,
+      "on equip SPD": 4
+     },
+     "clientId": "Legacy Coral Venom Trap Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-coral-venom-trap-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Kageboshi",
+     "type": "0x1A05",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1037
+     },
+     "description": "Imbued with haunting energies of a foreign rite, the layered blade of this shadowy tool is never finished with its victim.",
      "labels": [
       "EQUIPMENT",
       "ABILITY",
       "SHURIKEN",
       "UT",
       "TAB_UT",
-      "POWERTIER_SS",
+      "POWERTIER_B",
       "XPBONUS",
       "MPCOST",
-      "ORG_SPECTRAL",
+      "REALMWHITE",
       "STATMOD",
       "SHINY"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 25,
-      "feed power": 1000,
-      "bag": 6,
-      "XP bonus": 7,
-      "mp cost": 150,
-      "soulbound": true,
-      "slot odds": "100% · 100% · 25% · 12.5%",
-      "damage": "325-525",
-      "range": 14.9,
-      "pierces": true,
-      "passes cover": true,
-      "on equip ATT": 5,
-      "on equip VIT": 5
-     },
-     "clientId": "Overwhelming Axehead Shiny",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "overwhelming-axehead-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Draconic Insignia",
-     "type": "0x1675",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1024
-     },
-     "description": "This relic was once used by a secluded cult of dragon worshippers. A druid may tap into its arcane power to embrace the form of a dragon.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SIGIL",
-      "UT",
-      "MPCOST",
-      "STATMOD",
-      "TRADEABLE",
-      "ORG_LOD",
-      "SHINY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 31,
-      "feed power": 850,
-      "bag": 6,
-      "XP bonus": 7,
-      "mp cost": 110,
-      "rate of fire": 1,
-      "shots": 1,
-      "arc gap": 15,
-      "soulbound": true,
-      "slot odds": "100% · 100% · 25% · 12.5%",
-      "damage": "1050-1450",
-      "range": 9,
-      "pierces": true,
-      "subattacks": 2,
-      "on equip DEF": 6,
-      "on equip WIS": 6
-     },
-     "clientId": "Draconic Insignia Shiny",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "draconic-insignia-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Irradiance Sheath",
-     "type": "0x1676",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1023
-     },
-     "description": "Believed to be some kind of artificial organ, this sheath embeds the weapon in a solid crystal coating before violently fracturing into shrapnel when drawn.",
-     "labels": [
-      "EQUIPMENT",
-      "ABILITY",
-      "SHEATH",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_S",
-      "XPBONUS",
-      "MPCOST",
-      "COOLDOWN",
-      "ORG_CRYSTAL",
-      "SHINY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 30,
-      "feed power": 1000,
+      "feed power": 950,
       "bag": 6,
       "XP bonus": 8,
-      "mp cost": 130,
-      "cooldown": 3,
+      "mp cost": 110,
       "soulbound": true,
       "slot odds": "100% · 100% · 25% · 12.5%",
-      "damage": "500-500",
-      "range": 0,
+      "damage": "400-600",
+      "range": 12,
       "pierces": true,
       "passes cover": true,
-      "on equip MAXHP": 40,
-      "on equip ATT": 5
+      "on equip DEF": 5,
+      "on equip SPD": 5
      },
-     "clientId": "Irradiance Sheath Shiny",
+     "clientId": "Kageboshi Shiny",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "irradiance-sheath-shiny.png",
+        "file": "kageboshi-shiny.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        }
       }
      }
-    }
-   ],
-   "changed": [],
-   "gone": []
-  },
-  "armour": {
-   "added": [
+    },
     {
-     "id": "Stoneborn Husk",
-     "type": "0xbbf8",
+     "id": "The Triangle",
+     "type": "0x1A0C",
      "art": {
       "kind": "still",
-      "atlas": "memoriesObjects8x8",
-      "index": 19
+      "atlas": "lofiObjShiny",
+      "index": 1035
      },
-     "description": "An empty vessel.",
+     "description": "Although quite simple, its sound is unmistakable. This isn't just any triangle.",
      "labels": [
       "EQUIPMENT",
-      "ARMOR",
-      "HEAVY",
+      "ABILITY",
+      "LUTE",
       "UT",
       "TAB_UT",
       "POWERTIER_A",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 7,
-      "power": 89,
-      "feed power": 900,
-      "bag": 6,
-      "XP bonus": 6,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip DEF": 12,
-      "on equip ATT": 25,
-      "on equip DEX": -15
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "stoneborn-husk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Primal Padding",
-     "type": "0xF98E",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1092
-     },
-     "description": "Sheets of megaflora adorn a reptilian hide, shedding primeval lifeblood into its wearer.",
-     "labels": [
-      "EQUIPMENT",
-      "ARMOR",
-      "LEATHER",
-      "ST",
-      "TAB_ST",
-      "POWERTIER_B",
-      "RESKIN",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 6,
-      "power": 62,
-      "feed power": 700,
-      "bag": 8,
-      "XP bonus": 6,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip MAXHP": 80,
-      "on equip DEF": 7,
-      "on equip SPD": 5,
-      "on equip DEX": 4
-     },
-     "clientId": "HDruidST2",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "hdruidst2.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Mossy Guard",
-     "type": "0xbebc",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 486
-     },
-     "description": "An old leather armor overtaken by moss. The overgrowth seems to have made the armor self-healing.",
-     "labels": [
-      "EQUIPMENT",
-      "ARMOR",
-      "LEATHER",
-      "ST",
-      "TAB_ST",
-      "POWERTIER_B",
       "XPBONUS",
-      "STGEN_2"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 6,
-      "power": 62,
-      "feed power": 700,
-      "bag": 8,
-      "XP bonus": 6,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip DEF": 15,
-      "on equip VIT": 4,
-      "on equip DEX": 4
-     },
-     "clientId": "2DruidST2",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidst2.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sprite's Dream",
-     "type": "0xbec0",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 478
-     },
-     "description": "A lesser sprite that has taken the form of an armor in hopes of adventure. The pain it feels is nothing compared to the glory it seeks.",
-     "labels": [
-      "EQUIPMENT",
-      "ARMOR",
-      "LEATHER",
-      "ST",
-      "TAB_ST",
-      "POWERTIER_B",
-      "XPBONUS",
-      "STGEN_3"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 6,
-      "power": 62,
-      "feed power": 700,
-      "bag": 8,
-      "XP bonus": 6,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip DEF": 12,
-      "on equip MAXMP": 100,
-      "on equip SPD": 6
-     },
-     "clientId": "3DruidST2",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "3druidst2.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Flowering Kimono",
-     "type": "0x1677",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1002
-     },
-     "description": "A beautiful set of ornate ceremonial robes, filled with the energy of benevolent spirits from long ago.",
-     "labels": [
-      "EQUIPMENT",
-      "ARMOR",
-      "SUMMONPOWERED",
-      "ORG_MOONLIGHT",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_S",
-      "XPBONUS",
+      "MPCOST",
+      "ORG_3D",
+      "STATMOD",
       "SHINY"
      ],
      "facts": {
       "class": "Equipment",
-      "slot": 14,
-      "power": 98,
-      "feed power": 950,
+      "slot": 28,
+      "feed power": 800,
       "bag": 6,
       "XP bonus": 7,
+      "mp cost": 100,
+      "shots": 3,
       "soulbound": true,
       "slot odds": "100% · 100% · 25% · 12.5%",
-      "on equip DEF": 10,
-      "on equip MAXMP": 120,
-      "on equip WIS": 12,
-      "on equip SPD": 7,
-      "on equip ATT": 6
+      "damage": "300-450",
+      "range": 10,
+      "pierces": true,
+      "passes cover": true,
+      "on equip ATT": 3,
+      "on equip WIS": 3
      },
-     "clientId": "Flowering Kimono Shiny",
+     "clientId": "The Triangle Shiny",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "flowering-kimono-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Ethereal Happi",
-     "type": "0x1678",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1016
-     },
-     "description": "A festival coat woven from thin, spiritual threads. It allows the user to skirt the spirit realm in search of their destination.",
-     "labels": [
-      "EQUIPMENT",
-      "ARMOR",
-      "ORG_MOONLIGHT",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_S",
-      "XPBONUS",
-      "SHINY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 6,
-      "power": 105,
-      "feed power": 950,
-      "bag": 6,
-      "XP bonus": 7,
-      "soulbound": true,
-      "slot odds": "100% · 100% · 25% · 12.5%",
-      "on equip DEF": 15,
-      "on equip SPD": 15,
-      "on equip DEX": 10
-     },
-     "clientId": "Ethereal Happi Shiny",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "ethereal-happi-shiny.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sage's Wakibiki",
-     "type": "0x1679",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObjShiny",
-      "index": 1009
-     },
-     "description": "A worn plate from the Sage's armor. Its outwardly poor condition belies a strange, revitalizing effect still flowing within.",
-     "labels": [
-      "EQUIPMENT",
-      "ARMOR",
-      "ORG_MOONLIGHT",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_S",
-      "XPBONUS",
-      "SHINY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 7,
-      "power": 130,
-      "feed power": 950,
-      "bag": 6,
-      "XP bonus": 7,
-      "soulbound": true,
-      "slot odds": "100% · 100% · 25% · 12.5%",
-      "on equip DEF": 20,
-      "on equip VIT": 15,
-      "on equip WIS": 15,
-      "on equip MAXHP": 80
-     },
-     "clientId": "Sage's Wakibiki Shiny",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sage-s-wakibiki-shiny.png",
+        "file": "the-triangle-shiny.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -1597,50 +1098,725 @@
    ],
    "changed": [
     {
-     "id": "Mechpilot's Jerkin",
-     "type": "0x74ca",
+     "id": "Legion Elite Skull",
+     "type": "0xA36D",
      "art": {
       "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 541
+      "atlas": "lofiObj5new",
+      "index": 370
      },
-     "description": "A well fitting electrically resistant suit perfect for operating heavy machinery.",
+     "description": "A cursed artifact channeling disciplined death magic to drain and heal.",
+     "labels": [
+      "EQUIPMENT",
+      "ABILITY",
+      "SKULL",
+      "STATMOD",
+      "UT",
+      "RESKIN",
+      "T6",
+      "T6_ABILITY",
+      "MPCOST",
+      "XPBONUS",
+      "AOO",
+      "LEGION_ELITE"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 19,
+      "feed power": 380,
+      "bag": 4,
+      "XP bonus": 6,
+      "mp cost": 115,
+      "soulbound": true,
+      "slot odds": "100% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 90,
+      "on equip MAXMP": 20
+     },
+     "moved": [
+      {
+       "fact": "on equip MAXHP",
+       "was": 60,
+       "now": 90
+      }
+     ],
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legion-elite-skull.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Rectangular Prism",
+     "type": "0xbb4b",
+     "art": {
+      "kind": "still",
+      "atlas": "sorcEncountersObjects8x8",
+      "index": 220
+     },
+     "description": "A rectangular prism cut to perfection with impossibly accurate 90 degree angles.",
+     "labels": [
+      "EQUIPMENT",
+      "ABILITY",
+      "PRISM",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_SS",
+      "XPBONUS",
+      "MPCOST",
+      "REALMWHITE"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 22,
+      "feed power": 1000,
+      "bag": 6,
+      "XP bonus": 8,
+      "mp cost": 80,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "damage": "250-250",
+      "range": 4,
+      "pierces": true,
+      "passes cover": true,
+      "on equip WIS": 8
+     },
+     "moved": [
+      {
+       "fact": "labels",
+       "was": "EQUIPMENT,ABILITY,PRISM,UT,TAB_UT,POWERTIER_SS,XPBONUS,MPCOST",
+       "now": "EQUIPMENT,ABILITY,PRISM,UT,TAB_UT,POWERTIER_SS,XPBONUS,MPCOST,REALMWHITE"
+      }
+     ],
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "rectangular-prism.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    }
+   ],
+   "gone": []
+  },
+  "weapons": {
+   "added": [
+    {
+     "id": "Legacy Coral Bow",
+     "type": "0xd242",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 4
+     },
+     "description": "A bow fashioned from living coral found in only the deepest ocean trenches.  It is the favored weapon of those that inhabit the realms beneath the waves.",
+     "labels": [
+      "EQUIPMENT",
+      "WEAPON",
+      "BOW",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS",
+      "CBOW"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 3,
+      "power": 170,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "rate of fire": 1.25,
+      "shots": 2,
+      "arc gap": 9,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "damage": "75-95",
+      "range": 7.8,
+      "pierces": true
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-coral-bow.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Coral Bow",
+     "type": "0xd247",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 153
+     },
+     "description": "A bow fashioned from living coral found in only the deepest ocean trenches.  It is the favored weapon of those that inhabit the realms beneath the waves.",
+     "labels": [
+      "EQUIPMENT",
+      "WEAPON",
+      "BOW",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS",
+      "SHINY",
+      "CBOW"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 3,
+      "power": 170,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "rate of fire": 1.25,
+      "shots": 2,
+      "arc gap": 9,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "damage": "75-95",
+      "range": 7.8,
+      "pierces": true
+     },
+     "clientId": "Legacy Coral Bow Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-coral-bow-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Morning Square",
+     "type": "0x1A09",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1030
+     },
+     "description": "A strange bludgeoning weapon known for leaving extreme wounds on enemies with its perfect ninety degree angles.",
+     "labels": [
+      "EQUIPMENT",
+      "WEAPON",
+      "WAND",
+      "UT",
+      "TAB_UT",
+      "XPBONUS",
+      "ORG_3D",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 8,
+      "feed power": 1000,
+      "bag": 6,
+      "XP bonus": 7,
+      "rate of fire": 1,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "damage": "45-60",
+      "range": 8,
+      "pierces": true,
+      "passes cover": true,
+      "subattacks": 5,
+      "on equip WIS": 5
+     },
+     "clientId": "Morning Square Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "morning-square-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    }
+   ],
+   "changed": [],
+   "gone": []
+  },
+  "armour": {
+   "added": [
+    {
+     "id": "Legacy Coral Silk Armor",
+     "type": "0xd244",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObj2",
+      "index": 13
+     },
+     "description": "Mermaid-made armor woven from unbreakable coral threads.",
      "labels": [
       "EQUIPMENT",
       "ARMOR",
       "LEATHER",
-      "ST",
-      "TAB_ST",
+      "UT",
+      "TAB_UT",
       "POWERTIER_B",
+      "TRADEABLE",
       "XPBONUS"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 6,
-      "power": 62,
-      "feed power": 700,
-      "bag": 8,
-      "XP bonus": 6,
-      "soulbound": true,
+      "power": 66,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
       "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip MAXHP": 80,
-      "on equip DEF": 7,
-      "on equip SPD": 5,
-      "on equip DEX": 4
+      "on equip DEF": 14,
+      "on equip DEX": 8,
+      "on equip WIS": 8
      },
-     "moved": [
-      {
-       "fact": "labels",
-       "was": "EQUIPMENT,ARMOR,LEATHER,ST,TAB_ST,POWERTIER_B,XPBONUS,ORG_KOGBOLD",
-       "now": "EQUIPMENT,ARMOR,LEATHER,ST,TAB_ST,POWERTIER_B,XPBONUS"
-      }
-     ],
-     "clientId": "DruidST2",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "druidst2.png",
+        "file": "legacy-coral-silk-armor.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Coral Silk Armor",
+     "type": "0xd249",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 36
+     },
+     "description": "Mermaid-made armor woven from unbreakable coral threads.",
+     "labels": [
+      "EQUIPMENT",
+      "ARMOR",
+      "LEATHER",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 6,
+      "power": 66,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "on equip DEF": 14,
+      "on equip DEX": 8,
+      "on equip WIS": 8
+     },
+     "clientId": "Legacy Coral Silk Armor Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-coral-silk-armor-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Shifting Shroud",
+     "type": "0x1A01",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1038
+     },
+     "description": "A piece of the Artificial Slop in a state of constant change, never holding the same form for more than a moment.",
+     "labels": [
+      "EQUIPMENT",
+      "ARMOR",
+      "ROBE",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_S",
+      "XPBONUS",
+      "REALMWHITE",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 14,
+      "power": 78,
+      "feed power": 1100,
+      "bag": 6,
+      "XP bonus": 8,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "on equip DEF": 12,
+      "on equip MAXMP": 80,
+      "on equip WIS": 4,
+      "on equip DEX": 4
+     },
+     "clientId": "Shifting Shroud Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "shifting-shroud-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    }
+   ],
+   "changed": [],
+   "gone": []
+  },
+  "rings": {
+   "added": [
+    {
+     "id": "Legacy Coral Ring",
+     "type": "0xd245",
+     "art": null,
+     "description": "A ring crafted from the dangerous Fire Coral.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_C",
+      "TRADEABLE",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 33,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip SPD": 5,
+      "on equip DEX": 5,
+      "on equip WIS": 5,
+      "on equip MAXMP": 90
+     }
+    },
+    {
+     "id": "Coral Ring",
+     "type": "0xd24a",
+     "art": null,
+     "description": "A ring crafted from the dangerous Fire Coral.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_C",
+      "TRADEABLE",
+      "XPBONUS",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 33,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 7,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "on equip SPD": 5,
+      "on equip DEX": 5,
+      "on equip WIS": 5,
+      "on equip MAXMP": 90
+     },
+     "clientId": "Legacy Coral Ring Shiny"
+    },
+    {
+     "id": "Esben's Wedding Ring",
+     "type": "0x1A07",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiObjShiny",
+      "index": 1041
+     },
+     "description": "A memento of a life long gone. You can still feel the warmth from years past through the frigid ice that has taken over.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS",
+      "ORG_ICECAVE",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 50,
+      "feed power": 800,
+      "bag": 6,
+      "XP bonus": 6,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "on equip MAXHP": 80,
+      "on equip MAXMP": 80,
+      "on equip ATT": 10,
+      "on equip DEF": -5
+     },
+     "clientId": "Esben's Wedding Ring Shiny",
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "esben-s-wedding-ring-shiny.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Magical Lodestone",
+     "type": "0x1A08",
+     "art": null,
+     "description": "The source of power for the Marble Colossus found within his core. It is intended to give life to golems, but it can provide benefits to the living as well.",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_S",
+      "XPBONUS",
+      "ORG_LH",
+      "SHINY"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 60,
+      "feed power": 1000,
+      "bag": 6,
+      "XP bonus": 7,
+      "soulbound": true,
+      "slot odds": "100% · 100% · 25% · 12.5%",
+      "on equip MAXHP": 30,
+      "on equip DEF": 6,
+      "on equip DEX": 6,
+      "on equip ATT": 6,
+      "on equip SPD": 6
+     },
+     "clientId": "Magical Lodestone Shiny"
+    }
+   ],
+   "changed": [
+    {
+     "id": "Superior Mask of Anubis",
+     "type": "0xD87C",
+     "art": null,
+     "description": "An even more ancient relic of the Tomb of the Ancients, once used by holy worshippers in ceremonies. It turns your character into the Pharaoh Necromancer upon equip!",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 90,
+      "feed power": 400,
+      "bag": 9,
+      "XP bonus": 6,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 150,
+      "on equip MAXMP": 40
+     },
+     "moved": [
+      {
+       "fact": "soulbound",
+       "was": null,
+       "now": true
+      }
+     ]
+    },
+    {
+     "id": "Superior Mask of Lightning",
+     "type": "0xD87D",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 1432
+     },
+     "description": "A very gilded artifact discovered in the temple of El Dorado, presumably belonging to none other than Xolotl himself. It turns your character into the Dark Master Wizard upon equip!",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 45,
+      "feed power": 400,
+      "bag": 9,
+      "XP bonus": 6,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 50,
+      "on equip MAXMP": 140
+     },
+     "moved": [
+      {
+       "fact": "soulbound",
+       "was": null,
+       "now": true
+      }
+     ],
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "superior-mask-of-lightning.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Superior Mask of Cnidaria",
+     "type": "0xD87E",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 1433
+     },
+     "description": "A not so uncomfortably squishy piece of headgear that the Royal Cnidarian probably wants back. It turns your character into the Dark Knight Trickster upon equip!",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 45,
+      "feed power": 400,
+      "bag": 9,
+      "XP bonus": 6,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 50,
+      "on equip MAXMP": 140
+     },
+     "moved": [
+      {
+       "fact": "soulbound",
+       "was": null,
+       "now": true
+      }
+     ],
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "superior-mask-of-cnidaria.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       }
+      }
+     }
+    },
+    {
+     "id": "Superior Mask of Mucus",
+     "type": "0xD87F",
+     "art": {
+      "kind": "still",
+      "atlas": "d2LofiObjEmbed",
+      "index": 1434
+     },
+     "description": "A not so ordinary mask covered in copious amounts of sludge from the Toxic Sewers. It turns your character into the Slurp King Knight upon equip!",
+     "labels": [
+      "EQUIPMENT",
+      "RING",
+      "UT",
+      "TAB_UT",
+      "POWERTIER_B",
+      "TRADEABLE",
+      "XPBONUS"
+     ],
+     "facts": {
+      "class": "Equipment",
+      "slot": 9,
+      "power": 90,
+      "feed power": 400,
+      "bag": 9,
+      "XP bonus": 6,
+      "soulbound": true,
+      "slot odds": "50% · 37.5% · 25% · 12.5%",
+      "on equip MAXHP": 150,
+      "on equip MAXMP": 40
+     },
+     "moved": [
+      {
+       "fact": "soulbound",
+       "was": null,
+       "now": true
+      }
+     ],
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "superior-mask-of-mucus.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -1654,265 +1830,37 @@
   "skins": {
    "added": [
     {
-     "id": "Mini Swamp Hermit Druid",
-     "type": "0xbecd",
+     "id": "Cursed Paladin",
+     "type": "0x9E43",
      "art": {
       "kind": "moving",
       "atlas": "playerskins",
-      "index": 1340
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "mini-swamp-hermit-druid-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "mini-swamp-hermit-druid-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       },
-       "attack": {
-        "file": "mini-swamp-hermit-druid-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Swamp Monster Transform",
-     "type": "0xbece",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins",
-      "index": 1341
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "swamp-monster-transform-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "swamp-monster-transform-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       },
-       "attack": {
-        "file": "swamp-monster-transform-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Mini Extradimensional Druid",
-     "type": "0xbecf",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins",
-      "index": 1342
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "mini-extradimensional-druid-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "mini-extradimensional-druid-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       },
-       "attack": {
-        "file": "mini-extradimensional-druid-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Cube Transform",
-     "type": "0xbed0",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins",
-      "index": 1343
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "cube-transform-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "cube-transform-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       },
-       "attack": {
-        "file": "cube-transform-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Extradimensional Druid Set Skin",
-     "type": "0xbed1",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins16",
-      "index": 610
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "extradimensional-druid-set-skin-stand.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 1
-       },
-       "walk": {
-        "file": "extradimensional-druid-set-skin-walk.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 2
-       },
-       "attack": {
-        "file": "extradimensional-druid-set-skin-attack.png",
-        "tile": 32,
-        "height": 16,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Swamp Hermit Druid Set Skin",
-     "type": "0xbed2",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins16",
-      "index": 611
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "swamp-hermit-druid-set-skin-stand.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 1
-       },
-       "walk": {
-        "file": "swamp-hermit-druid-set-skin-walk.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 2
-       },
-       "attack": {
-        "file": "swamp-hermit-druid-set-skin-attack.png",
-        "tile": 32,
-        "height": 16,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Hollow Harvest Huntress",
-     "type": "0x9E08",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins",
-      "index": 1333
+      "index": 1345
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "Skin",
       "tier": 4,
-      "for": "Huntress"
+      "for": "Paladin"
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "hollow-harvest-huntress-stand.png",
+        "file": "cursed-paladin-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "hollow-harvest-huntress-walk.png",
+        "file": "cursed-paladin-walk.png",
         "tile": 8,
         "height": 8,
         "frames": 4
        },
        "attack": {
-        "file": "hollow-harvest-huntress-attack.png",
+        "file": "cursed-paladin-attack.png",
         "tile": 16,
         "height": 8,
         "frames": 4
@@ -1921,37 +1869,37 @@
      }
     },
     {
-     "id": "Lantern Shade Trickster",
-     "type": "0x9E0D",
+     "id": "Snake Flower Kensei",
+     "type": "0x9E45",
      "art": {
       "kind": "moving",
       "atlas": "playerskins",
-      "index": 1334
+      "index": 1346
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "Skin",
       "tier": 4,
-      "for": "Trickster"
+      "for": "Kensei"
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "lantern-shade-trickster-stand.png",
+        "file": "snake-flower-kensei-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "lantern-shade-trickster-walk.png",
+        "file": "snake-flower-kensei-walk.png",
         "tile": 8,
         "height": 8,
         "frames": 4
        },
        "attack": {
-        "file": "lantern-shade-trickster-attack.png",
+        "file": "snake-flower-kensei-attack.png",
         "tile": 16,
         "height": 8,
         "frames": 4
@@ -1960,37 +1908,37 @@
      }
     },
     {
-     "id": "Gothic Masquerade Archer",
-     "type": "0x9E13",
+     "id": "Tiramisu King Knight",
+     "type": "0x9E47",
      "art": {
       "kind": "moving",
       "atlas": "playerskins16",
-      "index": 603
+      "index": 605
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "Skin",
       "tier": 5,
-      "for": "Archer"
+      "for": "Knight"
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "gothic-masquerade-archer-stand.png",
+        "file": "tiramisu-king-knight-stand.png",
         "tile": 16,
         "height": 16,
         "frames": 1
        },
        "walk": {
-        "file": "gothic-masquerade-archer-walk.png",
+        "file": "tiramisu-king-knight-walk.png",
         "tile": 16,
         "height": 16,
         "frames": 4
        },
        "attack": {
-        "file": "gothic-masquerade-archer-attack.png",
+        "file": "tiramisu-king-knight-attack.png",
         "tile": 32,
         "height": 16,
         "frames": 4
@@ -1999,115 +1947,116 @@
      }
     },
     {
-     "id": "Tiramisu Queen Mystic",
-     "type": "0x9E2B",
+     "id": "Mollusk Wizard",
+     "type": "0x9E4C",
      "art": {
       "kind": "moving",
-      "atlas": "playerskins16",
-      "index": 604
+      "atlas": "playerskins",
+      "index": 1347
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "Skin",
-      "tier": 5,
+      "tier": 4,
+      "for": "Wizard"
+     },
+     "sprite": {
+      "moving": true,
+      "clips": {
+       "stand": {
+        "file": "mollusk-wizard-stand.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
+       },
+       "walk": {
+        "file": "mollusk-wizard-walk.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 4
+       },
+       "attack": {
+        "file": "mollusk-wizard-attack.png",
+        "tile": 16,
+        "height": 8,
+        "frames": 4
+       }
+      }
+     }
+    },
+    {
+     "id": "Snake Dancer Mystic",
+     "type": "0x9E58",
+     "art": {
+      "kind": "moving",
+      "atlas": "playerskins16",
+      "index": 606
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Skin",
+      "tier": 6,
       "for": "Mystic"
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "tiramisu-queen-mystic-stand.png",
+        "file": "snake-dancer-mystic-stand.png",
         "tile": 16,
         "height": 16,
-        "frames": 1
+        "frames": 8
        },
        "walk": {
-        "file": "tiramisu-queen-mystic-walk.png",
+        "file": "snake-dancer-mystic-walk.png",
         "tile": 16,
         "height": 16,
         "frames": 4
        },
        "attack": {
-        "file": "tiramisu-queen-mystic-attack.png",
+        "file": "snake-dancer-mystic-attack.png",
         "tile": 32,
         "height": 16,
-        "frames": 4
+        "frames": 8
        }
       }
      }
     },
     {
-     "id": "Skeletosaur Druid Set Skin",
-     "type": "0xF99A",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins16",
-      "index": 799
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Skin",
-      "for": "Druid"
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "skeletosaur-druid-set-skin-stand.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 1
-       },
-       "walk": {
-        "file": "skeletosaur-druid-set-skin-walk.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 3
-       },
-       "attack": {
-        "file": "skeletosaur-druid-set-skin-attack.png",
-        "tile": 32,
-        "height": 16,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Mini Skeletosaur Druid",
-     "type": "0x9E41",
+     "id": "Last Breath Thessal",
+     "type": "0x9E71",
      "art": {
       "kind": "moving",
       "atlas": "playerskins",
-      "index": 1344
+      "index": 1348
      },
      "description": null,
      "labels": [],
      "facts": {
       "class": "Skin",
       "tier": 4,
-      "for": "Druid"
+      "for": "Mystic"
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "mini-skeletosaur-druid-stand.png",
+        "file": "last-breath-thessal-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "mini-skeletosaur-druid-walk.png",
+        "file": "last-breath-thessal-walk.png",
         "tile": 8,
         "height": 8,
         "frames": 2
        },
        "attack": {
-        "file": "mini-skeletosaur-druid-attack.png",
-        "tile": 16,
+        "file": "last-breath-thessal-attack.png",
+        "tile": 8,
         "height": 8,
         "frames": 2
        }
@@ -2115,98 +2064,14 @@
      }
     },
     {
-     "id": "Mini Swamp Hermit Druid Skin",
-     "type": "0xbed3",
+     "id": "Cursed Paladin Skin",
+     "type": "0x9E44",
      "art": {
       "kind": "moving",
       "atlas": "playerskins",
-      "index": 1340
+      "index": 1345
      },
-     "description": "She refused to leave after the corruption took its toll on the village. It was her home after all.\\n\\nSkin Class: Druid",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 1000,
-      "bag": 7,
-      "soulbound": true,
-      "consumable": true
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "mini-swamp-hermit-druid-skin-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "mini-swamp-hermit-druid-skin-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       },
-       "attack": {
-        "file": "mini-swamp-hermit-druid-skin-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Mini Extradimensional Druid Skin",
-     "type": "0xbed4",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins",
-      "index": 1342
-     },
-     "description": "She was neither a sprite nor a cube. She was something entirely new.\\n\\nSkin Class: Druid",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 1000,
-      "bag": 7,
-      "soulbound": true,
-      "consumable": true
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "mini-extradimensional-druid-skin-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "mini-extradimensional-druid-skin-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       },
-       "attack": {
-        "file": "mini-extradimensional-druid-skin-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Hollow Harvest Huntress Skin",
-     "type": "0x9E09",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins",
-      "index": 1333
-     },
-     "description": "Once a farmer in their past life, they now rise again, lingering within the fallen leaves. During a full moon, a hunger grows inside of them; instead of harvesting crops, they harvest souls.\\n\\nSkin Class: Huntress",
+     "description": "Before meeting their demise at the hands of a paladin, a vengeful reptile goddess cursed the paladin, causing them to transform into a reptilian monster. Despite their transformation and hiding their appearance out of shame, their heart hasn’t faltered. They continue to fight to this day in hopes of finding a cure.\\n\\nSkin Class: Paladin",
      "labels": [],
      "facts": {
       "class": "Equipment",
@@ -2221,19 +2086,19 @@
       "moving": true,
       "clips": {
        "stand": {
-        "file": "hollow-harvest-huntress-skin-stand.png",
+        "file": "cursed-paladin-skin-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "hollow-harvest-huntress-skin-walk.png",
+        "file": "cursed-paladin-skin-walk.png",
         "tile": 8,
         "height": 8,
         "frames": 4
        },
        "attack": {
-        "file": "hollow-harvest-huntress-skin-attack.png",
+        "file": "cursed-paladin-skin-attack.png",
         "tile": 16,
         "height": 8,
         "frames": 4
@@ -2242,14 +2107,14 @@
      }
     },
     {
-     "id": "Lantern Shade Trickster Skin",
-     "type": "0x9E0E",
+     "id": "Snake Flower Kensei Skin",
+     "type": "0x9E46",
      "art": {
       "kind": "moving",
       "atlas": "playerskins",
-      "index": 1334
+      "index": 1346
      },
-     "description": "A lantern-bearing jester who lurks and snickers in the shadows, waiting to turn a little mischief into mayhem.\\n\\nSkin Class: Trickster",
+     "description": "This snake used to be mean and ruthless. Then one day, after sleeping in the Floral Escape, flowers began to grow on their head. As a result, the snake’s temper has calmed down significantly.\\n\\nSkin Class: Kensei",
      "labels": [],
      "facts": {
       "class": "Equipment",
@@ -2264,19 +2129,19 @@
       "moving": true,
       "clips": {
        "stand": {
-        "file": "lantern-shade-trickster-skin-stand.png",
+        "file": "snake-flower-kensei-skin-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "lantern-shade-trickster-skin-walk.png",
+        "file": "snake-flower-kensei-skin-walk.png",
         "tile": 8,
         "height": 8,
         "frames": 4
        },
        "attack": {
-        "file": "lantern-shade-trickster-skin-attack.png",
+        "file": "snake-flower-kensei-skin-attack.png",
         "tile": 16,
         "height": 8,
         "frames": 4
@@ -2285,14 +2150,14 @@
      }
     },
     {
-     "id": "Gothic Masquerade Archer Skin",
-     "type": "0x9E14",
+     "id": "Tiramisu King Knight Skin",
+     "type": "0x9E48",
      "art": {
       "kind": "moving",
       "atlas": "playerskins16",
-      "index": 603
+      "index": 605
      },
-     "description": "A masked marksman who turns the battlefield into a deadly dance—a sight to behold. Any unfortunate foes caught in the crossfire had better watch out.\\n\\nSkin Class: Archer",
+     "description": "A calm king who spends long hours reading every concern and emotional outburst his subjects bring him. He takes it all to heart and will fight the royal council for them without a second thought. He has a soft spot for Bing Cat, but misbehave and he'll still punch you.\\n\\nSkin Class: Knight",
      "labels": [],
      "facts": {
       "class": "Equipment",
@@ -2307,19 +2172,19 @@
       "moving": true,
       "clips": {
        "stand": {
-        "file": "gothic-masquerade-archer-skin-stand.png",
+        "file": "tiramisu-king-knight-skin-stand.png",
         "tile": 16,
         "height": 16,
         "frames": 1
        },
        "walk": {
-        "file": "gothic-masquerade-archer-skin-walk.png",
+        "file": "tiramisu-king-knight-skin-walk.png",
         "tile": 16,
         "height": 16,
         "frames": 4
        },
        "attack": {
-        "file": "gothic-masquerade-archer-skin-attack.png",
+        "file": "tiramisu-king-knight-skin-attack.png",
         "tile": 32,
         "height": 16,
         "frames": 4
@@ -2328,61 +2193,19 @@
      }
     },
     {
-     "id": "Tiramisu Queen Mystic Skin",
-     "type": "0x9E2C",
-     "art": {
-      "kind": "moving",
-      "atlas": "playerskins16",
-      "index": 604
-     },
-     "description": "Queen Tiramisu is very fond of Bing Cat, Miss Cancan, and her beloved Realmers. She hears the kingdom’s complaints and will gladly go punch the royal council on your behalf. She is a little temperamental, so behave, or she'll punch you too.\\n\\nSkin Class: Mystic",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "tier": 5,
-      "feed power": 1000,
-      "bag": 7,
-      "soulbound": true,
-      "consumable": true
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "tiramisu-queen-mystic-skin-stand.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 1
-       },
-       "walk": {
-        "file": "tiramisu-queen-mystic-skin-walk.png",
-        "tile": 16,
-        "height": 16,
-        "frames": 4
-       },
-       "attack": {
-        "file": "tiramisu-queen-mystic-skin-attack.png",
-        "tile": 32,
-        "height": 16,
-        "frames": 4
-       }
-      }
-     }
-    },
-    {
-     "id": "Mini Skeletosaur Druid Skin",
-     "type": "0x9E42",
+     "id": "Mollusk Wizard Skin",
+     "type": "0x9E4D",
      "art": {
       "kind": "moving",
       "atlas": "playerskins",
-      "index": 1344
+      "index": 1347
      },
-     "description": "A tiny keeper of ancient bones, breathing new life into creatures long forgotten.\\n\\nSkin Class: Druid",
+     "description": "This invertebrate is unusually distinct from a sea slurp. An aquamagic invention gave birth to its coral staff, which emulates the sound of the ocean.\\n\\nSkin Class: Wizard",
      "labels": [],
      "facts": {
       "class": "Equipment",
       "slot": 10,
+      "tier": 4,
       "feed power": 1000,
       "bag": 7,
       "soulbound": true,
@@ -2392,100 +2215,139 @@
       "moving": true,
       "clips": {
        "stand": {
-        "file": "mini-skeletosaur-druid-skin-stand.png",
+        "file": "mollusk-wizard-skin-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "mini-skeletosaur-druid-skin-walk.png",
+        "file": "mollusk-wizard-skin-walk.png",
         "tile": 8,
         "height": 8,
-        "frames": 2
+        "frames": 4
        },
        "attack": {
-        "file": "mini-skeletosaur-druid-skin-attack.png",
+        "file": "mollusk-wizard-skin-attack.png",
         "tile": 16,
         "height": 8,
-        "frames": 2
+        "frames": 4
        }
       }
      }
     },
     {
-     "id": "Evolutionary Skeletosaur",
-     "type": "0xF9F9",
+     "id": "Snake Dancer Mystic Skin",
+     "type": "0x9E59",
      "art": {
       "kind": "moving",
-      "atlas": "players",
-      "index": 51
+      "atlas": "playerskins16",
+      "index": 606
      },
-     "description": null,
+     "description": "Within the beastfolk lies a species of humanoid snakes, known for their amazing dance moves and ability to allure heroes and foes. Their dances are so dangerous that if one was continuing to gaze at their rhythmic moves, they’ll be put under a hypnotic spell.\\n\\nSkin Class: Mystic",
      "labels": [],
      "facts": {
-      "class": "Skin",
+      "class": "Equipment",
+      "slot": 10,
       "tier": 6,
-      "for": "OBJ_TYPE_MAX"
+      "feed power": 1000,
+      "bag": 7,
+      "soulbound": true,
+      "consumable": true
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "evolutionary-skeletosaur-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
+        "file": "snake-dancer-mystic-skin-stand.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 8
        },
        "walk": {
-        "file": "evolutionary-skeletosaur-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 3
+        "file": "snake-dancer-mystic-skin-walk.png",
+        "tile": 16,
+        "height": 16,
+        "frames": 4
        },
        "attack": {
-        "file": "evolutionary-skeletosaur-attack.png",
-        "tile": 16,
-        "height": 8,
-        "frames": 2
+        "file": "snake-dancer-mystic-skin-attack.png",
+        "tile": 32,
+        "height": 16,
+        "frames": 8
        }
       }
      }
     },
     {
-     "id": "Evolutionary Dragon Shiny",
-     "type": "0x1682",
+     "id": "Last Breath Thessal Skin",
+     "type": "0x9E72",
      "art": {
       "kind": "moving",
-      "atlas": "players",
-      "index": 50
+      "atlas": "playerskins",
+      "index": 1348
      },
-     "description": null,
+     "description": "So...tell me, Hero. The words... I've been waiting to hear.\\n\\nSkin Class: Mystic",
      "labels": [],
      "facts": {
-      "class": "Skin",
-      "tier": 6,
-      "for": "OBJ_TYPE_MAX"
+      "class": "Equipment",
+      "slot": 10,
+      "tier": 4,
+      "feed power": 1000,
+      "bag": 7,
+      "soulbound": true,
+      "consumable": true
      },
      "sprite": {
       "moving": true,
       "clips": {
        "stand": {
-        "file": "evolutionary-dragon-shiny-stand.png",
+        "file": "last-breath-thessal-skin-stand.png",
         "tile": 8,
         "height": 8,
         "frames": 1
        },
        "walk": {
-        "file": "evolutionary-dragon-shiny-walk.png",
+        "file": "last-breath-thessal-skin-walk.png",
         "tile": 8,
         "height": 8,
         "frames": 2
        },
        "attack": {
-        "file": "evolutionary-dragon-shiny-attack.png",
-        "tile": 16,
+        "file": "last-breath-thessal-skin-attack.png",
+        "tile": 8,
         "height": 8,
         "frames": 2
+       }
+      }
+     }
+    }
+   ],
+   "changed": [],
+   "gone": []
+  },
+  "places": {
+   "added": [
+    {
+     "id": "Legacy Ocean Trench Portal",
+     "type": "0x0730",
+     "art": {
+      "kind": "still",
+      "atlas": "lofiEnvironment2",
+      "index": 159
+     },
+     "description": null,
+     "labels": [],
+     "facts": {
+      "class": "Portal"
+     },
+     "sprite": {
+      "moving": false,
+      "clips": {
+       "stand": {
+        "file": "legacy-ocean-trench-portal.png",
+        "tile": 8,
+        "height": 8,
+        "frames": 1
        }
       }
      }
@@ -2497,12 +2359,12 @@
   "equipment": {
    "added": [
     {
-     "id": "Masquerade of the Departed Gravestone 1",
-     "type": "0x9E20",
+     "id": "Ocean Trench Gravestone 1",
+     "type": "0x9E66",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone8x8",
-      "index": 258
+      "index": 262
      },
      "description": null,
      "labels": [],
@@ -2514,7 +2376,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-1.png",
+        "file": "ocean-trench-gravestone-1.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2523,12 +2385,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 2",
-     "type": "0x9E21",
+     "id": "Ocean Trench Gravestone 2",
+     "type": "0x9E67",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone8x8",
-      "index": 259
+      "index": 263
      },
      "description": null,
      "labels": [],
@@ -2540,7 +2402,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-2.png",
+        "file": "ocean-trench-gravestone-2.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2549,12 +2411,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 3",
-     "type": "0x9E22",
+     "id": "Ocean Trench Gravestone 3",
+     "type": "0x9E68",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone8x8",
-      "index": 260
+      "index": 264
      },
      "description": null,
      "labels": [],
@@ -2566,7 +2428,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-3.png",
+        "file": "ocean-trench-gravestone-3.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2575,12 +2437,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 4",
-     "type": "0x9E23",
+     "id": "Ocean Trench Gravestone 4",
+     "type": "0x9E69",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone8x8",
-      "index": 261
+      "index": 265
      },
      "description": null,
      "labels": [],
@@ -2592,7 +2454,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-4.png",
+        "file": "ocean-trench-gravestone-4.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2601,12 +2463,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 5",
-     "type": "0x9E24",
+     "id": "Ocean Trench Gravestone 5",
+     "type": "0x9E6A",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 162
+      "index": 169
      },
      "description": null,
      "labels": [],
@@ -2618,7 +2480,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-5.png",
+        "file": "ocean-trench-gravestone-5.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2627,12 +2489,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 6",
-     "type": "0x9E25",
+     "id": "Ocean Trench Gravestone 6",
+     "type": "0x9E6B",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 163
+      "index": 170
      },
      "description": null,
      "labels": [],
@@ -2644,7 +2506,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-6.png",
+        "file": "ocean-trench-gravestone-6.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2653,12 +2515,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 7",
-     "type": "0x9E26",
+     "id": "Ocean Trench Gravestone 7",
+     "type": "0x9E6C",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 164
+      "index": 171
      },
      "description": null,
      "labels": [],
@@ -2670,7 +2532,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-7.png",
+        "file": "ocean-trench-gravestone-7.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2679,12 +2541,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 8",
-     "type": "0x9E27",
+     "id": "Ocean Trench Gravestone 8",
+     "type": "0x9E6D",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 165
+      "index": 172
      },
      "description": null,
      "labels": [],
@@ -2696,7 +2558,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-8.png",
+        "file": "ocean-trench-gravestone-8.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2705,12 +2567,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 9",
-     "type": "0x9E28",
+     "id": "Ocean Trench Gravestone 9",
+     "type": "0x9E6E",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 166
+      "index": 173
      },
      "description": null,
      "labels": [],
@@ -2722,7 +2584,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-9.png",
+        "file": "ocean-trench-gravestone-9.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2731,12 +2593,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 10",
-     "type": "0x9E29",
+     "id": "Ocean Trench Gravestone 10",
+     "type": "0x9E6F",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 167
+      "index": 174
      },
      "description": null,
      "labels": [],
@@ -2748,7 +2610,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-10.png",
+        "file": "ocean-trench-gravestone-10.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2757,12 +2619,12 @@
      }
     },
     {
-     "id": "Masquerade of the Departed Gravestone 11",
-     "type": "0x9E2A",
+     "id": "Ocean Trench Gravestone 11",
+     "type": "0x9E70",
      "art": {
       "kind": "still",
       "atlas": "lofiGravestone16x16",
-      "index": 168
+      "index": 175
      },
      "description": null,
      "labels": [],
@@ -2774,7 +2636,7 @@
       "moving": false,
       "clips": {
        "stand": {
-        "file": "masquerade-of-the-departed-gravestone-11.png",
+        "file": "ocean-trench-gravestone-11.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -2783,31 +2645,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x1",
-     "type": "0x9E2F",
+     "id": "Fire Coral Branch",
+     "type": "0xadd5",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 50,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x1",
+     "clientId": "OT Fire Coral Branch x1",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x1.png",
+        "file": "ot-fire-coral-branch-x1.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2816,31 +2677,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x2",
-     "type": "0x9E30",
+     "id": "Fire Coral Branch",
+     "type": "0xadd6",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 100,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x2",
+     "clientId": "OT Fire Coral Branch x2",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x2.png",
+        "file": "ot-fire-coral-branch-x2.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2849,31 +2709,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x3",
-     "type": "0x9E31",
+     "id": "Fire Coral Branch",
+     "type": "0xadd7",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 150,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x3",
+     "clientId": "OT Fire Coral Branch x3",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x3.png",
+        "file": "ot-fire-coral-branch-x3.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2882,31 +2741,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x4",
-     "type": "0x9E32",
+     "id": "Fire Coral Branch",
+     "type": "0xadd8",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 200,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x4",
+     "clientId": "OT Fire Coral Branch x4",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x4.png",
+        "file": "ot-fire-coral-branch-x4.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2915,31 +2773,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x5",
-     "type": "0x9E33",
+     "id": "Fire Coral Branch",
+     "type": "0xadd9",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 250,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x5",
+     "clientId": "OT Fire Coral Branch x5",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x5.png",
+        "file": "ot-fire-coral-branch-x5.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2948,31 +2805,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x6",
-     "type": "0x9E34",
+     "id": "Fire Coral Branch",
+     "type": "0xadda",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 300,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x6",
+     "clientId": "OT Fire Coral Branch x6",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x6.png",
+        "file": "ot-fire-coral-branch-x6.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -2981,31 +2837,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x7",
-     "type": "0x9E35",
+     "id": "Fire Coral Branch",
+     "type": "0xaddb",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 350,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x7",
+     "clientId": "OT Fire Coral Branch x7",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x7.png",
+        "file": "ot-fire-coral-branch-x7.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -3014,31 +2869,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x8",
-     "type": "0x9E36",
+     "id": "Fire Coral Branch",
+     "type": "0xaddc",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 400,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x8",
+     "clientId": "OT Fire Coral Branch x8",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x8.png",
+        "file": "ot-fire-coral-branch-x8.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -3047,31 +2901,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x9",
-     "type": "0x9E37",
+     "id": "Fire Coral Branch",
+     "type": "0xaddd",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 450,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x9",
+     "clientId": "OT Fire Coral Branch x9",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x9.png",
+        "file": "ot-fire-coral-branch-x9.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -3080,31 +2933,30 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x10",
-     "type": "0x9E38",
+     "id": "Fire Coral Branch",
+     "type": "0xadde",
      "art": {
       "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
+      "atlas": "oceanTrenchObjects8x8",
+      "index": 649
      },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
+     "description": "A branch of Fire Coral. It's warm to the touch.",
      "labels": [
-      "TAB_ST",
+      "ARTIFACT",
       "FORGESTORE"
      ],
      "facts": {
       "class": "Equipment",
       "slot": 10,
-      "feed power": 500,
-      "bag": 2,
+      "bag": 7,
       "soulbound": true
      },
-     "clientId": "2DruidSTShard x10",
+     "clientId": "OT Fire Coral Branch x10",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "2druidstshard-x10.png",
+        "file": "ot-fire-coral-branch-x10.png",
         "tile": 8,
         "height": 8,
         "frames": 1
@@ -3113,580 +2965,16 @@
      }
     },
     {
-     "id": "Swamp Hermit Druid 2ST Shard x11",
-     "type": "0x9E39",
-     "art": {
-      "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
-     },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
-     "labels": [
-      "TAB_ST",
-      "FORGESTORE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 550,
-      "bag": 2,
-      "soulbound": true
-     },
-     "clientId": "2DruidSTShard x11",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidstshard-x11.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Swamp Hermit Druid 2ST Shard x12",
-     "type": "0x9E3A",
-     "art": {
-      "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
-     },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
-     "labels": [
-      "TAB_ST",
-      "FORGESTORE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 600,
-      "bag": 2,
-      "soulbound": true
-     },
-     "clientId": "2DruidSTShard x12",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidstshard-x12.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Swamp Hermit Druid 2ST Shard x13",
-     "type": "0x9E3B",
-     "art": {
-      "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
-     },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
-     "labels": [
-      "TAB_ST",
-      "FORGESTORE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 650,
-      "bag": 2,
-      "soulbound": true
-     },
-     "clientId": "2DruidSTShard x13",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidstshard-x13.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Swamp Hermit Druid 2ST Shard x14",
-     "type": "0x9E3C",
-     "art": {
-      "kind": "still",
-      "atlas": "d2LofiObjEmbed",
-      "index": 2105
-     },
-     "description": "Collect a full stack of Swamp Hermit Druid 2ST Shards to obtain a Swamp Hermit Druid 2ST Selection Chest.",
-     "labels": [
-      "TAB_ST",
-      "FORGESTORE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 700,
-      "bag": 2,
-      "soulbound": true
-     },
-     "clientId": "2DruidSTShard x14",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidstshard-x14.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x1",
-     "type": "0xfdad",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x1.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x2",
-     "type": "0xfdae",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x2.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x3",
-     "type": "0xfdaf",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x4",
-     "type": "0xfdb0",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x4.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x5",
-     "type": "0xfdb1",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x5.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x6",
-     "type": "0xfdb2",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x6.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x7",
-     "type": "0xfdb3",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x7.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x8",
-     "type": "0xfdb4",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x8.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x9",
-     "type": "0xfdb5",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x9.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x10",
-     "type": "0xfdb6",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x10.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x11",
-     "type": "0xfdb7",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x11.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x12",
-     "type": "0xfdb8",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x12.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x13",
-     "type": "0xfdb9",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x13.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Halloween Selection ST Shard x14",
-     "type": "0xfdba",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1111
-     },
-     "description": "Consume full token stack to get Halloween Selection ST Chest.",
-     "labels": [],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "bag": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "halloween-selection-st-shard-x14.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Assimilation",
-     "type": "0xbed5",
-     "art": {
-      "kind": "moving",
-      "atlas": "parasiteDenChars8x8",
-      "index": 28
-     },
-     "description": "Become one.",
-     "labels": [
-      "PETBLACKLIST",
-      "COOLDOWN",
-      "EQUIPMENT"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 10,
-      "feed power": 0,
-      "bag": 8,
-      "cooldown": 2,
-      "soulbound": true
-     },
-     "sprite": {
-      "moving": true,
-      "clips": {
-       "stand": {
-        "file": "assimilation-stand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       },
-       "walk": {
-        "file": "assimilation-walk.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 2
-       }
-      }
-     }
-    },
-    {
-     "id": "Sad Ghost Bride (emote)",
-     "type": "0xFDBD",
+     "id": "Comfy Beach Snake (emote)",
+     "type": "0xFDA5",
      "art": {
       "kind": "still",
       "atlas": "lofiObj",
-      "index": 1359
+      "index": 1366
      },
      "description": "Unlocks an Emote which will be added to your Wardrobe.",
      "labels": [
-      "FESTIVE_EMOTE"
+      "MISC_EMOTE"
      ],
      "facts": {
       "class": "Emote",
@@ -3696,12 +2984,12 @@
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Sad Ghost Bride Emote",
+     "clientId": "Comfy Beach Snake Emote",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "sad-ghost-bride-emote.png",
+        "file": "comfy-beach-snake-emote.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -3710,16 +2998,16 @@
      }
     },
     {
-     "id": "Flame Skull (emote)",
-     "type": "0xFDBE",
+     "id": "Freaky Stheno (emote)",
+     "type": "0xFDA6",
      "art": {
       "kind": "still",
       "atlas": "lofiObj",
-      "index": 1360
+      "index": 1367
      },
      "description": "Unlocks an Emote which will be added to your Wardrobe.",
      "labels": [
-      "FESTIVE_EMOTE"
+      "MISC_EMOTE"
      ],
      "facts": {
       "class": "Emote",
@@ -3729,12 +3017,12 @@
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Flame Skull Emote",
+     "clientId": "Freaky Stheno Emote",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "flame-skull-emote.png",
+        "file": "freaky-stheno-emote.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -3743,16 +3031,16 @@
      }
     },
     {
-     "id": "Drooling Horseman (emote)",
-     "type": "0xFDBF",
+     "id": "Confused White Snake (emote)",
+     "type": "0xFDA7",
      "art": {
       "kind": "still",
       "atlas": "lofiObj",
-      "index": 1361
+      "index": 1368
      },
      "description": "Unlocks an Emote which will be added to your Wardrobe.",
      "labels": [
-      "FESTIVE_EMOTE"
+      "MISC_EMOTE"
      ],
      "facts": {
       "class": "Emote",
@@ -3762,12 +3050,12 @@
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Drooling Horseman Emote",
+     "clientId": "Confused White Snake Emote",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "drooling-horseman-emote.png",
+        "file": "confused-white-snake-emote.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -3776,16 +3064,16 @@
      }
     },
     {
-     "id": "Judgmental Beholder (emote)",
-     "type": "0xFDC0",
+     "id": "Drooling White Snake (emote)",
+     "type": "0xFDA8",
      "art": {
       "kind": "still",
       "atlas": "lofiObj",
-      "index": 1362
+      "index": 1369
      },
      "description": "Unlocks an Emote which will be added to your Wardrobe.",
      "labels": [
-      "FESTIVE_EMOTE"
+      "MISC_EMOTE"
      ],
      "facts": {
       "class": "Emote",
@@ -3795,12 +3083,12 @@
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Judgmental Beholder Emote",
+     "clientId": "Drooling White Snake Emote",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "judgmental-beholder-emote.png",
+        "file": "drooling-white-snake-emote.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -3809,16 +3097,16 @@
      }
     },
     {
-     "id": "Cheeky Possessed Pumpkin (emote)",
-     "type": "0xFDC1",
+     "id": "Thinking White Snake (emote)",
+     "type": "0xFDA9",
      "art": {
       "kind": "still",
       "atlas": "lofiObj",
-      "index": 1363
+      "index": 1370
      },
      "description": "Unlocks an Emote which will be added to your Wardrobe.",
      "labels": [
-      "FESTIVE_EMOTE"
+      "MISC_EMOTE"
      ],
      "facts": {
       "class": "Emote",
@@ -3828,12 +3116,12 @@
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Cheeky Possessed Pumpkin Emote",
+     "clientId": "Thinking White Snake Emote",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "cheeky-possessed-pumpkin-emote.png",
+        "file": "thinking-white-snake-emote.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -3842,16 +3130,16 @@
      }
     },
     {
-     "id": "Handsome Ruthven (emote)",
-     "type": "0xFDC2",
+     "id": "Bonked White Snake (emote)",
+     "type": "0xFDAA",
      "art": {
       "kind": "still",
       "atlas": "lofiObj",
-      "index": 1364
+      "index": 1371
      },
      "description": "Unlocks an Emote which will be added to your Wardrobe.",
      "labels": [
-      "FESTIVE_EMOTE"
+      "MISC_EMOTE"
      ],
      "facts": {
       "class": "Emote",
@@ -3861,12 +3149,12 @@
       "soulbound": true,
       "consumable": true
      },
-     "clientId": "Handsome Ruthven Emote",
+     "clientId": "Bonked White Snake Emote",
      "sprite": {
       "moving": false,
       "clips": {
        "stand": {
-        "file": "handsome-ruthven-emote.png",
+        "file": "bonked-white-snake-emote.png",
         "tile": 16,
         "height": 16,
         "frames": 1
@@ -3875,12 +3163,12 @@
      }
     },
     {
-     "id": "Soul-Fire Arrival",
-     "type": "0x9E12",
+     "id": "Siren Call Entrance",
+     "type": "0x9E5A",
      "art": {
       "kind": "still",
       "atlas": "entranceEffectsObjects",
-      "index": 679
+      "index": 704
      },
      "description": "Unlocks an Entrance Animation which will be added to your Wardrobe.",
      "labels": [],
@@ -3895,811 +3183,10 @@
       "moving": true,
       "clips": {
        "walk": {
-        "file": "soul-fire-arrival-walk.png",
-        "tile": 24,
-        "height": 120,
-        "frames": 24
-       }
-      }
-     }
-    }
-   ],
-   "changed": [],
-   "gone": []
-  },
-  "weapons": {
-   "added": [
-    {
-     "id": "Sweettreats Sword",
-     "type": "0xF99C",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 990
-     },
-     "description": "Made for the season's celebrations, this sword has passed between many heroes. Each owner added another story to its long history.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "SWORD",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_B",
-      "RESKIN",
-      "XPBONUS",
-      "CUTLASS",
-      "ORG_DDOCKS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 1,
-      "power": 192,
-      "feed power": 800,
-      "bag": 6,
-      "XP bonus": 6,
-      "rate of fire": 1.3,
-      "shots": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "180-230",
-      "range": 3.3,
-      "on equip SPD": 3
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-sword.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sweettreats Dagger",
-     "type": "0xF99E",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 991
-     },
-     "description": "Every year, this dagger was awarded to the winner of a contest held during the kingdom's sweetest celebration.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "DAGGER",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_B",
-      "RESKIN",
-      "XPBONUS",
-      "ORG_LIBRARY"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 2,
-      "power": 235,
-      "feed power": 850,
-      "bag": 6,
-      "XP bonus": 6,
-      "rate of fire": 1.2,
-      "shots": 2,
-      "arc gap": 20,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "85-100",
-      "range": 5.6
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-dagger.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sweettreats Bow",
-     "type": "0xF91A",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 992
-     },
-     "description": "Long ago, a skilled baker offered this bow to the hero who saved his village. It has changed hands many times since.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "BOW",
-      "UT",
-      "TAB_UT",
-      "BASETYPE",
-      "RESKIN",
-      "XPBONUS",
-      "ORG_CDEPTHS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 3,
-      "feed power": 800,
-      "bag": 6,
-      "XP bonus": 6,
-      "rate of fire": 1,
-      "shots": 1,
-      "arc gap": 14,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "180-290",
-      "range": 7.2,
-      "pierces": true,
-      "subattacks": 2,
-      "on equip ATT": 5
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-bow.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sweettreats Staff",
-     "type": "0xF91C",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1019
-     },
-     "description": "Few know who first owned this staff, but every story about it ends with a great feast and an unexpected victory.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "STAFF",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_S",
-      "RESKIN",
-      "XPBONUS",
-      "ORG_ICECAVE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 17,
-      "power": 147,
-      "feed power": 750,
-      "bag": 6,
-      "XP bonus": 6,
-      "rate of fire": 1,
-      "shots": 1,
-      "arc gap": 0,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "70-105",
-      "range": 8.4,
-      "pierces": true,
-      "subattacks": 2,
-      "on equip DEF": 3
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-staff.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sweettreats Wand",
-     "type": "0xF91E",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 993
-     },
-     "description": "Once given as a simple reward, the wand later became a treasured relic. It has been carried by adventurers on long journeys.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "WAND",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_A",
-      "RESKIN",
-      "XPBONUS",
-      "FALLEN",
-      "ORG_MTEMPLE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 8,
-      "power": 218,
-      "feed power": 750,
-      "bag": 6,
-      "XP bonus": 6,
-      "rate of fire": 0.85,
-      "shots": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "205-240",
-      "range": 6.6
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-wand.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Sweettreats Katana",
-     "type": "0xF91F",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1006
-     },
-     "description": "A closely guarded recipe was used to make this katana, though its final ingredient remains a secret to this day.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "KATANA",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_A",
-      "RESKIN",
-      "XPBONUS",
-      "ORG_LOD"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 24,
-      "power": 216,
-      "feed power": 850,
-      "bag": 6,
-      "XP bonus": 6,
-      "rate of fire": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "205-225",
-      "range": 5.2
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-katana.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Aeonic Talon",
-     "type": "0xF98C",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1090
-     },
-     "description": "The restored and enhanced remains of a raptor limb. It imbues its wielder with predatory instinct.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "WAND",
-      "ST",
-      "TAB_ST",
-      "ST_WEAPON",
-      "STGEN_1",
-      "RESKIN",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 8,
-      "feed power": 800,
-      "bag": 8,
-      "XP bonus": 7,
-      "rate of fire": 1.1,
-      "shots": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "80-110",
-      "range": 8.9,
-      "subattacks": 5,
-      "on equip ATT": 4,
-      "on equip DEX": 4
-     },
-     "clientId": "HDruidST0",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "hdruidst0.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Pulsating Wand",
-     "type": "0xbc46",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 481
-     },
-     "description": "A wand fashioned from a familiar ordinary willow. Its pulsating glow is akin to a heartbeat.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "WAND",
-      "ST",
-      "TAB_ST",
-      "ST_WEAPON",
-      "STGEN_2",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 8,
-      "feed power": 800,
-      "bag": 8,
-      "XP bonus": 5,
-      "rate of fire": 1.5,
-      "shots": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "65-95",
-      "range": 9,
-      "pierces": true,
-      "passes cover": true,
-      "on equip DEX": 6
-     },
-     "clientId": "2DruidST0",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidst0.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Dimensional Union",
-     "type": "0xbebe",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 476
-     },
-     "description": "A weapon made from the union of the Sprite World's elemental energies and the Third Dimension's squares.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "WAND",
-      "ST",
-      "TAB_ST",
-      "ST_WEAPON",
-      "STGEN_3",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 8,
-      "feed power": 800,
-      "bag": 8,
-      "XP bonus": 7,
-      "rate of fire": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "55-95",
-      "range": 9,
-      "pierces": true,
-      "on equip ATT": 5
-     },
-     "clientId": "3DruidST0",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "3druidst0.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    }
-   ],
-   "changed": [
-    {
-     "id": "Gearhawk Morning Star",
-     "type": "0x74c9",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 534
-     },
-     "description": "A precision-engineered morning star mimicking a raptor’s strike.",
-     "labels": [
-      "EQUIPMENT",
-      "WEAPON",
-      "WAND",
-      "ST",
-      "TAB_ST",
-      "ST_WEAPON",
-      "STGEN_1",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 8,
-      "feed power": 800,
-      "bag": 8,
-      "XP bonus": 7,
-      "rate of fire": 1.1,
-      "shots": 1,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "damage": "80-110",
-      "range": 8.9,
-      "subattacks": 5,
-      "on equip ATT": 4,
-      "on equip DEX": 4
-     },
-     "moved": [
-      {
-       "fact": "labels",
-       "was": "EQUIPMENT,WEAPON,WAND,ST,TAB_ST,ST_WEAPON,STGEN_1,XPBONUS,ORG_KOGBOLD",
-       "now": "EQUIPMENT,WEAPON,WAND,ST,TAB_ST,ST_WEAPON,STGEN_1,XPBONUS"
-      }
-     ],
-     "clientId": "DruidST0",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "druidst0.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    }
-   ],
-   "gone": []
-  },
-  "rings": {
-   "added": [
-    {
-     "id": "Sweettreats Ring",
-     "type": "0xF92E",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1009
-     },
-     "description": "A sweet reward for those who always come back for another helping.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_A",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 32,
-      "feed power": 700,
-      "bag": 6,
-      "XP bonus": 7,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip MAXHP": 90,
-      "on equip ATT": 4,
-      "on equip DEX": 4,
-      "on equip VIT": 2,
-      "on equip WIS": 2
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "sweettreats-ring.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Storied Fossil",
-     "type": "0xF98F",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 1093
-     },
-     "description": "A fossilized footprint that still carries the strength of an ancient predator.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "RESKIN",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip MAXHP": 100,
-      "on equip WIS": 10,
-      "on equip DEF": 5
-     },
-     "clientId": "HDruidST3",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "hdruidst3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Willow Sprout",
-     "type": "0xbebd",
-     "art": {
-      "kind": "still",
-      "atlas": "sorcEncountersObjects8x8",
-      "index": 487
-     },
-     "description": "A humble sapling left untouched by the curse that pervades the Wetlands. Perhaps there is hope after all.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "XPBONUS",
-      "STGEN_2"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip MAXHP": 260,
-      "on equip VIT": 6,
-      "on equip SPD": 6
-     },
-     "clientId": "2DruidST3",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "2druidst3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Infinite Bands",
-     "type": "0xbec1",
-     "art": null,
-     "description": "Infinite loops of infinite squares.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "XPBONUS",
-      "STGEN_3"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip ATT": 5,
-      "on equip MAXHP": 25,
-      "on equip DEF": 3
-     },
-     "clientId": "3DruidST3"
-    }
-   ],
-   "changed": [
-    {
-     "id": "Pressure Gauge Band",
-     "type": "0x74cb",
-     "art": {
-      "kind": "still",
-      "atlas": "lofiObj6",
-      "index": 700
-     },
-     "description": "Sturdy brass gauge ring that allows for monitoring its users status while boosting power and protection.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "ST",
-      "TAB_ST",
-      "ST_RING",
-      "XPBONUS"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 59,
-      "feed power": 600,
-      "bag": 8,
-      "XP bonus": 4,
-      "soulbound": true,
-      "slot odds": "50% · 37.5% · 25% · 12.5%",
-      "on equip MAXHP": 100,
-      "on equip WIS": 10,
-      "on equip DEF": 5
-     },
-     "moved": [
-      {
-       "fact": "labels",
-       "was": "EQUIPMENT,RING,ST,TAB_ST,ST_RING,XPBONUS,ORG_KOGBOLD",
-       "now": "EQUIPMENT,RING,ST,TAB_ST,ST_RING,XPBONUS"
-      }
-     ],
-     "clientId": "DruidST3",
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "druidst3.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Venerable Ring of the Sphinx",
-     "type": "0x96bf",
-     "art": null,
-     "description": "The malachite stone makes you feel at peace with the land.",
-     "labels": [
-      "EQUIPMENT",
-      "RING",
-      "UT",
-      "TAB_UT",
-      "POWERTIER_B",
-      "TRADEABLE",
-      "XPBONUS",
-      "VENERABLE"
-     ],
-     "facts": {
-      "class": "Equipment",
-      "slot": 9,
-      "power": 45,
-      "feed power": 800,
-      "bag": 6,
-      "XP bonus": 7,
-      "soulbound": true,
-      "slot odds": "100% · 37.5% · 25% · 12.5%",
-      "on equip ATT": 5,
-      "on equip DEX": 5,
-      "on equip MAXMP": 110
-     },
-     "moved": [
-      {
-       "fact": "slot odds",
-       "was": "50% · 37.5% · 25% · 12.5%",
-       "now": "100% · 37.5% · 25% · 12.5%"
-      }
-     ]
-    }
-   ],
-   "gone": []
-  },
-  "places": {
-   "added": [
-    {
-     "id": "Infected Memory Portal",
-     "type": "0xbefe",
-     "art": {
-      "kind": "still",
-      "atlas": "memoriesObjects8x8",
-      "index": 15
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Portal"
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "infected-memory-portal.png",
-        "tile": 8,
-        "height": 8,
-        "frames": 1
-       }
-      }
-     }
-    },
-    {
-     "id": "Stoneborn Memory Portal",
-     "type": "0xbee4",
-     "art": {
-      "kind": "still",
-      "atlas": "memoriesObjects16x16",
-      "index": 49
-     },
-     "description": null,
-     "labels": [],
-     "facts": {
-      "class": "Portal"
-     },
-     "sprite": {
-      "moving": false,
-      "clips": {
-       "stand": {
-        "file": "stoneborn-memory-portal.png",
+        "file": "siren-call-entrance-walk.png",
         "tile": 16,
-        "height": 16,
-        "frames": 1
+        "height": 72,
+        "frames": 23
        }
       }
      }
@@ -4710,6 +3197,33 @@
   }
  },
  "crucible": [
+  {
+   "season": 31,
+   "from": "2026-11-03",
+   "to": "2026-12-01",
+   "stats": [
+    {
+     "stat": "VIT",
+     "value": 30,
+     "pct": true
+    },
+    {
+     "stat": "WIS",
+     "value": 10,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 15,
+    "xp": 10
+   },
+   "rules": [
+    "−30% healing from pets, consumables and external sources"
+   ],
+   "part": 2,
+   "source": "RealmEye, The Crucible (read 2026-11-03): one Season 31 period, Oct 6 - Dec 1 2026, so Part 2 keeps Part 1's modifier; the Part 2 patch notes (hub.realmofthemadgod.com/news0/updates0/s312pn) name no new one"
+  },
   {
    "season": 31,
    "from": "2026-10-06",

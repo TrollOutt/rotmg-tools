@@ -4024,6 +4024,22 @@ const TINT = {
    */
   const SHARE_V = 1;
 
+  /*
+   * The 2026-11-03 client fixed the spelling of four enchantment ids and three
+   * names. Kept tabs carry the ids and shared links the names, so both still
+   * read the old spelling.
+   */
+  const RENAMED_ENCH = {
+    VAMPRIC_LIFEFORCE: 'VAMPIRIC_LIFEFORCE',
+    OVERWHEMLING_STRIKES: 'OVERWHELMING_STRIKES',
+    THANNKSGIVING_GIVER: 'THANKSGIVING_GIVER',
+    THANNKSGIVING_THANKFUL: 'THANKSGIVING_THANKFUL',
+    'Vampric Lifeforce': 'Vampiric Lifeforce',
+    'Mana -AttackTradeoff I': 'Mana -Attack Tradeoff I',
+    'Dexterity and and Speed Bonus II': 'Dexterity and Speed Bonus II'
+  };
+  const renamedEnch = said => RENAMED_ENCH[said] || said;
+
   function packBuild(state) {
     const gear = HANDS.map(([hand]) => {
       const worn = state.gear[hand] || {};
@@ -4064,7 +4080,7 @@ const TINT = {
         name: one[0],
         slots: 4,
         ench: [0, 1, 2, 3].map(at => {
-          const name = (one[1] || [])[at];
+          const name = renamedEnch((one[1] || [])[at]);
           const found = name && data.enchants.find(e => e.name === name);
           return found ? found.id : null;
         })
@@ -4099,6 +4115,11 @@ const TINT = {
       const was = JSON.parse(localStorage.getItem(STORE) || 'null');
       if (was && Array.isArray(was.tabs) && was.tabs.length) {
         tabs = was.tabs.map(one => ({ ...one, range: distanceOf(one) }));
+        for (const one of tabs) {
+          for (const worn of Object.values(one.gear || {})) {
+            if (worn && Array.isArray(worn.ench)) worn.ench = worn.ench.map(renamedEnch);
+          }
+        }
         onTab = Math.min(was.onTab || 0, tabs.length - 1);
         return true;
       }

@@ -1,4 +1,4 @@
-## provenance: {"built":"2026-10-14T00:00:00.000Z","from":{"build":"f1f479830bae49808b3d9927e8ad8fa1","date":"2026-10-14","kind":"client"},"tool":"tools/generate-fame.js"}
+## provenance: {"built":"2026-11-03T00:00:00.000Z","from":{"build":"730b86d6dab64c41a24f1be50ef46862","date":"2026-11-03","kind":"client"},"tool":"tools/generate-fame.js"}
 ## Every fame bonus an installed RotMG client defines.
 ##
 ## Written by tools/generate-fame.js. Do not edit by hand: run the
@@ -1141,7 +1141,7 @@ bonus|BeachFoe|Enemy Bonuses|Beach Kills|Beach Foe|20|0||Kill 200 Beach Enemies
 bonus|SpectralPenitentiaryExplorer|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Explorer|600|0||Complete Spectral Penitentiary 10 times
   needs|Spectral Penitentiary|10
 bonus|BeachAdversary|Enemy Bonuses|Beach Kills|Beach Adversary|100|0||Kill 1000 Beach Enemies
-  needs|Beach|100
+  needs|Beach|1000
 bonus|SpectralPenitentiaryAdventurer|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Adventurer|1200|0||Complete Spectral Penitentiary 20 times
   needs|Spectral Penitentiary|20
 bonus|BeachSlayer|Enemy Bonuses|Beach Kills|Beach Slayer|400|0||Kill 5000 Beach Enemies
@@ -1149,7 +1149,7 @@ bonus|BeachSlayer|Enemy Bonuses|Beach Kills|Beach Slayer|400|0||Kill 5000 Beach 
 bonus|SpectralPenitentiaryConqueror|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Conqueror|2400|0||Complete Spectral Penitentiary 40 times
   needs|Spectral Penitentiary|40
 bonus|BeachSlaughterer|Enemy Bonuses|Beach Kills|Beach Slaughterer|1000|0||Kill 10000 Beach Enemies
-  needs|Beach|1000
+  needs|Beach|10000
 bonus|SpectralPenitentiaryMaster|Dungeon Bonuses|Spectral Penitentiary|Spectral Penitentiary Master|6000|0|repeatable|Complete Spectral Penitentiary 100 times
   needs|Spectral Penitentiary|100
 bonus|BeachNemesis|Enemy Bonuses|Beach Kills|Beach Nemesis|2500|0|repeatable|Kill 50000 Beach Enemies
@@ -1159,189 +1159,189 @@ bonus|Undead ForestNemesis|Enemy Bonuses|Undead Forest Kills|Undead Forest Nemes
 bonus|ForestFoe|Enemy Bonuses|Forest Kills|Forest Foe|20|0||Kill 200 Forest Enemies
   needs|Forest|200
 bonus|ForestAdversary|Enemy Bonuses|Forest Kills|Forest Adversary|100|0||Kill 1000 Forest Enemies
-  needs|Forest|100
+  needs|Forest|1000
 bonus|ForestSlayer|Enemy Bonuses|Forest Kills|Forest Slayer|400|0||Kill 5000 Forest Enemies
   needs|Forest|5000
 bonus|ForestSlaughterer|Enemy Bonuses|Forest Kills|Forest Slaughterer|1000|0||Kill 10000 Forest Enemies
-  needs|Forest|1000
+  needs|Forest|10000
 bonus|ForestNemesis|Enemy Bonuses|Forest Kills|Forest Nemesis|2500|0|repeatable|Kill 50000 Forest Enemies
   needs|Forest|50000
 bonus|DesertFoe|Enemy Bonuses|Desert Kills|Desert Foe|20|0||Kill 200 Desert Enemies
   needs|Desert|200
 bonus|DesertAdversary|Enemy Bonuses|Desert Kills|Desert Adversary|100|0||Kill 1000 Desert Enemies
-  needs|Desert|100
+  needs|Desert|1000
 bonus|DesertSlayer|Enemy Bonuses|Desert Kills|Desert Slayer|400|0||Kill 5000 Desert Enemies
   needs|Desert|5000
 bonus|DesertSlaughterer|Enemy Bonuses|Desert Kills|Desert Slaughterer|1000|0||Kill 10000 Desert Enemies
-  needs|Desert|1000
+  needs|Desert|10000
 bonus|DesertNemesis|Enemy Bonuses|Desert Kills|Desert Nemesis|2500|0|repeatable|Kill 50000 Desert Enemies
   needs|Desert|50000
 bonus|PlainsFoe|Enemy Bonuses|Plains Kills|Plains Foe|20|0||Kill 200 Plains Enemies
   needs|Plains|200
 bonus|PlainsAdversary|Enemy Bonuses|Plains Kills|Plains Adversary|100|0||Kill 1000 Plains Enemies
-  needs|Plains|100
+  needs|Plains|1000
 bonus|PlainsSlayer|Enemy Bonuses|Plains Kills|Plains Slayer|400|0||Kill 5000 Plains Enemies
   needs|Plains|5000
 bonus|PlainsSlaughterer|Enemy Bonuses|Plains Kills|Plains Slaughterer|1000|0||Kill 10000 Plains Enemies
-  needs|Plains|1000
+  needs|Plains|10000
 bonus|PlainsNemesis|Enemy Bonuses|Plains Kills|Plains Nemesis|2500|0|repeatable|Kill 50000 Plains Enemies
   needs|Plains|50000
 bonus|WitherFoe|Enemy Bonuses|Wither Kills|Wither Foe|20|0||Kill 200 Wither Enemies
   needs|Wither|200
 bonus|WitherAdversary|Enemy Bonuses|Wither Kills|Wither Adversary|100|0||Kill 1000 Wither Enemies
-  needs|Wither|100
+  needs|Wither|1000
 bonus|WitherSlayer|Enemy Bonuses|Wither Kills|Wither Slayer|400|0||Kill 5000 Wither Enemies
   needs|Wither|5000
 bonus|WitherSlaughterer|Enemy Bonuses|Wither Kills|Wither Slaughterer|1000|0||Kill 10000 Wither Enemies
-  needs|Wither|1000
+  needs|Wither|10000
 bonus|WitherNemesis|Enemy Bonuses|Wither Kills|Wither Nemesis|2500|0|repeatable|Kill 50000 Wither Enemies
   needs|Wither|50000
 bonus|Dark ForestFoe|Enemy Bonuses|Dark Forest Kills|Dark Forest Foe|20|0||Kill 200 Dark Forest Enemies
   needs|Dark Forest|200
 bonus|Dark ForestAdversary|Enemy Bonuses|Dark Forest Kills|Dark Forest Adversary|100|0||Kill 1000 Dark Forest Enemies
-  needs|Dark Forest|100
+  needs|Dark Forest|1000
 bonus|Dark ForestSlayer|Enemy Bonuses|Dark Forest Kills|Dark Forest Slayer|400|0||Kill 5000 Dark Forest Enemies
   needs|Dark Forest|5000
 bonus|Dark ForestSlaughterer|Enemy Bonuses|Dark Forest Kills|Dark Forest Slaughterer|1000|0||Kill 10000 Dark Forest Enemies
-  needs|Dark Forest|1000
+  needs|Dark Forest|10000
 bonus|Dark ForestNemesis|Enemy Bonuses|Dark Forest Kills|Dark Forest Nemesis|2500|0|repeatable|Kill 50000 Dark Forest Enemies
   needs|Dark Forest|50000
 bonus|Coral ReefsFoe|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Foe|20|0||Kill 200 Coral Reefs Enemies
   needs|Coral Reefs|200
 bonus|Coral ReefsAdversary|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Adversary|100|0||Kill 1000 Coral Reefs Enemies
-  needs|Coral Reefs|100
+  needs|Coral Reefs|1000
 bonus|Coral ReefsSlayer|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Slayer|400|0||Kill 5000 Coral Reefs Enemies
   needs|Coral Reefs|5000
 bonus|Coral ReefsSlaughterer|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Slaughterer|1000|0||Kill 10000 Coral Reefs Enemies
-  needs|Coral Reefs|1000
+  needs|Coral Reefs|10000
 bonus|Coral ReefsNemesis|Enemy Bonuses|Coral Reefs Kills|Coral Reefs Nemesis|2500|0|repeatable|Kill 50000 Coral Reefs Enemies
   needs|Coral Reefs|50000
 bonus|Sprite ForestFoe|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Foe|20|0||Kill 200 Sprite Forest Enemies
   needs|Sprite Forest|200
 bonus|Sprite ForestAdversary|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Adversary|100|0||Kill 1000 Sprite Forest Enemies
-  needs|Sprite Forest|100
+  needs|Sprite Forest|1000
 bonus|Sprite ForestSlayer|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Slayer|400|0||Kill 5000 Sprite Forest Enemies
   needs|Sprite Forest|5000
 bonus|Sprite ForestSlaughterer|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Slaughterer|1000|0||Kill 10000 Sprite Forest Enemies
-  needs|Sprite Forest|1000
+  needs|Sprite Forest|10000
 bonus|Sprite ForestNemesis|Enemy Bonuses|Sprite Forest Kills|Sprite Forest Nemesis|2500|0|repeatable|Kill 50000 Sprite Forest Enemies
   needs|Sprite Forest|50000
 bonus|Haunted HallowsFoe|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Foe|20|0||Kill 200 Haunted Hallows Enemies
   needs|Haunted Hallows|200
 bonus|Haunted HallowsAdversary|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Adversary|100|0||Kill 1000 Haunted Hallows Enemies
-  needs|Haunted Hallows|100
+  needs|Haunted Hallows|1000
 bonus|Haunted HallowsSlayer|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Slayer|400|0||Kill 5000 Haunted Hallows Enemies
   needs|Haunted Hallows|5000
 bonus|Haunted HallowsSlaughterer|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Slaughterer|1000|0||Kill 10000 Haunted Hallows Enemies
-  needs|Haunted Hallows|1000
+  needs|Haunted Hallows|10000
 bonus|Haunted HallowsNemesis|Enemy Bonuses|Haunted Hallows Kills|Haunted Hallows Nemesis|2500|0|repeatable|Kill 50000 Haunted Hallows Enemies
   needs|Haunted Hallows|50000
 bonus|Shipwreck CoveFoe|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Foe|20|0||Kill 200 Shipwreck Cove Enemies
   needs|Shipwreck Cove|200
 bonus|Shipwreck CoveAdversary|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Adversary|100|0||Kill 1000 Shipwreck Cove Enemies
-  needs|Shipwreck Cove|100
+  needs|Shipwreck Cove|1000
 bonus|Shipwreck CoveSlayer|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Slayer|400|0||Kill 5000 Shipwreck Cove Enemies
   needs|Shipwreck Cove|5000
 bonus|Shipwreck CoveSlaughterer|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Slaughterer|1000|0||Kill 10000 Shipwreck Cove Enemies
-  needs|Shipwreck Cove|1000
+  needs|Shipwreck Cove|10000
 bonus|Shipwreck CoveNemesis|Enemy Bonuses|Shipwreck Cove Kills|Shipwreck Cove Nemesis|2500|0|repeatable|Kill 50000 Shipwreck Cove Enemies
   needs|Shipwreck Cove|50000
 bonus|Dead ChurchFoe|Enemy Bonuses|Dead Church Kills|Dead Church Foe|20|0||Kill 200 Dead Church Enemies
   needs|Dead Church|200
 bonus|Dead ChurchAdversary|Enemy Bonuses|Dead Church Kills|Dead Church Adversary|100|0||Kill 1000 Dead Church Enemies
-  needs|Dead Church|100
+  needs|Dead Church|1000
 bonus|Dead ChurchSlayer|Enemy Bonuses|Dead Church Kills|Dead Church Slayer|400|0||Kill 5000 Dead Church Enemies
   needs|Dead Church|5000
 bonus|Dead ChurchSlaughterer|Enemy Bonuses|Dead Church Kills|Dead Church Slaughterer|1000|0||Kill 10000 Dead Church Enemies
-  needs|Dead Church|1000
+  needs|Dead Church|10000
 bonus|Dead ChurchNemesis|Enemy Bonuses|Dead Church Kills|Dead Church Nemesis|2500|0|repeatable|Kill 50000 Dead Church Enemies
   needs|Dead Church|50000
 bonus|Risen HellFoe|Enemy Bonuses|Risen Hell Kills|Risen Hell Foe|20|0||Kill 200 Risen Hell Enemies
   needs|Risen Hell|200
 bonus|Risen HellAdversary|Enemy Bonuses|Risen Hell Kills|Risen Hell Adversary|100|0||Kill 1000 Risen Hell Enemies
-  needs|Risen Hell|100
+  needs|Risen Hell|1000
 bonus|Risen HellSlayer|Enemy Bonuses|Risen Hell Kills|Risen Hell Slayer|400|0||Kill 5000 Risen Hell Enemies
   needs|Risen Hell|5000
 bonus|Risen HellSlaughterer|Enemy Bonuses|Risen Hell Kills|Risen Hell Slaughterer|1000|0||Kill 10000 Risen Hell Enemies
-  needs|Risen Hell|1000
+  needs|Risen Hell|10000
 bonus|Risen HellNemesis|Enemy Bonuses|Risen Hell Kills|Risen Hell Nemesis|2500|0|repeatable|Kill 50000 Risen Hell Enemies
   needs|Risen Hell|50000
 bonus|Abandoned CityFoe|Enemy Bonuses|Abandoned City Kills|Abandoned City Foe|20|0||Kill 200 Abandoned City Enemies
   needs|Abandoned City|200
 bonus|Abandoned CityAdversary|Enemy Bonuses|Abandoned City Kills|Abandoned City Adversary|100|0||Kill 1000 Abandoned City Enemies
-  needs|Abandoned City|100
+  needs|Abandoned City|1000
 bonus|Abandoned CitySlayer|Enemy Bonuses|Abandoned City Kills|Abandoned City Slayer|400|0||Kill 5000 Abandoned City Enemies
   needs|Abandoned City|5000
 bonus|Abandoned CitySlaughterer|Enemy Bonuses|Abandoned City Kills|Abandoned City Slaughterer|1000|0||Kill 10000 Abandoned City Enemies
-  needs|Abandoned City|1000
+  needs|Abandoned City|10000
 bonus|Abandoned CityNemesis|Enemy Bonuses|Abandoned City Kills|Abandoned City Nemesis|2500|0|repeatable|Kill 50000 Abandoned City Enemies
   needs|Abandoned City|50000
 bonus|Deep Sea AbyssFoe|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Foe|20|0||Kill 200 Deep Sea Abyss Enemies
   needs|Deep Sea Abyss|200
 bonus|Deep Sea AbyssAdversary|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Adversary|100|0||Kill 1000 Deep Sea Abyss Enemies
-  needs|Deep Sea Abyss|100
+  needs|Deep Sea Abyss|1000
 bonus|Deep Sea AbyssSlayer|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Slayer|400|0||Kill 5000 Deep Sea Abyss Enemies
   needs|Deep Sea Abyss|5000
 bonus|Deep Sea AbyssSlaughterer|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Slaughterer|1000|0||Kill 10000 Deep Sea Abyss Enemies
-  needs|Deep Sea Abyss|1000
+  needs|Deep Sea Abyss|10000
 bonus|Deep Sea AbyssNemesis|Enemy Bonuses|Deep Sea Abyss Kills|Deep Sea Abyss Nemesis|2500|0|repeatable|Kill 50000 Deep Sea Abyss Enemies
   needs|Deep Sea Abyss|50000
 bonus|CarboniferousFoe|Enemy Bonuses|Carboniferous Kills|Carboniferous Foe|20|0||Kill 200 Carboniferous Enemies
   needs|Carboniferous|200
 bonus|CarboniferousAdversary|Enemy Bonuses|Carboniferous Kills|Carboniferous Adversary|100|0||Kill 1000 Carboniferous Enemies
-  needs|Carboniferous|100
+  needs|Carboniferous|1000
 bonus|CarboniferousSlayer|Enemy Bonuses|Carboniferous Kills|Carboniferous Slayer|400|0||Kill 5000 Carboniferous Enemies
   needs|Carboniferous|5000
 bonus|CarboniferousSlaughterer|Enemy Bonuses|Carboniferous Kills|Carboniferous Slaughterer|1000|0||Kill 10000 Carboniferous Enemies
-  needs|Carboniferous|1000
+  needs|Carboniferous|10000
 bonus|CarboniferousNemesis|Enemy Bonuses|Carboniferous Kills|Carboniferous Nemesis|2500|0|repeatable|Kill 50000 Carboniferous Enemies
   needs|Carboniferous|50000
 bonus|Floral EscapeFoe|Enemy Bonuses|Floral Escape Kills|Floral Escape Foe|20|0||Kill 200 Floral Escape Enemies
   needs|Floral Escape|200
 bonus|Floral EscapeAdversary|Enemy Bonuses|Floral Escape Kills|Floral Escape Adversary|100|0||Kill 1000 Floral Escape Enemies
-  needs|Floral Escape|100
+  needs|Floral Escape|1000
 bonus|Floral EscapeSlayer|Enemy Bonuses|Floral Escape Kills|Floral Escape Slayer|400|0||Kill 5000 Floral Escape Enemies
   needs|Floral Escape|5000
 bonus|Floral EscapeSlaughterer|Enemy Bonuses|Floral Escape Kills|Floral Escape Slaughterer|1000|0||Kill 10000 Floral Escape Enemies
-  needs|Floral Escape|1000
+  needs|Floral Escape|10000
 bonus|Floral EscapeNemesis|Enemy Bonuses|Floral Escape Kills|Floral Escape Nemesis|2500|0|repeatable|Kill 50000 Floral Escape Enemies
   needs|Floral Escape|50000
 bonus|Sanguine ForestFoe|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Foe|20|0||Kill 200 Sanguine Forest Enemies
   needs|Sanguine Forest|200
 bonus|Sanguine ForestAdversary|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Adversary|100|0||Kill 1000 Sanguine Forest Enemies
-  needs|Sanguine Forest|100
+  needs|Sanguine Forest|1000
 bonus|Sanguine ForestSlayer|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Slayer|400|0||Kill 5000 Sanguine Forest Enemies
   needs|Sanguine Forest|5000
 bonus|Sanguine ForestSlaughterer|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Slaughterer|1000|0||Kill 10000 Sanguine Forest Enemies
-  needs|Sanguine Forest|1000
+  needs|Sanguine Forest|10000
 bonus|Sanguine ForestNemesis|Enemy Bonuses|Sanguine Forest Kills|Sanguine Forest Nemesis|2500|0|repeatable|Kill 50000 Sanguine Forest Enemies
   needs|Sanguine Forest|50000
 bonus|Runic TundraFoe|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Foe|20|0||Kill 200 Runic Tundra Enemies
   needs|Runic Tundra|200
 bonus|Runic TundraAdversary|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Adversary|100|0||Kill 1000 Runic Tundra Enemies
-  needs|Runic Tundra|100
+  needs|Runic Tundra|1000
 bonus|Runic TundraSlayer|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Slayer|400|0||Kill 5000 Runic Tundra Enemies
   needs|Runic Tundra|5000
 bonus|Runic TundraSlaughterer|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Slaughterer|1000|0||Kill 10000 Runic Tundra Enemies
-  needs|Runic Tundra|1000
+  needs|Runic Tundra|10000
 bonus|Runic TundraNemesis|Enemy Bonuses|Runic Tundra Kills|Runic Tundra Nemesis|2500|0|repeatable|Kill 50000 Runic Tundra Enemies
   needs|Runic Tundra|50000
 bonus|Undead ForestFoe|Enemy Bonuses|Undead Forest Kills|Undead Forest Foe|20|0||Kill 200 Undead Forest Enemies
   needs|Undead Forest|200
 bonus|Undead ForestAdversary|Enemy Bonuses|Undead Forest Kills|Undead Forest Adversary|100|0||Kill 1000 Undead Forest Enemies
-  needs|Undead Forest|100
+  needs|Undead Forest|1000
 bonus|Undead ForestSlayer|Enemy Bonuses|Undead Forest Kills|Undead Forest Slayer|400|0||Kill 5000 Undead Forest Enemies
   needs|Undead Forest|5000
 bonus|Undead ForestSlaughterer|Enemy Bonuses|Undead Forest Kills|Undead Forest Slaughterer|1000|0||Kill 10000 Undead Forest Enemies
-  needs|Undead Forest|1000
+  needs|Undead Forest|10000
 bonus|RuinsFoe|Enemy Bonuses|Ruins Kills|Ruins Foe|20|0||Kill 200 Ruins Enemies
   needs|Ruins|200
 bonus|RuinsAdversary|Enemy Bonuses|Ruins Kills|Ruins Adversary|100|0||Kill 1000 Ruins Enemies
-  needs|Ruins|100
+  needs|Ruins|1000
 bonus|RuinsSlayer|Enemy Bonuses|Ruins Kills|Ruins Slayer|400|0||Kill 5000 Ruins Enemies
   needs|Ruins|5000
 bonus|RuinsSlaughterer|Enemy Bonuses|Ruins Kills|Ruins Slaughterer|1000|0||Kill 10000 Ruins Enemies
-  needs|Ruins|1000
+  needs|Ruins|10000
 bonus|RuinsNemesis|Enemy Bonuses|Ruins Kills|Ruins Nemesis|2500|0|repeatable|Kill 50000 Ruins Enemies
   needs|Ruins|50000
 bonus|HeroicUndeadLairScout|Dungeon Bonuses|Heroic Undead Lair|Heroic Undead Lair Scout|150|0||Complete Heroic Undead Lair 1 time

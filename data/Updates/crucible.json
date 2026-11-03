@@ -7,8 +7,35 @@
   "home": "https://www.realmeye.com/wiki/"
  },
  "source": "RealmEye wiki, The Crucible - Crucible Seasons",
- "read": "2026-10-06",
+ "read": "2026-11-03",
  "seasons": [
+  {
+   "season": 31,
+   "from": "2026-11-03",
+   "to": "2026-12-01",
+   "stats": [
+    {
+     "stat": "VIT",
+     "value": 30,
+     "pct": true
+    },
+    {
+     "stat": "WIS",
+     "value": 10,
+     "pct": true
+    }
+   ],
+   "bonuses": {
+    "loot": 10,
+    "bxp": 15,
+    "xp": 10
+   },
+   "rules": [
+    "−30% healing from pets, consumables and external sources"
+   ],
+   "part": 2,
+   "source": "RealmEye, The Crucible (read 2026-11-03): one Season 31 period, Oct 6 - Dec 1 2026, so Part 2 keeps Part 1's modifier; the Part 2 patch notes (hub.realmofthemadgod.com/news0/updates0/s312pn) name no new one"
+  },
   {
    "season": 31,
    "from": "2026-10-06",

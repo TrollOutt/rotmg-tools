@@ -79,7 +79,7 @@ assert.deepEqual(gear.items['Dusky Catalyst'], { cost: 0.95, combat: { WIS: -10 
 assert.equal(gear.items['Robe of the Mad Scientist'].cost, 0.85);
 assert.deepEqual(gear.items['Fire Blade'].procs, [{ on: 'shoot', proc: 1, cooldown: 3, kind: 'poison', total: 1000, impact: 0, duration: 6 }]);
 assert.equal(Object.values(gear.items).filter(x => x.combat).length, 8, 'eight items cost you something in combat');
-assert.equal(Object.values(gear.items).filter(x => x.cost).length, 15, 'fifteen items make abilities cheaper');
+assert.equal(Object.values(gear.items).filter(x => x.cost).length, 16, 'sixteen items make abilities cheaper (the Legacy Coral Ring joined in 2026-11)');
 for (const name of Object.keys(gear.items)) assert(raw.items.some(i => i.name === name), name + ' is an item the bench offers');
 {
   // A fight is in combat: Valor's ten attack comes off the shots, while the character's own statistics keep it.

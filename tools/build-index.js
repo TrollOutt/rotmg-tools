@@ -374,7 +374,15 @@ const familyOf = (labels, one) => {
 };
 
 const gear = [];
-for (const one of objects) {
+/*
+ * The first declaration under a name takes the name and the doors to the
+ * bench and the calculator. A shiny shares its DisplayId with the plain item,
+ * and the client does not keep it after that item in the files: the November
+ * 2026 build declares the Legacy Coral shinies, displayed "Coral Bow" and so
+ * on, eleven documents before the Coral Bow itself. So shinies come last.
+ */
+const isShiny = one => labelsOf(one.body).includes('SHINY') || / Shiny$/.test(one.id);
+for (const one of [...objects.filter(one => !isShiny(one)), ...objects.filter(isShiny)]) {
   if (!has(one.body, 'Item')) continue;
   const labels = labelsOf(one.body);
   /*

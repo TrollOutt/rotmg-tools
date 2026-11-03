@@ -102,9 +102,9 @@ check('and it sits in the top weight band with fourteen others', (() => {
   const top = fromClient.filter(mod => mod.weight === 200000);
   return top.length + ' at 200,000';
 })());
-// 50 the client labels ARTIFACT, plus the "No Artifact" row it has no record
+// 51 the client labels ARTIFACT, plus the "No Artifact" row it has no record
 // for, because in the game that is simply not using the enchanter's slot.
-check('51 artifacts, none held back', data.artifacts.length === 51 && data.heldArtifacts.length === 0,
+check('52 artifacts, none held back', data.artifacts.length === 52 && data.heldArtifacts.length === 0,
   `${data.artifacts.length} ranked, held: ${data.heldArtifacts.map(a => a.name).join(', ')}`);
 
 check('the four the client does not label ARTIFACT are not ranked', (() => {
@@ -635,18 +635,20 @@ const mermaid = data.byName.get('Mermaid Magic');
 // Night's Soul (DUALSTAT), taking 2,000 out; and Vitality to Attack Bonus,
 // whose record was missing its item-types line and so was rollable nowhere,
 // comes back in with 12,000. See the ## notes in globalMods.txt.
+// The 2026-11-03 client lets the Moon's x4.5 on MANA reach UNIQUE enchantments
+// and cuts its Mermaid Magic bonus from x15 to x3.33: 2,000 x 4.5 x 3.33.
 check('112 candidates in the pool', scenarioPool.mods.length === 112, `got ${scenarioPool.mods.length}`);
-check('total weighted pool is 5,608,000', scenarioPool.total === 5608000, `got ${scenarioPool.total}`);
+check('total weighted pool is 5,607,970', scenarioPool.total === 5607970, `got ${scenarioPool.total}`);
 check("the missing candidate is Jester's Trick, culled by Night's Soul",
   !scenarioPool.mods.some(m => m.name === "Jester's Trick")
   && data.byName.get("Night's Soul").tags.has('DUALSTAT'));
-check('Mermaid Magic weighs 30,000 under the Moon card', scenarioPool.weights.get(mermaid.id) === 30000, `got ${scenarioPool.weights.get(mermaid.id)}`);
-near('chance on the next slot is 0.5350 %', scenarioPool.weights.get(mermaid.id) / scenarioPool.total * 100, 0.5350, 0.0001);
+check('Mermaid Magic weighs 29,970 under the Moon card', scenarioPool.weights.get(mermaid.id) === 29970, `got ${scenarioPool.weights.get(mermaid.id)}`);
+near('chance on the next slot is 0.5344 %', scenarioPool.weights.get(mermaid.id) / scenarioPool.total * 100, 0.5344, 0.0001);
 const scenarioOdds = engine.oddsAny(data, twoLocks, moon, ['Mermaid Magic']);
-near('exact chance over the 2 remaining slots is 0.8322 %', scenarioOdds.odds, 0.8322, 0.0001);
+near('exact chance over the 2 remaining slots is 0.8314 %', scenarioOdds.odds, 0.8314, 0.0001);
 check('the 2-slot result is exact, not sampled', scenarioOdds.exact === true);
 const scenarioRow = engine.evaluate(data, twoLocks, moon);
-near('expected Red dust is 48,064', scenarioRow.dust, 48064, 5);
+near('expected Red dust is 48,111', scenarioRow.dust, 48111, 5);
 check('two slots beat one slot for the same target', (() => {
   const oneSlot = engine.oddsAny(data, Object.assign({}, twoLocks, { locks: [...twoLocks.locks, 'Attack Bonus'] }), moon, ['Mermaid Magic']);
   return oneSlot.odds < scenarioOdds.odds;
@@ -658,11 +660,11 @@ const lockedPool = engine.weightedPool(data, lockedCfg, moon);
 check('OnAbility Attack Boost carries ONABILITYSTAT and PROCATTACK',
   data.byName.get('OnAbility Attack Boost').tags.has('ONABILITYSTAT') && data.byName.get('OnAbility Attack Boost').tags.has('PROCATTACK'));
 check('pool 112 → 105', lockedPool.mods.length === 105, `got ${lockedPool.mods.length}`);
-check('total weight 5,608,000 → 4,958,000', lockedPool.total === 4958000, `got ${lockedPool.total}`);
-check('Mermaid Magic weight is unchanged', lockedPool.weights.get(mermaid.id) === 30000);
-near('per-slot chance rises to 0.6051 %', lockedPool.weights.get(mermaid.id) / lockedPool.total * 100, 0.6051, 0.0001);
+check('total weight 5,607,970 → 4,957,970', lockedPool.total === 4957970, `got ${lockedPool.total}`);
+check('Mermaid Magic weight is unchanged', lockedPool.weights.get(mermaid.id) === 29970);
+near('per-slot chance rises to 0.6045 %', lockedPool.weights.get(mermaid.id) / lockedPool.total * 100, 0.6045, 0.0001);
 const lockedOdds = engine.oddsAny(data, lockedCfg, moon, ['Mermaid Magic']);
-near('but the single remaining slot only gives 0.6051 %', lockedOdds.odds, 0.6051, 0.0001);
+near('but the single remaining slot only gives 0.6045 %', lockedOdds.odds, 0.6045, 0.0001);
 check('so the extra lock lowers the total chance', lockedOdds.odds < scenarioOdds.odds);
 check('and it raises the expected dust', engine.evaluate(data, lockedCfg, moon).dust > scenarioRow.dust);
 
@@ -1109,16 +1111,14 @@ check('every line is kind|name|fields',
 check('no two facts share a key', collisions.length === 0, collisions.slice(0, 3).join(', '));
 
 /*
- * The client's own display names, verbatim. Four are its typos — a missing
- * space, a missing apostrophe, a dropped letter, a lowercase initialism. The
+ * The client's own display names, verbatim. Two are its typos — a missing
+ * apostrophe and a lowercase initialism (the 2026-11-03 build fixed two more). The
  * last two are ours: the client gives the Alien and Neo Alien versions of
  * Acid Guardian and Solar Mastery the same name apiece, and we separate them
  * so a player can tell which one they are aiming at.
  */
 const CLIENT_SPELLING = {
-  'Mana -Attack Tradeoff': 'Mana -AttackTradeoff',
   "Pirate's Expertise": 'Pirates Expertise',
-  'Vampiric Lifeforce': 'Vampric Lifeforce',
   'MP Cost Reduction': 'Mp Cost Reduction',
   'Acid Guardian (Neo)': 'Acid Guardian',
   'Solar Mastery (Neo)': 'Solar Mastery'
