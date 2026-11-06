@@ -1,4 +1,4 @@
-## provenance: {"built":"2026-11-03T00:00:00.000Z","from":{"build":"730b86d6dab64c41a24f1be50ef46862","date":"2026-11-03","kind":"client"},"tool":"tools/generate-artifacts.js"}
+## provenance: {"built":"2026-11-05T00:00:00.000Z","from":{"build":"293f6bdfdb274140b0e5837fe8fec611","date":"2026-11-05","kind":"client"},"tool":"tools/generate-artifacts.js"}
 ## Every artifact an installed RotMG client defines, and the rules of the
 ## pool each one draws from.
 ##
