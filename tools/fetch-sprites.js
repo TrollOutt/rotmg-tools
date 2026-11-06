@@ -3,6 +3,7 @@
  * Downloads the artwork the original Qt assets never had.
  *
  *   node tools/fetch-sprites.js
+ *   node tools/fetch-sprites.js --artifacts   (artifacts only; run by npm run scrape)
  *
  * The client draws these too, but only as an index into a packed spritesheet
  * inside a Unity texture, which would mean decoding the texture formats and
@@ -405,6 +406,10 @@ async function main() {
     .split(/\r?\n/).filter(line => line.startsWith('artifact|')).map(line => line.split('|')[1]);
   await fill('artifact', PAGE, outDir, artifacts.filter(name =>
     !fs.existsSync(path.join(outDir, (ART_ALIAS[name] || name) + '-div2.png'))), true);
+  // `npm run scrape` stops here: the artifact page is read only when a new
+  // artifact has no art, whereas the dungeon section below visits every
+  // dungeon's page on each run.
+  if (process.argv.includes('--artifacts')) return;
 
   const enchDir = path.join(root, 'data', 'GUI Files', 'Enchantment Icons');
   const awakened = fs.readFileSync(path.join(root, 'data', 'Enchantment documents', 'client-enchantments.txt'), 'utf8')
