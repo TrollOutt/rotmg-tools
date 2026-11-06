@@ -1,4 +1,7 @@
-## provenance: {"built":"2026-11-03T12:09:26.131Z","from":{"kind":"client","build":"730b86d6dab64c41a24f1be50ef46862","date":"2026-11-03"},"tool":"tools/read-client.js"}
+## provenance: {"built":"2026-11-06T14:12:29.278Z","from":{"kind":"client","build":"293f6bdfdb274140b0e5837fe8fec611","date":"2026-11-05"},"tool":"tools/read-client.js"}
+## 2026-11-05 — build 293f6bdfdb274140b0e5837fe8fec611
+= nothing moved
+
 ## 2026-11-03 — build 730b86d6dab64c41a24f1be50ef46862
 ~ ench: Mana -Attack Tradeoff [Mana_Attack_Tradeoff]: name Mana -AttackTradeoff -> Mana -Attack Tradeoff
 ~ pool: Chariot Pool #2: rule ModifyEnchantmentWeightLabel excludeLabelsOR=UNIQUE includeLabelsOR=SPEED mult=4.5 -> ModifyEnchantmentWeightLabel includeLabelsOR=SPEED mult=4.5
