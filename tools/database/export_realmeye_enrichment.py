@@ -831,6 +831,24 @@ def export(db: Path, output: Path, served: Path | None):
             facts.pop(internal_key, None)
         return presentation
 
+    # A soulbound copy, "X (SB)", is X bound to its owner, and RealmEye writes it
+    # up on X's page. The copy gets that page and nothing more: where it comes
+    # from can differ (a quest chest rather than a monster), so X's facts,
+    # relations and pictures stay X's. Kept out of pageIndex, which must keep
+    # naming the one record a page is about.
+    for (rid,) in con.execute(
+        "SELECT legacy_index_id FROM entities WHERE kind='item' AND legacy_index_id IS NOT NULL ORDER BY legacy_index_id"
+    ):
+        name = rid.split(":", 1)[1].split("#", 1)[0]
+        if rid in records or not name.endswith(" (SB)"):
+            continue
+        base = records.get("item:" + name[: -len(" (SB)")])
+        if not base or base.get("communityOnly"):
+            continue
+        pages = [dict(page) for page in base["pages"] if not page.get("evidenceOnly")]
+        if pages:
+            records[rid] = {"id": rid, "communityOnly": False, "pages": pages, "facts": {}, "relations": [], "images": []}
+
     biome_icons = biome_sprites()
     for rid, item in list(records.items()):
         display_name = item.get("name") or rid.split(":", 1)[-1]

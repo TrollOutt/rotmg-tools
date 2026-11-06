@@ -424,8 +424,9 @@ def exact_title_candidates(name_map, page_type: str, title: str):
     2. It is the name the record is shown by (a folded stack's common name).
     3. A dungeon page names its portal: "Time Chamber" is "Time Chamber Portal".
     4. "X (Original)" is the client's copy of the original version, which the
-       Time Chamber brought back: the dungeon "Legacy X Portal", the creature
-       "Retro X". RealmEye links each Legacy dungeon to that "(Original)" page.
+       Time Chamber brought back: the dungeon "Legacy X Portal" (or, for some,
+       plain "Legacy X"), the creature "Retro X". RealmEye links each Legacy
+       dungeon to that "(Original)" page.
     """
     kinds = INDEX_KIND_FOR_PAGE.get(page_type, set())
     shown = name_map.get("shown", {})
@@ -449,7 +450,12 @@ def exact_title_candidates(name_map, page_type: str, title: str):
     if original:
         base = name_key(original.group(1))
         if page_type == "dungeon":
-            return lookup(name_map, "legacy" + base + "portal")
+            found = lookup(name_map, "legacy" + base + "portal")
+            # A plain "Legacy X" portal takes the page only when RealmEye has no
+            # "Legacy X" page of its own, which is then the one it is about.
+            if not found and "legacy" + base not in name_map.get("titles", set()):
+                found = lookup(name_map, "legacy" + base)
+            return found
         if page_type == "enemy":
             return lookup(name_map, "retro" + base)
     return set()
@@ -573,6 +579,7 @@ def import_realmeye_archive(imp, snapshot_uid: str, archive_path: str | Path):
     page_records = {}; page_entities = {}; payloads = {}
     exact_mapped = multi_mapped = provisional = unmapped_generic = 0
     name_map = index_name_candidates(imp.con)
+    name_map["titles"] = {name_key(row["title"]) for row in pages}
     known_slugs = {row["slug"] for row in pages}
 
     for page in pages:

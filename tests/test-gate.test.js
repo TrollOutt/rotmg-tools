@@ -28,6 +28,7 @@ const deployCritical = [
   'i18n.test.js',
   'index-extras.test.js',
   'fetch-client.test.js',
+  'realmeye-link-report.test.js',
   'fiches-data.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',

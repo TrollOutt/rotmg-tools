@@ -37,6 +37,11 @@ with no fallback on an installed client. The scrape stops with an error when
 `local/realmeye-monitor/processed/realmeye.sqlite` is missing, because without
 it the Unreleased list goes stale and the RealmEye enrichment comes out empty.
 
+The scrape ends with `npm run wiki-links` (`tools/realmeye-link-report.js`): the
+records of the latest update, and those Theory Crafting and the portals show,
+that have no RealmEye page yet. The update's list is what a targeted RealmEye
+refresh should fetch; its wiki addresses are guesses to check.
+
 The two sprite modules now decorate in-memory records supplied by the index
 builder. They write their PNG sheets; they cannot delete catalogue members or
 overwrite Theory Crafting independently. A build without `--sprites` retains
