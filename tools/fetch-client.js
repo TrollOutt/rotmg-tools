@@ -5,14 +5,16 @@
  *   node tools/fetch-client.js [--dir <dir>]   download it if the build is new
  *   node tools/fetch-client.js --scrape        then run `npm run scrape` on it
  *                                              if the data is on another build
+ *   node tools/fetch-client.js --check         download nothing; print, as JSON,
+ *                                              whether the data is on another build
  *
  * The launcher's own route: /app/init names the current build, checksum.json
  * lists its files with the MD5 of each decompressed file, and each file sits
  * beside it as <path>.gz. Only the three files the scrape reads are taken.
  *
  * /app/init answers without build fields unless given the launcher's key. It
- * is read from local/rotmg-app-key.txt rather than written here, so publishing
- * this repository never publishes it.
+ * is read from ROTMG_APP_KEY, else local/rotmg-app-key.txt, rather than written
+ * here, so publishing this repository never publishes it.
  *
  * Files keep the CDN's Last-Modified as their date, because the extraction
  * dates a build from its resources.assets: a download stamped today would
@@ -121,13 +123,33 @@ function bootBuild(dir) {
   return /build-guid=([0-9a-f]+)/i.exec(boot)?.[1];
 }
 
+/* The build's own id, from its boot.config alone: a few hundred bytes, not the whole build. */
+async function remoteBootBuild(build, get = fetch) {
+  const response = await get(build.base + 'RotMG%20Exalt_Data/boot.config.gz');
+  if (!response.ok) throw new Error(`boot.config: the CDN answered ${response.status}`);
+  const boot = zlib.gunzipSync(Buffer.from(await response.arrayBuffer())).toString('utf8');
+  const guid = /build-guid=([0-9a-f]+)/i.exec(boot)?.[1];
+  if (!guid) throw new Error('boot.config names no build-guid');
+  return guid;
+}
+
+function launcherKey() {
+  if (process.env.ROTMG_APP_KEY) return process.env.ROTMG_APP_KEY.trim();
+  if (!fs.existsSync(KEY_FILE)) throw new Error(`The launcher key goes in ${KEY_FILE} or ROTMG_APP_KEY`);
+  return fs.readFileSync(KEY_FILE, 'utf8').trim();
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const dirAt = args.indexOf('--dir');
   const dir = path.resolve(dirAt >= 0 ? args[dirAt + 1] : DEFAULT_DIR);
-  if (!fs.existsSync(KEY_FILE)) throw new Error(`The launcher key goes in ${KEY_FILE}`);
 
-  const build = await latestBuild(fs.readFileSync(KEY_FILE, 'utf8').trim());
+  const build = await latestBuild(launcherKey());
+  if (args.includes('--check')) {
+    const guid = await remoteBootBuild(build), recorded = recordedBuild();
+    console.log(JSON.stringify({ hash: build.hash, guid, recorded, new: guid !== recorded }));
+    return;
+  }
   if (currentHash(dir) === build.hash) {
     console.log(`\n  Build ${build.hash} is already in ${dir}\n`);
   } else {
@@ -147,7 +169,7 @@ async function main() {
   process.exitCode = scrape.status ?? 1;
 }
 
-module.exports = { parseBuild, latestBuild, pickFiles, download, currentHash };
+module.exports = { parseBuild, latestBuild, pickFiles, download, currentHash, remoteBootBuild };
 
 if (require.main === module) {
   main().catch(error => {

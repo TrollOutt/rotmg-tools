@@ -11,7 +11,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
-const { parseBuild, latestBuild, pickFiles, download, currentHash } = require('../tools/fetch-client');
+const { parseBuild, latestBuild, pickFiles, download, currentHash, remoteBootBuild } = require('../tools/fetch-client');
 
 const md5 = text => crypto.createHash('md5').update(text).digest('hex');
 const init = (cdn = 'https://rotmg-build.decagames.com/build-release/', hash = 'abc123') =>
@@ -91,6 +91,8 @@ function cdn(build, corrupt) {
     await assert.rejects(download(first, installed, cdn(first)), /not an earlier download/,
       'FETCH-016 a real client is never replaced');
     assert.ok(fs.existsSync(path.join(installed, 'RotMG Exalt.exe')), 'FETCH-017 the real client is untouched');
+
+    assert.equal(await remoteBootBuild(first, cdn(first)), 'f1f4', 'FETCH-018 the build id is read from boot.config alone');
   } finally {
     fs.rmSync(work, { recursive: true, force: true });
   }
