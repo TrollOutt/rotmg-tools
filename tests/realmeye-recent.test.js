@@ -5,7 +5,7 @@
  * reads as, and that the log keeps each revision once.
  */
 const assert = require('assert/strict');
-const { parseRecent, merge, pending } = require('../tools/realmeye-recent');
+const { parseRecent, layoutProblem, merge, pending } = require('../tools/realmeye-recent');
 
 const row = (slug, title, rev, comment, created) => `<tr><td><a href="/wiki/${slug}" title="/wiki/${slug}">${title}</a></td>`
   + `<td>${rev}<span class="muted"> (<a title="Diff with the previous revision" href="/compare-revisions-of-wiki-page/${slug}/${rev - 1}/${rev}">P</a>)</span></td>`
@@ -39,5 +39,10 @@ assert.deepEqual(log.entries.map(e => e.created), ['2026-11-06T07:15:39Z', '2026
 assert.deepEqual(pending(log), ['thessal-s-tides', 'haunted-cemetery-guide', 'ocean-trench'], 'RECENT-006 nothing integrated yet');
 log.integratedThrough = '2026-11-06T08:59:43Z';
 assert.deepEqual(pending(log), ['ocean-trench'], 'RECENT-007 only what came after the last integration');
+
+assert.equal(layoutProblem(page([]), []), null, 'RECENT-008 a quiet day, the table empty, is not a fault');
+assert.equal(layoutProblem(page([row('a', 'A', 2, 'x', '2026-11-06T10:00:00Z')]), first), null, 'RECENT-009 rows that read');
+assert.match(layoutProblem('<html><body>Just a moment...</body></html>', []), /table is gone/, 'RECENT-010 no table');
+assert.match(layoutProblem(page(['<tr><td>other</td></tr>']), []), /rows no longer read/, 'RECENT-011 rows that do not read');
 
 console.log('realmeye-recent: ok');

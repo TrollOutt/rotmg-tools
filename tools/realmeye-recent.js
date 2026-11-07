@@ -44,6 +44,15 @@ function parseRecent(page) {
   return out;
 }
 
+/* Why the page cannot be trusted, or null. A quiet day leaves the table with no
+ * rows, which is not a fault; a table that is gone, or rows that no longer read, is. */
+function layoutProblem(page, entries) {
+  const body = /<th>Page<\/th>[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/.exec(page)?.[1];
+  if (body == null) return 'the recent changes table is gone: has its layout changed?';
+  if (!entries.length && /<tr\b/.test(body)) return 'the recent changes rows no longer read: has their layout changed?';
+  return null;
+}
+
 /* Adds what the log lacks; returns the entries that were new. */
 function merge(log, entries) {
   const seen = new Set(log.entries.map(e => e.slug + '#' + e.revision));
@@ -77,15 +86,17 @@ async function main() {
   }
   const response = await fetch(URL, { headers: { 'user-agent': AGENT } });
   if (!response.ok) throw new Error(`RealmEye answered ${response.status}`);
-  const entries = parseRecent(await response.text());
-  if (!entries.length) throw new Error('the recent changes page listed nothing: has its layout changed?');
+  const page = await response.text();
+  const entries = parseRecent(page);
+  const problem = layoutProblem(page, entries);
+  if (problem) throw new Error(problem);
   const added = merge(log, entries);
   save();
   console.log(JSON.stringify({ listed: entries.length, added: added.length, pending: pending(log).length,
-    latest: log.entries.at(-1).created }));
+    latest: log.entries.at(-1)?.created ?? null }));
 }
 
-module.exports = { parseRecent, merge, pending };
+module.exports = { parseRecent, layoutProblem, merge, pending };
 
 if (require.main === module) {
   main().catch(error => {
