@@ -55,7 +55,8 @@ var FichesData = (() => {
     const SUMMARY_LABELS = ['Tier Grouped Drops', 'Blueprint', 'Drops From', 'Obtained Through', 'Tier', 'On Equip',
       'Effect(s)', 'MP Cost', 'XP Bonus', 'Soulbound', 'Feed Power', 'Forging Cost', 'Dismantling Value', 'Dust Type',
       'Loot Bag', 'Notes', 'Shots', 'Damage', 'Projectile Speed', 'Lifetime', 'Range', 'Rate of Fire', 'Reskin(s)',
-      'Upgrade', 'Reactive Proc', 'Potion', 'Consumed with use', 'Amplitude', 'Frequency', 'Power Level', 'Cooldown'];
+      'Upgrade', 'Reactive Proc', 'Potion', 'Consumed with use', 'Amplitude', 'Frequency', 'Power Level', 'Cooldown',
+      'Legacy Version', 'Legacy Version of'];
     const LABEL_RX = new RegExp('(?:^|\\s)(' + SUMMARY_LABELS.slice().sort((a, b) => b.length - a.length)
       .map(x => x.replace(/[()]/g, '\\$&')).join('|') + ')(?=\\s|$)', 'g');
 
