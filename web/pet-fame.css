@@ -194,3 +194,42 @@ body.pets-dragging, body.pets-dragging * { user-select: none !important; -webkit
 #pagePets .pf-tile canvas { width: 82%; height: 82%; image-rendering: pixelated; background: none; border-radius: 0; }
 #pagePets .pf-tile .kind { position: absolute; right: 2px; bottom: 1px; display: flex; font-size: calc(var(--u) * .78); line-height: 1; filter: drop-shadow(0 1px 1px #000); }
 #pagePets .pf-tile .kind .gem { height: calc(var(--u) * 1); }
+
+/* Cheapest Legendary: a tab of its own over the same grid. The answer on top, every egg to start from below it,
+   then the road of the row picked, stage by stage. */
+#pagePets .pf-main[hidden], #pagePets .pf-cheap[hidden] { display: none; }
+#pagePets .pf-cheap .pf-body { gap: 12px; }
+#pagePets .pf-cheap > header { flex-wrap: wrap; }
+#pagePets .pf-cheap #pfGoal { margin-left: 8px; }
+#pagePets .pf-cheap .header-aside { margin-left: auto; }
+#pagePets .lc-best { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; flex: none; }
+#pagePets .lc-best > div { background: rgb(var(--well-rgb) / .55); border: 1px solid var(--line-soft); border-radius: 8px; padding: 8px 12px; display: grid; gap: 2px; }
+#pagePets .lc-best span { color: var(--muted); font-size: calc(var(--u) * .85); }
+#pagePets .lc-best b { font-size: calc(var(--u) * 1.9); font-variant-numeric: tabular-nums; line-height: 1.15; }
+#pagePets .lc-best i { font-style: normal; color: var(--text); font-size: calc(var(--u) * .9); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+#pagePets .lc-best b.f, #pagePets .lc-steps em { color: var(--fame); }
+#pagePets .lc-best b.g { color: var(--gold); }
+#pagePets .lc-wrap { overflow-x: auto; flex: none; }
+#pagePets .lc-table { width: 100%; border-collapse: collapse; font-size: calc(var(--u) * .95); }
+#pagePets .lc-table th { text-align: right; font-weight: 600; color: var(--muted); font-size: calc(var(--u) * .82); padding: 4px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+#pagePets .lc-table td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: top; }
+#pagePets .lc-table th:first-child, #pagePets .lc-table td:first-child { text-align: left; }
+#pagePets .lc-table td:first-child { font-weight: 700; }
+#pagePets .lc-table td .egg { display: inline-flex; align-items: center; gap: 6px; }
+#pagePets .lc-table td small { display: block; color: var(--dim); font-size: calc(var(--u) * .78); }
+#pagePets .lc-table td.t { color: var(--title); font-weight: 700; }
+#pagePets .lc-table td.win { color: var(--fame); }
+#pagePets .lc-table td.win small { color: var(--fame); opacity: .8; }
+#pagePets .lc-table tbody tr { cursor: pointer; }
+#pagePets .lc-table tbody tr:hover { background: rgb(var(--hi-rgb) / .04); }
+#pagePets .lc-table tbody tr.on { background: var(--locked-soft); }
+#pagePets .lc-steps { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; flex: none; }
+#pagePets .lc-steps .st { background: rgb(var(--well-rgb) / .55); border: 1px solid var(--line-soft); border-radius: 8px; padding: 6px 10px; display: grid; gap: 2px; align-content: start; min-width: 0; }
+#pagePets .lc-steps .st b { display: flex; align-items: center; gap: 5px; color: var(--title); }
+#pagePets .lc-steps .st span { color: var(--muted); font-size: calc(var(--u) * .82); }
+#pagePets .lc-steps .st em { font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+#pagePets .lc-steps .ar { font-style: normal; color: var(--dim); align-self: center; }
+#pagePets .pf-cheap .hint { white-space: normal; overflow: visible; }
+#pagePets .pf-cheap.g .lc-steps em, #pagePets .pf-cheap.g .lc-table td.win, #pagePets .pf-cheap.g .lc-table td.win small { color: var(--gold); }
+#pagePets.cheap-on .calc-only { display: none; }
+#pagePets .lc-yard { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: calc(var(--u) * .9); }

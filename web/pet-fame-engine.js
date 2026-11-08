@@ -93,6 +93,46 @@
     return l + (l < cap ? fp / step(n, l) : 0);           // fractional, for drawing
   }
 
+  /* ---------------- the cheapest Legendary ---------------- */
+  /*
+   * What one Legendary pet costs when it starts from eggs of rarity `egg`
+   * (0 Common … 3 Legendary). Eggs cost no fame: they drop. A Legendary egg
+   * only needs a Rare yard to hatch; every other road ends in a fusion of two
+   * Rares, which needs the Legendary yard.
+   *
+   * goal 'any': nothing fed. Fusing unfed pets gives a Legendary whose cap
+   *   is the parents' first ability + 20, so 21: a Legendary that stays weak.
+   * goal 'cap': each stage fed to its cap before fusing (the first `upTo`
+   *   abilities), so the Legendary arrives with the full cap of 90.
+   * goal 'max': as 'cap', then fed at Legendary up to 90.
+   *
+   * `food` prices the feeding: whole items, each paying the stage's fee
+   * (and its shop price in gold). `yard` is the tier already owned.
+   */
+  function cheapest(egg, goal, upTo, yard, pay, food) {
+    const fee = k => FEED[k][pay] + (pay === 'gold' ? food.gold || 0 : 0);
+    const segs = road(egg, [1, 1, 1], upTo);
+    const stages = [];
+    let feed = 0, fuse = 0;
+    for (let k = egg; k <= 3; k++) {
+      const pets = Math.pow(2, 3 - k), g = segs[k];
+      const fed = goal !== 'any' && (k < 3 || goal === 'max') ? g.fp : 0;
+      const items = Math.ceil(fed / food.fp);
+      // Unfed all the way, every level stays at 1; otherwise a stage starts where the fusion left it.
+      const from = (goal === 'any' ? [1, 1, 1] : g.start).slice(0, g.open).map(Math.floor);
+      const s = { k, pets, fp: fed, items, feed: pets * items * fee(k), fuse: k < 3 ? pets / 2 * FUSE[k][pay] : 0,
+        from, to: (fed ? g.end.slice(0, g.open) : from).map(Math.floor) };
+      feed += s.feed; fuse += s.fuse;
+      stages.push(s);
+    }
+    const need = egg === 3 ? 2 : 3;
+    let yards = 0;
+    for (let t = yard + 1; t <= need; t++) yards += YARD[t][pay];
+    const last = stages[stages.length - 1];
+    const cap = egg === 3 || goal !== 'any' ? CAP[3] : 21;
+    return { egg, eggs: Math.pow(2, 3 - egg), need, yard: yards, feed, fuse, next: feed + fuse, total: feed + fuse + yards, cap, levels: last.to, stages };
+  }
+
   /* ---------------- food ---------------- */
   // Feed power per fame, or per gold with the shop price added to the fee.
   function value(food, r, pay) {
@@ -104,5 +144,5 @@
   const short = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 2).replace(/\.?0+$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'k' : fmt(n);
   const num = (v, d) => (d ? v.toFixed(d).replace(/\.?0+$/, '') : Math.round(v).toString());
 
-  return { RARITY, CAP, UNLOCK, FEED, FUSE, YARD, COLOR, SLOT_COLOR, ABILITIES, EFFECT, step, rarityOfLevel, unlocked, effect, road, fpTo, levelAfter, value, fmt, short, num };
+  return { RARITY, CAP, UNLOCK, FEED, FUSE, YARD, COLOR, SLOT_COLOR, ABILITIES, EFFECT, step, rarityOfLevel, unlocked, effect, road, fpTo, levelAfter, cheapest, value, fmt, short, num };
 });

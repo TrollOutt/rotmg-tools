@@ -36,6 +36,7 @@ var PetFame = (function () {
     fam: 'Feline', open: new Set(),                // the family followed, and the families unfolded in the list: none, at first
     abil: ['Heal', 'Magic Heal', 'Electric'],
     fp: 0, upTo: 3, pay: 'fame', mode: 'action', yard: 0,   // yard: the tier already bought
+    tab: 'calc',                                   // calc: the calculator; cheap: the cheapest Legendary
     // The food the whole road is priced with: a 750 feed power item to begin with (Cloak of the Planewalker).
     food: F.items.find(f => f.name === 'Cloak of the Planewalker') || F.items.find(f => f.fp === 750) || F.items[0]
   };
@@ -698,6 +699,63 @@ var PetFame = (function () {
     if ($('pfArenaTag').textContent !== tag) $('pfArenaTag').textContent = tag;
   }
 
+  /* ---------- the cheapest Legendary ---------- */
+  /*
+   * A tab of its own: one Legendary pet from each rarity of egg, priced with the same yard,
+   * currency, food and "Level to max" as the calculator, cheapest first. The yard is paid once,
+   * so a second pet costs only its feeding and fusions: the road for the first pet and the road
+   * for farming more of them are not always the same one.
+   */
+  const C = { pick: null };
+  const EGG_WHERE = ['tradable; drops from gods and bosses', 'tradable; drops from gods and bosses', 'tradable; drops from event and dungeon bosses', 'soulbound; drops from event and dungeon bosses'];
+  const money = n => '<b class="' + (S.pay === 'gold' ? 'g' : 'f') + '">' + PE.fmt(n) + '</b>';
+  function renderCheap() {
+    // Nothing fed: two pets at level 1 fuse as well as two maxed ones, only into a weaker pet (cap 21).
+    const food = S.food, rows = [3, 2, 1, 0].map(e => PE.cheapest(e, 'any', S.upTo, S.yard, S.pay, food));
+    const byTotal = rows.slice().sort((a, b) => a.total - b.total), byNext = rows.slice().sort((a, b) => a.next - b.next);
+    const best = byTotal[0], farm = byNext[0], fused = byTotal.find(r => r.egg < 3);
+    const pick = rows.find(r => r.egg === C.pick) || best;
+    $('pfCheapYard').value = S.yard;
+    $('pfCheap').classList.toggle('g', S.pay === 'gold');
+    const eggs = r => r.eggs + ' ' + PE.RARITY[r.egg] + ' egg' + (r.eggs > 1 ? 's' : '');
+    // The answer first, in one sentence each: the first pet, and every pet after it.
+    put($('pfBest'),
+      '<div><span>First Legendary</span>' + money(best.total) + '<i>' + gem(best.egg) + eggs(best) + (best.yard ? ' · ' + PE.short(best.yard) + ' of it is the yard' : '') + '</i></div>' +
+      '<div><span>Each one after</span>' + money(farm.next) + '<i>' + gem(farm.egg) + eggs(farm) + (farm.next ? ' · yard already bought' : ' · only the egg') + '</i></div>' +
+      (best.egg === 3 ? '<div><span>Without a Legendary egg</span>' + money(fused.total) + '<i>' + gem(fused.egg) + eggs(fused) + ' · then ' + PE.short(fused.next) + ' each</i></div>' : ''));
+    const head = '<thead><tr><th>Start from</th><th>Yard to buy (once)</th><th>Fusions</th><th>First pet</th><th>Each next</th><th>Arrives as</th></tr></thead>';
+    const body = rows.map(r => '<tr data-e="' + r.egg + '" class="' + (r === pick ? 'on' : '') + '">' +
+      '<td><span class="egg" style="color:' + RCOL(r.egg) + '">' + gem(r.egg) + eggs(r) + '</span></td>' +
+      '<td>' + (r.yard ? PE.fmt(r.yard) : '—') + '<small>' + (r.yard ? 'up to ' + PE.RARITY[r.need] : PE.RARITY[r.need] + ' yard owned') + '</small></td>' +
+      '<td>' + (r.fuse ? PE.fmt(r.fuse) : '—') + '<small>' + (r.eggs - 1) + ' fusion' + (r.eggs === 2 ? '' : 's') + '</small></td>' +
+      '<td class="t' + (r === best ? ' win' : '') + '">' + PE.fmt(r.total) + (r === best ? '<small>cheapest</small>' : '') + '</td>' +
+      '<td class="t' + (r === farm ? ' win' : '') + '">' + PE.fmt(r.next) + (r === farm ? '<small>cheapest to farm</small>' : '') + '</td>' +
+      '<td>level ' + r.levels[0] + '<small>cap ' + r.cap + (r.cap < 90 ? ' · stays weak' : '') + '</small></td></tr>').join('');
+    put($('pfRoutes'), head + '<tbody>' + body + '</tbody>');
+    // The chosen road, stage by stage: the yard if it is missing, the eggs, then each round of fusions.
+    const steps = [];
+    if (pick.yard) steps.push('<div class="st"><b>Yard up to ' + PE.RARITY[pick.need] + '</b><span>paid once, for every pet after</span><em>' + PE.fmt(pick.yard) + ' ' + S.pay + '</em></div>');
+    steps.push('<div class="st"><b>' + gem(pick.egg) + eggs(pick) + '</b><span>hatched in a ' + PE.RARITY[Math.max(0, pick.egg - 1)] + ' yard · ' + EGG_WHERE[pick.egg] + '</span></div>');
+    pick.stages.forEach(g => {
+      if (g.fuse) steps.push('<div class="st"><b style="color:' + RCOL(g.k + 1) + '">Fuse ' + (g.pets / 2 > 1 ? g.pets / 2 + ' pairs' : 'the pair') + ' → ' + PE.RARITY[g.k + 1] + '</b><span>' + (g.pets / 2) + ' × ' + PE.fmt(PE.FUSE[g.k][S.pay]) + ' · ' + PE.RARITY[g.k + 1] + ' yard</span><em>' + PE.fmt(g.fuse) + ' ' + S.pay + '</em></div>');
+    });
+    put($('pfSteps'), steps.join('<i class="ar">→</i>'));
+    $('pfCheapNote').textContent = 'Eggs cost no fame: they drop (or sell for Realm Gold). Pets need no feeding to be fused: two level 1 pets fuse into a level 1 pet of the next rarity. ' +
+      'Fusing needs a yard one tier above the two pets; hatching needs one tier below the egg. A fused Legendary from unfed pets has a cap of 21 (the parents’ 1st ability + 20); a hatched one has 90. Click a row for its road.';
+  }
+  $('pfCheapYard').onchange = e => { S.yard = +e.target.value; render(); };
+  $('pfRoutes').onclick = e => { const r = e.target.closest('tr[data-e]'); if (!r) return; C.pick = +r.dataset.e; renderCheap(); };
+  $('pfTabs').onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.tab = b.dataset.t;
+    [...$('pfTabs').children].forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
+    document.querySelector('#pagePets .pf-main').hidden = S.tab !== 'calc';
+    $('pagePets').classList.toggle('cheap-on', S.tab === 'cheap');
+    $('pfCheap').hidden = S.tab !== 'cheap';
+    render();
+    if (S.tab === 'calc') fit();
+  };
+
   /* ---------- render ---------- */
   // Leave a box alone when its content has not changed: every write costs the browser a new layout.
   function put(el, html) { if (el.__html !== html) { el.__html = html; el.innerHTML = html; } }
@@ -712,9 +770,11 @@ var PetFame = (function () {
     [...$('pfPay').children].forEach(b => b.classList.toggle('on', b.dataset.v === S.pay));
     // At a stage you have at least that stage's yard, so the list shows the higher of the two
     // and cannot go below it; what you pick is the yard you had before this pet.
-    const ys = $('pfYard'), shown = Math.max(S.yard, h.k);
+    // On the Cheapest Legendary tab there is no pet on the road: the yard is only the one you own.
+    const cheap = S.tab === 'cheap', ys = $('pfYard'), shown = cheap ? S.yard : Math.max(S.yard, h.k);
     if (+ys.value !== shown) ys.value = shown;
-    [...ys.options].forEach((o, i) => { o.disabled = i < h.k; });
+    [...ys.options].forEach((o, i) => { o.disabled = !cheap && i < h.k; });
+    if (cheap) renderCheap();
   }
   // Changing the goal changes the road: keep the 1st ability where it was.
   $('pfUpTo').onclick = e => { if (!e.target.dataset.v) return; const l1 = at(S.fp).lv[0]; S.upTo = +e.target.dataset.v; build(); S.fp = fpForLevel(0, l1); render(); };

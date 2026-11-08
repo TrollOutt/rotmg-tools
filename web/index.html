@@ -305,11 +305,12 @@
   <header class="masthead">
     <button type="button" class="link-button back" data-go="home">← All tools</button>
     <h1>Pet Fame Calculator</h1>
+    <span class="fame-avail pf-tabs" id="pfTabs" role="tablist"><button type="button" class="filter-chip on" role="tab" aria-selected="true" data-t="calc">Calculator</button><button type="button" class="filter-chip" role="tab" aria-selected="false" data-t="cheap">Cheapest Legendary</button></span>
     <div class="masthead-row">
-      <span class="lbl">Level to max</span>
-    <span class="fame-avail" id="pfUpTo"><button class="filter-chip" data-v="1">1st ability</button><button class="filter-chip" data-v="2">1st + 2nd</button><button class="filter-chip on" data-v="3">All 3</button></span>
-    <span class="lbl">Your yard</span>
-    <select id="pfYard" class="yard-sel" title="The yard you already own. It rises with the road: fusing into a rarity needs that rarity's yard."><option value="0">Common</option><option value="1">Uncommon</option><option value="2">Rare</option><option value="3">Legendary</option><option value="4">Divine</option></select>
+      <span class="lbl calc-only">Level to max</span>
+    <span class="fame-avail calc-only" id="pfUpTo"><button class="filter-chip" data-v="1">1st ability</button><button class="filter-chip" data-v="2">1st + 2nd</button><button class="filter-chip on" data-v="3">All 3</button></span>
+    <span class="lbl calc-only">Your yard</span>
+    <select id="pfYard" class="yard-sel calc-only" title="The yard you already own. It rises with the road: fusing into a rarity needs that rarity's yard."><option value="0">Common</option><option value="1">Uncommon</option><option value="2">Rare</option><option value="3">Legendary</option><option value="4">Divine</option></select>
     <span class="lbl">Pay with</span>
     <span class="fame-avail" id="pfPay"><button class="filter-chip on" data-v="fame">Fame</button><button class="filter-chip" data-v="gold">Gold</button></span>
     </div>
@@ -367,6 +368,16 @@
       </section>
     </div>
   </div>
+    <!-- The cheapest way to one Legendary pet: every egg to start from, priced like the calculator. -->
+    <section class="card pf-cheap" id="pfCheap" hidden>
+      <header><h2>Cheapest road to Legendary</h2><span class="header-aside">no feeding: only the fusions, and the yard if you do not have it yet</span><label class="lc-yard">Yard you already own <select id="pfCheapYard"><option value="0">Common</option><option value="1">Uncommon</option><option value="2">Rare</option><option value="3">Legendary</option><option value="4">Divine</option></select></label></header>
+      <div class="pf-body">
+        <div class="lc-best" id="pfBest"></div>
+        <div class="lc-wrap"><table class="lc-table" id="pfRoutes"></table></div>
+        <div class="lc-steps" id="pfSteps"></div>
+        <p class="hint" id="pfCheapNote"></p>
+      </div>
+    </section>
   </div>
   <div class="tip" id="pfTip" hidden></div>
 </div>

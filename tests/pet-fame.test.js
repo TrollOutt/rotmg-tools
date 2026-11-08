@@ -96,3 +96,32 @@ assert.equal(ambrosia.gold, 1000);
 for (const file of ['pets.png', 'foods.png']) assert(fs.existsSync(path.join(root, 'web', 'assets', 'pets', file)), file + ' is next to the page');
 
 console.log('Pet Fame: the arithmetic reproduces RealmEye\'s totals; prices, yard, skins and food match the data.');
+
+/* The cheapest Legendary: RealmEye's prices put together by hand for a 750 FP food, in fame. */
+{
+  const food = { fp: 750, gold: 0 };
+  const items = fp => Math.ceil(fp / 750);
+  // A Legendary egg needs only a Rare yard to hatch, and nothing fed for the full cap.
+  const egg = E.cheapest(3, 'cap', 1, 0, 'fame', food);
+  assert.strictEqual(egg.total, 525 + 3500, 'a Legendary egg costs the yard up to Rare');
+  assert.strictEqual(egg.next, 0, 'a second Legendary egg costs nothing more');
+  // Two Rare eggs, each fed 1 → 70 at Rare, fused in a Legendary yard.
+  const rare = E.cheapest(2, 'cap', 1, 0, 'fame', food);
+  assert.strictEqual(rare.yard, 525 + 3500 + 43750, 'fusing two Rares needs the Legendary yard');
+  assert.strictEqual(rare.fuse, 7000);
+  assert.strictEqual(rare.feed, 2 * items(E.fpTo(0, 1, 70)) * 175);
+  assert.strictEqual(rare.levels[0], 70, 'two Rares at 70 give a Legendary at 70');
+  assert.strictEqual(rare.levels.length, 3, 'the third ability opens at Legendary');
+  assert.strictEqual(rare.cap, 90);
+  // Unfed, the fusion's cap is the parents' first ability + 20: a weak Legendary.
+  const unfed = E.cheapest(0, 'any', 1, 0, 'fame', food);
+  assert.strictEqual(unfed.feed, 0);
+  assert.strictEqual(unfed.fuse, 4 * 525 + 2 * 1750 + 7000, 'seven fusions from eight Common eggs');
+  assert.strictEqual(unfed.cap, 21);
+  // A yard already owned is not paid again.
+  assert.strictEqual(E.cheapest(2, 'cap', 1, 3, 'fame', food).yard, 0);
+  // Fed to 90: the levels before 70 are cheaper at Rare, so farming from Rare eggs beats the Legendary egg's feeding.
+  const maxEgg = E.cheapest(3, 'max', 1, 3, 'fame', food), maxRare = E.cheapest(2, 'max', 1, 3, 'fame', food);
+  assert.strictEqual(maxEgg.feed, items(E.fpTo(0, 1, 90)) * 625);
+  assert(maxRare.next < maxEgg.next, 'two Rares fed to 70 then fused are cheaper to take to 90 than a Legendary egg');
+}
