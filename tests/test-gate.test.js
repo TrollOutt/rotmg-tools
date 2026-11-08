@@ -30,6 +30,7 @@ const deployCritical = [
   'fetch-client.test.js',
   'realmeye-link-report.test.js',
   'realmeye-recent.test.js',
+  'hub-news.test.js',
   'fiches-data.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',
