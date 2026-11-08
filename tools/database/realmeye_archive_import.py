@@ -183,6 +183,17 @@ def is_history_fact(key: str) -> bool:
     return (lowered in HISTORY_FACT_KEYS or lowered.startswith("released ") or lowered.startswith("history ") or " before release" in lowered)
 
 
+def link_in_prose(section_text: str, anchor: str) -> bool:
+    """Every mention of the link follows a lowercase word: "the brother of Mixcoatl"."""
+    anchor = (anchor or "").strip()
+    hits = [m.start() for m in re.finditer(re.escape(anchor), section_text or "")] if anchor else []
+    return bool(hits) and all(re.search(r"\b[a-z][a-z']*\s*$", section_text[:at]) for at in hits)
+
+
+def place_words(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", str(value or "").lower().replace("’", "'")).strip()
+
+
 def _preload(source: sqlite3.Connection):
     pages = [dict(row) for row in source.execute("SELECT * FROM pages ORDER BY slug")]
     page_type = {row["slug"]: row["type_guess"] for row in pages}
@@ -191,6 +202,7 @@ def _preload(source: sqlite3.Connection):
     sections = defaultdict(list)
     allowed_section = defaultdict(set)
     section_name = {}
+    section_text = {}
     for row in source.execute("SELECT page_url,ord,level,heading,heading_id,path,text FROM sections ORDER BY page_url,ord"):
         page_url, order, level, heading, heading_id, path, text = row
         heading = heading or ""; path = path or ""; text = text or ""
@@ -200,6 +212,7 @@ def _preload(source: sqlite3.Connection):
         sections[page_url].append(obj)
         allowed_section[page_url].add(order)
         section_name[(page_url, order)] = (heading, path)
+        section_text[(page_url, order)] = text
 
     facts = defaultdict(list)
     for row in source.execute("SELECT page_url,section_ord,key,value,source,table_ord,row_ord,links_json FROM facts ORDER BY page_url,id"):
@@ -322,6 +335,13 @@ def _preload(source: sqlite3.Connection):
                     "headers": headers, "rows": sanitized,
                 })
 
+    # Where an enemy's own page says it lives ("… EXP: 700 Location: Forbidden Jungle").
+    slug_to_url = {slug: url for url, slug in url_to_slug.items()}
+    def stated_location(slug):
+        return place_words(" ".join(str(f["value"] or "").split("Location: ", 1)[1]
+                                    for f in facts.get(slug_to_url.get(slug, ""), [])
+                                    if "Location: " in str(f["value"] or "")))
+
     semantic_links = table_semantic_links
     for row in source.execute("SELECT page_url,section_ord,href,target_url,target_slug,anchor FROM links ORDER BY page_url,id"):
         page_url, section_ord, href, target_url, target_slug, anchor = row
@@ -339,6 +359,14 @@ def _preload(source: sqlite3.Connection):
         target = slug_of(target_slug or target_url or href)
         if not target or target.startswith("release-history-"):
             continue
+        # A roster section also talks about other places: the Beachzone's boss "claims to be the
+        # brother of Mixcoatl the Masked God". A name inside a sentence whose own page lives
+        # somewhere else is not on this roster.
+        if typ == "dungeon" and link_in_prose(section_text.get((page_url, section_ord), ""), anchor):
+            lives = stated_location(target)
+            place = place_words(re.sub(r"\s*\(.*?\)|\s+(?:Guide|Enemies)$", "", title_by_url.get(page_url, "")))
+            if lives and place not in lives:
+                continue
         semantic_links[slug].append({
             "section_ord": section_ord, "section": heading, "section_path": path,
             "href": href, "target_slug": target, "anchor": anchor or "",
