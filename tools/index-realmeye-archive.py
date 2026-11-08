@@ -1054,7 +1054,9 @@ def delete_page(con: sqlite3.Connection, url: str, update_fts: bool = True) -> N
 
 
 def insert_prepared_batch(con: sqlite3.Connection, results: List[Dict[str, Any]], update_fts: bool = True) -> int:
-    rows = [result for result in results if not result.get("skip")]
+    # Two archived URLs can resolve to one canonical page (a page and one of its
+    # revisions): keep the last, or the second insert breaks the whole batch.
+    rows = list({result["url"]: result for result in results if not result.get("skip")}.values())
     if not rows:
         return 0
     urls = [(result["url"],) for result in rows]

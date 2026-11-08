@@ -22,6 +22,8 @@ const AGENT = 'rotmg-tools-realmeye-monitor/1.0 (+https://github.com/TrollOutt/r
 const decode = value => String(value)
   .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
   .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code))).replace(/&amp;/g, '&');
+/* A page's slug: an older revision is linked as /wiki/<slug>/<revision>, the same page. */
+const pageSlug = slug => slug.replace(/\/\d+$/, '');
 const text = cell => decode(cell.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 
 /* The rows of the changes table: page, revision, comment, author, when, size. */
@@ -36,7 +38,7 @@ function parseRecent(page) {
     const revision = Number(text(cells[1]).match(/^\d+/)?.[0]);
     if (!created || !revision) continue;
     out.push({
-      slug: decode(slug), title: text(cells[0]), revision,
+      slug: pageSlug(decode(slug)), title: text(cells[0]), revision,
       comment: decode(/<abbr title="([^"]*)"/.exec(cells[2])?.[1] ?? text(cells[2])),
       author: text(cells[3]), created
     });
@@ -55,6 +57,7 @@ function layoutProblem(page, entries) {
 
 /* Adds what the log lacks; returns the entries that were new. */
 function merge(log, entries) {
+  for (const e of log.entries) e.slug = pageSlug(e.slug); // logs written before revision links were read
   const seen = new Set(log.entries.map(e => e.slug + '#' + e.revision));
   const added = entries.filter(e => !seen.has(e.slug + '#' + e.revision));
   log.entries.push(...added);
@@ -63,7 +66,7 @@ function merge(log, entries) {
 }
 
 const pending = log => [...new Set(log.entries
-  .filter(e => !log.integratedThrough || e.created > log.integratedThrough).map(e => e.slug))];
+  .filter(e => !log.integratedThrough || e.created > log.integratedThrough).map(e => pageSlug(e.slug)))];
 
 async function main() {
   const args = process.argv.slice(2);
