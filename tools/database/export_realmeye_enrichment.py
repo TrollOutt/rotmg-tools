@@ -77,6 +77,9 @@ def _summary_boilerplate(text):
         return True
     return any(pattern.search(value) for pattern in BOILERPLATE_SUMMARY_PATTERNS)
 
+LEGACY_VERSION_ROW = re.compile(r"\bLegacy Version(?: of)? (?:UT|ST|T\d{1,2})\.$")
+
+
 def concise_page_intro(payload):
     """Return player-facing introductory prose, not wiki maintenance chrome.
 
@@ -116,7 +119,17 @@ def concise_page_intro(payload):
             intro = pattern.sub("", intro).strip()
 
     intro = re.sub(r"\s+([,.;:!?])", r"\1", intro)
-    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", intro) if part.strip()]
+    sentences = []
+    for part in re.split(r"(?<=[.!?])\s+", intro):
+        part = part.strip()
+        if not part:
+            continue
+        # "Legacy Version UT." is an infobox row naming a tier, not a sentence:
+        # counted as one, it cut the summary before the item's stats.
+        if sentences and LEGACY_VERSION_ROW.search(sentences[-1]):
+            sentences[-1] += " " + part
+        else:
+            sentences.append(part)
     sentences = [part for part in sentences if not _summary_boilerplate(part)]
     return " ".join(sentences[:3])[:1200].strip()
 
