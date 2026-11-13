@@ -2521,6 +2521,16 @@
       "file": "508f539c01c6c8e345f9397d.png",
       "source": "https://www.realmeye.com/s/a/img/wiki/i/85Tqh5l.png",
       "name": "Leaf Dragon Hide Armor (Retro)"
+    },
+    "enemy:Coral Barrier": {
+      "file": "d49d573e0a46efec8c12b501.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/jbzYOxl.png",
+      "name": "Coral Barrier"
+    },
+    "enemy:Lost Blue Cnidarian": {
+      "file": "1c4999d99b473c7427c7e69c.png",
+      "source": "https://www.realmeye.com/s/a/img/wiki/i/hr0NAXY.png",
+      "name": "Lost Blue Cnidarian"
     }
   }
 }
