@@ -5,10 +5,17 @@
 # identity pinned for this repository (git config --local rotmg.pinnedName and
 # rotmg.pinnedEmail) and fail closed when nothing is pinned.
 #
+# Commit and tag messages are checked too: no e-mail address other than the
+# pinned one, those of allowed-message-addresses and of rotmg.allowedIdentity.
+#
 # Extra identities can be allowed locally, one per value:
 #   git config --local --add rotmg.allowedIdentity "Name <email>"
 
 rotmg_hooks_dir=$(cd "$(dirname "$0")" && pwd)
+
+# Check the objects really sent, never their git replace substitutes.
+GIT_NO_REPLACE_OBJECTS=1
+export GIT_NO_REPLACE_OBJECTS
 
 rotmg_load_identity() {
   expected_name=$(git config --local --get rotmg.pinnedName)
@@ -54,23 +61,75 @@ rotmg_check_next_commit() {
 # Lists, one per line, the commits of a rev-list range whose author or
 # committer is not allowed:  <sha> author|committer <ident>
 rotmg_foreign_commits() {
-  git log --format='%H%x09%an <%ae>%x09%cn <%ce>' "$@" | while IFS='	' read -r sha author committer; do
+  git log --no-mailmap --format='%H%x09%an <%ae>%x09%cn <%ce>' "$@" | while IFS='	' read -r sha author committer; do
     rotmg_allowed "$author" || echo "$sha author $author"
     rotmg_allowed "$committer" || echo "$sha committer $committer"
   done
 }
 
+# Remote whose branches count as already published when merging: the remote of
+# the current branch's upstream, else origin.
+rotmg_merge_remote() {
+  rotmg_branch=$(git symbolic-ref -q --short HEAD)
+  rotmg_remote=$(git config --get "branch.$rotmg_branch.remote" 2>/dev/null)
+  if [ -z "$rotmg_remote" ] || [ "$rotmg_remote" = "." ]; then rotmg_remote=origin; fi
+  echo "$rotmg_remote"
+}
+
 # Commits a merge in progress would bring in: MERGE_HEAD when it exists (a
 # merge concluded with `git commit`), else the GITHEAD_<sha> variables git
-# merge exports to its hooks. Only commits not yet on a remote are checked.
+# merge exports to its hooks. Commits already on that remote are not checked.
 rotmg_foreign_merged() {
   rotmg_heads=$(
     git rev-parse -q --verify MERGE_HEAD >/dev/null && cat "$(git rev-parse --git-path MERGE_HEAD)"
     env | sed -n 's/^GITHEAD_\([0-9a-f]\{40,64\}\)=.*/\1/p'
   )
   for rotmg_head in $rotmg_heads; do
-    rotmg_foreign_commits "HEAD..$rotmg_head" --not --remotes
+    rotmg_foreign_commits "HEAD..$rotmg_head" --not --remotes="$(rotmg_merge_remote)/*"
   done
+}
+
+# rotmg_address_allowed <address>: the pinned address, an address of
+# rotmg.allowedIdentity, or one listed in allowed-message-addresses (the
+# versioned list of tool addresses, such as a co-author trailer's).
+rotmg_address_allowed() {
+  rotmg_addr=$(echo "$1" | tr 'A-Z' 'a-z')
+  [ "$rotmg_addr" = "$(echo "$expected_email" | tr 'A-Z' 'a-z')" ] && return 0
+  {
+    git config --local --get-all rotmg.allowedIdentity 2>/dev/null | sed -n 's/.*<\(.*\)>.*/\1/p'
+    grep -v '^#' "$rotmg_hooks_dir/allowed-message-addresses" 2>/dev/null
+  } | tr 'A-Z' 'a-z' | tr -d '\r' | grep -Fxq -- "$rotmg_addr"
+}
+
+# Reads a commit or tag message on stdin and prints one line per problem: an
+# e-mail address that is not allowed (the "Author: Name <address>" lines of
+# git merge --squash, a foreign Co-authored-by or Signed-off-by trailer...), or
+# this machine's account-wide git name or address when they differ from the
+# pinned identity. Values are masked in the report.
+rotmg_message_problems() {
+  rotmg_msg=$(sed -e '/^# -\{24\} >8 -\{24\}/,$d' -e '/^#/d' | tr -d '\r')
+  echo "$rotmg_msg" | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sort -u | while read -r rotmg_a; do
+    rotmg_address_allowed "$rotmg_a" || echo "address $(echo "$rotmg_a" | cut -c1)***@${rotmg_a#*@}"
+  done
+  rotmg_gname=$(git config --global --get user.name 2>/dev/null)
+  rotmg_gmail=$(git config --global --get user.email 2>/dev/null)
+  if [ -n "$rotmg_gname" ] && [ "$rotmg_gname" != "$expected_name" ] && echo "$rotmg_msg" | grep -qiF -- "$rotmg_gname"; then
+    echo "the account-wide git name (git config --global user.name)"
+  fi
+  if [ -n "$rotmg_gmail" ] && ! rotmg_address_allowed "$rotmg_gmail" && echo "$rotmg_msg" | grep -qiF -- "$rotmg_gmail"; then
+    echo "the account-wide git address (git config --global user.email)"
+  fi
+}
+
+rotmg_message_blocked() {
+  echo "" >&2
+  echo "$1 BLOCKED - the message names an identity that must not be published:" >&2
+  echo "$2" | head -10 | sed 's/^/    /' >&2
+  echo "  Allowed addresses: the pinned one, tools/hooks/allowed-message-addresses," >&2
+  echo "  and rotmg.allowedIdentity. Edit the message (e.g. drop the Author: lines" >&2
+  echo "  that git merge --squash writes)." >&2
+  echo "" >&2
+  exit 1
 }
 
 rotmg_blocked() {

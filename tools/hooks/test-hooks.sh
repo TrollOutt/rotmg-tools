@@ -65,7 +65,15 @@ git rm -rq --cached . >/dev/null 2>&1
 
 echo "Commits"
 accepted "commit with the project identity" commit_file a "a"
+accepted "commit with a Claude Co-Authored-By trailer" git commit -q --allow-empty -m "t" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 base=$(git rev-parse HEAD)
+refused "commit with a foreign Co-authored-by trailer" git commit -q --allow-empty -m "t" -m "Co-authored-by: $other_name <$other_email>"
+refused "commit message with a foreign address" git commit -q --allow-empty -m "write to $other_email"
+git config --global user.name "Global Person"
+git config --global user.email "global.person@example.invalid"
+refused "commit message naming the account-wide git name" git commit -q --allow-empty -m "thanks Global Person"
+git config --global --unset user.name
+git config --global --unset user.email
 refused "commit with another user.name/user.email" git -c user.name=$other_name -c user.email=$other_email commit -q --allow-empty -m x
 refused "commit --author with another identity" git commit -q --allow-empty --author="$other_name <$other_email>" -m x
 refused "GIT_COMMITTER_* with another identity" env GIT_COMMITTER_NAME=$other_name GIT_COMMITTER_EMAIL=$other_email git commit -q --allow-empty -m x
@@ -80,7 +88,7 @@ rm -f "$hooks/pre-commit.local"
 
 # A foreign commit, as if made with --no-verify on another branch.
 git switch -q -c foreign
-git commit -q --no-verify --allow-empty --author="$other_name <$other_email>" -m foreign >/dev/null 2>&1
+echo f > f.txt && git add f.txt && git commit -q --no-verify --author="$other_name <$other_email>" -m foreign >/dev/null 2>&1
 foreign=$(git rev-parse HEAD)
 refused "amend keeping a foreign author" git commit -q --amend --allow-empty -m foreign2
 git switch -q hooks-test
@@ -90,6 +98,9 @@ refused "merge --no-ff of a foreign commit" git merge --no-ff -m merge foreign
 reset_to "$base"
 git merge -q --no-ff --no-commit foreign >/dev/null 2>&1
 refused "merge concluded by git commit, bringing a foreign commit" git commit -q -m merge
+reset_to "$base"
+git merge -q --squash foreign >/dev/null 2>&1
+refused "merge --squash copying a foreign Author: line" sh -c 'git commit -q --no-edit; s=$?; grep -q "message names" "$0" && exit $s; exit 0' "$tmp/out"
 reset_to "$base"
 detected "cherry-pick of a foreign commit" git cherry-pick --allow-empty "$foreign"
 reset_to "$base"
@@ -104,6 +115,25 @@ git init -q --bare "$tmp/remote.git"
 git remote add test "$tmp/remote.git"
 accepted "push of commits made with the project identity" git push -q test hooks-test
 refused "push of a branch with a foreign commit" git push -q test foreign
+git update-ref refs/remotes/side/elsewhere "$foreign"
+refused "push of a foreign commit known only to another remote" git push -q test foreign
+git update-ref -d refs/remotes/side/elsewhere
+git switch -q -c squashed hooks-test
+git merge -q --squash foreign >/dev/null 2>&1
+git commit -q --no-verify --no-edit >/dev/null 2>&1
+refused "push of a squash commit whose message has a foreign Author: line" git push -q test squashed
+git switch -q -c replaced hooks-test
+git commit -q --no-verify --allow-empty --author="$other_name <$other_email>" -m replaced >/dev/null 2>&1
+masked=$(git commit-tree "HEAD^{tree}" -p HEAD~1 -m replaced)
+git replace HEAD "$masked"
+refused "push of a foreign commit hidden by git replace" git push -q test replaced
+git switch -q hooks-test
+git -c user.name=$other_name -c user.email=$other_email tag -a v-foreign -m "foreign tagger"
+refused "push of an annotated tag with a foreign tagger" git push -q test v-foreign
+git tag -a v-message -m "ask $other_email"
+refused "push of an annotated tag with a foreign address in its message" git push -q test v-message
+git tag -a v-ok -m "project tag"
+accepted "push of an annotated tag by the project identity" git push -q test v-ok
 git update-ref refs/remotes/test/already-published "$foreign"
 accepted "push of a foreign commit already on a remote" git push -q test foreign:refs/heads/foreign
 git switch -q -c later hooks-test

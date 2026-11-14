@@ -1,0 +1,4 @@
+# rotmg-hooks:managed - addresses a commit or tag message may contain besides
+# the pinned one, one per line (compared without case). Tool addresses only,
+# never a person's.
+noreply@anthropic.com

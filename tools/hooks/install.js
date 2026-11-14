@@ -21,7 +21,7 @@ const { execFileSync } = require('child_process');
 
 const MARKER = 'rotmg-hooks:managed';
 const HOOKS = ['pre-commit', 'commit-msg', 'pre-merge-commit', 'post-commit', 'post-rewrite', 'pre-push'];
-const FILES = ['rotmg-identity.sh', ...HOOKS];
+const FILES = ['rotmg-identity.sh', 'allowed-message-addresses', ...HOOKS];
 const SOURCE = __dirname;
 
 function git(cwd, ...args) {
@@ -91,7 +91,10 @@ if (require.main === module) {
     const { top, hooksDir, kept } = installHooks();
     console.log(`\nIdentity hooks installed in ${path.relative(top, hooksDir) || hooksDir}`);
     console.log(`  ${HOOKS.join(', ')}`);
-    if (kept.length) console.log(`  previous hooks kept and chained: ${kept.join(', ')}`);
+    for (const name of kept) {
+      if (name.endsWith('.local')) console.log(`  previous hook kept and chained: ${name}`);
+      else console.log(`  WARNING: previous hook kept but no longer run: ${name} (a .local already existed; merge it by hand)`);
+    }
     console.log(`  identity: ${pinIfNeeded(top)}\n`);
   } catch (error) {
     console.error(`\n${error.message}\n`);

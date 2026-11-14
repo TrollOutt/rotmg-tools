@@ -1,28 +1,48 @@
 #!/bin/sh
 # rotmg-hooks:managed - installed from tools/hooks by tools/hooks/install.js.
-# The last barrier before publication: refuses the push when any commit about
-# to leave this machine has an author or committer that is not the pinned
-# identity (or one allowed with rotmg.allowedIdentity). Commits already on a
-# remote-tracking branch are not checked again.
+# The last barrier before publication. Refuses the push when anything about to
+# leave this machine names another identity:
+# - a commit whose author or committer is not the pinned identity (or one
+#   allowed with rotmg.allowedIdentity);
+# - a commit or annotated-tag message with an address that is not allowed;
+# - an annotated tag whose tagger is not allowed.
+# Only commits already on a branch of the remote being pushed to (as last
+# fetched) are skipped; when it is given as a URL, everything is checked.
 . "$(dirname "$0")/rotmg-identity.sh"
 rotmg_load_identity
+remote=$1
+if git config --get "remote.$remote.url" >/dev/null 2>&1; then
+  published="--remotes=$remote/*"
+else
+  published="--remotes=rotmg-no-remote-ref/*"
+fi
 input=$(cat)
 zero=0000000000000000000000000000000000000000
-foreign=$(echo "$input" | while read -r local_ref local_sha remote_ref remote_sha; do
+problems=$(echo "$input" | while read -r local_ref local_sha remote_ref remote_sha; do
   [ -z "$local_sha" ] && continue
   [ "$local_sha" = "$zero" ] && continue
-  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
-    rotmg_foreign_commits "$remote_sha..$local_sha" --not --remotes | sed "s|^|$local_ref |"
-  else
-    rotmg_foreign_commits "$local_sha" --not --remotes | sed "s|^|$local_ref |"
+  if [ "$(git cat-file -t "$local_sha" 2>/dev/null)" = tag ]; then
+    tagger=$(git cat-file tag "$local_sha" | sed -n 's/^tagger \(.*>\) [0-9]* [-+][0-9]*$/\1/p')
+    rotmg_allowed "$tagger" || echo "$local_ref tagger ${tagger:-<none>}"
+    git cat-file tag "$local_sha" | sed '1,/^$/d' | rotmg_message_problems | sed "s|^|$local_ref tag message: |"
   fi
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+    range="$remote_sha..$local_sha"
+  else
+    range="$local_sha"
+  fi
+  # Only commits are checked below (a tag of a tree or blob has none).
+  git cat-file -e "$local_sha^{commit}" 2>/dev/null || continue
+  rotmg_foreign_commits $range --not "$published" | sed "s|^|$local_ref |"
+  git log --no-mailmap --format=%B $range --not "$published" | rotmg_message_problems | sed "s|^|$local_ref commit message: |"
 done)
-if [ -n "$foreign" ]; then
+if [ -n "$problems" ]; then
   echo "" >&2
-  echo "PUSH BLOCKED - commits about to be published carry another identity:" >&2
-  echo "$foreign" | head -10 | sed 's/^/    /' >&2
+  echo "PUSH BLOCKED - what is about to be published names another identity:" >&2
+  echo "$problems" | head -10 | sed 's/^/    /' >&2
   echo "  pinned: $expected" >&2
-  echo "  Rewrite them (git commit --amend --reset-author, or a rebase) before pushing." >&2
+  echo "  Rewrite the commits or tags (git commit --amend --reset-author, a rebase," >&2
+  echo "  or an edited message) before pushing." >&2
   echo "" >&2
   exit 1
 fi

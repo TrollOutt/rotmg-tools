@@ -79,7 +79,8 @@ It pins the project identity from `tools/hooks/project-identity` (local config o
 
 - a commit whose author or committer differs from the pinned identity, including `--author`, `-c user.*`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*` and `--amend` (pre-commit, commit-msg);
 - a merge commit, or a merge bringing in local commits, under another identity (pre-merge-commit, pre-commit);
-- a push that would publish any commit, not yet on a remote, with another author or committer (pre-push).
+- a commit or annotated-tag message with an e-mail address other than the pinned one and those of `tools/hooks/allowed-message-addresses` (e.g. the `Author:` lines of `git merge --squash`, a foreign `Co-authored-by`), or with this machine's account-wide git name (commit-msg, pre-push);
+- a push that would publish a commit not yet on the target remote with another author or committer, or an annotated tag with another tagger (pre-push).
 
 Cherry-picks and rebases keep the original author and have no blocking hook: post-commit and post-rewrite warn, and pre-push refuses them. With nothing pinned every commit is refused. Extra identities can be allowed locally with `git config --local --add rotmg.allowedIdentity "Name <email>"`; an unversioned `<hook>.local` next to an installed hook runs after it. `--no-verify` skips the hooks, so keep it for emergencies.
 
