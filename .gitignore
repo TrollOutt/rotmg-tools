@@ -21,6 +21,17 @@ tools/__pycache__/
 /rotmg_dialogue_corpus.json
 /graphify-out/
 
+# Keys and secrets, wherever they are.
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.env
+.env.*
+!.env.example
+
 # Network traces never belong in the repository.
 *.etl
 *.pcap
