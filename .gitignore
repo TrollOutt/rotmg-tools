@@ -1,7 +1,6 @@
 node_modules/
 
-# Personal working notes: these mention the account being anonymised, so they
-# must never end up in the public repository.
+# Personal notes.
 ANONYMITY.md
 
 # Local tooling configuration, not part of the project.
@@ -15,8 +14,20 @@ client-data/
 # Local bytecode created by the optional Realm animation generator.
 tools/__pycache__/
 
-# Local RealmEye monitor data
-local/realmeye-monitor/
+# Machine-local files: keys, monitor data, backups and other working copies.
+/local/
+/backups/
+/RealmEye-Wiki-Sync/
+/rotmg_dialogue_corpus.json
+/graphify-out/
+
+# Network traces never belong in the repository.
+*.etl
+*.pcap
+*.pcapng
+
+# Written by the local AI task runner on every run.
+/.ai/provider-health.json
 
 # Generated SQLite workspace
 data/Database/

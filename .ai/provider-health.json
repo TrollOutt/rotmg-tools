@@ -1,7 +1,0 @@
-{
-  "providers": {
-    "codex": { "status": "unknown", "reason": "not yet observed", "timestamp": null },
-    "claude": { "status": "unknown", "reason": "not yet observed", "timestamp": null },
-    "deepseek": { "status": "unknown", "reason": "not yet observed", "timestamp": null }
-  }
-}
