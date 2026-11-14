@@ -1,0 +1,20 @@
+#!/bin/sh
+# rotmg-hooks:managed - installed from tools/hooks by tools/hooks/install.js.
+# Runs after `git commit --amend` and `git rebase`. Rewritten commits keep their
+# original author, so they are checked here and refused later by pre-push.
+. "$(dirname "$0")/rotmg-identity.sh"
+rotmg_load_identity
+input=$(cat)
+foreign=$(echo "$input" | while read -r old new rest; do
+  [ -n "$new" ] && rotmg_foreign_commits -1 "$new"
+done)
+if [ -n "$foreign" ]; then
+  echo "" >&2
+  echo "WARNING - rewritten commits carry another identity:" >&2
+  echo "$foreign" | head -10 | sed 's/^/    /' >&2
+  echo "  pinned: $expected" >&2
+  echo "  Fix them before pushing, e.g.:  git rebase -r <base> --exec 'git commit --amend --no-edit --reset-author'" >&2
+  echo "" >&2
+fi
+[ -f "$rotmg_hooks_dir/post-rewrite.local" ] && echo "$input" | sh "$rotmg_hooks_dir/post-rewrite.local" "$@"
+exit 0

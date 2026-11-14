@@ -1,0 +1,19 @@
+#!/bin/sh
+# rotmg-hooks:managed - installed from tools/hooks by tools/hooks/install.js.
+# Runs after every commit, including cherry-pick, revert and amend, which do
+# not all pass through pre-commit. It cannot undo the commit, so it warns; the
+# pre-push hook refuses to publish it.
+. "$(dirname "$0")/rotmg-identity.sh"
+rotmg_load_identity
+foreign=$(rotmg_foreign_commits -1 HEAD)
+if [ -n "$foreign" ]; then
+  echo "" >&2
+  echo "WARNING - the commit just made carries another identity:" >&2
+  echo "$foreign" | sed 's/^/    /' >&2
+  echo "  pinned: $expected" >&2
+  echo "  Fix it before pushing:  git commit --amend --no-edit --reset-author" >&2
+  echo "  (pre-push will refuse to publish it as it is)" >&2
+  echo "" >&2
+fi
+rotmg_chain_local post-commit "$@"
+exit 0

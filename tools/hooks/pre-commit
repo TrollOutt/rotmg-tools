@@ -1,0 +1,15 @@
+#!/bin/sh
+# rotmg-hooks:managed - installed from tools/hooks by tools/hooks/install.js.
+# Refuses a commit whose author or committer is not the pinned identity.
+. "$(dirname "$0")/rotmg-identity.sh"
+rotmg_load_identity
+rotmg_check_next_commit || rotmg_blocked "COMMIT"
+# A conflicted merge concluded with `git commit`.
+foreign=$(rotmg_foreign_merged)
+if [ -n "$foreign" ]; then
+  echo "  merged commits under another identity:" >&2
+  echo "$foreign" | head -5 | sed 's/^/    /' >&2
+  rotmg_blocked "COMMIT"
+fi
+rotmg_chain_local pre-commit "$@"
+exit 0

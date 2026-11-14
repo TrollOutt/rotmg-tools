@@ -1,0 +1,5 @@
+# The identity this public project commits under (a pseudonym and its GitHub
+# no-reply address). tools/hooks/install.js pins it in a new clone. Never put
+# a real name or a personal address here.
+name=TrollOutt
+email=129011076+TrollOutt@users.noreply.github.com

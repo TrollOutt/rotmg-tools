@@ -11,8 +11,8 @@
  * merely unlikely, and the hook fails closed: with nothing pinned it refuses
  * every commit instead of guessing.
  *
- * The values are written to .git/config and .git/hooks/pre-commit, neither of
- * which is ever committed.
+ * The values are written to .git/config, which is never committed. The hooks
+ * themselves come from tools/hooks (see tools/hooks/install.js).
  */
 'use strict';
 const fs = require('fs');
@@ -30,51 +30,20 @@ function fail(message) {
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
 
 /* --------------------------------------------------------------- *
- * The hook                                                         *
+ * The hooks                                                        *
  * --------------------------------------------------------------- */
 
-// It reads the pinned values from local git config rather than having them
-// written into it, so arming the guard needs no identity yet: with nothing
-// pinned it blocks every commit. Fail closed beats committing under a name
-// chosen by accident.
-const HOOK = `#!/bin/sh
-# Installed by tools/set-identity.js. Delete this file to disable.
-expected_name=$(git config --local --get rotmg.pinnedName)
-expected_email=$(git config --local --get rotmg.pinnedEmail)
-actual_name=$(git config user.name)
-actual_email=$(git config user.email)
-
-if [ -z "$expected_name" ] || [ -z "$expected_email" ]; then
-  echo "" >&2
-  echo "COMMIT BLOCKED - no identity has been pinned for this repository yet." >&2
-  echo "" >&2
-  echo "  git would record: $actual_name <$actual_email>" >&2
-  echo "" >&2
-  echo "Author details are permanent once pushed to a public repository." >&2
-  echo "Choose deliberately, then run:" >&2
-  echo "  node tools/set-identity.js \\"<handle>\\" \\"<id>+<handle>@users.noreply.github.com\\"" >&2
-  echo "" >&2
-  exit 1
-fi
-
-if [ "$actual_name" != "$expected_name" ] || [ "$actual_email" != "$expected_email" ]; then
-  echo "" >&2
-  echo "COMMIT BLOCKED - the git identity is not the one pinned for this repository." >&2
-  echo "" >&2
-  echo "  pinned : $expected_name <$expected_email>" >&2
-  echo "  actual : $actual_name <$actual_email>" >&2
-  echo "" >&2
-  exit 1
-fi
-`;
+// The hooks are versioned in tools/hooks and installed by tools/hooks/install.js
+// into the hooks directory shared by every worktree. They read the pinned
+// values from local git config rather than having them written into them, so
+// arming the guard needs no identity yet: with nothing pinned they block every
+// commit. Hooks already there that were not installed by it (local guards) are
+// kept as <hook>.local and still run, so re-running this script never removes
+// them.
+const { installHooks } = require('./hooks/install');
 
 function installHook() {
-  const hookDir = path.join(root, '.git', 'hooks');
-  fs.mkdirSync(hookDir, { recursive: true });
-  const hookPath = path.join(hookDir, 'pre-commit');
-  fs.writeFileSync(hookPath, HOOK, 'utf8');
-  try { fs.chmodSync(hookPath, 0o755); } catch (error) { /* Windows ignores the mode */ }
-  return hookPath;
+  return path.join(installHooks(root).hooksDir, 'pre-commit');
 }
 
 // `--arm` installs the guard before a pseudonym has been chosen, so no commit
@@ -138,8 +107,8 @@ console.log('\nIdentity pinned for this repository only:\n');
 console.log(`  name  : ${git('config', 'user.name')}`);
 console.log(`  email : ${git('config', 'user.email')}`);
 console.log(`\n  account-wide value, now overridden here: ${git('config', '--global', 'user.name')}`);
-console.log(`\n  pre-commit hook installed: ${path.relative(root, hookPath)}`);
-console.log('  (lives in .git/, never committed, so it leaks nothing)');
+console.log(`\n  identity hooks installed: ${path.relative(root, path.dirname(hookPath))}`);
+console.log('  (from tools/hooks; also checks merges, rewrites and every push)');
 
 if (warnings.length) {
   console.log('\nWarnings:');

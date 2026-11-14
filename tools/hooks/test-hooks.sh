@@ -1,0 +1,122 @@
+#!/bin/sh
+# Replays the identity hook checks in a throwaway clone of this repository.
+# Nothing in this repository changes; only made-up identities are used.
+#
+#   sh tools/hooks/test-hooks.sh
+#
+# Needs git (with its sh) and node. No network.
+set -u
+here=$(cd "$(dirname "$0")" && pwd)
+src=$(git -C "$here" rev-parse --show-toplevel)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/rotmg-hooks-test.XXXXXX")
+
+# Keep the account-wide git config out of the way: the tests must never fall
+# back to whatever identity this machine has.
+export GIT_CONFIG_GLOBAL="$tmp/empty-gitconfig"
+: > "$GIT_CONFIG_GLOBAL"
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+export GIT_EDITOR=true GIT_MERGE_AUTOEDIT=no
+
+me_name=hooks-test
+me_email=hooks-test@example.invalid
+other_name=someone-else
+other_email=someone-else@example.invalid
+
+pass=0
+fail=0
+ok() { pass=$((pass + 1)); echo "  ok   - $1"; }
+ko() { fail=$((fail + 1)); echo "  FAIL - $1"; sed 's/^/         /' "$tmp/out"; }
+accepted() { d=$1; shift; if "$@" >"$tmp/out" 2>&1; then ok "accepted: $d"; else ko "should be accepted: $d"; fi; }
+refused() { d=$1; shift; if "$@" >"$tmp/out" 2>&1; then ko "should be refused: $d"; else ok "refused:  $d"; fi; }
+# Refused, or at least reported by a warning hook (for commands git runs
+# without a blocking hook).
+detected() {
+  d=$1; shift
+  if ! "$@" >"$tmp/out" 2>&1; then ok "refused:  $d"
+  elif grep -q 'another identity' "$tmp/out"; then ok "warned:   $d"
+  else ko "should be detected: $d"; fi
+}
+reset_to() { git cherry-pick --abort >/dev/null 2>&1; git merge --abort >/dev/null 2>&1; git rebase --abort >/dev/null 2>&1; git reset -q --hard "$1"; }
+commit_file() { echo "$1" > "$1.txt" && git add "$1.txt" && shift && git commit -q -m "$@"; }
+
+echo "Throwaway clone: $tmp/clone"
+git clone -q --no-checkout "$src" "$tmp/clone" || exit 1
+cd "$tmp/clone" || exit 1
+hooks=$(git rev-parse --git-path hooks)
+mkdir -p "$hooks"
+printf '#!/bin/sh\nexit 0\n' > "$hooks/pre-push"   # a hook installed by hand before
+
+echo "Install"
+node "$here/install.js" >"$tmp/out" 2>&1 && ok "install.js runs" || ko "install.js runs"
+for h in pre-commit commit-msg pre-merge-commit post-commit post-rewrite pre-push; do
+  grep -q rotmg-hooks:managed "$hooks/$h" 2>/dev/null || { echo "missing $h" > "$tmp/out"; ko "hook $h installed"; }
+done
+[ -f "$hooks/pre-push.local" ] && ok "previous pre-push kept as pre-push.local" || ko "previous pre-push kept as pre-push.local"
+expected_pin=$(sed -n 's/^name=//p' "$here/project-identity")
+[ "$(git config --local rotmg.pinnedName)" = "$expected_pin" ] && ok "project identity pinned from tools/hooks/project-identity" || ko "project identity pinned"
+
+# From here on, a made-up project identity.
+git config --local rotmg.pinnedName "$me_name"
+git config --local rotmg.pinnedEmail "$me_email"
+git config --local user.name "$me_name"
+git config --local user.email "$me_email"
+git switch -q --orphan hooks-test
+git rm -rq --cached . >/dev/null 2>&1
+
+echo "Commits"
+accepted "commit with the project identity" commit_file a "a"
+base=$(git rev-parse HEAD)
+refused "commit with another user.name/user.email" git -c user.name=$other_name -c user.email=$other_email commit -q --allow-empty -m x
+refused "commit --author with another identity" git commit -q --allow-empty --author="$other_name <$other_email>" -m x
+refused "GIT_COMMITTER_* with another identity" env GIT_COMMITTER_NAME=$other_name GIT_COMMITTER_EMAIL=$other_email git commit -q --allow-empty -m x
+refused "GIT_AUTHOR_* with another identity" env GIT_AUTHOR_NAME=$other_name GIT_AUTHOR_EMAIL=$other_email git commit -q --allow-empty -m x
+git config --local --unset rotmg.pinnedName
+refused "commit with no pinned identity (fail closed)" git commit -q --allow-empty -m x
+git config --local rotmg.pinnedName "$me_name"
+printf '#!/bin/sh\nexit 1\n' > "$hooks/pre-commit.local"
+refused "commit refused by a local pre-commit.local guard" git commit -q --allow-empty -m x
+rm -f "$hooks/pre-commit.local"
+[ "$(git rev-parse HEAD)" = "$base" ] && ok "no refused commit was created" || { echo "HEAD moved" > "$tmp/out"; ko "no refused commit was created"; }
+
+# A foreign commit, as if made with --no-verify on another branch.
+git switch -q -c foreign
+git commit -q --no-verify --allow-empty --author="$other_name <$other_email>" -m foreign >/dev/null 2>&1
+foreign=$(git rev-parse HEAD)
+refused "amend keeping a foreign author" git commit -q --amend --allow-empty -m foreign2
+git switch -q hooks-test
+
+echo "Merge, cherry-pick, rebase"
+refused "merge --no-ff of a foreign commit" git merge --no-ff -m merge foreign
+reset_to "$base"
+git merge -q --no-ff --no-commit foreign >/dev/null 2>&1
+refused "merge concluded by git commit, bringing a foreign commit" git commit -q -m merge
+reset_to "$base"
+detected "cherry-pick of a foreign commit" git cherry-pick --allow-empty "$foreign"
+reset_to "$base"
+git switch -q -c rebased foreign
+commit_file b "b" --no-verify
+detected "rebase replaying a foreign commit" git rebase -q --force-rebase "$base"
+git switch -q hooks-test
+reset_to "$base"
+
+echo "Push"
+git init -q --bare "$tmp/remote.git"
+git remote add test "$tmp/remote.git"
+accepted "push of commits made with the project identity" git push -q test hooks-test
+refused "push of a branch with a foreign commit" git push -q test foreign
+git update-ref refs/remotes/test/already-published "$foreign"
+accepted "push of a foreign commit already on a remote" git push -q test foreign:refs/heads/foreign
+git switch -q -c later hooks-test
+commit_file c "c"
+git commit -q --no-verify --allow-empty -m late-foreign --author="$other_name <$other_email>" >/dev/null 2>&1
+refused "push updating a branch with a new foreign commit" git push -q test later:hooks-test
+printf '#!/bin/sh\nexit 1\n' > "$hooks/pre-push.local"
+git reset -q --hard HEAD~1
+refused "push refused by a local pre-push.local guard" git push -q test later:hooks-test
+rm -f "$hooks/pre-push.local"
+accepted "same push once the guard allows it" git push -q test later:hooks-test
+
+cd "$src" || exit 1
+echo ""
+echo "$pass passed, $fail failed  (clone left in $tmp)"
+[ "$fail" -eq 0 ]
