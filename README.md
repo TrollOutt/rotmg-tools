@@ -67,6 +67,24 @@ Theory Crafting is a model: results depend on the selected target, distance and 
 
 Install dependencies and run `npm run typecheck`, `npm test` and `npm run build` before submitting changes. Keep generated data consistent with its source and include relevant validation for calculation or data changes.
 
+### Commit identity hooks
+
+Every commit in this public history carries an author and a committer. After cloning, run once:
+
+```sh
+node tools/hooks/install.js
+```
+
+It pins the project identity from `tools/hooks/project-identity` (local config only) and installs the hooks of `tools/hooks/` into the hooks directory shared by all worktrees. They block:
+
+- a commit whose author or committer differs from the pinned identity, including `--author`, `-c user.*`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*` and `--amend` (pre-commit, commit-msg);
+- a merge commit, or a merge bringing in local commits, under another identity (pre-merge-commit, pre-commit);
+- a push that would publish any commit, not yet on a remote, with another author or committer (pre-push).
+
+Cherry-picks and rebases keep the original author and have no blocking hook: post-commit and post-rewrite warn, and pre-push refuses them. With nothing pinned every commit is refused. Extra identities can be allowed locally with `git config --local --add rotmg.allowedIdentity "Name <email>"`; an unversioned `<hook>.local` next to an installed hook runs after it. `--no-verify` skips the hooks, so keep it for emergencies.
+
+Test the hooks in a throwaway clone (nothing in the repository changes): `sh tools/hooks/test-hooks.sh`.
+
 The [Deploy to GitHub Pages workflow](.github/workflows/pages.yml) builds and deploys the site on every push to `main`, after type checking, tests and build validation. It publishes `docs/`; generated site files do not need to be committed.
 
 ## Credits and license
