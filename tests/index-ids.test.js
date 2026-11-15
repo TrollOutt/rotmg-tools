@@ -54,7 +54,12 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'index-ids-'));
 const write = (name, records) => { const file = path.join(dir, name); fs.writeFileSync(file, JSON.stringify({ records })); return file; };
 const oldFile = write('old.json', first);
 const tool = path.join(__dirname, '..', 'tools', 'check-index-ids.js');
-const run = (env, ...files) => spawnSync(process.execPath, [tool, ...files], { encoding: 'utf8', env: { ...process.env, ...env } });
+// Without the caller's own waiver: the CI sets it for a pull request labelled accept-data-changes.
+const run = (env, ...files) => {
+  const base = { ...process.env };
+  delete base.ROTMG_ACCEPT_ID_CHANGES;
+  return spawnSync(process.execPath, [tool, ...files], { encoding: 'utf8', env: { ...base, ...env } });
+};
 const bad = run({}, oldFile, write('swapped.json', swapped));
 assert.strictEqual(bad.status, 1, bad.stderr);
 assert.match(bad.stderr, /item:Made-up Star: was item\|0x3745, now item\|0x460d/);

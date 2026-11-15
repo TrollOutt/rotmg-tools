@@ -90,6 +90,13 @@ scrape, so a moved id shows in the pull request's failing tests.
 `ROTMG_ACCEPT_ID_CHANGES=1` makes it a warning, for a move checked by hand
 (the three enchantment typo fixes above would need it).
 
+In CI (`.github/workflows/ci.yml`), once the moved ids have been checked by hand
+(a season update, say): add the `accept-data-changes` label to the pull request,
+which reruns the checks, or start the Tests workflow by hand with
+`accept_data_changes` ticked. Both set `ROTMG_ACCEPT_ID_CHANGES=1` and
+`ROTMG_ACCEPT_DATA_CHANGES=1`; the job log shows a "Data checks waived" warning
+and still lists every change. The label only waives that pull request.
+
 ## Known limits (outside this work)
 
 - **Two RealmEye archives (ROT-B-08).** The local archive

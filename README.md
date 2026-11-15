@@ -67,7 +67,7 @@ Theory Crafting is a model: results depend on the selected target, distance and 
 
 ## Contributing and publishing
 
-Install dependencies and run `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` before submitting changes. The [Tests workflow](.github/workflows/ci.yml) runs lint, type check and tests on every branch and pull request. Keep generated data consistent with its source and include relevant validation for calculation or data changes.
+Install dependencies and run `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` before submitting changes. The [Tests workflow](.github/workflows/ci.yml) runs lint, type check and tests on every branch and pull request; a data update that moves Index ids on purpose is waived with the `accept-data-changes` label (see [INDEX-IDS.md](INDEX-IDS.md#the-guard-in-place)). Keep generated data consistent with its source and include relevant validation for calculation or data changes.
 
 The [Deploy to GitHub Pages workflow](.github/workflows/pages.yml) builds and deploys the site on every push to `main`, after type checking, tests and build validation. It publishes `docs/`; generated site files do not need to be committed.
 
