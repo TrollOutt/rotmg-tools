@@ -1343,6 +1343,9 @@ def main() -> int:
         print(f"RealmEye index: refused, {problem}. Nothing was changed. "
               "Check the crawl (network, RealmEye blocking) or pass --allow-mass-removal.", file=sys.stderr)
         return 3
+    if problem:
+        print(f"RealmEye index: mass removal accepted by --allow-mass-removal: "
+              f"{len(removed & set(existing))} of {len(existing)} archived pages removed ({problem})", file=sys.stderr)
     for url in removed:
         if url in existing:
             delete_page(con, url)

@@ -96,7 +96,9 @@ class ArchiveGuardTest(unittest.TestCase):
         self.assertEqual(self.archived(), 60)
 
         # Someone who checked the crawl by hand can still accept it.
-        self.assertEqual(self.index("--allow-mass-removal").returncode, 0)
+        accepted = self.index("--allow-mass-removal")
+        self.assertEqual(accepted.returncode, 0)
+        self.assertIn("mass removal accepted by --allow-mass-removal: 58 of 60", accepted.stderr)
         self.assertEqual(self.archived(), 2)
 
     def test_a_page_the_crawl_could_not_read_keeps_its_archived_text(self):
