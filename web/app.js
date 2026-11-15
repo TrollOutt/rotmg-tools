@@ -5572,6 +5572,10 @@ function ensureTheoryPage() {
  * server answers "not modified" when nothing changed), and the script tag then
  * reads the fresh one. A copy opened from disk has no server to ask and loads
  * as it always did.
+ *
+ * The built page names each file with a digest of its bytes, so a changed file
+ * already has a new address and that first request would only download the
+ * script a second time: with a version, the script tag alone is enough.
  */
 function loadLateScript(placeholder, onload, onerror) {
   // The built page names each lazy file with a digest of its bytes (tools/build-standalone.js).
@@ -5585,7 +5589,7 @@ function loadLateScript(placeholder, onload, onerror) {
     placeholder.before(script);
   };
   const served = /^https?:$/.test(location.protocol) && typeof fetch === 'function';
-  if (!served) { add(); return; }
+  if (!served || version) { add(); return; }
   fetch(src, { cache: 'no-cache' }).catch(() => {}).then(add);
 }
 

@@ -378,6 +378,37 @@ async function run() {
       assert.equal(pending.length, 0, 'revisit reuses every Index dependency');
     }
   }
+  // A versioned lazy script is downloaded once: its address changes with its
+  // bytes, so no revalidating fetch before the tag (L06 V-03). Unversioned
+  // (the raw web/ page) still revalidates; a copy opened from disk never fetches.
+  {
+    const vm = require('vm');
+    const begin = app.indexOf('function loadLateScript(');
+    const end = app.indexOf('\n}', begin) + 2;
+    assert(begin >= 0 && end > begin, 'loadLateScript remains extractable');
+    const attempt = async (protocol, version) => {
+      const fetched = [], added = [];
+      const context = {
+        location: { protocol },
+        fetch: (url, options) => { fetched.push([url, options && options.cache]); return Promise.resolve({}); },
+        document: { createElement: () => ({ remove() {} }) },
+        encodeURIComponent
+      };
+      vm.createContext(context);
+      vm.runInContext(app.slice(begin, end), context);
+      const placeholder = { dataset: { lazySrc: 'index-page.js', ...(version ? { version } : {}) }, before: script => added.push(script.src) };
+      context.loadLateScript(placeholder, () => {}, () => {});
+      await new Promise(resolve => setImmediate(resolve));
+      return { fetched, added };
+    };
+    assert.deepEqual(await attempt('https:', '0123456789'), { fetched: [], added: ['index-page.js?v=0123456789'] },
+      'a versioned script is requested once, by its tag');
+    assert.deepEqual(await attempt('http:', undefined), { fetched: [['index-page.js', 'no-cache']], added: ['index-page.js'] },
+      'an unversioned script is revalidated before its tag');
+    assert.deepEqual(await attempt('file:', undefined), { fetched: [], added: ['index-page.js'] },
+      'a copy from disk never fetches');
+  }
+
   // A tool whose scripts could not be fetched says so and offers to try again,
   // instead of standing on "Loading" (L06 V-06). Real code, fake DOM.
   {
