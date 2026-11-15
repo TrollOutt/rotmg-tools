@@ -10,25 +10,46 @@
     ],
     "types": []
   },
+  // Every script of the site is checked by default, so a new file in web/ is
+  // covered the day it lands.
   "include": [
-    "web/engine.js",
-    "web/training/engine.js",
-    "web/training/index-combat.js",
-    "web/fame.js",
-    "web/items.js",
-    "web/progression.js",
-    "web/theory-engine.js",
-    "web/index-search.js",
-    "web/index-filter.js",
-    "web/index-grouping.js",
-    "web/index-families.js",
-    "web/app-data.js",
-    "web/fiches-data.js",
-    "web/skin-viewer-data.js",
-    "web/skin-viewer-animation.js",
-    "web/atlas-data.js",
-    "web/atlas-geometry.js",
-    "web/atlas-spatial.js",
+    "web/**/*.js",
+    "web/**/*.mjs",
     "web/progression-module.d.ts"
+  ],
+  // Not checked yet: the page controllers below talk to the DOM, and these
+  // settings have no DOM library, so each reports from tens to a thousand
+  // errors (ROT-C-14). Take a file off this list once it type-checks; never
+  // add one to it. realm-data.js is a local file that git does not carry;
+  // locales.js (tools/build-i18n.js) and assets/ are generated.
+  "exclude": [
+    "web/assets/**",
+    "web/realm-data.js",
+    "web/locales.js",
+    "web/app.js",
+    "web/fame-page.js",
+    "web/fiches-c.js",
+    "web/home-snake.js",
+    "web/i18n.js",
+    "web/index-browse.js",
+    "web/index-page.js",
+    "web/outline.js",
+    "web/pet-fame-engine.js",
+    "web/pet-fame.js",
+    "web/realm-map.js",
+    "web/router-contract.js",
+    "web/skins/app.js",
+    "web/skins/contracts.mjs",
+    "web/skins/renderer.js",
+    "web/sprite-animation.js",
+    "web/theorycraft.js",
+    "web/training/loop.js",
+    "web/training/renderer.js",
+    "web/training/ui_bg.js",
+    "web/training/ui_code.js",
+    "web/training/ui_game.js",
+    "web/training/ui_gear.js",
+    "web/ui-style.js",
+    "web/whats-new.js"
   ]
 }
