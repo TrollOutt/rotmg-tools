@@ -99,6 +99,12 @@ try {
 }
 
 fs.mkdirSync(OUT, { recursive: true });
+/*
+ * The provenance goes first and comes back last (ROT-B-09): a run stopped
+ * halfway leaves XML with no provenance, which check_client_source and the
+ * Index refuse, rather than partial XML labelled with the previous build.
+ */
+fs.rmSync(path.join(OUT, 'provenance.json'), { force: true });
 for (const file of fs.readdirSync(OUT)) if (file.endsWith('.xml')) fs.unlinkSync(path.join(OUT, file));
 
 console.log(`\n  ${path.basename(client.base)} — ${(size / 1048576).toFixed(0)} MB read in ${((Date.now() - started) / 1000).toFixed(1)} s\n`);

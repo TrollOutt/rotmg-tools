@@ -8,6 +8,31 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# The documents the Index cannot be built without (ROT-B-09).
+KEY_DOCUMENTS = ("Enchantments.xml", "EnchantmentLists.xml", "EquipmentSets.xml")
+
+
+def contract_problem(source: Path, origin: dict) -> str:
+    """Why the XML and the textures of client-data do not make one source ("" when they do).
+
+    The key documents must be there, and the textures must come from the same
+    build as the XML: tools/extract-client-textures.js writes its own
+    textures/provenance.json, last, for this comparison.
+    """
+    missing = [name for name in KEY_DOCUMENTS if not (source / name).is_file()]
+    if not any(source.glob("Objects.*.xml")) and not (source / "Objects.xml").is_file():
+        missing.insert(0, "Objects.*.xml")
+    if missing:
+        return "client-data lacks key documents: " + ", ".join(missing) + ". Run tools/extract-client.js."
+    textures = source / "textures" / "provenance.json"
+    if not textures.is_file():
+        return f"no {textures}: run tools/extract-client-textures.js (it records the textures' build)"
+    texture_origin = json.loads(textures.read_text(encoding="utf-8")).get("from") or {}
+    if texture_origin.get("build") != origin.get("build"):
+        return (f"textures come from build {texture_origin.get('build')!r}, the XML from {origin.get('build')!r}: "
+                "run tools/extract-client.js and tools/extract-client-textures.js on the same client")
+    return ""
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -60,6 +85,10 @@ def main():
         raise SystemExit(
             f"client-data source looks incomplete: only {len(xml)} XML files"
         )
+
+    problem = contract_problem(source, origin)
+    if problem:
+        raise SystemExit(problem)
 
     print(
         "Client source contract: ok"
