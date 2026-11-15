@@ -99,6 +99,26 @@ class ArchiveGuardTest(unittest.TestCase):
         self.assertEqual(self.index("--allow-mass-removal").returncode, 0)
         self.assertEqual(self.archived(), 2)
 
+    def test_a_page_the_crawl_could_not_read_keeps_its_archived_text(self):
+        # R2: watch-realmeye records a 200 block page with an error and no rawHash.
+        self.snapshot(self.PAGES)
+        self.assertEqual(self.index().returncode, 0)
+        latest = self.root / "monitor" / "latest.json"
+        payload = json.loads(latest.read_text(encoding="utf-8"))
+        payload["complete"] = False
+        for page in payload["pages"][:5]:
+            page.update(rawHash="", contentHash="", error="no wiki content (not a wiki page)")
+        latest.write_text(json.dumps(payload), encoding="utf-8")
+        self.assertEqual(self.index().returncode, 0)
+        con = sqlite3.connect(self.db)
+        try:
+            texts = [row[0] for row in con.execute("SELECT text FROM pages WHERE url IN (%s)" % ",".join("?" * 5),
+                                                   [p["url"] for p in payload["pages"][:5]])]
+        finally:
+            con.close()
+        self.assertEqual(len(texts), 5)
+        self.assertTrue(all("Made-up page" in text for text in texts))
+
     def test_an_ordinary_removal_still_goes_through(self):
         self.snapshot(self.PAGES)
         self.assertEqual(self.index().returncode, 0)

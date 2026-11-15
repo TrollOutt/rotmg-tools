@@ -17,6 +17,9 @@ function page(slug) {
     `<body><div class="wiki-page"><h1>${slug}</h1><p>${slug} text</p>${links}</div></body></html>`;
 }
 
+// A block page served with 200, as a challenge wall does: no wiki body.
+const CHALLENGE = '<!doctype html><html><head><title>Just a moment...</title></head><body><p>Checking your browser.</p></body></html>';
+
 // failing(slug) -> null (answers 200) or a status / 'throw'.
 function fakeRequest(failing) {
   return async url => {
@@ -25,6 +28,9 @@ function fakeRequest(failing) {
     const slug = pathname.slice('/wiki/'.length);
     const failure = failing(slug);
     if (failure === 'throw') throw new Error('connect ECONNRESET');
+    if (failure === 'challenge') {
+      return { status: 200, headers: { 'content-type': 'text/html' }, body: Buffer.from(CHALLENGE) };
+    }
     if (failure) return { status: failure, headers: { 'content-type': 'text/html' }, body: Buffer.from('<html>blocked</html>') };
     return { status: 200, headers: { 'content-type': 'text/html' }, body: Buffer.from(page(slug)) };
   };
@@ -90,6 +96,23 @@ function snapshots(out) {
     const [snapshot] = snapshots(blocked.out);
     assert.strictEqual(snapshot.complete, false);
   }
+
+  // A challenge page answered 200 everywhere: a failure, nothing archived as content.
+  assert.strictEqual(monitor.hasWikiContent(CHALLENGE), false);
+  assert.strictEqual(monitor.hasWikiContent(page('a')), true);
+  const walled = await crawl([], () => 'challenge');
+  assert.ok(walled.error, 'a 200 challenge on every page must fail the crawl');
+  assert.match(walled.error.message, /2 of 2 pages unreadable/);
+  const [wall] = snapshots(walled.out);
+  assert.ok(wall.pages.every(one => one.error && !one.rawHash), 'a challenge page is never stored as the page');
+  assert.ok(!fs.existsSync(path.join(walled.out, 'objects')) || fs.readdirSync(path.join(walled.out, 'objects')).length === 0);
+
+  // One trapped page in ten stays under the limit, and is kept out of the archive.
+  const oneTrap = await crawl([], slug => slug === 'c' ? 'challenge' : null);
+  assert.strictEqual(oneTrap.error, null);
+  const trapped = oneTrap.result.snapshot.pages.find(one => one.url.endsWith('/wiki/c'));
+  assert.ok(trapped.error && !trapped.rawHash);
+  assert.strictEqual(oneTrap.result.snapshot.complete, false);
 
   // 30 % of the pages fail: above the default 20 % limit.
   const failing = new Set(['a', 'b', 'c']);

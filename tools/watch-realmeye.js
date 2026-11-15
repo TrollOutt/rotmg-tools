@@ -229,6 +229,11 @@ function extractTitle(html, mainHtml) {
   return title ? textFromHtml(title[1]).replace(/\s+[|\-–—]\s+RealmEye.*$/i, '').trim() : '';
 }
 
+/* Does the page carry the wiki's body marker? Every archived 2xx page does (6,727 of 6,727). */
+function hasWikiContent(html) {
+  return /class\s*=\s*["'][^"']*\bwiki-page\b[^"']*["']/i.test(String(html || ''));
+}
+
 function extractWikiMain(html) {
   const source = String(html || '');
   const marker = /class\s*=\s*["'][^"']*\bwiki-page\b[^"']*["']/i.exec(source);
@@ -950,13 +955,35 @@ async function crawlOnce(options) {
       const body = response.body.toString('utf8');
       const contentType = headerValue(response.headers, 'content-type');
       const isHtml = /text\/html|application\/xhtml\+xml/i.test(contentType) || /^\s*</.test(body);
-      const rawHash = body ? storeHtmlObject(options.out, body) : '';
       const mainHtml = isHtml ? extractWikiMain(body) : body;
       const normalized = isHtml ? normalizeWikiContent(mainHtml) : body.trim();
       const text = isHtml ? textFromHtml(mainHtml) : body.trim();
       const title = isHtml ? extractTitle(body, mainHtml) : '';
       const canonical = isHtml ? extractCanonical(body) : null;
       const goneHint = isHtml ? looksGone(body, title, text) : false;
+
+      /*
+       * A 2xx that is not a wiki page (a challenge or block page served with
+       * 200) is a failure, not new content: it is not stored, carries no
+       * rawHash, so the indexer keeps the archived page, and it counts
+       * against --max-error-ratio.
+       */
+      if (response.status >= 200 && response.status < 300 && !goneHint && !hasWikiContent(body)) {
+        records.set(job.url, {
+          url: job.url,
+          finalUrl: finalWiki || response.finalUrl,
+          status: response.status,
+          transportStatus: response.status,
+          source: job.source,
+          discoveredFrom: job.discoveredFrom,
+          fetchedAt: nowIso(),
+          contentType,
+          contentLength: Buffer.byteLength(body),
+          error: 'no wiki content (not a wiki page)'
+        });
+        return;
+      }
+      const rawHash = body ? storeHtmlObject(options.out, body) : '';
 
       const record = {
         url: job.url,
@@ -1108,6 +1135,7 @@ module.exports = {
   crawlOnce,
   crawlHealth,
   crawlComplete,
+  hasWikiContent,
   canonicalWikiUrl,
   extractWikiMain,
   normalizeWikiContent,
