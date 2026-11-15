@@ -5,7 +5,8 @@ const { createCardData } = require('../web/fiches-data');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 // Recorded from the unmodified card closure at this commit, before extraction.
 // Output interning only compresses repetitions; these are values, not another implementation.
-const corpus = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(__dirname, 'fiches-data-corpus.json.gz'))));
+// The real-data cases can be re-recorded after a data update (tests/corpus-record.js).
+const frozen = require('./corpus-record').open('fiches-data-corpus.json.gz'), corpus = frozen.corpus;
 const enrichment = JSON.parse(read('web/assets/index/realmeye-enrichment.json'));
 const forge = JSON.parse(read('web/assets/index/client-forge.json'));
 const plain = v => JSON.parse(JSON.stringify(v, (_, value) => typeof value === 'number' && !Number.isFinite(value) ? { $number: String(value) } : value));
@@ -37,17 +38,26 @@ function direct(sources, extra = {}) {
     adapters.push(page.fiches);
   }
   await flush();
-  assert.deepEqual(plain(apis[3].forgeExtra()), corpus.forge);
+  frozen.value(corpus, 'forge', plain(apis[3].forgeExtra()), 'forge table');
   assert.strictEqual(apis[7].forgeExtra(), forge, 'HTTP keeps the response object');
   assert.strictEqual(apis[7].communityRecords(), enrichment.records, 'HTTP keeps the records object');
-  assert.equal(digest(apis[3].communityRecords()), corpus.communityDigest);
+  frozen.value(corpus, 'communityDigest', digest(apis[3].communityRecords()), 'community digest');
   for (const catalogue of corpus.catalogues) {
     const current = await require('./index-harness')(require('../web/index-search'), undefined, { archive: catalogue.archive, loadArchive: catalogue.archive });
-    assert.deepEqual(plain(current.IX.list.map(project)), catalogue.rows.map(([r]) => r), 'Real catalogue projection, archive=' + catalogue.archive);
+    const projected = plain(current.IX.list.map(project));
+    // Recording: a catalogue whose records changed is rebuilt from the data; every
+    // record then gets its four outputs re-pointed below, and modes must still agree.
+    if (frozen.recording && JSON.stringify(projected) !== JSON.stringify(catalogue.rows.map(([r]) => r))) {
+      const before = new Map(catalogue.rows.map(([r, expected]) => [r.id, expected]));
+      catalogue.rows = projected.map(r => [r, (before.get(r.id) || [0, 0, 0, 0]).slice()]);
+      frozen.moved('catalogue records, archive=' + catalogue.archive);
+    }
+    assert.deepEqual(projected, catalogue.rows.map(([r]) => r), 'Real catalogue projection, archive=' + catalogue.archive);
+    const same = (actual, expected, label) => assert.equal(JSON.stringify(actual), JSON.stringify(expected), label);
     for (const [r, expected] of catalogue.rows) {
       for (let i = 0; i < apis.length; i++) {
-        assert.equal(JSON.stringify(result(apis[i], r)), JSON.stringify(corpus.outputs[expected[i % 4]]), r.id + ': module mode ' + i);
-        assert.equal(JSON.stringify(result(adapters[i], r)), JSON.stringify(corpus.outputs[expected[i % 4]]), r.id + ': adapter mode ' + i);
+        frozen.pointer('outputs', expected, i % 4, result(apis[i], r), r.id + ': module mode ' + i, 'card outputs', same);
+        frozen.pointer('outputs', expected, i % 4, result(adapters[i], r), r.id + ': adapter mode ' + i, 'card outputs', same);
         cases++;
       }
     }
@@ -148,4 +158,5 @@ function direct(sources, extra = {}) {
   const retry = direct(undefined, { fetchForge: () => Promise.resolve(incoming) }); await flush();
   assert.strictEqual(retry.forgeExtra(), incoming, 'Fresh factory can recover from a failed previous page');
   console.log(`Card data parity: ${cases} frozen record/mode cases, module and adapters identical; 11 summaries, 7 loader journals, references, concurrency and live phases.`);
+  frozen.save();
 })().catch(error => { console.error(error); process.exitCode = 1; });

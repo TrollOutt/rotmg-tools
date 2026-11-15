@@ -27,6 +27,8 @@ npm run build
 
 `npm test` runs the calculation, data consistency and application checks. Both tests and build check translations and compile the locale catalogues; build also validates the standalone output.
 
+Four tests (`fiches-data`, `index-facets`, `index-families`, `index-grouping`) also freeze what the code gives on the real data, so a data update moves some of their cases. After a data-only update, with no code change in the working tree, `npm run corpus:record` re-records only the moved data cases, prints how many moved, and checks the result; commit the corpora with the data they follow. Edge and failure cases are never re-recorded, and `npm test` stays strict.
+
 Serve the generated `docs/` directory over HTTP. For example, if Python 3 is installed:
 
 ```sh
@@ -65,7 +67,7 @@ Theory Crafting is a model: results depend on the selected target, distance and 
 
 ## Contributing and publishing
 
-Install dependencies and run `npm run typecheck`, `npm test` and `npm run build` before submitting changes. Keep generated data consistent with its source and include relevant validation for calculation or data changes.
+Install dependencies and run `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` before submitting changes. The [Tests workflow](.github/workflows/ci.yml) runs lint, type check and tests on every branch and pull request. Keep generated data consistent with its source and include relevant validation for calculation or data changes.
 
 The [Deploy to GitHub Pages workflow](.github/workflows/pages.yml) builds and deploys the site on every push to `main`, after type checking, tests and build validation. It publishes `docs/`; generated site files do not need to be committed.
 

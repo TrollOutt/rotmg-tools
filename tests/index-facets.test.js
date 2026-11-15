@@ -3,7 +3,8 @@ const assert = require('assert/strict'), fs = require('fs'), path = require('pat
 const vm = require('vm'), crypto = require('crypto'), zlib = require('zlib');
 const IndexSearch = require('../web/index-search');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
-const corpus = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(__dirname, 'index-facets-corpus.json.gz'))));
+// The real-data cases can be re-recorded after a data update (tests/corpus-record.js).
+const frozen = require('./corpus-record').open('index-facets-corpus.json.gz'), corpus = frozen.corpus;
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const summary = rows => [rows.length, digest(Array.from(rows, r => r.id))];
 const options = value => Object.fromEntries(Object.entries(value).map(([key, entries]) => [key,
@@ -35,7 +36,8 @@ async function run() {
     // Captured outside the repository on f6bc1bf before changing the adapter.
     // Option values/counts are explicit; hashes cover complete ordered results
     // and groups. No second implementation of the original counters is kept.
-    for (const [loaded, s, expected] of corpus.cases) {
+    for (const frozenCase of corpus.cases) {
+      const [loaded, s] = frozenCase;
       if (loaded !== archive) continue;
       const ctx = api.select({ ...s, tags: new Set(s.tags || []) });
       const before = Array.from(ctx.all);
@@ -44,8 +46,8 @@ async function run() {
         .map(p => [p.title, p.g?.id || null, Array.from(p.rows, r => r.bundle
           ? ['bundle', r.name, Array.from(r.members, ([n, r]) => [n, r.id])] : r.id)]))])
         : ctx.groups ? digest(ctx.groups.map(p => [p.title, p.g?.id || null, Array.from(p.rows, r => r.id)])) : null;
-      assert.deepEqual([facets && options(facets), summary(ctx.all), summary(ctx.rows), ctx.all === ctx.rows, groups],
-        corpus.values[expected], JSON.stringify([archive, s]));
+      frozen.pointer('values', frozenCase, 2, [facets && options(facets), summary(ctx.all), summary(ctx.rows), ctx.all === ctx.rows, groups],
+        JSON.stringify([archive, s]), archive ? 'archive facet states' : 'facet states');
       assert.deepEqual(Array.from(ctx.all), before, 'preparing options never reorders the selection');
       for (const r of [...ctx.all, ...ctx.rows]) assert.strictEqual(r, api.IX.records.get(r.id));
       if (facets) for (const [key, tag] of facets.tags) assert.strictEqual(tag, api.filterDependencies().getTags()[key]);
@@ -124,5 +126,6 @@ async function run() {
   let perCall = 0; deps.getState = () => { perCall++; return state(); }; prepare(); assert.equal(perCall, 1);
   assert(reads > 15);
   console.log(`Index facet parity: ${corpus.cases.length} real states with/without archive, ${corpus.edges.length} edges and ${corpus.failures.length} historical failures; identical options, counts, order, results and references.`);
+  frozen.save();
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

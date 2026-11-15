@@ -3,7 +3,8 @@ const assert = require('assert/strict'), fs = require('fs'), path = require('pat
 const vm = require('vm'), crypto = require('crypto'), zlib = require('zlib');
 const IndexSearch = require('../web/index-search');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
-const corpus = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(__dirname, 'index-grouping-corpus.json.gz'))));
+// The real-data cases can be re-recorded after a data update (tests/corpus-record.js).
+const frozen = require('./corpus-record').open('index-grouping-corpus.json.gz'), corpus = frozen.corpus;
 const plain = parts => Array.from(parts, p => [p.title, p.g?.id ?? null, p.rows.length,
   Array.from(p.rows, r => r.bundle ? ['bundle', r.name, Array.from(r.members, ([n, r]) => [n, r.id])] : r.id)]);
 const summary = value => ({ count: value.length,
@@ -32,17 +33,19 @@ async function run() {
     // Captured outside the repository on cfac5cf before extraction. The hashes
     // cover complete ordered titles, section keys, counts, IDs and bundle members.
     // No second implementation of the old grouping algorithm is kept here.
-    for (const [s, by, expected] of (archive ? corpus.archiveCases : corpus.cases)) {
+    for (const frozenCase of (archive ? corpus.archiveCases : corpus.cases)) {
+      const [s, by] = frozenCase;
       const ctx = api.select({ ...s, tags: new Set(s.tags || []) });
       const before = Array.from(ctx.rows), parts = api.grouped(ctx.rows, ctx, by);
-      assert.deepEqual(summary(plain(parts)), corpus.lists[expected], JSON.stringify([s, by]));
+      frozen.pointer('lists', frozenCase, 2, summary(plain(parts)), JSON.stringify([s, by]), archive ? 'archive groupings' : 'groupings');
       assert.deepEqual(Array.from(ctx.rows), before, 'input order remains unchanged');
       for (const p of parts) if (p.g) assert((ctx.g ? [ctx.g] : [...ctx.d.groups, ctx.d.abilities]).includes(p.g));
       references(parts, api.IX.records);
     }
-    for (const [s, expected] of (archive ? corpus.archiveSearches : corpus.searches)) {
+    for (const frozenSearch of (archive ? corpus.archiveSearches : corpus.searches)) {
+      const [s] = frozenSearch;
       const got = api.select({ ...s, tags: new Set(s.tags || []) });
-      assert.deepEqual(summary(plain(got.groups)), corpus.lists[expected], JSON.stringify(s));
+      frozen.pointer('lists', frozenSearch, 1, summary(plain(got.groups)), JSON.stringify(s), archive ? 'archive searches' : 'searches');
       references(got.groups, api.IX.records);
     }
     assert.equal(api.groupingCreations(), 1);
@@ -121,5 +124,6 @@ async function run() {
   assert.equal(grouping.grouped([a], ctx, 'section').length, 0);
   assert.equal(calls, 2);
   console.log(`Index grouping parity: ${corpus.cases.length + corpus.archiveCases.length} groups, ${corpus.searches.length + corpus.archiveSearches.length} search states, ${corpus.edges.length + corpus.failures.length} edges; identical order, bundles, references and duplicates.`);
+  frozen.save();
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

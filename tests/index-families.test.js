@@ -2,7 +2,8 @@
 const assert=require('assert/strict'), fs=require('fs'),path=require('path'),vm=require('vm'),zlib=require('zlib'),crypto=require('crypto');
 const IndexSearch=require('../web/index-search');
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
-const corpus=JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(__dirname,'index-families-corpus.json.gz'))));
+// The real-data cases can be re-recorded after a data update (tests/corpus-record.js).
+const frozen=require('./corpus-record').open('index-families-corpus.json.gz'),corpus=frozen.corpus;
 const digest=v=>crypto.createHash('sha256').update(JSON.stringify(v)).digest('hex');
 const plain=x=>JSON.parse(JSON.stringify(x,(_,v)=>typeof v==='number'&&!Number.isFinite(v)?String(v):v));
 function collect(api) {
@@ -200,7 +201,12 @@ async function run() {
  let api;
  for(const real of corpus.real) {
   api=await require('./index-harness')(IndexSearch,undefined,{archive:real.archive,loadArchive:real.archive});
-  compare(collect(api),real.cases,'archive='+real.archive);
+  const got=collect(api);
+  // Recording: the real cases follow the data (names and digests); edges stay strict.
+  if(frozen.recording&&JSON.stringify(got.map(([name,value])=>[name,digest(value)]))!==JSON.stringify(real.cases.map(([name,i])=>[name,corpus.values[i]]))){
+   real.cases=got.map(([name,value])=>[name,frozen.slot('values',digest(value))]);frozen.moved('archive='+real.archive+' family digests');
+  }
+  compare(got,real.cases,'archive='+real.archive);
   const membership=api.familyMembership(),gives=api.dungeonGives(),domain=api.IX.domains[0];
   assert.strictEqual(api.familyMembership(),membership);assert.strictEqual(api.dungeonGives(),gives);
   api.buildDomains();
@@ -225,5 +231,6 @@ async function run() {
  assert.equal(domains.length, 11); assert.equal(side.length, 0); assert.equal(holders.size, 0);
  assert.equal(pure.familyMembership().size, 0); assert.equal(pure.dungeonGives().size, 0);
  console.log('Index families parity: '+count+' frozen cases, archive loaded/absent and '+corpus.edges.length+' edge scenarios; identical order, labels, associations, references and duplicates.');
+ frozen.save();
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});
