@@ -3640,7 +3640,7 @@ function voucherIndex() {
     let said = shared.index || null;
     if (!said) {
       let raw = BUNDLE && BUNDLE.sources && BUNDLE.sources.indexText;
-      if (!raw) raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.text()).catch(() => '');
+      if (!raw) raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => '');
       if (!raw) return new Map();
       said = JSON.parse(raw);
       shared.index = said;
@@ -3761,7 +3761,7 @@ async function loadUpdateMade() {
     return;
   }
   try {
-    const news = await fetch('assets/whats-new/index.json', { cache: 'no-cache' }).then(response => response.json());
+    const news = await fetch('assets/whats-new/index.json', { cache: 'no-cache' }).then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status)));
     state.updateMade = newsMadeOn(news);
     dressNewsBell(news);
   } catch (error) {
@@ -3802,7 +3802,7 @@ function ensureItemArt() {
   }
 
   itemArtLoading = fetch('assets/index/item-art.json', { cache: 'no-cache' })
-    .then(response => response.json())
+    .then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status)))
     .then(art => {
       state.itemArt = art;
       // The sheet these rectangles were cut for, never a cached one from another build.
@@ -3896,10 +3896,10 @@ function renderClientNews(reading) {
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
   const [clientModText, clientArtifactText, clientItemText, awakenText] = await Promise.all([
-    fetch(ROOT + ['Enchantment documents', 'client-enchantments.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Items', 'client-items.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text())
+    fetch(ROOT + ['Enchantment documents', 'client-enchantments.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+    fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+    fetch(ROOT + ['Items', 'client-items.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status)))
   ]);
   return { clientModText, clientArtifactText, clientItemText, awakenText };
 }
@@ -5468,12 +5468,12 @@ function openFamePage() {
     try {
       const bundled = BUNDLE && BUNDLE.sources;
       const text = bundled && bundled.fameText ? bundled.fameText
-        : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
+        : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status)));
       const info = bundled && bundled.dungeonText ? bundled.dungeonText
-        : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
+        : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status)));
       const overrides = bundled && bundled.overrideText ? bundled.overrideText
         : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
-          .then(response => response.text()).catch(() => '');
+          .then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))).catch(() => '');
 
       await Promise.resolve(
         FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides)

@@ -17,7 +17,7 @@
   const cardBundle = () => window.ROTMG_BUNDLE || {};
   function readCardFile(url, options) {
     const text = (cardBundle().cardFiles || {})[url];
-    return text !== undefined ? Promise.resolve(text) : fetch(url, options).then(r => r.text());
+    return text !== undefined ? Promise.resolve(text) : fetch(url, options).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)));
   }
   const cardUrls = new Map();
   function cardAssetUrl(url) {
@@ -51,14 +51,14 @@
    */
   {
     const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.gearText;
-    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.json()))
+    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then(j => { window.RealmGearEffects = j.items || {}; }).catch(() => { window.RealmGearEffects = {}; }).finally(settled);
   }
   // One shared reader for both layouts; keep each request in its original phase.
   const cardData = FichesData.createCardData({
     getSources: () => (window.ROTMG_BUNDLE || {}).sources,
-    fetchCommunity: url => fetch(url).then(r => r.json()),
-    fetchForge: url => fetch(url).then(r => r.json()),
+    fetchCommunity: url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))),
+    fetchForge: url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))),
     settled
   });
   cardData.loadCommunity();
@@ -96,7 +96,7 @@
   let statusData = null;
   {
     const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.statusText;
-    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/status-effects.json').then(r => r.json()))
+    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/status-effects.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then(j => { statusData = { sheet: j.sheet, wiki: j.wiki, byName: new Map((j.effects || []).map(e => [e.name, e])) }; })
       .catch(() => {}).finally(settled);
   }

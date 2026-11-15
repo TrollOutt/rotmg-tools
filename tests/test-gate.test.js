@@ -34,6 +34,7 @@ const deployCritical = [
   'fiches-data.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',
+  'fetch-status.test.js',
   'home-navigation.test.js',
   'home-snake.test.js',
   'index-quality.test.js',

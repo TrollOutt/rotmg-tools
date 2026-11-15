@@ -1111,7 +1111,7 @@ var WhatsNew = (function () {
       bundled && bundled.index
         ? Promise.resolve().then(() => show(bundled.index, bundled.art))
         : fetch('assets/whats-new/index.json')
-          .then(response => response.json())
+          .then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status)))
           .then(index => show(index, null))
     )
       .then(() => {

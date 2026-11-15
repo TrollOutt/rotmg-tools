@@ -222,8 +222,8 @@ const RealmIndex = (function () {
     if (!said) {
       let raw = bundle && bundle.sources && bundle.sources.indexText;
       if (!raw) {
-        raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.text())
-          .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
+        raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+          .catch(() => fetch('../data/Index/index.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
       }
       if (!raw) return false;
       said = JSON.parse(raw);
@@ -369,7 +369,7 @@ const RealmIndex = (function () {
     let raw = bundle && bundle.sources && bundle.sources.wikiText;
     if (!raw) {
       raw = await fetch('assets/index/wiki.json').then(r => (r.ok ? r.text() : ''))
-        .catch(() => fetch('../data/Index/wiki.json').then(r => r.text()).catch(() => ''));
+        .catch(() => fetch('../data/Index/wiki.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
     }
     if (!raw) return;
     let said;
@@ -471,7 +471,7 @@ const RealmIndex = (function () {
     let raw = bundle && bundle.sources && bundle.sources.realmeyeEnrichmentText;
     if (!raw) {
       raw = await fetch('assets/index/realmeye-enrichment.json').then(r => (r.ok ? r.text() : ''))
-        .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.text()).catch(() => ''));
+        .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
     }
     if (!raw) return;
     let said;

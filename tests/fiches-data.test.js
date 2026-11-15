@@ -30,7 +30,7 @@ function direct(sources, extra = {}) {
     apis.push(direct(sources, { fetchCommunity: () => Promise.resolve(c), fetchForge: () => Promise.resolve(f) }));
     const page = run({ bundle: sources && { sources }, answer: url => {
       assert(!kept, 'Kept data must not be fetched');
-      return Promise.resolve({ json: () => Promise.resolve(url.endsWith('client-forge.json') ? f : c) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(url.endsWith('client-forge.json') ? f : c) });
     } });
     assert.equal(page.creations(), 1, 'Both card layouts share one factory');
     assert.equal(page.bigParses(), 0, 'Construction leaves kept text undecoded');
