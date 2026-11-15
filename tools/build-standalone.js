@@ -711,8 +711,50 @@ const lazyOrInline = (name, source, served) => served
   ? `<script data-lazy-src="${name}" data-version="${digestOf(source)}"></script>`
   : `<script>\n${safe(source)}\n</script>`;
 
+/*
+ * A Content-Security-Policy for the served page (ROT-A-11). GitHub Pages cannot
+ * send headers, so it is a <meta>, placed before anything it governs.
+ *
+ * It limits where the page may reach: scripts and data from the site itself,
+ * the visit counter and the contact relay for requests, Google Fonts for the
+ * card font, no plugins, no <base> rewrite, no form posted elsewhere. Scripts
+ * stay 'unsafe-inline': the page is one document of inline scripts and the
+ * interface draws pictures with inline onerror handlers, which a hash cannot
+ * allow. Images may come from any https address, as RealmEye-sourced data may
+ * name one. The downloadable copy, opened from disk, gets none.
+ */
+/*
+ * The two remote services the page talks to, read from app.js itself (the
+ * counter's fetch calls and the contact relay) so the policy follows the code
+ * and the counter's address stays named in its three guarded places only.
+ */
+const remoteOrigins = [...new Set([
+  ...appSource.matchAll(/fetch\('(https:\/\/[^/']+)\//g),
+  /const SAY_RELAY = '(https:\/\/[^/']+)\//.exec(appSource)
+].filter(Boolean).map(match => match[1]))];
+if (remoteOrigins.length !== 2) {
+  console.error('Build failed: expected the counter and the contact relay in web/app.js, found ' + remoteOrigins.join(', '));
+  process.exit(1);
+}
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: blob:",
+  "connect-src 'self' data: blob: " + remoteOrigins.join(' '),
+  "frame-src 'self'",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'"
+].join('; ');
+const cspTag = `<meta http-equiv="Content-Security-Policy" content="${CSP}">`;
+
 const dress = (bundleSources, { skins = true } = {}) =>
   (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
+  .replace('<meta charset="utf-8">', whole => skins ? `${whole}\n  ${cspTag}` : whole)
   .replace('<!--TRAINING_ENTRY-->', () => skins
     ? `<style>${readWeb('training/entry.css')}</style>\n${readWeb('training/entry.html')}` : '')
   .replace('</title>', `</title>\n  ${faviconTag}`)

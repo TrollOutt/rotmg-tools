@@ -164,6 +164,18 @@ for (const version of [served, offline]) {
     assert(!served.html.includes(marker), 'served startup must not inline ' + marker);
   }
 }
+/* The served page carries a Content-Security-Policy before any script (ROT-A-11); the kept copy, opened from disk, does not. */
+{
+  const at = served.html.indexOf('<meta http-equiv="Content-Security-Policy"');
+  assert(at > 0 && at < served.html.indexOf('<script'), 'served page declares its CSP before any script');
+  const policy = /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/.exec(served.html)[1];
+  for (const part of ["default-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-src 'self'"]) {
+    assert(policy.includes(part), 'CSP keeps ' + part);
+  }
+  const connect = /connect-src ([^;]+)/.exec(policy)[1].split(' ');
+  assert.equal(connect.filter(source => source.startsWith('https://')).length, 2, 'CSP lets the page reach exactly two remote services');
+  assert(!offline.html.includes('Content-Security-Policy'), 'the downloadable copy carries no CSP');
+}
 assert(JSON.parse(offline.data.sources.realmLootText).creatures, 'Biome loot evidence missing');
 assert.equal(read('docs/assets/theory/progression.json').trim(), offline.data.sources.realmLootText);
 const privateIndex = JSON.parse(read('data/Index/index.json'));
