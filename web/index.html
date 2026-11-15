@@ -711,12 +711,12 @@
         </header>
         <div class="fame-controls">
           <input id="fameSearch" type="search" placeholder="Search a dungeon…" autocomplete="off">
-          <div class="fame-sort" role="group" aria-label="Order the dungeons">
-            <button type="button" class="filter-chip on" data-sort="fame">By fame</button>
-            <button type="button" class="filter-chip" data-sort="hard">By difficulty</button>
-            <button type="button" class="filter-chip" data-sort="name">By name</button>
-            <button type="button" class="filter-chip" data-sort="todo">Left to do</button>
-          </div>
+          <select id="fameSort" class="fame-sort" aria-label="Order the dungeons">
+            <option value="fame" selected>By fame</option>
+            <option value="hard">By difficulty</option>
+            <option value="name">By name</option>
+          </select>
+          <button type="button" id="fameHideDone" class="filter-chip" aria-pressed="false">Hide completed</button>
         </div>
         <div id="fameGrid" class="fame-grid"></div>
       </section>

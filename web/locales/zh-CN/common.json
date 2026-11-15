@@ -154,7 +154,7 @@
   "static.include.limited.edition.equipment": "包括限定版装备（在 RealmEye 上标记为 Limited）",
   "static.include.non.set.equipment.without.a.tier": "包括没有等级的非套装装备。分层装备始终包含在内。",
   "static.item.type": "物品类型",
-  "static.left.to.do": "剩下要做的事",
+  "static.hide.completed": "隐藏已完成",
   "static.legendary.3.slots": "传奇 — 3 个插槽",
   "static.life": "生活",
   "static.limited": "限定",

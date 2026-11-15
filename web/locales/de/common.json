@@ -154,7 +154,7 @@
   "static.include.limited.edition.equipment": "Ausrüstung in limitierter Auflage einbeziehen (auf RealmEye als Limited markiert)",
   "static.include.non.set.equipment.without.a.tier": "Berücksichtigen Sie nicht festgelegte Ausrüstung ohne Stufe. Gestaffelte Ausrüstung ist immer enthalten.",
   "static.item.type": "Artikeltyp",
-  "static.left.to.do": "Bleibt zu tun",
+  "static.hide.completed": "Erledigte ausblenden",
   "static.legendary.3.slots": "Legendär – 3 Slots",
   "static.life": "Leben",
   "static.limited": "Limitiert",

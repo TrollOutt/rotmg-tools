@@ -154,7 +154,7 @@
   "static.include.limited.edition.equipment": "Sınırlı sürüm ekipmanları dahil et (RealmEye’da Limited olarak işaretli)",
   "static.include.non.set.equipment.without.a.tier": "Ayarlanmamış ekipmanları kademesiz olarak dahil edin. Katmanlı donanım her zaman dahildir.",
   "static.item.type": "Öğe türü",
-  "static.left.to.do": "Yapmak kaldı",
+  "static.hide.completed": "Tamamlananları gizle",
   "static.legendary.3.slots": "Efsanevi – 3 slot",
   "static.life": "Hayat",
   "static.limited": "Sınırlı",

@@ -154,7 +154,7 @@
   "static.include.limited.edition.equipment": "Sisällytä rajoitetun erän varusteet (RealmEyessa merkitty Limited)",
   "static.include.non.set.equipment.without.a.tier": "Sisällytä asettamattomat laitteet ilman tasoa. Porrastetut varusteet ovat aina mukana.",
   "static.item.type": "Kohteen tyyppi",
-  "static.left.to.do": "Jäi tekemään",
+  "static.hide.completed": "Piilota suoritetut",
   "static.legendary.3.slots": "Legendaarinen - 3 paikkaa",
   "static.life": "Elämä",
   "static.limited": "Rajoitettu",
