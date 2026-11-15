@@ -33,6 +33,8 @@ async function run() {
     // Captured outside the repository on cfac5cf before extraction. The hashes
     // cover complete ordered titles, section keys, counts, IDs and bundle members.
     // No second implementation of the old grouping algorithm is kept here.
+    frozen.floor(archive ? 'archive groupings' : 'groupings', (archive ? corpus.archiveCases : corpus.cases).length, 5000);
+    frozen.floor(archive ? 'archive searches' : 'searches', (archive ? corpus.archiveSearches : corpus.searches).length, 9000);
     for (const frozenCase of (archive ? corpus.archiveCases : corpus.cases)) {
       const [s, by] = frozenCase;
       const ctx = api.select({ ...s, tags: new Set(s.tags || []) });

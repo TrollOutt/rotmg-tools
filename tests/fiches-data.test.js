@@ -49,9 +49,14 @@ function direct(sources, extra = {}) {
     // record then gets its four outputs re-pointed below, and modes must still agree.
     if (frozen.recording && JSON.stringify(projected) !== JSON.stringify(catalogue.rows.map(([r]) => r))) {
       const before = new Map(catalogue.rows.map(([r, expected]) => [r.id, expected]));
+      const was = new Map(catalogue.rows.map(([r]) => [r.id, JSON.stringify(r)]));
+      const kind = 'catalogue archive=' + catalogue.archive;
+      frozen.rebuilt(kind, catalogue.rows.map(([r]) => r.id), projected.map(r => r.id));
+      for (const r of projected) if (was.has(r.id) && was.get(r.id) !== JSON.stringify(r)) frozen.note('modified', kind + ': ' + r.id);
       catalogue.rows = projected.map(r => [r, (before.get(r.id) || [0, 0, 0, 0]).slice()]);
-      frozen.moved('catalogue records, archive=' + catalogue.archive);
     }
+    // A data update may add or retire records, never empty the catalogue.
+    frozen.floor('catalogue archive=' + catalogue.archive, catalogue.rows.length, catalogue.archive ? 13500 : 13000);
     assert.deepEqual(projected, catalogue.rows.map(([r]) => r), 'Real catalogue projection, archive=' + catalogue.archive);
     const same = (actual, expected, label) => assert.equal(JSON.stringify(actual), JSON.stringify(expected), label);
     for (const [r, expected] of catalogue.rows) {

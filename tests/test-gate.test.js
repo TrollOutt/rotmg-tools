@@ -31,6 +31,7 @@ const deployCritical = [
   'realmeye-link-report.test.js',
   'realmeye-recent.test.js',
   'hub-news.test.js',
+  'corpus-record.test.js',
   'fiches-data.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',

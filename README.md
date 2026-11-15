@@ -27,7 +27,7 @@ npm run build
 
 `npm test` runs the calculation, data consistency and application checks. Both tests and build check translations and compile the locale catalogues; build also validates the standalone output.
 
-Four tests (`fiches-data`, `index-facets`, `index-families`, `index-grouping`) also freeze what the code gives on the real data, so a data update moves some of their cases. After a data-only update, with no code change in the working tree, `npm run corpus:record` re-records only the moved data cases, prints how many moved, and checks the result; commit the corpora with the data they follow. Edge and failure cases are never re-recorded, and `npm test` stays strict.
+Four tests (`fiches-data`, `index-facets`, `index-families`, `index-grouping`) also freeze what the code gives on the real data, so a data update moves some of their cases. After a data-only update, `npm run corpus:record` re-records only the moved data cases, lists them in `tests/corpus-moves.txt`, and checks the result; commit the corpora and that list with the data they follow, and review the list. It refuses when code differs from the common base with main (committed or not; `-- --force` overrides it with a warning) or when a corpus would fall under its floor of cases, and it restores every corpus if any step fails. Edge and failure cases are never re-recorded, and `npm test` stays strict.
 
 Serve the generated `docs/` directory over HTTP. For example, if Python 3 is installed:
 

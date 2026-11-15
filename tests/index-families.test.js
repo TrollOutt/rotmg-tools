@@ -204,8 +204,12 @@ async function run() {
   const got=collect(api);
   // Recording: the real cases follow the data (names and digests); edges stay strict.
   if(frozen.recording&&JSON.stringify(got.map(([name,value])=>[name,digest(value)]))!==JSON.stringify(real.cases.map(([name,i])=>[name,corpus.values[i]]))){
-   real.cases=got.map(([name,value])=>[name,frozen.slot('values',digest(value))]);frozen.moved('archive='+real.archive+' family digests');
+   const kind='archive='+real.archive+' families',was=new Map(real.cases.map(([name,i])=>[name,corpus.values[i]]));
+   frozen.rebuilt(kind,real.cases.map(([name])=>name),got.map(([name])=>name));
+   for(const [name,value] of got) if(was.has(name)&&was.get(name)!==digest(value)) frozen.note('modified',kind+': '+name);
+   real.cases=got.map(([name,value])=>[name,frozen.slot('values',digest(value))]);
   }
+  frozen.floor('archive='+real.archive+' families',Array.isArray(real.cases)?real.cases.length:0,real.archive?35000:20000);
   compare(got,real.cases,'archive='+real.archive);
   const membership=api.familyMembership(),gives=api.dungeonGives(),domain=api.IX.domains[0];
   assert.strictEqual(api.familyMembership(),membership);assert.strictEqual(api.dungeonGives(),gives);

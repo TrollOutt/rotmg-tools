@@ -36,6 +36,7 @@ async function run() {
     // Captured outside the repository on f6bc1bf before changing the adapter.
     // Option values/counts are explicit; hashes cover complete ordered results
     // and groups. No second implementation of the original counters is kept.
+    frozen.floor('facet states', corpus.cases.length, 23000);
     for (const frozenCase of corpus.cases) {
       const [loaded, s] = frozenCase;
       if (loaded !== archive) continue;
