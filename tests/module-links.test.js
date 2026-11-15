@@ -378,6 +378,93 @@ async function run() {
       assert.equal(pending.length, 0, 'revisit reuses every Index dependency');
     }
   }
+  // A tool whose scripts could not be fetched says so and offers to try again,
+  // instead of standing on "Loading" (L06 V-06). Real code, fake DOM.
+  {
+    const vm = require('vm');
+    for (const page of ['index', 'theory', 'pets']) {
+      assert(app.includes(`ensure${page === 'index' ? 'Index' : page === 'theory' ? 'Theory' : 'Pets'}Page().catch(lateToolFailed('${page}'))`),
+        `showPage reports a ${page} load failure on the page`);
+    }
+    assert(app.includes("ensureIndexPage(route.open).catch(lateToolFailed('index'))"), 'an Index record link reports it too');
+    assert(/pageLoading = Promise\.resolve\(\);\s*clearLateToolFailure\(page\);/.test(app), 'each visit starts without the old note');
+    const begin = app.indexOf('const LATE_TOOLS = {');
+    const end = app.indexOf('\n}', app.indexOf('function clearLateToolFailure(', begin)) + 2;
+    assert(begin >= 0 && end > begin, 'late tool failure helpers remain extractable');
+
+    const element = (tag, props = {}) => {
+      const node = { tag, children: [], parent: null, hidden: false, attrs: {}, listeners: {}, className: '', ...props };
+      node.setAttribute = (key, value) => { node.attrs[key] = value; };
+      node.addEventListener = (type, fn) => { node.listeners[type] = fn; };
+      const place = (child, at) => { if (child.parent) child.remove(); child.parent = node; node.children.splice(at, 0, child); };
+      node.prepend = child => place(child, 0);
+      node.after = child => { const p = node.parent; if (child.parent) child.remove(); child.parent = p; p.children.splice(p.children.indexOf(node) + 1, 0, child); };
+      node.remove = () => { if (node.parent) node.parent.children.splice(node.parent.children.indexOf(node), 1); node.parent = null; };
+      node.replaceChildren = (...items) => { node.children = items.map(item => (typeof item === 'string' ? { text: item } : item)); };
+      node.querySelector = selector => {
+        const cls = selector.slice(1);
+        const walk = list => { for (const child of list) { if (child.className && child.className.split(' ').includes(cls)) return child; const found = child.children ? walk(child.children) : null; if (found) return found; } return null; };
+        return walk(node.children);
+      };
+      node.text = () => node.children.map(child => typeof child.text === 'string' ? child.text : child.textContent || '').join('');
+      return node;
+    };
+    const build = (page, here = {}) => {
+      const host = element('div', { id: 'page' });
+      const head = element('header', { className: 'masthead' });
+      host.prepend(head);
+      const mid = element('section', { id: 'ixbMid' });
+      const waiting = element('p', { className: 'ixb-none' });
+      mid.prepend(waiting);
+      if (page === 'index') head.after(mid);
+      const ids = { pageIndex: host, pageTheory: host, pagePets: host, ixbMid: page === 'index' ? mid : null };
+      const errors = [];
+      let routed = 0;
+      const context = {
+        PAGES: { index: 'pageIndex', theory: 'pageTheory', pets: 'pagePets', home: 'pageHome' },
+        $: id => ids[id] || null,
+        document: { body: { dataset: { page } }, createElement: tag => element(tag) },
+        console: { error: error => errors.push(error) },
+        routeFromHash: () => { routed++; },
+        ...here
+      };
+      vm.createContext(context);
+      vm.runInContext(app.slice(begin, end), context);
+      return { context, host, head, waiting, errors, routed: () => routed };
+    };
+
+    for (const [page, name] of [['index', 'The Index'], ['theory', 'Theory Crafting'], ['pets', 'The Pet Fame Calculator']]) {
+      const t = build(page);
+      const failed = vm.runInContext(`lateToolFailed('${page}')`, t.context);
+      assert.equal(failed(new Error('Could not load x.js.')), false, 'the navigation settles');
+      assert.equal(t.errors.length, 1, 'the error still reaches the console');
+      const note = t.host.querySelector('.late-failed');
+      assert(note, `${page}: a failed load is shown on the page`);
+      assert.equal(note.attrs.role, 'alert');
+      assert.equal(t.host.children[1], note, 'the note stands under the masthead');
+      assert.match(note.text(), new RegExp('^' + name + ' could not be loaded\\. Check your connection, then Try again\\.$'));
+      if (page === 'index') assert.equal(t.waiting.hidden, true, 'the Index list no longer says Loading');
+      failed(new Error('again'));
+      assert.equal(t.host.children.filter(child => child.className === 'late-failed').length, 1, 'one note, however many rejections');
+      const again = t.host.querySelector('.late-failed').children.find(child => child.tag === 'button');
+      assert.equal(again.textContent, 'Try again');
+      again.listeners.click();
+      assert.equal(t.routed(), 1, 'Try again asks for the page again');
+      vm.runInContext(`clearLateToolFailure('${page}')`, t.context);
+      assert.equal(t.host.querySelector('.late-failed'), null, 'a new attempt puts the note away');
+      assert.equal(t.waiting.hidden, false);
+    }
+    // A tool that did load, or a page left meanwhile: console only, as before.
+    const loaded = build('index', { RealmIndex: {}, RealmIndexBrowse: {} });
+    vm.runInContext("lateToolFailed('index')", loaded.context)(new Error('render failed'));
+    assert.equal(loaded.host.querySelector('.late-failed'), null, 'an error after loading is not a load failure');
+    assert.equal(loaded.errors.length, 1);
+    const left = build('index');
+    left.context.document.body.dataset.page = 'home';
+    vm.runInContext("lateToolFailed('index')", left.context)(new Error('Could not load index-page.js.'));
+    assert.equal(left.host.querySelector('.late-failed'), null, 'nothing is drawn on a page already left');
+  }
+
   // Exercise the real lazy loader with controlled script completion, including
   // concurrent navigation and retry after either dependency fails.
   const vm = require('vm');

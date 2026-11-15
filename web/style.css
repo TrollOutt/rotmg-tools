@@ -335,6 +335,13 @@ body[data-page="home"][data-home="ring"].globe-wide .home-snake { display: none;
   border-radius: 999px; padding: 4px 12px;
 }
 .status.bad { color: var(--bad); border-color: rgba(255, 69, 66, .45); }
+/* A tool whose scripts could not be fetched (app.js, lateToolFailed). */
+.late-failed {
+  margin: 12px 0; padding: 10px 14px; font-size: 14px; color: var(--bad);
+  border: 1px solid rgba(255, 69, 66, .45); border-radius: 10px;
+  background: rgb(var(--panel-rgb) / .85);
+}
+.late-failed .link-button { font-size: inherit; }
 
 /*
  * The corner row: the only thing up there with a position of its own.

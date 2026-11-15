@@ -5590,6 +5590,57 @@ function loadLateScript(placeholder, onload, onerror) {
 }
 
 /*
+ * A tool whose own scripts could not be fetched says so, with a way to ask
+ * again, instead of standing on "Loading" for good. Only when the tool really
+ * is missing: an error from a tool that did load keeps to the console.
+ */
+const LATE_TOOLS = {
+  index: { name: 'The Index', here: () => typeof RealmIndex !== 'undefined' && typeof RealmIndexBrowse !== 'undefined' },
+  theory: { name: 'Theory Crafting', here: () => typeof TheoryCraft !== 'undefined' },
+  pets: { name: 'The Pet Fame Calculator', here: () => typeof PetFame !== 'undefined' }
+};
+function lateToolFailed(page) {
+  return error => {
+    console.error(error);
+    const tool = LATE_TOOLS[page];
+    const host = $(PAGES[page]);
+    if (!tool || tool.here() || !host || document.body.dataset.page !== page) return false;
+    let note = host.querySelector('.late-failed');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'late-failed';
+      note.setAttribute('role', 'alert');
+      const head = host.querySelector('.masthead');
+      if (head) head.after(note); else host.prepend(note);
+    }
+    // The Index's list says "Loading" until its script draws it: not while this is shown.
+    const waiting = lateToolWaiting(page);
+    if (waiting) waiting.hidden = true;
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.className = 'link-button';
+    again.textContent = 'Try again';
+    // showPage puts the note away and asks for the scripts again.
+    again.addEventListener('click', () => { if (document.body.dataset.page === page) routeFromHash(); });
+    note.replaceChildren(tool.name + ' could not be loaded. Check your connection, then ', again, '.');
+    return false;
+  };
+}
+function lateToolWaiting(page) {
+  const mid = page === 'index' ? $('ixbMid') : null;
+  return mid ? mid.querySelector('.ixb-none') : null;
+}
+// Each new attempt (Try again, or coming back to the page) starts without the old note.
+function clearLateToolFailure(page) {
+  const host = LATE_TOOLS[page] ? $(PAGES[page]) : null;
+  const note = host ? host.querySelector('.late-failed') : null;
+  if (!note) return;
+  note.remove();
+  const waiting = lateToolWaiting(page);
+  if (waiting) waiting.hidden = false;
+}
+
+/*
  * The Pet Fame Calculator reads three files the first time it is opened - its arithmetic,
  * what the client says about pets and food, and the page itself - and nobody who came for
  * another tool pays for them. They go in that order, each needing the one before.
@@ -5734,6 +5785,7 @@ function showPage(name) {
   // A dynamically inserted script is invisible to that watcher until it has
   // finished downloading, so expose its own promise to the black cover.
   pageLoading = Promise.resolve();
+  clearLateToolFailure(page);
   if (page === 'enchant') {
     pageLoading = ensureEnchantPage().catch(error => {
       console.error(error);
@@ -5761,10 +5813,7 @@ function showPage(name) {
    * asked for, and nobody who came for the enchanter pays for it.
    */
   if (page === 'theory') {
-    pageLoading = ensureTheoryPage().catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensureTheoryPage().catch(lateToolFailed('theory'));
   }
   /*
    * And the index, which is some twelve megabytes of records: it is read
@@ -5772,16 +5821,10 @@ function showPage(name) {
    * the other two heavy pages are.
    */
   if (page === 'pets') {
-    pageLoading = ensurePetsPage().catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensurePetsPage().catch(lateToolFailed('pets'));
   }
   if (page === 'index') {
-    pageLoading = ensureIndexPage().catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensureIndexPage().catch(lateToolFailed('index'));
   }
   if (page === 'skins') {
     pageLoading = ensureSkinPage().catch(error => {
@@ -5869,10 +5912,7 @@ function routeFromHash() {
   const route = RealmRoutes.parse(location.hash);
   showPage(route.page);
   if (route.page === 'index' && route.open) {
-    pageLoading = ensureIndexPage(route.open).catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensureIndexPage(route.open).catch(lateToolFailed('index'));
   }
   return pageLoading;
 }
