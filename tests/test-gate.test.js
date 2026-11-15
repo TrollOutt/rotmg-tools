@@ -80,6 +80,7 @@ const deployCritical = [
   // Pipeline guards (ROT-B-01 to B-15), offline.
   'availability-floor.test.js',
   'client-order.test.js',
+  'client-textures.test.js',
   'data-drift.test.js',
   'index-ids.test.js',
   'realmeye-crawl-guard.test.js',

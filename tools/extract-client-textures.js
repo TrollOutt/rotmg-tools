@@ -232,6 +232,7 @@ function main() {
   fs.mkdirSync(OUT, { recursive: true });
   let written = 0;
   const missing = new Set(names);
+  const skipped = new Set();
   for (const object of file.objects) {
     if (object.classID !== 28) continue;
     const texture = readTexture(file, object);
@@ -239,6 +240,7 @@ function main() {
     missing.delete(texture.name);
     if (texture.format !== RGBA32) {
       console.log('    ' + texture.name.padEnd(20) + 'format ' + texture.format + ', not raw pixels — skipped');
+      skipped.add(texture.name);
       continue;
     }
     // Unity keeps a texture bottom-up; everything else reads top-down.
@@ -277,7 +279,23 @@ function main() {
 
   console.log('\n  ' + written + ' written'
     + (missing.size ? ', not found: ' + [...missing].join(', ') : '') + '\n');
-  fs.writeFileSync(provenanceFile, JSON.stringify({ ...meta, missing: [...missing] }) + '\n');
+  const problem = texturesProblem(missing, skipped);
+  if (problem) {
+    // No provenance: check_client_source then refuses this client-data too.
+    console.error('  ' + problem + '\n');
+    process.exitCode = 1;
+    return;
+  }
+  fs.writeFileSync(provenanceFile, JSON.stringify(meta) + '\n');
 }
+
+/* R7 / ROT-B-09: a wanted texture absent or not in raw pixels is a failed extraction, not a note. */
+function texturesProblem(missing, skipped) {
+  const parts = [];
+  if (missing.size) parts.push('not found: ' + [...missing].join(', '));
+  if (skipped.size) parts.push('not raw RGBA32 pixels: ' + [...skipped].join(', '));
+  return parts.length ? 'textures incomplete (' + parts.join('; ') + '); the previous sheets may be stale' : '';
+}
+module.exports.texturesProblem = texturesProblem;
 
 if (require.main === module) main();
