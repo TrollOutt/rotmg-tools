@@ -1,0 +1,12 @@
+# Keeps the GitHub Actions used by the workflows up to date (ROT-A-10). Once
+# the actions are pinned to commit SHAs, Dependabot updates the SHA and the
+# tag comment together.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
