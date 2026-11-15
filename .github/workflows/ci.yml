@@ -38,9 +38,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      # Two commits deep: the parent of the tested commit is where the data
+      # checks below compare from (for a pull request, the merge commit's
+      # first parent is the tip of the base branch).
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 2
 
       - uses: actions/setup-node@v4
         with:
@@ -58,8 +62,14 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      # check-data-drift.js and check-index-ids.js (inside npm test) compare
+      # the Index with ROTMG_COMPARE_BASE instead of HEAD, which in CI is the
+      # tested commit itself: without it they always answered "nothing to
+      # compare" (ROT-B-06, ROT-B-02). Local git only, no network.
       - name: Tests
         run: npm test
+        env:
+          ROTMG_COMPARE_BASE: HEAD^1
 
       # Unit tests of the Python pipeline's pure helpers: standard library only.
       - uses: actions/setup-python@v5

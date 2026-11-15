@@ -14,7 +14,7 @@
  * the one before it and fails when an id now names another object, so the
  * change is seen before it ships.
  *
- *     node tools/check-index-ids.js                 # HEAD's index vs the working copy
+ *     node tools/check-index-ids.js                 # HEAD's index (or ROTMG_COMPARE_BASE's) vs the working copy
  *     node tools/check-index-ids.js OLD.json NEW.json
  *
  * An object is told apart by its kind and client type number (the file number
@@ -76,9 +76,12 @@ function readRecords(text, where) {
   return parsed.records;
 }
 
+// The committed Index to compare with: HEAD, or the ref in ROTMG_COMPARE_BASE
+// (the CI sets it to the base of a pull request, as for check-data-drift.js).
 function fromHead() {
+  const base = process.env.ROTMG_COMPARE_BASE || 'HEAD';
   try {
-    return execFileSync('git', ['show', 'HEAD:' + INDEX], { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+    return execFileSync('git', ['show', base + ':' + INDEX], { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
   } catch (_) {
     return null;
   }
