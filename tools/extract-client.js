@@ -89,6 +89,15 @@ const meta = provenance.stamp(__filename, {
   kind: 'client', build, date: fs.statSync(client.assets).mtime.toISOString().slice(0, 10)
 });
 
+try {
+  const allow = process.argv.includes('--allow-older') || process.env.ROTMG_ALLOW_OLDER_CLIENT === '1';
+  const problem = require('./client-order').checkNotOlder(meta.from, { allow });
+  if (problem) console.warn('\n  warning: ' + problem + ' (allowed)');
+} catch (error) {
+  console.error('\n  ' + error.message + '\n');
+  process.exit(1);
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 for (const file of fs.readdirSync(OUT)) if (file.endsWith('.xml')) fs.unlinkSync(path.join(OUT, file));
 
