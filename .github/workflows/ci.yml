@@ -60,3 +60,11 @@ jobs:
 
       - name: Tests
         run: npm test
+
+      # Unit tests of the Python pipeline's pure helpers: standard library only.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Python pipeline unit tests
+        run: npm run test:python

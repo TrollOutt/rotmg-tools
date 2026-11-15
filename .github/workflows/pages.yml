@@ -58,6 +58,13 @@ jobs:
       - name: Verify the calculation engine
         run: npm test
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Python pipeline unit tests
+        run: npm run test:python
+
       - name: Build the page
         run: npm run build
 

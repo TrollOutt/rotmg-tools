@@ -41,7 +41,8 @@
     "skin-looks": "node tools/build-skin-looks.js",
     "index-extras": "node tools/build-index-extras.js && node tools/build-status-effects.js && node tools/build-realm-events.js && node tools/build-gear-effects.js",
     "wiki-availability": "python tools/database/export_realmeye_availability.py",
-    "typecheck": "tsc --project tsconfig.json"
+    "typecheck": "tsc --project tsconfig.json",
+    "test:python": "python -B -m unittest discover -s tests/python -v"
   },
   "devDependencies": {
     "typescript": "^7.0.2"
