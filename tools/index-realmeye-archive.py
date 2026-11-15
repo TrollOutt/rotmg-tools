@@ -1207,6 +1207,19 @@ def export_json_pages(con: sqlite3.Connection, out_dir: Path) -> None:
         (out_dir / f"{name}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def mass_removal_problem(removing: int, archived: int, max_removals: int, max_ratio: float) -> str:
+    """ROT-B-01: why a pass may not remove `removing` of `archived` pages ("" when it may).
+
+    A crawl that failed (RealmEye blocking the runner, an outage) can look like
+    the wiki lost its pages. Removing more than max(max_removals, max_ratio *
+    archived) pages in one pass is refused, whatever the snapshot says.
+    """
+    limit = max(max_removals, int(archived * max_ratio))
+    if removing <= limit:
+        return ""
+    return f"this pass would remove {removing} of {archived} archived pages (limit {limit})"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Index the complete RealmEye HTML archive into SQLite + FTS5.")
     ap.add_argument("--monitor-dir", default="local/realmeye-monitor", help="RealmEye monitor root")
@@ -1226,6 +1239,18 @@ def main() -> int:
     ap.add_argument(
         "--no-resume-upgrade", action="store_true",
         help="Do not reuse pages already reparsed during an interrupted parser upgrade",
+    )
+    ap.add_argument(
+        "--max-removals", type=int, default=50,
+        help="Refuse a pass that would remove more archived pages than this (default 50) ...",
+    )
+    ap.add_argument(
+        "--max-removal-ratio", type=float, default=0.02,
+        help="... or than this share of the archive, whichever is larger (default 0.02)",
+    )
+    ap.add_argument(
+        "--allow-mass-removal", action="store_true",
+        help="Accept a removal above both limits (after checking the crawl by hand)",
     )
     args = ap.parse_args()
 
@@ -1310,6 +1335,14 @@ def main() -> int:
         # network/server failure into deletion: those URLs are explicitly preserved above.
         transient_urls = {x["url"] for x in unavailable if x.get("url")}
         removed |= (set(existing) - present_urls) - transient_urls
+    problem = mass_removal_problem(
+        len(removed & set(existing)), len(existing), args.max_removals, args.max_removal_ratio,
+    )
+    if problem and not args.allow_mass_removal:
+        con.close()
+        print(f"RealmEye index: refused, {problem}. Nothing was changed. "
+              "Check the crawl (network, RealmEye blocking) or pass --allow-mass-removal.", file=sys.stderr)
+        return 3
     for url in removed:
         if url in existing:
             delete_page(con, url)
