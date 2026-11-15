@@ -5574,7 +5574,9 @@ function ensureTheoryPage() {
  * as it always did.
  */
 function loadLateScript(placeholder, onload, onerror) {
-  const src = placeholder.dataset.lazySrc;
+  // The built page names each lazy file with a digest of its bytes (tools/build-standalone.js).
+  const version = placeholder.dataset.version;
+  const src = placeholder.dataset.lazySrc + (version ? '?v=' + encodeURIComponent(version) : '');
   const add = () => {
     const script = document.createElement('script');
     script.src = src;

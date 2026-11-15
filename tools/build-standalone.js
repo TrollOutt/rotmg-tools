@@ -689,6 +689,28 @@ function withoutSkinViewer(html) {
     `\n  </div>\n${SKIN_VIEWER_MOVED}\n  <!--\n    The realm, on this page.`);
 }
 
+/*
+ * The scripts web/index.html already marks as lazy (data-lazy-src): Theory
+ * Crafting, the Index and the Pet Fame Calculator. app.js loads them the first
+ * time their page is opened. The downloadable copy has no server to load them
+ * from, so it carries them inline; the served page used to carry them inline
+ * too, which made every visitor of the home page download and parse them
+ * (ROT-C-04). The served page now leaves the placeholder and serves each file
+ * beside it, with a digest of its bytes (data-version, sent as ?v=) so a
+ * browser never runs an old copy against a new page.
+ */
+const LAZY_SCRIPTS = [
+  ['theory-engine.js', theoryEngineSource], ['theorycraft.js', theorySource],
+  ['index-search.js', indexSearchSource], ['index-filter.js', indexFilterSource],
+  ['index-grouping.js', indexGroupingSource], ['index-families.js', indexFamiliesSource],
+  ['index-page.js', indexSource], ['index-browse.js', browseSource],
+  ['pet-fame-engine.js', petEngineSource], ['pet-fame-data.js', petDataSource], ['pet-fame.js', petPageSource]
+];
+const digestOf = text => require('crypto').createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 10);
+const lazyOrInline = (name, source, served) => served
+  ? `<script data-lazy-src="${name}" data-version="${digestOf(source)}"></script>`
+  : `<script>\n${safe(source)}\n</script>`;
+
 const dress = (bundleSources, { skins = true } = {}) =>
   (skins ? readWeb('index.html') : withoutSkinViewer(readWeb('index.html')))
   .replace('<!--TRAINING_ENTRY-->', () => skins
@@ -719,17 +741,17 @@ const dress = (bundleSources, { skins = true } = {}) =>
     `<script>\n${safe(famePageSource)}\n</script>`,
     `<script>\n${safe(whatsNewSource)}\n</script>`,
     `<script>\n${safe(progressionSource)}\n</script>`,
-    `<script>\n${safe(theoryEngineSource)}\n</script>`,
-    `<script>\n${safe(theorySource)}\n</script>`,
-    `<script>\n${safe(indexSearchSource)}\n</script>`,
-    `<script>\n${safe(indexFilterSource)}\n</script>`,
-    `<script>\n${safe(indexGroupingSource)}\n</script>`,
-    `<script>\n${safe(indexFamiliesSource)}\n</script>`,
-    `<script>\n${safe(indexSource)}\n</script>`,
-    `<script>\n${safe(browseSource)}\n</script>`,
-    `<script>\n${safe(petEngineSource)}\n</script>`,
-    `<script>\n${safe(petDataSource)}\n</script>`,
-    `<script>\n${safe(petPageSource)}\n</script>`,
+    lazyOrInline('theory-engine.js', theoryEngineSource, skins),
+    lazyOrInline('theorycraft.js', theorySource, skins),
+    lazyOrInline('index-search.js', indexSearchSource, skins),
+    lazyOrInline('index-filter.js', indexFilterSource, skins),
+    lazyOrInline('index-grouping.js', indexGroupingSource, skins),
+    lazyOrInline('index-families.js', indexFamiliesSource, skins),
+    lazyOrInline('index-page.js', indexSource, skins),
+    lazyOrInline('index-browse.js', browseSource, skins),
+    lazyOrInline('pet-fame-engine.js', petEngineSource, skins),
+    lazyOrInline('pet-fame-data.js', petDataSource, skins),
+    lazyOrInline('pet-fame.js', petPageSource, skins),
     `<script>\n${safe(routerSource)}\n</script>`,
     `<script>\n${safe(appDataSource)}\n</script>`,
     `<script>\n${safe(appSource)}\n</script>`,
@@ -880,6 +902,9 @@ fs.copyFileSync(path.join(web, 'skin-viewer-animation.js'), path.join(pagesDir, 
 carryAcross(path.join(web, 'skins'), path.join(pagesDir, 'skins'));
 carryAcross(path.join(web, 'assets', 'skins'), path.join(pagesDir, 'assets', 'skins'));
 fs.copyFileSync(path.join(web, 'locales.js'), path.join(pagesDir, 'locales.js'));
+// The lazy page scripts the served page loads on demand (LAZY_SCRIPTS), in the
+// same normalised bytes their data-version digest was computed from.
+for (const [name, source] of LAZY_SCRIPTS) fs.writeFileSync(path.join(pagesDir, name), source, 'utf8');
 fs.copyFileSync(path.join(web, 'i18n.js'), path.join(pagesDir, 'i18n.js'));
 carryAcross(path.join(web, 'assets', 'realm-biomes'), path.join(pagesDir, 'assets', 'realm-biomes'));
 // The pet and food pictures the Pet Fame Calculator draws with.
