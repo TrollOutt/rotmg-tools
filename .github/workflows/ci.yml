@@ -1,0 +1,102 @@
+# Tests every branch and every pull request, without publishing.
+#
+# pages.yml only runs on main, so a regression used to be seen after it had
+# already landed there, and the auto/update-* pull requests opened by the data
+# watch were merged untested (ROT-C-01). This workflow only checks: it has no
+# deploy job, and publishing main is left to pages.yml, which runs the same
+# checks before it builds.
+#
+# Safe for pull requests from anyone: it is triggered by pull_request (never
+# pull_request_target), so the code of a pull request runs with a read-only
+# token and no repository secret. It uses no secret at all.
+#
+# To make it a gate, mark the "checks" job as required in a ruleset on main
+# (Settings -> Rules), with pull requests required and no bypass for the watch's
+# token.
+#
+# TODO(ROT-A-10): pin each action to a full commit SHA (tag in a comment); that
+# needs the network, so it was not done offline. .github/dependabot.yml keeps
+# the actions up to date.
+name: Tests
+
+on:
+  push:
+    branches-ignore: [main]
+  # labeled/unlabeled: adding or removing the waiver label below reruns the checks.
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  workflow_dispatch:
+    inputs:
+      accept_data_changes:
+        description: 'Waive the Index id and data drift checks (a data change checked by hand, e.g. a season update; see INDEX-IDS.md)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One run per branch or pull request: a newer push cancels the older run.
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The waiver for an intended data change (a season update moves ids), given
+    # by a maintainer: the "accept-data-changes" label on the pull request, or
+    # the accept_data_changes input of a manual run. Only the label's name is
+    # compared here; nothing from the pull request reaches a shell. A push run
+    # never has it: the pull request's run is the one that counts.
+    env:
+      DATA_WAIVER: ${{ (contains(github.event.pull_request.labels.*.name, 'accept-data-changes') || inputs.accept_data_changes == true) && '1' || '0' }}
+    steps:
+      # Two commits deep: the parent of the tested commit is where the data
+      # checks below compare from (for a pull request, the merge commit's
+      # first parent is the tip of the base branch).
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The locked development dependencies (TypeScript, for the type check
+      # only). No install script runs.
+      - name: Install type checking tools
+        run: npm ci --ignore-scripts
+
+      - name: Parse every page script and check the translations
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      # check-data-drift.js and check-index-ids.js (inside npm test) compare
+      # the Index with ROTMG_COMPARE_BASE instead of HEAD, which in CI is the
+      # tested commit itself: without it they always answered "nothing to
+      # compare" (ROT-B-06, ROT-B-02). Local git only, no network.
+      # With the waiver, both checks still run and list every change, as
+      # warnings instead of failures.
+      - name: Data checks waived (accept-data-changes)
+        if: env.DATA_WAIVER == '1'
+        run: echo "::warning title=Data checks waived::ROTMG_ACCEPT_ID_CHANGES=1 and ROTMG_ACCEPT_DATA_CHANGES=1 for this run (label accept-data-changes or manual input). Moved ids and data drift are reported below as warnings, not failures."
+
+      - name: Tests
+        run: npm test
+        env:
+          ROTMG_COMPARE_BASE: HEAD^1
+          ROTMG_ACCEPT_ID_CHANGES: ${{ env.DATA_WAIVER == '1' && '1' || '' }}
+          ROTMG_ACCEPT_DATA_CHANGES: ${{ env.DATA_WAIVER == '1' && '1' || '' }}
+
+      # Unit tests of the Python pipeline's pure helpers: standard library only.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Python pipeline unit tests
+        run: npm run test:python

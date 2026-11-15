@@ -26,7 +26,7 @@ function harness(bundle, objectUrls) {
       blobs.push(blob);
       return 'blob:item-sheet-' + blobs.length;
     } } : objectUrls,
-    fetch: async () => ({ json: async () => ({ from: { build: 'client' }, built: 'build date' }) })
+    fetch: async () => ({ ok: true, json: async () => ({ from: { build: 'client' }, built: 'build date' }) })
   };
   vm.createContext(context);
   vm.runInContext(source.slice(start, end), context);

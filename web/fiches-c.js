@@ -17,7 +17,7 @@
   const cardBundle = () => window.ROTMG_BUNDLE || {};
   function readCardFile(url, options) {
     const text = (cardBundle().cardFiles || {})[url];
-    return text !== undefined ? Promise.resolve(text) : fetch(url, options).then(r => r.text());
+    return text !== undefined ? Promise.resolve(text) : fetch(url, options).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)));
   }
   const cardUrls = new Map();
   function cardAssetUrl(url) {
@@ -36,8 +36,6 @@
 
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  /* Un seul affichage : la fiche harmonisée. */
-  const mode = 'c2';
   /* La fiche attend toutes ses données : aucun second rendu visible quand l'une d'elles arrive. */
   let pending = 8;
   const settled = () => {
@@ -46,27 +44,51 @@
     redraw();
   };
   /*
+   * Ces lectures ne partent qu'au premier besoin d'une fiche (ouverture de l'Index, du tiroir de l'Atlas ou
+   * de What's New, ou première fiche dessinée), et non au chargement de la page d'accueil, qui n'en montre
+   * aucune : environ 17 Mo de JSON que la page d'accueil téléchargeait pour rien (ROT-C-04). Elles partent
+   * toutes ensemble et dans le même ordre qu'avant ; la fiche reste masquée tant qu'elles ne sont pas arrivées.
+   */
+  const warmers = [];
+  let warmed = false;
+  const whenWarm = start => { if (warmed) start(); else warmers.push(start); };
+  function warm() {
+    if (warmed) return;
+    warmed = true;
+    for (const start of warmers.splice(0)) start();
+  }
+  /* Une seule requête par fichier, quel que soit le nombre de lecteurs : l'Index lit le même enrichissement (ROT-C-05). */
+  function sharedJson(url) {
+    const shared = window.ROTMG_SHARED_DATA || (window.ROTMG_SHARED_DATA = {});
+    const requests = shared.requests || (shared.requests = {});
+    if (!requests[url]) {
+      const asked = requests[url] = fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
+      asked.catch(() => { if (requests[url] === asked) delete requests[url]; });
+    }
+    return requests[url];
+  }
+  /*
    * Ce que l'équipement fait en plus de ses tirs et de ses statistiques : les balles qu'il lance quand on tire,
    * les grenades de poison, ce qu'il faut porter avec (tools/build-gear-effects.js). Partagé avec la seconde mise en page.
    */
-  {
+  whenWarm(() => {
     const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.gearText;
-    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.json()))
+    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then(j => { window.RealmGearEffects = j.items || {}; }).catch(() => { window.RealmGearEffects = {}; }).finally(settled);
-  }
+  });
   // One shared reader for both layouts; keep each request in its original phase.
   const cardData = FichesData.createCardData({
     getSources: () => (window.ROTMG_BUNDLE || {}).sources,
-    fetchCommunity: url => fetch(url).then(r => r.json()),
-    fetchForge: url => fetch(url).then(r => r.json()),
+    fetchCommunity: url => sharedJson(url),
+    fetchForge: url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))),
     settled
   });
-  cardData.loadCommunity();
+  whenWarm(() => cardData.loadCommunity());
   const communityRecords = () => cardData.communityRecords();
-  cardData.loadForge();
+  whenWarm(() => cardData.loadForge());
   const forgeExtra = () => cardData.forgeExtra();
   // Both card layouts read the same lazy payload, including in the kept copy.
-  window.RealmCardExtras = { forge: forgeExtra, read: readCardFile, asset: cardAssetUrl };
+  window.RealmCardExtras = { forge: forgeExtra, read: readCardFile, asset: cardAssetUrl, warm, whenWarm, sharedJson };
   const index = () => window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index;
   function recs() {
     const s = index();
@@ -78,8 +100,8 @@
   /* Les monstres qui bougent : la boucle de marche que le client leur dessine, découpée pour l'Atlas
      (tools/generate-realm-animations.py) et rangée sous leur identifiant client. */
   let moving = {};
-  readCardFile('assets/realm-monster-animations/index.json').then(t => JSON.parse(t))
-    .then(j => { moving = j || {}; }).catch(() => {}).finally(settled);
+  whenWarm(() => readCardFile('assets/realm-monster-animations/index.json').then(t => JSON.parse(t))
+    .then(j => { moving = j || {}; }).catch(() => {}).finally(settled));
   /* A picture of someone - a skin, a class, a creature - wears the one outline every page lays on a character (web/outline.js). */
   const inkOf = (r, scale) => r && (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy') && window.RealmOutline
     ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
@@ -94,12 +116,12 @@
 
   /* ---------- les statuts (tools/build-status-effects.js) ---------- */
   let statusData = null;
-  {
+  whenWarm(() => {
     const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.statusText;
-    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/status-effects.json').then(r => r.json()))
+    (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/status-effects.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then(j => { statusData = { sheet: j.sheet, wiki: j.wiki, byName: new Map((j.effects || []).map(e => [e.name, e])) }; })
       .catch(() => {}).finally(settled);
-  }
+  });
   function statusIcon(name, side) {
     const e = statusData && statusData.byName.get(name);
     if (!e || !e.icon) return '';
@@ -212,7 +234,6 @@
   /* ---------- l'infobulle ---------- */
   const STAT_ORDER = ['MAXHP', 'MAXMP', 'ATT', 'DEF', 'SPD', 'DEX', 'VIT', 'WIS'];
   const STAT_NAME = { MAXHP: 'Max HP', MAXMP: 'Max MP', ATT: 'Attack', DEF: 'Defense', SPD: 'Speed', DEX: 'Dexterity', VIT: 'Vitality', WIS: 'Wisdom' };
-  const CLASS_STAT = [['hp', 'Max HP'], ['mp', 'Max MP'], ['att', 'Attack'], ['def', 'Defense'], ['spd', 'Speed'], ['dex', 'Dexterity'], ['vit', 'Vitality'], ['wis', 'Wisdom']];
   const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
   const RE = what => '<sup class="re" title="' + esc(what) + ' — RealmEye, not the client">RE</sup>';
   const slotName = r => {
@@ -229,222 +250,8 @@
     return { b: '', cls: 't', color: '#ffffff' };
   }
   const isDivine = r => (r.does || []).some(s => /always Divine/i.test(s[0]));
-  function kindLine(r) {
-    if (isDivine(r)) return ['Divine', '#ffd026'];
-    const L = r.labels || [];
-    if (r.kind === 'item') return [r.use ? 'Consumable' : slotName(r), '#9a9a9a'];
-    if (r.kind === 'enemy') return [[L.includes('GOD') && 'God', L.includes('BOSS') ? 'Boss' : L.includes('MINIBOSS') ? 'Miniboss' : 'Enemy', L.includes('QUEST') && 'Quest'].filter(Boolean).join(' · '), '#ff6b5a'];
-    if (r.kind === 'portal') return ['Dungeon', '#9a9a9a'];
-    if (r.kind === 'class') return ['Class', '#9a9a9a'];
-    if (r.kind === 'skin') return ['Skin', '#9a9a9a'];
-    if (r.kind === 'set') return ['Set', '#ff9a1f'];
-    if (r.kind === 'enchant') return ['Enchantment', '#ca7aff'];
-    return [r.family || r.kind, '#9a9a9a'];
-  }
   function rowByLabel(rows, rx) { return rows.find(x => rx.test(x.label)); }
   const namesIn = html => [...new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html').querySelectorAll('.ix-jump, .ix-data-chip')].map(x => x.textContent.trim());
-
-  function tooltip(r, card, com) {
-    const t = tierOf(r), [kind, kindColor] = kindLine(r);
-    const nameColor = isDivine(r) ? '#ffd026' : t.color;
-    const sep = t.cls === 'ut' ? '#5a2f7a' : t.cls === 'st' ? '#7a4a24' : '#6b5a2a';
-    let h = '<div class="fc-tt k-' + t.cls + '" style="--sep:' + sep + '">';
-    h += '<div class="h"><div class="ic">' + (card.cell || art(r, 48)) + '</div><div>'
-      + '<div class="rar" style="color:' + kindColor + '">' + esc(kind) + '</div>'
-      + '<div class="nm" style="color:' + nameColor + '">' + esc(r.said || r.name) + '</div>'
-      + (com.facts.power ? '<div style="color:' + nameColor + '">Power Level: ' + esc(com.facts.power) + RE('Power Level') + '</div>' : '')
-      + '</div><div class="tb" style="color:' + t.color + '">' + esc(t.b)
-      + (r.set && r.kind === 'item' ? '<small>' + esc(r.set) + '</small>' : '') + '</div></div>';
-
-    const holds = rowByLabel(card.rows.links, /may hold/i);
-    if (r.kind === 'item' && holds && !r.use) {
-      const names = namesIn(holds.html);
-      const allClasses = [...recs().values()].filter(x => x.kind === 'class').length;
-      if (names.length && names.length < allClasses) h += '<div class="cls">' + esc(names.join(', ')) + '</div>';
-    }
-    if (r.kind === 'skin') {
-      const by = rowByLabel(card.rows.links, /worn by/i);
-      if (by) h += '<div class="cls">' + esc(namesIn(by.html).join(', ')) + '</div>';
-    }
-
-    let top = '<div class="b">', mid = '';
-    const s = (r.fires || [])[0];
-    if (s) {
-      top += '<div class="lab">Damage</div><div class="big">' + s.low + (s.high !== s.low ? '–' + s.high : '') + '</div>';
-    }
-    if (r.kind === 'enemy') {
-      top += '<div class="lab">Health</div><div class="big">' + Number(r.hp || 0).toLocaleString('en-US') + '</div>'
-        + '<div class="ln">Defense: <span class="v">' + (r.def || 0) + '</span></div>';
-    }
-    if (r.kind === 'portal' && card.difficulty) {
-      top += '<div class="lab">Difficulty' + RE('Difficulty') + '</div><div class="pips">'
-        + Array.from({ length: 10 }, (_, i) => '<i class="' + (i < card.difficulty ? 'on' : '') + '"></i>').join('') + '</div>'
-        + '<div class="ln"><span class="v">' + card.difficulty + ' / 10</span></div>';
-    }
-    if (r.sb) top += '<div class="sb">Soulbound</div>';
-    if (r.about) top += '<p class="desc">' + esc(r.about.replace(/\\n\\n[\s\S]*$/, '').replace(/\n\n[\s\S]*$/, '')) + '</p>';
-
-    for (const said of r.does || []) {
-      if (said.length === 1) mid += '<div class="ln gold">' + esc(said[0]) + '</div>';
-      else mid += '<div class="ln">' + esc(said[0]) + ': <span class="v">' + esc(said[1]) + '</span></div>';
-    }
-    for (const x of r.share || []) {
-      mid += '<div class="ln">Bonus ' + statWord(x.stat) + ': Equal to <span class="v">'
-        + signed(x.pct) + '%</span> of ' + statWord(x.of) + ' Stat.</div>';
-    }
-    if (r.mp) mid += '<div class="ln">MP Cost: <span class="v">' + r.mp + '</span></div>';
-    /* L'effet écrit par RealmEye, moins ce que le client dit déjà ligne par ligne. */
-    const reEffect = String(com.facts.effect || '')
-      .replace(/Shots hit multiple targets|Shots pass through obstacles|Ignores defense of target/g, '')
-      .replace(new RegExp((r.conditions || []).filter(c => c.on === 'hit').map(c => c.effect + ' for ' + c.duration + ' seconds?').join('|') || '$^', 'g'), '')
-      .replace(/\s+/g, ' ').trim();
-    if (!(r.does || []).length && reEffect && !(r.use && r.about && r.about.includes(reEffect.replace(/^\+/, ''))))
-      mid += '<div class="ln">Effect: <span class="v">' + esc(reEffect) + '</span>' + RE('Effect') + '</div>';
-    for (const c of r.conditions || []) {
-      if (c.on === 'hit') mid += '<div class="ln">Shot effect: <span class="v">' + esc(c.effect) + ' for ' + esc(c.duration) + ' seconds</span></div>';
-    }
-    if (s) {
-      if (s.reach !== undefined) mid += '<div class="ln">Range: <span class="v">' + s.reach + '</span></div>';
-      const many = r.volley ? r.volley.map(n => n || 'pause').join(' / ') : r.shots || s.many || 1;
-      if (r.volley || many > 1) mid += '<div class="ln">Shots: <span class="v">' + many + '</span></div>';
-      if (s.through) mid += '<div class="ln flag">Shots hit multiple targets</div>';
-      if (s.pierce) mid += '<div class="ln flag">Ignores defense of target</div>';
-      const rate = r.rate !== undefined ? r.rate : s.rate;
-      if (rate !== undefined) mid += '<div class="ln">Rate of Fire: <span class="v">' + Math.round(rate * 100) + '%</span></div>';
-    }
-    if (r.kind === 'skin' && r.level) mid += '<div class="ln">Unlocks at level: <span class="v">' + r.level + '</span></div>';
-    if (r.kind === 'portal') {
-      const bosses = rowByLabel(card.rows.details, /^bosses$/i), minis = rowByLabel(card.rows.details, /minibosses/i);
-      if (bosses) mid += '<div class="ln">Boss: <span class="v">' + esc(namesIn(bosses.html).join(', ')) + '</span>' + RE('Boss') + '</div>';
-      if (minis) mid += '<div class="ln">Minibosses: <span class="v">' + esc(namesIn(minis.html).join(', ')) + '</span>' + RE('Minibosses') + '</div>';
-    }
-    if (com.facts.xp) mid += '<div class="ln">XP Bonus: <span class="v">' + esc(com.facts.xp) + '</span>' + RE('XP Bonus') + '</div>';
-
-    const w = r.worn || {};
-    const worn = STAT_ORDER.filter(k => w[k] !== undefined);
-    if (worn.length && r.kind === 'item') {
-      mid += '<div class="oe">On Equip:</div><div class="grid">' + worn.map(k =>
-        '<span class="' + (w[k] < 0 ? 'neg' : '') + '">' + signed(w[k]) + ' ' + statWord(k) + '</span>').join('') + '</div>';
-    }
-    if (r.kind === 'class' && r.stats) {
-      mid += '<div class="oe">Base → Max:</div><div class="grid two">' + CLASS_STAT.map(([k, n]) =>
-        '<span>' + n + ' <span class="dim">' + r.stats[k] + ' →</span> ' + r.stats[k + 'Top'] + '</span>').join('') + '</div>';
-    }
-    h += top + (mid ? '<hr>' + mid : '');
-
-    const set = r.set ? rec('set:' + r.set) : null;
-    if (set && set.steps && Object.keys(set.steps).length) {
-      h += '<hr><div class="set"><h5>' + esc(set.name) + '</h5><div class="cols">' + Object.keys(set.steps).map(n =>
-        '<div><i>' + (n === '4' ? 'Full Set' : n + ' Pieces') + '</i>' + STAT_ORDER.filter(k => set.steps[n][k] !== undefined)
-          .map(k => '<div>' + signed(set.steps[n][k]) + ' ' + statWord(k) + '</div>').join('') + '</div>').join('') + '</div></div>';
-    }
-    h += '</div>';
-    const foot = [];
-    if (com.facts.feed) foot.push('<span>Feed Power: ' + esc(com.facts.feed) + RE('Feed Power') + '</span>');
-    if (com.facts.dismantle) foot.push('<small>Dismantle ' + esc(com.facts.dismantle) + RE('Dismantle') + '</small>');
-    if (foot.length) h += '<div class="f">' + foot.join('') + '</div>';
-    return h + '</div>';
-  }
-
-  /* Le butin d'un ennemi ou d'un donjon, rangé comme un sac du jeu. */
-  function lootBag(card, used) {
-    const rows = card.rows.details.filter(x => /dropping|drops of interest/i.test(x.label));
-    if (!rows.length) return '';
-    rows.forEach(x => used.add(x));
-    const seen = new Set(), cells = [];
-    for (const x of rows) {
-      const doc = new DOMParser().parseFromString('<div>' + x.html + '</div>', 'text/html');
-      doc.querySelectorAll('[data-open]').forEach(b => {
-        if (seen.has(b.dataset.open)) return;
-        seen.add(b.dataset.open);
-        const pic = b.querySelector('.ix-art, img');
-        const name = b.textContent.trim();
-        cells.push('<button type="button" class="fc-slot" data-open="' + esc(b.dataset.open) + '" title="' + esc(name) + '">'
-          + (pic ? pic.outerHTML : esc(name.slice(0, 2))) + '</button>');
-      });
-    }
-    return cells.length ? '<div class="fc-bag"><div class="fc-bag-h">Loot<sup class="re" title="Loot listed by RealmEye">RE</sup><span>' + cells.length + '</span></div>'
-      + '<div class="fc-bag-grid">' + cells.join('') + '</div></div>' : '';
-  }
-
-  /* ---------- le dossier ---------- */
-  function dos(title, body, src) {
-    return body ? '<section class="fc-dos"><h4><span>' + esc(title) + '</span>'
-      + (src ? '<span class="fc-src' + (src === 'RealmEye' ? ' re' : '') + '">' + esc(src) + '</span>' : '') + '</h4>' + body + '</section>' : '';
-  }
-  const kvRows = rows => rows.length ? '<dl class="fc-kv">' + rows.map(([k, v]) => '<dt>' + esc(k) + '</dt><dd>' + v + '</dd>').join('') + '</dl>' : '';
-
-  function dossier(r, card, com) {
-    let out = '';
-    const used = card.__used || new Set();
-    const take = (rows, rx) => rows.filter(x => rx.test(x.label) && !used.has(x) && used.add(x));
-
-    /* Où l'obtenir : les lignes RealmEye/wiki déjà résolues par le site, puis les champs sans lien. */
-    const getRows = take(card.rows.details, /dropped by|obtained through|drop locations|blueprint|found in|sold|shop/i)
-      .map(x => [x.label, x.html]);
-    const bag = com.facts.bag ? com.facts.bag.replace(/^Assigned to /, '') : '';
-    const plain = [['Loot bag', esc(bag)], ['Dust', esc(com.facts.dust)], ['Forge', esc(com.facts.forge)]].filter(x => x[1]);
-    out += dos(r.kind === 'enemy' ? 'Where to find it' : r.kind === 'portal' ? 'Access' : 'Where to get it',
-      kvRows(getRows.concat(plain)), 'RealmEye');
-
-    if (r.kind === 'enemy' || r.kind === 'portal') {
-      const loot = take(card.rows.details, /dropping|drops of interest|tier drops|loot/i).map(x => [x.label, x.html]);
-      out += dos(r.kind === 'enemy' ? 'Drops' : 'Loot', kvRows(loot), 'RealmEye');
-      const who = take(card.rows.details, /enemies|bosses|minibosses/i).map(x => [x.label, x.html]);
-      out += dos('Inhabitants', kvRows(who), 'RealmEye');
-    }
-
-    /* Qui peut s'en servir : toutes les classes, celles qui ne peuvent pas en gris. */
-    const holds = rowByLabel(card.rows.links, /may hold/i);
-    if (r.kind === 'item' && !r.use && r.slot !== undefined && holds) {
-      used.add(holds);
-      const names = new Set(namesIn(holds.html));
-      const classes = [...recs().values()].filter(x => x.kind === 'class');
-      out += dos('Usable by · ' + names.size + '/' + classes.length, '<div class="fc-classes">' + classes.map(c =>
-        '<button type="button" title="' + esc(c.name) + '" class="fc-cl' + (names.has(c.name) ? '" data-open="' + esc(c.id) + '"' : ' off" disabled') + '>'
-        + art(c, 16) + esc(c.name) + '</button>').join('') + '</div>', 'client');
-    }
-
-    /* L'enchantement, sans supposer qu'il y en a un sur l'objet. */
-    if (r.kind === 'item' && !r.use && r.slot !== undefined) {
-      const wakes = take(card.rows.links, /^wakes$/i)[0];
-      const pool = take(card.rows.links, /rolls from/i)[0];
-      let body = '<div class="fc-ench"><div class="st">' + (r.ench
-        ? '<span class="fc-pill ok">Enchantable</span><span class="fc-pill">4 slots</span>'
-        : '<span class="fc-pill no">Not enchantable</span>') + '</div>';
-      if (pool) body += kvRows([['Rolls from', pool.html]]);
-      if (wakes) body += kvRows([['Can awaken', wakes.html]]);
-      body += '</div>';
-      out += dos('Enchantment', body, 'client');
-    }
-
-    /* Les autres formes sous le même nom, et ce que RealmEye en dit. */
-    const same = take(card.rows.links, /same name/i)[0];
-    const varRows = [];
-    const many = same ? namesIn(same.html).length : 0;
-    if (same) varRows.push(['Variants', many > 4 ? '<details><summary style="text-transform:none;letter-spacing:0;font-weight:400">'
-      + many + ' declarations under this name</summary>' + same.html + '</details>' : same.html]);
-    if (com.variants) varRows.push(['RealmEye', esc(com.variants)]);
-    out += dos('Variants', kvRows(varRows), same ? 'client' : 'RealmEye');
-
-    /* Ce que la communauté écrit en toutes lettres. */
-    const prose = [];
-    if (com.notes) prose.push('<p class="fc-prose">' + esc(com.notes) + '</p>');
-    for (const p of com.prose) prose.push('<p class="fc-prose">' + esc(p) + '</p>');
-    out += dos(com.notes ? 'Notes' : 'According to RealmEye', prose.join(''), 'RealmEye');
-
-    const dl = card.dlDetails.filter(([k]) => !/drops from|obtained through|feed power|dust|loot bag|on equip|power level|tier$|xp bonus|soulbound|forging|dismantl|effect|damage|range|shots|mp cost|reactive|^set$|lifetime|projectile|amplitude|frequency|potion|technical/i.test(k));
-    if (dl.length || card.tables) out += dos('Other data', kvRows(dl.map(([k, v]) => [k, esc(v)])) + (card.tables || ''), 'RealmEye');
-
-    const rest = card.rows.details.filter(x => !used.has(x)).map(x => [x.label, x.html])
-      .concat(card.rows.links.filter(x => !used.has(x)).map(x => [x.label, x.html]));
-    out += dos('Links', kvRows(rest));
-    out += card.others.map(x => '<div class="fc-legacy">' + x + '</div>').join('');
-    if (card.labels.length) out += '<section class="fc-dos"><details><summary>Tags</summary><div class="fc-labels">'
-      + card.labels.join('') + '</div></details></section>';
-    return out;
-  }
-
 
   /* =====================================================================
      C harmonisée : l'ordre de l'infobulle du jeu, les composants de l'Index.
@@ -558,7 +365,7 @@
     return clientMap.get(id);
   };
   let famSheet = null;
-  readCardFile('assets/index/collection-icons.json').then(t => JSON.parse(t)).then(j => { famSheet = j; }).catch(() => {}).finally(settled);
+  whenWarm(() => readCardFile('assets/index/collection-icons.json').then(t => JSON.parse(t)).then(j => { famSheet = j; }).catch(() => {}).finally(settled));
   /* L'icône de famille du client (CollectionIcon_N), la même que dans l'infobulle du jeu. */
   function famIcon(n, cls) {
     if (n === undefined || !famSheet || !famSheet.have.includes(n)) return '';
@@ -913,7 +720,7 @@
   };
   const marked = (url, mark) => url + (mark ? '?v=' + encodeURIComponent(mark) : '');
   let projData = null, projMark = '';
-  readCardFile('assets/index/projectiles.json', { cache: 'no-cache' }).then(t => { projData = JSON.parse(t); projMark = markOf(t); }).catch(() => {}).finally(settled);
+  whenWarm(() => readCardFile('assets/index/projectiles.json', { cache: 'no-cache' }).then(t => { projData = JSON.parse(t); projMark = markOf(t); }).catch(() => {}).finally(settled));
   const projOf = r => projData && projData.items[r.clientId || r.name];
 
   /* Ce que fait le tir, dit une fois, sous l'animation. */
@@ -1595,8 +1402,8 @@
 
   /* ---------- le skin, animé depuis les images du Skin Viewer ---------- */
   let looks = null, skinTypes = null;
-  Promise.all([readCardFile('assets/skins/generated/looks.json', { cache: 'no-cache' }).then(t => JSON.parse(t)), readCardFile('assets/skins/generated/skins.json', { cache: 'no-cache' }).then(t => JSON.parse(t))])
-    .then(([l, s]) => { looks = l; skinTypes = new Map((s.skins || []).map(x => [x.id, x.type])); }).catch(() => {}).finally(settled);
+  whenWarm(() => Promise.all([readCardFile('assets/skins/generated/looks.json', { cache: 'no-cache' }).then(t => JSON.parse(t)), readCardFile('assets/skins/generated/skins.json', { cache: 'no-cache' }).then(t => JSON.parse(t))])
+    .then(([l, s]) => { looks = l; skinTypes = new Map((s.skins || []).map(x => [x.id, x.type])); }).catch(() => {}).finally(settled));
   const skinCanvas = (skinId, big) => '<canvas class="fc2-skin' + (big ? ' is-big' : '') + '" data-skin="' + esc(skinId) + '" width="96" height="96"></canvas>';
   function bootSkins(box) {
     if (!looks) return;
@@ -1874,7 +1681,6 @@
   const hosts = () => HOSTS.map(id => document.getElementById(id)).filter(Boolean);
   const drawn = new WeakMap();
   const widths = new WeakMap();
-  const modeBar = () => '';
   function build(box) {
     const card = readCard(box);
     if (!card.id) return null;
@@ -1883,7 +1689,7 @@
     const gear = isGear(r);
     const com = communityOf(r);
     card.__used = new Set();
-    const bar = '<div class="fc-bar"><div class="fc-tools">' + card.doors + card.away + card.love + '</div>' + modeBar() + '</div>';
+    const bar = '<div class="fc-bar"><div class="fc-tools">' + card.doors + card.away + card.love + '</div></div>';
     /* Un événement a sa propre fiche, tirée du catalogue des événements. */
     const happening = card.id.startsWith('event:') ? eventRec(card.id) : null;
     if (happening && happening.event) {
@@ -1898,21 +1704,15 @@
         + '<div class="fc-cols"><div class="fc-left">' + sheetStatus(name) + '</div>'
         + '<div class="fc-right fc2-right">' + statusDossier(name) + '</div></div></div>';
     }
-    if (mode === 'c2' && gear) {
+    if (gear) {
       const sheet = sheet2(r, card, com);
       return '<div class="fc-root fc2 fc2-gear">' + bar + card.warns
         + '<div class="fc-cols"><div class="fc-left">' + sheet.left + '</div>'
         + '<div class="fc-right fc2-side">' + sheet.right + '<div class="fc2-dosmark" hidden></div>' + dossier2(r, card, com, 8) + '</div></div></div>';
     }
-    if (mode === 'c2') {
-      return '<div class="fc-root fc2">' + bar + card.warns
-        + '<div class="fc-cols"><div class="fc-left">' + sheetAny(r, card, com) + '</div>'
-        + '<div class="fc-right fc2-right">' + dossier2(r, card, com) + '</div></div></div>';
-    }
-    return '<div class="fc-root">' + bar + card.warns
-      + '<div class="fc-cols"><div class="fc-left">' + tooltip(r, card, com)
-      + '<p class="fc-note">Base values declared by the client: no rarity, no enchantment. <b style="color:#7aa6c2">RE</b> = RealmEye.</p></div>'
-      + '<div class="fc-right">' + dossier(r, card, com) + '</div></div></div>';
+    return '<div class="fc-root fc2">' + bar + card.warns
+      + '<div class="fc-cols"><div class="fc-left">' + sheetAny(r, card, com) + '</div>'
+      + '<div class="fc-right fc2-right">' + dossier2(r, card, com) + '</div></div></div>';
   }
   /*
    * Deux colonnes de hauteur voisine : les derniers blocs du dossier passent au
@@ -1972,7 +1772,6 @@
     widths.set(box, { wide: Math.round(box.getBoundingClientRect().width) });
   }
   function redraw() {
-    if (mode === 'old') return;
     for (const box of hosts()) {
       const last = drawn.get(box);
       if (!last || !box.firstElementChild) continue;
@@ -1989,11 +1788,12 @@
     more.remove();
   });
   function onCard(box) {
-    if (!box.firstElementChild || box.querySelector('.fc-root, .fc-oldbar')) return;
+    if (!box.firstElementChild || box.querySelector('.fc-root')) return;
+    warm();
     drawn.set(box, box.innerHTML);
     if (pending > 0) { box.style.visibility = 'hidden'; return; }
-    if (mode !== 'old') { const html = build(box); if (html) { box.innerHTML = html; settle(box); } }
-    else box.insertAdjacentHTML('afterbegin', '<div class="fc-bar fc-oldbar"><span></span>' + modeBar() + '</div>');
+    const html = build(box);
+    if (html) { box.innerHTML = html; settle(box); }
   }
   /*
    * A host resized by its reader - the atlas drawer's handle, the window - lays
@@ -2053,8 +1853,11 @@
 
   /* ---------------- what is read ---------------- */
   let D = null, projectiles = null, moving = {};
-  window.RealmCardExtras.read('assets/index/projectiles.json').then(t => JSON.parse(t)).then(j => { projectiles = j; }).catch(() => {});
-  window.RealmCardExtras.read('assets/realm-monster-animations/index.json').then(t => JSON.parse(t)).then(j => { moving = j || {}; }).catch(() => {});
+  // Read with the first card's data, like the reads above (RealmCardExtras.whenWarm).
+  window.RealmCardExtras.whenWarm(() => {
+    window.RealmCardExtras.read('assets/index/projectiles.json').then(t => JSON.parse(t)).then(j => { projectiles = j; }).catch(() => {});
+    window.RealmCardExtras.read('assets/realm-monster-animations/index.json').then(t => JSON.parse(t)).then(j => { moving = j || {}; }).catch(() => {});
+  });
   const rec = id => D && D.all.get(id);
   const isSomeone = r => r && (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy');
   const extra = r => {

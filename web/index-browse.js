@@ -36,7 +36,7 @@
     const b = bundle();
     const read = file => b && b.cardFiles && b.cardFiles[file] !== undefined
       ? Promise.resolve().then(() => JSON.parse(b.cardFiles[file]))
-      : fetch(file).then(r => r.json());
+      : fetch(file).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
     const image = file => (b && b.cardImages && b.cardImages[file]) || file;
     // The biomes' beacons, the pictures the site keeps for the atlas.
     IX.beacons = await read('assets/realm-biomes/index.json').then(j => j.beacons || null).catch(() => null);
@@ -60,7 +60,7 @@
     try {
       const b = bundle();
       const ix = window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index, mark = ix && (ix.built || (ix.from && ix.from.build));
-      const blob = await fetch((b && b.indexSheet) || 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')).then(r => r.blob());
+      const blob = await fetch((b && b.indexSheet) || 'assets/index/sheet.png' + (mark ? '?v=' + encodeURIComponent(mark) : '')).then(r => r.ok ? r.blob() : Promise.reject(new Error('HTTP ' + r.status)));
       const img = await createImageBitmap(blob);
       const c = document.createElement('canvas');
       c.width = img.width; c.height = img.height;

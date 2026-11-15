@@ -84,6 +84,9 @@ async function run({ bundle, answer }) {
   page.globalThis = page.window;
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../web/fiches-data.js'), 'utf8'), page, { filename: 'web/fiches-data.js' });
   vm.runInNewContext(instrumented, page, { filename: 'web/fiches-c.js' });
+  // The home page shows no card, so the cards read nothing until one is wanted; then everything is asked for at once.
+  assert.deepEqual(fetched, [], 'nothing is fetched before a card is wanted');
+  page.window.RealmCardExtras.warm();
   await flush();
   const fiches = page.window.__fiches;
   return { fiches, fetched, bigParses: () => bigParses, enrichmentFetches: () => fetched.filter(a => a === WHERE).length };

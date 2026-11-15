@@ -57,3 +57,6 @@ docs/
 
 # Python bytecode
 **/__pycache__/
+
+# Files set aside for deletion (never deleted by an agent): local only, never published.
+_a_supprimer/

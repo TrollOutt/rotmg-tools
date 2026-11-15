@@ -119,28 +119,62 @@ for (const version of [served, offline]) {
   assert(resolverAt >= 0 && resolverAt < version.html.indexOf('const appData = AppData.createItemResolver('),
     'Calculator data module is inlined before its adapters in both HTML copies');
   assert(!version.html.includes('src="app-data.js"'), 'Built copies never fetch the calculator data module');
-  const searchAt = version.html.indexOf('var IndexSearch =');
-  const filterAt = version.html.indexOf('var IndexFilter =');
-  const groupingAt = version.html.indexOf('var IndexGrouping =');
-  const familiesAt = version.html.indexOf('var IndexFamilies =');
-  assert(familiesAt > groupingAt && familiesAt < version.html.indexOf('const families = IndexFamilies.createFamilies('));
-  assert(!version.html.includes('<script data-lazy-src="index-families.js">'));
-  assert(groupingAt > filterAt && groupingAt < version.html.indexOf('const grouped = IndexGrouping.createGrouping('));
-  assert(!version.html.includes('<script data-lazy-src="index-grouping.js">'));
-  assert(filterAt >= 0 && filterAt < version.html.indexOf('const filterModel = IndexFilter.createFilter('));
-  assert(!version.html.includes('<script data-lazy-src="index-filter.js">'));
-  const browseAt = version.html.indexOf('IX.search = IndexSearch.createSearch(');
-  assert(searchAt >= 0 && browseAt > searchAt,
-    'Index search must be inlined before the browse interface in both HTML copies');
-  assert(!version.html.includes('<script data-lazy-src="index-search.js">'),
-    'Built copies must inline Index search rather than fetch it');
   assert(version.html.includes('var BuildProgression'), 'Progression code missing');
-  const engineAt = version.html.indexOf('var TheoryEngine =');
-  const uiAt = version.html.indexOf('var TheoryCraft =');
-  assert(engineAt >= 0 && uiAt > engineAt,
-    'Pure theory engine must be inlined before TheoryCraft in both HTML copies');
-  assert(!version.html.includes('<script data-lazy-src="theory-engine.js">'),
-    'Built copies must inline the theory engine rather than fetch it');
+  if (version === offline) {
+    const searchAt = version.html.indexOf('var IndexSearch =');
+    const filterAt = version.html.indexOf('var IndexFilter =');
+    const groupingAt = version.html.indexOf('var IndexGrouping =');
+    const familiesAt = version.html.indexOf('var IndexFamilies =');
+    assert(familiesAt > groupingAt && familiesAt < version.html.indexOf('const families = IndexFamilies.createFamilies('));
+    assert(!version.html.includes('<script data-lazy-src="index-families.js">'));
+    assert(groupingAt > filterAt && groupingAt < version.html.indexOf('const grouped = IndexGrouping.createGrouping('));
+    assert(!version.html.includes('<script data-lazy-src="index-grouping.js">'));
+    assert(filterAt >= 0 && filterAt < version.html.indexOf('const filterModel = IndexFilter.createFilter('));
+    assert(!version.html.includes('<script data-lazy-src="index-filter.js">'));
+    const browseAt = version.html.indexOf('IX.search = IndexSearch.createSearch(');
+    assert(searchAt >= 0 && browseAt > searchAt,
+      'Index search must be inlined before the browse interface in both HTML copies');
+    assert(!version.html.includes('<script data-lazy-src="index-search.js">'),
+      'Built copies must inline Index search rather than fetch it');
+    const engineAt = version.html.indexOf('var TheoryEngine =');
+    const uiAt = version.html.indexOf('var TheoryCraft =');
+    assert(engineAt >= 0 && uiAt > engineAt,
+      'Pure theory engine must be inlined before TheoryCraft in both HTML copies');
+    assert(!version.html.includes('<script data-lazy-src="theory-engine.js">'),
+      'Built copies must inline the theory engine rather than fetch it');
+  }
+}
+/*
+ * The served page leaves the scripts web/index.html marks as lazy outside itself (ROT-C-04):
+ * one placeholder each, in the source order, versioned by a digest of the file served beside it,
+ * which is the exact (normalised) source and compiles. None of them is inlined.
+ */
+{
+  const lazy = ['theory-engine.js', 'theorycraft.js', 'index-search.js', 'index-filter.js', 'index-grouping.js', 'index-families.js',
+    'index-page.js', 'index-browse.js', 'pet-fame-engine.js', 'pet-fame-data.js', 'pet-fame.js'];
+  const holders = [...served.html.matchAll(/<script data-lazy-src="([\w.-]+)" data-version="([0-9a-f]{10})"><\/script>/g)];
+  assert.deepEqual(holders.map(m => m[1]), lazy, 'served page keeps every lazy placeholder, in order');
+  for (const [, name, version] of holders) {
+    const beside = read('docs/' + name);
+    assert.equal(beside, read('web/' + name).replace(/\r\n/g, '\n'), name + ': served file is the exact source');
+    assert.equal(version, require('crypto').createHash('sha256').update(beside, 'utf8').digest('hex').slice(0, 10), name + ': version matches its content');
+    new vm.Script(beside);
+  }
+  for (const marker of ['var TheoryEngine =', 'var TheoryCraft =', 'var IndexSearch =', 'var IndexFilter =', 'var IndexGrouping =', 'var IndexFamilies =', 'IX.search = IndexSearch.createSearch(']) {
+    assert(!served.html.includes(marker), 'served startup must not inline ' + marker);
+  }
+}
+/* The served page carries a Content-Security-Policy before any script (ROT-A-11); the kept copy, opened from disk, does not. */
+{
+  const at = served.html.indexOf('<meta http-equiv="Content-Security-Policy"');
+  assert(at > 0 && at < served.html.indexOf('<script'), 'served page declares its CSP before any script');
+  const policy = /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/.exec(served.html)[1];
+  for (const part of ["default-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-src 'self'"]) {
+    assert(policy.includes(part), 'CSP keeps ' + part);
+  }
+  const connect = /connect-src ([^;]+)/.exec(policy)[1].split(' ');
+  assert.equal(connect.filter(source => source.startsWith('https://')).length, 2, 'CSP lets the page reach exactly two remote services');
+  assert(!offline.html.includes('Content-Security-Policy'), 'the downloadable copy carries no CSP');
 }
 assert(JSON.parse(offline.data.sources.realmLootText).creatures, 'Biome loot evidence missing');
 assert.equal(read('docs/assets/theory/progression.json').trim(), offline.data.sources.realmLootText);

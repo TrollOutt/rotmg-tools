@@ -3632,6 +3632,22 @@ const VOUCHER = {
     ['Candy of Extreme Mana', 1], ['Candy of Extreme Vitality', 1], ['Droplet of Bloody Ambrosia', 1]
   ]
 };
+/*
+ * The served Index, asked for once however many pages want it at the same time
+ * (the voucher and the Index page each read it; ROT-C-05). A failed read is
+ * forgotten, so a later ask tries again.
+ */
+function sharedIndexText() {
+  const shared = window.ROTMG_SHARED_DATA || (window.ROTMG_SHARED_DATA = {});
+  const requests = shared.requests || (shared.requests = {});
+  const url = 'assets/index/index.json';
+  if (!requests[url]) {
+    const asked = requests[url] = fetch(url, { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)));
+    asked.catch(() => { if (requests[url] === asked) delete requests[url]; });
+  }
+  return requests[url];
+}
+window.sharedIndexText = sharedIndexText;
 let voucherRecords = null;
 function voucherIndex() {
   if (voucherRecords) return voucherRecords;
@@ -3640,7 +3656,7 @@ function voucherIndex() {
     let said = shared.index || null;
     if (!said) {
       let raw = BUNDLE && BUNDLE.sources && BUNDLE.sources.indexText;
-      if (!raw) raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.text()).catch(() => '');
+      if (!raw) raw = await sharedIndexText().catch(() => '');
       if (!raw) return new Map();
       said = JSON.parse(raw);
       shared.index = said;
@@ -3761,7 +3777,7 @@ async function loadUpdateMade() {
     return;
   }
   try {
-    const news = await fetch('assets/whats-new/index.json', { cache: 'no-cache' }).then(response => response.json());
+    const news = await fetch('assets/whats-new/index.json', { cache: 'no-cache' }).then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status)));
     state.updateMade = newsMadeOn(news);
     dressNewsBell(news);
   } catch (error) {
@@ -3802,7 +3818,7 @@ function ensureItemArt() {
   }
 
   itemArtLoading = fetch('assets/index/item-art.json', { cache: 'no-cache' })
-    .then(response => response.json())
+    .then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status)))
     .then(art => {
       state.itemArt = art;
       // The sheet these rectangles were cut for, never a cached one from another build.
@@ -3896,10 +3912,10 @@ function renderClientNews(reading) {
 async function readSources() {
   if (BUNDLE) return BUNDLE.sources;
   const [clientModText, clientArtifactText, clientItemText, awakenText] = await Promise.all([
-    fetch(ROOT + ['Enchantment documents', 'client-enchantments.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Items', 'client-items.txt'].map(esc).join('/')).then(response => response.text()),
-    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.text())
+    fetch(ROOT + ['Enchantment documents', 'client-enchantments.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+    fetch(ROOT + ['Artifacts', 'client-artifacts.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+    fetch(ROOT + ['Items', 'client-items.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+    fetch(ROOT + ['Awakened Items', 'awakenedItems.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status)))
   ]);
   return { clientModText, clientArtifactText, clientItemText, awakenText };
 }
@@ -5468,12 +5484,12 @@ function openFamePage() {
     try {
       const bundled = BUNDLE && BUNDLE.sources;
       const text = bundled && bundled.fameText ? bundled.fameText
-        : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.text());
+        : await fetch(ROOT + ['Fame', 'client-fame.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status)));
       const info = bundled && bundled.dungeonText ? bundled.dungeonText
-        : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.text());
+        : await fetch(ROOT + ['Fame', 'dungeon-pages.txt'].map(esc).join('/')).then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status)));
       const overrides = bundled && bundled.overrideText ? bundled.overrideText
         : await fetch(ROOT + ['Fame', 'availability-overrides.txt'].map(esc).join('/'))
-          .then(response => response.text()).catch(() => '');
+          .then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))).catch(() => '');
 
       await Promise.resolve(
         FamePage.init(text, BUNDLE ? BUNDLE.assets : null, info, overrides)
@@ -5556,9 +5572,15 @@ function ensureTheoryPage() {
  * server answers "not modified" when nothing changed), and the script tag then
  * reads the fresh one. A copy opened from disk has no server to ask and loads
  * as it always did.
+ *
+ * The built page names each file with a digest of its bytes, so a changed file
+ * already has a new address and that first request would only download the
+ * script a second time: with a version, the script tag alone is enough.
  */
 function loadLateScript(placeholder, onload, onerror) {
-  const src = placeholder.dataset.lazySrc;
+  // The built page names each lazy file with a digest of its bytes (tools/build-standalone.js).
+  const version = placeholder.dataset.version;
+  const src = placeholder.dataset.lazySrc + (version ? '?v=' + encodeURIComponent(version) : '');
   const add = () => {
     const script = document.createElement('script');
     script.src = src;
@@ -5567,8 +5589,59 @@ function loadLateScript(placeholder, onload, onerror) {
     placeholder.before(script);
   };
   const served = /^https?:$/.test(location.protocol) && typeof fetch === 'function';
-  if (!served) { add(); return; }
+  if (!served || version) { add(); return; }
   fetch(src, { cache: 'no-cache' }).catch(() => {}).then(add);
+}
+
+/*
+ * A tool whose own scripts could not be fetched says so, with a way to ask
+ * again, instead of standing on "Loading" for good. Only when the tool really
+ * is missing: an error from a tool that did load keeps to the console.
+ */
+const LATE_TOOLS = {
+  index: { name: 'The Index', here: () => typeof RealmIndex !== 'undefined' && typeof RealmIndexBrowse !== 'undefined' },
+  theory: { name: 'Theory Crafting', here: () => typeof TheoryCraft !== 'undefined' },
+  pets: { name: 'The Pet Fame Calculator', here: () => typeof PetFame !== 'undefined' }
+};
+function lateToolFailed(page) {
+  return error => {
+    console.error(error);
+    const tool = LATE_TOOLS[page];
+    const host = $(PAGES[page]);
+    if (!tool || tool.here() || !host || document.body.dataset.page !== page) return false;
+    let note = host.querySelector('.late-failed');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'late-failed';
+      note.setAttribute('role', 'alert');
+      const head = host.querySelector('.masthead');
+      if (head) head.after(note); else host.prepend(note);
+    }
+    // The Index's list says "Loading" until its script draws it: not while this is shown.
+    const waiting = lateToolWaiting(page);
+    if (waiting) waiting.hidden = true;
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.className = 'link-button';
+    again.textContent = 'Try again';
+    // showPage puts the note away and asks for the scripts again.
+    again.addEventListener('click', () => { if (document.body.dataset.page === page) routeFromHash(); });
+    note.replaceChildren(tool.name + ' could not be loaded. Check your connection, then ', again, '.');
+    return false;
+  };
+}
+function lateToolWaiting(page) {
+  const mid = page === 'index' ? $('ixbMid') : null;
+  return mid ? mid.querySelector('.ixb-none') : null;
+}
+// Each new attempt (Try again, or coming back to the page) starts without the old note.
+function clearLateToolFailure(page) {
+  const host = LATE_TOOLS[page] ? $(PAGES[page]) : null;
+  const note = host ? host.querySelector('.late-failed') : null;
+  if (!note) return;
+  note.remove();
+  const waiting = lateToolWaiting(page);
+  if (waiting) waiting.hidden = false;
 }
 
 /*
@@ -5593,6 +5666,9 @@ function ensurePetsPage() {
 
 let indexScriptLoading = null;
 function ensureIndexPage(open) {
+  // The cards' own data (web/fiches-c.js) is read from here on, beside the Index, not by the home page.
+  const cards = typeof window !== 'undefined' ? window.RealmCardExtras : null;
+  if (cards && typeof cards.warm === 'function') cards.warm();
   const run = () => {
     if (typeof RealmIndex === 'undefined') return false;
     if (document.body.dataset.page !== 'index') return true;
@@ -5713,6 +5789,7 @@ function showPage(name) {
   // A dynamically inserted script is invisible to that watcher until it has
   // finished downloading, so expose its own promise to the black cover.
   pageLoading = Promise.resolve();
+  clearLateToolFailure(page);
   if (page === 'enchant') {
     pageLoading = ensureEnchantPage().catch(error => {
       console.error(error);
@@ -5740,27 +5817,18 @@ function showPage(name) {
    * asked for, and nobody who came for the enchanter pays for it.
    */
   if (page === 'theory') {
-    pageLoading = ensureTheoryPage().catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensureTheoryPage().catch(lateToolFailed('theory'));
   }
   /*
-   * And the index, which is three and a half megabytes of records: it is read
+   * And the index, which is some twelve megabytes of records: it is read
    * the first time somebody asks for it and not a moment before, the same way
    * the other two heavy pages are.
    */
   if (page === 'pets') {
-    pageLoading = ensurePetsPage().catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensurePetsPage().catch(lateToolFailed('pets'));
   }
   if (page === 'index') {
-    pageLoading = ensureIndexPage().catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensureIndexPage().catch(lateToolFailed('index'));
   }
   if (page === 'skins') {
     pageLoading = ensureSkinPage().catch(error => {
@@ -5848,10 +5916,7 @@ function routeFromHash() {
   const route = RealmRoutes.parse(location.hash);
   showPage(route.page);
   if (route.page === 'index' && route.open) {
-    pageLoading = ensureIndexPage(route.open).catch(error => {
-      console.error(error);
-      return false;
-    });
+    pageLoading = ensureIndexPage(route.open).catch(lateToolFailed('index'));
   }
   return pageLoading;
 }

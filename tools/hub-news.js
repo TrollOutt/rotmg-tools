@@ -87,7 +87,7 @@ const digest = posts => posts.map(p => `## ${p.title}\n\n${p.published.slice(0, 
   + ` · ${p.category ?? 'post'} · ${SITE}${p.path}\n\n${p.text}\n`).join('\n');
 
 async function get(url) {
-  const response = await fetch(url, { headers: { 'user-agent': AGENT } });
+  const response = await fetch(url, { headers: { 'user-agent': AGENT }, signal: AbortSignal.timeout(60_000) });
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response.text();
 }

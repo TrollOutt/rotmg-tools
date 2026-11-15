@@ -31,9 +31,11 @@ const deployCritical = [
   'realmeye-link-report.test.js',
   'realmeye-recent.test.js',
   'hub-news.test.js',
+  'corpus-record.test.js',
   'fiches-data.test.js',
   'fiches-community.test.js',
   'fiches-forge.test.js',
+  'fetch-status.test.js',
   'home-navigation.test.js',
   'home-snake.test.js',
   'index-quality.test.js',
@@ -74,7 +76,16 @@ const deployCritical = [
   'ui-cache.test.js',
   'visit-counter.test.js',
   'whats-new-sheet.test.js',
-  'whats-new.test.js'
+  'whats-new.test.js',
+  // Pipeline guards (ROT-B-01 to B-15), offline.
+  'availability-floor.test.js',
+  'client-order.test.js',
+  'client-textures.test.js',
+  'data-drift.test.js',
+  'index-ids.test.js',
+  'realmeye-crawl-guard.test.js',
+  'realmeye-recent-gaps.test.js',
+  'realmeye-sprite-guard.test.js'
 ];
 
 const buildCritical = [

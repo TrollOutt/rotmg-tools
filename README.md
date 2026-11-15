@@ -16,7 +16,7 @@ Browser tools for exploring Realm of the Mad God data, planning builds and estim
 
 ## Run locally
 
-Use **Node.js 20 with npm** to match CI. The project has no declared Node engine requirement or `.nvmrc`; dependencies are pinned by `package-lock.json`. Building the site from committed data does not require an installed game client or a fresh scrape.
+Use **Node.js 24 (LTS) with npm**, the version CI runs: it is named in `.nvmrc` and in `engines` in `package.json`. Dependencies are pinned by `package-lock.json`. Building the site from committed data does not require an installed game client or a fresh scrape.
 
 ```sh
 npm ci
@@ -26,6 +26,8 @@ npm run build
 ```
 
 `npm test` runs the calculation, data consistency and application checks. Both tests and build check translations and compile the locale catalogues; build also validates the standalone output.
+
+Four tests (`fiches-data`, `index-facets`, `index-families`, `index-grouping`) also freeze what the code gives on the real data, so a data update moves some of their cases. After a data-only update, `npm run corpus:record` re-records only the moved data cases, lists them in `tests/corpus-moves.txt`, and checks the result; commit the corpora and that list with the data they follow, and review the list. It refuses when code differs from the common base with main (committed or not; `-- --force` overrides it with a warning) or when a corpus would fall under its floor of cases, and it restores every corpus if any step fails. Edge and failure cases are never re-recorded, and `npm test` stays strict.
 
 Serve the generated `docs/` directory over HTTP. For example, if Python 3 is installed:
 
@@ -65,7 +67,7 @@ Theory Crafting is a model: results depend on the selected target, distance and 
 
 ## Contributing and publishing
 
-Install dependencies and run `npm run typecheck`, `npm test` and `npm run build` before submitting changes. Keep generated data consistent with its source and include relevant validation for calculation or data changes.
+Install dependencies and run `npm run lint`, `npm run typecheck`, `npm test` and `npm run build` before submitting changes. The [Tests workflow](.github/workflows/ci.yml) runs lint, type check and tests on every branch and pull request; a data update that moves Index ids on purpose is waived with the `accept-data-changes` label (see [INDEX-IDS.md](INDEX-IDS.md#the-guard-in-place)). Keep generated data consistent with its source and include relevant validation for calculation or data changes.
 
 ### Commit identity hooks
 

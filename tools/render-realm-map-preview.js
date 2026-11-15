@@ -6,7 +6,7 @@
  *
  * The server sends the exact ground type at every coordinate. RandomTexture
  * variants are a client-side cosmetic choice, so the preview picks one stably
- * from its coordinate and never pretends that choice came from the packet.
+ * from its coordinate and never pretends that choice came from the tile data.
  */
 const fs = require('fs');
 const path = require('path');

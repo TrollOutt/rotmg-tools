@@ -106,6 +106,17 @@ class Importer:
         self.con.execute("INSERT INTO source_record_relations VALUES(?,?,?,?,?,?,?,?)",(key,snapshot,from_record,typ,to_record,field,position,canon(attributes or {})))
         return key
 
+def entities_by_part(imp, part):
+    """(document, type, client) -> entities, regrouped by one part: 1 = type, 2 = client id.
+
+    One pass instead of a full scan of the table for every catalogue member and
+    combat profile (ROT-B-12); the union per key is the same as the scan's.
+    """
+    grouped = {}
+    for key, entities in imp.entities_by_document_type_client.items():
+        grouped.setdefault(key[part], set()).update(entities)
+    return grouped
+
 def import_index(imp, snap, index):
     files=index.get("files",[])
     contract={key:value for key,value in index.items() if key not in {"files","records","catalogues","views"}}
@@ -162,6 +173,7 @@ def import_index(imp, snap, index):
         group=imp.con.execute("SELECT group_uid FROM browse_groups WHERE representative_entity_uid=?",(target_entity,)).fetchone() if target_entity else None
         if not group: raise ValueError(f"folded target is not a browse group: {record['id']} -> {target}")
         imp.con.execute("INSERT INTO index_folded_targets VALUES(?,?)",(entity,group[0]))
+    by_client = entities_by_part(imp, 2)
     for name, payload in sorted(index.get("catalogues",{}).items()):
         cid=uid("catalogue",name); imp.con.execute("INSERT INTO catalogues VALUES(?,?,?)",(cid,name,canon({"source":"index.catalogues"})))
         sections=[("root",payload)] if isinstance(payload,list) else sorted(payload.items()) if isinstance(payload,dict) else [("root",payload)]
@@ -171,7 +183,7 @@ def import_index(imp, snap, index):
             for position,value in enumerate(values):
                 key=(value.get("id") or value.get("key") or value.get("name") or str(position)) if isinstance(value,dict) else str(position); candidates=[]
                 if isinstance(value,dict) and value.get("id"):
-                    candidates=set().union(*[v for (d,t,c),v in imp.entities_by_document_type_client.items() if c==str(value["id"])]) if any(c==str(value["id"]) for d,t,c in imp.entities_by_document_type_client) else set()
+                    candidates=set(by_client.get(str(value["id"]),()))
                 entity=next(iter(candidates)) if len(candidates)==1 else None
                 imp.con.execute("INSERT INTO catalogue_members(catalogue_uid,entity_uid,legacy_key,position,payload_json,section) VALUES(?,?,?,?,?,?)",(cid,entity,str(key),position,canon(value),section))
     imp.con.execute("INSERT INTO stored_views VALUES(?,?,?,?)",(uid("view","theory",snap),"theory",snap,canon(index.get("views",{}).get("theory"))))
@@ -269,10 +281,11 @@ def import_atlas(imp,snap,atlas):
         imp.record(snap,"atlas_biome",str(n),None,biome); imp.con.execute("INSERT INTO realm_observations VALUES(?,?,?,?,?)",(uid("atlas-biome",snap,n),snap,"atlas_biome",str(n),canon(biome)))
 
 def import_combat(imp,snap,combat):
+    by_type = entities_by_part(imp, 1)
     for kind, values in sorted(combat.items()):
         if not isinstance(values,dict): continue
         for key,payload in sorted(values.items(), key=lambda x:str(x[0])):
-            candidate=set().union(*[v for (d,t,c),v in imp.entities_by_document_type_client.items() if t==str(key)]) if any(t==str(key) for d,t,c in imp.entities_by_document_type_client) else set()
+            candidate=set(by_type.get(str(key),()))
             entity=next(iter(candidate)) if len(candidate)==1 else None; pid=uid("combat",snap,kind,key); rid=imp.record(snap,"combat_"+kind,str(key),entity,payload)
             imp.con.execute("INSERT INTO combat_profiles VALUES(?,?,?,?,?,?,?)",(pid,snap,entity,kind,str(key),canon(payload),rid))
             if kind=="observed": imp.con.execute("INSERT INTO observed_behaviors VALUES(?,?,?,?,?)",(uid("behavior",pid),pid,snap,str(key),canon(payload)))

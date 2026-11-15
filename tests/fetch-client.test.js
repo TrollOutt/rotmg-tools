@@ -40,7 +40,8 @@ const MODIFIED = 'Wed, 14 Oct 2026 08:57:56 GMT';
 
 /* A CDN holding the files above; `corrupt` serves one with the wrong bytes. */
 function cdn(build, corrupt) {
-  return async url => {
+  return async (url, options) => {
+    assert.ok(options && options.signal instanceof AbortSignal, `FETCH-020 ${url} gives up after a delay`);
     const file = decodeURIComponent(url.slice(build.base.length));
     if (file === 'checksum.json') {
       return Response.json({ files: Object.entries(CONTENT).map(([name, text]) =>
@@ -56,12 +57,13 @@ function cdn(build, corrupt) {
 (async () => {
   let asked;
   const found = await latestBuild('k y', async (url, options) => {
-    asked = { url, method: options.method };
+    asked = { url, method: options.method, signal: options.signal };
     return new Response(init());
   });
   assert.equal(found.hash, 'abc123');
   assert.equal(asked.method, 'POST', 'FETCH-007 /app/init is a POST');
   assert.ok(asked.url.endsWith('key=k%20y'), 'FETCH-008 the key is encoded into the URL');
+  assert.ok(asked.signal instanceof AbortSignal, 'FETCH-019 /app/init gives up after a delay');
 
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'fetch-client-'));
   try {

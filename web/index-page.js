@@ -213,7 +213,7 @@ const RealmIndex = (function () {
     /*
      * Carried inside the file you download to keep, and fetched by the served
      * page - which is the one difference between the two copies, and it is
-     * three and a half megabytes that most visitors never need.
+     * some twelve megabytes that most visitors never need.
      */
     const shared = window.ROTMG_SHARED_DATA
       || (window.ROTMG_SHARED_DATA = {});
@@ -222,8 +222,11 @@ const RealmIndex = (function () {
     if (!said) {
       let raw = bundle && bundle.sources && bundle.sources.indexText;
       if (!raw) {
-        raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.text())
-          .catch(() => fetch('../data/Index/index.json').then(r => r.text()).catch(() => ''));
+        // One request shared with the other readers of the Index (app.js), when they are on the page.
+        const ask = typeof window.sharedIndexText === 'function' ? window.sharedIndexText()
+          : fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)));
+        raw = await ask
+          .catch(() => fetch('../data/Index/index.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
       }
       if (!raw) return false;
       said = JSON.parse(raw);
@@ -369,7 +372,7 @@ const RealmIndex = (function () {
     let raw = bundle && bundle.sources && bundle.sources.wikiText;
     if (!raw) {
       raw = await fetch('assets/index/wiki.json').then(r => (r.ok ? r.text() : ''))
-        .catch(() => fetch('../data/Index/wiki.json').then(r => r.text()).catch(() => ''));
+        .catch(() => fetch('../data/Index/wiki.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
     }
     if (!raw) return;
     let said;
@@ -469,13 +472,26 @@ const RealmIndex = (function () {
   async function loadRealmEyeArchive() {
     const bundle = window.ROTMG_BUNDLE;
     let raw = bundle && bundle.sources && bundle.sources.realmeyeEnrichmentText;
+    let said = null;
     if (!raw) {
-      raw = await fetch('assets/index/realmeye-enrichment.json').then(r => (r.ok ? r.text() : ''))
-        .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.text()).catch(() => ''));
+      /*
+       * The cards (web/fiches-c.js) read the same file when the Index opens: one request and one
+       * decoded copy for both (ROT-C-05). Read only, by both. Without the cards, a plain request.
+       */
+      const extras = window.RealmCardExtras;
+      if (extras && typeof extras.sharedJson === 'function') {
+        said = await extras.sharedJson('assets/index/realmeye-enrichment.json').catch(() => null);
+      }
+      if (!said) {
+        raw = await fetch('assets/index/realmeye-enrichment.json').then(r => (r.ok ? r.text() : ''))
+          .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
+      }
     }
-    if (!raw) return;
-    let said;
-    try { said = JSON.parse(raw); } catch (err) { return; }
+    if (!said) {
+      if (!raw) return;
+      try { said = JSON.parse(raw); } catch (err) { return; }
+    }
+    if (!said || typeof said !== 'object') return;
     realmeyeArchive = {
       home: (said.source && said.source.home) || 'https://www.realmeye.com/wiki/',
       page: new Map()
@@ -483,6 +499,9 @@ const RealmIndex = (function () {
     for (const [slug, ids] of Object.entries(said.pageIndex || {})) {
       realmeyeArchive.page.set(slug, (ids || []).filter(id => typeof id === 'string'));
     }
+    // The list's row of each record, looked up by id rather than by walking the list for every alias (ROT-C-15).
+    const rowOf = new Map();
+    for (const entry of light) if (!rowOf.has(entry[0])) rowOf.set(entry[0], entry);
     for (const [id, data] of Object.entries(said.records || {})) {
       let one = all.get(id);
       if (!one && data.communityOnly) {
@@ -493,7 +512,11 @@ const RealmIndex = (function () {
           communityOnly: true
         };
         all.set(id, one);
-        if (!data.scopeOnly) light.push([one.id, one.name, filedAs(one), '', 0, 0, '']);
+        if (!data.scopeOnly) {
+          const entry = [one.id, one.name, filedAs(one), '', 0, 0, ''];
+          light.push(entry);
+          if (!rowOf.has(entry[0])) rowOf.set(entry[0], entry);
+        }
       }
       if (!one) continue;
       one.realmeyeArchive = data;
@@ -511,7 +534,7 @@ const RealmIndex = (function () {
       }
       if (data.sprite && !one.icon && !one.art) one.icon = data.sprite;
       if (Array.isArray(data.searchAliases) && data.searchAliases.length) {
-        const row = light.find(entry => entry[0] === one.id);
+        const row = rowOf.get(one.id);
         if (row) row[3] = [row[3], ...data.searchAliases].filter(Boolean).join(' ');
       }
       for (const page of data.pages || []) {

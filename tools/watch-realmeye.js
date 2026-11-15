@@ -82,6 +82,14 @@ function parsePositiveInt(value, name, min = 1) {
   return number;
 }
 
+function parseRatio(value, name) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0 || number > 1) {
+    throw new Error(`Invalid ${name}: ${value} (expected a number from 0 to 1)`);
+  }
+  return number;
+}
+
 function parseArgs(argv) {
   const options = {
     out: path.resolve(process.cwd(), 'local', 'realmeye-monitor'),
@@ -90,6 +98,7 @@ function parseArgs(argv) {
     timeout: 25000,
     retries: 3,
     maxPages: 0,
+    maxErrorRatio: 0.2,
     maxBodyBytes: 25 * 1024 * 1024,
     watchSeconds: 0,
     full: false,
@@ -114,6 +123,7 @@ function parseArgs(argv) {
       case '--timeout': options.timeout = parsePositiveInt(next(), '--timeout'); break;
       case '--retries': options.retries = parsePositiveInt(next(), '--retries', 0); break;
       case '--max-pages': options.maxPages = parsePositiveInt(next(), '--max-pages'); break;
+      case '--max-error-ratio': options.maxErrorRatio = parseRatio(next(), '--max-error-ratio'); break;
       case '--max-body-mb': options.maxBodyBytes = parsePositiveInt(next(), '--max-body-mb') * 1024 * 1024; break;
       case '--watch': options.watchSeconds = parsePositiveInt(next(), '--watch'); break;
       case '--seed': options.seeds.push(next()); break;
@@ -146,6 +156,8 @@ function printHelp() {
 `  --timeout MS         Per-request timeout (default: 25000)\n` +
 `  --retries N          Retries for network/429/5xx failures (default: 3)\n` +
 `  --max-pages N        Safety cap; 0 means unlimited\n` +
+`  --max-error-ratio R  Fail the run (exit 1) when more than this share of the\n` +
+`                       pages could not be read (default: 0.2)\n` +
 `  --max-body-mb N      Maximum single response size (default: 25)\n` +
 `  --watch SECONDS      Repeat forever after each completed run\n` +
 `  --full               Disable conditional GET and download every page body\n` +
@@ -215,6 +227,11 @@ function extractTitle(html, mainHtml) {
   if (h1) return textFromHtml(h1[1]).trim();
   const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html || '');
   return title ? textFromHtml(title[1]).replace(/\s+[|\-–—]\s+RealmEye.*$/i, '').trim() : '';
+}
+
+/* Does the page carry the wiki's body marker? Every archived 2xx page does (6,727 of 6,727). */
+function hasWikiContent(html) {
+  return /class\s*=\s*["'][^"']*\bwiki-page\b[^"']*["']/i.test(String(html || ''));
 }
 
 function extractWikiMain(html) {
@@ -442,7 +459,8 @@ async function fetchWithRedirects(url, requestHeaders, options, limiter) {
   const redirects = [];
 
   for (let hop = 0; hop < 8; hop++) {
-    const response = await requestOnce(current, requestHeaders, options, limiter);
+    // options.request lets the offline tests stand in for the network.
+    const response = await (options.request || requestOnce)(current, requestHeaders, options, limiter);
     if (!REDIRECT_STATUS.has(response.status)) {
       return { ...response, finalUrl: current, redirects };
     }
@@ -649,6 +667,26 @@ function pageState(record) {
   if (record.goneHint || REMOVED_STATUS.has(record.status)) return 'gone';
   if (record.status >= 200 && record.status < 300) return 'ok';
   return 'http-' + record.status;
+}
+
+// A page read for what it is: a page (2xx), gone (404, 410, gone hint) or kept
+// out by robots.txt. Anything else (network error, 403, 429, 5xx, a redirect
+// with no target) says nothing about the page and counts as a failure.
+const SETTLED_STATES = new Set(['ok', 'gone', 'robots']);
+
+function crawlHealth(pages) {
+  const total = pages.length;
+  const failed = pages.filter(page => !SETTLED_STATES.has(pageState(page))).length;
+  return { total, failed, failedRatio: total ? failed / total : 0 };
+}
+
+// ROT-B-01. A crawl is complete, and so may stand for "every page that
+// exists", only when it covered everything it found, nothing failed, and it
+// was not limited to explicit seeds: a seed run (--seed, --no-sitemap) never
+// sees the whole wiki, and an all-403 run discovers nothing, so it used to
+// look complete and let the indexer drop the rest of the archive.
+function crawlComplete({ maxPagesReached, pagesCount, queueLength, failed, explicitSeeds }) {
+  return !maxPagesReached && pagesCount === queueLength && failed === 0 && !explicitSeeds;
 }
 
 function summarizeChange(change, limit = 120) {
@@ -917,13 +955,35 @@ async function crawlOnce(options) {
       const body = response.body.toString('utf8');
       const contentType = headerValue(response.headers, 'content-type');
       const isHtml = /text\/html|application\/xhtml\+xml/i.test(contentType) || /^\s*</.test(body);
-      const rawHash = body ? storeHtmlObject(options.out, body) : '';
       const mainHtml = isHtml ? extractWikiMain(body) : body;
       const normalized = isHtml ? normalizeWikiContent(mainHtml) : body.trim();
       const text = isHtml ? textFromHtml(mainHtml) : body.trim();
       const title = isHtml ? extractTitle(body, mainHtml) : '';
       const canonical = isHtml ? extractCanonical(body) : null;
       const goneHint = isHtml ? looksGone(body, title, text) : false;
+
+      /*
+       * A 2xx that is not a wiki page (a challenge or block page served with
+       * 200) is a failure, not new content: it is not stored, carries no
+       * rawHash, so the indexer keeps the archived page, and it counts
+       * against --max-error-ratio.
+       */
+      if (response.status >= 200 && response.status < 300 && !goneHint && !hasWikiContent(body)) {
+        records.set(job.url, {
+          url: job.url,
+          finalUrl: finalWiki || response.finalUrl,
+          status: response.status,
+          transportStatus: response.status,
+          source: job.source,
+          discoveredFrom: job.discoveredFrom,
+          fetchedAt: nowIso(),
+          contentType,
+          contentLength: Buffer.byteLength(body),
+          error: 'no wiki content (not a wiki page)'
+        });
+        return;
+      }
+      const rawHash = body ? storeHtmlObject(options.out, body) : '';
 
       const record = {
         url: job.url,
@@ -979,7 +1039,16 @@ async function crawlOnce(options) {
   process.stdout.write('\n');
 
   const pages = [...records.values()].sort((a, b) => a.url.localeCompare(b.url));
-  const complete = !maxPagesReached && pages.length === queue.length;
+  const health = crawlHealth(pages);
+  const explicitSeeds = options.seeds.length > 0 || !options.sitemap;
+  const complete = crawlComplete({
+    maxPagesReached,
+    pagesCount: pages.length,
+    queueLength: queue.length,
+    failed: health.failed,
+    explicitSeeds
+  });
+  const tooManyFailures = health.failedRatio > options.maxErrorRatio;
   const snapshot = {
     schema: 1,
     generatedAt: startedAt,
@@ -1000,7 +1069,9 @@ async function crawlOnce(options) {
       bundleSeeds: bundleSeeds.length,
       sitemapSeeds: sitemapSeeds.length,
       discoveredLinks: discovered,
-      maxPagesReached
+      maxPagesReached,
+      explicitSeeds,
+      failedPages: health.failed
     },
     pages
   };
@@ -1013,6 +1084,14 @@ async function crawlOnce(options) {
   atomicWrite(snapshotFile, JSON.stringify(snapshot, null, 2) + '\n');
   atomicWrite(reportJson, JSON.stringify(report, null, 2) + '\n');
   atomicWrite(reportMd, reportMarkdown(report));
+  if (tooManyFailures) {
+    // The dated snapshot and report stay for inspection, but a failed crawl
+    // never becomes latest.json: neither the indexer nor the next run's
+    // comparison may take it for the state of the wiki.
+    const share = Math.round(health.failedRatio * 1000) / 10;
+    throw new Error(`crawl failed: ${health.failed} of ${health.total} pages unreadable (${share}%, limit ${options.maxErrorRatio * 100}%); ` +
+      `latest.json not updated, see ${path.relative(process.cwd(), reportMd)}`);
+  }
   atomicWrite(latestFile, JSON.stringify(snapshot, null, 2) + '\n');
   atomicWrite(path.join(options.out, 'latest-report.json'), JSON.stringify(report, null, 2) + '\n');
   atomicWrite(path.join(options.out, 'latest-report.md'), reportMarkdown(report));
@@ -1052,6 +1131,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+  parseArgs,
+  crawlOnce,
+  crawlHealth,
+  crawlComplete,
+  hasWikiContent,
   canonicalWikiUrl,
   extractWikiMain,
   normalizeWikiContent,

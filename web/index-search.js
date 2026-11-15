@@ -111,6 +111,8 @@ var IndexSearch = (function () {
       const words = t.split(/\s+/).filter(w => w && !STOP.has(w));
       const loose = plain(t).split(' ').filter(w => w && !STOP.has(w));
       const meant = SHORT[t] && SHORT[t].toLowerCase();
+      // Each typed word compiled once per search, not once per record (ROT-C-15).
+      const starts = words.map(w => new RegExp('(^|[\\s\'(-])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
       /** @type {IndexSearchHit<R>[]} */
       const hits = [];
       /** @type {R[]} */
@@ -123,7 +125,7 @@ var IndexSearch = (function () {
         if (meant && n === meant) rank = -1;
         else if (n === t || bare === t) rank = 0;
         else if (bare.startsWith(t) || n.startsWith(t)) rank = 1;
-        else if (words.length && words.every(w => new RegExp('(^|[\\s\'(-])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(n))) rank = 2;
+        else if (words.length && starts.every(start => start.test(n))) rank = 2;
         else if (words.length && words.every(w => n.includes(w))) rank = 3;
         // The client's own name for it, which is what a reader holding a data mine types.
         else if (r.clientId && r.clientId.toLowerCase() !== n && r.clientId.toLowerCase().includes(t)) rank = 3;

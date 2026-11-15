@@ -465,9 +465,9 @@ var RealmMap = (function () {
     };
     if (bundled && bundled.index) { ready(bundled.index); built(bundled.monuments); return; }
     fetch('assets/realm-tiles/index.json')
-      .then(response => response.json()).then(ready).catch(() => { tiles.index = {}; });
+      .then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status))).then(ready).catch(() => { tiles.index = {}; });
     fetch('assets/realm-tiles/monuments.json')
-      .then(response => response.json()).then(built).catch(() => {});
+      .then(response => response.ok ? response.json() : Promise.reject(new Error('HTTP ' + response.status))).then(built).catch(() => {});
   }
 
   /*
@@ -1127,8 +1127,8 @@ var RealmMap = (function () {
       return;
     }
     Promise.all([
-      fetch('../data/Realm/realm-terrain.txt').then(response => response.text()),
-      fetch('../data/Realm/realm-beacons.txt').then(response => response.text()).catch(() => '')
+      fetch('../data/Realm/realm-terrain.txt').then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))),
+      fetch('../data/Realm/realm-beacons.txt').then(response => response.ok ? response.text() : Promise.reject(new Error('HTTP ' + response.status))).catch(() => '')
     ]).then(function (texts) { start(texts[0], texts[1]); })
       .catch(function () {
         details.innerHTML = '<p class="note warn">Could not read the traced realm map.</p>';

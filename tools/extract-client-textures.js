@@ -177,10 +177,17 @@ function writePng(width, height, rgba) {
 /* ---------------------------------------------------------------- *
  * Do it                                                             *
  * ---------------------------------------------------------------- */
-function findClient() {
-  for (const base of DEFAULT_CLIENTS) {
-    const assets = path.join(base, 'RotMG Exalt_Data', 'resources.assets');
-    if (fs.existsSync(assets)) return assets;
+/*
+ * The client, as tools/extract-client.js finds it: a folder given with
+ * --client wins over the installed ones (ROT-B-09: this reader used to ignore
+ * --client, so the XML and the textures could come from two clients).
+ */
+function findClient(given) {
+  for (const base of given ? [given] : DEFAULT_CLIENTS) {
+    for (const folder of ['RotMG Exalt_Data', 'RotMG Exalt Launcher_Data', 'Realm of the Mad God Exalt_Data', '']) {
+      const assets = path.join(base, folder, 'resources.assets');
+      if (fs.existsSync(assets)) return assets;
+    }
   }
   return null;
 }
@@ -189,15 +196,32 @@ function findClient() {
 module.exports = { Reader, openAssets, readTexture, findClient, CLIENT_DATA };
 
 function main() {
-  const assets = findClient();
+  const args = process.argv.slice(2);
+  const givenAt = args.indexOf('--client');
+  const given = givenAt >= 0 ? args[givenAt + 1] : null;
+  if (givenAt >= 0) args.splice(givenAt, 2);
+  const assets = findClient(given);
   if (!assets) {
     console.error('\n  No installed client found. Looked in:');
-    for (const base of DEFAULT_CLIENTS) console.error('    ' + base);
+    for (const base of given ? [given] : DEFAULT_CLIENTS) console.error('    ' + base);
     console.error('');
     process.exit(1);
   }
 
-  const wanted = process.argv.slice(2);
+  /*
+   * Which build these textures come from, written last: check_client_source
+   * compares it with the XML's, so sheets of one build never go with the XML
+   * of another, and a run stopped halfway leaves no provenance at all.
+   */
+  const provenanceFile = path.join(OUT, 'provenance.json');
+  fs.rmSync(provenanceFile, { force: true });
+  const boot = path.join(path.dirname(assets), 'boot.config');
+  const build = fs.existsSync(boot) ? /build-guid=([0-9a-f]+)/i.exec(fs.readFileSync(boot, 'utf8'))?.[1] : undefined;
+  const meta = require('./provenance').stamp(__filename, {
+    kind: 'client', build, date: fs.statSync(assets).mtime.toISOString().slice(0, 10)
+  });
+
+  const wanted = args;
   const names = new Set(wanted.length ? wanted : WANTED);
 
   console.log('\n  reading ' + path.basename(assets) + ' ('
@@ -208,6 +232,7 @@ function main() {
   fs.mkdirSync(OUT, { recursive: true });
   let written = 0;
   const missing = new Set(names);
+  const skipped = new Set();
   for (const object of file.objects) {
     if (object.classID !== 28) continue;
     const texture = readTexture(file, object);
@@ -215,6 +240,7 @@ function main() {
     missing.delete(texture.name);
     if (texture.format !== RGBA32) {
       console.log('    ' + texture.name.padEnd(20) + 'format ' + texture.format + ', not raw pixels — skipped');
+      skipped.add(texture.name);
       continue;
     }
     // Unity keeps a texture bottom-up; everything else reads top-down.
@@ -253,6 +279,23 @@ function main() {
 
   console.log('\n  ' + written + ' written'
     + (missing.size ? ', not found: ' + [...missing].join(', ') : '') + '\n');
+  const problem = texturesProblem(missing, skipped);
+  if (problem) {
+    // No provenance: check_client_source then refuses this client-data too.
+    console.error('  ' + problem + '\n');
+    process.exitCode = 1;
+    return;
+  }
+  fs.writeFileSync(provenanceFile, JSON.stringify(meta) + '\n');
 }
+
+/* R7 / ROT-B-09: a wanted texture absent or not in raw pixels is a failed extraction, not a note. */
+function texturesProblem(missing, skipped) {
+  const parts = [];
+  if (missing.size) parts.push('not found: ' + [...missing].join(', '));
+  if (skipped.size) parts.push('not raw RGBA32 pixels: ' + [...skipped].join(', '));
+  return parts.length ? 'textures incomplete (' + parts.join('; ') + '); the previous sheets may be stale' : '';
+}
+module.exports.texturesProblem = texturesProblem;
 
 if (require.main === module) main();

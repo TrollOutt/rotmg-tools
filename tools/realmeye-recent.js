@@ -5,8 +5,10 @@
  *   node tools/realmeye-recent.js --log <file>             read the list, add what is new
  *   node tools/realmeye-recent.js --log <file> --pending   the pages edited since the last
  *                                                          integration, one per line
- *   node tools/realmeye-recent.js --log <file> --integrated-through <created>
- *                                                          everything up to then is in the archive
+ *   node tools/realmeye-recent.js --log <file> --integrated-through <created> [--not-fetched <file>]
+ *                                                          everything up to then is in the archive,
+ *                                                          except the pages listed in <file>, one
+ *                                                          slug per line, which stay pending
  *
  * recent-changes-of-the-rotmg-wiki shows only the last day or so, and only so
  * many rows, so it is read every few hours and each edit kept in the log: one
@@ -65,8 +67,36 @@ function merge(log, entries) {
   return added;
 }
 
-const pending = log => [...new Set(log.entries
-  .filter(e => !log.integratedThrough || e.created > log.integratedThrough).map(e => pageSlug(e.slug)))];
+/* Pages edited since the last integration, and those an update asked for but could not fetch (ROT-B-04). */
+const pending = log => [...new Set([...(log.retry || []), ...log.entries
+  .filter(e => !log.integratedThrough || e.created > log.integratedThrough).map(e => pageSlug(e.slug))])];
+
+/*
+ * Everything up to `through` is in the archive, except the pages that were
+ * asked for and not fetched (a 404, a 429, a network error): they stay
+ * pending until an update gets them, instead of waiting for the next edit.
+ */
+function integrate(log, through, notFetched = []) {
+  log.integratedThrough = through;
+  const retry = [...new Set(notFetched.map(pageSlug).filter(Boolean))];
+  if (retry.length) log.retry = retry;
+  else delete log.retry;
+  return log;
+}
+
+/*
+ * The list only covers the last day or so. When its oldest row is newer than
+ * the newest edit already logged, and none of its rows was known, the watch
+ * may have missed edits in between (ROT-B-04): the revisions CSV can fill it.
+ */
+function gapProblem(log, entries) {
+  const latest = log.entries.at(-1)?.created;
+  if (!latest || !entries.length) return null;
+  const seen = new Set(log.entries.map(e => pageSlug(e.slug) + '#' + e.revision));
+  if (entries.some(e => seen.has(e.slug + '#' + e.revision))) return null;
+  const oldest = entries.map(e => e.created).sort()[0];
+  return oldest > latest ? `possible gap: the list starts at ${oldest}, the log ends at ${latest}; edits in between may be missing` : null;
+}
 
 async function main() {
   const args = process.argv.slice(2);
@@ -82,24 +112,28 @@ async function main() {
   }
   const through = option('--integrated-through');
   if (through) {
-    log.integratedThrough = through;
+    const listFile = option('--not-fetched');
+    const notFetched = listFile && fs.existsSync(listFile) ? fs.readFileSync(listFile, 'utf8').split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [];
+    integrate(log, through, notFetched);
     save();
     console.log(JSON.stringify({ integratedThrough: through, pending: pending(log).length }));
     return;
   }
-  const response = await fetch(URL, { headers: { 'user-agent': AGENT } });
+  const response = await fetch(URL, { headers: { 'user-agent': AGENT }, signal: AbortSignal.timeout(60_000) });
   if (!response.ok) throw new Error(`RealmEye answered ${response.status}`);
   const page = await response.text();
   const entries = parseRecent(page);
   const problem = layoutProblem(page, entries);
   if (problem) throw new Error(problem);
+  const gap = gapProblem(log, entries);
+  if (gap) console.error(`  warning: ${gap}`);
   const added = merge(log, entries);
   save();
   console.log(JSON.stringify({ listed: entries.length, added: added.length, pending: pending(log).length,
-    latest: log.entries.at(-1)?.created ?? null }));
+    latest: log.entries.at(-1)?.created ?? null, ...(gap ? { possibleGap: true } : {}) }));
 }
 
-module.exports = { parseRecent, layoutProblem, merge, pending };
+module.exports = { parseRecent, layoutProblem, merge, pending, integrate, gapProblem };
 
 if (require.main === module) {
   main().catch(error => {
