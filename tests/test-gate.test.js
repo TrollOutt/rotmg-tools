@@ -78,6 +78,7 @@ const deployCritical = [
   'whats-new-sheet.test.js',
   'whats-new.test.js',
   // Pipeline guards (ROT-B-01 to B-15), offline.
+  'availability-floor.test.js',
   'client-order.test.js',
   'data-drift.test.js',
   'index-ids.test.js',

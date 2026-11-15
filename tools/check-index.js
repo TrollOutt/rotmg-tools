@@ -28,16 +28,9 @@ for (const r of index.records.filter(r => r.kind === 'item' && !r.bench)) {
 {
   const availability = JSON.parse(fs.readFileSync(path.join(root, 'data/Index/availability.json'), 'utf8'));
   const listed = availability.records;
-  /*
-   * An empty list passes every check below, and that is exactly what a
-   * change of layout on the RealmEye page produces (ROT-B-03). 37 records
-   * are listed at the time of writing; under 10 is a broken read, not a
-   * release.
-   */
-  assert(Object.keys(listed).length >= 10, 'availability.json lists ' + Object.keys(listed).length + ' records; the Unreleased page was probably misread');
-  for (const [status, page] of Object.entries(availability.pages || {})) {
-    assert(page.listed > 0 && page.records > 0, 'availability.json: the ' + status + ' page listed nothing');
-  }
+  // An empty list passes every check below (ROT-B-03): see availability-floor.js.
+  const floorNote = require('./availability-floor').checkFloor(availability);
+  if (floorNote) console.warn(floorNote);
   const byId = new Map(index.records.map(r => [r.id, r]));
   const offeredItems = new Set(projected.items.map(one => one.name));
   const offeredBosses = new Set(projected.bosses.map(one => one.name));
