@@ -499,6 +499,9 @@ const RealmIndex = (function () {
     for (const [slug, ids] of Object.entries(said.pageIndex || {})) {
       realmeyeArchive.page.set(slug, (ids || []).filter(id => typeof id === 'string'));
     }
+    // The list's row of each record, looked up by id rather than by walking the list for every alias (ROT-C-15).
+    const rowOf = new Map();
+    for (const entry of light) if (!rowOf.has(entry[0])) rowOf.set(entry[0], entry);
     for (const [id, data] of Object.entries(said.records || {})) {
       let one = all.get(id);
       if (!one && data.communityOnly) {
@@ -509,7 +512,11 @@ const RealmIndex = (function () {
           communityOnly: true
         };
         all.set(id, one);
-        if (!data.scopeOnly) light.push([one.id, one.name, filedAs(one), '', 0, 0, '']);
+        if (!data.scopeOnly) {
+          const entry = [one.id, one.name, filedAs(one), '', 0, 0, ''];
+          light.push(entry);
+          if (!rowOf.has(entry[0])) rowOf.set(entry[0], entry);
+        }
       }
       if (!one) continue;
       one.realmeyeArchive = data;
@@ -527,7 +534,7 @@ const RealmIndex = (function () {
       }
       if (data.sprite && !one.icon && !one.art) one.icon = data.sprite;
       if (Array.isArray(data.searchAliases) && data.searchAliases.length) {
-        const row = light.find(entry => entry[0] === one.id);
+        const row = rowOf.get(one.id);
         if (row) row[3] = [row[3], ...data.searchAliases].filter(Boolean).join(' ');
       }
       for (const page of data.pages || []) {
