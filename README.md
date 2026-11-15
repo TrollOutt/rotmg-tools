@@ -16,7 +16,7 @@ Browser tools for exploring Realm of the Mad God data, planning builds and estim
 
 ## Run locally
 
-Use **Node.js 20 with npm** to match CI. The project has no declared Node engine requirement or `.nvmrc`; dependencies are pinned by `package-lock.json`. Building the site from committed data does not require an installed game client or a fresh scrape.
+Use **Node.js 24 (LTS) with npm**, the version CI runs: it is named in `.nvmrc` and in `engines` in `package.json`. Dependencies are pinned by `package-lock.json`. Building the site from committed data does not require an installed game client or a fresh scrape.
 
 ```sh
 npm ci
