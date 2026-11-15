@@ -19,7 +19,9 @@ const outDir = path.join(root, 'web', 'assets', 'index', 'realmeye-sprites');
 const manifestFile = path.join(outDir, 'index.json');
 const delayArg = process.argv.find(x => x.startsWith('--delay='));
 const limitArg = process.argv.find(x => x.startsWith('--limit='));
-const delayMs = delayArg ? Math.max(0, Number(delayArg.split('=')[1]) || 0) : 120;
+// One request a second by default, as the archive crawler does (ROT-B-15).
+const delayMs = delayArg ? Math.max(0, Number(delayArg.split('=')[1]) || 0) : 1000;
+const guard = require('./realmeye-sprite-guard');
 const limit = limitArg ? Math.max(0, Number(limitArg.split('=')[1]) || 0) : Infinity;
 
 // Biome pages usually use RealmEye's beacon artwork rather than a page hero
@@ -58,7 +60,7 @@ function fileOf(url) {
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-function request(url, attempt = 0) {
+function request(url, attempt = 0, hops = 0) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
@@ -68,9 +70,10 @@ function request(url, attempt = 0) {
       timeout: 20000
     }, response => {
       if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
-        const next = new URL(response.headers.location, url).href;
         response.resume();
-        return request(next, attempt).then(resolve, reject);
+        let next;
+        try { next = guard.redirectTarget(response.headers.location, url, hops); } catch (error) { return reject(error); }
+        return request(next, attempt, hops + 1).then(resolve, reject);
       }
       if (response.statusCode !== 200) {
         response.resume();
@@ -130,7 +133,12 @@ function request(url, attempt = 0) {
     try {
       const bytes = await request(one.url);
       if (!bytes.length) throw new Error('empty response');
-      fs.writeFileSync(target, bytes);
+      if (!guard.isRealmEye(one.url)) throw new Error('not a RealmEye address');
+      if (!guard.imageKind(bytes)) throw new Error('the answer is not an image');
+      // Written whole or not at all: a half-written file would pass the size check above next time.
+      const temp = target + '.partial';
+      fs.writeFileSync(temp, bytes);
+      fs.renameSync(temp, target);
       manifest.sprites[one.id] = { file, source: one.url, name: one.name };
       downloaded++;
     } catch (error) {
