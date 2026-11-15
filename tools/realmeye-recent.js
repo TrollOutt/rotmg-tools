@@ -87,7 +87,7 @@ async function main() {
     console.log(JSON.stringify({ integratedThrough: through, pending: pending(log).length }));
     return;
   }
-  const response = await fetch(URL, { headers: { 'user-agent': AGENT } });
+  const response = await fetch(URL, { headers: { 'user-agent': AGENT }, signal: AbortSignal.timeout(60_000) });
   if (!response.ok) throw new Error(`RealmEye answered ${response.status}`);
   const page = await response.text();
   const entries = parseRecent(page);

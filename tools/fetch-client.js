@@ -38,6 +38,10 @@ const KEY_FILE = path.join(root, 'local', 'rotmg-app-key.txt');
 const DEFAULT_DIR = path.join(root, 'local', 'client');
 const CDN_HOST = 'rotmg-build.decagames.com';
 const MARKER = 'fetched-build.json';
+// A stalled connection must fail the run, not hold the Watch job until its own
+// timeout (ROT-B-19): a minute for the small requests, longer for each client file.
+const SMALL_TIMEOUT = 60_000;
+const FILE_TIMEOUT = 15 * 60_000;
 const WANTED = [
   'RotMG Exalt_Data/resources.assets',
   'RotMG Exalt_Data/resources.assets.resS',
@@ -56,7 +60,7 @@ function parseBuild(xml) {
 }
 
 async function latestBuild(key, get = fetch) {
-  const response = await get(INIT_URL + encodeURIComponent(key), { method: 'POST', body: '' });
+  const response = await get(INIT_URL + encodeURIComponent(key), { method: 'POST', body: '', signal: AbortSignal.timeout(SMALL_TIMEOUT) });
   if (!response.ok) throw new Error(`/app/init answered ${response.status}`);
   return parseBuild(await response.text());
 }
@@ -73,7 +77,7 @@ function pickFiles(manifest) {
 
 async function fetchFile(base, file, out, get) {
   const url = base + file.path.split('/').map(encodeURIComponent).join('/') + '.gz';
-  const response = await get(url);
+  const response = await get(url, { signal: AbortSignal.timeout(FILE_TIMEOUT) });
   if (!response.ok) throw new Error(`${file.path}: the CDN answered ${response.status}`);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const md5 = crypto.createHash('md5');
@@ -100,7 +104,7 @@ async function download(build, dir, get = fetch) {
   if (fs.existsSync(dir) && fs.readdirSync(dir).length && !currentHash(dir)) {
     throw new Error(`${dir} is not an earlier download; refusing to replace it`);
   }
-  const response = await get(build.base + 'checksum.json');
+  const response = await get(build.base + 'checksum.json', { signal: AbortSignal.timeout(SMALL_TIMEOUT) });
   if (!response.ok) throw new Error(`checksum.json: the CDN answered ${response.status}`);
   const files = pickFiles(await response.json());
 
@@ -125,7 +129,7 @@ function bootBuild(dir) {
 
 /* The build's own id, from its boot.config alone: a few hundred bytes, not the whole build. */
 async function remoteBootBuild(build, get = fetch) {
-  const response = await get(build.base + 'RotMG%20Exalt_Data/boot.config.gz');
+  const response = await get(build.base + 'RotMG%20Exalt_Data/boot.config.gz', { signal: AbortSignal.timeout(SMALL_TIMEOUT) });
   if (!response.ok) throw new Error(`boot.config: the CDN answered ${response.status}`);
   const boot = zlib.gunzipSync(Buffer.from(await response.arrayBuffer())).toString('utf8');
   const guid = /build-guid=([0-9a-f]+)/i.exec(boot)?.[1];
