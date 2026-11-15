@@ -222,7 +222,10 @@ const RealmIndex = (function () {
     if (!said) {
       let raw = bundle && bundle.sources && bundle.sources.indexText;
       if (!raw) {
-        raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+        // One request shared with the other readers of the Index (app.js), when they are on the page.
+        const ask = typeof window.sharedIndexText === 'function' ? window.sharedIndexText()
+          : fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)));
+        raw = await ask
           .catch(() => fetch('../data/Index/index.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
       }
       if (!raw) return false;
@@ -469,13 +472,26 @@ const RealmIndex = (function () {
   async function loadRealmEyeArchive() {
     const bundle = window.ROTMG_BUNDLE;
     let raw = bundle && bundle.sources && bundle.sources.realmeyeEnrichmentText;
+    let said = null;
     if (!raw) {
-      raw = await fetch('assets/index/realmeye-enrichment.json').then(r => (r.ok ? r.text() : ''))
-        .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
+      /*
+       * The cards (web/fiches-c.js) read the same file when the Index opens: one request and one
+       * decoded copy for both (ROT-C-05). Read only, by both. Without the cards, a plain request.
+       */
+      const extras = window.RealmCardExtras;
+      if (extras && typeof extras.sharedJson === 'function') {
+        said = await extras.sharedJson('assets/index/realmeye-enrichment.json').catch(() => null);
+      }
+      if (!said) {
+        raw = await fetch('assets/index/realmeye-enrichment.json').then(r => (r.ok ? r.text() : ''))
+          .catch(() => fetch('../data/Index/realmeye-enrichment.json').then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => ''));
+      }
     }
-    if (!raw) return;
-    let said;
-    try { said = JSON.parse(raw); } catch (err) { return; }
+    if (!said) {
+      if (!raw) return;
+      try { said = JSON.parse(raw); } catch (err) { return; }
+    }
+    if (!said || typeof said !== 'object') return;
     realmeyeArchive = {
       home: (said.source && said.source.home) || 'https://www.realmeye.com/wiki/',
       page: new Map()

@@ -24,6 +24,9 @@ function run({ bundle, answer, shared = null, source = read('web/fiches-c.js'), 
   assert(source.includes('\n})();'), 'Card harness closure marker moved');
   const instrumented = source.replace('\n})();', '\nwindow.__fiches = { forgeExtra, communityRecords, communityOf, parseSummary, powerOf, pending: () => pending };\n})();');
   vm.runInNewContext(instrumented, page, { filename: 'web/fiches-c.js' });
+  // The home page shows no card, so the cards read nothing until one is wanted; then everything is asked for at once.
+  assert.deepEqual(fetched, [], 'nothing is fetched before a card is wanted');
+  page.window.RealmCardExtras.warm();
   return { creations: () => creations, fiches: page.window.__fiches, fetched, bigParses: () => bigParses };
 }
 

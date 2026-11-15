@@ -3632,6 +3632,22 @@ const VOUCHER = {
     ['Candy of Extreme Mana', 1], ['Candy of Extreme Vitality', 1], ['Droplet of Bloody Ambrosia', 1]
   ]
 };
+/*
+ * The served Index, asked for once however many pages want it at the same time
+ * (the voucher and the Index page each read it; ROT-C-05). A failed read is
+ * forgotten, so a later ask tries again.
+ */
+function sharedIndexText() {
+  const shared = window.ROTMG_SHARED_DATA || (window.ROTMG_SHARED_DATA = {});
+  const requests = shared.requests || (shared.requests = {});
+  const url = 'assets/index/index.json';
+  if (!requests[url]) {
+    const asked = requests[url] = fetch(url, { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)));
+    asked.catch(() => { if (requests[url] === asked) delete requests[url]; });
+  }
+  return requests[url];
+}
+window.sharedIndexText = sharedIndexText;
 let voucherRecords = null;
 function voucherIndex() {
   if (voucherRecords) return voucherRecords;
@@ -3640,7 +3656,7 @@ function voucherIndex() {
     let said = shared.index || null;
     if (!said) {
       let raw = BUNDLE && BUNDLE.sources && BUNDLE.sources.indexText;
-      if (!raw) raw = await fetch('assets/index/index.json', { cache: 'no-cache' }).then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status))).catch(() => '');
+      if (!raw) raw = await sharedIndexText().catch(() => '');
       if (!raw) return new Map();
       said = JSON.parse(raw);
       shared.index = said;
@@ -5593,6 +5609,9 @@ function ensurePetsPage() {
 
 let indexScriptLoading = null;
 function ensureIndexPage(open) {
+  // The cards' own data (web/fiches-c.js) is read from here on, beside the Index, not by the home page.
+  const cards = typeof window !== 'undefined' ? window.RealmCardExtras : null;
+  if (cards && typeof cards.warm === 'function') cards.warm();
   const run = () => {
     if (typeof RealmIndex === 'undefined') return false;
     if (document.body.dataset.page !== 'index') return true;

@@ -44,27 +44,51 @@
     redraw();
   };
   /*
+   * Ces lectures ne partent qu'au premier besoin d'une fiche (ouverture de l'Index, du tiroir de l'Atlas ou
+   * de What's New, ou première fiche dessinée), et non au chargement de la page d'accueil, qui n'en montre
+   * aucune : environ 17 Mo de JSON que la page d'accueil téléchargeait pour rien (ROT-C-04). Elles partent
+   * toutes ensemble et dans le même ordre qu'avant ; la fiche reste masquée tant qu'elles ne sont pas arrivées.
+   */
+  const warmers = [];
+  let warmed = false;
+  const whenWarm = start => { if (warmed) start(); else warmers.push(start); };
+  function warm() {
+    if (warmed) return;
+    warmed = true;
+    for (const start of warmers.splice(0)) start();
+  }
+  /* Une seule requête par fichier, quel que soit le nombre de lecteurs : l'Index lit le même enrichissement (ROT-C-05). */
+  function sharedJson(url) {
+    const shared = window.ROTMG_SHARED_DATA || (window.ROTMG_SHARED_DATA = {});
+    const requests = shared.requests || (shared.requests = {});
+    if (!requests[url]) {
+      const asked = requests[url] = fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)));
+      asked.catch(() => { if (requests[url] === asked) delete requests[url]; });
+    }
+    return requests[url];
+  }
+  /*
    * Ce que l'équipement fait en plus de ses tirs et de ses statistiques : les balles qu'il lance quand on tire,
    * les grenades de poison, ce qu'il faut porter avec (tools/build-gear-effects.js). Partagé avec la seconde mise en page.
    */
-  {
+  whenWarm(() => {
     const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.gearText;
     (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/gear-effects.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then(j => { window.RealmGearEffects = j.items || {}; }).catch(() => { window.RealmGearEffects = {}; }).finally(settled);
-  }
+  });
   // One shared reader for both layouts; keep each request in its original phase.
   const cardData = FichesData.createCardData({
     getSources: () => (window.ROTMG_BUNDLE || {}).sources,
-    fetchCommunity: url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))),
+    fetchCommunity: url => sharedJson(url),
     fetchForge: url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))),
     settled
   });
-  cardData.loadCommunity();
+  whenWarm(() => cardData.loadCommunity());
   const communityRecords = () => cardData.communityRecords();
-  cardData.loadForge();
+  whenWarm(() => cardData.loadForge());
   const forgeExtra = () => cardData.forgeExtra();
   // Both card layouts read the same lazy payload, including in the kept copy.
-  window.RealmCardExtras = { forge: forgeExtra, read: readCardFile, asset: cardAssetUrl };
+  window.RealmCardExtras = { forge: forgeExtra, read: readCardFile, asset: cardAssetUrl, warm, whenWarm, sharedJson };
   const index = () => window.ROTMG_SHARED_DATA && window.ROTMG_SHARED_DATA.index;
   function recs() {
     const s = index();
@@ -76,8 +100,8 @@
   /* Les monstres qui bougent : la boucle de marche que le client leur dessine, découpée pour l'Atlas
      (tools/generate-realm-animations.py) et rangée sous leur identifiant client. */
   let moving = {};
-  readCardFile('assets/realm-monster-animations/index.json').then(t => JSON.parse(t))
-    .then(j => { moving = j || {}; }).catch(() => {}).finally(settled);
+  whenWarm(() => readCardFile('assets/realm-monster-animations/index.json').then(t => JSON.parse(t))
+    .then(j => { moving = j || {}; }).catch(() => {}).finally(settled));
   /* A picture of someone - a skin, a class, a creature - wears the one outline every page lays on a character (web/outline.js). */
   const inkOf = (r, scale) => r && (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy') && window.RealmOutline
     ? 'filter:' + window.RealmOutline.filter(scale) + ';' : '';
@@ -92,12 +116,12 @@
 
   /* ---------- les statuts (tools/build-status-effects.js) ---------- */
   let statusData = null;
-  {
+  whenWarm(() => {
     const kept = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.statusText;
     (kept ? Promise.resolve(JSON.parse(kept)) : fetch('assets/index/status-effects.json').then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
       .then(j => { statusData = { sheet: j.sheet, wiki: j.wiki, byName: new Map((j.effects || []).map(e => [e.name, e])) }; })
       .catch(() => {}).finally(settled);
-  }
+  });
   function statusIcon(name, side) {
     const e = statusData && statusData.byName.get(name);
     if (!e || !e.icon) return '';
@@ -341,7 +365,7 @@
     return clientMap.get(id);
   };
   let famSheet = null;
-  readCardFile('assets/index/collection-icons.json').then(t => JSON.parse(t)).then(j => { famSheet = j; }).catch(() => {}).finally(settled);
+  whenWarm(() => readCardFile('assets/index/collection-icons.json').then(t => JSON.parse(t)).then(j => { famSheet = j; }).catch(() => {}).finally(settled));
   /* L'icône de famille du client (CollectionIcon_N), la même que dans l'infobulle du jeu. */
   function famIcon(n, cls) {
     if (n === undefined || !famSheet || !famSheet.have.includes(n)) return '';
@@ -696,7 +720,7 @@
   };
   const marked = (url, mark) => url + (mark ? '?v=' + encodeURIComponent(mark) : '');
   let projData = null, projMark = '';
-  readCardFile('assets/index/projectiles.json', { cache: 'no-cache' }).then(t => { projData = JSON.parse(t); projMark = markOf(t); }).catch(() => {}).finally(settled);
+  whenWarm(() => readCardFile('assets/index/projectiles.json', { cache: 'no-cache' }).then(t => { projData = JSON.parse(t); projMark = markOf(t); }).catch(() => {}).finally(settled));
   const projOf = r => projData && projData.items[r.clientId || r.name];
 
   /* Ce que fait le tir, dit une fois, sous l'animation. */
@@ -1378,8 +1402,8 @@
 
   /* ---------- le skin, animé depuis les images du Skin Viewer ---------- */
   let looks = null, skinTypes = null;
-  Promise.all([readCardFile('assets/skins/generated/looks.json', { cache: 'no-cache' }).then(t => JSON.parse(t)), readCardFile('assets/skins/generated/skins.json', { cache: 'no-cache' }).then(t => JSON.parse(t))])
-    .then(([l, s]) => { looks = l; skinTypes = new Map((s.skins || []).map(x => [x.id, x.type])); }).catch(() => {}).finally(settled);
+  whenWarm(() => Promise.all([readCardFile('assets/skins/generated/looks.json', { cache: 'no-cache' }).then(t => JSON.parse(t)), readCardFile('assets/skins/generated/skins.json', { cache: 'no-cache' }).then(t => JSON.parse(t))])
+    .then(([l, s]) => { looks = l; skinTypes = new Map((s.skins || []).map(x => [x.id, x.type])); }).catch(() => {}).finally(settled));
   const skinCanvas = (skinId, big) => '<canvas class="fc2-skin' + (big ? ' is-big' : '') + '" data-skin="' + esc(skinId) + '" width="96" height="96"></canvas>';
   function bootSkins(box) {
     if (!looks) return;
@@ -1765,6 +1789,7 @@
   });
   function onCard(box) {
     if (!box.firstElementChild || box.querySelector('.fc-root')) return;
+    warm();
     drawn.set(box, box.innerHTML);
     if (pending > 0) { box.style.visibility = 'hidden'; return; }
     const html = build(box);
@@ -1828,8 +1853,11 @@
 
   /* ---------------- what is read ---------------- */
   let D = null, projectiles = null, moving = {};
-  window.RealmCardExtras.read('assets/index/projectiles.json').then(t => JSON.parse(t)).then(j => { projectiles = j; }).catch(() => {});
-  window.RealmCardExtras.read('assets/realm-monster-animations/index.json').then(t => JSON.parse(t)).then(j => { moving = j || {}; }).catch(() => {});
+  // Read with the first card's data, like the reads above (RealmCardExtras.whenWarm).
+  window.RealmCardExtras.whenWarm(() => {
+    window.RealmCardExtras.read('assets/index/projectiles.json').then(t => JSON.parse(t)).then(j => { projectiles = j; }).catch(() => {});
+    window.RealmCardExtras.read('assets/realm-monster-animations/index.json').then(t => JSON.parse(t)).then(j => { moving = j || {}; }).catch(() => {});
+  });
   const rec = id => D && D.all.get(id);
   const isSomeone = r => r && (r.kind === 'skin' || r.kind === 'class' || r.kind === 'enemy');
   const extra = r => {
