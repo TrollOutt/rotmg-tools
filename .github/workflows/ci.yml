@@ -1,0 +1,62 @@
+# Tests every branch and every pull request, without publishing.
+#
+# pages.yml only runs on main, so a regression used to be seen after it had
+# already landed there, and the auto/update-* pull requests opened by the data
+# watch were merged untested (ROT-C-01). This workflow only checks: it has no
+# deploy job, and publishing main is left to pages.yml, which runs the same
+# checks before it builds.
+#
+# Safe for pull requests from anyone: it is triggered by pull_request (never
+# pull_request_target), so the code of a pull request runs with a read-only
+# token and no repository secret. It uses no secret at all.
+#
+# To make it a gate, mark the "checks" job as required in a ruleset on main
+# (Settings -> Rules), with pull requests required and no bypass for the watch's
+# token.
+#
+# TODO(ROT-A-10): pin each action to a full commit SHA (tag in a comment); that
+# needs the network, so it was not done offline. .github/dependabot.yml keeps
+# the actions up to date.
+name: Tests
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One run per branch or pull request: a newer push cancels the older run.
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The locked development dependencies (TypeScript, for the type check
+      # only). No install script runs.
+      - name: Install type checking tools
+        run: npm ci --ignore-scripts
+
+      - name: Parse every page script and check the translations
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
