@@ -13,13 +13,28 @@ const classic = [
   'tools/build-training.js', 'tools/training-catalog.js', 'tests/training-index.test.js',
   'tools/build-i18n.js', 'tools/check-i18n.js', 'tests/i18n.test.js'
 ];
-for (const file of classic) new vm.Script(fs.readFileSync(path.join(root, file), 'utf8'), { filename: file });
-const moduleSource = fs.readFileSync(path.join(root, 'web', 'skins', 'app.js'), 'utf8');
-const moduleCheck = spawnSync(process.execPath, ['--input-type=module', '--check'], {
-  input: moduleSource, encoding: 'utf8'
-});
-if (moduleCheck.status !== 0) {
-  process.stderr.write(moduleCheck.stderr);
-  process.exit(moduleCheck.status || 1);
+// The Skin Viewer is shipped as ES modules (web/skins is copied as is): every
+// .js and .mjs file in it, subfolders included, not only its entry point.
+const moduleFiles = (dir = 'web/skins') => fs.readdirSync(path.join(root, dir), { withFileTypes: true })
+  .flatMap(entry => entry.isDirectory() ? moduleFiles(dir + '/' + entry.name)
+    : /\.m?js$/.test(entry.name) ? [dir + '/' + entry.name] : [])
+  .sort();
+// Returns node's error output when the source does not parse as a module.
+const moduleProblem = source => {
+  const check = spawnSync(process.execPath, ['--input-type=module', '--check'], { input: source, encoding: 'utf8' });
+  return check.status === 0 ? '' : (check.stderr || 'does not parse');
+};
+module.exports = { moduleFiles, moduleProblem };
+
+if (require.main === module) {
+  for (const file of classic) new vm.Script(fs.readFileSync(path.join(root, file), 'utf8'), { filename: file });
+  const modules = moduleFiles();
+  for (const file of modules) {
+    const problem = moduleProblem(fs.readFileSync(path.join(root, file), 'utf8'));
+    if (problem) {
+      process.stderr.write(file + '\n' + problem);
+      process.exit(1);
+    }
+  }
+  console.log(`${classic.length} classic scripts and ${modules.length} Skin Viewer modules parse successfully.`);
 }
-console.log(`${classic.length} classic scripts and the Skin Viewer module parse successfully.`);

@@ -9,6 +9,7 @@ const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
 const scripts = pkg.scripts || {};
 
 const deployCritical = [
+  'lint-modules.test.js',
   'training-ground.test.js',
   'training-index.test.js',
   'training-consumables.test.js',
