@@ -62,7 +62,8 @@ function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function request(url, attempt = 0, hops = 0) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, {
+    // The address is checked before any request, the first and every redirect (R4).
+    const req = guard.realmEyeGet(https.get, url, {
       headers: {
         'User-Agent': 'rotmg-tools RealmEye archive sprite cache',
         'Accept': 'image/avif,image/webp,image/png,image/*,*/*;q=0.8'
@@ -105,6 +106,10 @@ function request(url, attempt = 0, hops = 0) {
     if (!record.needsSprite || !Array.isArray(record.images) || !record.images.length) continue;
     const source = record.images.find(one => one && typeof one.source === 'string' && /^https:\/\//.test(one.source));
     if (!source) continue;
+    if (!guard.isRealmEye(source.source)) {
+      console.warn(`  sprite skipped ${id}: not a RealmEye address`);
+      continue;
+    }
     candidates.push({ id, name: record.name || id.replace(/^[^:]+:/, ''), url: source.source });
   }
   candidates.sort((a, b) => a.id.localeCompare(b.id));
@@ -133,7 +138,6 @@ function request(url, attempt = 0, hops = 0) {
     try {
       const bytes = await request(one.url);
       if (!bytes.length) throw new Error('empty response');
-      if (!guard.isRealmEye(one.url)) throw new Error('not a RealmEye address');
       if (!guard.imageKind(bytes)) throw new Error('the answer is not an image');
       // Written whole or not at all: a half-written file would pass the size check above next time.
       const temp = target + '.partial';

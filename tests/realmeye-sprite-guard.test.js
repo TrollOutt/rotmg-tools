@@ -4,7 +4,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { imageKind, isRealmEye, redirectTarget, MAX_REDIRECTS } = require('../tools/realmeye-sprite-guard.js');
+const { imageKind, isRealmEye, redirectTarget, realmEyeGet, MAX_REDIRECTS } = require('../tools/realmeye-sprite-guard.js');
 
 const pad = head => Buffer.concat([Buffer.from(head), Buffer.alloc(16)]);
 assert.strictEqual(imageKind(pad([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), 'png');
@@ -24,6 +24,19 @@ assert.strictEqual(redirectTarget('/s/b/img/x.png', from, 0), 'https://www.realm
 assert.throws(() => redirectTarget('https://elsewhere.example/x.png', from, 0), /away from RealmEye/);
 assert.throws(() => redirectTarget('/s/c/x.png', from, MAX_REDIRECTS), /more than 5 redirects/);
 assert.throws(() => redirectTarget('', from, 0), /without a location/);
+
+// R4: nothing is requested from another host, not even the first address.
+const asked = [];
+const fakeGet = (url, options, callback) => { asked.push(url); return { url, options, callback }; };
+assert.throws(() => realmEyeGet(fakeGet, 'https://elsewhere.example/x.png', {}, () => {}), /not requested/);
+assert.throws(() => realmEyeGet(fakeGet, 'http://www.realmeye.com/x.png', {}, () => {}), /not requested/);
+assert.deepStrictEqual(asked, []);
+realmEyeGet(fakeGet, from, {}, () => {});
+assert.deepStrictEqual(asked, [from]);
+// The fetcher goes through it for every request, redirects included (they call request() again).
+const fetcher = fs.readFileSync(path.join(__dirname, '..', 'tools', 'fetch-realmeye-index-sprites.js'), 'utf8');
+assert.ok(!fetcher.includes('https.get(url'), 'the fetcher must not call https.get directly');
+assert.ok(fetcher.includes('guard.realmEyeGet(https.get, url'));
 
 // Every sprite already published is a real image.
 const dir = path.join(__dirname, '..', 'web', 'assets', 'index', 'realmeye-sprites');

@@ -38,4 +38,10 @@ function redirectTarget(location, current, hops) {
   return next;
 }
 
-module.exports = { MAX_REDIRECTS, imageKind, isRealmEye, redirectTarget };
+/* get(url, options, callback) - https.get - called only for a RealmEye address; throws before any request otherwise. */
+function realmEyeGet(get, url, options, callback) {
+  if (!isRealmEye(url)) throw new Error(`not a RealmEye address, not requested: ${url}`);
+  return get(url, options, callback);
+}
+
+module.exports = { MAX_REDIRECTS, imageKind, isRealmEye, redirectTarget, realmEyeGet };
