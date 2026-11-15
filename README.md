@@ -69,20 +69,15 @@ Install dependencies and run `npm run typecheck`, `npm test` and `npm run build`
 
 ### Commit identity hooks
 
-Every commit in this public history carries an author and a committer. After cloning, run once:
+Every commit in this public history carries an author and a committer. After cloning, run once `node tools/hooks/install.js`: it pins the project identity from `tools/hooks/project-identity` (local config only), installs the hooks of `tools/hooks/` for all worktrees and creates an empty private list, `.git/rotmg-private-terms`. Put in that file, one per line, the real name and any other term that must never be published; it is never versioned. The hooks block:
 
-```sh
-node tools/hooks/install.js
-```
+- a commit whose author or committer differs from the pinned identity (`--author`, `-c user.*`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*`, `--amend`), or a merge bringing in local commits under another identity;
+- a commit, tag or git-note text with a term of the private list, the account-wide git name or address, or an e-mail address (also as `＠`, `%40`, `[at]`, "at … dot …") other than the pinned one, those of `tools/hooks/allowed-message-addresses` and reserved example domains;
+- a push publishing a commit not yet on the target remote with another author or committer, or a tag (or nested tag) with another tagger.
 
-It pins the project identity from `tools/hooks/project-identity` (local config only) and installs the hooks of `tools/hooks/` into the hooks directory shared by all worktrees. They block:
+Cherry-picks and rebases are only warned about until the push. A plain "name at domain.tld" or a name not in the private list is not detected. With nothing pinned every commit is refused; allow other identities with `git config --local --add rotmg.allowedIdentity "Name <email>"`; an unversioned `<hook>.local` runs after each hook. `--no-verify` skips everything.
 
-- a commit whose author or committer differs from the pinned identity, including `--author`, `-c user.*`, `GIT_AUTHOR_*`, `GIT_COMMITTER_*` and `--amend` (pre-commit, commit-msg);
-- a merge commit, or a merge bringing in local commits, under another identity (pre-merge-commit, pre-commit);
-- a commit or annotated-tag message with an e-mail address other than the pinned one and those of `tools/hooks/allowed-message-addresses` (e.g. the `Author:` lines of `git merge --squash`, a foreign `Co-authored-by`), or with this machine's account-wide git name (commit-msg, pre-push);
-- a push that would publish a commit not yet on the target remote with another author or committer, or an annotated tag with another tagger (pre-push).
-
-Cherry-picks and rebases keep the original author and have no blocking hook: post-commit and post-rewrite warn, and pre-push refuses them. With nothing pinned every commit is refused. Extra identities can be allowed locally with `git config --local --add rotmg.allowedIdentity "Name <email>"`; an unversioned `<hook>.local` next to an installed hook runs after it. `--no-verify` skips the hooks, so keep it for emergencies.
+A push to a URL or to a new remote checks the whole history, and the public history still holds older non-conforming commits, so it is refused. Seed the new remote with what is already public (`git push --no-verify <remote> origin/main:refs/heads/main`), `git fetch <remote>`, then push normally.
 
 Test the hooks in a throwaway clone (nothing in the repository changes): `sh tools/hooks/test-hooks.sh`.
 

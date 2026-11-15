@@ -20,7 +20,8 @@ export GIT_EDITOR=true GIT_MERGE_AUTOEDIT=no
 me_name=hooks-test
 me_email=hooks-test@example.invalid
 other_name=someone-else
-other_email=someone-else@example.invalid
+# Not a reserved example domain: messages naming it must be refused.
+other_email=someone-else@elsewhere-mail.org
 
 pass=0
 fail=0
@@ -51,6 +52,9 @@ node "$here/install.js" >"$tmp/out" 2>&1 && ok "install.js runs" || ko "install.
 for h in pre-commit commit-msg pre-merge-commit post-commit post-rewrite pre-push; do
   grep -q rotmg-hooks:managed "$hooks/$h" 2>/dev/null || { echo "missing $h" > "$tmp/out"; ko "hook $h installed"; }
 done
+grep -q "private list is empty" "$tmp/out" && ok "install.js warns that the private list is empty" || ko "install.js warns that the private list is empty"
+terms="$(git rev-parse --git-common-dir)/rotmg-private-terms"
+[ -f "$terms" ] && [ ! -s "$terms" ] && ok "install.js creates an empty private list" || ko "install.js creates an empty private list"
 [ -f "$hooks/pre-push.local" ] && ok "previous pre-push kept as pre-push.local" || ko "previous pre-push kept as pre-push.local"
 expected_pin=$(sed -n 's/^name=//p' "$here/project-identity")
 [ "$(git config --local rotmg.pinnedName)" = "$expected_pin" ] && ok "project identity pinned from tools/hooks/project-identity" || ko "project identity pinned"
@@ -66,6 +70,8 @@ git rm -rq --cached . >/dev/null 2>&1
 echo "Commits"
 accepted "commit with the project identity" commit_file a "a"
 accepted "commit with a Claude Co-Authored-By trailer" git commit -q --allow-empty -m "t" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+accepted "commit message with reserved example addresses" git commit -q --allow-empty -m "see user@example.com, a@b.example.org, x@host.invalid, y@ci.test"
+accepted "commit message with an ordinary 'at' (fail at index.html)" git commit -q --allow-empty -m "fix: fail at index.html when empty"
 base=$(git rev-parse HEAD)
 refused "commit with a foreign Co-authored-by trailer" git commit -q --allow-empty -m "t" -m "Co-authored-by: $other_name <$other_email>"
 refused "commit message with a foreign address" git commit -q --allow-empty -m "write to $other_email"
@@ -74,6 +80,12 @@ git config --global user.email "global.person@example.invalid"
 refused "commit message naming the account-wide git name" git commit -q --allow-empty -m "thanks Global Person"
 git config --global --unset user.name
 git config --global --unset user.email
+echo "Zorblax Quux" > "$terms"
+refused "commit message with a term of the private list (no global identity)" git commit -q --allow-empty -m "thanks zorblax quux"
+refused "commit message with a full-width at sign" git commit -q --allow-empty -m "write to someone-else＠elsewhere-mail.org"
+refused "commit message with %40" git commit -q --allow-empty -m "write to someone-else%40elsewhere-mail.org"
+refused "commit message with [at] and [dot]" git commit -q --allow-empty -m "write to someone-else [at] elsewhere-mail [dot] org"
+refused "commit message with 'at' and 'dot' spelled out" git commit -q --allow-empty -m "write to someone-else at elsewhere-mail dot org"
 refused "commit with another user.name/user.email" git -c user.name=$other_name -c user.email=$other_email commit -q --allow-empty -m x
 refused "commit --author with another identity" git commit -q --allow-empty --author="$other_name <$other_email>" -m x
 refused "GIT_COMMITTER_* with another identity" env GIT_COMMITTER_NAME=$other_name GIT_COMMITTER_EMAIL=$other_email git commit -q --allow-empty -m x
@@ -134,6 +146,19 @@ git tag -a v-message -m "ask $other_email"
 refused "push of an annotated tag with a foreign address in its message" git push -q test v-message
 git tag -a v-ok -m "project tag"
 accepted "push of an annotated tag by the project identity" git push -q test v-ok
+git -c user.name=$other_name -c user.email=$other_email tag -a v-inner -m "inner"
+git tag -a v-outer -m "outer" v-inner
+refused "push of a tag pointing to a tag with a foreign tagger" git push -q test refs/tags/v-outer
+git notes add -m "contact $other_email" HEAD
+refused "push of a git note naming a foreign address" git push -q test refs/notes/commits
+git notes remove HEAD >/dev/null 2>&1
+git update-ref -d refs/notes/commits
+git notes add -m "zorblax quux was here" HEAD
+refused "push of a git note with a term of the private list" git push -q test refs/notes/commits
+git update-ref -d refs/notes/commits
+git commit -q --no-verify --allow-empty -m "thanks Zorblax Quux"
+refused "push of a commit message with a term of the private list" git push -q test hooks-test
+git reset -q --hard HEAD~1
 git update-ref refs/remotes/test/already-published "$foreign"
 accepted "push of a foreign commit already on a remote" git push -q test foreign:refs/heads/foreign
 git switch -q -c later hooks-test

@@ -98,17 +98,50 @@ rotmg_address_allowed() {
   {
     git config --local --get-all rotmg.allowedIdentity 2>/dev/null | sed -n 's/.*<\(.*\)>.*/\1/p'
     grep -v '^#' "$rotmg_hooks_dir/allowed-message-addresses" 2>/dev/null
-  } | tr 'A-Z' 'a-z' | tr -d '\r' | grep -Fxq -- "$rotmg_addr"
+  } | tr 'A-Z' 'a-z' | tr -d '\r' | grep -Fxq -- "$rotmg_addr" && return 0
+  # Domains reserved for examples (RFC 2606 / 6761) never reach anyone.
+  case "${rotmg_addr#*@}" in
+    example.com|example.org|example.net|*.example.com|*.example.org|*.example.net) return 0 ;;
+    example|*.example|invalid|*.invalid|test|*.test) return 0 ;;
+  esac
+  return 1
+}
+
+# The local, unversioned list of private terms (a real name, a former
+# handle...), one per line, filled by hand: .git/rotmg-private-terms, plus the
+# values of git config --local rotmg.privateTerm.
+rotmg_private_terms_file() {
+  echo "$(git rev-parse --git-common-dir)/rotmg-private-terms"
+}
+
+rotmg_private_terms() {
+  {
+    tr -d '\r' < "$(rotmg_private_terms_file)" 2>/dev/null | grep -v '^[[:space:]]*#'
+    git config --local --get-all rotmg.privateTerm 2>/dev/null
+  } | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | grep -v '^$'
+}
+
+# Rewrites simple disguised addresses as plain ones: full-width at sign, %40,
+# &#64;, [at] (at) {at}, [dot] (dot) {dot}, and "name at domain dot tld".
+# A bare "word at word.tld" is left alone: it is too common in ordinary text.
+rotmg_unmask_addresses() {
+  sed -e 's/＠/@/g' -e 's/%40/@/g' -e 's/&#64;/@/g' \
+      -e 's/ *[[({][Aa][Tt][])}] */@/g' -e 's/ *[[({][Dd][Oo][Tt][])}] */./g' \
+      -e 's/\([A-Za-z0-9._-]\{1,\}\) \{1,\}[Aa][Tt] \{1,\}\([A-Za-z0-9-]\{1,\}\) \{1,\}[Dd][Oo][Tt] \{1,\}\([A-Za-z]\{2,\}\)/\1@\2.\3/g'
 }
 
 # Reads a commit or tag message on stdin and prints one line per problem: an
 # e-mail address that is not allowed (the "Author: Name <address>" lines of
 # git merge --squash, a foreign Co-authored-by or Signed-off-by trailer...), or
 # this machine's account-wide git name or address when they differ from the
-# pinned identity. Values are masked in the report.
+# pinned identity, or a term of the local private list. Values are masked in
+# the report.
 rotmg_message_problems() {
   rotmg_msg=$(sed -e '/^# -\{24\} >8 -\{24\}/,$d' -e '/^#/d' | tr -d '\r')
-  echo "$rotmg_msg" | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sort -u | while read -r rotmg_a; do
+  rotmg_private_terms | while IFS= read -r rotmg_t; do
+    echo "$rotmg_msg" | grep -qiF -- "$rotmg_t" && echo "a term of the private list ($(rotmg_private_terms_file))"
+  done | sort -u
+  echo "$rotmg_msg" | rotmg_unmask_addresses | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sort -u | while read -r rotmg_a; do
     rotmg_address_allowed "$rotmg_a" || echo "address $(echo "$rotmg_a" | cut -c1)***@${rotmg_a#*@}"
   done
   rotmg_gname=$(git config --global --get user.name 2>/dev/null)

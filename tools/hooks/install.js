@@ -84,7 +84,18 @@ function pinIfNeeded(top) {
   return `pinned the project identity from tools/hooks/project-identity (${project.name})`;
 }
 
-module.exports = { installHooks, pinIfNeeded };
+// The private list: terms (a real name, a former handle...) that no commit or
+// tag message may contain. It lives in the git directory, is never versioned,
+// and only its owner writes to it; this script only creates it, empty.
+function ensurePrivateTerms(top) {
+  const file = path.resolve(top, git(top, 'rev-parse', '--git-common-dir'), 'rotmg-private-terms');
+  if (!fs.existsSync(file)) fs.writeFileSync(file, '', 'utf8');
+  const listed = fs.readFileSync(file, 'utf8').split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith('#'));
+  const configured = git(top, 'config', '--local', '--get-all', 'rotmg.privateTerm').split(/\r?\n/).filter((line) => line.trim());
+  return { file, count: listed.length + configured.length };
+}
+
+module.exports = { installHooks, pinIfNeeded, ensurePrivateTerms };
 
 if (require.main === module) {
   try {
@@ -95,7 +106,10 @@ if (require.main === module) {
       if (name.endsWith('.local')) console.log(`  previous hook kept and chained: ${name}`);
       else console.log(`  WARNING: previous hook kept but no longer run: ${name} (a .local already existed; merge it by hand)`);
     }
-    console.log(`  identity: ${pinIfNeeded(top)}\n`);
+    console.log(`  identity: ${pinIfNeeded(top)}`);
+    const terms = ensurePrivateTerms(top);
+    if (terms.count) console.log(`  private terms: ${terms.count} (${terms.file})\n`);
+    else console.log(`  WARNING: the private list is empty. Add to it, one per line, the real name and\n  any other term that must never be published: ${terms.file}\n`);
   } catch (error) {
     console.error(`\n${error.message}\n`);
     process.exit(1);
