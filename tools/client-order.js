@@ -31,6 +31,9 @@ function publishedClient(text) {
 /* "" when the candidate may replace the published client, else why not. */
 function olderProblem(candidate, published) {
   if (!published || !candidate || !candidate.date) return '';
+  // The same build is not older, whatever date the copy carries (the date
+  // comes from the file's modification time, which a copy can move back).
+  if (candidate.build && candidate.build === published.build) return '';
   if (candidate.date < published.date) {
     return `this client (build ${candidate.build || '?'}, ${candidate.date}) is older than the one the published data `
       + `comes from (build ${published.build}, ${published.date})`;
