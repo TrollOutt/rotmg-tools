@@ -4,7 +4,10 @@
 . "$(dirname "$0")/rotmg-identity.sh"
 rotmg_load_identity
 rotmg_check_next_commit || rotmg_blocked "COMMIT"
-problems=$(rotmg_message_problems < "$1")
+# Lines starting with "#" are checked too: git keeps them with -m, -F and
+# --cleanup=verbatim. In the editor, comment such a line out of the message by
+# deleting it rather than prefixing it with "#".
+problems=$(rotmg_message_problems editing < "$1")
 [ -z "$problems" ] || rotmg_message_blocked "COMMIT" "$problems"
 rotmg_chain_local commit-msg "$@"
 exit 0

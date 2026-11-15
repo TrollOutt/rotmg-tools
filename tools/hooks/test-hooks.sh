@@ -58,6 +58,9 @@ terms="$(git rev-parse --git-common-dir)/rotmg-private-terms"
 [ -f "$hooks/pre-push.local" ] && ok "previous pre-push kept as pre-push.local" || ko "previous pre-push kept as pre-push.local"
 expected_pin=$(sed -n 's/^name=//p' "$here/project-identity")
 [ "$(git config --local rotmg.pinnedName)" = "$expected_pin" ] && ok "project identity pinned from tools/hooks/project-identity" || ko "project identity pinned"
+git config --local core.hooksPath .githooks
+refused "install.js with a relative core.hooksPath (other worktrees unguarded)" node "$here/install.js"
+git config --local --unset core.hooksPath
 
 # From here on, a made-up project identity.
 git config --local rotmg.pinnedName "$me_name"
@@ -72,6 +75,8 @@ accepted "commit with the project identity" commit_file a "a"
 accepted "commit with a Claude Co-Authored-By trailer" git commit -q --allow-empty -m "t" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 accepted "commit message with reserved example addresses" git commit -q --allow-empty -m "see user@example.com, a@b.example.org, x@host.invalid, y@ci.test"
 accepted "commit message with an ordinary 'at' (fail at index.html)" git commit -q --allow-empty -m "fix: fail at index.html when empty"
+echo "contact $other_email" > v.txt && git add v.txt
+accepted "commit -v in the editor (the diff below the scissors line is not stored)" env GIT_EDITOR='sed -i 1s/^/edited/' git commit -q -v -e -m "verbose"
 base=$(git rev-parse HEAD)
 refused "commit with a foreign Co-authored-by trailer" git commit -q --allow-empty -m "t" -m "Co-authored-by: $other_name <$other_email>"
 refused "commit message with a foreign address" git commit -q --allow-empty -m "write to $other_email"
@@ -86,6 +91,11 @@ refused "commit message with a full-width at sign" git commit -q --allow-empty -
 refused "commit message with %40" git commit -q --allow-empty -m "write to someone-else%40elsewhere-mail.org"
 refused "commit message with [at] and [dot]" git commit -q --allow-empty -m "write to someone-else [at] elsewhere-mail [dot] org"
 refused "commit message with 'at' and 'dot' spelled out" git commit -q --allow-empty -m "write to someone-else at elsewhere-mail dot org"
+# git keeps lines starting with "#" with -m, -F and --cleanup=verbatim.
+refused "commit message with a foreign address on a '#' line (-m)" git commit -q --allow-empty -m "t" -m "# contact $other_email"
+printf 't\n# contact %s\n' "$other_email" > "$tmp/msg"
+refused "commit message with a foreign address on a '#' line (-F)" git commit -q --allow-empty -F "$tmp/msg"
+refused "commit message with a foreign address on a '#' line (--cleanup=verbatim)" git commit -q --allow-empty --cleanup=verbatim -m "t" -m "# contact $other_email"
 refused "commit with another user.name/user.email" git -c user.name=$other_name -c user.email=$other_email commit -q --allow-empty -m x
 refused "commit --author with another identity" git commit -q --allow-empty --author="$other_name <$other_email>" -m x
 refused "GIT_COMMITTER_* with another identity" env GIT_COMMITTER_NAME=$other_name GIT_COMMITTER_EMAIL=$other_email git commit -q --allow-empty -m x
@@ -97,6 +107,12 @@ printf '#!/bin/sh\nexit 1\n' > "$hooks/pre-commit.local"
 refused "commit refused by a local pre-commit.local guard" git commit -q --allow-empty -m x
 rm -f "$hooks/pre-commit.local"
 [ "$(git rev-parse HEAD)" = "$base" ] && ok "no refused commit was created" || { echo "HEAD moved" > "$tmp/out"; ko "no refused commit was created"; }
+# A preserved hook runs through its own #! line (sh would fail on this one).
+printf '#!/usr/bin/env node\nprocess.exit(0)\n' > "$hooks/pre-commit.local"
+chmod +x "$hooks/pre-commit.local"
+accepted "commit with a node pre-commit.local, run through its #! line" git commit -q --allow-empty -m x
+rm -f "$hooks/pre-commit.local"
+git reset -q --hard "$base"
 
 # A foreign commit, as if made with --no-verify on another branch.
 git switch -q -c foreign
@@ -158,6 +174,13 @@ refused "push of a git note with a term of the private list" git push -q test re
 git update-ref -d refs/notes/commits
 git commit -q --no-verify --allow-empty -m "thanks Zorblax Quux"
 refused "push of a commit message with a term of the private list" git push -q test hooks-test
+git reset -q --hard HEAD~1
+git commit -q --no-verify --allow-empty -m "t" -m "# contact $other_email"
+refused "push of a commit whose '#' line names a foreign address" git push -q test hooks-test
+git reset -q --hard HEAD~1
+git commit -q --no-verify --allow-empty -m "t" -m "# ------------------------ >8 ------------------------
+contact $other_email"
+refused "push of a commit naming a foreign address below a scissors line" git push -q test hooks-test
 git reset -q --hard HEAD~1
 git update-ref refs/remotes/test/already-published "$foreign"
 accepted "push of a foreign commit already on a remote" git push -q test foreign:refs/heads/foreign

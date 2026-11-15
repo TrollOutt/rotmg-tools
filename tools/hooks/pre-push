@@ -59,6 +59,6 @@ if [ -n "$problems" ]; then
   exit 1
 fi
 if [ -f "$rotmg_hooks_dir/pre-push.local" ]; then
-  echo "$input" | sh "$rotmg_hooks_dir/pre-push.local" "$@" || exit $?
+  echo "$input" | rotmg_run_local "$rotmg_hooks_dir/pre-push.local" "$@" || exit $?
 fi
 exit 0

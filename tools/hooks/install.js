@@ -5,7 +5,8 @@
  *
  * Run it once in every new clone. The hooks go into the hooks directory that
  * git shares between a repository and all its worktrees (or core.hooksPath
- * when it is set), so one run protects every worktree.
+ * when it is set, which must then be absolute), so one run protects every
+ * worktree.
  *
  * - When no identity is pinned yet, it pins the project identity read from
  *   tools/hooks/project-identity (rotmg.pinnedName / rotmg.pinnedEmail, and
@@ -46,6 +47,14 @@ function readProjectIdentity() {
 function installHooks(cwd = process.cwd()) {
   const top = git(cwd, 'rev-parse', '--show-toplevel');
   if (!top) throw new Error('Not inside a git repository.');
+  // A relative core.hooksPath is resolved in each worktree on its own: hooks
+  // installed here would leave every other worktree unguarded.
+  const hooksPath = git(top, 'config', '--get', 'core.hooksPath');
+  if (hooksPath && !path.isAbsolute(hooksPath) && !hooksPath.startsWith('~')) {
+    throw new Error(`core.hooksPath is relative (${hooksPath}): each worktree would use its own hooks directory,\n`
+      + 'and the others would commit and push unguarded. Set it to an absolute path, or unset it\n'
+      + '(git config --unset core.hooksPath), then run this script again.');
+  }
   const hooksDir = path.resolve(top, git(top, 'rev-parse', '--git-path', 'hooks'));
   fs.mkdirSync(hooksDir, { recursive: true });
   const kept = [];

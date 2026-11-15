@@ -16,5 +16,5 @@ if [ -n "$foreign" ]; then
   echo "  Fix them before pushing, e.g.:  git rebase -r <base> --exec 'git commit --amend --no-edit --reset-author'" >&2
   echo "" >&2
 fi
-[ -f "$rotmg_hooks_dir/post-rewrite.local" ] && echo "$input" | sh "$rotmg_hooks_dir/post-rewrite.local" "$@"
+[ -f "$rotmg_hooks_dir/post-rewrite.local" ] && echo "$input" | rotmg_run_local "$rotmg_hooks_dir/post-rewrite.local" "$@"
 exit 0

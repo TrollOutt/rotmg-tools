@@ -136,8 +136,18 @@ rotmg_unmask_addresses() {
 # this machine's account-wide git name or address when they differ from the
 # pinned identity, or a term of the local private list. Values are masked in
 # the report.
+#
+# The text is scanned verbatim, lines starting with "#" included: git keeps
+# them in commits made with -m or -F (cleanup "whitespace") or with
+# --cleanup=verbatim, so they can be published. Only commit-msg passes
+# "editing": the diff that `git commit -v` appends below the scissors line is
+# then left out, since git never stores it. pre-push scans what is stored.
 rotmg_message_problems() {
-  rotmg_msg=$(sed -e '/^# -\{24\} >8 -\{24\}/,$d' -e '/^#/d' | tr -d '\r')
+  if [ "${1:-}" = editing ]; then
+    rotmg_msg=$(tr -d '\r' | sed -e '/^# -\{24\} >8 -\{24\}$/,$d')
+  else
+    rotmg_msg=$(tr -d '\r')
+  fi
   rotmg_private_terms | while IFS= read -r rotmg_t; do
     echo "$rotmg_msg" | grep -qiF -- "$rotmg_t" && echo "a term of the private list ($(rotmg_private_terms_file))"
   done | sort -u
@@ -173,10 +183,16 @@ rotmg_blocked() {
   exit 1
 }
 
+# rotmg_run_local <file> [args]: runs a preserved hook as git would, through
+# its own interpreter (#! line) when it is executable, else with sh.
+rotmg_run_local() {
+  if [ -x "$1" ]; then "$@"; else sh "$@"; fi
+}
+
 # Runs the optional, unversioned <hook>.local next to the installed hooks.
 rotmg_chain_local() {
   rotmg_local="$rotmg_hooks_dir/$1.local"
   shift
   [ -f "$rotmg_local" ] || return 0
-  sh "$rotmg_local" "$@" || exit $?
+  rotmg_run_local "$rotmg_local" "$@" || exit $?
 }
