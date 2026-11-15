@@ -5,7 +5,7 @@
  *   node tools/build-realm-brushes.js [realm-map.json] [realm-brushes.json]
  *
  * The output deliberately records its evidence. It contains no guessed type:
- * a biome is omitted until a captured packet has supplied its floor type.
+ * a biome is omitted until observed tile data has supplied its floor type.
  */
 const fs = require('fs');
 const path = require('path');

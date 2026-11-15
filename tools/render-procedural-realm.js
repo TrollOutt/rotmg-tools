@@ -5,7 +5,7 @@
  *   node tools/render-procedural-realm.js
  *
  * This is deliberately a visual generator, not a claim that every tile was
- * observed. Its companion report marks the biomes with measured packet
+ * observed. Its companion report marks the biomes with observed tile-data
  * brushes and those currently using the installed-client palette only.
  */
 const fs = require('fs');
