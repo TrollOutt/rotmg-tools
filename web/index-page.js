@@ -213,7 +213,7 @@ const RealmIndex = (function () {
     /*
      * Carried inside the file you download to keep, and fetched by the served
      * page - which is the one difference between the two copies, and it is
-     * three and a half megabytes that most visitors never need.
+     * some twelve megabytes that most visitors never need.
      */
     const shared = window.ROTMG_SHARED_DATA
       || (window.ROTMG_SHARED_DATA = {});

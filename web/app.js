@@ -5767,7 +5767,7 @@ function showPage(name) {
     });
   }
   /*
-   * And the index, which is three and a half megabytes of records: it is read
+   * And the index, which is some twelve megabytes of records: it is read
    * the first time somebody asks for it and not a moment before, the same way
    * the other two heavy pages are.
    */

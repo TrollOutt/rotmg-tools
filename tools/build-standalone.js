@@ -146,7 +146,7 @@ const sources = {
   theoryText: readText('TheoryCraft', 'theorycraft.json'),
   /*
    * And the index, which is what every other page's list is a subset of. It
-   * is three and a half megabytes - a third of it the joins - so the offline
+   * is some twelve megabytes of records - so the offline
    * copy carries it and the served page fetches it only when somebody opens
    * that page. One file that works with no server is the whole point of the
    * offline copy; a page in it that cannot answer is worse than the weight.
@@ -623,7 +623,7 @@ const changes = fs.existsSync(changesPath)
  * The served page leaves the index outside itself and fetches it from
  * assets/ if somebody opens that page; the file you download to keep
  * carries it inside, because a kept file that cannot answer without a
- * server is not a kept file. The same three and a half megabytes either
+ * server is not a kept file. The same twelve or so megabytes either
  * way - the question is only who pays for it, and when.
  */
 const served = Object.assign({}, sources);
