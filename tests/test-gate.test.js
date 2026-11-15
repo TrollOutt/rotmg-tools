@@ -76,7 +76,14 @@ const deployCritical = [
   'ui-cache.test.js',
   'visit-counter.test.js',
   'whats-new-sheet.test.js',
-  'whats-new.test.js'
+  'whats-new.test.js',
+  // Pipeline guards (ROT-B-01 to B-15), offline.
+  'client-order.test.js',
+  'data-drift.test.js',
+  'index-ids.test.js',
+  'realmeye-crawl-guard.test.js',
+  'realmeye-recent-gaps.test.js',
+  'realmeye-sprite-guard.test.js'
 ];
 
 const buildCritical = [
