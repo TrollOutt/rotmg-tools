@@ -89,3 +89,20 @@ lists them. In the cloud update it runs with the other tests, after the
 scrape, so a moved id shows in the pull request's failing tests.
 `ROTMG_ACCEPT_ID_CHANGES=1` makes it a warning, for a move checked by hand
 (the three enchantment typo fixes above would need it).
+
+## Known limits (outside this work)
+
+- **Two RealmEye archives (ROT-B-08).** The local archive
+  (`local/realmeye-monitor/processed/realmeye.sqlite`) and the cloud release
+  diverge, and `realmeye-enrichment.json` records only the archive's hash,
+  not its date, so an export cannot tell that it reads an older archive. A
+  large regression is still caught by `tools/check-data-drift.js` (archive
+  pages, linked records), a small one is not. Fix to decide: record the
+  archive date in the enrichment and refuse an older one, or fetch the
+  release before any local scrape.
+- **Name keys (ROT-B-17).** `name_key` (`build_sqlite.py`,
+  `realmeye_archive_import.py`) drops non-ASCII letters and "+", so
+  "Dōnotsura" cannot match "Donotsura" and "+Makakoyumi" collides with
+  "Makakoyumi". Normalising with NFKD and keeping "+" as a marker would change
+  which RealmEye pages join which records, so it needs a replay against the
+  current archive before it is applied.
