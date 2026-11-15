@@ -14,9 +14,8 @@
 # (Settings -> Rules), with pull requests required and no bypass for the watch's
 # token.
 #
-# TODO(ROT-A-10): pin each action to a full commit SHA (tag in a comment); that
-# needs the network, so it was not done offline. .github/dependabot.yml keeps
-# the actions up to date.
+# Each action is pinned to a full commit SHA, with its tag in a comment
+# (ROT-A-10); .github/dependabot.yml keeps the pins up to date.
 name: Tests
 
 on:
@@ -55,12 +54,12 @@ jobs:
       # Two commits deep: the parent of the tested commit is where the data
       # checks below compare from (for a pull request, the merge commit's
       # first parent is the tip of the base branch).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
           fetch-depth: 2
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -94,7 +93,7 @@ jobs:
           ROTMG_ACCEPT_DATA_CHANGES: ${{ env.DATA_WAIVER == '1' && '1' || '' }}
 
       # Unit tests of the Python pipeline's pure helpers: standard library only.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
 
