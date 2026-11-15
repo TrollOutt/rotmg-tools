@@ -39,5 +39,10 @@ const tool = path.join(__dirname, '..', 'tools', 'realmeye-recent.js');
 const run = (...args) => spawnSync(process.execPath, [tool, '--log', file, ...args], { encoding: 'utf8' });
 assert.strictEqual(run('--integrated-through', '2026-11-10T12:00:00Z', '--not-fetched', missed).status, 0);
 assert.strictEqual(run('--pending').stdout.trim(), 'alpha');
+// A --not-fetched list that is missing fails, and the log is left as it was.
+const before = fs.readFileSync(file, 'utf8');
+assert.notStrictEqual(run('--integrated-through', '2026-11-12T00:00:00Z', '--not-fetched', path.join(dir, 'absent.txt')).status, 0);
+assert.strictEqual(fs.readFileSync(file, 'utf8'), before);
+assert.strictEqual(run('--pending').stdout.trim(), 'alpha');
 
 console.log('realmeye recent gaps: ok');

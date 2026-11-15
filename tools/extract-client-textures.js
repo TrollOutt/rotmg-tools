@@ -286,8 +286,20 @@ function main() {
     process.exitCode = 1;
     return;
   }
+  if (!certifiesAll(names)) {
+    // The other sheets may come from an older client: nothing vouches for them.
+    console.error('  partial extraction (' + [...names].join(', ') + '): no provenance written;'
+      + ' run without names to certify the whole directory\n');
+    return;
+  }
   fs.writeFileSync(provenanceFile, JSON.stringify(meta) + '\n');
 }
+
+/* The directory-wide provenance only after a run that refreshed every sheet it vouches for. */
+function certifiesAll(names) {
+  return WANTED.every(name => names.has(name));
+}
+module.exports.certifiesAll = certifiesAll;
 
 /* R7 / ROT-B-09: a wanted texture absent or not in raw pixels is a failed extraction, not a note. */
 function texturesProblem(missing, skipped) {

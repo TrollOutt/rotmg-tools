@@ -113,7 +113,10 @@ async function main() {
   const through = option('--integrated-through');
   if (through) {
     const listFile = option('--not-fetched');
-    const notFetched = listFile && fs.existsSync(listFile) ? fs.readFileSync(listFile, 'utf8').split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [];
+    // A list that was asked for but is missing (a failed step, a typo) must not
+    // read as "everything fetched": that would drop the pages still to retry.
+    if (listFile && !fs.existsSync(listFile)) throw new Error(`--not-fetched ${listFile}: no such file; nothing integrated`);
+    const notFetched = listFile ? fs.readFileSync(listFile, 'utf8').split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [];
     integrate(log, through, notFetched);
     save();
     console.log(JSON.stringify({ integratedThrough: through, pending: pending(log).length }));
