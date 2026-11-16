@@ -74,16 +74,24 @@
     return record ? (record.said || record.name) : one.key;
   }
   const others = one => ((one.data && one.data.candidates) || []).filter(id => !((one.data && one.data.shown) || []).includes(id));
+  const fold = text => String(text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const answeredAt = one => { const v = state.verdicts[keyOf(one)]; return (v && (v.time || v.at)) || ''; };
   function visible() {
     const check = $('check').value;
     const status = $('status').value;
-    return state.report.findings.filter(one => {
+    const wanted = fold($('find').value.trim());
+    const items = state.report.findings.filter(one => {
       if (!one.review) return false;
       if (check !== 'all' && one.check !== check) return false;
+      if (wanted && !fold(titleOf(one) + ' ' + one.key).includes(wanted)) return false;
       const s = statusOf(one);
       if (status === 'todo') return s === 'todo' || s === 'stale';
+      if (status === 'done') return s === 'ok' || s === 'error';
       return status === 'all' || s === status;
     });
+    // Already seen: the latest answer first, so going back over a session is reading down the list.
+    if (status !== 'todo') items.sort((a, b) => answeredAt(b).localeCompare(answeredAt(a)));
+    return items;
   }
 
   /* ---------------- drawing ---------------- */
@@ -226,15 +234,28 @@
       $('list').innerHTML = '<p class="none">Rien dans ce filtre.</p>';
       return;
     }
-    $('list').innerHTML = items.map(one => '<button type="button" data-key="' + esc(keyOf(one)) + '" aria-current="' + (keyOf(one) === current) + '">'
-      + '<span class="dot ' + statusOf(one) + '" aria-hidden="true"></span>'
-      + '<span><span class="t">' + esc(titleOf(one)) + '</span><span class="k">' + esc((CHECKS[one.check] || {}).label || one.check)
-      + '</span></span></button>').join('');
+    $('list').innerHTML = items.map(one => {
+      const status = statusOf(one);
+      const verdict = verdictOf(one);
+      const said = status === 'ok' ? '✓ même chose'
+        : status === 'error' ? '✗ pas la même chose' + (verdict && verdict.pick ? ' → <span class="picked">' + esc(nameOf(verdict.pick)) + '</span>' : '')
+          : esc((CHECKS[one.check] || {}).label || one.check) + (status === 'stale' ? ' · à revoir' : '');
+      const when = verdict && verdict.time
+        ? new Date(verdict.time).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+        : verdict ? verdict.at : '';
+      return '<button type="button" data-key="' + esc(keyOf(one)) + '" aria-current="' + (keyOf(one) === current) + '">'
+        + '<span class="dot ' + status + '" aria-hidden="true"></span>'
+        + '<span><span class="t">' + esc(titleOf(one)) + '</span><span class="k">' + said + '</span>'
+        + (when ? '<span class="when">' + esc(when) + '</span>' : '') + '</span></button>';
+    }).join('');
   }
 
   function drawTally() {
     const all = state.report.findings.filter(one => one.review);
     const count = status => all.filter(one => (status === 'todo' ? ['todo', 'stale'].includes(statusOf(one)) : statusOf(one) === status)).length;
+    $('n-todo').textContent = count('todo');
+    $('n-done').textContent = count('ok') + count('error');
+    for (const tab of document.querySelectorAll('.tabs [data-status]')) tab.setAttribute('aria-selected', String(tab.dataset.status === $('status').value));
     $('tally').innerHTML = '<span class="t-todo">À regarder <b>' + count('todo') + '</b></span>'
       + '<span class="t-error">Pas la même chose <b>' + count('error') + '</b></span>'
       + '<span class="t-ok">Même chose <b>' + count('ok') + '</b></span>';
@@ -244,6 +265,7 @@
     const items = visible();
     const one = items.find(item => keyOf(item) === key) || items[0];
     current = one ? keyOf(one) : null;
+    if (current) store.set('current', current);     // where to pick up next time
     picking = false;
     drawList(items);
     drawTally();
@@ -371,7 +393,7 @@
     $('check').innerHTML = '<option value="all">Tous</option>' + checks.map(check =>
       '<option value="' + esc(check) + '">' + esc((CHECKS[check] || {}).label || check) + '</option>').join('');
     $('check').value = checks.includes(chosen) ? chosen : 'all';
-    select(current);
+    select(current || store.get('current', null));
   }
 
   /* ---------------- wiring ---------------- */
@@ -379,6 +401,14 @@
   if (store.get('list', '1') === '0') { $('layout').classList.add('no-list'); $('list-toggle').setAttribute('aria-pressed', 'false'); }
   $('check').addEventListener('change', () => { store.set('check', $('check').value); select(current); });
   $('status').addEventListener('change', () => { store.set('status', $('status').value); select(current); });
+  for (const tab of document.querySelectorAll('.tabs [data-status]')) {
+    tab.addEventListener('click', () => {
+      $('status').value = tab.dataset.status;
+      store.set('status', tab.dataset.status);
+      select(current);
+    });
+  }
+  $('find').addEventListener('input', () => select(current));
   $('list-toggle').addEventListener('click', () => {
     const hidden = $('layout').classList.toggle('no-list');
     $('list-toggle').setAttribute('aria-pressed', String(!hidden));

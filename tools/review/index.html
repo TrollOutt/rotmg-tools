@@ -16,6 +16,7 @@
     <label>Statut
       <select id="status">
         <option value="todo">À regarder</option>
+        <option value="done">Déjà vus (récents d'abord)</option>
         <option value="error">Pas la même chose</option>
         <option value="ok">Même chose</option>
         <option value="all">Tout</option>
@@ -27,7 +28,14 @@
 </header>
 
 <main class="layout" id="layout">
-  <nav class="list" id="list" aria-label="Constats"></nav>
+  <aside class="side" id="side">
+    <div class="tabs" role="tablist" aria-label="Que lister">
+      <button type="button" role="tab" id="tab-todo" data-status="todo">À regarder <b id="n-todo"></b></button>
+      <button type="button" role="tab" id="tab-done" data-status="done">Déjà vus <b id="n-done"></b></button>
+    </div>
+    <input type="search" id="find" placeholder="Chercher un nom…" aria-label="Chercher dans la liste">
+    <nav class="list" id="list" aria-label="Constats"></nav>
+  </aside>
 
   <section class="pane compare" aria-labelledby="compare-title">
     <div class="pane-head">

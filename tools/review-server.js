@@ -104,7 +104,7 @@ function writeVerdict({ key, verdict, note, pick }) {
     doc.verdicts[key] = {
       verdict, note: String(note || '').slice(0, 500), message: finding.message,
       ...(pick ? { pick, page: finding.data.page } : {}),
-      at: new Date().toISOString().slice(0, 10)
+      at: new Date().toISOString().slice(0, 10), time: new Date().toISOString()
     };
   }
   doc.verdicts = Object.fromEntries(Object.keys(doc.verdicts).sort().map(k => [k, doc.verdicts[k]]));
