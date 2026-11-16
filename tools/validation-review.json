@@ -965,11 +965,9 @@
    "at": "2026-11-16"
   },
   "page-pictures|cyclops-god|enemy:Cyclops God": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'cyclops-god' is joined to 2 client objects with 2 different pictures; the site shows enemy:Cyclops God [client id New Cyclops God].",
-   "pick": "enemy:Cyclops God#Cyclops God",
-   "page": "cyclops-god",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:24.309Z"
   },
@@ -980,11 +978,9 @@
    "at": "2026-11-16"
   },
   "page-pictures|cyclops-king|enemy:Cyclops King": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'cyclops-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Cyclops King [client id New Cyclops King].",
-   "pick": "enemy:Cyclops King#Cyclops King",
-   "page": "cyclops-king",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:26.352Z"
   },
@@ -995,11 +991,9 @@
    "at": "2026-11-16"
   },
   "page-pictures|cyclops-noble|enemy:Cyclops Noble": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'cyclops-noble' is joined to 2 client objects with 2 different pictures; the site shows enemy:Cyclops Noble [client id New Cyclops Noble].",
-   "pick": "enemy:Cyclops Noble#Cyclops Noble",
-   "page": "cyclops-noble",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:28.190Z"
   },
@@ -1010,11 +1004,9 @@
    "at": "2026-11-16"
   },
   "page-pictures|cyclops-prince|enemy:Cyclops Prince": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'cyclops-prince' is joined to 2 client objects with 2 different pictures; the site shows enemy:Cyclops Prince [client id New Cyclops Prince].",
-   "pick": "enemy:Cyclops Prince#Cyclops Prince",
-   "page": "cyclops-prince",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:46.486Z"
   },
@@ -1025,11 +1017,9 @@
    "at": "2026-11-16"
   },
   "page-pictures|cyclops-warrior|enemy:Cyclops Warrior": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'cyclops-warrior' is joined to 2 client objects with 2 different pictures; the site shows enemy:Cyclops Warrior [client id New Cyclops Warrior].",
-   "pick": "enemy:Cyclops Warrior#Cyclops Warrior",
-   "page": "cyclops-warrior",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:48.519Z"
   },
@@ -1040,11 +1030,9 @@
    "at": "2026-11-16"
   },
   "page-pictures|cyclops|enemy:Cyclops": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'cyclops' is joined to 2 client objects with 2 different pictures; the site shows enemy:Cyclops [client id New Cyclops].",
-   "pick": "enemy:Cyclops#Cyclops",
-   "page": "cyclops",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:49.785Z"
   },
@@ -1289,11 +1277,9 @@
    "time": "2026-11-16T16:23:20.617Z"
   },
   "page-pictures|dwarf-axebearer|enemy:Dwarf Axebearer": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'dwarf-axebearer' is joined to 2 client objects with 2 different pictures; the site shows enemy:Dwarf Axebearer [client id New Dwarf Axebearer].",
-   "pick": "enemy:Dwarf Axebearer#Dwarf Axebearer",
-   "page": "dwarf-axebearer",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:52.546Z"
   },
@@ -1305,11 +1291,9 @@
    "time": "2026-11-16T16:23:21.737Z"
   },
   "page-pictures|dwarf-king|enemy:Dwarf King": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'dwarf-king' is joined to 3 client objects with 2 different pictures; the site shows enemy:Dwarf King [client id New Dwarf King].",
-   "pick": "enemy:Dwarf King#Dwarf King",
-   "page": "dwarf-king",
    "at": "2026-11-16",
    "time": "2026-11-16T16:29:53.805Z"
   },
@@ -1988,11 +1972,9 @@
    "time": "2026-11-16T16:26:31.299Z"
   },
   "page-pictures|great-coil-snake|enemy:Great Coil Snake": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'great-coil-snake' is joined to 2 client objects with 2 different pictures; the site shows enemy:Great Coil Snake [client id New Great Coil Snake].",
-   "pick": "enemy:Great Coil Snake#Great Coil Snake",
-   "page": "great-coil-snake",
    "at": "2026-11-16",
    "time": "2026-11-16T16:26:33.054Z"
   },
@@ -2202,11 +2184,9 @@
    "time": "2026-11-16T16:30:42.017Z"
   },
   "page-pictures|horrid-reaper|enemy:Horrid Reaper#New Horrid Reaper": {
-   "verdict": "error",
-   "note": "",
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
    "message": "RealmEye 'horrid-reaper' is joined to 2 client objects with 2 different pictures; the site shows enemy:Horrid Reaper#New Horrid Reaper [client id New Horrid Reaper].",
-   "pick": "enemy:Horrid Reaper",
-   "page": "horrid-reaper",
    "at": "2026-11-16",
    "time": "2026-11-16T16:30:43.544Z"
   },
@@ -2922,4 +2902,2076 @@
    "at": "2026-11-16",
    "time": "2026-11-16T16:32:39.710Z"
   },
-  "p
+  "page-pictures|oasis-giant|enemy:Oasis Giant": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oasis-giant' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oasis Giant [client id New Oasis Giant].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:40.307Z"
+  },
+  "page-pictures|obsidian-soul-shard|enemy:Obsidian Soul Shard#LOD Obsidian Soul Shard": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'obsidian-soul-shard' is joined to 2 client objects with 2 different pictures; the site shows enemy:Obsidian Soul Shard#LOD Obsidian Soul Shard [client id LOD Obsidian Soul Shard].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:41.013Z"
+  },
+  "page-pictures|ocular-entrapment|item:Ocular Entrapment": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ocular-entrapment' is joined to 2 client objects with 2 different pictures; the site shows item:Ocular Entrapment.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:41.667Z"
+  },
+  "page-pictures|ogre-king|enemy:Ogre King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ogre-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Ogre King [client id New Ogre King].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:42.194Z"
+  },
+  "page-pictures|ogre-mage|enemy:Ogre Mage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ogre-mage' is joined to 2 client objects with 2 different pictures; the site shows enemy:Ogre Mage [client id New Ogre Mage].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:42.821Z"
+  },
+  "page-pictures|ogre-warrior|enemy:Ogre Warrior": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ogre-warrior' is joined to 2 client objects with 2 different pictures; the site shows enemy:Ogre Warrior [client id New Ogre Warrior].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:43.928Z"
+  },
+  "page-pictures|ogre-wizard|enemy:Ogre Wizard": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ogre-wizard' is joined to 2 client objects with 2 different pictures; the site shows enemy:Ogre Wizard [client id New Ogre Wizard].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:44.508Z"
+  },
+  "page-pictures|omnipotence-ring|item:Omnipotence Ring": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'omnipotence-ring' is joined to 2 client objects with 2 different pictures; the site shows item:Omnipotence Ring.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:45.056Z"
+  },
+  "page-pictures|orb-of-aether|item:Orb of Aether": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orb-of-aether' is joined to 2 client objects with 2 different pictures; the site shows item:Orb of Aether.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:45.538Z"
+  },
+  "page-pictures|orb-of-conflict|item:Orb of Conflict": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orb-of-conflict' is joined to 2 client objects with 2 different pictures; the site shows item:Orb of Conflict.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:46.040Z"
+  },
+  "page-pictures|orb-of-sweet-demise|item:Orb of Sweet Demise": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orb-of-sweet-demise' is joined to 2 client objects with 2 different pictures; the site shows item:Orb of Sweet Demise.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:46.617Z"
+  },
+  "page-pictures|orc-king|enemy:Orc King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orc-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Orc King [client id New Orc King].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:47.124Z"
+  },
+  "page-pictures|orc-mage|enemy:Orc Mage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orc-mage' is joined to 2 client objects with 2 different pictures; the site shows enemy:Orc Mage [client id New Orc Mage].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:47.579Z"
+  },
+  "page-pictures|orc-queen|enemy:Orc Queen": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orc-queen' is joined to 2 client objects with 2 different pictures; the site shows enemy:Orc Queen [client id New Orc Queen].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:48.119Z"
+  },
+  "page-pictures|orc-warrior|enemy:Orc Warrior": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'orc-warrior' is joined to 2 client objects with 2 different pictures; the site shows enemy:Orc Warrior [client id New Orc Warrior].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:48.582Z"
+  },
+  "page-pictures|oryx-ambassador|enemy:Oryx Ambassador": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-ambassador' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oryx Ambassador.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:49.256Z"
+  },
+  "page-pictures|oryx-cardinal|enemy:Oryx Cardinal": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-cardinal' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oryx Cardinal.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:49.893Z"
+  },
+  "page-pictures|oryx-cleric|enemy:Oryx Cleric": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-cleric' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oryx Cleric.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:50.448Z"
+  },
+  "page-pictures|oryx-deacon|enemy:Oryx Deacon": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-deacon' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oryx Deacon.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:50.950Z"
+  },
+  "page-pictures|oryx-judge|enemy:Oryx Judge": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-judge' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oryx Judge.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:51.528Z"
+  },
+  "page-pictures|oryx-minister|enemy:Oryx Minister": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-minister' is joined to 2 client objects with 2 different pictures; the site shows enemy:Oryx Minister.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:52.040Z"
+  },
+  "page-pictures|oryx-s-escutcheon|item:Oryx's Escutcheon": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-s-escutcheon' is joined to 2 client objects with 2 different pictures; the site shows item:Oryx's Escutcheon.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:52.933Z"
+  },
+  "page-pictures|oryx-s-sanctuary|portal:Oryx's Sanctuary": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'oryx-s-sanctuary' is joined to 3 client objects with 2 different pictures; the site shows portal:Oryx's Sanctuary [client id Oryx Sanctuary Portal].",
+   "pick": "portal:Oryx's Sanctuary#Oryx Mania Sanctuary Portal",
+   "page": "oryx-s-sanctuary",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:32:55.574Z"
+  },
+  "page-pictures|oryx-the-mad-god|enemy:Oryx the Mad God#Oryx the Mad God 1": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'oryx-the-mad-god' is joined to 19 client objects with 9 different pictures; the site shows enemy:Oryx the Mad God#Oryx the Mad God 1 [client id Oryx the Mad God 1].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:02.119Z"
+  },
+  "page-pictures|overclocking-amulet|item:Overclocking Amulet": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'overclocking-amulet' is joined to 2 client objects with 2 different pictures; the site shows item:Overclocking Amulet.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:03.187Z"
+  },
+  "page-pictures|paladin-obelisk|enemy:Paladin Obelisk#shtrs Bridge Obelisk A": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'paladin-obelisk' is joined to 9 client objects with 4 different pictures; the site shows enemy:Paladin Obelisk#shtrs Bridge Obelisk A [client id shtrs Bridge Obelisk A].",
+   "pick": "enemy:Paladin Obelisk",
+   "page": "paladin-obelisk",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:04.646Z"
+  },
+  "page-pictures|pandemic-poison|item:Pandemic Poison": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pandemic-poison' is joined to 2 client objects with 2 different pictures; the site shows item:Pandemic Poison.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:05.556Z"
+  },
+  "page-pictures|paper-golem|enemy:Paper Golem": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'paper-golem' is joined to 2 client objects with 2 different pictures; the site shows enemy:Paper Golem [client id New Paper Golem].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:06.120Z"
+  },
+  "page-pictures|peacekeeper|item:Peacekeeper": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'peacekeeper' is joined to 2 client objects with 2 different pictures; the site shows item:Peacekeeper.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:06.761Z"
+  },
+  "page-pictures|penetrating-blast-spell|item:Penetrating Blast Spell": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'penetrating-blast-spell' is joined to 2 client objects with 2 different pictures; the site shows item:Penetrating Blast Spell.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:07.454Z"
+  },
+  "page-pictures|perennial-cranium|item:Perennial Cranium": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'perennial-cranium' is joined to 2 client objects with 2 different pictures; the site shows item:Perennial Cranium.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:08.102Z"
+  },
+  "page-pictures|permafrost-lord|enemy:Permafrost Lord#FR Boss": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'permafrost-lord' is joined to 7 client objects with 3 different pictures; the site shows enemy:Permafrost Lord#FR Boss [client id FR Boss].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:09.153Z"
+  },
+  "page-pictures|pharaoh-s-requiem|item:Pharaoh's Requiem": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pharaoh-s-requiem' is joined to 2 client objects with 2 different pictures; the site shows item:Pharaoh's Requiem.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:09.962Z"
+  },
+  "page-pictures|phoenix-egg|enemy:Phoenix Egg": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'phoenix-egg' is joined to 2 client objects with 2 different pictures; the site shows enemy:Phoenix Egg [client id New Phoenix Egg].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:10.751Z"
+  },
+  "page-pictures|phoenix-lord|enemy:Phoenix Lord": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'phoenix-lord' is joined to 2 client objects with 2 different pictures; the site shows enemy:Phoenix Lord [client id New Phoenix Lord].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:11.362Z"
+  },
+  "page-pictures|phylactery-bearer|enemy:Phylactery Bearer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'phylactery-bearer' is joined to 2 client objects with 2 different pictures; the site shows enemy:Phylactery Bearer [client id New Phylactery Bearer].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:12.005Z"
+  },
+  "page-pictures|pink-blob|enemy:Pink Blob": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pink-blob' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pink Blob [client id New Pink Blob].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:13.827Z"
+  },
+  "page-pictures|pirate-admiral|enemy:Pirate Admiral": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-admiral' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pirate Admiral.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:14.505Z"
+  },
+  "page-pictures|pirate-brawler|enemy:Pirate Brawler#Tavern Pirate Brawler": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-brawler' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pirate Brawler#Tavern Pirate Brawler [client id Tavern Pirate Brawler].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:15.386Z"
+  },
+  "page-pictures|pirate-captain|enemy:Pirate Captain": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-captain' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pirate Captain.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:15.937Z"
+  },
+  "page-pictures|pirate-commander|enemy:Pirate Commander": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-commander' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pirate Commander.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:16.649Z"
+  },
+  "page-pictures|pirate-king-s-cutlass|item:Pirate King's Cutlass": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-king-s-cutlass' is joined to 3 client objects with 3 different pictures; the site shows item:Pirate King's Cutlass.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:17.260Z"
+  },
+  "page-pictures|pirate-lieutenant|enemy:Pirate Lieutenant": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-lieutenant' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pirate Lieutenant.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:17.914Z"
+  },
+  "page-pictures|pirate-s-artillery|item:Pirate's Artillery": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate-s-artillery' is joined to 2 client objects with 2 different pictures; the site shows item:Pirate's Artillery.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:19.615Z"
+  },
+  "page-pictures|piratess|enemy:Piratess": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'piratess' is joined to 2 client objects with 2 different pictures; the site shows enemy:Piratess [client id New Piratess].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:20.176Z"
+  },
+  "page-pictures|pirate|enemy:Pirate": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pirate' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pirate [client id New Pirate].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:20.551Z"
+  },
+  "page-pictures|plague-poison|item:Plague Poison": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'plague-poison' is joined to 2 client objects with 2 different pictures; the site shows item:Plague Poison.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:20.968Z"
+  },
+  "page-pictures|poison-fang-dagger|item:Poison Fang Dagger": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'poison-fang-dagger' is joined to 3 client objects with 3 different pictures; the site shows item:Poison Fang Dagger.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:21.375Z"
+  },
+  "page-pictures|polarity-poison|item:Polarity Poison": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'polarity-poison' is joined to 2 client objects with 2 different pictures; the site shows item:Polarity Poison.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:21.916Z"
+  },
+  "page-pictures|pollen-incendiary|item:Pollen Incendiary": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pollen-incendiary' is joined to 2 client objects with 2 different pictures; the site shows item:Pollen Incendiary.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:22.841Z"
+  },
+  "page-pictures|possessed-child|enemy:Possessed Child": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'possessed-child' is joined to 2 client objects with 2 different pictures; the site shows enemy:Possessed Child [client id Haunted Cemetery Gates Large Possessed Child].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:23.444Z"
+  },
+  "page-pictures|primal-arcana|item:Primal Arcana": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'primal-arcana' is joined to 2 client objects with 2 different pictures; the site shows item:Primal Arcana.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:24.001Z"
+  },
+  "page-pictures|primal-snake|enemy:Primal Snake": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'primal-snake' is joined to 6 client objects with 3 different pictures; the site shows enemy:Primal Snake [client id LNY Primal Snake Realm].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:25.753Z"
+  },
+  "page-pictures|prism-of-dancing-swords|item:Prism of Dancing Swords": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'prism-of-dancing-swords' is joined to 2 client objects with 2 different pictures; the site shows item:Prism of Dancing Swords.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:26.288Z"
+  },
+  "page-pictures|prism-of-dire-instability|item:Prism of Dire Instability": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'prism-of-dire-instability' is joined to 2 client objects with 2 different pictures; the site shows item:Prism of Dire Instability.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:26.871Z"
+  },
+  "page-pictures|pulsating-obstacle|enemy:Pulsating Obstacle": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pulsating-obstacle' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pulsating Obstacle [client id pD Obstacle].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:27.299Z"
+  },
+  "page-pictures|pumpkin-king|enemy:Pumpkin King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pumpkin-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pumpkin King [client id Haunted Cemetery Boss Pumpkin].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:27.694Z"
+  },
+  "page-pictures|purple-gelatinous-cube|enemy:Purple Gelatinous Cube#3D Purple Cube": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'purple-gelatinous-cube' is joined to 2 client objects with 2 different pictures; the site shows enemy:Purple Gelatinous Cube#3D Purple Cube [client id 3D Purple Cube].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:28.185Z"
+  },
+  "page-pictures|putrid-goop|enemy:Putrid Goop": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'putrid-goop' is joined to 2 client objects with 2 different pictures; the site shows enemy:Putrid Goop [client id SpecPen Putrid Goop].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:28.640Z"
+  },
+  "page-pictures|pyro-warlock|enemy:Pyro Warlock": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pyro-warlock' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pyro Warlock [client id shtrs S Archmage of Flame].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:29.095Z"
+  },
+  "page-pictures|pyyr-the-crimson-dragon|enemy:Pyyr the Crimson Dragon#LOD Pyyr the Crimson Dragon": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'pyyr-the-crimson-dragon' is joined to 2 client objects with 2 different pictures; the site shows enemy:Pyyr the Crimson Dragon#LOD Pyyr the Crimson Dragon [client id LOD Pyyr the Crimson Dragon].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:29.504Z"
+  },
+  "page-pictures|q-u-i-v-e-r|item:Q.U.I.V.E.R.": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'q-u-i-v-e-r' is joined to 2 client objects with 2 different pictures; the site shows item:Q.U.I.V.E.R..",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:29.977Z"
+  },
+  "page-pictures|quartermaster-scabbard|item:Quartermaster Scabbard": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'quartermaster-scabbard' is joined to 2 client objects with 2 different pictures; the site shows item:Quartermaster Scabbard.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:30.408Z"
+  },
+  "page-pictures|queen-s-stinger|item:Queen's Stinger": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'queen-s-stinger' is joined to 2 client objects with 2 different pictures; the site shows item:Queen's Stinger [client id EH Queen's Stinger Dagger].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:30.873Z"
+  },
+  "page-pictures|quiver-of-shadows|item:Quiver of Shadows": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'quiver-of-shadows' is joined to 2 client objects with 2 different pictures; the site shows item:Quiver of Shadows [client id Quiver of the Shadows].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:34.329Z"
+  },
+  "page-pictures|quiver-of-thunder|item:Quiver of Thunder": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'quiver-of-thunder' is joined to 2 client objects with 2 different pictures; the site shows item:Quiver of Thunder.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:34.782Z"
+  },
+  "page-pictures|ravenous-rot|enemy:Ravenous Rot": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ravenous-rot' is joined to 3 client objects with 2 different pictures; the site shows enemy:Ravenous Rot.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:35.125Z"
+  },
+  "page-pictures|ray-katana|item:Ray Katana": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ray-katana' is joined to 2 client objects with 2 different pictures; the site shows item:Ray Katana.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:35.581Z"
+  },
+  "page-pictures|reanimated-remains|enemy:Reanimated Remains": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'reanimated-remains' is joined to 2 client objects with 2 different pictures; the site shows enemy:Reanimated Remains [client id Haunted Cemetery Gates Small Skeleton].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:36.034Z"
+  },
+  "page-pictures|rebirth-worm|enemy:Rebirth Worm": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'rebirth-worm' is joined to 2 client objects with 2 different pictures; the site shows enemy:Rebirth Worm [client id SpecPen Rebirth Worm].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:36.449Z"
+  },
+  "page-pictures|recurring-terror-spell|item:Recurring Terror Spell": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'recurring-terror-spell' is joined to 2 client objects with 2 different pictures; the site shows item:Recurring Terror Spell [client id pD Spell].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:36.961Z"
+  },
+  "page-pictures|red-demon|enemy:Red Demon": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'red-demon' is joined to 2 client objects with 2 different pictures; the site shows enemy:Red Demon [client id New Red Demon].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:37.386Z"
+  },
+  "page-pictures|red-flaming-skull|enemy:Red Flaming Skull#New Red Flaming Skull": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'red-flaming-skull' is joined to 2 client objects with 2 different pictures; the site shows enemy:Red Flaming Skull#New Red Flaming Skull [client id New Red Flaming Skull].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:40.009Z"
+  },
+  "page-pictures|red-gelatinous-cube|enemy:Red Gelatinous Cube#3D Red Cube": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'red-gelatinous-cube' is joined to 2 client objects with 2 different pictures; the site shows enemy:Red Gelatinous Cube#3D Red Cube [client id 3D Red Cube].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:40.833Z"
+  },
+  "page-pictures|red-satellite|enemy:Red Satellite": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'red-satellite' is joined to 2 client objects with 2 different pictures; the site shows enemy:Red Satellite [client id New Red Satellite].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:41.378Z"
+  },
+  "page-pictures|resurrected-warrior-s-armor|item:Resurrected Warrior's Armor": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'resurrected-warrior-s-armor' is joined to 2 client objects with 2 different pictures; the site shows item:Resurrected Warrior's Armor.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:41.810Z"
+  },
+  "page-pictures|ring-of-decades|item:Ring of Decades": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ring-of-decades' is joined to 2 client objects with 2 different pictures; the site shows item:Ring of Decades.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:42.252Z"
+  },
+  "page-pictures|ring-of-divine-faith|item:Ring of Divine Faith": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ring-of-divine-faith' is joined to 2 client objects with 2 different pictures; the site shows item:Ring of Divine Faith.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:42.735Z"
+  },
+  "page-pictures|ring-of-skeletal-specters|item:Ring of Skeletal Specters": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ring-of-skeletal-specters' is joined to 2 client objects with 2 different pictures; the site shows item:Ring of Skeletal Specters.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:43.154Z"
+  },
+  "page-pictures|ring-of-the-nile|item:Ring of the Nile": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ring-of-the-nile' is joined to 2 client objects with 2 different pictures; the site shows item:Ring of the Nile.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:43.530Z"
+  },
+  "page-pictures|ring-of-the-pyramid|item:Ring of the Pyramid": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ring-of-the-pyramid' is joined to 2 client objects with 2 different pictures; the site shows item:Ring of the Pyramid.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:43.898Z"
+  },
+  "page-pictures|ring-of-the-sphinx|item:Ring of the Sphinx": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ring-of-the-sphinx' is joined to 2 client objects with 2 different pictures; the site shows item:Ring of the Sphinx.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:44.286Z"
+  },
+  "page-pictures|risen-archer|enemy:Risen Archer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'risen-archer' is joined to 2 client objects with 2 different pictures; the site shows enemy:Risen Archer [client id Haunted Cemetery Graves Small Archer].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:44.729Z"
+  },
+  "page-pictures|risen-brawler|enemy:Risen Brawler": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'risen-brawler' is joined to 2 client objects with 2 different pictures; the site shows enemy:Risen Brawler [client id Haunted Cemetery Graves Large Brawler].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:45.158Z"
+  },
+  "page-pictures|risen-mage|enemy:Risen Mage#Arena Risen Mage": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'risen-mage' is joined to 2 client objects with 2 different pictures; the site shows enemy:Risen Mage#Arena Risen Mage [client id Arena Risen Mage].",
+   "pick": "enemy:Risen Mage",
+   "page": "risen-mage",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:47.546Z"
+  },
+  "page-pictures|risen-mummy|enemy:Risen Mummy": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'risen-mummy' is joined to 2 client objects with 2 different pictures; the site shows enemy:Risen Mummy [client id Haunted Cemetery Graves Large Mummy].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:48.248Z"
+  },
+  "page-pictures|risen-warrior|enemy:Risen Warrior": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'risen-warrior' is joined to 2 client objects with 2 different pictures; the site shows enemy:Risen Warrior [client id Haunted Cemetery Graves Large Warrior].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:48.812Z"
+  },
+  "page-pictures|ritual-robe|item:Ritual Robe": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ritual-robe' is joined to 2 client objects with 2 different pictures; the site shows item:Ritual Robe.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:49.415Z"
+  },
+  "page-pictures|robe-of-the-mad-scientist|item:Robe of the Mad Scientist": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'robe-of-the-mad-scientist' is joined to 2 client objects with 2 different pictures; the site shows item:Robe of the Mad Scientist.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:49.920Z"
+  },
+  "page-pictures|robe-of-the-tlatoani|item:Robe of the Tlatoani": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'robe-of-the-tlatoani' is joined to 2 client objects with 2 different pictures; the site shows item:Robe of the Tlatoani.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:50.384Z"
+  },
+  "page-pictures|robot-brawler|enemy:Robot Brawler#Tavern Robot Brawler": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'robot-brawler' is joined to 2 client objects with 2 different pictures; the site shows enemy:Robot Brawler#Tavern Robot Brawler [client id Tavern Robot Brawler].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:50.758Z"
+  },
+  "page-pictures|rock-construct|enemy:Rock Construct#City Rock Bot": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'rock-construct' is joined to 2 client objects with 2 different pictures; the site shows enemy:Rock Construct#City Rock Bot [client id City Rock Bot].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:51.169Z"
+  },
+  "page-pictures|rock-dragon-bat|enemy:Rock Dragon Bat#New LOD Rock Dragon Bat": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'rock-dragon-bat' is joined to 3 client objects with 2 different pictures; the site shows enemy:Rock Dragon Bat#New LOD Rock Dragon Bat [client id New LOD Rock Dragon Bat].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:33:51.591Z"
+  },
+  "page-pictures|rock-dragon|enemy:Rock Dragon#New LOD Rock Dragon Body": {
+   "verdict": "ok",
+   "note": "RealmEye montre l'image de l'ancienne version ; la version New garde la page (décision du 2026-11-16).",
+   "message": "RealmEye 'rock-dragon' is joined to 10 client objects with 6 different pictures; the site shows enemy:Rock Dragon#New LOD Rock Dragon Body [client id New LOD Rock Dragon Body].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:00.219Z"
+  },
+  "page-pictures|ronin-s-wakizashi|item:Ronin's Wakizashi": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'ronin-s-wakizashi' is joined to 2 client objects with 2 different pictures; the site shows item:Ronin's Wakizashi.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:02.226Z"
+  },
+  "page-pictures|royal-cnidarian|enemy:Royal Cnidarian": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'royal-cnidarian' is joined to 2 client objects with 2 different pictures; the site shows enemy:Royal Cnidarian [client id CR Royal Cnidarian].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:02.833Z"
+  },
+  "page-pictures|royal-epic-quest-chest|enemy:Royal Epic Quest Chest#Royal Epic Quest Chest": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'royal-epic-quest-chest' is joined to 2 client objects with 2 different pictures; the site shows enemy:Royal Epic Quest Chest#Royal Epic Quest Chest.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:05.608Z"
+  },
+  "page-pictures|royal-guard-s-cuirass|item:Royal Guard's Cuirass": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'royal-guard-s-cuirass' is joined to 2 client objects with 2 different pictures; the site shows item:Royal Guard's Cuirass.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:06.242Z"
+  },
+  "page-pictures|runes-of-knowledge|item:Runes of Knowledge": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'runes-of-knowledge' is joined to 2 client objects with 2 different pictures; the site shows item:Runes of Knowledge.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:06.747Z"
+  },
+  "page-pictures|s-h-e-a-t-h|item:S.H.E.A.T.H.": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 's-h-e-a-t-h' is joined to 3 client objects with 2 different pictures; the site shows item:S.H.E.A.T.H. [client id S.H.E.A.T.H. Proc Attack].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:07.351Z"
+  },
+  "page-pictures|s-t-a-f-f|item:S.T.A.F.F.": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 's-t-a-f-f' is joined to 2 client objects with 2 different pictures; the site shows item:S.T.A.F.F..",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:07.822Z"
+  },
+  "page-pictures|s-w-i-t-c-h|enemy:S.W.I.T.C.H.": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 's-w-i-t-c-h' is joined to 9 client objects with 2 different pictures; the site shows enemy:S.W.I.T.C.H. [client id HTT Vat Switch NW].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:08.229Z"
+  },
+  "page-pictures|sand-devil|enemy:Sand Devil": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sand-devil' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sand Devil [client id New Sand Devil].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:09.230Z"
+  },
+  "page-pictures|sand-phantom|enemy:Sand Phantom": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sand-phantom' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sand Phantom [client id New Sand Phantom].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:09.644Z"
+  },
+  "page-pictures|sandsman-archer|enemy:Sandsman Archer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sandsman-archer' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sandsman Archer [client id New Sandsman Archer].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:10.111Z"
+  },
+  "page-pictures|sandsman-king|enemy:Sandsman King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sandsman-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sandsman King [client id New Sandsman King].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:10.569Z"
+  },
+  "page-pictures|sandsman-sorcerer|enemy:Sandsman Sorcerer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sandsman-sorcerer' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sandsman Sorcerer [client id New Sandsman Sorcerer].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:10.939Z"
+  },
+  "page-pictures|sandstone-seal|item:Sandstone Seal": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sandstone-seal' is joined to 2 client objects with 2 different pictures; the site shows item:Sandstone Seal.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:12.787Z"
+  },
+  "page-pictures|sandstone-titan|enemy:Sandstone Titan": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sandstone-titan' is joined to 4 client objects with 2 different pictures; the site shows enemy:Sandstone Titan [client id Ruins Boss Golem].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:13.301Z"
+  },
+  "page-pictures|scepter-of-devastation|item:Scepter of Devastation": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'scepter-of-devastation' is joined to 2 client objects with 2 different pictures; the site shows item:Scepter of Devastation [client id pD Scepter].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:13.661Z"
+  },
+  "page-pictures|scepter-of-fulmination|item:Scepter of Fulmination": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'scepter-of-fulmination' is joined to 2 client objects with 2 different pictures; the site shows item:Scepter of Fulmination.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:15.780Z"
+  },
+  "page-pictures|scepter-of-rust|item:Scepter of Rust": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'scepter-of-rust' is joined to 2 client objects with 2 different pictures; the site shows item:Scepter of Rust.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:16.305Z"
+  },
+  "page-pictures|scholar-s-seal|item:Scholar's Seal": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'scholar-s-seal' is joined to 2 client objects with 2 different pictures; the site shows item:Scholar's Seal.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:16.666Z"
+  },
+  "page-pictures|scorpion-queen|enemy:Scorpion Queen": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'scorpion-queen' is joined to 2 client objects with 2 different pictures; the site shows enemy:Scorpion Queen [client id New Scorpion Queen].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:17.025Z"
+  },
+  "page-pictures|scout-bee|enemy:Scout Bee": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'scout-bee' is joined to 2 client objects with 2 different pictures; the site shows enemy:Scout Bee [client id New Scout Bee].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:17.395Z"
+  },
+  "page-pictures|seal-of-blasphemous-prayer|item:Seal of Blasphemous Prayer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'seal-of-blasphemous-prayer' is joined to 2 client objects with 2 different pictures; the site shows item:Seal of Blasphemous Prayer.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:20.564Z"
+  },
+  "page-pictures|seal-of-cubic-conundra|item:Seal of Cubic Conundra": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'seal-of-cubic-conundra' is joined to 2 client objects with 2 different pictures; the site shows item:Seal of Cubic Conundra [client id tD Seal].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:20.880Z"
+  },
+  "page-pictures|sealed-crystal-skull|item:Sealed Crystal Skull": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sealed-crystal-skull' is joined to 2 client objects with 2 different pictures; the site shows item:Sealed Crystal Skull.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:21.199Z"
+  },
+  "page-pictures|sentient-monolith|enemy:Sentient Monolith": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sentient-monolith' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sentient Monolith.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:21.501Z"
+  },
+  "page-pictures|sentinel-s-sidearm|item:Sentinel's Sidearm": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sentinel-s-sidearm' is joined to 2 client objects with 2 different pictures; the site shows item:Sentinel's Sidearm.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:21.898Z"
+  },
+  "page-pictures|sewer-brown-slime|enemy:Sewer Brown Slime": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sewer-brown-slime' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sewer Brown Slime [client id DS Brown Slime].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:22.455Z"
+  },
+  "page-pictures|sewer-yellow-slime|enemy:Sewer Yellow Slime": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sewer-yellow-slime' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sewer Yellow Slime [client id DS Yellow Slime].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:22.948Z"
+  },
+  "page-pictures|shade-of-feargus|enemy:Shade of Feargus#LOD Shade of Feargus": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shade-of-feargus' is joined to 7 client objects with 2 different pictures; the site shows enemy:Shade of Feargus#LOD Shade of Feargus [client id LOD Shade of Feargus].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:23.460Z"
+  },
+  "page-pictures|shadow-cube-blaster|enemy:Shadow Cube Blaster#3D Boss Head": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shadow-cube-blaster' is joined to 4 client objects with 4 different pictures; the site shows enemy:Shadow Cube Blaster#3D Boss Head [client id 3D Boss Head].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:25.650Z"
+  },
+  "page-pictures|shadow-cube-defender|enemy:Shadow Cube Defender#3D Boss Defender": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shadow-cube-defender' is joined to 2 client objects with 2 different pictures; the site shows enemy:Shadow Cube Defender#3D Boss Defender [client id 3D Boss Defender].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:26.511Z"
+  },
+  "page-pictures|shadow-serpent-sidearm|item:Shadow Serpent Sidearm": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shadow-serpent-sidearm' is joined to 2 client objects with 2 different pictures; the site shows item:Shadow Serpent Sidearm [client id tD Waki].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:26.900Z"
+  },
+  "page-pictures|shaitan-the-advisor|enemy:Shaitan the Advisor": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shaitan-the-advisor' is joined to 3 client objects with 2 different pictures; the site shows enemy:Shaitan the Advisor [client id md2 Head of Shaitan].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:27.661Z"
+  },
+  "page-pictures|shambling-sludge|enemy:Shambling Sludge": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shambling-sludge' is joined to 2 client objects with 2 different pictures; the site shows enemy:Shambling Sludge [client id New Shambling Sludge].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:28.113Z"
+  },
+  "page-pictures|sharktooth-sigil|item:Sharktooth Sigil": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sharktooth-sigil' is joined to 2 client objects with 2 different pictures; the site shows item:Sharktooth Sigil.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:28.530Z"
+  },
+  "page-pictures|sheath-of-thunderous-rites|item:Sheath of Thunderous Rites": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sheath-of-thunderous-rites' is joined to 2 client objects with 2 different pictures; the site shows item:Sheath of Thunderous Rites [client id Vindication Sheath Proc Attack].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:28.902Z"
+  },
+  "page-pictures|shield-of-flowing-clarity|item:Shield of Flowing Clarity": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shield-of-flowing-clarity' is joined to 2 client objects with 2 different pictures; the site shows item:Shield of Flowing Clarity.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:29.579Z"
+  },
+  "page-pictures|shield-of-ogmur|item:Shield of Ogmur": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shield-of-ogmur' is joined to 2 client objects with 2 different pictures; the site shows item:Shield of Ogmur.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:30.056Z"
+  },
+  "page-pictures|shield-orc-king|enemy:Shield Orc King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shield-orc-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Shield Orc King [client id New Shield Orc Flooder].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:30.440Z"
+  },
+  "page-pictures|shield-orc-queen|enemy:Shield Orc Queen": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shield-orc-queen' is joined to 2 client objects with 2 different pictures; the site shows enemy:Shield Orc Queen [client id New Shield Orc Key].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:30.879Z"
+  },
+  "page-pictures|shield-orc-warrior|enemy:Shield Orc Warrior": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'shield-orc-warrior' is joined to 2 client objects with 2 different pictures; the site shows enemy:Shield Orc Warrior [client id New Shield Orc Shield].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:33.015Z"
+  },
+  "page-pictures|skeletal-centipede|enemy:Skeletal Centipede": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skeletal-centipede' is joined to 6 client objects with 3 different pictures; the site shows enemy:Skeletal Centipede.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:33.968Z"
+  },
+  "page-pictures|skeleton-brawler|enemy:Skeleton Brawler#Tavern Skeleton Brawler": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skeleton-brawler' is joined to 5 client objects with 3 different pictures; the site shows enemy:Skeleton Brawler#Tavern Skeleton Brawler [client id Tavern Skeleton Brawler].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:34.362Z"
+  },
+  "page-pictures|skeleton|enemy:Skeleton#New Low Skeleton": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skeleton' is joined to 3 client objects with 2 different pictures; the site shows enemy:Skeleton#New Low Skeleton [client id New Low Skeleton].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:34.738Z"
+  },
+  "page-pictures|skull-of-corrupted-souls|item:Skull of Corrupted Souls": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skull-of-corrupted-souls' is joined to 2 client objects with 2 different pictures; the site shows item:Skull of Corrupted Souls.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:36.342Z"
+  },
+  "page-pictures|skull-of-endless-torment|item:Skull of Endless Torment": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skull-of-endless-torment' is joined to 3 client objects with 2 different pictures; the site shows item:Skull of Endless Torment.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:36.639Z"
+  },
+  "page-pictures|skull-of-restless-souls|item:Skull of Restless Souls": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skull-of-restless-souls' is joined to 2 client objects with 2 different pictures; the site shows item:Skull of Restless Souls.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:37.047Z"
+  },
+  "page-pictures|skull-shrine|enemy:Skull Shrine#New Skull Shrine": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'skull-shrine' is joined to 2 client objects with 2 different pictures; the site shows enemy:Skull Shrine#New Skull Shrine [client id New Skull Shrine].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:37.738Z"
+  },
+  "page-pictures|sleigh-bell-staff|item:Sleigh Bell Staff": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sleigh-bell-staff' is joined to 2 client objects with 2 different pictures; the site shows item:Sleigh Bell Staff.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:38.125Z"
+  },
+  "page-pictures|sludget|enemy:Sludget": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sludget' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sludget [client id New Sludget].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:38.544Z"
+  },
+  "page-pictures|small-ghost|enemy:Small Ghost": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'small-ghost' is joined to 2 client objects with 2 different pictures; the site shows enemy:Small Ghost [client id New Small Ghost].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:38.905Z"
+  },
+  "page-pictures|snake-brawler|enemy:Snake Brawler#Tavern Snake Brawler": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snake-brawler' is joined to 3 client objects with 3 different pictures; the site shows enemy:Snake Brawler#Tavern Snake Brawler [client id Tavern Snake Brawler].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:39.339Z"
+  },
+  "page-pictures|snake-charmer-pungi|item:Snake Charmer Pungi": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snake-charmer-pungi' is joined to 2 client objects with 2 different pictures; the site shows item:Snake Charmer Pungi.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:39.743Z"
+  },
+  "page-pictures|snake-eye-ring|item:Snake Eye Ring": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snake-eye-ring' is joined to 3 client objects with 3 different pictures; the site shows item:Snake Eye Ring.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:42.425Z"
+  },
+  "page-pictures|snakeskin-armor|item:Snakeskin Armor": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snakeskin-armor' is joined to 2 client objects with 2 different pictures; the site shows item:Snakeskin Armor [client id Snake Skin Armor].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:43.409Z"
+  },
+  "page-pictures|snakeskin-shield|item:Snakeskin Shield": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snakeskin-shield' is joined to 2 client objects with 2 different pictures; the site shows item:Snakeskin Shield [client id Snake Skin Shield].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:43.790Z"
+  },
+  "page-pictures|snomipede|enemy:Snomipede": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snomipede' is joined to 3 client objects with 3 different pictures; the site shows enemy:Snomipede [client id Citadel Snom Polly Head].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:44.112Z"
+  },
+  "page-pictures|snow-bat|enemy:Snow Bat": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snow-bat' is joined to 2 client objects with 2 different pictures; the site shows enemy:Snow Bat [client id Citadel Snow Bat Mama].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:44.482Z"
+  },
+  "page-pictures|snowblind-wand|item:Snowblind Wand": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snowblind-wand' is joined to 2 client objects with 2 different pictures; the site shows item:Snowblind Wand.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:44.792Z"
+  },
+  "page-pictures|snowy-the-frost-god|enemy:Snowy The Frost God": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'snowy-the-frost-god' is joined to 2 client objects with 2 different pictures; the site shows enemy:Snowy The Frost God.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:45.154Z"
+  },
+  "page-pictures|soul-s-guidance|item:Soul's Guidance": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'soul-s-guidance' is joined to 2 client objects with 2 different pictures; the site shows item:Soul's Guidance.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:47.711Z"
+  },
+  "page-pictures|soulful-affection|item:Soulful Affection": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'soulful-affection' is joined to 2 client objects with 2 different pictures; the site shows item:Soulful Affection.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:48.080Z"
+  },
+  "page-pictures|soulless-dwarf|enemy:Soulless Dwarf": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'soulless-dwarf' is joined to 2 client objects with 2 different pictures; the site shows enemy:Soulless Dwarf [client id New Soulless Dwarf].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:48.487Z"
+  },
+  "page-pictures|soulwarden-murcian|enemy:Soulwarden Murcian": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'soulwarden-murcian' is joined to 12 client objects with 3 different pictures; the site shows enemy:Soulwarden Murcian [client id SpecPen Soulwarden Murcian].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:49.022Z"
+  },
+  "page-pictures|spectral-cloth-armor|item:Spectral Cloth Armor": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spectral-cloth-armor' is joined to 2 client objects with 2 different pictures; the site shows item:Spectral Cloth Armor.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:49.540Z"
+  },
+  "page-pictures|spectral-sword|item:Spectral Sword": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spectral-sword' is joined to 2 client objects with 2 different pictures; the site shows item:Spectral Sword [client id Sword of Light].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:49.973Z"
+  },
+  "page-pictures|spider-s-eye-ring|item:Spider's Eye Ring": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spider-s-eye-ring' is joined to 3 client objects with 3 different pictures; the site shows item:Spider's Eye Ring.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:50.335Z"
+  },
+  "page-pictures|spider-silk-bow|item:Spider Silk Bow": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spider-silk-bow' is joined to 2 client objects with 2 different pictures; the site shows item:Spider Silk Bow.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:50.741Z"
+  },
+  "page-pictures|spike|enemy:Spike#Retro shtrs Spike": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spike' is joined to 3 client objects with 2 different pictures; the site shows enemy:Spike#Retro shtrs Spike [client id Retro shtrs Spike].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:51.098Z"
+  },
+  "page-pictures|spirit-dagger|item:Spirit Dagger": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spirit-dagger' is joined to 2 client objects with 2 different pictures; the site shows item:Spirit Dagger.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:51.500Z"
+  },
+  "page-pictures|spirit-staff|item:Spirit Staff": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spirit-staff' is joined to 2 client objects with 2 different pictures; the site shows item:Spirit Staff.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:51.917Z"
+  },
+  "page-pictures|spiteful-scutum|item:Spiteful Scutum": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'spiteful-scutum' is joined to 2 client objects with 2 different pictures; the site shows item:Spiteful Scutum.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:52.280Z"
+  },
+  "page-pictures|sporous-spray-spell|item:Sporous Spray Spell": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sporous-spray-spell' is joined to 2 client objects with 2 different pictures; the site shows item:Sporous Spray Spell.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:52.687Z"
+  },
+  "page-pictures|sprite-brawler|enemy:Sprite Brawler#Tavern Sprite Brawler": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sprite-brawler' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sprite Brawler#Tavern Sprite Brawler [client id Tavern Sprite Brawler].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:53.065Z"
+  },
+  "page-pictures|sprite-child|enemy:Sprite Child": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sprite-child' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sprite Child.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:53.442Z"
+  },
+  "page-pictures|sprite-cube|enemy:Sprite Cube": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sprite-cube' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sprite Cube [client id 3D Cube Sprite].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:53.838Z"
+  },
+  "page-pictures|sprite-god|enemy:Sprite God#Sprite Forest God": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sprite-god' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sprite God#Sprite Forest God [client id Sprite Forest God].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:54.204Z"
+  },
+  "page-pictures|sprite-wand|item:Sprite Wand": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sprite-wand' is joined to 2 client objects with 2 different pictures; the site shows item:Sprite Wand.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:54.585Z"
+  },
+  "page-pictures|square-elemental|enemy:Square Elemental#3D Elemental": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'square-elemental' is joined to 2 client objects with 2 different pictures; the site shows enemy:Square Elemental#3D Elemental [client id 3D Elemental].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:54.967Z"
+  },
+  "page-pictures|squared-sprite|enemy:Squared Sprite": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'squared-sprite' is joined to 2 client objects with 2 different pictures; the site shows enemy:Squared Sprite [client id 3D Sprite].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:55.429Z"
+  },
+  "page-pictures|square|enemy:Square#3D Square": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'square' is joined to 2 client objects with 2 different pictures; the site shows enemy:Square#3D Square [client id 3D Square].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:55.769Z"
+  },
+  "page-pictures|st-abraham-s-wand|item:St. Abraham's Wand": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'st-abraham-s-wand' is joined to 2 client objects with 2 different pictures; the site shows item:St. Abraham's Wand.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:56.170Z"
+  },
+  "page-pictures|staff-of-extreme-prejudice|item:Staff of Extreme Prejudice": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'staff-of-extreme-prejudice' is joined to 3 client objects with 3 different pictures; the site shows item:Staff of Extreme Prejudice.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:56.602Z"
+  },
+  "page-pictures|staff-of-the-crystal-serpent|item:Staff of the Crystal Serpent": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'staff-of-the-crystal-serpent' is joined to 2 client objects with 2 different pictures; the site shows item:Staff of the Crystal Serpent.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:56.973Z"
+  },
+  "page-pictures|staff-of-unholy-sacrifice|item:Staff of Unholy Sacrifice": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'staff-of-unholy-sacrifice' is joined to 2 client objects with 2 different pictures; the site shows item:Staff of Unholy Sacrifice.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:34:57.358Z"
+  },
+  "page-pictures|star-of-enlightenment|item:Star of Enlightenment": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'star-of-enlightenment' is joined to 2 client objects with 2 different pictures; the site shows item:Star of Enlightenment.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:05.547Z"
+  },
+  "page-pictures|statue-of-feargus|enemy:Statue of Feargus": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'statue-of-feargus' is joined to 2 client objects with 2 different pictures; the site shows enemy:Statue of Feargus [client id LOD Feargus Ivory Statue].",
+   "pick": "enemy:Statue of Feargus#LOD Feargus Ivory Support Statue",
+   "page": "statue-of-feargus",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:06.796Z"
+  },
+  "page-pictures|statue-of-limoz|enemy:Statue of Limoz": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'statue-of-limoz' is joined to 2 client objects with 2 different pictures; the site shows enemy:Statue of Limoz [client id LOD Limoz Ivory Statue].",
+   "pick": "enemy:Statue of Limoz#LOD Limoz Ivory Support Statue",
+   "page": "statue-of-limoz",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:08.612Z"
+  },
+  "page-pictures|statue-of-nikao|enemy:Statue of Nikao": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'statue-of-nikao' is joined to 2 client objects with 2 different pictures; the site shows enemy:Statue of Nikao [client id LOD Nikao Ivory Statue].",
+   "pick": "enemy:Statue of Nikao#LOD Nikao Ivory Support Statue",
+   "page": "statue-of-nikao",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:09.716Z"
+  },
+  "page-pictures|statue-of-pyyr|enemy:Statue of Pyyr": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'statue-of-pyyr' is joined to 2 client objects with 2 different pictures; the site shows enemy:Statue of Pyyr [client id LOD Pyyr Ivory Statue].",
+   "pick": "enemy:Statue of Pyyr#LOD Pyyr Ivory Support Statue",
+   "page": "statue-of-pyyr",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:10.570Z"
+  },
+  "page-pictures|steam-pipe|item:Steam Pipe": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'steam-pipe' is joined to 2 client objects with 2 different pictures; the site shows item:Steam Pipe.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:11.974Z"
+  },
+  "page-pictures|steam-serpent|enemy:Steam Serpent": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'steam-serpent' is joined to 8 client objects with 5 different pictures; the site shows enemy:Steam Serpent [client id KSW Steam Serpent Head].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:13.874Z"
+  },
+  "page-pictures|steel-construct|enemy:Steel Construct#City Steel Bot": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'steel-construct' is joined to 2 client objects with 2 different pictures; the site shows enemy:Steel Construct#City Steel Bot [client id City Steel Bot].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:14.662Z"
+  },
+  "page-pictures|stone-guardian-sword|enemy:Stone Guardian Sword": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'stone-guardian-sword' is joined to 3 client objects with 3 different pictures; the site shows enemy:Stone Guardian Sword [client id Oryx Guardian Sword].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:15.254Z"
+  },
+  "page-pictures|stone-knight|enemy:Stone Knight": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'stone-knight' is joined to 2 client objects with 2 different pictures; the site shows enemy:Stone Knight [client id shtrs Stone Knight].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:15.689Z"
+  },
+  "page-pictures|stone-mage|enemy:Stone Mage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'stone-mage' is joined to 2 client objects with 2 different pictures; the site shows enemy:Stone Mage [client id shtrs Stone Mage].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:16.016Z"
+  },
+  "page-pictures|stone-monolith|enemy:Stone Monolith#shtrs Titanum": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'stone-monolith' is joined to 2 client objects with 2 different pictures; the site shows enemy:Stone Monolith#shtrs Titanum [client id shtrs Titanum].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:16.427Z"
+  },
+  "page-pictures|stone-paladin|enemy:Stone Paladin": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'stone-paladin' is joined to 2 client objects with 2 different pictures; the site shows enemy:Stone Paladin [client id shtrs Stone Paladin].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:16.827Z"
+  },
+  "page-pictures|suit-of-armor|enemy:Suit of Armor": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'suit-of-armor' is joined to 2 client objects with 2 different pictures; the site shows enemy:Suit of Armor.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:17.195Z"
+  },
+  "page-pictures|sulfuric-stone|item:Sulfuric Stone": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sulfuric-stone' is joined to 2 client objects with 2 different pictures; the site shows item:Sulfuric Stone.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:17.539Z"
+  },
+  "page-pictures|sumo-master|enemy:Sumo Master": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sumo-master' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sumo Master [client id New Sumo Master].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:21.183Z"
+  },
+  "page-pictures|sun-s-judgement|item:Sun's Judgement": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sun-s-judgement' is joined to 2 client objects with 2 different pictures; the site shows item:Sun's Judgement.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:21.506Z"
+  },
+  "page-pictures|sunken-treasure|enemy:Sunken Treasure#Sunken Treasure": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sunken-treasure' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sunken Treasure#Sunken Treasure.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:22.842Z"
+  },
+  "page-pictures|superior|item:Superior": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'superior' is joined to 2 client objects with 2 different pictures; the site shows item:Superior.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:23.437Z"
+  },
+  "page-pictures|swarmlord-s-sigil|item:Swarmlord's Sigil": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'swarmlord-s-sigil' is joined to 2 client objects with 2 different pictures; the site shows item:Swarmlord's Sigil.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:23.794Z"
+  },
+  "page-pictures|swarm|enemy:Swarm": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'swarm' is joined to 2 client objects with 2 different pictures; the site shows enemy:Swarm [client id New Swarm].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:24.167Z"
+  },
+  "page-pictures|sword-in-the-stone|enemy:Sword in the Stone?": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sword-in-the-stone' is joined to 2 client objects with 2 different pictures; the site shows enemy:Sword in the Stone? [client id False Sword in the Stone].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:24.544Z"
+  },
+  "page-pictures|sword-of-the-colossus|item:Sword of the Colossus": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'sword-of-the-colossus' is joined to 3 client objects with 3 different pictures; the site shows item:Sword of the Colossus.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:24.912Z"
+  },
+  "page-pictures|tarul-eyes-of-the-cosmos|enemy:Tarul, Eyes of the Cosmos": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'tarul-eyes-of-the-cosmos' is joined to 7 client objects with 7 different pictures; the site shows enemy:Tarul, Eyes of the Cosmos [client id AI Neo Tarul].",
+   "pick": "enemy:Tarul, Eyes of the Cosmos#AI Neo Tarul Mouth",
+   "page": "tarul-eyes-of-the-cosmos",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:34.370Z"
+  },
+  "page-pictures|tawny-warg|enemy:Tawny Warg": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tawny-warg' is joined to 2 client objects with 2 different pictures; the site shows enemy:Tawny Warg [client id New Tawny Warg].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:35.903Z"
+  },
+  "page-pictures|tesseract-fragment|enemy:Tesseract Fragment#3D Fragment": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tesseract-fragment' is joined to 2 client objects with 2 different pictures; the site shows enemy:Tesseract Fragment#3D Fragment [client id 3D Fragment].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:36.528Z"
+  },
+  "page-pictures|tesseract-goddess|enemy:Tesseract Goddess#3D Tesseract Goddess": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tesseract-goddess' is joined to 24 client objects with 11 different pictures; the site shows enemy:Tesseract Goddess#3D Tesseract Goddess [client id 3D Tesseract Goddess].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:36.977Z"
+  },
+  "page-pictures|tezcacoatl-s-tail|item:Tezcacoatl's Tail": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tezcacoatl-s-tail' is joined to 2 client objects with 2 different pictures; the site shows item:Tezcacoatl's Tail.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:37.313Z"
+  },
+  "page-pictures|tezutsu-hanabi|item:Tezutsu Hanabi": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tezutsu-hanabi' is joined to 2 client objects with 2 different pictures; the site shows item:Tezutsu Hanabi.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:37.680Z"
+  },
+  "page-pictures|the-appetizer|enemy:The Appetizer#The Appetizer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-appetizer' is joined to 14 client objects with 9 different pictures; the site shows enemy:The Appetizer#The Appetizer.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:37.999Z"
+  },
+  "page-pictures|the-beekeeper|enemy:The Beekeeper#EH Beekeeper": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-beekeeper' is joined to 9 client objects with 3 different pictures; the site shows enemy:The Beekeeper#EH Beekeeper [client id EH Beekeeper].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:38.350Z"
+  },
+  "page-pictures|the-bridge-sentinel|enemy:The Bridge Sentinel#shtrs Bridge Sentinel": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-bridge-sentinel' is joined to 4 client objects with 3 different pictures; the site shows enemy:The Bridge Sentinel#shtrs Bridge Sentinel [client id shtrs Bridge Sentinel].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:40.600Z"
+  },
+  "page-pictures|the-forgotten-crown|item:The Forgotten Crown": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-forgotten-crown' is joined to 3 client objects with 3 different pictures; the site shows item:The Forgotten Crown.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:40.996Z"
+  },
+  "page-pictures|the-forgotten-king|enemy:The Forgotten King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-forgotten-king' is joined to 14 client objects with 5 different pictures; the site shows enemy:The Forgotten King [client id shtrs The Forgotten King].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:41.364Z"
+  },
+  "page-pictures|the-forgotten-ring|item:The Forgotten Ring": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-forgotten-ring' is joined to 2 client objects with 2 different pictures; the site shows item:The Forgotten Ring.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:41.705Z"
+  },
+  "page-pictures|the-glitch|enemy:The Glitch": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-glitch' is joined to 4 client objects with 3 different pictures; the site shows enemy:The Glitch.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:42.032Z"
+  },
+  "page-pictures|the-keyper|enemy:The Keyper#The Keyper": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-keyper' is joined to 4 client objects with 2 different pictures; the site shows enemy:The Keyper#The Keyper.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:42.582Z"
+  },
+  "page-pictures|the-puppet-master|enemy:The Puppet Master": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-puppet-master' is joined to 4 client objects with 2 different pictures; the site shows enemy:The Puppet Master.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:42.989Z"
+  },
+  "page-pictures|the-right-hook|item:The Right Hook": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-right-hook' is joined to 2 client objects with 2 different pictures; the site shows item:The Right Hook.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:43.356Z"
+  },
+  "page-pictures|the-tavern|portal:The Tavern": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-tavern' is joined to 2 client objects with 2 different pictures; the site shows portal:The Tavern [client id The Tavern Portal].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:43.723Z"
+  },
+  "page-pictures|the-twilight-gemstone|item:The Twilight Gemstone": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-twilight-gemstone' is joined to 3 client objects with 3 different pictures; the site shows item:The Twilight Gemstone.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:44.057Z"
+  },
+  "page-pictures|the-wanderer|enemy:The Wanderer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-wanderer' is joined to 13 client objects with 4 different pictures; the site shows enemy:The Wanderer [client id Wanderer Boss Ultra Easy].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:44.400Z"
+  },
+  "page-pictures|the-white-snake|enemy:The White Snake": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'the-white-snake' is joined to 3 client objects with 3 different pictures; the site shows enemy:The White Snake [client id LNY The White Snake].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:44.823Z"
+  },
+  "page-pictures|thessal-the-mermaid-goddess|enemy:Thessal the Mermaid Goddess#Thessal the Mermaid Goddess": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'thessal-the-mermaid-goddess' is joined to 4 client objects with 2 different pictures; the site shows enemy:Thessal the Mermaid Goddess#Thessal the Mermaid Goddess.",
+   "pick": "enemy:Thessal the Mermaid Goddess#Thessal the Mermaid Goddess Wounded",
+   "page": "thessal-the-mermaid-goddess",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:47.676Z"
+  },
+  "page-pictures|thistleleaf-necklace|item:Thistleleaf Necklace": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'thistleleaf-necklace' is joined to 2 client objects with 2 different pictures; the site shows item:Thistleleaf Necklace.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:48.483Z"
+  },
+  "page-pictures|thousand-shot|item:Thousand Shot": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'thousand-shot' is joined to 2 client objects with 2 different pictures; the site shows item:Thousand Shot.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:49.077Z"
+  },
+  "page-pictures|tipsy-topper|item:Tipsy Topper": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tipsy-topper' is joined to 2 client objects with 2 different pictures; the site shows item:Tipsy Topper.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:49.759Z"
+  },
+  "page-pictures|tlatoani-s-shroud|item:Tlatoani's Shroud": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tlatoani-s-shroud' is joined to 2 client objects with 2 different pictures; the site shows item:Tlatoani's Shroud.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:50.093Z"
+  },
+  "page-pictures|tomb-fire-turret|enemy:Tomb Fire Turret": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'tomb-fire-turret' is joined to 2 client objects with 2 different pictures; the site shows enemy:Tomb Fire Turret.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:58.055Z"
+  },
+  "page-pictures|tomb-frost-turret|enemy:Tomb Frost Turret": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'tomb-frost-turret' is joined to 2 client objects with 2 different pictures; the site shows enemy:Tomb Frost Turret.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:35:59.584Z"
+  },
+  "page-pictures|tomb-thunder-turret|enemy:Tomb Thunder Turret": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'tomb-thunder-turret' is joined to 2 client objects with 2 different pictures; the site shows enemy:Tomb Thunder Turret.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:00.560Z"
+  },
+  "page-pictures|tome-of-holy-protection|item:Tome of Holy Protection": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tome-of-holy-protection' is joined to 2 client objects with 2 different pictures; the site shows item:Tome of Holy Protection.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:01.850Z"
+  },
+  "page-pictures|tome-of-pain|item:Tome of Pain": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tome-of-pain' is joined to 2 client objects with 2 different pictures; the site shows item:Tome of Pain [client id pD Tome].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:02.448Z"
+  },
+  "page-pictures|tome-of-purification|item:Tome of Purification": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tome-of-purification' is joined to 2 client objects with 2 different pictures; the site shows item:Tome of Purification.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:02.965Z"
+  },
+  "page-pictures|tome-of-the-mushroom-tribes|item:Tome of the Mushroom Tribes": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tome-of-the-mushroom-tribes' is joined to 2 client objects with 2 different pictures; the site shows item:Tome of the Mushroom Tribes.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:03.503Z"
+  },
+  "page-pictures|tools-of-the-tarnished|item:Tools of the Tarnished": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tools-of-the-tarnished' is joined to 2 client objects with 2 different pictures; the site shows item:Tools of the Tarnished.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:04.081Z"
+  },
+  "page-pictures|tornado|enemy:Tornado#Eye of the Storm Tornado": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'tornado' is joined to 2 client objects with 2 different pictures; the site shows enemy:Tornado#Eye of the Storm Tornado [client id Eye of the Storm Tornado].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:05.696Z"
+  },
+  "page-pictures|torrential-staff|item:Torrential Staff": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'torrential-staff' is joined to 2 client objects with 2 different pictures; the site shows item:Torrential Staff.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:06.224Z"
+  },
+  "page-pictures|towering-perfection|enemy:Towering Perfection": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'towering-perfection' is joined to 2 client objects with 2 different pictures; the site shows enemy:Towering Perfection.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:06.969Z"
+  },
+  "page-pictures|trap-of-the-vile-spirit|item:Trap of the Vile Spirit": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'trap-of-the-vile-spirit' is joined to 3 client objects with 2 different pictures; the site shows item:Trap of the Vile Spirit.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:07.520Z"
+  },
+  "page-pictures|treasure-pot|enemy:Treasure Pot": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'treasure-pot' is joined to 8 client objects with 2 different pictures; the site shows enemy:Treasure Pot.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:08.066Z"
+  },
+  "page-pictures|trickster-puppet|enemy:Trickster Puppet": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'trickster-puppet' is joined to 4 client objects with 2 different pictures; the site shows enemy:Trickster Puppet.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:08.529Z"
+  },
+  "page-pictures|troll-matriarch|enemy:Troll Matriarch": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'troll-matriarch' is joined to 2 client objects with 2 different pictures; the site shows enemy:Troll Matriarch [client id Haunted Cemetery Boss Troll].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:09.076Z"
+  },
+  "page-pictures|troll-pathfinder|enemy:Troll Pathfinder": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'troll-pathfinder' is joined to 2 client objects with 2 different pictures; the site shows enemy:Troll Pathfinder [client id Haunted Cemetery Gates Large Pathfinder].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:09.520Z"
+  },
+  "page-pictures|turncoat-cape|item:Turncoat Cape": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'turncoat-cape' is joined to 2 client objects with 2 different pictures; the site shows item:Turncoat Cape.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:09.894Z"
+  },
+  "page-pictures|twilight-archmage|enemy:Twilight Archmage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'twilight-archmage' is joined to 4 client objects with 4 different pictures; the site shows enemy:Twilight Archmage [client id shtrs Twilight Archmage].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:10.256Z"
+  },
+  "page-pictures|undead-dwarf-king|enemy:Undead Dwarf King": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'undead-dwarf-king' is joined to 2 client objects with 2 different pictures; the site shows enemy:Undead Dwarf King [client id New Undead Dwarf King].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:10.659Z"
+  },
+  "page-pictures|undead-dwarf-mage|enemy:Undead Dwarf Mage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'undead-dwarf-mage' is joined to 2 client objects with 2 different pictures; the site shows enemy:Undead Dwarf Mage [client id New Undead Dwarf Mage].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:10.970Z"
+  },
+  "page-pictures|undead-dwarf-warrior|enemy:Undead Dwarf Warrior": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'undead-dwarf-warrior' is joined to 2 client objects with 2 different pictures; the site shows enemy:Undead Dwarf Warrior [client id New Undead Dwarf Warrior].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:11.302Z"
+  },
+  "page-pictures|undead-hobbit-archer|enemy:Undead Hobbit Archer": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'undead-hobbit-archer' is joined to 2 client objects with 2 different pictures; the site shows enemy:Undead Hobbit Archer [client id New Undead Hobbit Archer].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:11.712Z"
+  },
+  "page-pictures|undead-hobbit-mage|enemy:Undead Hobbit Mage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'undead-hobbit-mage' is joined to 2 client objects with 2 different pictures; the site shows enemy:Undead Hobbit Mage [client id New Undead Hobbit Mage].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:12.115Z"
+  },
+  "page-pictures|undead-hobbit-rogue|enemy:Undead Hobbit Rogue": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'undead-hobbit-rogue' is joined to 2 client objects with 2 different pictures; the site shows enemy:Undead Hobbit Rogue [client id New Undead Hobbit Rogue].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:12.572Z"
+  },
+  "page-pictures|valentine-s-candy-heart|enemy:Valentine's Candy Heart": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'valentine-s-candy-heart' is joined to 7 client objects with 7 different pictures; the site shows enemy:Valentine's Candy Heart [client id Valentine's Candy Heart Abandoned City].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:12.962Z"
+  },
+  "page-pictures|valor|item:Valor": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'valor' is joined to 2 client objects with 2 different pictures; the site shows item:Valor.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:13.378Z"
+  },
+  "page-pictures|vanguard-s-visage|item:Vanguard's Visage": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vanguard-s-visage' is joined to 2 client objects with 2 different pictures; the site shows item:Vanguard's Visage.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:13.724Z"
+  },
+  "page-pictures|vengeful-spirit|enemy:Vengeful Spirit#New Vengeful Spirit": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vengeful-spirit' is joined to 2 client objects with 2 different pictures; the site shows enemy:Vengeful Spirit#New Vengeful Spirit [client id New Vengeful Spirit].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:14.052Z"
+  },
+  "page-pictures|vengeful-vampire|enemy:Vengeful Vampire": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vengeful-vampire' is joined to 2 client objects with 2 different pictures; the site shows enemy:Vengeful Vampire [client id Haunted Cemetery Graves Small Vampire].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:15.497Z"
+  },
+  "page-pictures|vest-of-abandoned-shadows|item:Vest of Abandoned Shadows": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vest-of-abandoned-shadows' is joined to 2 client objects with 2 different pictures; the site shows item:Vest of Abandoned Shadows.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:15.824Z"
+  },
+  "page-pictures|vesture-of-duality|item:Vesture of Duality": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vesture-of-duality' is joined to 2 client objects with 2 different pictures; the site shows item:Vesture of Duality.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:16.141Z"
+  },
+  "page-pictures|vial-of-soul-extract|item:Vial of Soul Extract": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vial-of-soul-extract' is joined to 2 client objects with 2 different pictures; the site shows item:Vial of Soul Extract [client id SpecPen Upgrade Token].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:16.414Z"
+  },
+  "page-pictures|vision-of-draconis|item:Vision of Draconis": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vision-of-draconis' is joined to 2 client objects with 2 different pictures; the site shows item:Vision of Draconis.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:16.715Z"
+  },
+  "page-pictures|vitamine-buster|item:Vitamine Buster": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'vitamine-buster' is joined to 2 client objects with 2 different pictures; the site shows item:Vitamine Buster.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:17.047Z"
+  },
+  "page-pictures|void-blade|item:Void Blade": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'void-blade' is joined to 2 client objects with 2 different pictures; the site shows item:Void Blade.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:17.391Z"
+  },
+  "page-pictures|volcanic-sheath|item:Volcanic Sheath": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'volcanic-sheath' is joined to 2 client objects with 2 different pictures; the site shows item:Volcanic Sheath.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:17.726Z"
+  },
+  "page-pictures|wakizashi-of-crossing-fires|item:Wakizashi of Crossing Fires": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wakizashi-of-crossing-fires' is joined to 2 client objects with 2 different pictures; the site shows item:Wakizashi of Crossing Fires.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:18.095Z"
+  },
+  "page-pictures|wakizashi-of-eastern-winds|item:Wakizashi of Eastern Winds": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wakizashi-of-eastern-winds' is joined to 2 client objects with 2 different pictures; the site shows item:Wakizashi of Eastern Winds.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:18.413Z"
+  },
+  "page-pictures|waltank|enemy:Waltank": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'waltank' is joined to 2 client objects with 2 different pictures; the site shows enemy:Waltank [client id AI Waltank Head].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:18.743Z"
+  },
+  "page-pictures|waltan|enemy:Waltan": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'waltan' is joined to 2 client objects with 2 different pictures; the site shows enemy:Waltan [client id AI Waltan Head].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:19.107Z"
+  },
+  "page-pictures|wand-of-hidden-knowledge|item:Wand of Hidden Knowledge": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wand-of-hidden-knowledge' is joined to 2 client objects with 2 different pictures; the site shows item:Wand of Hidden Knowledge.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:19.441Z"
+  },
+  "page-pictures|wand-of-the-bulwark|item:Wand of the Bulwark": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wand-of-the-bulwark' is joined to 2 client objects with 2 different pictures; the site shows item:Wand of the Bulwark.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:19.811Z"
+  },
+  "page-pictures|wand-of-the-fallen|item:Wand of the Fallen": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wand-of-the-fallen' is joined to 2 client objects with 2 different pictures; the site shows item:Wand of the Fallen.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:20.201Z"
+  },
+  "page-pictures|wandering-souls-spell|item:Wandering Souls Spell": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wandering-souls-spell' is joined to 2 client objects with 2 different pictures; the site shows item:Wandering Souls Spell.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:20.569Z"
+  },
+  "page-pictures|warlord-wand|item:Warlord Wand": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'warlord-wand' is joined to 2 client objects with 2 different pictures; the site shows item:Warlord Wand.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:20.933Z"
+  },
+  "page-pictures|warmonger|item:Warmonger": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'warmonger' is joined to 2 client objects with 2 different pictures; the site shows item:Warmonger.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:21.283Z"
+  },
+  "page-pictures|warped-ent-ancient|enemy:Warped Ent Ancient": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'warped-ent-ancient' is joined to 3 client objects with 2 different pictures; the site shows enemy:Warped Ent Ancient [client id SulfW Warped Ent].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:21.613Z"
+  },
+  "page-pictures|warped-mantle|item:Warped Mantle": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'warped-mantle' is joined to 2 client objects with 2 different pictures; the site shows item:Warped Mantle.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:21.958Z"
+  },
+  "page-pictures|warrior-bee|enemy:Warrior Bee": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'warrior-bee' is joined to 2 client objects with 2 different pictures; the site shows enemy:Warrior Bee [client id New Warrior Bee].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:22.354Z"
+  },
+  "page-pictures|warrior-wasp|enemy:Warrior Wasp": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'warrior-wasp' is joined to 2 client objects with 2 different pictures; the site shows enemy:Warrior Wasp [client id New Warrior Wasp].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:22.698Z"
+  },
+  "page-pictures|wasp-queen|enemy:Wasp Queen": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wasp-queen' is joined to 2 client objects with 2 different pictures; the site shows enemy:Wasp Queen [client id New Wasp Queen].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:23.030Z"
+  },
+  "page-pictures|water-dragon-silk-robe|item:Water Dragon Silk Robe": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'water-dragon-silk-robe' is joined to 3 client objects with 3 different pictures; the site shows item:Water Dragon Silk Robe.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:23.371Z"
+  },
+  "page-pictures|water-mine|enemy:Water Mine#New Water Mine": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'water-mine' is joined to 4 client objects with 2 different pictures; the site shows enemy:Water Mine#New Water Mine [client id New Water Mine].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:23.714Z"
+  },
+  "page-pictures|wavecrest-concertina|item:Wavecrest Concertina": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wavecrest-concertina' is joined to 2 client objects with 2 different pictures; the site shows item:Wavecrest Concertina.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:26.845Z"
+  },
+  "page-pictures|werepanther|enemy:Werepanther": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'werepanther' is joined to 2 client objects with 2 different pictures; the site shows enemy:Werepanther [client id New Werepanther].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:27.247Z"
+  },
+  "page-pictures|werewolf-cub|enemy:Werewolf Cub": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'werewolf-cub' is joined to 2 client objects with 2 different pictures; the site shows enemy:Werewolf Cub [client id Haunted Cemetery Gates Small Werewolf].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:30.191Z"
+  },
+  "page-pictures|werewolf|enemy:Werewolf": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'werewolf' is joined to 2 client objects with 2 different pictures; the site shows enemy:Werewolf [client id Haunted Cemetery Gates Large Werewolf].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:31.475Z"
+  },
+  "page-pictures|whirlpool|enemy:Whirlpool#New Whirlpool": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'whirlpool' is joined to 3 client objects with 2 different pictures; the site shows enemy:Whirlpool#New Whirlpool [client id New Whirlpool].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:31.906Z"
+  },
+  "page-pictures|white-demon|enemy:White Demon": {
+   "verdict": "error",
+   "note": "",
+   "message": "RealmEye 'white-demon' is joined to 2 client objects with 2 different pictures; the site shows enemy:White Demon.",
+   "pick": "enemy:White Demon#Hell White Demon",
+   "page": "white-demon",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:33.993Z"
+  },
+  "page-pictures|white-dragon-whelp|enemy:White Dragon Whelp": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'white-dragon-whelp' is joined to 2 client objects with 2 different pictures; the site shows enemy:White Dragon Whelp [client id New White Dragon Whelp].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:36.637Z"
+  },
+  "page-pictures|wood-construct|enemy:Wood Construct#City Paper Bot": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wood-construct' is joined to 2 client objects with 2 different pictures; the site shows enemy:Wood Construct#City Paper Bot [client id City Paper Bot].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:37.357Z"
+  },
+  "page-pictures|woodland-robe|item:Woodland Robe": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'woodland-robe' is joined to 2 client objects with 2 different pictures; the site shows item:Woodland Robe.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:37.981Z"
+  },
+  "page-pictures|worker-wasp|enemy:Worker Wasp": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'worker-wasp' is joined to 2 client objects with 2 different pictures; the site shows enemy:Worker Wasp [client id New Worker Wasp].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:43.029Z"
+  },
+  "page-pictures|wretched-rags|item:Wretched Rags": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'wretched-rags' is joined to 2 client objects with 2 different pictures; the site shows item:Wretched Rags.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:43.718Z"
+  },
+  "page-pictures|xolotl-the-lightning-god|enemy:Xolotl the Lightning God": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'xolotl-the-lightning-god' is joined to 2 client objects with 2 different pictures; the site shows enemy:Xolotl the Lightning God.",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:44.491Z"
+  },
+  "page-pictures|zombie-hulk|enemy:Zombie Hulk": {
+   "verdict": "ok",
+   "note": "",
+   "message": "RealmEye 'zombie-hulk' is joined to 3 client objects with 2 different pictures; the site shows enemy:Zombie Hulk [client id Haunted Cemetery Boss Skuld Large Zombie].",
+   "at": "2026-11-16",
+   "time": "2026-11-16T16:36:45.087Z"
+  }
+ }
+}

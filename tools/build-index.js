@@ -1106,17 +1106,29 @@ for (const it of gear) {
    * And a "New ..." object is the one the game plays: the client keeps the
    * creature a rework replaced under the old working id ("Cyclops God") and
    * names its replacement "New Cyclops God". The new one carries the row,
-   * ahead of RealmEye's stated life (the wiki can lag behind a rework); only
-   * a person's pick does not move a row back to an old object either: it
-   * still sends the page there (tools/database/realmeye_archive_import.py).
+   * ahead of RealmEye's stated life (the wiki can lag behind a rework). A
+   * person's pick outranks it, except a pick of the object the New one
+   * replaced.
    */
   // A creature of its own: not a "New ... Spawner", controller or shot object.
+  // Among several New parts, the one with the most life is the creature (a dragon's head, not a body segment).
   const renewed = one => (one.kind === 'portal' || (one.kind === 'enemy' && one.hp !== undefined && !one.spawns))
     && /^new\s/i.test(one.alias || '');
   const described = one => one.kind === 'enemy' && one.hp !== undefined
     && (STATED[one.name] || []).some(([hp, def]) => hp === one.hp && (def === null || one.def === undefined || def === one.def));
-  const pick = here => { const lost = retiredIn(here); return [...here].sort((a, b) => {
-    const score = one => (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0) + (renewed(one) ? 80000 : 0) + (picked(one) ? 60000 : 0)
+  /* A pick of the very object a "New ..." replaced ("Cyclops" beside "New
+     Cyclops") is RealmEye showing the old picture: the New one keeps the row.
+     Any other pick wins (a "Cube Overseer Rework" over a "New Cube Overseer"). */
+  const replacedBy = here => new Set(here.filter(renewed).map(one => one.alias.replace(/^new\s+/i, '').toLowerCase()));
+  /* A hidden declaration (a proc's machinery, an admin-only old copy) never
+     carries the row over a visible one: the row is the door to the thing,
+     and the search and the browse lists skip a hidden row with everything
+     folded into it. Combcutter Kunai's weapon sat under its Proc A helper. */
+  const MACHINERY = new Set(['the machinery behind a proc', 'admin only']);
+  const buried = (one, here) => (one.hidden || []).some(why => MACHINERY.has(why)) && here.some(other => !other.hidden);
+  const pick = here => { const lost = retiredIn(here); const replaced = replacedBy(here); return [...here].sort((a, b) => {
+    const pickWeight = one => (lost.has(one) || replaced.has(String(one.alias || one.name).toLowerCase()) ? 60000 : 200000);
+    const score = one => (buried(one, here) ? -1000000 : 0) + (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0) + (renewed(one) ? 80000 + Math.min(9000, Math.floor((one.hp || 0) / 100)) : 0) + (picked(one) ? pickWeight(one) : 0)
       + (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
       + (!one.hidden ? 1000 : 0) + (!one.spawns ? 500 : 0)
       + (!one.alias ? 100 : 0) + (one.hp !== undefined ? 20 : 0)
