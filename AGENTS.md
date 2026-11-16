@@ -147,6 +147,12 @@ to `tools/validation-review.json`; a pick makes that record carry the page's
 row and receive the page at the next data update, and the validator fails
 until it has. A verdict is asked again when the finding changes.
 
+What's New keeps every update it published: when a scrape brings the next
+update, `tools/diff-client.js` freezes the one it replaces under
+`web/assets/whats-new/archive/<date>/` (`tools/whats-new-archive.js`). A frozen
+update is never rewritten; `tests/whats-new-archive.test.js` fails if one
+changes or disappears.
+
 For an ordinary client update, do not run a recursive/full-site RealmEye crawl.
 Fetch only exact pages justified by new or changed records unless the user
 explicitly requests a full refresh.

@@ -557,8 +557,21 @@ function main() {
 
   const sprites = loadSprites();
   const cut = cutter();
-  fs.rmSync(OUT, { recursive: true, force: true });
+  /*
+   * The update this run replaces is kept aside, not deleted: once the new
+   * one is known it is frozen under archive/ (tools/whats-new-archive.js),
+   * and the updates frozen before it are carried over untouched.
+   */
+  const archive = require('./whats-new-archive');
+  const previous = fs.existsSync(OUT) ? fs.mkdtempSync(path.join(require('os').tmpdir(), 'whats-new-previous-')) : null;
+  if (previous) {
+    fs.cpSync(OUT, previous, { recursive: true });
+    fs.rmSync(OUT, { recursive: true, force: true });
+  }
   fs.mkdirSync(OUT, { recursive: true });
+  if (previous && fs.existsSync(path.join(previous, archive.ARCHIVE))) {
+    fs.cpSync(path.join(previous, archive.ARCHIVE), path.join(OUT, archive.ARCHIVE), { recursive: true });
+  }
 
   const slug = id => id.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
   const seen = new Set();
@@ -720,9 +733,20 @@ function main() {
   // What the page reads of it: the provenance that every data file carries stays in the file.
   const ritual = (({ built, tool, from, ...rest }) => rest)(readJson('ritual.json') || {});
 
+  /* The update replaced by this one goes to the archive, once and for good. */
+  const replaced = previous && fs.existsSync(path.join(previous, 'index.json'))
+    ? JSON.parse(fs.readFileSync(path.join(previous, 'index.json'), 'utf8')) : null;
+  const beforeDate = replaced && replaced.notes && replaced.notes.date;
+  if (beforeDate && beforeDate !== (notes && notes.date)
+    && !fs.existsSync(path.join(OUT, archive.ARCHIVE, beforeDate))) {
+    console.log('  froze the update of ' + beforeDate + ' into ' + path.relative(root, archive.freeze(replaced, previous, OUT)));
+  }
+  if (previous) fs.rmSync(previous, { recursive: true, force: true });
+
   const index = {
     made: new Date().toISOString().slice(0, 10),
     notes,
+    archive: archive.list(OUT),
     upcoming,
     before: buildOf(BEFORE),
     counts: { added: added.length, changed: changed.length, gone: gone.length },
