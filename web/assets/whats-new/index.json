@@ -460,6 +460,13 @@
    }
   }
  },
+ "archive": [
+  {
+   "date": "2026-10-06",
+   "title": "Twilight of the Mad God",
+   "path": "archive/2026-10-06/index.json"
+  }
+ ],
  "upcoming": [],
  "before": "f1f479830bae49808b3d9927e8ad8fa1",
  "counts": {

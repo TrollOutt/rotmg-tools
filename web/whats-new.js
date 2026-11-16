@@ -50,7 +50,9 @@ var WhatsNew = (function () {
     .replace(/\b(HP|MP|ATT|DEF|SPD|DEX|VIT|WIS)\b/g, m => word(m, m))
     .replace(/\b(defen[cs]e|dexterity|vitality|wisdom)\b/gi, m => word(m, WORDS[m.toLowerCase()]));
 
-  let data = null;                       // the update's own index.json
+  let data = null;                       // the update shown: the latest, or one frozen in the archive
+  let live = null;                       // the latest update's own index.json
+  const frozen = new Map();              // date -> a frozen update, once read
   let art = null;                        // bundled data URIs, when standalone
   let ix = null;                         // the Index's records, when it could be read
   let items = [];                        // every thing the update names, as the page draws it
@@ -455,7 +457,8 @@ var WhatsNew = (function () {
   };
   const label = u => u.season ? 'Season ' + u.season + (u.part ? ' · Part ' + u.part : '') : (data.notes && data.notes.title) || "What's New";
   /* The notes of an update: the account of the one the client was read for, or what was written ahead of a client not read yet. */
-  const notesOf = u => u.archived ? data.notes || null : (data.upcoming || []).find(n => n.date === u.from) || null;
+  const notesOf = u => (u.archived && data.notes && data.notes.date === u.from ? data.notes : null)
+    || (data.upcoming || []).find(n => n.date === u.from) || null;
   const titleOf = u => (notesOf(u) && notesOf(u).title) || label(u);
   const pagesFor = u => u.archived ? ['overview', 'summary'].concat(groups.map(g => g[0])) : notesOf(u) ? ['overview', 'summary'] : ['overview'];
   const saidPage = p => p === 'overview' ? 'Overview' : p === 'summary' ? 'Summary' : (GROUPS.find(x => x[0] === p) || [])[1];
@@ -463,8 +466,10 @@ var WhatsNew = (function () {
   const ritualOf = u => ((data.ritual && data.ritual.seasons) || []).find(s => s.season === u.season && (s.part || null) === (u.part || null)) || null;
 
   function setUpdates() {
-    const date = data.notes && data.notes.date;
-    const seasons = (data.crucible || []).map((s, i) => Object.assign({}, s, { latest: i === 0, archived: s.from === date }));
+    const date = live.notes && live.notes.date;
+    // An update is told when it is the latest one read, or one the archive kept (tools/whats-new-archive.js).
+    const kept = new Set((live.archive || []).map(a => a.date));
+    const seasons = (live.crucible || []).map((s, i) => Object.assign({}, s, { latest: i === 0, archived: s.from === date || kept.has(s.from) }));
     // Without the seasons, the one update there is is the one the account tells.
     updates = seasons.length ? seasons : [{ season: 0, from: date || '', to: date || '', stats: [], bonuses: {}, rules: [], latest: true, archived: true }];
     uAt = 0;
@@ -841,9 +846,41 @@ var WhatsNew = (function () {
   /* Another update: the same page when it has one, else the overview. */
   const pick = i => {
     const here = page();
-    uAt = i; pages = pagesFor(upd()); menuOpen = false; story = 0;
-    go(Math.max(0, pages.indexOf(here)));
+    const done = () => {
+      uAt = i; pages = pagesFor(upd()); menuOpen = false; story = 0;
+      go(Math.max(0, pages.indexOf(here)));
+    };
+    // The latest update, and a frozen one already read, switch at once; another is read first.
+    const u = updates[i];
+    if (!wanted(u) || frozen.has(u.from)) { switchTo(u, frozen.get(u.from) || null); done(); return null; }
+    return frozenOf(u.from).then(doc => { switchTo(u, doc); done(); });
   };
+  /* The document an update is told from: the latest one, or its frozen copy, read once. */
+  async function frozenOf(date) {
+    if (frozen.has(date)) return frozen.get(date);
+    const entry = (live.archive || []).find(a => a.date === date);
+    if (!entry) return null;
+    let doc = live.archiveDocs && live.archiveDocs[date];
+    if (!doc) {
+      try {
+        const response = await fetch('assets/whats-new/' + entry.path);
+        doc = response.ok ? await response.json() : null;
+      } catch (error) { doc = null; }
+    }
+    if (doc) frozen.set(date, doc);
+    return doc || null;
+  }
+  /* Whether an update is told from a frozen copy rather than the latest index. */
+  const wanted = u => Boolean(u && u.archived && live.notes && u.from !== live.notes.date);
+  function switchTo(u, doc) {
+    const want = wanted(u) && doc;
+    if (want && data && data !== live && data.notes && data.notes.date === u.from) return;
+    if (!want && data === live) return;
+    // The season list, the rituals and the announcements are always the latest index's own.
+    data = want ? Object.assign({}, doc, { crucible: live.crucible, ritual: live.ritual, upcoming: live.upcoming, archive: live.archive }) : live;
+    build();
+    groups = GROUPS.filter(([g]) => inGroup(g).length);
+  }
 
   /* ---------------- the Index's own card, and the skin to try, in a window of the page ---------------- */
   let trail = [], ask = 0;
@@ -1087,7 +1124,7 @@ var WhatsNew = (function () {
   }
 
   async function show(index, bundledArt) {
-    data = index;
+    data = live = index;
     art = bundledArt || null;
     app = $('newsApp');
     ix = await readIndex();

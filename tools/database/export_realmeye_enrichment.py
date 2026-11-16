@@ -383,6 +383,65 @@ def public_wiki_slugs(con):
     return {slug: next(iter(ids)) for slug, ids in found.items() if len(ids) == 1}
 
 
+def row_carriers(con: sqlite3.Connection):
+    """Index id of a creature folded into another -> the record that carries its row.
+
+    One RealmEye page answers to every client object of its name, and the
+    first declared holds the plain id a page would otherwise resolve to. The
+    Index build chooses which object carries the row (the reworked one, the one
+    RealmEye's stated life matches); a page's relations follow that choice.
+    """
+    found = {}
+    for member, carrier in con.execute(
+        """
+        SELECT member.legacy_index_id, carrier.legacy_index_id
+        FROM browse_group_members link
+        JOIN browse_groups grouped ON grouped.group_uid=link.group_uid
+        JOIN entities member ON member.entity_uid=link.entity_uid
+        JOIN entities carrier ON carrier.entity_uid=grouped.representative_entity_uid
+        WHERE link.is_representative=0 AND member.kind='enemy' AND carrier.kind='enemy'
+          AND member.legacy_index_id IS NOT NULL AND carrier.legacy_index_id IS NOT NULL
+        ORDER BY member.legacy_index_id
+        """
+    ):
+        found[member] = carrier
+    return found
+
+
+STATS_FILE = ROOT / "data/Index/realmeye-stats.json"
+
+
+def described_records(con: sqlite3.Connection, stated=None):
+    """Page title -> the Index ids of the creatures whose client life and defence the page states.
+
+    "Oryx the Mad God 3" is one page among nineteen objects called Oryx the
+    Mad God: the one with the page's 562,500 life is the one it is about.
+    """
+    if stated is None:
+        stated = json.loads(STATS_FILE.read_text(encoding="utf-8")).get("enemies", {}) if STATS_FILE.is_file() else {}
+    wanted = defaultdict(set)
+    for title, pairs in stated.items():
+        for life, defence in pairs:
+            wanted[life].add((title, defence))
+    if not wanted:
+        return {}
+    stats = defaultdict(dict)
+    for legacy, field, value in con.execute(
+        """
+        SELECT entity.legacy_index_id, fact.field_path, fact.value_json
+        FROM facts fact JOIN entities entity ON entity.entity_uid=fact.entity_uid
+        WHERE entity.kind='enemy' AND entity.legacy_index_id IS NOT NULL AND fact.field_path IN ('hp','def')
+        """
+    ):
+        stats[legacy][field] = load_json(value, None)
+    found = defaultdict(set)
+    for legacy, own in stats.items():
+        for title, defence in wanted.get(own.get("hp"), ()):
+            if defence is None or own.get("def") is None or own.get("def") == defence:
+                found[title].add(legacy)
+    return found
+
+
 def runtime_entities(con: sqlite3.Connection):
     """Map semantic entities to navigable Index IDs, merging only high-confidence aliases."""
     runtime = {}
@@ -676,7 +735,28 @@ def export(db: Path, output: Path, served: Path | None):
         if page not in item["pages"]:
             item["pages"].append(page)
 
+    carriers = row_carriers(con)
+    described = described_records(con)
+    page_titles = {}
+    for item in records.values():
+        for page in item["pages"]:
+            page_titles.setdefault(page["slug"], page["title"])
+
     def resolve_page_slug(slug):
+        ids = page_index.get(str(slug or ""), set())
+        # Several creatures of one name: the one whose life the page states.
+        if len(ids) > 1:
+            stated = described.get(page_titles.get(str(slug or "")), set()) & ids
+            if len(stated) == 1:
+                return next(iter(stated))
+            carried = {carriers.get(one, one) for one in stated}
+            if len(carried) == 1 and next(iter(carried)) in ids:
+                return next(iter(carried))
+        found = plain_page_record(slug)
+        carrier = carriers.get(found)
+        return carrier if carrier in ids else found
+
+    def plain_page_record(slug):
         ids = sorted(page_index.get(str(slug or ""), set()))
         if len(ids) == 1:
             return ids[0]

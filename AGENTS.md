@@ -124,6 +124,35 @@ and the fights; `tools/check-index.js` fails if one reaches a tool. RealmEye's
 Testing, Admin and Scrapped pages are not used: they link test copies to live
 pages (Rock Dragon, Lost Halls).
 
+The client gives one display name to several objects (the creature, its
+helpers, a harder copy, a copy a rework retired), and the Index picks which
+one carries the row. `npm run wiki-stats` writes the life and defence each
+RealmEye page states to `data/Index/realmeye-stats.json`; the build lets the
+object matching them carry the row, and the wiki join sends the page there.
+Values shown stay the client's. Cases no name can settle go in
+`tools/reworked.json`.
+
+Which source is believed: the client, always, for what it declares (life,
+defence, tiers, bonuses, shots). RealmEye only where the client says nothing:
+drops, and retired content the client no longer ships. A RealmEye value that
+contradicts the client is never copied; it only hints that a page is joined
+to the wrong client object.
+
+After an update, `npm run validate` compares the Index with RealmEye and the
+client scrape (it ends `npm run scrape`, without failing it). `npm run review`
+opens each finding at http://127.0.0.1:5198/review/: RealmEye's picture on the
+left, the site's card on the right. The person answers one question, by the
+pictures: same thing or not, and if not, which client object it is. Answers go
+to `tools/validation-review.json`; a pick makes that record carry the page's
+row and receive the page at the next data update, and the validator fails
+until it has. A verdict is asked again when the finding changes.
+
+What's New keeps every update it published: when a scrape brings the next
+update, `tools/diff-client.js` freezes the one it replaces under
+`web/assets/whats-new/archive/<date>/` (`tools/whats-new-archive.js`). A frozen
+update is never rewritten; `tests/whats-new-archive.test.js` fails if one
+changes or disappears.
+
 For an ordinary client update, do not run a recursive/full-site RealmEye crawl.
 Fetch only exact pages justified by new or changed records unless the user
 explicitly requests a full refresh.

@@ -35,6 +35,8 @@ const deployCritical = [
   'corpus-record.test.js',
   'fiches-data.test.js',
   'fiches-community.test.js',
+  'whats-new-archive.test.js',
+  'review-server.test.js',
   'fiches-forge.test.js',
   'fetch-status.test.js',
   'home-navigation.test.js',

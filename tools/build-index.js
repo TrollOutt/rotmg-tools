@@ -1055,13 +1055,89 @@ for (const it of gear) {
    * visible, playable creature wins over an invisible helper carrying the
    * same DisplayId. The final terms make the choice deterministic.
    */
-  const pick = here => [...here].sort((a, b) => {
-    const score = one => (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
+  /*
+   * And a creature a dungeon rework replaced never wins over its replacement.
+   * The client keeps both generations of the Third Dimension under the same
+   * names, and the retired one is declared first; tools/reworked.json names
+   * the working-id prefix of each generation. Only where both are present.
+   */
+  const GENERATIONS = require('./reworked.json').generations || [];
+  const retiredIn = here => {
+    const lost = new Set();
+    for (const { retired, current } of GENERATIONS) {
+      const of = (one, prefix) => one.kind === 'enemy' && (one.alias || '').startsWith(prefix);
+      if (!here.some(one => of(one, current))) continue;
+      for (const one of here) if (of(one, retired)) lost.add(one);
+    }
+    return lost;
+  };
+  /*
+   * And the creature RealmEye's page of that name describes wins over its
+   * helpers and copies. data/Index/realmeye-stats.json holds the life and
+   * defence each page states; the object matching them is the one players
+   * call by the name. Only a tie-break: the values shown stay the client's,
+   * and a page matching no object, or every object, changes nothing.
+   */
+  const STATED = (() => {
+    const file = path.join(OUT, 'realmeye-stats.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).enemies || {} : {};
+  })();
+  /*
+   * And the record a person pointed at wins over both: npm run review shows a
+   * RealmEye page beside the site, and "not the same thing, it is this one"
+   * is written to tools/validation-review.json; tools/reworked.json `slugs`
+   * holds the same kind of answer for cases settled by hand.
+   */
+  const PICKED = (() => {
+    const read = file => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {});
+    const verdicts = Object.values(read(path.join(root, 'tools', 'validation-review.json')).verdicts || {});
+    return new Map([                            // record id -> the page said to be about it
+      ...Object.entries(read(path.join(root, 'tools', 'reworked.json')).slugs || {}).map(([page, id]) => [id, page]),
+      ...verdicts.filter(one => one.verdict === 'error' && one.pick && one.page).map(one => [one.pick, one.page])
+    ]);
+  })();
+  /* Only for the row of the page's own name: "5 Leaf Shamrock" is about an
+     object the client calls St Patrick's SHamrock, which must not take the
+     St Patrick's Shamrock row for it. */
+  const slugOf = name => String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Not for an item: the version a calculator offers keeps its row, and the page still goes to the pick.
+  const picked = one => one.kind !== 'item' && PICKED.has(one.id) && slugOf(one.name) === PICKED.get(one.id);
+  /*
+   * And a "New ..." object is the one the game plays: the client keeps the
+   * creature a rework replaced under the old working id ("Cyclops God") and
+   * names its replacement "New Cyclops God". The new one carries the row,
+   * ahead of RealmEye's stated life (the wiki can lag behind a rework). A
+   * person's pick outranks it, except a pick of the object the New one
+   * replaced.
+   */
+  // A creature of its own: not a "New ... Spawner", controller or shot object.
+  // Among several New parts, the one with the most life is the creature (a dragon's head, not a body segment).
+  const renewed = one => (one.kind === 'portal' || (one.kind === 'enemy' && one.hp !== undefined && !one.spawns))
+    && /^new\s/i.test(one.alias || '');
+  const described = one => one.kind === 'enemy' && one.hp !== undefined
+    && (STATED[one.name] || []).some(([hp, def]) => hp === one.hp && (def === null || one.def === undefined || def === one.def));
+  /* A pick of the very object a "New ..." replaced ("Cyclops" beside "New
+     Cyclops") is RealmEye showing the old picture: the New one keeps the row.
+     Any other pick wins (a "Cube Overseer Rework" over a "New Cube Overseer"). */
+  const replacedBy = here => new Set(here.filter(renewed).map(one => one.alias.replace(/^new\s+/i, '').toLowerCase()));
+  /* A hidden declaration (a proc's machinery, an admin-only old copy) never
+     carries the row over a visible one: the row is the door to the thing,
+     and the search and the browse lists skip a hidden row with everything
+     folded into it. Combcutter Kunai's weapon sat under its Proc A helper. */
+  const MACHINERY = new Set(['the machinery behind a proc', 'admin only']);
+  const buried = (one, here) => (one.hidden || []).some(why => MACHINERY.has(why)) && here.some(other => !other.hidden);
+  const pick = here => { const lost = retiredIn(here); const replaced = replacedBy(here); return [...here].sort((a, b) => {
+    const pickWeight = one => (lost.has(one) || replaced.has(String(one.alias || one.name).toLowerCase()) ? 60000 : 200000);
+    const score = one => (buried(one, here) ? -1000000 : 0) + (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0) + (renewed(one) ? 80000 + Math.min(9000, Math.floor((one.hp || 0) / 100)) : 0) + (picked(one) ? pickWeight(one) : 0)
+      + (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
       + (!one.hidden ? 1000 : 0) + (!one.spawns ? 500 : 0)
       + (!one.alias ? 100 : 0) + (one.hp !== undefined ? 20 : 0)
       + ((one.labels || []).includes('BOSS') ? 10 : 0);
-    return score(b) - score(a) || a.id.localeCompare(b.id);
-  })[0];
+    /* Among the replacements the first declared is the creature itself; its
+       decoys and helpers follow it in the file, and an id sorts them first. */
+    return score(b) - score(a) || (lost.size ? here.indexOf(a) - here.indexOf(b) : 0)
+      || a.id.localeCompare(b.id);
+  })[0]; };
   function fold(here, say, why, rule) {
     here = [...new Set(here)].filter(one => one && !one.folded);
     const into = pick(here);

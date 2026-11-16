@@ -65,6 +65,8 @@ if (!BUNDLE || !fs.existsSync(path.join(BUNDLE, 'wiki', 'search.json'))) {
 
 /* ---------------- our records, by the client's own key ---------------- */
 const facts = JSON.parse(fs.readFileSync(INDEX, 'utf8'));
+const REWORKED = require('./reworked.json').pages;
+const held = new Set(facts.records.map(one => one.id));
 
 /*
  * The snapshot files a client object under "document|type in decimal|its id",
@@ -119,7 +121,16 @@ for (const row of search) {
     gone: Boolean(raw.life && raw.life.goneAt) });
   const mine = [];
   for (const match of raw.clientMatches || []) {
-    for (const id of byKey.get(match.key) || []) if (!mine.includes(id)) mine.push(id);
+    for (const id of byKey.get(match.key) || []) {
+      /*
+       * A rework can leave the creature it replaced in the client under the
+       * very name of the page, which is about the one played now. The key
+       * then finds the retired object, and tools/reworked.json says whose
+       * page it is.
+       */
+      const now = held.has(REWORKED[id]) ? REWORKED[id] : id;
+      if (!mine.includes(now)) mine.push(now);
+    }
   }
   if (mine.length) about.set(raw.id, mine);
 }

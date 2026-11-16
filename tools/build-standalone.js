@@ -354,6 +354,17 @@ const newsDir = path.join(web, 'assets', 'whats-new');
 const newsIndex = path.join(newsDir, 'index.json');
 if (fs.existsSync(newsIndex)) {
   whatsNew.index = JSON.parse(fs.readFileSync(newsIndex, 'utf8'));
+  /* And every update the archive kept, with its pictures: a past season is told offline too. */
+  const frozenDocs = {};
+  for (const entry of whatsNew.index.archive || []) {
+    const doc = JSON.parse(fs.readFileSync(path.join(newsDir, entry.path), 'utf8'));
+    frozenDocs[entry.date] = doc;
+    for (const file of require('./whats-new-archive').filesOf(doc)) {
+      const absolute = path.join(newsDir, file);
+      if (fs.existsSync(absolute) && !whatsNew.art[file]) whatsNew.art[file] = 'data:image/png;base64,' + fs.readFileSync(absolute).toString('base64');
+    }
+  }
+  if (Object.keys(frozenDocs).length) whatsNew.index = Object.assign({}, whatsNew.index, { archiveDocs: frozenDocs });
   for (const drawer of Object.values(whatsNew.index.drawers || {})) {
     for (const why of ['added', 'changed']) {
       for (const thing of drawer[why] || []) {

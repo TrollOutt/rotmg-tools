@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import sys
 import uuid
 from collections import defaultdict
 from pathlib import Path
@@ -502,6 +503,64 @@ def exact_title_candidates(name_map, page_type: str, title: str):
     return set()
 
 
+REWORKED_FILE = Path(__file__).resolve().parents[1] / "reworked.json"
+REVIEW_FILE = Path(__file__).resolve().parents[1] / "validation-review.json"
+
+
+def reworked_entities(con: sqlite3.Connection, table=None):
+    """The record a rework retired -> the record that replaced it.
+
+    The Third Dimension's rework left the old treasure room boss in the client
+    as "Masquarerader" and named the new one "The Masquarerader"; RealmEye has
+    one page, "Masquarerader", about the new one. An exact name can only find
+    the retired object, so tools/reworked.json says which record a page belongs
+    to. An entry naming a record the Index no longer holds is reported and
+    left out: there is nothing left to mistake the page for.
+    """
+    if table is None:
+        table = json.loads(REWORKED_FILE.read_text(encoding="utf-8")).get("pages", {})
+    by_legacy = dict(con.execute(
+        "SELECT legacy_index_id,entity_uid FROM entities WHERE legacy_index_id IS NOT NULL"
+    ))
+    found = {}
+    for retired, current in sorted(table.items()):
+        if retired in by_legacy and current in by_legacy:
+            found[by_legacy[retired]] = by_legacy[current]
+        else:
+            print(f"  reworked.json: {retired} -> {current} names a record the Index does not hold; left out",
+                  file=sys.stderr)
+    return found
+
+
+def page_owners(con: sqlite3.Connection, table=None):
+    """RealmEye page slug -> the one record the page is about (tools/reworked.json, `slugs`).
+
+    For a creature the client shows under another display name than the page's
+    title, while another creature holds that title: "Fate" is the client's
+    "Statue of Fate", and an arena statue is called Fate. Each entry was read
+    off the page's stated life and defence. An entry naming a record the Index
+    no longer holds is reported and left out.
+    """
+    if table is None:
+        table = dict(json.loads(REWORKED_FILE.read_text(encoding="utf-8")).get("slugs", {}))
+        # A person's answer in npm run review: "this page is about that record".
+        if REVIEW_FILE.is_file():
+            for one in json.loads(REVIEW_FILE.read_text(encoding="utf-8")).get("verdicts", {}).values():
+                if one.get("verdict") == "error" and one.get("pick") and one.get("page"):
+                    table[one["page"]] = one["pick"]
+    by_legacy = dict(con.execute(
+        "SELECT legacy_index_id,entity_uid FROM entities WHERE legacy_index_id IS NOT NULL"
+    ))
+    found = {}
+    for slug, legacy in sorted(table.items()):
+        if legacy in by_legacy:
+            found[slug] = by_legacy[legacy]
+        else:
+            print(f"  reworked.json: page {slug} -> {legacy} names a record the Index does not hold; left out",
+                  file=sys.stderr)
+    return found
+
+
 def companion_base_slug(slug: str, page_type: str, known_slugs: set[str]):
     if page_type == "biome" and slug.endswith("-enemies"):
         base = slug[:-len("-enemies")]
@@ -622,6 +681,8 @@ def import_realmeye_archive(imp, snapshot_uid: str, archive_path: str | Path):
     name_map = index_name_candidates(imp.con)
     name_map["titles"] = {name_key(row["title"]) for row in pages}
     known_slugs = {row["slug"] for row in pages}
+    reworked = reworked_entities(imp.con)
+    owners = page_owners(imp.con)
 
     for page in pages:
         slug = page["slug"]; url = page["url"]; typ = page["type_guess"] or "other"
@@ -651,6 +712,11 @@ def import_realmeye_archive(imp, snapshot_uid: str, archive_path: str | Path):
             if base_slug and exact_title.lower().endswith(" enemies"):
                 exact_title = exact_title[:-len(" enemies")]
             candidates = exact_title_candidates(name_map, typ, exact_title)
+        # A page about a creature a rework replaced belongs to the one played
+        # now, whichever of the two joins above found the retired object.
+        candidates = {reworked.get(one, one) for one in candidates}
+        if slug in owners:
+            candidates = {owners[slug]}
         entity_uid = None
         if len(candidates) == 1:
             entity_uid = next(iter(candidates)); exact_mapped += 1
