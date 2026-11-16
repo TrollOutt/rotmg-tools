@@ -1,0 +1,64 @@
+# Data cases re-recorded by `npm run corpus:record`. Review this list with the data diff;
+# every line is a case whose frozen value now follows the data.
+
+## fiches-data-corpus.json.gz: 17 data cases (1 modified, 16 moved)
+modified	community digest
+moved	card outputs: item:Eden's Embrace: module mode 2
+moved	card outputs: item:Eden's Embrace: module mode 3
+moved	card outputs: enemy:Archdemon Malphas: module mode 2
+moved	card outputs: enemy:Archdemon Malphas: module mode 3
+moved	card outputs: portal:White Snake Invasion II: module mode 2
+moved	card outputs: portal:White Snake Invasion II: module mode 3
+moved	card outputs: portal:White Snake Invasion III: module mode 2
+moved	card outputs: portal:White Snake Invasion III: module mode 3
+moved	card outputs: item:Eden's Embrace: module mode 2
+moved	card outputs: item:Eden's Embrace: module mode 3
+moved	card outputs: enemy:Archdemon Malphas: module mode 2
+moved	card outputs: enemy:Archdemon Malphas: module mode 3
+moved	card outputs: portal:White Snake Invasion II: module mode 2
+moved	card outputs: portal:White Snake Invasion II: module mode 3
+moved	card outputs: portal:White Snake Invasion III: module mode 2
+moved	card outputs: portal:White Snake Invasion III: module mode 3
+
+## index-families-corpus.json.gz: 41 data cases (41 modified)
+modified	archive=true families: gives
+modified	archive=true families: gave/portal:White Snake Invasion Enemies//
+modified	archive=true families: gave/portal:White Snake Invasion Enemies//ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Rogue/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Rogue/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Archer/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Archer/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Wizard/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Wizard/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Priest/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Priest/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Warrior/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Warrior/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Knight/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Knight/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Paladin/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Paladin/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Assassin/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Assassin/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Necromancer/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Necromancer/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Huntress/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Huntress/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Mystic/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Mystic/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Trickster/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Trickster/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Sorcerer/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Sorcerer/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Ninja/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Ninja/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Samurai/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Samurai/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Bard/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Bard/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Summoner/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Summoner/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Kensei/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Kensei/ring
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Druid/
+modified	archive=true families: gave/portal:White Snake Invasion Enemies/class:Druid/ring
