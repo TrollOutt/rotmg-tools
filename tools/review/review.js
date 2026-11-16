@@ -89,8 +89,11 @@
       if (status === 'done') return s === 'ok' || s === 'error';
       return status === 'all' || s === status;
     });
-    // Already seen: the latest answer first, so going back over a session is reading down the list.
-    if (status !== 'todo') items.sort((a, b) => answeredAt(b).localeCompare(answeredAt(a)));
+    // Already seen: by name, so a thing is found where the alphabet puts it.
+    if (status !== 'todo') {
+      items.sort((a, b) => titleOf(a).localeCompare(titleOf(b), 'fr', { sensitivity: 'base', numeric: true })
+        || answeredAt(b).localeCompare(answeredAt(a)));
+    }
     return items;
   }
 

@@ -1100,11 +1100,23 @@ for (const it of gear) {
      object the client calls St Patrick's SHamrock, which must not take the
      St Patrick's Shamrock row for it. */
   const slugOf = name => String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const picked = one => PICKED.has(one.id) && slugOf(one.name) === PICKED.get(one.id);
+  // Not for an item: the version a calculator offers keeps its row, and the page still goes to the pick.
+  const picked = one => one.kind !== 'item' && PICKED.has(one.id) && slugOf(one.name) === PICKED.get(one.id);
+  /*
+   * And a "New ..." object is the one the game plays: the client keeps the
+   * creature a rework replaced under the old working id ("Cyclops God") and
+   * names its replacement "New Cyclops God". The new one carries the row,
+   * ahead of RealmEye's stated life (the wiki can lag behind a rework); only
+   * a person's pick does not move a row back to an old object either: it
+   * still sends the page there (tools/database/realmeye_archive_import.py).
+   */
+  // A creature of its own: not a "New ... Spawner", controller or shot object.
+  const renewed = one => (one.kind === 'portal' || (one.kind === 'enemy' && one.hp !== undefined && !one.spawns))
+    && /^new\s/i.test(one.alias || '');
   const described = one => one.kind === 'enemy' && one.hp !== undefined
     && (STATED[one.name] || []).some(([hp, def]) => hp === one.hp && (def === null || one.def === undefined || def === one.def));
   const pick = here => { const lost = retiredIn(here); return [...here].sort((a, b) => {
-    const score = one => (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0) + (picked(one) ? 200000 : 0)
+    const score = one => (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0) + (renewed(one) ? 80000 : 0) + (picked(one) ? 60000 : 0)
       + (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
       + (!one.hidden ? 1000 : 0) + (!one.spawns ? 500 : 0)
       + (!one.alias ? 100 : 0) + (one.hp !== undefined ? 20 : 0)

@@ -152,6 +152,11 @@ class Sources:
                 out.append(record)
         return out
 
+    def settled(self, slug, shown):
+        """A person said which record this page is about, and the site shows it: the values are not asked again."""
+        pick = self.picks.get(slug)
+        return bool(pick) and any(pick in (one["id"], self.final(one)["id"]) for one in shown)
+
     def page_records(self, slug, kind):
         return [self.records[rid] for rid in self.page_ids.get(slug, [])
                 if rid in self.records and self.records[rid].get("kind") == kind]
@@ -191,7 +196,7 @@ def check_enemy_stats(src):
     compared = 0
     for slug in sorted(src.page_ids):
         shown = src.shown(slug, "enemy")
-        if not shown:
+        if not shown or src.settled(slug, shown):
             continue
         stated = [enemy_stats(value) for value in src.fact(slug, "HP", "Base HP")]
         stated = [one for one in stated if one[0] is not None]
@@ -244,7 +249,7 @@ def check_enemy_attacks(src):
             continue                      # too little to tell objects apart
         candidates = src.page_records(slug, "enemy")
         shown = src.shown(slug, "enemy")
-        if not candidates or not shown:
+        if not candidates or not shown or src.settled(slug, shown):
             continue
         compared += 1
         # Only what the site shows: a folded helper firing the shots says nothing about the card.
