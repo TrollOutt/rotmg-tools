@@ -1,0 +1,12206 @@
+{
+ "built": "2026-11-16T09:40:34+00:00",
+ "tool": "tools/database/export_realmeye_stats.py",
+ "from": {
+  "kind": "community",
+  "source": "RealmEye",
+  "home": "https://www.realmeye.com/wiki/"
+ },
+ "source": "RealmEye (community), not the client",
+ "enemies": {
+  "3 Leaf Shamrock": [
+   [
+    1600,
+    0
+   ]
+  ],
+  "4 Leaf Shamrock": [
+   [
+    1600,
+    0
+   ]
+  ],
+  "5 Leaf Shamrock": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "A.E.G.I.S.": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Aberrant of Oryx": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Abomination of Oryx": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Abundant Shield": [
+   [
+    6375,
+    20
+   ]
+  ],
+  "Abundant Shield Deux": [
+   [
+    10000,
+    20
+   ]
+  ],
+  "Abyss Idol": [
+   [
+    25000,
+    30
+   ]
+  ],
+  "Abyssal Hydra": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Abyssal Kraken": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Abyssal Siren": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Abyssal Squid": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Acidic Shambler": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Acidic Sludget": [
+   [
+    1600,
+    5
+   ]
+  ],
+  "Acidic Spitter": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Acidus": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Acidus, Natural Disaster": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Administration Turret": [
+   [
+    6500,
+    25
+   ]
+  ],
+  "Adolescent Blue Beehemoth": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Adolescent Green Beehemoth": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Adolescent Red Beehemoth": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Adolescent Yellow Beehemoth": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Adult Basilisk": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Adult White Dragon": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Aerial Warship": [
+   [
+    100000,
+    30
+   ]
+  ],
+  "Aerial Warship Crew": [
+   [
+    6750,
+    20
+   ]
+  ],
+  "Agonized Titan": [
+   [
+    54375,
+    35
+   ]
+  ],
+  "Air Elemental": [
+   [
+    22000,
+    0
+   ]
+  ],
+  "Alchemy Cauldron": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Alien Biff": [
+   [
+    80000,
+    0
+   ]
+  ],
+  "Alien Buster": [
+   [
+    7000,
+    25
+   ]
+  ],
+  "Alien Caster": [
+   [
+    800,
+    10
+   ]
+  ],
+  "Alien Champion": [
+   [
+    2000,
+    25
+   ]
+  ],
+  "Alien Destroyer": [
+   [
+    7000,
+    30
+   ]
+  ],
+  "Alien Elite": [
+   [
+    1400,
+    10
+   ]
+  ],
+  "Alien Leprechaun": [
+   [
+    40000,
+    0
+   ]
+  ],
+  "Alien Mini Satellite": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Alien Mini Tank": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Alien Pod": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Alien Reactor (Adept)": [
+   [
+    25000,
+    25
+   ]
+  ],
+  "Alien Reactor (Veteran)": [
+   [
+    50000,
+    40
+   ]
+  ],
+  "Alien Sage": [
+   [
+    1750,
+    20
+   ]
+  ],
+  "Alien Shadow": [
+   [
+    2200,
+    20
+   ]
+  ],
+  "Alien Soldier": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Alien Spoder": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Alien Tank": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Alien UFO": [
+   [
+    100000,
+    25
+   ]
+  ],
+  "Alluring Blossom": [
+   [
+    50000,
+    60
+   ]
+  ],
+  "Alpha Arcane Fighter": [
+   [
+    34500,
+    34
+   ]
+  ],
+  "Alpha Werewolf": [
+   [
+    15000,
+    35
+   ]
+  ],
+  "Amethyst Bat": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Amethyst Slime": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Ancient Kaiju": [
+   [
+    125000,
+    70
+   ]
+  ],
+  "Ancient Monolith": [
+   [
+    2250,
+    50
+   ]
+  ],
+  "Ancient Spirit": [
+   [
+    1500,
+    5
+   ]
+  ],
+  "Angry Hornet": [
+   [
+    16000,
+    35
+   ]
+  ],
+  "Animal Merchant": [
+   [
+    5000,
+    0
+   ]
+  ],
+  "Animate Sigillaria": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Anti-Spectator": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Apparition": [
+   [
+    450,
+    8
+   ]
+  ],
+  "Aqua Artifact": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Arachna Element (Original)": [
+   [
+    100000,
+    1000
+   ]
+  ],
+  "Arachna the Spider Queen": [
+   [
+    3200,
+    4
+   ]
+  ],
+  "Arachna the Spider Queen (Original)": [
+   [
+    2700,
+    4
+   ]
+  ],
+  "Archbishop Leucoryx": [
+   [
+    300000,
+    60
+   ]
+  ],
+  "Archdemon Malphas": [
+   [
+    20000,
+    20
+   ]
+  ],
+  "Archdemon Malphas Deux": [
+   [
+    30000,
+    20
+   ]
+  ],
+  "Archer Puppet": [
+   [
+    1000,
+    25
+   ]
+  ],
+  "Archmage of Flame": [
+   [
+    6500,
+    45
+   ]
+  ],
+  "Argus": [
+   [
+    33750,
+    25
+   ]
+  ],
+  "Armor Guard": [
+   [
+    900,
+    25
+   ]
+  ],
+  "Armored Squirrel": [
+   [
+    130,
+    5
+   ]
+  ],
+  "Artificial Cube": [
+   [
+    3400,
+    10
+   ]
+  ],
+  "Artificial Cube God": [
+   [
+    3800,
+    30
+   ]
+  ],
+  "Artificial Slop": [
+   [
+    90000,
+    55
+   ]
+  ],
+  "Artificial Sprite Child": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Artificial Sprite God": [
+   [
+    18500,
+    20
+   ]
+  ],
+  "AsiaEast": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "AsiaSouthEast": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "Assassin Puppet": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Assassin of Oryx": [
+   [
+    4000,
+    10
+   ]
+  ],
+  "Astral Archer": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Astral Archer (Big)": [
+   [
+    2800,
+    30
+   ]
+  ],
+  "Astral Beast": [
+   [
+    12500,
+    25
+   ]
+  ],
+  "Astral Guard": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Astral Rift": [
+   [
+    50000,
+    0
+   ]
+  ],
+  "Australia": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "Avalon the Archivist": [
+   [
+    22500,
+    20
+   ]
+  ],
+  "Avatar of the Forgotten King": [
+   [
+    125000,
+    90
+   ]
+  ],
+  "Azure Soul Shard": [
+   [
+    3750,
+    20
+   ]
+  ],
+  "Baby Jelleye": [
+   [
+    2250,
+    10
+   ]
+  ],
+  "Baby Larveye": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Bandit": [
+   [
+    50,
+    1
+   ]
+  ],
+  "Bandit Leader": [
+   [
+    280,
+    2
+   ]
+  ],
+  "Banshee": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Bard Puppet": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Bartholomew the Massive Parrot": [
+   [
+    17500,
+    20
+   ]
+  ],
+  "Basaran": [
+   [
+    33750,
+    25
+   ]
+  ],
+  "Basilisk": [
+   [
+    370,
+    10
+   ]
+  ],
+  "Basilisk Baby": [
+   [
+    200,
+    10
+   ]
+  ],
+  "Beach Bum": [
+   [
+    20000,
+    15
+   ]
+  ],
+  "Beach Spectre": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Beach Towel": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Beached Buccaneer": [
+   [
+    500,
+    2
+   ]
+  ],
+  "Beached Cannon": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Beefy Fairy": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Beer God": [
+   [
+    80000,
+    25
+   ]
+  ],
+  "Beer Slurp": [
+   [
+    10000,
+    25
+   ]
+  ],
+  "Behemoth's Egg": [
+   [
+    120000,
+    100
+   ]
+  ],
+  "Beholder": [
+   [
+    1500,
+    12
+   ]
+  ],
+  "Bella Bud": [
+   [
+    6000,
+    15
+   ]
+  ],
+  "Bella Seed": [
+   [
+    4000,
+    20
+   ]
+  ],
+  "Belladonna": [
+   [
+    65000,
+    60
+   ]
+  ],
+  "Bes": [
+   [
+    48750,
+    50
+   ]
+  ],
+  "Beta Werewolf": [
+   [
+    5500,
+    30
+   ]
+  ],
+  "Biff Egg (Basket)": [
+   [
+    8000,
+    20
+   ]
+  ],
+  "Biff the Buffed Bunny": [
+   [
+    110000,
+    0
+   ]
+  ],
+  "Big Creampuff": [
+   [
+    2300,
+    20
+   ]
+  ],
+  "Big Green Slime": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Big Ladybug": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Big Yeti": [
+   [
+    5000,
+    0
+   ]
+  ],
+  "Bile of Oryx": [
+   [
+    3000,
+    80
+   ]
+  ],
+  "Bilgewater's Booty": [
+   [
+    30000,
+    0
+   ]
+  ],
+  "Bilgewater's Galleon": [
+   [
+    90000,
+    70
+   ]
+  ],
+  "Bird Tribesman": [
+   [
+    26250,
+    40
+   ]
+  ],
+  "Birdman": [
+   [
+    200,
+    7
+   ]
+  ],
+  "Birdman Chief": [
+   [
+    250,
+    11
+   ]
+  ],
+  "Black Bat": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Black Blade Ozuchi": [
+   [
+    130000,
+    30
+   ],
+   [
+    50000,
+    30
+   ]
+  ],
+  "Black Den Spider": [
+   [
+    350,
+    0
+   ]
+  ],
+  "Black Den Spider (Original)": [
+   [
+    350,
+    0
+   ]
+  ],
+  "Black Moon": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Black Planet": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Black Spotted Den Spider": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Black Spotted Den Spider (Original)": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Blacksmith of the Abyss": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Blazing Sprite": [
+   [
+    800,
+    12
+   ]
+  ],
+  "Blighted Bark": [
+   [
+    12000,
+    30
+   ]
+  ],
+  "Blighted Twiglet": [
+   [
+    7500,
+    20
+   ]
+  ],
+  "Blizzard": [
+   [
+    21500,
+    30
+   ]
+  ],
+  "Blizzard Cloud": [
+   [
+    800,
+    15
+   ]
+  ],
+  "Bloated Mummy": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Blob Colony": [
+   [
+    9000,
+    2000
+   ]
+  ],
+  "Blobomb": [
+   [
+    1500,
+    30
+   ]
+  ],
+  "Blood Acolyte": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Blood Archer": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Blood Bomb": [
+   [
+    1500,
+    25
+   ]
+  ],
+  "Blood Hound": [
+   [
+    2300,
+    25
+   ]
+  ],
+  "Blood Ooze": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Blood Slurp": [
+   [
+    3200,
+    25
+   ]
+  ],
+  "Bloodroot Heart": [
+   [
+    130000,
+    20
+   ]
+  ],
+  "Bloodroot Treant": [
+   [
+    3500,
+    15
+   ]
+  ],
+  "Blooming Flower": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Blorgian": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Blorgling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Blorgorm": [
+   [
+    4500,
+    35
+   ]
+  ],
+  "Blue Beehemoth": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Blue Bloom": [
+   [
+    7000,
+    40
+   ]
+  ],
+  "Blue Cnidarian": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Blue Drake": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Blue Flaming Skull": [
+   [
+    750,
+    0
+   ]
+  ],
+  "Blue Floating Pumpkin": [
+   [
+    750,
+    0
+   ]
+  ],
+  "Blue Killer Bee": [
+   [
+    400,
+    25
+   ]
+  ],
+  "Blue Larva": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Blue Nest Colony Guardian": [
+   [
+    400,
+    25
+   ]
+  ],
+  "Blue Satellite": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Blue Soldier Bee": [
+   [
+    5625,
+    20
+   ]
+  ],
+  "Blue Son of Arachna Giant Egg Sac": [
+   [
+    11000,
+    20
+   ]
+  ],
+  "Blue Swarm Masters": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Blue Swarm Minions": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Blue Turtle": [
+   [
+    4200,
+    10
+   ]
+  ],
+  "Blue Zombie": [
+   [
+    415,
+    12
+   ]
+  ],
+  "Blue and Red Onis": [
+   [
+    30000,
+    12
+   ]
+  ],
+  "Bog Child": [
+   [
+    1400,
+    10
+   ]
+  ],
+  "Bog Guardian": [
+   [
+    6000,
+    25
+   ]
+  ],
+  "Bomb Devil": [
+   [
+    10000,
+    25
+   ]
+  ],
+  "Bomb Father": [
+   [
+    15000,
+    25
+   ]
+  ],
+  "Bone Blaster": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Bone Defender": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Bone Overseer": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Bonegrind the Butcher": [
+   [
+    450,
+    0
+   ]
+  ],
+  "Bonegrind the Undead Butcher": [
+   [
+    70000,
+    60
+   ]
+  ],
+  "Book Bomb": [
+   [
+    10000,
+    10
+   ]
+  ],
+  "Bookwyrm": [
+   [
+    2800,
+    20
+   ]
+  ],
+  "Boomerang Turret": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Boulder": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Bow Wielding Host": [
+   [
+    2200,
+    40
+   ]
+  ],
+  "Bradley the Barkeep": [
+   [
+    60000,
+    65
+   ]
+  ],
+  "Bramble Root": [
+   [
+    1800,
+    25
+   ]
+  ],
+  "Bramblethorn Bud": [
+   [
+    8500,
+    40
+   ]
+  ],
+  "Breathtaking White Flower": [
+   [
+    2750,
+    0
+   ]
+  ],
+  "Breathtaking White Flower (Dungeon)": [
+   [
+    2750,
+    0
+   ]
+  ],
+  "Brimstone Wyvern": [
+   [
+    5000,
+    32
+   ]
+  ],
+  "Brown Den Spider": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Brown Den Spider (Original)": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Brown Python": [
+   [
+    200,
+    20
+   ]
+  ],
+  "Brute Warrior of the Abyss": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Brute of Oryx": [
+   [
+    7000,
+    30
+   ]
+  ],
+  "Brute of the Abyss": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Bubblar": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Bubblarion": [
+   [
+    500,
+    15
+   ]
+  ],
+  "Bubblaris": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Build Block": [
+   [
+    12000,
+    60
+   ]
+  ],
+  "Bulbous Perforator": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Burning Bones": [
+   [
+    1000,
+    8
+   ]
+  ],
+  "Butcher": [
+   [
+    30,
+    0
+   ]
+  ],
+  "Cactus": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Calamity Crab": [
+   [
+    32000,
+    40
+   ]
+  ],
+  "Calcium God": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Candy Gnome": [
+   [
+    800,
+    12
+   ]
+  ],
+  "Candy Pumpkin Chest": [
+   [
+    5000,
+    0
+   ]
+  ],
+  "Canopic Jar": [
+   [
+    1,
+    0
+   ]
+  ],
+  "Carnival Clown": [
+   [
+    40000,
+    15
+   ]
+  ],
+  "Carnival Effigy": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Carp Emperor": [
+   [
+    145000,
+    40
+   ]
+  ],
+  "Cattail": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Cave Pirate Brawler": [
+   [
+    20,
+    0
+   ]
+  ],
+  "Cave Pirate Cabin Boy": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Cave Pirate Hunchback": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Cave Pirate Macaw": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Cave Pirate Moll": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Cave Pirate Monkey": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Cave Pirate Parrot": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Cave Pirate Sailor": [
+   [
+    30,
+    0
+   ]
+  ],
+  "Cave Pirate Veteran": [
+   [
+    35,
+    2
+   ]
+  ],
+  "Cavecrawler Bloodsucker": [
+   [
+    1125,
+    15
+   ]
+  ],
+  "Cavecrawler Webslinger": [
+   [
+    1875,
+    15
+   ]
+  ],
+  "Cavern Crystal": [
+   [
+    3750,
+    0
+   ]
+  ],
+  "Celestial Sprite": [
+   [
+    12000,
+    15
+   ]
+  ],
+  "Cell Switch": [
+   [
+    3500,
+    0
+   ]
+  ],
+  "Cerberus": [
+   [
+    2000,
+    32
+   ]
+  ],
+  "Champion of Oryx": [
+   [
+    7500,
+    30
+   ]
+  ],
+  "Chancellor Dammah": [
+   [
+    375000,
+    40
+   ]
+  ],
+  "Chase Element": [
+   [
+    100000,
+    1000
+   ]
+  ],
+  "Chicken": [
+   [
+    1100,
+    35
+   ]
+  ],
+  "Chicken (Easter)": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Chief Beisa": [
+   [
+    150000,
+    60
+   ]
+  ],
+  "Chill Snowman God": [
+   [
+    1850,
+    15
+   ]
+  ],
+  "Chochinobake": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Chocolate Head": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Classic Ghost": [
+   [
+    450,
+    8
+   ]
+  ],
+  "Clax": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Clingstar": [
+   [
+    15000,
+    30
+   ]
+  ],
+  "Clockwork Golem": [
+   [
+    220,
+    3
+   ]
+  ],
+  "Cobalt Wretched Rose": [
+   [
+    1800,
+    15
+   ]
+  ],
+  "Coffin": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Coffin Creature": [
+   [
+    3500,
+    20
+   ]
+  ],
+  "Cold Snowman God": [
+   [
+    1800,
+    15
+   ]
+  ],
+  "Cold Soul": [
+   [
+    90000,
+    30
+   ]
+  ],
+  "Colossal Mantis": [
+   [
+    2500,
+    40
+   ]
+  ],
+  "Commander Calbrik": [
+   [
+    185000,
+    85
+   ]
+  ],
+  "Commander of Oryx": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Commander of the Crusade": [
+   [
+    7500,
+    30
+   ]
+  ],
+  "Commotion Crab": [
+   [
+    12000,
+    40
+   ]
+  ],
+  "Confuse Trap": [
+   [
+    100000,
+    35
+   ]
+  ],
+  "Cool Shrine": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Cool Skull": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Cool Snowman God": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Cooler Skull": [
+   [
+    750,
+    0
+   ]
+  ],
+  "Copper Sentreenel": [
+   [
+    20000,
+    35
+   ]
+  ],
+  "Coral Gift": [
+   [
+    17250,
+    5
+   ]
+  ],
+  "Coral Gift (Original)": [
+   [
+    17250,
+    5
+   ]
+  ],
+  "Corrupt Sprite": [
+   [
+    750,
+    12
+   ]
+  ],
+  "Corrupted Armor": [
+   [
+    10000,
+    20
+   ]
+  ],
+  "Corrupted Bowman": [
+   [
+    1750,
+    30
+   ]
+  ],
+  "Corrupted Bramblethorn": [
+   [
+    115000,
+    45
+   ]
+  ],
+  "Corrupted Caster": [
+   [
+    3750,
+    25
+   ]
+  ],
+  "Corrupted Monk": [
+   [
+    2000,
+    30
+   ]
+  ],
+  "Corrupted Spawn": [
+   [
+    2000,
+    35
+   ]
+  ],
+  "Corrupted Spearman": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Corruption Phantom": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Corruption Phantom Wisp Charger": [
+   [
+    4500,
+    0
+   ]
+  ],
+  "Corruption Phantom Wisp Ravager": [
+   [
+    6750,
+    0
+   ]
+  ],
+  "Corruption Phantom Wisp Stalker": [
+   [
+    3750,
+    0
+   ]
+  ],
+  "Corruption Phantom Wisp Watcher": [
+   [
+    5625,
+    0
+   ]
+  ],
+  "Corsair Crab": [
+   [
+    9000,
+    15
+   ]
+  ],
+  "Cosmic Sprite": [
+   [
+    12000,
+    15
+   ]
+  ],
+  "Crab Sovereign": [
+   [
+    75000,
+    60
+   ]
+  ],
+  "Crackjaw Gregg": [
+   [
+    80000,
+    30
+   ]
+  ],
+  "Crawling Creeper Spider": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Crawling Depths Egg Sac": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Crawling Goliath Spider": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Crawling Green Spider": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Crawling Grey Spider": [
+   [
+    1750,
+    15
+   ]
+  ],
+  "Crawling Grey Spotted Spider": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Crawling Hunter Spider": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Crawling Red Spotted Spider": [
+   [
+    1750,
+    15
+   ]
+  ],
+  "Crawling Spider Hatchling": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Crawling Stalker Spider": [
+   [
+    4000,
+    30
+   ]
+  ],
+  "Crawling Weaver Spider": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Crawling Zombie": [
+   [
+    250,
+    8
+   ]
+  ],
+  "Creepy Beholder": [
+   [
+    1500,
+    12
+   ]
+  ],
+  "Creepy Small Hands": [
+   [
+    940,
+    0
+   ]
+  ],
+  "Creepy Small Heads": [
+   [
+    4500,
+    25
+   ]
+  ],
+  "Creepy Weird Dark Spirit Mental Manifestation": [
+   [
+    5000,
+    1000
+   ]
+  ],
+  "Creepy Weird Dark Spirit Mirror Image Monster": [
+   [
+    11000,
+    22
+   ]
+  ],
+  "Creepy Weird Dark Spirit Mirror Image Monster (Original)": [
+   [
+    3500,
+    0
+   ],
+   [
+    6000,
+    0
+   ]
+  ],
+  "Criminal Monkey": [
+   [
+    8000,
+    15
+   ]
+  ],
+  "Crimson Soul Shard": [
+   [
+    3750,
+    20
+   ]
+  ],
+  "Critter Brood": [
+   [
+    35000,
+    30
+   ]
+  ],
+  "Critter Egg": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Crusade Explorer": [
+   [
+    2440,
+    20
+   ]
+  ],
+  "Crusade Shipwright": [
+   [
+    2810,
+    25
+   ]
+  ],
+  "Crusade Soldier": [
+   [
+    3190,
+    30
+   ]
+  ],
+  "Crusader Skeleton": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Crusher Abomination": [
+   [
+    4000,
+    40
+   ]
+  ],
+  "Cryo Warlock": [
+   [
+    12000,
+    45
+   ]
+  ],
+  "Crystal Entity": [
+   [
+    120000,
+    50
+   ]
+  ],
+  "Crystal Prisoner": [
+   [
+    28000,
+    25
+   ]
+  ],
+  "Crystal Prisoner Clone": [
+   [
+    15000,
+    12
+   ]
+  ],
+  "Crystal Prisoner Steed": [
+   [
+    6000,
+    11
+   ]
+  ],
+  "Crystal Tower": [
+   [
+    50000,
+    30
+   ]
+  ],
+  "Crystal Worm Rudolph": [
+   [
+    75000,
+    40
+   ]
+  ],
+  "Crystallised Boomer": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Crystallised Charger": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Crystallised Crawler": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Crystallised Cyclops": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Crystallised Fish": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Crystallised Lizard": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Crystallised Monstrosity": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Crystallised Scorpion": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Crystallised Shrieker": [
+   [
+    6000,
+    80
+   ]
+  ],
+  "Crystallised Watcher": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Cube Blaster": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Cube Constructor": [
+   [
+    10000,
+    80
+   ]
+  ],
+  "Cube Defender": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Cube Deity": [
+   [
+    125000,
+    30
+   ]
+  ],
+  "Cube God": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Cube Overseer": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Cubed Brain": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Cubic Cleric": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Cubic Core": [
+   [
+    6000,
+    50
+   ]
+  ],
+  "Cubic Frame (Enemy)": [
+   [
+    5000,
+    45
+   ]
+  ],
+  "Cubic Satellite": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Cubic Soldier": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Cuboid Matriarch": [
+   [
+    4000,
+    0
+   ]
+  ],
+  "Cuboid Paladin": [
+   [
+    1200,
+    20
+   ]
+  ],
+  "Cuboid Paladin (Big)": [
+   [
+    1600,
+    25
+   ]
+  ],
+  "Cuboid Queen": [
+   [
+    4400,
+    5
+   ]
+  ],
+  "Cuboid Rogue": [
+   [
+    900,
+    50
+   ]
+  ],
+  "Cuboid Rogue (Big)": [
+   [
+    1100,
+    60
+   ]
+  ],
+  "Cuboid Trickster": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Cuboid Trickster (Big)": [
+   [
+    1200,
+    25
+   ]
+  ],
+  "Cuboid Trickster Decoy": [
+   [
+    200,
+    20
+   ]
+  ],
+  "Cuboid Trickster Decoy (Big)": [
+   [
+    350,
+    25
+   ]
+  ],
+  "Cubyte": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Cupcake": [
+   [
+    9750,
+    20
+   ]
+  ],
+  "Cursed Blast": [
+   [
+    10000,
+    30
+   ]
+  ],
+  "Cursed Fruit": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Cursed Grave": [
+   [
+    8000,
+    0
+   ]
+  ],
+  "Cyclops": [
+   [
+    150,
+    10
+   ]
+  ],
+  "Cyclops God": [
+   [
+    4500,
+    8
+   ]
+  ],
+  "Cyclops King": [
+   [
+    350,
+    10
+   ]
+  ],
+  "Cyclops Noble": [
+   [
+    310,
+    10
+   ]
+  ],
+  "Cyclops Prince": [
+   [
+    320,
+    20
+   ]
+  ],
+  "Cyclops Warrior": [
+   [
+    300,
+    20
+   ]
+  ],
+  "Daeva Prison": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Dagger Wielding Host": [
+   [
+    2200,
+    40
+   ]
+  ],
+  "Daichi the Fallen": [
+   [
+    63750,
+    65
+   ]
+  ],
+  "Dancer Miko": [
+   [
+    180000,
+    0
+   ]
+  ],
+  "Dark Elf Cleric": [
+   [
+    260,
+    0
+   ]
+  ],
+  "Dark Elf Queen": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Dark Elf Royal Guard": [
+   [
+    450,
+    2
+   ]
+  ],
+  "Dark Elf Scout": [
+   [
+    250,
+    2
+   ]
+  ],
+  "Dark Elf Swordsman": [
+   [
+    340,
+    5
+   ]
+  ],
+  "Dark Trap": [
+   [
+    100000,
+    35
+   ]
+  ],
+  "Darkness Golem": [
+   [
+    220,
+    3
+   ]
+  ],
+  "Darq": [
+   [
+    400,
+    12
+   ]
+  ],
+  "Daughter of Limon": [
+   [
+    80000,
+    30
+   ]
+  ],
+  "Davy Jones": [
+   [
+    26250,
+    35
+   ]
+  ],
+  "Daze Trap": [
+   [
+    100000,
+    35
+   ]
+  ],
+  "Dead Medic": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Deadly Mushroom": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Deadwater Admiral": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Deadwater Boatswain": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Deadwater Brawler": [
+   [
+    1300,
+    5
+   ]
+  ],
+  "Deadwater Buccaneer": [
+   [
+    1750,
+    10
+   ]
+  ],
+  "Deadwater Cannoneer": [
+   [
+    4000,
+    30
+   ]
+  ],
+  "Deadwater Captain": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Deadwater Commander": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Deadwater Cook": [
+   [
+    1550,
+    10
+   ]
+  ],
+  "Deadwater Cutthroat": [
+   [
+    1750,
+    10
+   ]
+  ],
+  "Deadwater Docks Macaw": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Deadwater Docks Parrot": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Deadwater Doctor": [
+   [
+    1300,
+    5
+   ]
+  ],
+  "Deadwater Helmsman": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Deadwater Lieutenant": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Deadwater Macaw": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Deadwater Navigator": [
+   [
+    1300,
+    10
+   ]
+  ],
+  "Deadwater Parrot": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Deadwater Raider": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Deadwater Sailor": [
+   [
+    1300,
+    5
+   ]
+  ],
+  "Deadwater Sharpshooter": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Deadwater Shipwright": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Deadwater Swashbuckler": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Deadwater Veteran": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Deadwater Watchman": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Death Knight": [
+   [
+    25000,
+    35
+   ]
+  ],
+  "Death Morel": [
+   [
+    10000,
+    20
+   ]
+  ],
+  "Deathmage": [
+   [
+    900,
+    11
+   ]
+  ],
+  "Decaract": [
+   [
+    18750,
+    0
+   ]
+  ],
+  "Decrepit Alchemist": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Deep Sea Beast": [
+   [
+    10000,
+    20
+   ]
+  ],
+  "Deep Sea Beast (Original)": [
+   [
+    10000,
+    20
+   ]
+  ],
+  "Defiled Filer": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Deholder": [
+   [
+    2000,
+    18
+   ]
+  ],
+  "Deity Blaster": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Deity Defender": [
+   [
+    3500,
+    10
+   ]
+  ],
+  "Deity Overseer": [
+   [
+    6500,
+    20
+   ]
+  ],
+  "Demon": [
+   [
+    250,
+    12
+   ]
+  ],
+  "Demon Brute Brawler": [
+   [
+    15000,
+    50
+   ]
+  ],
+  "Demon Mage Brawler": [
+   [
+    15000,
+    15
+   ]
+  ],
+  "Demon Mage of the Abyss": [
+   [
+    350,
+    30
+   ]
+  ],
+  "Demon Tribesman": [
+   [
+    26250,
+    25
+   ]
+  ],
+  "Demon Warg": [
+   [
+    40,
+    0
+   ]
+  ],
+  "Demon Warrior": [
+   [
+    260,
+    14
+   ]
+  ],
+  "Demon Warrior of the Abyss": [
+   [
+    400,
+    30
+   ]
+  ],
+  "Demon of the Abyss": [
+   [
+    400,
+    30
+   ]
+  ],
+  "Demonic Effigy": [
+   [
+    9000,
+    0
+   ]
+  ],
+  "Derelict Monument": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Desert Scorpion": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Desert Werewolf": [
+   [
+    320,
+    3
+   ]
+  ],
+  "Desire Troll": [
+   [
+    10875,
+    20
+   ]
+  ],
+  "Detest Subject": [
+   [
+    2500,
+    40
+   ]
+  ],
+  "Deyst": [
+   [
+    500,
+    25
+   ]
+  ],
+  "Diamond Ore Realm": [
+   [
+    5000000,
+    0
+   ]
+  ],
+  "Dicey Cube": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Dicey Square": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Dimitus": [
+   [
+    3000,
+    10
+   ]
+  ],
+  "Dirge": [
+   [
+    33750,
+    25
+   ]
+  ],
+  "Disturbing Mind Fog Demon Drizzle": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Divine Soul Snake": [
+   [
+    4000,
+    10
+   ]
+  ],
+  "Divine Spirit Snake": [
+   [
+    500,
+    5
+   ]
+  ],
+  "Djinn": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Doctor Lobotomik": [
+   [
+    100000,
+    30
+   ]
+  ],
+  "Donotsura": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Doomed Consumer": [
+   [
+    15000,
+    10
+   ]
+  ],
+  "Dr Terrible": [
+   [
+    33750,
+    25
+   ]
+  ],
+  "Drac": [
+   [
+    350,
+    10
+   ]
+  ],
+  "Dragon Egg": [
+   [
+    75,
+    0
+   ]
+  ],
+  "Dragon Orbs": [
+   [
+    30000,
+    50
+   ]
+  ],
+  "Dragon's Treasure": [
+   [
+    16000,
+    30
+   ]
+  ],
+  "Drake Baby": [
+   [
+    700,
+    0
+   ]
+  ],
+  "Dreadstump the Pirate King": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Dreadstump the Pirate King (Original)": [
+   [
+    800,
+    3
+   ]
+  ],
+  "Drowned Sailor": [
+   [
+    1000,
+    18
+   ]
+  ],
+  "Druid Puppet": [
+   [
+    1250,
+    20
+   ]
+  ],
+  "Drummer Kaguya": [
+   [
+    180000,
+    0
+   ]
+  ],
+  "Drunk Sailor": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Dungeon Leprechaun": [
+   [
+    25000,
+    25
+   ]
+  ],
+  "Dutchman Spirit": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Dwarf Axebearer": [
+   [
+    80,
+    2
+   ]
+  ],
+  "Dwarf King": [
+   [
+    320,
+    3
+   ]
+  ],
+  "Dwarf Mage": [
+   [
+    80,
+    0
+   ]
+  ],
+  "Dwarf Veteran": [
+   [
+    100,
+    3
+   ]
+  ],
+  "EUEast": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "EUNorth": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "EUNorth2": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "EUSouth": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "EUSouthWest": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "EUWest": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "EUWest2": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "Eagle Sentry": [
+   [
+    4000,
+    35
+   ]
+  ],
+  "Eango": [
+   [
+    500,
+    20
+   ]
+  ],
+  "Earth Elemental": [
+   [
+    20000,
+    50
+   ]
+  ],
+  "Earth Golem": [
+   [
+    220,
+    4
+   ]
+  ],
+  "Earth Smash": [
+   [
+    10,
+    0
+   ]
+  ],
+  "Eashy": [
+   [
+    700,
+    4
+   ]
+  ],
+  "Easily Enraged Bunny": [
+   [
+    40,
+    0
+   ]
+  ],
+  "Easter Egg": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Easter Realm Egg": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Easter Rusher": [
+   [
+    9000,
+    25
+   ]
+  ],
+  "Eati": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Eendi": [
+   [
+    650,
+    10
+   ]
+  ],
+  "Effigy Worshipper": [
+   [
+    5500,
+    15
+   ]
+  ],
+  "Egg Basket": [
+   [
+    25000,
+    0
+   ]
+  ],
+  "Egg Basket (Dungeon)": [
+   [
+    800,
+    0
+   ]
+  ],
+  "Eggs Golem": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Ehoni": [
+   [
+    250,
+    8
+   ]
+  ],
+  "El Dorado": [
+   [
+    90000,
+    65
+   ]
+  ],
+  "Elder Ent Ancient": [
+   [
+    43000,
+    40
+   ]
+  ],
+  "Elder Ent Sapling": [
+   [
+    8000,
+    30
+   ]
+  ],
+  "Elder Sprite Tree": [
+   [
+    16000,
+    20
+   ]
+  ],
+  "Elf Archer": [
+   [
+    22,
+    2
+   ]
+  ],
+  "Elf Mage": [
+   [
+    22,
+    0
+   ]
+  ],
+  "Elf Swordsman": [
+   [
+    26,
+    2
+   ]
+  ],
+  "Elf Wizard": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Elite Skeletal Guard": [
+   [
+    12000,
+    30
+   ]
+  ],
+  "Emerald Bat": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Emerald Ore Realm": [
+   [
+    5000000,
+    0
+   ]
+  ],
+  "Emerald Slime": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Enchanted Turtle": [
+   [
+    1200,
+    30
+   ]
+  ],
+  "Encore Trap": [
+   [
+    30000,
+    50
+   ]
+  ],
+  "Enforcer Bot 3000": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Enlightened Beholder": [
+   [
+    1500,
+    12
+   ]
+  ],
+  "Enraged Blue Killer Bee": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Enraged Bunny": [
+   [
+    130,
+    1
+   ]
+  ],
+  "Enraged Bunny Egg": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Enraged Bunny Spawn": [
+   [
+    600,
+    0
+   ]
+  ],
+  "Enraged Green Killer Bee": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Enraged Yellow Killer Bee": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Ent": [
+   [
+    500,
+    11
+   ]
+  ],
+  "Ent Ancient": [
+   [
+    1200,
+    15
+   ]
+  ],
+  "Ent God": [
+   [
+    1000,
+    18
+   ]
+  ],
+  "Ent Sapling": [
+   [
+    200,
+    3
+   ]
+  ],
+  "Ent Sapling (Christmas)": [
+   [
+    200,
+    3
+   ]
+  ],
+  "Esben the Neurotic": [
+   [
+    135000,
+    40
+   ]
+  ],
+  "Esben the Unwilling": [
+   [
+    45000,
+    20
+   ]
+  ],
+  "Escaped Experiment": [
+   [
+    2750,
+    25
+   ]
+  ],
+  "Eternal Frost Present": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Eternal Phoenix (Easy)": [
+   [
+    30000,
+    25
+   ]
+  ],
+  "Eternal Phoenix (Hard)": [
+   [
+    60000,
+    25
+   ]
+  ],
+  "Eternal Tormentor": [
+   [
+    15000,
+    20
+   ]
+  ],
+  "Ethereal Shrine": [
+   [
+    115000,
+    200
+   ]
+  ],
+  "Event Chest": [
+   [
+    60000,
+    0
+   ]
+  ],
+  "Evergreen Ent": [
+   [
+    1200,
+    15
+   ]
+  ],
+  "Evergreen Sprite": [
+   [
+    750,
+    12
+   ]
+  ],
+  "Evil Chicken": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Evil Chicken God": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Evil Chicken Minion": [
+   [
+    30,
+    0
+   ]
+  ],
+  "Evil Hen": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Evil Spirit": [
+   [
+    1875,
+    5
+   ]
+  ],
+  "Exaltation Banner": [
+   [
+    50000,
+    0
+   ]
+  ],
+  "Experimental Blue Soldier Bee 2.0": [
+   [
+    40000,
+    20
+   ]
+  ],
+  "Experimental Green Soldier Bee 2.0": [
+   [
+    40000,
+    20
+   ]
+  ],
+  "Experimental Red Soldier Bee 2.0": [
+   [
+    40000,
+    20
+   ]
+  ],
+  "Experimental Yellow Soldier Bee 2.0": [
+   [
+    40000,
+    20
+   ]
+  ],
+  "Explosive Barrel": [
+   [
+    800,
+    0
+   ]
+  ],
+  "Eye of the Avatar": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Eye of the Edified": [
+   [
+    1800,
+    6
+   ]
+  ],
+  "Eye of the King": [
+   [
+    10000,
+    30
+   ],
+   [
+    2500,
+    30
+   ]
+  ],
+  "Eye of the Storm": [
+   [
+    72000,
+    60
+   ]
+  ],
+  "F.E.R.A.L.": [
+   [
+    100000,
+    30
+   ]
+  ],
+  "F.E.R.A.L. Tentacle": [
+   [
+    20000,
+    30
+   ]
+  ],
+  "Factory Control Core": [
+   [
+    250000,
+    40
+   ]
+  ],
+  "Factory Tesla Pylon": [
+   [
+    16000,
+    25
+   ]
+  ],
+  "Fairy": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "False Puppet Master": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Fat Angry Bee": [
+   [
+    250,
+    5
+   ]
+  ],
+  "Fat Bee": [
+   [
+    250,
+    5
+   ]
+  ],
+  "Fate": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Feargus Statue": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Feargus the Obsidian Dragon": [
+   [
+    48750,
+    40
+   ]
+  ],
+  "Fiendish Bailiff": [
+   [
+    6000,
+    60
+   ]
+  ],
+  "Fighter Bee": [
+   [
+    140,
+    3
+   ]
+  ],
+  "Fire Adept": [
+   [
+    5500,
+    25
+   ]
+  ],
+  "Fire Blight": [
+   [
+    20000,
+    50
+   ]
+  ],
+  "Fire Cube Overseer": [
+   [
+    1400,
+    20
+   ]
+  ],
+  "Fire Cube Overseer (Big)": [
+   [
+    1550,
+    25
+   ]
+  ],
+  "Fire Demon": [
+   [
+    1690,
+    15
+   ]
+  ],
+  "Fire Elemental": [
+   [
+    20000,
+    20
+   ]
+  ],
+  "Fire Golem": [
+   [
+    220,
+    3
+   ]
+  ],
+  "Fire Mage": [
+   [
+    4500,
+    25
+   ]
+  ],
+  "Fire Portal": [
+   [
+    10000,
+    10
+   ]
+  ],
+  "Fire Python": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Fire Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Fishman": [
+   [
+    2500,
+    40
+   ]
+  ],
+  "Fishman (Fishing)": [
+   [
+    2500,
+    40
+   ]
+  ],
+  "Fishman (Original)": [
+   [
+    2500,
+    40
+   ]
+  ],
+  "Fishman Warrior": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Fishman Warrior (Fishing)": [
+   [
+    10000,
+    52
+   ]
+  ],
+  "Fishman Warrior (Original)": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Flamer": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Flamer King": [
+   [
+    1000,
+    7
+   ]
+  ],
+  "Flayer": [
+   [
+    140,
+    8
+   ]
+  ],
+  "Flayer God": [
+   [
+    1400,
+    12
+   ]
+  ],
+  "Flayer Veteran": [
+   [
+    280,
+    0
+   ]
+  ],
+  "Flesh Golem": [
+   [
+    17500,
+    30
+   ]
+  ],
+  "Flesh Satellite": [
+   [
+    6000,
+    45
+   ]
+  ],
+  "Fluffy Bunny God": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Flying Behemoth": [
+   [
+    120000,
+    60
+   ]
+  ],
+  "Flying Behemoth Tornado": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Flying Brain": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Flying Seahorse": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Flying Vampire": [
+   [
+    1500,
+    16
+   ]
+  ],
+  "Follower of Argus": [
+   [
+    3750,
+    30
+   ]
+  ],
+  "Follower of Basaran": [
+   [
+    3000,
+    25
+   ]
+  ],
+  "Follower of Dirge": [
+   [
+    2440,
+    20
+   ]
+  ],
+  "Follower of Gaius": [
+   [
+    3000,
+    25
+   ]
+  ],
+  "Follower of Malus": [
+   [
+    3000,
+    25
+   ]
+  ],
+  "Follower of Phaedra": [
+   [
+    2440,
+    20
+   ]
+  ],
+  "Follower of Valus": [
+   [
+    3750,
+    30
+   ]
+  ],
+  "Forax Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Forest Goblin": [
+   [
+    90,
+    0
+   ]
+  ],
+  "Forest Goblin Bruiser": [
+   [
+    3000,
+    5
+   ]
+  ],
+  "Forest Goblin Mage": [
+   [
+    60,
+    1
+   ]
+  ],
+  "Forest Goblin Necromancer": [
+   [
+    1500,
+    3
+   ]
+  ],
+  "Forest Nymph": [
+   [
+    120,
+    1
+   ]
+  ],
+  "Forest Troll": [
+   [
+    3000,
+    16
+   ]
+  ],
+  "Forgotten Ice Mage": [
+   [
+    9000,
+    25
+   ]
+  ],
+  "Forgotten Soul": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Foul Flower": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Fountain Spirit": [
+   [
+    11250,
+    20
+   ]
+  ],
+  "Fraudulent Tiger": [
+   [
+    12000,
+    30
+   ]
+  ],
+  "Freaky Cursed Brain Fog Entity": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Frimar": [
+   [
+    63750,
+    50
+   ]
+  ],
+  "Frost Dragon": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Frost Snowman God": [
+   [
+    1750,
+    15
+   ]
+  ],
+  "Frostaract Eye": [
+   [
+    750,
+    0
+   ]
+  ],
+  "Frosted Howler": [
+   [
+    1600,
+    12
+   ]
+  ],
+  "Frosted Ogre": [
+   [
+    1800,
+    12
+   ]
+  ],
+  "Frosted Troll": [
+   [
+    1700,
+    12
+   ]
+  ],
+  "Frozen Ship": [
+   [
+    60000,
+    40
+   ]
+  ],
+  "Furious Lasher": [
+   [
+    2625,
+    20
+   ]
+  ],
+  "Fuzzy Bunny God": [
+   [
+    1800,
+    15
+   ]
+  ],
+  "Gaius": [
+   [
+    33750,
+    25
+   ]
+  ],
+  "Galleon Admiral": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Galleon Parrot": [
+   [
+    7500,
+    40
+   ]
+  ],
+  "Gamma Werewolf": [
+   [
+    3000,
+    10
+   ]
+  ],
+  "Garden Gravestone": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Geb": [
+   [
+    41250,
+    30
+   ]
+  ],
+  "Genie": [
+   [
+    6750,
+    20
+   ]
+  ],
+  "Gharr": [
+   [
+    250,
+    5
+   ]
+  ],
+  "Ghastly Ethereal Screaming Skull Paradox": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Ghastly Nun": [
+   [
+    1500,
+    12
+   ]
+  ],
+  "Ghost Bride": [
+   [
+    7500,
+    10
+   ]
+  ],
+  "Ghost God": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Ghost King": [
+   [
+    5000,
+    7
+   ]
+  ],
+  "Ghost Lantern": [
+   [
+    3500,
+    2
+   ],
+   [
+    600,
+    5000
+   ]
+  ],
+  "Ghost Mage of Septavius": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Ghost Master": [
+   [
+    100000,
+    2
+   ]
+  ],
+  "Ghost Mine": [
+   [
+    1000,
+    30
+   ]
+  ],
+  "Ghost Pirate Sr": [
+   [
+    1700,
+    15
+   ]
+  ],
+  "Ghost Rogue of Septavius": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Ghost Ship": [
+   [
+    60000,
+    40
+   ]
+  ],
+  "Ghost Ship Rat": [
+   [
+    650,
+    5
+   ]
+  ],
+  "Ghost Warrior of Septavius": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Ghost of Roger": [
+   [
+    2300,
+    50
+   ]
+  ],
+  "Ghost of Skuld": [
+   [
+    45000,
+    16
+   ]
+  ],
+  "Ghost of Turkeys Past": [
+   [
+    10000,
+    50
+   ]
+  ],
+  "Ghoul": [
+   [
+    2000,
+    35
+   ]
+  ],
+  "Giant Antlion": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Giant Crab": [
+   [
+    300,
+    2
+   ]
+  ],
+  "Giant Critter": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Giant Oryx Chicken": [
+   [
+    80000,
+    45
+   ]
+  ],
+  "Giant Rat": [
+   [
+    7500,
+    30
+   ]
+  ],
+  "Giant Squid": [
+   [
+    6000,
+    40
+   ]
+  ],
+  "Giant Squid (Original)": [
+   [
+    6000,
+    40
+   ]
+  ],
+  "Giga Iron Titan": [
+   [
+    8000,
+    30
+   ]
+  ],
+  "Giga Silver Walker": [
+   [
+    12000,
+    30
+   ]
+  ],
+  "Giga Steel Reaper": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Gigacorn": [
+   [
+    12000,
+    35
+   ]
+  ],
+  "Gilded Fruit": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Glacial Spirit": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Glacier Archmage": [
+   [
+    6500,
+    45
+   ]
+  ],
+  "Glacius": [
+   [
+    56250,
+    30
+   ]
+  ],
+  "Glory": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Glowing Egg": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Gobble Blaster": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Gobble Defender": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Gobble God": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Gobble Overseer": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Goblin Brute": [
+   [
+    1750,
+    12
+   ]
+  ],
+  "Goblin Fire": [
+   [
+    4500,
+    0
+   ]
+  ],
+  "Goblin Knight": [
+   [
+    2450,
+    18
+   ]
+  ],
+  "Goblin Mage": [
+   [
+    280,
+    0
+   ]
+  ],
+  "Goblin Patriarch": [
+   [
+    65000,
+    25
+   ]
+  ],
+  "Goblin Peon": [
+   [
+    900,
+    10
+   ]
+  ],
+  "Goblin Rogue": [
+   [
+    25,
+    0
+   ]
+  ],
+  "Goblin Sorcerer": [
+   [
+    800,
+    8
+   ]
+  ],
+  "Goblin Villager": [
+   [
+    4500,
+    15
+   ]
+  ],
+  "Goblin Warlock": [
+   [
+    800,
+    8
+   ]
+  ],
+  "Goblin Warrior": [
+   [
+    25,
+    2
+   ]
+  ],
+  "God Cube": [
+   [
+    18000,
+    20
+   ]
+  ],
+  "Gold Cnidarian": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Gold Planet": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Golden Oryx Effigy": [
+   [
+    18750,
+    30
+   ]
+  ],
+  "Golden Oryx Effigy Deux": [
+   [
+    30000,
+    30
+   ]
+  ],
+  "Golden Rat": [
+   [
+    5500,
+    10
+   ]
+  ],
+  "Golden Sphinx": [
+   [
+    40000,
+    40
+   ]
+  ],
+  "Golden Sphinx Mk II": [
+   [
+    40000,
+    40
+   ]
+  ],
+  "Golem of Anger": [
+   [
+    2440,
+    50
+   ]
+  ],
+  "Golem of Fear": [
+   [
+    3000,
+    50
+   ]
+  ],
+  "Golem of Sorrow": [
+   [
+    2625,
+    50
+   ]
+  ],
+  "Gorgeous Yellow Flower": [
+   [
+    2750,
+    0
+   ]
+  ],
+  "Gorgeous Yellow Flower (Dungeon)": [
+   [
+    2750,
+    0
+   ]
+  ],
+  "Grand Dragonfly": [
+   [
+    6500,
+    10
+   ]
+  ],
+  "Grand Sphinx": [
+   [
+    65000,
+    25
+   ]
+  ],
+  "Grave Caretaker": [
+   [
+    25000,
+    15
+   ]
+  ],
+  "Grave Digger": [
+   [
+    3500,
+    25
+   ]
+  ],
+  "Grave Spider": [
+   [
+    600,
+    8
+   ]
+  ],
+  "Graverobber Lookout": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Gray Blob": [
+   [
+    25,
+    0
+   ]
+  ],
+  "Gray Satellite": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Great Coil Snake": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Great Lizard": [
+   [
+    500,
+    4
+   ]
+  ],
+  "Great Owl": [
+   [
+    9000,
+    15
+   ]
+  ],
+  "Great Snake Egg": [
+   [
+    50,
+    20
+   ]
+  ],
+  "Great Temple Snake": [
+   [
+    100,
+    5
+   ]
+  ],
+  "Greater Nature Sprite": [
+   [
+    500,
+    7
+   ]
+  ],
+  "Greater Nature Sprite (Christmas)": [
+   [
+    3600,
+    7
+   ]
+  ],
+  "Greater Pit Snake": [
+   [
+    500,
+    10
+   ]
+  ],
+  "Greater Pit Viper": [
+   [
+    500,
+    10
+   ]
+  ],
+  "Greater Void Shade": [
+   [
+    9000,
+    30
+   ]
+  ],
+  "Greedy Crab": [
+   [
+    80,
+    0
+   ]
+  ],
+  "Green Cnidarian": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Green Den Spider Hatchling": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Green Den Spider Hatchling (Original)": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Green Drake": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Green Fingers": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Green Floating Pumpkin": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Green Gelatinous Cube": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Green Gelatinous Sphere": [
+   [
+    70,
+    0
+   ]
+  ],
+  "Green Killer Bee": [
+   [
+    600,
+    25
+   ]
+  ],
+  "Green Larva": [
+   [
+    400,
+    5
+   ]
+  ],
+  "Green Potion": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Green Satellite": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Green Soldier Bee": [
+   [
+    6000,
+    60
+   ]
+  ],
+  "Green Son of Arachna Giant Egg Sac": [
+   [
+    11000,
+    20
+   ]
+  ],
+  "Grey Sea Slurp": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Grey Sea Slurp (Original)": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Griefkeeper Zole": [
+   [
+    150000,
+    40
+   ]
+  ],
+  "Grinch": [
+   [
+    45000,
+    0
+   ]
+  ],
+  "Grizzled Armored Squirrel": [
+   [
+    4000,
+    0
+   ]
+  ],
+  "Grotto Bat": [
+   [
+    2060,
+    10
+   ]
+  ],
+  "Grotto Blob": [
+   [
+    8430,
+    30
+   ]
+  ],
+  "Grotto Rat": [
+   [
+    2060,
+    10
+   ]
+  ],
+  "Grotto Slime": [
+   [
+    2625,
+    30
+   ]
+  ],
+  "Groundskeeper Gretch": [
+   [
+    150000,
+    20
+   ]
+  ],
+  "Guard Captain": [
+   [
+    100,
+    8
+   ]
+  ],
+  "Guardian of the Lost Lands": [
+   [
+    8000,
+    10
+   ]
+  ],
+  "Gulpord the Slime God": [
+   [
+    20000,
+    null
+   ],
+   [
+    6000,
+    null
+   ],
+   [
+    4000,
+    null
+   ]
+  ],
+  "Gumball Machine": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Hadopelagic Jellyfish": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Hadopelagic Submersible": [
+   [
+    9000,
+    40
+   ]
+  ],
+  "Halloween Candy": [
+   [
+    800,
+    0
+   ]
+  ],
+  "Halloween Candy (Dungeon)": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Hand of Shaitan": [
+   [
+    7875,
+    70
+   ]
+  ],
+  "Hand of the Helpless": [
+   [
+    3900,
+    35
+   ]
+  ],
+  "Hard Candy": [
+   [
+    1300,
+    18
+   ]
+  ],
+  "Harrowed Fiend": [
+   [
+    750,
+    24
+   ]
+  ],
+  "Hat God": [
+   [
+    55000,
+    35
+   ]
+  ],
+  "Hat God Tentacle": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Hat Minion": [
+   [
+    2200,
+    0
+   ]
+  ],
+  "Haunted Armor": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Haunted Pumpkin": [
+   [
+    2500,
+    5
+   ]
+  ],
+  "Haunted Spirit": [
+   [
+    400,
+    18
+   ]
+  ],
+  "Haunted Treasure": [
+   [
+    5000,
+    8
+   ]
+  ],
+  "Haunted Weird Brain Mist Entity": [
+   [
+    1000,
+    1000
+   ]
+  ],
+  "Haunting Spectre": [
+   [
+    450,
+    8
+   ]
+  ],
+  "Hazardous Sprite": [
+   [
+    800,
+    12
+   ]
+  ],
+  "Head of Security": [
+   [
+    12000,
+    40
+   ]
+  ],
+  "Headless Horseman": [
+   [
+    7500,
+    20
+   ]
+  ],
+  "Headless Specter": [
+   [
+    4205,
+    35
+   ]
+  ],
+  "Heart of the Wetlands": [
+   [
+    100000,
+    30
+   ]
+  ],
+  "Heartbat": [
+   [
+    15000,
+    25
+   ]
+  ],
+  "Hellhound": [
+   [
+    600,
+    30
+   ]
+  ],
+  "Helmet Head": [
+   [
+    350,
+    30
+   ]
+  ],
+  "Helpless Souls": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Henchman of Oryx": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Hermit God": [
+   [
+    55000,
+    35
+   ]
+  ],
+  "Hermit God Tentacle": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Hermit Minion": [
+   [
+    2200,
+    0
+   ]
+  ],
+  "Heroic Archdemon Malphas": [
+   [
+    37500,
+    40
+   ]
+  ],
+  "Heroic Ghost Mage of Septavius": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Heroic Ghost Rogue of Septavius": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Heroic Ghost Warrior of Septavius": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Heroic Lair Big Black Slime": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Heroic Lair Big Brown Slime": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Heroic Lair Blue Spectre": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Heroic Lair Brown Bat": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Heroic Lair Construct Giant": [
+   [
+    700,
+    20
+   ]
+  ],
+  "Heroic Lair Construct Titan": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Heroic Lair Ghost Archer": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Heroic Lair Ghost Bat": [
+   [
+    200,
+    30
+   ]
+  ],
+  "Heroic Lair Ghost Knight": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Heroic Lair Ghost Mage": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Heroic Lair Ghost Paladin": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Heroic Lair Ghost Rogue": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Heroic Lair Ghost Warrior": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Heroic Lair Grey Spectre": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Heroic Lair Little Black Slime": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Heroic Lair Little Brown Slime": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Heroic Lair Medium Black Slime": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Heroic Lair Mummy": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Heroic Lair Mummy King": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Heroic Lair Mummy Pharaoh": [
+   [
+    600,
+    0
+   ]
+  ],
+  "Heroic Lair Reaper": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Heroic Lair Skeleton": [
+   [
+    350,
+    0
+   ]
+  ],
+  "Heroic Lair Skeleton King": [
+   [
+    600,
+    0
+   ]
+  ],
+  "Heroic Lair Skeleton Mage": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Heroic Lair Skeleton Swordsman": [
+   [
+    400,
+    2
+   ]
+  ],
+  "Heroic Lair Skeleton Veteran": [
+   [
+    450,
+    4
+   ]
+  ],
+  "Heroic Lair Spectral Skeleton": [
+   [
+    35000,
+    25
+   ]
+  ],
+  "Heroic Lair Vampire": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Heroic Lair Vampire King": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Heroic Lair White Spectre": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Heroic Living Skeleton": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Heroic Malphas Flamer": [
+   [
+    1125,
+    24
+   ]
+  ],
+  "Heroic Malphas Missile": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Heroic Malphas Protector": [
+   [
+    1500,
+    30
+   ]
+  ],
+  "Heroic Septavius the Ghost God": [
+   [
+    50000,
+    48
+   ]
+  ],
+  "Heroic White Demon of the Abyss": [
+   [
+    2250,
+    24
+   ]
+  ],
+  "High Visibility Kogbold": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Hobbit Archer": [
+   [
+    22,
+    0
+   ]
+  ],
+  "Hobbit Mage": [
+   [
+    200,
+    2
+   ]
+  ],
+  "Hobbit Rogue": [
+   [
+    26,
+    0
+   ]
+  ],
+  "Hollow Brigand": [
+   [
+    3750,
+    20
+   ]
+  ],
+  "Hollow Gypsy": [
+   [
+    4250,
+    10
+   ]
+  ],
+  "Hollow Huntsman": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Hollow Importer": [
+   [
+    4000,
+    20
+   ]
+  ],
+  "Hollow Madman": [
+   [
+    2750,
+    30
+   ]
+  ],
+  "Hollow Mason": [
+   [
+    5500,
+    35
+   ]
+  ],
+  "Hollow Oracle": [
+   [
+    4250,
+    10
+   ]
+  ],
+  "Hollow Outlaw": [
+   [
+    3750,
+    20
+   ]
+  ],
+  "Hollow Peasant": [
+   [
+    3500,
+    10
+   ]
+  ],
+  "Hollow Prisoner": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Hollow Serf": [
+   [
+    3500,
+    10
+   ]
+  ],
+  "Hollow Smith": [
+   [
+    5500,
+    35
+   ]
+  ],
+  "Hollow Tracker": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Hollow Trader": [
+   [
+    4000,
+    20
+   ]
+  ],
+  "Hook Tester": [
+   [
+    100000,
+    0
+   ]
+  ],
+  "Horned Drake": [
+   [
+    1270,
+    4
+   ]
+  ],
+  "Hornet's Nest": [
+   [
+    28000,
+    60
+   ]
+  ],
+  "Horrid Reaper": [
+   [
+    6000,
+    15
+   ]
+  ],
+  "Horrific Creation": [
+   [
+    37500,
+    30
+   ]
+  ],
+  "Horror Maw": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Hunger": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Hunter Centaur": [
+   [
+    1200,
+    0
+   ]
+  ],
+  "Hunter Dragonfly": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Huntress Pumpkin": [
+   [
+    30000,
+    20
+   ]
+  ],
+  "Huntress Puppet": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Huntress Puppet (Encore)": [
+   [
+    25500,
+    20
+   ]
+  ],
+  "Hyper Cube": [
+   [
+    4500,
+    10
+   ]
+  ],
+  "Iatho": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Iawa": [
+   [
+    350,
+    2
+   ]
+  ],
+  "Ice Adept": [
+   [
+    5500,
+    25
+   ]
+  ],
+  "Ice Artifact": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Ice Cube Blaster": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Ice Cube Blaster (Third Dimension)": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Ice Cube Blaster (Third Dimension) (Big)": [
+   [
+    500,
+    20
+   ]
+  ],
+  "Ice Cube Defender": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Ice Cube God": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Ice Cube Overseer": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Ice Demon": [
+   [
+    1690,
+    15
+   ]
+  ],
+  "Ice Giant": [
+   [
+    5000,
+    45
+   ]
+  ],
+  "Ice Golem": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Ice Mage": [
+   [
+    4500,
+    25
+   ]
+  ],
+  "Ice Mine": [
+   [
+    1000,
+    30
+   ]
+  ],
+  "Ice Portal": [
+   [
+    10000,
+    10
+   ]
+  ],
+  "Ice Spectre": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Ice Sphere": [
+   [
+    14000,
+    25
+   ]
+  ],
+  "Ice Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Ice Stalagmite": [
+   [
+    5000,
+    40
+   ]
+  ],
+  "Iceion": [
+   [
+    5500,
+    25
+   ]
+  ],
+  "Iceion (Original)": [
+   [
+    5500,
+    20
+   ]
+  ],
+  "Icy Snowman God": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Icy Whirlwind": [
+   [
+    2600,
+    0
+   ]
+  ],
+  "Idrae": [
+   [
+    550,
+    20
+   ]
+  ],
+  "Immaculate Red Flower": [
+   [
+    2750,
+    0
+   ]
+  ],
+  "Immaculate Red Flower (Dungeon)": [
+   [
+    2750,
+    0
+   ]
+  ],
+  "Imp": [
+   [
+    200,
+    10
+   ]
+  ],
+  "Imp of the Abyss": [
+   [
+    300,
+    30
+   ]
+  ],
+  "Infernal Abyss Idol": [
+   [
+    45000,
+    30
+   ]
+  ],
+  "Infernal Axe": [
+   [
+    7500,
+    10
+   ]
+  ],
+  "Infernal Blacksmith of the Abyss": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Infernal Brute Berserker": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Infernal Brute Warrior of the Abyss": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Infernal Brute of the Abyss": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Infernal Demon Mage of the Abyss": [
+   [
+    350,
+    30
+   ]
+  ],
+  "Infernal Demon Warrior": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Infernal Demon Warrior of the Abyss": [
+   [
+    400,
+    30
+   ]
+  ],
+  "Infernal Demon of the Abyss": [
+   [
+    400,
+    30
+   ]
+  ],
+  "Infernal Imp of the Abyss": [
+   [
+    300,
+    30
+   ]
+  ],
+  "Infernal Ironsmith": [
+   [
+    12000,
+    20
+   ]
+  ],
+  "Infernal Magus": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Infernal Malphas Hound": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Infernal Red Demon": [
+   [
+    6000,
+    12
+   ]
+  ],
+  "Infernal Sorceress": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Infernal Spear": [
+   [
+    7500,
+    10
+   ]
+  ],
+  "Infernal Sword": [
+   [
+    7500,
+    10
+   ]
+  ],
+  "Infernal Warsmith": [
+   [
+    4000,
+    30
+   ]
+  ],
+  "Infernal White Demon of the Abyss": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Inferno": [
+   [
+    21500,
+    30
+   ]
+  ],
+  "Infested Chest": [
+   [
+    37500,
+    0
+   ]
+  ],
+  "Infested Pestilent": [
+   [
+    7000,
+    20
+   ]
+  ],
+  "Ink Bubble": [
+   [
+    2000,
+    40
+   ]
+  ],
+  "Ink Bubble (Original)": [
+   [
+    2000,
+    40
+   ]
+  ],
+  "Insane Shadow Ghoul Memory Mirage": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Insect Minion": [
+   [
+    500,
+    10
+   ]
+  ],
+  "Insect Tribesman": [
+   [
+    18750,
+    35
+   ]
+  ],
+  "Inspector Stromwell (Adept)": [
+   [
+    100000,
+    15
+   ]
+  ],
+  "Inspector Stromwell (Expert)": [
+   [
+    200000,
+    45
+   ]
+  ],
+  "Inspector Stromwell (Veteran)": [
+   [
+    200000,
+    30
+   ]
+  ],
+  "Insurgent Rebel Brawler": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Insurgent Rebel Commander": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Insurgent Rebel Mechanic": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Insurgent Rebel Sniper": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Iri": [
+   [
+    400,
+    6
+   ]
+  ],
+  "Iron Ore Realm": [
+   [
+    5000000,
+    0
+   ]
+  ],
+  "Iron Titan": [
+   [
+    2250,
+    30
+   ]
+  ],
+  "Issz": [
+   [
+    300,
+    35
+   ]
+  ],
+  "Itani": [
+   [
+    600,
+    15
+   ]
+  ],
+  "Ivory Wyvern": [
+   [
+    75000,
+    40
+   ]
+  ],
+  "Izel the Grand Shaman": [
+   [
+    22000,
+    22
+   ],
+   [
+    30000,
+    30
+   ]
+  ],
+  "Jack Frost": [
+   [
+    120000,
+    12
+   ]
+  ],
+  "Jack-o'-lanturn": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Jackal Assassin": [
+   [
+    2000,
+    30
+   ]
+  ],
+  "Jackal Lord": [
+   [
+    6000,
+    40
+   ]
+  ],
+  "Jackal Priest": [
+   [
+    2500,
+    5
+   ]
+  ],
+  "Jackal Veteran": [
+   [
+    1800,
+    20
+   ]
+  ],
+  "Jackal Warrior": [
+   [
+    1400,
+    10
+   ]
+  ],
+  "Jade and Garnet Statues": [
+   [
+    30000,
+    12
+   ]
+  ],
+  "Janus the Doorwarden": [
+   [
+    60000,
+    25
+   ]
+  ],
+  "Jelleye": [
+   [
+    4500,
+    15
+   ]
+  ],
+  "Jewel Angler": [
+   [
+    15000,
+    20
+   ]
+  ],
+  "Jolly Sphinx": [
+   [
+    65000,
+    25
+   ]
+  ],
+  "Jon Bilgewater the Pirate King": [
+   [
+    80000,
+    30
+   ]
+  ],
+  "Jotunn": [
+   [
+    70000,
+    25
+   ]
+  ],
+  "Jungle Fire": [
+   [
+    400,
+    80
+   ]
+  ],
+  "Jungle Flame": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Jungle Totem": [
+   [
+    900,
+    10
+   ]
+  ],
+  "Juvenile White Dragon": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Kage Kami": [
+   [
+    3000,
+    63
+   ]
+  ],
+  "Kappa": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Katalund Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Katana Wielding Host": [
+   [
+    2200,
+    40
+   ]
+  ],
+  "Kensei Puppet": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Key Fairy": [
+   [
+    10000,
+    15
+   ]
+  ],
+  "Key of Darkness": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Key of Light": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Killer Bee Nest (Event Boss)": [
+   [
+    40000,
+    40
+   ]
+  ],
+  "Killer Bee Nest (Queen)": [
+   [
+    400000,
+    40
+   ]
+  ],
+  "Killer Bee Queen": [
+   [
+    112500,
+    50
+   ]
+  ],
+  "Killer Pillar": [
+   [
+    15000,
+    60
+   ]
+  ],
+  "King Suesogian I": [
+   [
+    40000,
+    30
+   ]
+  ],
+  "King's Cavalry": [
+   [
+    8000,
+    35
+   ]
+  ],
+  "King's Cavalry Rider": [
+   [
+    6500,
+    15
+   ]
+  ],
+  "King's Crossbowman": [
+   [
+    5500,
+    20
+   ]
+  ],
+  "King's Gladiator": [
+   [
+    9000,
+    35
+   ]
+  ],
+  "King's Knight": [
+   [
+    6000,
+    40
+   ]
+  ],
+  "King's Thaumaturge": [
+   [
+    5000,
+    25
+   ],
+   [
+    2500,
+    0
+   ]
+  ],
+  "Kingdom Stowaway": [
+   [
+    2,
+    0
+   ]
+  ],
+  "Kitchen Archer": [
+   [
+    15,
+    3
+   ]
+  ],
+  "Kitchen Caster": [
+   [
+    15,
+    0
+   ]
+  ],
+  "Kitchen Guard": [
+   [
+    15,
+    5
+   ]
+  ],
+  "Kitsune Umi": [
+   [
+    180000,
+    0
+   ]
+  ],
+  "Knight Puppet": [
+   [
+    2000,
+    25
+   ]
+  ],
+  "Knight of Oryx": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Knight of the Lost Lands": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Kogbold Battlesmith": [
+   [
+    6200,
+    30
+   ]
+  ],
+  "Kogbold Drone": [
+   [
+    2000,
+    30
+   ]
+  ],
+  "Kogbold Expedition Engine": [
+   [
+    110000,
+    20
+   ]
+  ],
+  "Kogbold Flying Machine": [
+   [
+    65000,
+    40
+   ]
+  ],
+  "Kogbold Laser": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Kogbold Overseer": [
+   [
+    7500,
+    45
+   ]
+  ],
+  "Kogbold Plumber Apprentice": [
+   [
+    3500,
+    25
+   ]
+  ],
+  "Kogbold Steamwalker": [
+   [
+    6525,
+    30
+   ]
+  ],
+  "Kogbold Supervisor": [
+   [
+    3200,
+    30
+   ]
+  ],
+  "Kogbold Tinkerer": [
+   [
+    8500,
+    30
+   ]
+  ],
+  "Kogbold Turret": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Kogbold Welder": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Kogbold Worker": [
+   [
+    4725,
+    30
+   ]
+  ],
+  "Laen": [
+   [
+    500,
+    2
+   ]
+  ],
+  "Lair Big Black Slime": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Lair Big Brown Slime": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Lair Black Slime Mass": [
+   [
+    2000,
+    12
+   ]
+  ],
+  "Lair Blue Spectre": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Lair Brown Bat": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Lair Brown Slime Mass": [
+   [
+    2000,
+    12
+   ]
+  ],
+  "Lair Construct Colossus": [
+   [
+    7000,
+    40
+   ]
+  ],
+  "Lair Construct Giant": [
+   [
+    700,
+    20
+   ]
+  ],
+  "Lair Construct Titan": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Lair Ghost Archer": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lair Ghost Bat": [
+   [
+    200,
+    30
+   ]
+  ],
+  "Lair Ghost Knight": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lair Ghost Mage": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lair Ghost Paladin": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lair Ghost Rogue": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lair Ghost Warrior": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lair Giant Bat": [
+   [
+    2500,
+    12
+   ]
+  ],
+  "Lair Grey Spectre": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Lair Hulking Mummy": [
+   [
+    4000,
+    25
+   ]
+  ],
+  "Lair Little Black Slime": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Lair Little Brown Slime": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Lair Medium Black Slime": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Lair Mummy": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Lair Mummy King": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Lair Mummy Pharaoh": [
+   [
+    600,
+    0
+   ]
+  ],
+  "Lair Native Ghost God": [
+   [
+    3000,
+    12
+   ]
+  ],
+  "Lair Phantom God": [
+   [
+    3000,
+    12
+   ]
+  ],
+  "Lair Reaper": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Lair Skeletal Magistrate": [
+   [
+    5000,
+    5
+   ]
+  ],
+  "Lair Skeleton": [
+   [
+    350,
+    0
+   ]
+  ],
+  "Lair Skeleton King": [
+   [
+    600,
+    0
+   ]
+  ],
+  "Lair Skeleton Mage": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Lair Skeleton Swordsman": [
+   [
+    400,
+    2
+   ]
+  ],
+  "Lair Skeleton Veteran": [
+   [
+    450,
+    4
+   ]
+  ],
+  "Lair Spectral Skeleton": [
+   [
+    11000,
+    25
+   ]
+  ],
+  "Lair Spectre God": [
+   [
+    3000,
+    12
+   ]
+  ],
+  "Lair Vampire": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Lair Vampire King": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Lair White Spectre": [
+   [
+    400,
+    0
+   ]
+  ],
+  "Lair Wraith": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Lamb": [
+   [
+    1500,
+    18
+   ]
+  ],
+  "Lantern Holder": [
+   [
+    16000,
+    10
+   ]
+  ],
+  "Large Ghost": [
+   [
+    8000,
+    20
+   ]
+  ],
+  "Large Rat": [
+   [
+    750,
+    25
+   ]
+  ],
+  "Larvae Rock": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Larveye": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Larvision": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Lauk": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Legacy Heroic Ghost Mage of Septavius": [
+   [
+    450,
+    40
+   ]
+  ],
+  "Legacy Heroic Ghost Rogue of Septavius": [
+   [
+    450,
+    40
+   ]
+  ],
+  "Legacy Heroic Ghost Warrior of Septavius": [
+   [
+    450,
+    40
+   ]
+  ],
+  "Legacy Heroic Lair Ghost Archer": [
+   [
+    450,
+    30
+   ]
+  ],
+  "Legacy Heroic Lair Ghost Knight": [
+   [
+    450,
+    30
+   ]
+  ],
+  "Legacy Heroic Lair Ghost Mage": [
+   [
+    900,
+    30
+   ]
+  ],
+  "Legacy Heroic Lair Ghost Paladin": [
+   [
+    450,
+    30
+   ]
+  ],
+  "Legacy Heroic Lair Ghost Rogue": [
+   [
+    450,
+    30
+   ]
+  ],
+  "Legacy Heroic Lair Ghost Warrior": [
+   [
+    750,
+    30
+   ]
+  ],
+  "Legion Abyssal Defender": [
+   [
+    75000,
+    1
+   ]
+  ],
+  "Legion Arcanist": [
+   [
+    1500,
+    12
+   ]
+  ],
+  "Legion Church Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion City Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion Colonel": [
+   [
+    75000,
+    25
+   ]
+  ],
+  "Legion Commissioner": [
+   [
+    65000,
+    20
+   ]
+  ],
+  "Legion Cove Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion Desert Guard": [
+   [
+    2800,
+    5
+   ]
+  ],
+  "Legion Excavator": [
+   [
+    17500,
+    40
+   ]
+  ],
+  "Legion Fey Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion Footsoldier": [
+   [
+    6250,
+    40
+   ]
+  ],
+  "Legion Forest Guard": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Legion General": [
+   [
+    90000,
+    50
+   ]
+  ],
+  "Legion Graveyard Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion Guard": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Legion Guard Captain": [
+   [
+    15000,
+    35
+   ]
+  ],
+  "Legion Head Researcher": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Legion Hell Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion Hunter": [
+   [
+    1250,
+    10
+   ]
+  ],
+  "Legion Knight": [
+   [
+    2000,
+    30
+   ]
+  ],
+  "Legion Lead Strategist": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Legion Mage": [
+   [
+    1100,
+    12
+   ]
+  ],
+  "Legion Major": [
+   [
+    12500,
+    50
+   ]
+  ],
+  "Legion Missionary": [
+   [
+    50000,
+    25
+   ]
+  ],
+  "Legion Novice Guard": [
+   [
+    220,
+    8
+   ]
+  ],
+  "Legion Novice Hunter": [
+   [
+    180,
+    4
+   ]
+  ],
+  "Legion Novice Mage": [
+   [
+    150,
+    2
+   ]
+  ],
+  "Legion Plains Guard": [
+   [
+    7200,
+    5
+   ]
+  ],
+  "Legion Principal": [
+   [
+    100000,
+    25
+   ]
+  ],
+  "Legion Reef Guardian": [
+   [
+    18000,
+    10
+   ]
+  ],
+  "Legion Researcher": [
+   [
+    1300,
+    11
+   ]
+  ],
+  "Legion Scout": [
+   [
+    1200,
+    12
+   ]
+  ],
+  "Legion Scout Master": [
+   [
+    15000,
+    20
+   ]
+  ],
+  "Legion Shinobi": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Legion Spearman": [
+   [
+    1250,
+    15
+   ]
+  ],
+  "Legion Surveyor": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Legion Undead Forest Guard": [
+   [
+    2400,
+    5
+   ]
+  ],
+  "Legion Veteran Arcanist": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Legion Veteran Guard": [
+   [
+    3500,
+    35
+   ]
+  ],
+  "Legion Veteran Hunter": [
+   [
+    2500,
+    25
+   ]
+  ],
+  "Legion Veteran Knight": [
+   [
+    4000,
+    40
+   ]
+  ],
+  "Legion Veteran Mage": [
+   [
+    2500,
+    15
+   ]
+  ],
+  "Legion Veteran Researcher": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Legion Veteran Scout": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Legion Veteran Shinobi": [
+   [
+    2000,
+    25
+   ]
+  ],
+  "Legion Veteran Spearman": [
+   [
+    3500,
+    25
+   ]
+  ],
+  "Legion Watchmaster": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Leprechaun": [
+   [
+    25000,
+    25
+   ]
+  ],
+  "Leprechaun (Biome)": [
+   [
+    8000,
+    12
+   ]
+  ],
+  "Leprechaun Coin Reward": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Leprechaun Statue": [
+   [
+    150000,
+    50
+   ]
+  ],
+  "Lesser Bald Vampire": [
+   [
+    400,
+    15
+   ]
+  ],
+  "Lesser Cube God": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Lethal Cure": [
+   [
+    4000,
+    0
+   ]
+  ],
+  "Leviathan": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Lich": [
+   [
+    1100,
+    7
+   ]
+  ],
+  "Lightning Cube Defender": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Lightning Cube Defender (Big)": [
+   [
+    1200,
+    25
+   ]
+  ],
+  "Lightning Demon": [
+   [
+    1690,
+    15
+   ]
+  ],
+  "Lightning Totem": [
+   [
+    15000,
+    20
+   ]
+  ],
+  "Lil Feratu": [
+   [
+    480,
+    35
+   ]
+  ],
+  "Lil Sumo": [
+   [
+    55,
+    4
+   ]
+  ],
+  "Lil' Ghost Pirate": [
+   [
+    700,
+    0
+   ]
+  ],
+  "Lilzicle": [
+   [
+    2000,
+    25
+   ]
+  ],
+  "Limon Element (Original)": [
+   [
+    100000,
+    1000
+   ]
+  ],
+  "Limon the Sprite Goddess": [
+   [
+    12000,
+    16
+   ]
+  ],
+  "Limoz Statue": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Limoz the Veridian Dragon Deux": [
+   [
+    48750,
+    40
+   ]
+  ],
+  "Limoz the Viridian Dragon": [
+   [
+    48750,
+    40
+   ]
+  ],
+  "Lion Archer": [
+   [
+    3200,
+    20
+   ]
+  ],
+  "Lips of the Lost": [
+   [
+    2600,
+    30
+   ]
+  ],
+  "Little Blue Jelly": [
+   [
+    70,
+    0
+   ]
+  ],
+  "Little Green Jelly": [
+   [
+    70,
+    0
+   ]
+  ],
+  "Little Green Slime": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Little Pink Jelly": [
+   [
+    70,
+    0
+   ]
+  ],
+  "Little Scorpion": [
+   [
+    10,
+    0
+   ]
+  ],
+  "Living Armor": [
+   [
+    5500,
+    30
+   ]
+  ],
+  "Living Skeleton": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Living Tree": [
+   [
+    10000,
+    20
+   ]
+  ],
+  "Lizard God": [
+   [
+    900,
+    12
+   ]
+  ],
+  "Lizicle": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Lizicle (Original)": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Loot Broom": [
+   [
+    15500,
+    10
+   ]
+  ],
+  "Loot Elf": [
+   [
+    15500,
+    10
+   ]
+  ],
+  "Lord Ruthven": [
+   [
+    12000,
+    30
+   ]
+  ],
+  "Lord Ruthven Deux": [
+   [
+    30000,
+    30
+   ]
+  ],
+  "Lord of the Lost Lands": [
+   [
+    60000,
+    30
+   ]
+  ],
+  "Lorz": [
+   [
+    400,
+    10
+   ]
+  ],
+  "Lost Sentry": [
+   [
+    125000,
+    40
+   ]
+  ],
+  "Lost Soul": [
+   [
+    500,
+    30
+   ]
+  ],
+  "Lucky Beholder": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Djinn": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Ent God": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Flying Brain": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Ghost God": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Leviathan": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Medusa": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Slime God": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky Sprite Child": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Lucky Sprite God": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Lucky White Demon": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "Mad Santa": [
+   [
+    80000,
+    25
+   ]
+  ],
+  "Maggot": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Maggot Egg (Hive)": [
+   [
+    120,
+    5
+   ]
+  ],
+  "Maggot Egg (Nest)": [
+   [
+    10000,
+    5
+   ]
+  ],
+  "Magi-Generator": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Magic Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Maiden of the Sea": [
+   [
+    12000,
+    10
+   ]
+  ],
+  "Malogia Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Malphas Flamer Deux": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Malphas Hound": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Malphas Protector Deux": [
+   [
+    900,
+    7
+   ]
+  ],
+  "Malphas, Gilded Forgemaster": [
+   [
+    130000,
+    40
+   ]
+  ],
+  "Malus": [
+   [
+    33750,
+    25
+   ],
+   [
+    97500,
+    35
+   ]
+  ],
+  "Mama Megamoth": [
+   [
+    750,
+    5
+   ]
+  ],
+  "Mammoth Megamoth": [
+   [
+    40000,
+    20
+   ]
+  ],
+  "Mammoth Rat": [
+   [
+    75000,
+    50
+   ]
+  ],
+  "Man-Eating Flytrap": [
+   [
+    3000,
+    18
+   ]
+  ],
+  "Man-eating Barnacle": [
+   [
+    90000,
+    45
+   ]
+  ],
+  "Marble Colossus": [
+   [
+    187500,
+    50
+   ]
+  ],
+  "Marble Colossus Pillar": [
+   [
+    6750,
+    35
+   ]
+  ],
+  "Marble Core": [
+   [
+    18750,
+    10
+   ]
+  ],
+  "Marble Defender": [
+   [
+    54375,
+    30
+   ]
+  ],
+  "Mask Hunter": [
+   [
+    300,
+    10
+   ]
+  ],
+  "Mask Shaman": [
+   [
+    250,
+    5
+   ]
+  ],
+  "Mask Warrior": [
+   [
+    300,
+    20
+   ]
+  ],
+  "Masked Party God": [
+   [
+    30000,
+    10
+   ]
+  ],
+  "Masquarerader": [
+   [
+    40000,
+    25
+   ]
+  ],
+  "Master Rat": [
+   [
+    15000,
+    10
+   ]
+  ],
+  "Maze Minotaur": [
+   [
+    90000,
+    55
+   ]
+  ],
+  "Mecha Squirrel": [
+   [
+    10000,
+    6
+   ]
+  ],
+  "Medium Critter": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Medium Ghost": [
+   [
+    4000,
+    7
+   ]
+  ],
+  "Medium Rat": [
+   [
+    500,
+    15
+   ]
+  ],
+  "Medusa": [
+   [
+    2000,
+    18
+   ]
+  ],
+  "MegaRototo": [
+   [
+    9750,
+    40
+   ]
+  ],
+  "Megamad Brute of Oryx": [
+   [
+    25000,
+    50
+   ]
+  ],
+  "Megamad Oryx Statue": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Megamad Warrior of Oryx": [
+   [
+    3000,
+    34
+   ]
+  ],
+  "Megamoth Larva": [
+   [
+    30000,
+    15
+   ]
+  ],
+  "Messengers of Oryx": [
+   [
+    75000,
+    60
+   ]
+  ],
+  "Metal Golem": [
+   [
+    220,
+    5
+   ]
+  ],
+  "Micro Megamoth Guardian": [
+   [
+    1800,
+    10
+   ]
+  ],
+  "Micro Megamoth Sentinel": [
+   [
+    1500,
+    5
+   ]
+  ],
+  "Mini Bot": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Mini Corrupted Armor": [
+   [
+    1250,
+    12
+   ]
+  ],
+  "Mini Hive": [
+   [
+    120,
+    5
+   ]
+  ],
+  "Mini Killer Bee Nest": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Mini Larva": [
+   [
+    1200,
+    0
+   ]
+  ],
+  "Mini Larva Deux": [
+   [
+    3000,
+    5
+   ]
+  ],
+  "Mini Megamoth": [
+   [
+    120,
+    0
+   ]
+  ],
+  "Mini Yeti": [
+   [
+    1600,
+    0
+   ]
+  ],
+  "Minion Puppet": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Minion of Oryx": [
+   [
+    4000,
+    12
+   ]
+  ],
+  "Minotaur": [
+   [
+    850,
+    7
+   ]
+  ],
+  "Mirror Minion": [
+   [
+    6500,
+    15
+   ]
+  ],
+  "Mirror Wyvern": [
+   [
+    75000,
+    40
+   ]
+  ],
+  "Mixcoatl the Masked God": [
+   [
+    3150,
+    15
+   ]
+  ],
+  "Molek": [
+   [
+    45000,
+    50
+   ]
+  ],
+  "Monolith Protector": [
+   [
+    5000,
+    0
+   ]
+  ],
+  "Monstrosity Scarab": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Monstrosity of Oryx": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Monstrous Grizzly": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Mossy Chest": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Mummy": [
+   [
+    140,
+    0
+   ]
+  ],
+  "Mummy King": [
+   [
+    140,
+    0
+   ]
+  ],
+  "Mummy Pharaoh": [
+   [
+    140,
+    0
+   ]
+  ],
+  "Munin": [
+   [
+    11000,
+    22
+   ]
+  ],
+  "Murderous Megamoth": [
+   [
+    50000,
+    25
+   ]
+  ],
+  "Murderous Megamoth Deux": [
+   [
+    30000,
+    25
+   ]
+  ],
+  "Mushroom Alchemist": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Mushroom Berserker": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Mushroom Brawler": [
+   [
+    1875,
+    20
+   ]
+  ],
+  "Mushroom Brute": [
+   [
+    1875,
+    20
+   ]
+  ],
+  "Mushroom Caster": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Mushroom Champion": [
+   [
+    1875,
+    20
+   ]
+  ],
+  "Mushroom Chieftain": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Mushroom Guardian": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Mushroom Keeper": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Mushroom Mage": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Mushroom Oracle": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Mushroom Rogue": [
+   [
+    1875,
+    20
+   ]
+  ],
+  "Mushroom Sentinel": [
+   [
+    1875,
+    20
+   ]
+  ],
+  "Mushroom Shaman": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Mushroom Soldier": [
+   [
+    1875,
+    20
+   ]
+  ],
+  "Mushroom Sorcerer": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Mushroom Stalker": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Mysterious Crystal": [
+   [
+    75000,
+    15
+   ]
+  ],
+  "Mysterious Egg": [
+   [
+    300000,
+    0
+   ]
+  ],
+  "Mysterious Ice Shard": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Mystic Puppet": [
+   [
+    800,
+    18
+   ]
+  ],
+  "Nameless Gladiator": [
+   [
+    1700,
+    10
+   ]
+  ],
+  "Nano Platinum Stinger": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Nano Silver Walker": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Nano Steel Reaper": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Native Cube Deity": [
+   [
+    6000,
+    35
+   ]
+  ],
+  "Native Cube God": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Native Darkness Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Native Fire Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Native Greater Darkness Sprite": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Native Greater Fire Sprite": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Native Greater Ice Sprite": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Native Greater Magic Sprite": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Native Greater Nature Sprite": [
+   [
+    1000,
+    6
+   ]
+  ],
+  "Native Ice Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Native Magic Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Native Nature Sprite": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Native Sprite God": [
+   [
+    3500,
+    12
+   ]
+  ],
+  "Natural Slime God": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Necromancer Puppet": [
+   [
+    800,
+    15
+   ]
+  ],
+  "Nefret the Pharaoh": [
+   [
+    80000,
+    30
+   ],
+   [
+    30000,
+    30
+   ]
+  ],
+  "Neil": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Neo Baby Jelleye": [
+   [
+    2250,
+    10
+   ]
+  ],
+  "Neo Baby Larveye": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Neo Blorgian": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Blorgling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Neo Blorgorm": [
+   [
+    4500,
+    35
+   ]
+  ],
+  "Neo Bubblar": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Neo Bubblarion": [
+   [
+    500,
+    15
+   ]
+  ],
+  "Neo Bubblaris": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Neo Clax": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Neo Clingstar": [
+   [
+    15000,
+    30
+   ]
+  ],
+  "Neo Forax Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Neo Giga Golden Reaper": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Neo Giga Golden Titan": [
+   [
+    8000,
+    30
+   ]
+  ],
+  "Neo Giga Golden Walker": [
+   [
+    12000,
+    30
+   ]
+  ],
+  "Neo Golden Cannon": [
+   [
+    15000,
+    35
+   ]
+  ],
+  "Neo Golden Reaper": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Golden Sentreenel": [
+   [
+    20000,
+    35
+   ]
+  ],
+  "Neo Golden Stinger": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Neo Golden Titan": [
+   [
+    2250,
+    30
+   ]
+  ],
+  "Neo Golden Walker": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Heartbat": [
+   [
+    15000,
+    25
+   ]
+  ],
+  "Neo Hunger": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Iron Titan": [
+   [
+    11250,
+    40
+   ]
+  ],
+  "Neo Jelleye": [
+   [
+    4500,
+    15
+   ]
+  ],
+  "Neo Katalund Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Neo Larveye": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Larvision": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Neo Malogia Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Neo Nano Golden Reaper": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Neo Nano Golden Stinger": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Nano Golden Walker": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Neo Phorgian": [
+   [
+    4500,
+    35
+   ]
+  ],
+  "Neo Phorgling": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Plex": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Neo Plexling": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Neo Ptorgian": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Ptortorgian": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Neo Roonogian": [
+   [
+    15000,
+    25
+   ]
+  ],
+  "Neo Shred": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Neo Shredder": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Neo Shredling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Neo Silver Walker": [
+   [
+    18750,
+    35
+   ]
+  ],
+  "Neo Starvation": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Neo Syogian": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Neo Tarul Tentacle": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Neo Untaris Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Neo Waste": [
+   [
+    10000,
+    25
+   ]
+  ],
+  "Neo Watcher": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Neo Watcher Sentinel": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Neo Watchling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Neo Znorgian": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Neo Znorgling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Neo Znorgorm": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Nest Colony": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Night Elf Archer": [
+   [
+    240,
+    0
+   ]
+  ],
+  "Night Elf King": [
+   [
+    180,
+    5
+   ]
+  ],
+  "Night Elf Mage": [
+   [
+    220,
+    0
+   ]
+  ],
+  "Night Elf Veteran": [
+   [
+    300,
+    4
+   ]
+  ],
+  "Night Elf Warrior": [
+   [
+    280,
+    2
+   ]
+  ],
+  "Nightmare Colony": [
+   [
+    75000,
+    5000
+   ]
+  ],
+  "Nikao Statue": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Nikao the Azure Dragon": [
+   [
+    48750,
+    40
+   ]
+  ],
+  "Nile Artifact": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Ninja Puppet": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Nomadic Shaman": [
+   [
+    140,
+    1
+   ]
+  ],
+  "Nosferatu": [
+   [
+    1100,
+    45
+   ]
+  ],
+  "Noxious Sprite": [
+   [
+    900,
+    12
+   ]
+  ],
+  "Noxious Walker": [
+   [
+    8000,
+    0
+   ]
+  ],
+  "Null": [
+   [
+    90000,
+    30
+   ]
+  ],
+  "Nure-Onna": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Nut": [
+   [
+    37500,
+    15
+   ]
+  ],
+  "Oalei": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Oasis Creature": [
+   [
+    160,
+    10
+   ]
+  ],
+  "Oasis Giant": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Oasis Monster": [
+   [
+    140,
+    10
+   ]
+  ],
+  "Oasis Ruler": [
+   [
+    200,
+    10
+   ]
+  ],
+  "Oasis Soldier": [
+   [
+    180,
+    10
+   ]
+  ],
+  "Obsidian Soul Shard": [
+   [
+    5250,
+    20
+   ]
+  ],
+  "Ocean Spirit": [
+   [
+    2000,
+    16
+   ]
+  ],
+  "Octahedron": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Odaru": [
+   [
+    450,
+    15
+   ]
+  ],
+  "Oeti": [
+   [
+    700,
+    3
+   ]
+  ],
+  "Ogre King": [
+   [
+    700,
+    7
+   ]
+  ],
+  "Ogre Mage": [
+   [
+    300,
+    7
+   ]
+  ],
+  "Ogre Warrior": [
+   [
+    270,
+    7
+   ]
+  ],
+  "Ogre Wizard": [
+   [
+    300,
+    7
+   ]
+  ],
+  "Ogreish Outhouse": [
+   [
+    125000,
+    0
+   ]
+  ],
+  "Old Chest": [
+   [
+    26250,
+    0
+   ]
+  ],
+  "Omnipresent Superintendent": [
+   [
+    6500,
+    20
+   ]
+  ],
+  "Orange Bunny God": [
+   [
+    1850,
+    15
+   ]
+  ],
+  "Orange Drake": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Orange Turtle": [
+   [
+    4200,
+    10
+   ]
+  ],
+  "Orb of Chaos": [
+   [
+    3375,
+    0
+   ]
+  ],
+  "Orb of Light": [
+   [
+    2250,
+    0
+   ]
+  ],
+  "Orc King": [
+   [
+    240,
+    3
+   ]
+  ],
+  "Orc Mage": [
+   [
+    80,
+    0
+   ]
+  ],
+  "Orc Queen": [
+   [
+    130,
+    0
+   ]
+  ],
+  "Orc Warrior": [
+   [
+    90,
+    3
+   ]
+  ],
+  "Organ Harvester": [
+   [
+    31000,
+    40
+   ]
+  ],
+  "Orothi": [
+   [
+    200,
+    3
+   ]
+  ],
+  "Oryx Admiral": [
+   [
+    2810,
+    25
+   ]
+  ],
+  "Oryx Ambassador": [
+   [
+    7315,
+    25
+   ]
+  ],
+  "Oryx Aristocrat": [
+   [
+    6750,
+    25
+   ]
+  ],
+  "Oryx Armorbearer": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Oryx Cardinal": [
+   [
+    7875,
+    20
+   ]
+  ],
+  "Oryx Cleric": [
+   [
+    9000,
+    10
+   ]
+  ],
+  "Oryx Deacon": [
+   [
+    7315,
+    15
+   ]
+  ],
+  "Oryx Elite Assassin": [
+   [
+    6000,
+    30
+   ]
+  ],
+  "Oryx Elite Brute": [
+   [
+    6750,
+    50
+   ]
+  ],
+  "Oryx Elite Falconer": [
+   [
+    5825,
+    15
+   ]
+  ],
+  "Oryx Eye": [
+   [
+    940,
+    0
+   ]
+  ],
+  "Oryx Judge": [
+   [
+    9565,
+    5
+   ]
+  ],
+  "Oryx Major": [
+   [
+    8440,
+    50
+   ]
+  ],
+  "Oryx Minister": [
+   [
+    6750,
+    15
+   ]
+  ],
+  "Oryx Noble": [
+   [
+    5625,
+    20
+   ]
+  ],
+  "Oryx Officer": [
+   [
+    9000,
+    40
+   ]
+  ],
+  "Oryx Patrician": [
+   [
+    6000,
+    35
+   ]
+  ],
+  "Oryx Puppet": [
+   [
+    18750,
+    20
+   ]
+  ],
+  "Oryx Sergeant": [
+   [
+    7875,
+    45
+   ]
+  ],
+  "Oryx Swordsman": [
+   [
+    2625,
+    20
+   ]
+  ],
+  "Oryx Wood Totem": [
+   [
+    65000,
+    0
+   ]
+  ],
+  "Oryx the Mad God": [
+   [
+    80000,
+    45
+   ]
+  ],
+  "Oryx the Mad God 2": [
+   [
+    100000,
+    60
+   ]
+  ],
+  "Oryx the Mad God 2 (Original)": [
+   [
+    65000,
+    60
+   ]
+  ],
+  "Oryx the Mad God 3": [
+   [
+    562500,
+    75
+   ]
+  ],
+  "Oryx the Mad God Deux": [
+   [
+    48750,
+    60
+   ]
+  ],
+  "Oryx's Living Floor": [
+   [
+    2600,
+    0
+   ]
+  ],
+  "Oryxmas Archer": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Oryxmas Clown": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Oryxmas Dungeon Present": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Oryxmas Knight": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Oryxmas Presents Golem": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Oryxmas Realm Present": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Oryxmas Reindeer": [
+   [
+    1500,
+    18
+   ]
+  ],
+  "Oryxmas Snowman Tier 1": [
+   [
+    150,
+    15
+   ]
+  ],
+  "Oryxmas Snowman Tier 2": [
+   [
+    500,
+    15
+   ]
+  ],
+  "Oryxmas Snowman Tier 3": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Oryxmas Snowman Tier 4": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Oryxmas Snowman Tier 5": [
+   [
+    4000,
+    15
+   ]
+  ],
+  "Oryxmas Susuwatari": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Oryxmas Wizard": [
+   [
+    900,
+    20
+   ]
+  ],
+  "Oshyu": [
+   [
+    550,
+    9
+   ]
+  ],
+  "Overgrown Lily": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Overseer Oculon": [
+   [
+    150000,
+    20
+   ]
+  ],
+  "Painling": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Paladin Obelisk": [
+   [
+    25000,
+    25
+   ]
+  ],
+  "Paladin Puppet": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Paper Golem": [
+   [
+    220,
+    1
+   ]
+  ],
+  "Paranormal Cringe Specter Panic Cloud": [
+   [
+    1000,
+    1000
+   ]
+  ],
+  "Parasitic Blob": [
+   [
+    1600,
+    10
+   ]
+  ],
+  "Parasitic Blob Guardian": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Parasitic Blob Scout": [
+   [
+    1300,
+    10
+   ]
+  ],
+  "Parasitic Stalker": [
+   [
+    1950,
+    40
+   ]
+  ],
+  "Pentaract": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Pentaract Eye": [
+   [
+    750,
+    0
+   ]
+  ],
+  "Pentaract Tower (Mad God Mayhem)": [
+   [
+    3750,
+    0
+   ]
+  ],
+  "Perfected Cube Blaster": [
+   [
+    700,
+    20
+   ]
+  ],
+  "Perfected Cube Defender": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Perfected Cube God": [
+   [
+    75000,
+    20
+   ]
+  ],
+  "Perfected Cube Overseer": [
+   [
+    8000,
+    60
+   ]
+  ],
+  "Permafrost Lord": [
+   [
+    120000,
+    40
+   ]
+  ],
+  "Pet of Oryx": [
+   [
+    750,
+    15
+   ]
+  ],
+  "Phoenix Egg": [
+   [
+    5000,
+    0
+   ]
+  ],
+  "Phoenix Lord": [
+   [
+    3000,
+    15
+   ]
+  ],
+  "Phoenix Reborn": [
+   [
+    4200,
+    15
+   ]
+  ],
+  "Phorgian": [
+   [
+    4500,
+    35
+   ]
+  ],
+  "Phorgling": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Phylactery Bearer": [
+   [
+    1000,
+    4
+   ]
+  ],
+  "Pigeon": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Pinata": [
+   [
+    45000,
+    0
+   ]
+  ],
+  "Pink Blob": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Pink Bloom": [
+   [
+    7000,
+    40
+   ]
+  ],
+  "Pink Cnidarian": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Piranha": [
+   [
+    750,
+    10
+   ]
+  ],
+  "Piranha Shoal": [
+   [
+    12500,
+    10
+   ]
+  ],
+  "Pirate": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Pirate Admiral": [
+   [
+    120,
+    5
+   ]
+  ],
+  "Pirate Brawler": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Pirate Captain": [
+   [
+    100,
+    4
+   ]
+  ],
+  "Pirate Commander": [
+   [
+    80,
+    3
+   ]
+  ],
+  "Pirate Lieutenant": [
+   [
+    70,
+    2
+   ]
+  ],
+  "Pirate Queen Ramm": [
+   [
+    5000,
+    20
+   ],
+   [
+    7500,
+    25
+   ],
+   [
+    30000,
+    30
+   ]
+  ],
+  "Pirate Sharpshooter": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Piratess": [
+   [
+    6,
+    0
+   ]
+  ],
+  "Pit Snake": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Pit Snake (Original)": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Pit Viper": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Pit Viper (Original)": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Pitchfork Pete": [
+   [
+    80000,
+    30
+   ]
+  ],
+  "Platinum Stinger": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Playful Bunny God": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Plex": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Plexling": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Polaris": [
+   [
+    48750,
+    15
+   ]
+  ],
+  "Poltergeist": [
+   [
+    1300,
+    10
+   ]
+  ],
+  "Possessed Child": [
+   [
+    3000,
+    16
+   ]
+  ],
+  "Possessed Oryx Statue": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Possessed Planter": [
+   [
+    8000,
+    10
+   ]
+  ],
+  "Possessed Pumpkin": [
+   [
+    65000,
+    20
+   ]
+  ],
+  "Possessed Skeleton": [
+   [
+    5000,
+    15
+   ]
+  ],
+  "Possessed Small Pumpkin": [
+   [
+    9000,
+    5
+   ]
+  ],
+  "Pot of Gold": [
+   [
+    45000,
+    5
+   ]
+  ],
+  "Potted Phant": [
+   [
+    2500,
+    35
+   ]
+  ],
+  "Poult": [
+   [
+    900,
+    7
+   ]
+  ],
+  "Priest Puppet": [
+   [
+    800,
+    15
+   ]
+  ],
+  "Prismimic (Boss)": [
+   [
+    41250,
+    30
+   ],
+   [
+    33750,
+    40
+   ]
+  ],
+  "Probation Wraith": [
+   [
+    11000,
+    40
+   ]
+  ],
+  "Protection Crystal": [
+   [
+    5000,
+    15
+   ]
+  ],
+  "Pterasite": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Pterasite Colony": [
+   [
+    9000,
+    2000
+   ]
+  ],
+  "Ptorgian": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Ptortorgian": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Pulsating Obstacle": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Pumpkin Brute": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Pumpkin Clone": [
+   [
+    8000,
+    10
+   ]
+  ],
+  "Pumpkin King": [
+   [
+    20000,
+    15
+   ]
+  ],
+  "Pumpkin Shrine": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Pumpkin Trap": [
+   [
+    30000,
+    50
+   ]
+  ],
+  "Pumpkin of Chaos": [
+   [
+    25000,
+    30
+   ]
+  ],
+  "Pumpkin of Pain": [
+   [
+    35000,
+    30
+   ]
+  ],
+  "Puppet Clone": [
+   [
+    6000,
+    10
+   ]
+  ],
+  "Puppet of Chaos": [
+   [
+    22500,
+    30
+   ]
+  ],
+  "Puppet of Pain": [
+   [
+    28500,
+    30
+   ]
+  ],
+  "Purple Bloom": [
+   [
+    7000,
+    40
+   ]
+  ],
+  "Purple Drake": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Purple Gelatinous Cube": [
+   [
+    1800,
+    15
+   ]
+  ],
+  "Purple Gelatinous Sphere": [
+   [
+    70,
+    0
+   ]
+  ],
+  "Purple Leprechaun": [
+   [
+    60000,
+    0
+   ]
+  ],
+  "Purple Stone Guardian": [
+   [
+    55000,
+    55
+   ]
+  ],
+  "Purple Turtle": [
+   [
+    4200,
+    10
+   ]
+  ],
+  "Putrid Goop": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Puzzled Corner": [
+   [
+    950,
+    20
+   ]
+  ],
+  "Puzzled Cube": [
+   [
+    4500,
+    20
+   ]
+  ],
+  "Pyramid Artifact": [
+   [
+    3000,
+    50
+   ]
+  ],
+  "Pyro Warlock": [
+   [
+    12000,
+    45
+   ]
+  ],
+  "Pythagorean": [
+   [
+    500,
+    20
+   ]
+  ],
+  "Pyyr Statue": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Pyyr the Crimson Dragon": [
+   [
+    48750,
+    40
+   ]
+  ],
+  "Queen Alien Egglayer": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Queen Bee": [
+   [
+    2625,
+    15
+   ]
+  ],
+  "Queq": [
+   [
+    350,
+    0
+   ]
+  ],
+  "Quiet Wizard": [
+   [
+    4000,
+    15
+   ]
+  ],
+  "Radph": [
+   [
+    300,
+    10
+   ]
+  ],
+  "Raging Ifrit": [
+   [
+    3500,
+    24
+   ]
+  ],
+  "Rampage Cyborg": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Rampant Walrus": [
+   [
+    1300,
+    10
+   ]
+  ],
+  "Ravenous Harpy": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Ravenous Rot": [
+   [
+    180000,
+    30
+   ]
+  ],
+  "Ravenous Rot Overgrowth": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Rayr": [
+   [
+    700,
+    9
+   ]
+  ],
+  "Reanimated Hermit God": [
+   [
+    55000,
+    35
+   ]
+  ],
+  "Reanimated Hermit God Tentacle": [
+   [
+    7500,
+    15
+   ]
+  ],
+  "Reanimated Hermit Minion": [
+   [
+    2200,
+    0
+   ]
+  ],
+  "Reanimated Remains": [
+   [
+    450,
+    8
+   ]
+  ],
+  "Rebirth Worm": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Rectangular Prism (Enemy)": [
+   [
+    1800,
+    20
+   ]
+  ],
+  "Red Beehemoth": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Red Bloom": [
+   [
+    7000,
+    40
+   ]
+  ],
+  "Red Demon": [
+   [
+    7000,
+    12
+   ]
+  ],
+  "Red Flaming Skull": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Red Gelatinous Cube": [
+   [
+    1900,
+    15
+   ]
+  ],
+  "Red Gelatinous Sphere": [
+   [
+    70,
+    0
+   ]
+  ],
+  "Red Killer Bee": [
+   [
+    400,
+    25
+   ]
+  ],
+  "Red Larva": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Red Nest Colony Guardian": [
+   [
+    400,
+    25
+   ]
+  ],
+  "Red Satellite": [
+   [
+    1000,
+    5
+   ]
+  ],
+  "Red Soldier Bee": [
+   [
+    5625,
+    20
+   ]
+  ],
+  "Red Son of Arachna Giant Egg Sac": [
+   [
+    11000,
+    20
+   ]
+  ],
+  "Red Spider": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Red Spotted Den Spider": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Red Spotted Den Spider (Original)": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Red Stone Guardian": [
+   [
+    55000,
+    55
+   ]
+  ],
+  "Red Swarm Masters": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Red Swarm Minions": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Red Turtle": [
+   [
+    4200,
+    10
+   ]
+  ],
+  "Resurrected Corpse": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Resurrected Spirit": [
+   [
+    800,
+    50
+   ]
+  ],
+  "Resurrectional Officer": [
+   [
+    9000,
+    30
+   ]
+  ],
+  "Revenant": [
+   [
+    5000,
+    22
+   ]
+  ],
+  "Reverend Revenant": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Rhinoceros": [
+   [
+    3000,
+    40
+   ]
+  ],
+  "Ril": [
+   [
+    300,
+    1
+   ]
+  ],
+  "Rilr": [
+   [
+    250,
+    0
+   ]
+  ],
+  "Ring Element": [
+   [
+    100000,
+    1000
+   ]
+  ],
+  "Risen Archer": [
+   [
+    600,
+    8
+   ]
+  ],
+  "Risen Brawler": [
+   [
+    4000,
+    16
+   ]
+  ],
+  "Risen Hellhound": [
+   [
+    1000,
+    28
+   ]
+  ],
+  "Risen Mage": [
+   [
+    1875,
+    5
+   ]
+  ],
+  "Risen Mummy": [
+   [
+    4000,
+    16
+   ]
+  ],
+  "Risen Warrior": [
+   [
+    4000,
+    16
+   ]
+  ],
+  "Risrr": [
+   [
+    450,
+    6
+   ]
+  ],
+  "Robot Brawler": [
+   [
+    20000,
+    65
+   ]
+  ],
+  "Rock Construct": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Rock Dragon Bat": [
+   [
+    3000,
+    10
+   ]
+  ],
+  "Rock Dragon Bat (Christmas)": [
+   [
+    3000,
+    10
+   ]
+  ],
+  "Rogue Puppet": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Roonogian": [
+   [
+    15000,
+    25
+   ]
+  ],
+  "Rototo": [
+   [
+    2300,
+    25
+   ]
+  ],
+  "Royal Chamberlain": [
+   [
+    8500,
+    35
+   ]
+  ],
+  "Royal Cnidarian": [
+   [
+    120000,
+    35
+   ]
+  ],
+  "Royal Crab": [
+   [
+    6500,
+    30
+   ]
+  ],
+  "Royal Guardian": [
+   [
+    20000,
+    45
+   ],
+   [
+    10000,
+    45
+   ]
+  ],
+  "Royal Herald": [
+   [
+    4500,
+    10
+   ]
+  ],
+  "Royal Jester": [
+   [
+    10500,
+    80
+   ]
+  ],
+  "Royal Magistrate": [
+   [
+    5000,
+    35
+   ]
+  ],
+  "Royal Steward": [
+   [
+    6750,
+    15
+   ]
+  ],
+  "Rubber Ducky": [
+   [
+    60000,
+    40
+   ]
+  ],
+  "Ruby Bat": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Ruby Slime": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Runic Golem": [
+   [
+    5000,
+    15
+   ]
+  ],
+  "S.W.I.T.C.H.": [
+   [
+    20000,
+    15
+   ]
+  ],
+  "Sage Genji": [
+   [
+    180000,
+    0
+   ]
+  ],
+  "Samurai Puppet": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Sand Devil": [
+   [
+    100,
+    1
+   ]
+  ],
+  "Sand Elemental": [
+   [
+    1750,
+    10
+   ]
+  ],
+  "Sand Phantom": [
+   [
+    230,
+    3
+   ]
+  ],
+  "Sand Phantom Wisp": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Sandsman Archer": [
+   [
+    30,
+    0
+   ]
+  ],
+  "Sandsman King": [
+   [
+    270,
+    2
+   ]
+  ],
+  "Sandsman Sorcerer": [
+   [
+    88,
+    0
+   ]
+  ],
+  "Sandstone Titan": [
+   [
+    10500,
+    34
+   ]
+  ],
+  "Sapphire Bat": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Sapphire Slime": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Sarcophagus": [
+   [
+    15000,
+    100
+   ]
+  ],
+  "SayIt": [
+   [
+    450,
+    8
+   ]
+  ],
+  "Scarab": [
+   [
+    300,
+    0
+   ]
+  ],
+  "Scarlet Wretched Rose": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Scheev": [
+   [
+    500,
+    8
+   ]
+  ],
+  "School of Ghostfish": [
+   [
+    1600,
+    3
+   ]
+  ],
+  "Scorpion Queen": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Scout Bee": [
+   [
+    110,
+    1
+   ]
+  ],
+  "Scout Colony": [
+   [
+    12000,
+    50
+   ]
+  ],
+  "Screaming Dean": [
+   [
+    7500,
+    0
+   ]
+  ],
+  "Scutosaurus": [
+   [
+    4500,
+    40
+   ]
+  ],
+  "Sea Dragon": [
+   [
+    50000,
+    35
+   ]
+  ],
+  "Sea Hag": [
+   [
+    2000,
+    14
+   ]
+  ],
+  "Sea Horse": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Sea Horse (Original)": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Sea Mare": [
+   [
+    6000,
+    60
+   ]
+  ],
+  "Sea Mare (Original)": [
+   [
+    6000,
+    60
+   ]
+  ],
+  "Sea Slurp Home": [
+   [
+    5000,
+    40
+   ]
+  ],
+  "Sea Slurp Home (Original)": [
+   [
+    5000,
+    40
+   ]
+  ],
+  "Sea Spectre": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Seeking Bot": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Sek": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Sentient Monolith": [
+   [
+    175000,
+    100
+   ]
+  ],
+  "Septavius the Ghost God": [
+   [
+    12000,
+    12
+   ]
+  ],
+  "Septavius, Master of the Undead": [
+   [
+    160000,
+    25
+   ]
+  ],
+  "Serl": [
+   [
+    250,
+    1
+   ]
+  ],
+  "Seus": [
+   [
+    400,
+    8
+   ]
+  ],
+  "Sewer Alligator": [
+   [
+    1700,
+    15
+   ]
+  ],
+  "Sewer Bat": [
+   [
+    500,
+    10
+   ]
+  ],
+  "Sewer Brown Slime": [
+   [
+    2750,
+    15
+   ]
+  ],
+  "Sewer Dummy": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Sewer Rat": [
+   [
+    800,
+    10
+   ]
+  ],
+  "Sewer Yellow Slime": [
+   [
+    2500,
+    5
+   ]
+  ],
+  "Shackled Shanker": [
+   [
+    2500,
+    15
+   ]
+  ],
+  "Shackled Siphoner": [
+   [
+    2250,
+    35
+   ]
+  ],
+  "Shackled Slugger": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Shackled Soul": [
+   [
+    3500,
+    0
+   ]
+  ],
+  "Shade of Feargus": [
+   [
+    3750,
+    15
+   ]
+  ],
+  "Shades of the Avatar": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Shadow Cube Defender": [
+   [
+    6500,
+    40
+   ]
+  ],
+  "Shadow Lurker": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Shady Sect Follower": [
+   [
+    2000,
+    5
+   ]
+  ],
+  "Shady Sect Leader": [
+   [
+    18000,
+    15
+   ]
+  ],
+  "Shaitan the Advisor": [
+   [
+    120000,
+    60
+   ]
+  ],
+  "Shaitan the Advisor (Original)": [
+   [
+    65000,
+    60
+   ]
+  ],
+  "Shambling Sludge": [
+   [
+    1000,
+    4
+   ]
+  ],
+  "Shard Artifact": [
+   [
+    3000,
+    50
+   ]
+  ],
+  "Shield Generator": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Shield Orc King": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Shield Orc Queen": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Shield Orc Warrior": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Shred": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Shredder": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Shredling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Shunned Shrubbery": [
+   [
+    6500,
+    15
+   ]
+  ],
+  "Sickly Vampire Bat": [
+   [
+    100,
+    0
+   ]
+  ],
+  "Sigma Werewolf": [
+   [
+    65000,
+    45
+   ]
+  ],
+  "Silent Wizard": [
+   [
+    9000,
+    25
+   ]
+  ],
+  "Silver Son of Arachna Giant Egg Sac": [
+   [
+    11000,
+    20
+   ]
+  ],
+  "Silver Walker": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Silvery Narwhal": [
+   [
+    1000,
+    16
+   ]
+  ],
+  "Sinister Crow": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Sinister Haunted Psychic Flesh Whispers": [
+   [
+    1000,
+    1000
+   ]
+  ],
+  "Sinister Scarecrow": [
+   [
+    23000,
+    25
+   ]
+  ],
+  "Skeletal Shieldbearer": [
+   [
+    5000,
+    60
+   ]
+  ],
+  "Skeletal Silencer": [
+   [
+    7000,
+    10
+   ]
+  ],
+  "Skeletal Taskmaster": [
+   [
+    6500,
+    30
+   ]
+  ],
+  "Skeleton": [
+   [
+    150,
+    1
+   ]
+  ],
+  "Skeleton (Deathmage)": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Skeleton Brawler": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Skeleton Swordsman": [
+   [
+    55,
+    2
+   ]
+  ],
+  "Skeleton Veteran": [
+   [
+    60,
+    4
+   ]
+  ],
+  "Skeleton Worshipper": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Skeleton of the Damned": [
+   [
+    250,
+    10
+   ]
+  ],
+  "Skull Knight": [
+   [
+    75000,
+    55
+   ]
+  ],
+  "Skull Shrine": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Slime Dispenser": [
+   [
+    3500,
+    0
+   ]
+  ],
+  "Slime God": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Sludget": [
+   [
+    250,
+    0
+   ]
+  ],
+  "Slumbering Dragon": [
+   [
+    18000,
+    40
+   ]
+  ],
+  "Small Bee": [
+   [
+    125,
+    5
+   ]
+  ],
+  "Small Creampuff": [
+   [
+    700,
+    20
+   ]
+  ],
+  "Small Critter": [
+   [
+    800,
+    20
+   ]
+  ],
+  "Small Diamond Ore": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Small Emerald Ore": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Small Ghost": [
+   [
+    1000,
+    2
+   ]
+  ],
+  "Small Iron Ore": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Small Rat": [
+   [
+    250,
+    5
+   ]
+  ],
+  "Small Stone Ore": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Small Stygian Mirror": [
+   [
+    200,
+    10
+   ]
+  ],
+  "Small Worker Bee": [
+   [
+    125,
+    25
+   ]
+  ],
+  "Small Yeti": [
+   [
+    1200,
+    10
+   ]
+  ],
+  "Smelly Octopus": [
+   [
+    1000,
+    16
+   ]
+  ],
+  "Smuggled Parrot": [
+   [
+    500,
+    5
+   ]
+  ],
+  "Snake": [
+   [
+    5,
+    0
+   ]
+  ],
+  "Snake Brawler": [
+   [
+    20000,
+    30
+   ]
+  ],
+  "Snakepit Guard": [
+   [
+    7500,
+    20
+   ]
+  ],
+  "Snapdragon": [
+   [
+    2500,
+    18
+   ]
+  ],
+  "Snow Bat": [
+   [
+    3500,
+    10
+   ]
+  ],
+  "Snow Bat (Original)": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Snow Bat Mama": [
+   [
+    3500,
+    10
+   ]
+  ],
+  "Snow Bat Pup": [
+   [
+    800,
+    5
+   ]
+  ],
+  "Snow Construct": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Snow Shrine": [
+   [
+    16000,
+    40
+   ]
+  ],
+  "Snow Troll": [
+   [
+    2000,
+    35
+   ]
+  ],
+  "Snow Wolf": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Snow Yeti": [
+   [
+    3000,
+    18
+   ]
+  ],
+  "Snowball Stash": [
+   [
+    3500,
+    0
+   ]
+  ],
+  "Snowball Thrower": [
+   [
+    6000,
+    10
+   ]
+  ],
+  "Snowmonster": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Snowy Big Snowflake": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Snowy Present": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Snowy Snowflake": [
+   [
+    5000,
+    0
+   ]
+  ],
+  "Snowy the Frost God": [
+   [
+    60000,
+    0
+   ]
+  ],
+  "Soap Mine": [
+   [
+    1000,
+    30
+   ]
+  ],
+  "Son of Arachna": [
+   [
+    40000,
+    30
+   ]
+  ],
+  "Sorcerer Puppet": [
+   [
+    600,
+    15
+   ]
+  ],
+  "Soulblast": [
+   [
+    10000,
+    30
+   ]
+  ],
+  "Soulless Dwarf": [
+   [
+    250,
+    11
+   ]
+  ],
+  "Soulless Scholar": [
+   [
+    2600,
+    15
+   ]
+  ],
+  "Soulless Scribe": [
+   [
+    2200,
+    20
+   ]
+  ],
+  "Soulless Student": [
+   [
+    1400,
+    30
+   ]
+  ],
+  "Soulwarden Murcian": [
+   [
+    250000,
+    40
+   ]
+  ],
+  "Special Golden Rat": [
+   [
+    10000,
+    15
+   ]
+  ],
+  "Special Large Rat": [
+   [
+    10000,
+    25
+   ]
+  ],
+  "Special Medium Rat": [
+   [
+    10000,
+    15
+   ]
+  ],
+  "Special Small Rat": [
+   [
+    10000,
+    5
+   ]
+  ],
+  "Specter Mine": [
+   [
+    200,
+    150
+   ]
+  ],
+  "Spectral Jailer": [
+   [
+    30000,
+    20
+   ]
+  ],
+  "Spectral Rat": [
+   [
+    750,
+    25
+   ]
+  ],
+  "Spectral Sentry (Event)": [
+   [
+    77000,
+    0
+   ]
+  ],
+  "Sphere Blaster": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Sphere Defender": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Sphere God": [
+   [
+    45000,
+    40
+   ]
+  ],
+  "Sphere Overseer": [
+   [
+    1500,
+    0
+   ]
+  ],
+  "Sphinx Artifact": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Spider Egg Sac": [
+   [
+    1,
+    0
+   ]
+  ],
+  "Spider Egg Sac (Original)": [
+   [
+    1,
+    0
+   ]
+  ],
+  "Spider Webbed Chest": [
+   [
+    750,
+    2
+   ]
+  ],
+  "Spike": [
+   [
+    1500,
+    45
+   ]
+  ],
+  "Spilled Icecream": [
+   [
+    1000,
+    20
+   ]
+  ],
+  "Spirit of Oryx": [
+   [
+    25000,
+    75
+   ]
+  ],
+  "Spitting Arachnid": [
+   [
+    2000,
+    30
+   ]
+  ],
+  "Spoiled Creampuff": [
+   [
+    9000,
+    30
+   ]
+  ],
+  "Sporatic Mushroom": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Spore Spreader": [
+   [
+    2500,
+    30
+   ]
+  ],
+  "Sprite Beast": [
+   [
+    600,
+    30
+   ]
+  ],
+  "Sprite Brawler": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Sprite Child": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Sprite Cube": [
+   [
+    2200,
+    15
+   ]
+  ],
+  "Sprite Cube (Big)": [
+   [
+    2400,
+    20
+   ]
+  ],
+  "Sprite God": [
+   [
+    1500,
+    12
+   ]
+  ],
+  "Squaramore Tree": [
+   [
+    18000,
+    20
+   ]
+  ],
+  "Square": [
+   [
+    1200,
+    20
+   ]
+  ],
+  "Square Elemental": [
+   [
+    600,
+    20
+   ]
+  ],
+  "Squared Sprite": [
+   [
+    450,
+    5
+   ]
+  ],
+  "Squared Sprite (Big)": [
+   [
+    550,
+    10
+   ]
+  ],
+  "Staff Wielding Host": [
+   [
+    1800,
+    30
+   ]
+  ],
+  "Starvation": [
+   [
+    8000,
+    25
+   ]
+  ],
+  "Statue of Feargus": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Statue of Limoz": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Statue of Nikao": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Statue of Pyyr": [
+   [
+    15000,
+    0
+   ]
+  ],
+  "Steam Turret": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Steel Construct": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Steel Reaper": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Stheno Pet": [
+   [
+    1000,
+    7
+   ]
+  ],
+  "Stheno Pet Deux": [
+   [
+    5000,
+    7
+   ]
+  ],
+  "Stheno Swarm": [
+   [
+    400,
+    4
+   ]
+  ],
+  "Stheno Swarm Deux": [
+   [
+    1000,
+    4
+   ]
+  ],
+  "Stheno the Snake Queen": [
+   [
+    9000,
+    19
+   ]
+  ],
+  "Stheno the Snake Queen Deux": [
+   [
+    48750,
+    30
+   ]
+  ],
+  "Sticky Fudgefoot": [
+   [
+    80000,
+    30
+   ]
+  ],
+  "Sting Spider": [
+   [
+    9000,
+    15
+   ]
+  ],
+  "Sting Spider (Old)": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Stone Gargoyle": [
+   [
+    7000,
+    40
+   ]
+  ],
+  "Stone Guardian Sword": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Stone Guardian Sword (Oryx Horde)": [
+   [
+    2000,
+    60
+   ]
+  ],
+  "Stone Guardians": [
+   [
+    45000,
+    80
+   ]
+  ],
+  "Stone Guardians (Oryx Horde)": [
+   [
+    20000,
+    100
+   ]
+  ],
+  "Stone Idol": [
+   [
+    25000,
+    85
+   ]
+  ],
+  "Stone Knight": [
+   [
+    4750,
+    45
+   ]
+  ],
+  "Stone Mage": [
+   [
+    3000,
+    50
+   ]
+  ],
+  "Stone Monolith": [
+   [
+    10000,
+    60
+   ]
+  ],
+  "Stone Ore Realm": [
+   [
+    5000000,
+    0
+   ]
+  ],
+  "Stone Paladin": [
+   [
+    5000,
+    65
+   ]
+  ],
+  "Stone Ranger": [
+   [
+    3250,
+    35
+   ]
+  ],
+  "Stone Warrior": [
+   [
+    4000,
+    55
+   ]
+  ],
+  "Stygian Mirror": [
+   [
+    100000,
+    30
+   ]
+  ],
+  "Succubus (Realm)": [
+   [
+    8000,
+    12
+   ]
+  ],
+  "Suesogian": [
+   [
+    40000,
+    30
+   ]
+  ],
+  "Suit of Armor": [
+   [
+    4000,
+    0
+   ]
+  ],
+  "Sulfuric Centipede": [
+   [
+    4000,
+    20
+   ]
+  ],
+  "Summoner Puppet": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Sumo Master": [
+   [
+    340,
+    5
+   ]
+  ],
+  "Sunflower Sentinel": [
+   [
+    2500,
+    18
+   ]
+  ],
+  "Sunken Soul": [
+   [
+    600,
+    8
+   ]
+  ],
+  "Sunken Treasure": [
+   [
+    9000,
+    30
+   ]
+  ],
+  "Sunken Treasure (Shipwreck)": [
+   [
+    25000,
+    35
+   ]
+  ],
+  "Swamp Spirit": [
+   [
+    4500,
+    15
+   ]
+  ],
+  "Swamp Stalker": [
+   [
+    5000,
+    20
+   ]
+  ],
+  "Swarm": [
+   [
+    360,
+    4
+   ]
+  ],
+  "Swarm Colony": [
+   [
+    9000,
+    2000
+   ]
+  ],
+  "Swarm Spider High": [
+   [
+    500,
+    0
+   ]
+  ],
+  "Swarm Spider Low": [
+   [
+    50,
+    0
+   ]
+  ],
+  "Swarm Spider Mid": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Swarm Spirit Snake": [
+   [
+    500,
+    5
+   ]
+  ],
+  "Swarm Tree": [
+   [
+    32500,
+    35
+   ]
+  ],
+  "Swoll Fairy": [
+   [
+    9750,
+    40
+   ]
+  ],
+  "Sword Wielding Host": [
+   [
+    2600,
+    50
+   ]
+  ],
+  "Sword in the Stone?": [
+   [
+    25000,
+    30
+   ]
+  ],
+  "Syndicate Fighter": [
+   [
+    350,
+    10
+   ]
+  ],
+  "Syndicate Healer": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Syndicate Mage": [
+   [
+    1550,
+    10
+   ]
+  ],
+  "Syndicate Ranger": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Syogian": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Tablet of the Monarchy": [
+   [
+    35000,
+    35
+   ]
+  ],
+  "Tal": [
+   [
+    200,
+    2
+   ]
+  ],
+  "Tarul": [
+   [
+    30000,
+    30
+   ]
+  ],
+  "Tarul Tentacle": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Tarul, Eyes of the Cosmos": [
+   [
+    30000,
+    30
+   ]
+  ],
+  "Tavern Cook": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Tavern Piano": [
+   [
+    8000,
+    60
+   ]
+  ],
+  "Tawny Warg": [
+   [
+    30,
+    0
+   ]
+  ],
+  "Tempest": [
+   [
+    15000,
+    30
+   ]
+  ],
+  "Tempest Sponge": [
+   [
+    800,
+    15
+   ]
+  ],
+  "Tengu": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Terracotta Knight": [
+   [
+    1000,
+    25
+   ]
+  ],
+  "Terracotta Paladin": [
+   [
+    900,
+    25
+   ]
+  ],
+  "Terracotta Warrior": [
+   [
+    800,
+    25
+   ]
+  ],
+  "Tesla Coil": [
+   [
+    600,
+    0
+   ]
+  ],
+  "Tesseract Fragment": [
+   [
+    6500,
+    30
+   ]
+  ],
+  "Tesseract Goddess": [
+   [
+    90000,
+    25
+   ]
+  ],
+  "Tezcacoatl the Great Basilisk": [
+   [
+    75000,
+    35
+   ]
+  ],
+  "The Appetizer": [
+   [
+    150000,
+    60
+   ]
+  ],
+  "The Beekeeper": [
+   [
+    60000,
+    35
+   ]
+  ],
+  "The Bridge Sentinel": [
+   [
+    250000,
+    40
+   ]
+  ],
+  "The Flying Dutchman": [
+   [
+    60000,
+    40
+   ]
+  ],
+  "The Forgotten King": [
+   [
+    500000,
+    50
+   ]
+  ],
+  "The Forgotten King (Original)": [
+   [
+    75000,
+    65
+   ]
+  ],
+  "The Forgotten Sentinel": [
+   [
+    56250,
+    70
+   ]
+  ],
+  "The Founder": [
+   [
+    50000,
+    40
+   ]
+  ],
+  "The Gardener": [
+   [
+    180000,
+    10
+   ]
+  ],
+  "The Glitch": [
+   [
+    55000,
+    1
+   ]
+  ],
+  "The Hemomancer": [
+   [
+    55000,
+    25
+   ]
+  ],
+  "The Hemomancer's Henchman": [
+   [
+    30000,
+    15
+   ]
+  ],
+  "The Keyper": [
+   [
+    50000,
+    25
+   ]
+  ],
+  "The Lich King": [
+   [
+    80000,
+    55
+   ]
+  ],
+  "The Plague Doctor": [
+   [
+    65000,
+    20
+   ]
+  ],
+  "The Pumpkin Master": [
+   [
+    67500,
+    40
+   ]
+  ],
+  "The Puppet Master": [
+   [
+    22500,
+    30
+   ]
+  ],
+  "The Puppet Master (Encore)": [
+   [
+    67500,
+    40
+   ]
+  ],
+  "The Santappetizer": [
+   [
+    150000,
+    60
+   ]
+  ],
+  "The Servers": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "The Shattered Queen": [
+   [
+    100000,
+    35
+   ]
+  ],
+  "The Skeyper": [
+   [
+    50000,
+    25
+   ]
+  ],
+  "The Source": [
+   [
+    20000,
+    15
+   ]
+  ],
+  "The Wanderer": [
+   [
+    2500,
+    5
+   ]
+  ],
+  "The Wanderer (Interregnum)": [
+   [
+    100000,
+    45
+   ]
+  ],
+  "Thessal the Mermaid Goddess": [
+   [
+    51750,
+    60
+   ]
+  ],
+  "Thessal the Mermaid Goddess (Original)": [
+   [
+    51750,
+    60
+   ]
+  ],
+  "Thorned Drake": [
+   [
+    5000,
+    30
+   ]
+  ],
+  "Thorned Drake Baby": [
+   [
+    2750,
+    15
+   ]
+  ],
+  "Thorned Ravager": [
+   [
+    6000,
+    15
+   ]
+  ],
+  "Thunderstrike": [
+   [
+    100000,
+    35
+   ]
+  ],
+  "Tiar": [
+   [
+    400,
+    10
+   ]
+  ],
+  "Tin Cannon": [
+   [
+    15000,
+    35
+   ]
+  ],
+  "Tiny Rototo": [
+   [
+    1200,
+    20
+   ]
+  ],
+  "Topaz Bat": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Topaz Slime": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Tormented Golem": [
+   [
+    8430,
+    1000
+   ]
+  ],
+  "Tormented Soul": [
+   [
+    1250,
+    12
+   ]
+  ],
+  "Tornado": [
+   [
+    8500,
+    0
+   ]
+  ],
+  "Tortured Soul": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Totalia the Malevolent": [
+   [
+    80000,
+    20
+   ]
+  ],
+  "Totalia's Bat Swarm": [
+   [
+    2500,
+    0
+   ]
+  ],
+  "Totem Spirit": [
+   [
+    125,
+    25
+   ]
+  ],
+  "Towering Perfection": [
+   [
+    100000,
+    40
+   ]
+  ],
+  "Trap Element": [
+   [
+    100000,
+    1000
+   ]
+  ],
+  "Treasure Mimic": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Treasure Oryx Defender": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Treasure Oryx Defender Deux": [
+   [
+    3000,
+    30
+   ]
+  ],
+  "Treasure Plunderer": [
+   [
+    2000,
+    15
+   ]
+  ],
+  "Treasure Pot": [
+   [
+    500,
+    10
+   ]
+  ],
+  "Treasure Pot (Lost Halls)": [
+   [
+    3000,
+    0
+   ]
+  ],
+  "Treasure Rat": [
+   [
+    4000,
+    15
+   ]
+  ],
+  "Treasure Robber": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Treasure Sarcophagus": [
+   [
+    26250,
+    100
+   ]
+  ],
+  "Treasure Thief": [
+   [
+    10000,
+    10
+   ]
+  ],
+  "Treasurer Gemsbok": [
+   [
+    150000,
+    40
+   ]
+  ],
+  "Trickster Pumpkin": [
+   [
+    25000,
+    20
+   ]
+  ],
+  "Trickster Puppet": [
+   [
+    1000,
+    18
+   ]
+  ],
+  "Trickster Puppet (Encore)": [
+   [
+    22500,
+    20
+   ]
+  ],
+  "Trickster Puppet Decoy": [
+   [
+    600,
+    18
+   ]
+  ],
+  "Troll Matriarch": [
+   [
+    20000,
+    10
+   ]
+  ],
+  "Troll Pathfinder": [
+   [
+    3000,
+    16
+   ]
+  ],
+  "Troll's Toadstool": [
+   [
+    500,
+    5
+   ]
+  ],
+  "Tundra Tribe Fighter": [
+   [
+    1600,
+    20
+   ]
+  ],
+  "Tundra Tribe Leader": [
+   [
+    2000,
+    20
+   ]
+  ],
+  "Tundra Tribe Shaman": [
+   [
+    1800,
+    20
+   ]
+  ],
+  "Turkey High": [
+   [
+    4000,
+    15
+   ]
+  ],
+  "Turkey Low": [
+   [
+    150,
+    15
+   ]
+  ],
+  "Turkey Mid": [
+   [
+    1500,
+    15
+   ]
+  ],
+  "Turret Attack": [
+   [
+    2000,
+    10
+   ]
+  ],
+  "Twilight Archmage": [
+   [
+    300000,
+    45
+   ]
+  ],
+  "Twilight Archmage (Original)": [
+   [
+    58125,
+    70
+   ]
+  ],
+  "Twisted Pistolwisp": [
+   [
+    2500,
+    10
+   ]
+  ],
+  "Twisted Thornbush": [
+   [
+    650,
+    1000
+   ]
+  ],
+  "USEast": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USEast2": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USEast3": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USMidWest": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USMidWest2": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USNorthWest": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USSouth": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USSouth2": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USSouth3": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USSouthWest": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USWest": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USWest2": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "USWest3": [
+   [
+    11250,
+    15
+   ]
+  ],
+  "Ultimate Squirrel": [
+   [
+    400,
+    4
+   ]
+  ],
+  "Undead Dwarf Axebearer": [
+   [
+    260,
+    7
+   ]
+  ],
+  "Undead Dwarf God": [
+   [
+    800,
+    11
+   ]
+  ],
+  "Undead Dwarf King": [
+   [
+    400,
+    7
+   ]
+  ],
+  "Undead Dwarf Mage": [
+   [
+    210,
+    0
+   ]
+  ],
+  "Undead Dwarf Warrior": [
+   [
+    250,
+    7
+   ]
+  ],
+  "Undead Hobbit Archer": [
+   [
+    28,
+    0
+   ]
+  ],
+  "Undead Hobbit Mage": [
+   [
+    270,
+    5
+   ]
+  ],
+  "Undead Hobbit Rogue": [
+   [
+    34,
+    0
+   ]
+  ],
+  "Undead Pirate": [
+   [
+    800,
+    14
+   ]
+  ],
+  "Unholy Dream Mucus Echo Vortex": [
+   [
+    5000,
+    50
+   ]
+  ],
+  "Unicorn": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Uninfected Archer": [
+   [
+    1350,
+    20
+   ]
+  ],
+  "Uninfected Chest": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Uninfected Priest": [
+   [
+    1275,
+    10
+   ]
+  ],
+  "Uninfected Rogue": [
+   [
+    1350,
+    15
+   ]
+  ],
+  "Uninfected Warrior": [
+   [
+    1500,
+    30
+   ]
+  ],
+  "Uninfected Wizard": [
+   [
+    1125,
+    10
+   ]
+  ],
+  "Unsung Jester": [
+   [
+    1000,
+    0
+   ]
+  ],
+  "Untaris Satellite Core": [
+   [
+    22500,
+    0
+   ]
+  ],
+  "Uoro": [
+   [
+    100,
+    4
+   ]
+  ],
+  "Urake": [
+   [
+    500,
+    7
+   ]
+  ],
+  "Urgle": [
+   [
+    1600,
+    9
+   ]
+  ],
+  "Utanu": [
+   [
+    700,
+    15
+   ]
+  ],
+  "Vagabond Satyr": [
+   [
+    1700,
+    0
+   ]
+  ],
+  "Vagrant Sellsword Ond'ande": [
+   [
+    60000,
+    40
+   ]
+  ],
+  "Valentine's Candy Heart": [
+   [
+    800,
+    0
+   ]
+  ],
+  "Valentine's Card": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Valentine's Flower": [
+   [
+    37500,
+    0
+   ]
+  ],
+  "Vampire Bat": [
+   [
+    200,
+    25
+   ]
+  ],
+  "Vampire Bat Swarmer": [
+   [
+    125,
+    25
+   ]
+  ],
+  "Vegetarian Tiger": [
+   [
+    2000,
+    35
+   ]
+  ],
+  "Vengeful Shampoo": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Vengeful Spirit": [
+   [
+    2000,
+    0
+   ]
+  ],
+  "Vengeful Vampire": [
+   [
+    600,
+    8
+   ]
+  ],
+  "Vile Maggot": [
+   [
+    200,
+    2
+   ]
+  ],
+  "Vintner of Oryx": [
+   [
+    1500,
+    18
+   ]
+  ],
+  "Violent Spirit": [
+   [
+    1200,
+    0
+   ]
+  ],
+  "Viridian Soul Shard": [
+   [
+    3750,
+    20
+   ]
+  ],
+  "Viridian Wretched Rose": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Void Emperor": [
+   [
+    5000000,
+    90
+   ]
+  ],
+  "Void Entity": [
+   [
+    300000,
+    60
+   ]
+  ],
+  "Void Fragment": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Void Phantasm": [
+   [
+    20000,
+    5
+   ]
+  ],
+  "Void Prison": [
+   [
+    20000,
+    40
+   ]
+  ],
+  "Void Shade": [
+   [
+    4500,
+    25
+   ]
+  ],
+  "Voided Arachna the Spider Queen": [
+   [
+    7500,
+    10
+   ]
+  ],
+  "Voided Blooming Flower": [
+   [
+    20000,
+    0
+   ]
+  ],
+  "Voided Golden Oryx Effigy": [
+   [
+    20000,
+    10
+   ]
+  ],
+  "Voided Gulpord the Slime God": [
+   [
+    35000,
+    30
+   ]
+  ],
+  "Voided Ivory Wyvern": [
+   [
+    60000,
+    50
+   ]
+  ],
+  "Voided Killer Bee Queen": [
+   [
+    60000,
+    50
+   ]
+  ],
+  "Voided Nightmare Colony": [
+   [
+    35000,
+    30
+   ]
+  ],
+  "Voided Septavius the Ghost God": [
+   [
+    20000,
+    10
+   ]
+  ],
+  "Voided Son of Arachna": [
+   [
+    35000,
+    30
+   ]
+  ],
+  "Vorck": [
+   [
+    300,
+    4
+   ]
+  ],
+  "Vorv": [
+   [
+    700,
+    20
+   ]
+  ],
+  "Vulture": [
+   [
+    950,
+    16
+   ]
+  ],
+  "Walking Horror": [
+   [
+    2625,
+    20
+   ]
+  ],
+  "Wand Wielding Host": [
+   [
+    1800,
+    30
+   ]
+  ],
+  "Wandering Spectatre": [
+   [
+    30000,
+    50
+   ]
+  ],
+  "Wandering Wailer": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "Warped Ent Ancient": [
+   [
+    24000,
+    25
+   ]
+  ],
+  "Warped Entling": [
+   [
+    1900,
+    15
+   ]
+  ],
+  "Warrior Bee": [
+   [
+    900,
+    2
+   ]
+  ],
+  "Warrior Puppet": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Warrior Wasp": [
+   [
+    150,
+    3
+   ]
+  ],
+  "Warrior of Oryx": [
+   [
+    1500,
+    20
+   ]
+  ],
+  "Washed-Up Captain": [
+   [
+    16000,
+    15
+   ]
+  ],
+  "Wasp Queen": [
+   [
+    850,
+    2
+   ]
+  ],
+  "Waste": [
+   [
+    10000,
+    25
+   ]
+  ],
+  "Watcher": [
+   [
+    2250,
+    20
+   ]
+  ],
+  "Watcher Sentinel": [
+   [
+    4500,
+    30
+   ]
+  ],
+  "Watchling": [
+   [
+    900,
+    15
+   ]
+  ],
+  "Water Elemental": [
+   [
+    22000,
+    35
+   ]
+  ],
+  "Water Mine": [
+   [
+    1000,
+    30
+   ]
+  ],
+  "Well of Souls": [
+   [
+    80000,
+    30
+   ]
+  ],
+  "Wereleopard": [
+   [
+    220,
+    1
+   ]
+  ],
+  "Werelion": [
+   [
+    400,
+    5
+   ]
+  ],
+  "Werepanther": [
+   [
+    240,
+    3
+   ]
+  ],
+  "Weretiger": [
+   [
+    220,
+    3
+   ]
+  ],
+  "Werewolf": [
+   [
+    3000,
+    16
+   ]
+  ],
+  "Werewolf Berserker": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Werewolf Cub": [
+   [
+    450,
+    8
+   ]
+  ],
+  "Wetlands Chomper": [
+   [
+    4500,
+    20
+   ]
+  ],
+  "Whirlpool": [
+   [
+    10000,
+    0
+   ]
+  ],
+  "White Blood Cell": [
+   [
+    12500,
+    10
+   ]
+  ],
+  "White Bunny God": [
+   [
+    1750,
+    15
+   ]
+  ],
+  "White Demon": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "White Demon of the Abyss": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "White Dragon Whelp": [
+   [
+    240,
+    0
+   ]
+  ],
+  "White Drake": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "White Moon": [
+   [
+    1000,
+    50
+   ]
+  ],
+  "White Planet": [
+   [
+    1000,
+    50
+   ]
+  ],
+  "Wind Vortex": [
+   [
+    99999,
+    0
+   ]
+  ],
+  "Winter Reaper": [
+   [
+    6000,
+    15
+   ]
+  ],
+  "Wishing Troll": [
+   [
+    4000,
+    20
+   ]
+  ],
+  "Withered Sphinx": [
+   [
+    65000,
+    25
+   ]
+  ],
+  "Wizard Puppet": [
+   [
+    800,
+    15
+   ]
+  ],
+  "Wood Construct": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Woodland Skysplitter Stone": [
+   [
+    1000,
+    10
+   ]
+  ],
+  "Worker Wasp": [
+   [
+    110,
+    1
+   ]
+  ],
+  "World's Oyster": [
+   [
+    65000,
+    55
+   ]
+  ],
+  "World's Oyster Coral": [
+   [
+    6000,
+    0
+   ]
+  ],
+  "World's Pearl": [
+   [
+    15000,
+    30
+   ]
+  ],
+  "Worshipping Priest": [
+   [
+    8000,
+    20
+   ]
+  ],
+  "Worshipping Priestess": [
+   [
+    7000,
+    15
+   ]
+  ],
+  "Wraith": [
+   [
+    1000,
+    15
+   ]
+  ],
+  "Wretched Executioner": [
+   [
+    10000,
+    40
+   ]
+  ],
+  "X Treasure Chest": [
+   [
+    200,
+    1
+   ]
+  ],
+  "XP Gifts": [
+   [
+    600,
+    null
+   ],
+   [
+    400,
+    null
+   ],
+   [
+    800,
+    null
+   ],
+   [
+    200,
+    null
+   ]
+  ],
+  "Xolotl the Lightning God": [
+   [
+    90000,
+    30
+   ]
+  ],
+  "Yangu": [
+   [
+    400,
+    3
+   ]
+  ],
+  "Yellow Beehemoth": [
+   [
+    20000,
+    25
+   ]
+  ],
+  "Yellow Drake": [
+   [
+    3500,
+    30
+   ]
+  ],
+  "Yellow Killer Bee": [
+   [
+    400,
+    25
+   ]
+  ],
+  "Yellow Larva": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Yellow Leprechaun": [
+   [
+    60000,
+    0
+   ]
+  ],
+  "Yellow Nest Colony Guardian": [
+   [
+    400,
+    25
+   ]
+  ],
+  "Yellow Python": [
+   [
+    200,
+    5
+   ]
+  ],
+  "Yellow Soldier Bee": [
+   [
+    5625,
+    20
+   ]
+  ],
+  "Yellow Swarm Masters": [
+   [
+    3000,
+    20
+   ]
+  ],
+  "Yellow Swarm Minions": [
+   [
+    200,
+    0
+   ]
+  ],
+  "Yeti": [
+   [
+    6000,
+    20
+   ]
+  ],
+  "Yimi": [
+   [
+    300,
+    4
+   ]
+  ],
+  "Yuki-Onna": [
+   [
+    1500,
+    10
+   ]
+  ],
+  "Zhiar": [
+   [
+    150,
+    0
+   ]
+  ],
+  "Znorgian": [
+   [
+    2250,
+    25
+   ]
+  ],
+  "Znorgling": [
+   [
+    950,
+    15
+   ]
+  ],
+  "Znorgorm": [
+   [
+    12000,
+    25
+   ]
+  ],
+  "Zombie Archer": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Assassin": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Bard": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Cleric": [
+   [
+    1000,
+    12
+   ]
+  ],
+  "Zombie Druid": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Hulk": [
+   [
+    10000,
+    16
+   ]
+  ],
+  "Zombie Huntress": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Kensei": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Knight": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Mystic": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Necromancer": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Ninja": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Paladin": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Pirate Jr": [
+   [
+    700,
+    11
+   ]
+  ],
+  "Zombie Pirate Sr": [
+   [
+    1200,
+    17
+   ]
+  ],
+  "Zombie Priest": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Rogue": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Samurai": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Sorcerer": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Summoner": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Trickster": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Warrior": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Zombie Wizard": [
+   [
+    2500,
+    20
+   ]
+  ]
+ }
+}

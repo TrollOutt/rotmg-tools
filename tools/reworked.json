@@ -1,0 +1,20 @@
+{
+  "about": "A dungeon rework can leave the creatures it replaced in the client, beside the new ones. RealmEye then writes one page per creature, about the one played now. `generations` names the client working-id prefix of the retired and of the reworked objects of a dungeon: where both hold the same display name, tools/build-index.js lets a reworked one carry the row, and tools/database/export_realmeye_enrichment.py sends the page's relations to it. `pages` covers a creature the rework also renamed, so no shared name ties the two: the Index id of the retired record, then the id of the record its page belongs to, read by tools/index-wiki.js and tools/database/realmeye_archive_import.py. `slugs` covers a page whose creature the client shows under another display name, so no name can find it and another creature of the page's name took it: the RealmEye page slug, then the Index id of the record whose life and defence the page states.",
+  "generations": [
+    {
+      "dungeon": "The Third Dimension",
+      "retired": "tD ",
+      "current": "3D "
+    }
+  ],
+  "pages": {
+    "enemy:Masquarerader": "enemy:The Masquarerader"
+  },
+  "slugs": {
+    "chicken": "enemy:Oryx Chicken Minion",
+    "fate": "enemy:Statue of Fate",
+    "exaltation-banner": "enemy:ExaltationBanner",
+    "5-leaf-shamrock": "enemy:St Patrick's SHamrock",
+    "kogbold-tinkerer": "enemy:Kogbold Expedition Engine#KSW Tinkerer 1"
+  }
+}

@@ -124,6 +124,22 @@ and the fights; `tools/check-index.js` fails if one reaches a tool. RealmEye's
 Testing, Admin and Scrapped pages are not used: they link test copies to live
 pages (Rock Dragon, Lost Halls).
 
+The client gives one display name to several objects (the creature, its
+helpers, a harder copy, a copy a rework retired), and the Index picks which
+one carries the row. `npm run wiki-stats` writes the life and defence each
+RealmEye page states to `data/Index/realmeye-stats.json`; the build lets the
+object matching them carry the row, and the wiki join sends the page there.
+Values shown stay the client's. Cases no name can settle go in
+`tools/reworked.json`.
+
+After an update, `npm run validate` compares the Index with RealmEye and the
+client scrape (it ends `npm run scrape`, without failing it). `npm run review`
+opens each finding at http://127.0.0.1:5198/review/, RealmEye on the left and
+the site's card on the right, and records a person's verdict in
+`tools/validation-review.json`: "ok" quiets a finding, "error" keeps the
+validator failing until the data is fixed. A verdict is asked again when the
+finding changes.
+
 For an ordinary client update, do not run a recursive/full-site RealmEye crawl.
 Fetch only exact pages justified by new or changed records unless the user
 explicitly requests a full refresh.

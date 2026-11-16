@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérification des données</title>
+<link rel="stylesheet" href="review.css">
+</head>
+<body>
+<header class="bar">
+  <h1>Vérification des données</h1>
+  <p class="sub">RealmEye à gauche, le site à droite&nbsp;: le site est-il faux&nbsp;?</p>
+  <div class="tally" id="tally"></div>
+  <div class="tools">
+    <label>Contrôle <select id="check"></select></label>
+    <label>Statut
+      <select id="status">
+        <option value="todo">À vérifier</option>
+        <option value="error">Erreurs confirmées</option>
+        <option value="ok">Sans erreur</option>
+        <option value="all">Tout</option>
+      </select>
+    </label>
+    <button type="button" id="list-toggle" class="quiet" aria-pressed="true">Liste</button>
+    <button type="button" id="rerun" class="quiet" title="Relance npm run validate sur les données actuelles">Relancer la validation</button>
+  </div>
+</header>
+
+<main class="layout" id="layout">
+  <nav class="list" id="list" aria-label="Constats"></nav>
+
+  <section class="pane compare" aria-labelledby="compare-title">
+    <div class="pane-head">
+      <h2 id="compare-title">Comparaison</h2>
+      <div class="nav">
+        <button type="button" id="prev" class="quiet" title="Précédent (←)">←</button>
+        <span id="position"></span>
+        <button type="button" id="next" class="quiet" title="Suivant (→)">→</button>
+      </div>
+    </div>
+    <div class="pane-body" id="detail">
+      <p class="empty">Chargement…</p>
+    </div>
+    <form class="verdict" id="verdict">
+      <p class="question">Le site montre-t-il une erreur&nbsp;?</p>
+      <div class="buttons">
+        <button type="button" class="is-error" data-verdict="error" title="Raccourci : E">✗ Erreur sur le site <kbd>E</kbd></button>
+        <button type="button" class="is-ok" data-verdict="ok" title="Raccourci : O">✓ Pas d'erreur <kbd>O</kbd></button>
+        <button type="button" class="quiet" data-verdict="skip" title="Raccourci : →">Passer</button>
+      </div>
+      <input type="text" id="note" maxlength="500" placeholder="Note (facultative) : pourquoi ?" aria-label="Note">
+      <p class="saved" id="saved" role="status"></p>
+    </form>
+  </section>
+
+  <section class="pane site" aria-labelledby="site-title">
+    <div class="pane-head">
+      <h2 id="site-title">Le site</h2>
+      <div class="records" id="records"></div>
+      <a id="site-open" target="_blank" rel="noopener" class="quiet link">Ouvrir ↗</a>
+    </div>
+    <iframe id="site" title="La fiche sur le site" src="about:blank"></iframe>
+  </section>
+</main>
+
+<script src="review.js"></script>
+</body>
+</html>

@@ -1055,13 +1055,46 @@ for (const it of gear) {
    * visible, playable creature wins over an invisible helper carrying the
    * same DisplayId. The final terms make the choice deterministic.
    */
-  const pick = here => [...here].sort((a, b) => {
-    const score = one => (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
+  /*
+   * And a creature a dungeon rework replaced never wins over its replacement.
+   * The client keeps both generations of the Third Dimension under the same
+   * names, and the retired one is declared first; tools/reworked.json names
+   * the working-id prefix of each generation. Only where both are present.
+   */
+  const GENERATIONS = require('./reworked.json').generations || [];
+  const retiredIn = here => {
+    const lost = new Set();
+    for (const { retired, current } of GENERATIONS) {
+      const of = (one, prefix) => one.kind === 'enemy' && (one.alias || '').startsWith(prefix);
+      if (!here.some(one => of(one, current))) continue;
+      for (const one of here) if (of(one, retired)) lost.add(one);
+    }
+    return lost;
+  };
+  /*
+   * And the creature RealmEye's page of that name describes wins over its
+   * helpers and copies. data/Index/realmeye-stats.json holds the life and
+   * defence each page states; the object matching them is the one players
+   * call by the name. Only a tie-break: the values shown stay the client's,
+   * and a page matching no object, or every object, changes nothing.
+   */
+  const STATED = (() => {
+    const file = path.join(OUT, 'realmeye-stats.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).enemies || {} : {};
+  })();
+  const described = one => one.kind === 'enemy' && one.hp !== undefined
+    && (STATED[one.name] || []).some(([hp, def]) => hp === one.hp && (def === null || one.def === undefined || def === one.def));
+  const pick = here => { const lost = retiredIn(here); return [...here].sort((a, b) => {
+    const score = one => (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0)
+      + (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
       + (!one.hidden ? 1000 : 0) + (!one.spawns ? 500 : 0)
       + (!one.alias ? 100 : 0) + (one.hp !== undefined ? 20 : 0)
       + ((one.labels || []).includes('BOSS') ? 10 : 0);
-    return score(b) - score(a) || a.id.localeCompare(b.id);
-  })[0];
+    /* Among the replacements the first declared is the creature itself; its
+       decoys and helpers follow it in the file, and an id sorts them first. */
+    return score(b) - score(a) || (lost.size ? here.indexOf(a) - here.indexOf(b) : 0)
+      || a.id.localeCompare(b.id);
+  })[0]; };
   function fold(here, say, why, rule) {
     here = [...new Set(here)].filter(one => one && !one.folded);
     const into = pick(here);
