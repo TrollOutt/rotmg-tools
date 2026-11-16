@@ -45,6 +45,16 @@
   let current = null;           // the finding's full key
   let shownRecord = null;       // the record the site pane shows
   let picking = false;          // "not the same": choosing the right record
+  /* Every answer given, newest last, with what was there before: "go back" puts it back. */
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('review.history') || '[]'); } catch { history = []; }
+  function keepHistory() {
+    history = history.slice(-200);
+    try { localStorage.setItem('review.history', JSON.stringify(history)); } catch { /* private window */ }
+    $('undo').disabled = !history.length;
+    const last = history[history.length - 1];
+    $('undo').title = last ? 'Annule la réponse donnée sur « ' + last.title + ' » et y revient (raccourci : Z)' : 'Aucune réponse à annuler';
+  }
 
   const keyOf = one => one.check + '|' + one.key;
   const findingOf = key => state.report.findings.find(one => keyOf(one) === key);
@@ -283,7 +293,10 @@
     try {
       const body = { key: current, verdict: same ? null : verdict, note: $('note').value };
       if (!same && pick) body.pick = pick;
+      const before = state.verdicts[current] || null;
       state.verdicts = (await api('verdict', body)).verdicts;
+      history.push({ key: current, title: titleOf(one), before });
+      keepHistory();
     } catch (error) {
       $('saved').textContent = 'Non enregistré : ' + error.message;
       return;
@@ -310,6 +323,33 @@
       return;
     }
     save(verdict, null);
+  }
+
+  async function undo() {
+    const last = history[history.length - 1];
+    if (!last || !state) return;
+    const before = last.before;
+    try {
+      const body = { key: last.key, verdict: before ? before.verdict : null, note: before ? before.note || '' : '' };
+      if (before && before.pick) body.pick = before.pick;
+      state.verdicts = (await api('verdict', body)).verdicts;
+    } catch (error) {
+      // The finding is gone from the report (data changed): drop it from the history.
+      history.pop();
+      keepHistory();
+      $('saved').textContent = 'Impossible de revenir sur « ' + last.title + ' » : ' + error.message;
+      return;
+    }
+    history.pop();
+    keepHistory();
+    const one = findingOf(last.key);
+    if (one && !visible().includes(one)) {          // put it where it can be seen again
+      $('status').value = statusOf(one) === 'todo' || statusOf(one) === 'stale' ? 'todo' : 'all';
+      if ($('check').value !== 'all' && $('check').value !== one.check) $('check').value = 'all';
+    }
+    select(last.key);
+    $('saved').textContent = 'Réponse annulée sur « ' + last.title + ' »'
+      + (before ? " : l'avis précédent (" + (before.verdict === 'ok' ? 'même chose' : 'pas la même chose') + ') est remis.' : ' : de nouveau à regarder.');
   }
 
   async function load(rerun) {
@@ -345,6 +385,8 @@
     store.set('list', hidden ? '0' : '1');
   });
   $('rerun').addEventListener('click', () => load(true));
+  $('undo').addEventListener('click', undo);
+  keepHistory();
   $('prev').addEventListener('click', () => step(-1));
   $('next').addEventListener('click', () => step(1));
   $('list').addEventListener('click', event => {
@@ -360,6 +402,7 @@
     if (pick) { save('error', pick.dataset.pick || null); return; }
     const button = event.target.closest('[data-verdict]');
     if (button) answer(button.dataset.verdict);
+    if (picking && event.target.closest('#undo')) { picking = false; drawVerdict(findingOf(current)); }
   });
   $('verdict').addEventListener('submit', event => event.preventDefault());
   function shortcut(event) {
@@ -371,6 +414,8 @@
     else if (key === 'e' || key === 'E') { event.preventDefault(); answer('error'); }
     else if (key === 'ArrowRight') { event.preventDefault(); step(1); }
     else if (key === 'ArrowLeft') { event.preventDefault(); step(-1); }
+    else if (key === 'z' || key === 'Z' || key === 'Backspace') { event.preventDefault(); undo(); }
+    else if (key === 'Escape' && picking) { event.preventDefault(); picking = false; drawVerdict(findingOf(current)); $('saved').textContent = ''; }
     else if (picking && /^[0-9]$/.test(key)) {
       const one = findingOf(current);
       const candidates = others(one);

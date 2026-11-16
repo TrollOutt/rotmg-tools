@@ -305,3 +305,5 @@ iframe { flex: 1; width: 100%; border: 0; background: #0c0b09; }
 .picker .tiles button kbd { position: absolute; top: 4px; right: 4px; margin: 0; }
 .picker .tiles button[aria-pressed="true"] { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--panel-2)); }
 .picker .tiles button.none { justify-content: center; min-height: 90px; color: var(--muted); }
+
+.verdict .undo { margin-left: auto; }
