@@ -20,13 +20,24 @@ Checks:
   folded-target  a wiki relation pointing at a record folded into a different-looking one
   client-drift   Index records against the scraped client objects they were read from
 
+What a person is asked is always the same question: do the RealmEye page and
+the site's card show the same thing? The client's values are right by
+definition; a disagreement on life or tier is only a sign that a page may be
+joined to the wrong client object, and the pictures settle it. RealmEye alone
+is believed where the client says nothing (drops, retired content).
+
+  page-pictures  a page joined to several client objects that look different:
+                 is the one the site shows the one RealmEye pictures?
+
 Severity: ERROR = the site shows the wrong thing and the sources say which is
 right; WARN = the sources disagree and a person has to say who is right; INFO =
 context. A person's verdict on a finding lives in tools/validation-review.json
 (npm run review shows each finding beside the site and records it): "ok" keeps
 the finding quiet, "error" makes it an ERROR until the data is fixed. A verdict
 holds for the exact message it was given on; when the finding changes, it is
-asked again. Exit code 1 while an ERROR is not answered "ok".
+asked again. An "error" may name the right record (`pick`): the Index build
+then lets that record carry the page's row and the wiki join sends the page to
+it. Exit code 1 while an ERROR is not answered "ok".
 """
 from __future__ import annotations
 
@@ -97,6 +108,8 @@ class Sources:
         self.archive = archive          # {"facts": {slug: {key: [values]}}, "attacks": {slug: set}, "types": {slug: type}}
         self.client = client            # {"build": str, "objects": {type int: {...}}}
         self.notes = []
+        self.raised_pages = set()   # pages a check before page-pictures already raised
+        self.picks = {}             # page slug -> the record a person said it is about
         self._linked = None
 
     def final(self, record):
@@ -230,16 +243,21 @@ def check_enemy_attacks(src):
         if len(pictured) < 2:
             continue                      # too little to tell objects apart
         candidates = src.page_records(slug, "enemy")
-        if not candidates:
+        shown = src.shown(slug, "enemy")
+        if not candidates or not shown:
             continue
         compared += 1
+        # Only what the site shows: a folded helper firing the shots says nothing about the card.
         fired = set()
-        for record in candidates:
+        for record in shown:
             thing = src.client_object(record)
             if thing:
                 fired |= thing["shots"]
         if fired & pictured:
             continue
+        # The page's other objects that do fire them are the likeliest replacements.
+        firing = [record for record in candidates if record not in shown
+                  and (src.client_object(record) or {}).get("shots", set()) & pictured]
         tally = defaultdict(int)
         for shot in pictured:
             for kind in owners[shot]:
@@ -248,11 +266,16 @@ def check_enemy_attacks(src):
         strong = [(kind, count) for kind, count in best if count >= max(2, len(pictured) // 2)]
         named = ", ".join((label(by_type[kind]) if kind in by_type else src.client["objects"][kind]["id"]) + f" ({count} of {len(pictured)})"
                           for kind, count in (strong or best))
-        findings.append(("ERROR" if strong else "WARN", "enemy-attacks", f"{slug}|{candidates[0]['id']}",
-                         f"RealmEye '{slug}' pictures shots ({', '.join(sorted(pictured)[:4])}...) that none of its "
-                         f"{len(candidates)} record(s) fires ({label(src.final(candidates[0]))}). They belong to: {named}.",
-                         {"page": slug, "shots": sorted(pictured), "shown": [src.final(candidates[0])["id"]],
-                          "candidates": [by_type[kind]["id"] for kind, _ in (strong or best) if kind in by_type]}))
+        if firing:
+            named = ", ".join(label(record) for record in firing[:4])
+        # A creature's shots are often fired by a helper object of its own name,
+        # so a firing helper only asks for a look; shots owned elsewhere outright are an error.
+        findings.append(("ERROR" if (strong and not firing) else "WARN", "enemy-attacks", f"{slug}|{shown[0]['id']}",
+                         f"RealmEye '{slug}' pictures shots ({', '.join(sorted(pictured)[:4])}...) that the site's "
+                         f"{label(shown[0])} does not fire. They belong to: {named}.",
+                         {"page": slug, "shots": sorted(pictured), "shown": [record["id"] for record in shown],
+                          "candidates": [record["id"] for record in firing[:4]]
+                          or [by_type[kind]["id"] for kind, _ in (strong or best) if kind in by_type]}))
     src.notes.append(f"enemy-attacks: {compared} enemy pages picture client shots and were compared")
     return findings
 
@@ -298,10 +321,13 @@ def check_folded_targets(src):
     """A wiki relation that points at a folded record which does not look like its carrier."""
     findings = []
     targets = defaultdict(set)
+    pages = defaultdict(lambda: defaultdict(int))
     for rid, item in src.enrichment["records"].items():
         for relation in item.get("relations") or []:
             if relation.get("to"):
                 targets[relation["to"]].add(rid)
+                if relation.get("toRealmEye"):
+                    pages[relation["to"]][relation["toRealmEye"]] += 1
     for target in sorted(targets):
         record = src.records.get(target)
         if not record or not record.get("folded"):
@@ -313,7 +339,8 @@ def check_folded_targets(src):
         findings.append(("WARN", "folded-target", target,
                          f"{len(targets[target])} wiki relation(s) point at {label(record)}, which is folded into "
                          f"{label(carrier)} and differs from it in {', '.join(differs)}: cards show the folded one.",
-                         {"shown": [target], "candidates": [carrier["id"]], "from": sorted(targets[target])[:8]}))
+                         {"shown": [target], "candidates": [carrier["id"]], "from": sorted(targets[target])[:8],
+                          **({"page": max(pages[target].items(), key=lambda kv: (kv[1], kv[0]))[0]} if pages[target] else {})}))
     return findings
 
 
@@ -353,7 +380,60 @@ def check_client_drift(src):
     return findings
 
 
-CHECKS = [check_enemy_stats, check_enemy_attacks, check_item_stats, check_folded_targets, check_client_drift]
+def check_page_pictures(src):
+    """A page joined to client objects that look different: does the site show the one RealmEye means?
+
+    Nothing in the data can answer it: two objects of one name are both "right"
+    as far as the client goes. A person compares the pictures. Pages another
+    check already raised, and pages a person already pointed at a record, are
+    left out.
+    """
+    findings = []
+    raised = src.raised_pages
+    # A person's answer waits for the next data update to reach the site.
+    for slug, pick in sorted(src.picks.items()):
+        record = src.records.get(pick)
+        if not record:
+            findings.append(("ERROR", "page-pictures", f"{slug}|picked",
+                             f"A person said RealmEye '{slug}' is about {pick}, which the Index no longer holds: look again.",
+                             {"page": slug, "shown": [], "candidates": []}))
+            continue
+        shown = src.shown(slug, record.get("kind"))
+        if pick not in [one["id"] for one in shown] and pick not in [src.final(one)["id"] for one in shown]:
+            findings.append(("ERROR", "page-pictures", f"{slug}|picked",
+                             f"A person said RealmEye '{slug}' is about {label(record)}; the site still shows "
+                             f"{', '.join(label(one) for one in shown) or 'nothing'}. Run the data update (npm run scrape).",
+                             {"page": slug, "shown": [one["id"] for one in shown], "candidates": [pick]}))
+    for slug in sorted(src.page_ids):
+        if slug in raised or slug in src.picks:
+            continue
+        for kind in ("enemy", "item", "portal"):
+            records = src.page_records(slug, kind)
+            if len(records) < 2:
+                continue
+            shown = src.shown(slug, kind)
+            if not shown or not shown[0].get("art"):
+                continue
+            pictures, others = {json.dumps(shown[0]["art"])}, []
+            for record in records:
+                key = json.dumps(record.get("art"))
+                if record.get("art") and key not in pictures:
+                    pictures.add(key)
+                    others.append(record)
+            if not others:
+                continue
+            findings.append(("INFO", "page-pictures", f"{slug}|{shown[0]['id']}",
+                             f"RealmEye '{slug}' is joined to {len(records)} client objects with "
+                             f"{len(pictures)} different pictures; the site shows {label(shown[0])}.",
+                             {"page": slug, "shown": [shown[0]["id"]], "candidates": [r["id"] for r in others[:6]]}))
+    src.notes.append(f"page-pictures: {len(findings)} pages joined to differently drawn objects wait for a look")
+    return findings
+
+
+CHECKS = [check_enemy_stats, check_enemy_attacks, check_item_stats, check_folded_targets, check_client_drift,
+          check_page_pictures]
+# What a person is shown; the rest is for the data's maintainer.
+REVIEWED = {"enemy-stats", "enemy-attacks", "item-stats", "folded-target", "page-pictures"}
 
 
 # ---------------------------------------------------------------- loading
@@ -433,11 +513,15 @@ def run(src, verdicts=None):
     `confirmed`. A verdict given on another message is reported as `stale`.
     """
     verdicts = verdicts or {}
+    src.picks = picks_of(verdicts)
     findings = []
     for check in CHECKS:
         for level, name, key, message, *rest in check(src):
+            data = rest[0] if rest else {}
+            if data.get("page"):
+                src.raised_pages.add(data["page"])
             one = {"level": level, "check": name, "key": key, "message": message,
-                   "data": rest[0] if rest else {}, "accepted": None}
+                   "data": data, "accepted": None, "review": name in REVIEWED and not key.endswith("|picked")}
             verdict = verdicts.get(f"{name}|{key}")
             if verdict and verdict.get("message") == message:
                 one["verdict"] = verdict.get("verdict")
@@ -446,6 +530,8 @@ def run(src, verdicts=None):
                 elif verdict.get("verdict") == "error":
                     one["level"] = "ERROR"
                     one["confirmed"] = verdict.get("note") or "reviewed: error"
+                    if verdict.get("pick"):
+                        one["pick"] = verdict["pick"]
             elif verdict:
                 one["stale"] = verdict.get("verdict")
             findings.append(one)
@@ -480,6 +566,12 @@ def page_details(archive, slugs):
         out[slug] = {"title": title, "url": url, "version": version, "date": date, "images": images, "facts": facts}
     con.close()
     return out
+
+
+def picks_of(verdicts):
+    """Page slug -> the record a person said the page is about."""
+    return {one["page"]: one["pick"] for one in (verdicts or {}).values()
+            if one.get("verdict") == "error" and one.get("pick") and one.get("page")}
 
 
 def read_verdicts(path):
@@ -550,9 +642,10 @@ def main(argv=None):
                                                      "pages": pages}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"\n  full report: {out / 'report.md'}")
     errors = [one for one in findings if one["level"] == "ERROR" and not one["accepted"]]
-    waiting = [one for one in findings if one["level"] == "WARN" and not one["accepted"] and not one.get("verdict")]
+    waiting = [one for one in findings if one["review"] and one["level"] != "ERROR"
+               and not one["accepted"] and not one.get("verdict")]
     stale = [one for one in findings if one.get("stale")]
-    print(f"\n  {len(errors)} error(s) to fix or accept, {len(waiting)} warning(s) nobody has looked at"
+    print(f"\n  {len(errors)} error(s) to fix or accept, {len(waiting)} picture check(s) waiting for a person"
           + (f", {len(stale)} verdict(s) given on an older message" if stale else "") + ".")
     print("  Look at them beside the site: npm run review\n")
     return 1 if errors and not args.no_fail else 0

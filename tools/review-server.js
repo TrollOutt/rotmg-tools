@@ -9,9 +9,12 @@
  * client scrape and writes local/validation/report.json. Most of what it finds
  * needs a person: RealmEye can be behind, or the site can be showing the wrong
  * object. This serves a page that puts each finding's RealmEye side on the
- * left and the site's own card on the right, with two buttons, and writes the
- * answer to tools/validation-review.json, which the validator reads back:
- * "ok" quiets the finding, "error" makes it fail until the data is fixed.
+ * left and the site's own card on the right. A person answers one question -
+ * do they show the same thing? - by the pictures, since the client's values
+ * are right by definition. The answer goes to tools/validation-review.json:
+ * "ok" quiets the finding; "error" makes the validator fail until the data is
+ * fixed, and may name the record the page is really about, which the next
+ * build and wiki join then use.
  *
  * It serves the site from this checkout (web/ and data/) so the card on the
  * right is the one the next deploy publishes. Local only: it listens on
@@ -82,12 +85,16 @@ function state() {
   return { report, verdicts, records: summaries(ids), sheet: indexRecords().sheet };
 }
 
-function writeVerdict({ key, verdict, note }) {
+function writeVerdict({ key, verdict, note, pick }) {
   const report = readJson(REPORT, null);
   const finding = report && report.findings.find(one => one.check + '|' + one.key === key);
   if (!finding) throw Object.assign(new Error('no such finding in the current report: ' + key), { status: 404 });
   if (verdict !== null && verdict !== 'ok' && verdict !== 'error') {
     throw Object.assign(new Error('verdict must be "ok", "error" or null'), { status: 400 });
+  }
+  const offered = [...(finding.data?.shown || []), ...(finding.data?.candidates || [])];
+  if (pick !== undefined && pick !== null && (verdict !== 'error' || !offered.includes(pick) || !finding.data?.page)) {
+    throw Object.assign(new Error('a pick must be one of the records shown for this page, with "error"'), { status: 400 });
   }
   const doc = readJson(VERDICTS, { about: VERDICT_ABOUT, verdicts: {} });
   doc.about = doc.about || VERDICT_ABOUT;
@@ -96,6 +103,7 @@ function writeVerdict({ key, verdict, note }) {
   else {
     doc.verdicts[key] = {
       verdict, note: String(note || '').slice(0, 500), message: finding.message,
+      ...(pick ? { pick, page: finding.data.page } : {}),
       at: new Date().toISOString().slice(0, 10)
     };
   }

@@ -1082,10 +1082,29 @@ for (const it of gear) {
     const file = path.join(OUT, 'realmeye-stats.json');
     return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).enemies || {} : {};
   })();
+  /*
+   * And the record a person pointed at wins over both: npm run review shows a
+   * RealmEye page beside the site, and "not the same thing, it is this one"
+   * is written to tools/validation-review.json; tools/reworked.json `slugs`
+   * holds the same kind of answer for cases settled by hand.
+   */
+  const PICKED = (() => {
+    const read = file => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {});
+    const verdicts = Object.values(read(path.join(root, 'tools', 'validation-review.json')).verdicts || {});
+    return new Map([                            // record id -> the page said to be about it
+      ...Object.entries(read(path.join(root, 'tools', 'reworked.json')).slugs || {}).map(([page, id]) => [id, page]),
+      ...verdicts.filter(one => one.verdict === 'error' && one.pick && one.page).map(one => [one.pick, one.page])
+    ]);
+  })();
+  /* Only for the row of the page's own name: "5 Leaf Shamrock" is about an
+     object the client calls St Patrick's SHamrock, which must not take the
+     St Patrick's Shamrock row for it. */
+  const slugOf = name => String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const picked = one => PICKED.has(one.id) && slugOf(one.name) === PICKED.get(one.id);
   const described = one => one.kind === 'enemy' && one.hp !== undefined
     && (STATED[one.name] || []).some(([hp, def]) => hp === one.hp && (def === null || one.def === undefined || def === one.def));
   const pick = here => { const lost = retiredIn(here); return [...here].sort((a, b) => {
-    const score = one => (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0)
+    const score = one => (lost.has(one) ? -100000 : 0) + (described(one) ? 50000 : 0) + (picked(one) ? 200000 : 0)
       + (offers(one) ? 10000 : 0) + (one.fight ? 5000 : 0)
       + (!one.hidden ? 1000 : 0) + (!one.spawns ? 500 : 0)
       + (!one.alias ? 100 : 0) + (one.hp !== undefined ? 20 : 0)

@@ -504,6 +504,7 @@ def exact_title_candidates(name_map, page_type: str, title: str):
 
 
 REWORKED_FILE = Path(__file__).resolve().parents[1] / "reworked.json"
+REVIEW_FILE = Path(__file__).resolve().parents[1] / "validation-review.json"
 
 
 def reworked_entities(con: sqlite3.Connection, table=None):
@@ -541,7 +542,12 @@ def page_owners(con: sqlite3.Connection, table=None):
     no longer holds is reported and left out.
     """
     if table is None:
-        table = json.loads(REWORKED_FILE.read_text(encoding="utf-8")).get("slugs", {})
+        table = dict(json.loads(REWORKED_FILE.read_text(encoding="utf-8")).get("slugs", {}))
+        # A person's answer in npm run review: "this page is about that record".
+        if REVIEW_FILE.is_file():
+            for one in json.loads(REVIEW_FILE.read_text(encoding="utf-8")).get("verdicts", {}).values():
+                if one.get("verdict") == "error" and one.get("pick") and one.get("page"):
+                    table[one["page"]] = one["pick"]
     by_legacy = dict(con.execute(
         "SELECT legacy_index_id,entity_uid FROM entities WHERE legacy_index_id IS NOT NULL"
     ))

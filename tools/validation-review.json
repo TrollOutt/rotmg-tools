@@ -4,31 +4,31 @@
   "enemy-attacks|heroic-lair-construct-giant|enemy:Heroic Lair Construct Giant": {
    "verdict": "ok",
    "note": "RealmEye's Heroic page repeats the normal Undead Lair creature's shots and life (reviewed 2026-11-16): the wiki is behind, the client record of that exact name is the right one.",
-   "message": "RealmEye 'heroic-lair-construct-giant' pictures shots (UDL Blue Shot, UDL Blue Star...) that none of its 1 record(s) fires (enemy:Heroic Lair Construct Giant). They belong to: enemy:Lair Construct Giant (2 of 2).",
+   "message": "RealmEye 'heroic-lair-construct-giant' pictures shots (UDL Blue Shot, UDL Blue Star...) that the site's enemy:Heroic Lair Construct Giant does not fire. They belong to: enemy:Lair Construct Giant (2 of 2).",
    "at": "2026-11-16"
   },
   "enemy-attacks|heroic-lair-construct-titan|enemy:Heroic Lair Construct Titan": {
    "verdict": "ok",
    "note": "RealmEye's Heroic page repeats the normal Undead Lair creature's shots and life (reviewed 2026-11-16): the wiki is behind, the client record of that exact name is the right one.",
-   "message": "RealmEye 'heroic-lair-construct-titan' pictures shots (UDL Brown Shot, UDL Grey Star...) that none of its 1 record(s) fires (enemy:Heroic Lair Construct Titan). They belong to: enemy:Lair Construct Titan (2 of 2).",
+   "message": "RealmEye 'heroic-lair-construct-titan' pictures shots (UDL Brown Shot, UDL Grey Star...) that the site's enemy:Heroic Lair Construct Titan does not fire. They belong to: enemy:Lair Construct Titan (2 of 2).",
    "at": "2026-11-16"
   },
   "enemy-attacks|heroic-lair-vampire-king|enemy:Heroic Lair Vampire King": {
    "verdict": "ok",
    "note": "RealmEye's Heroic page repeats the normal Undead Lair creature's shots and life (reviewed 2026-11-16): the wiki is behind, the client record of that exact name is the right one.",
-   "message": "RealmEye 'heroic-lair-vampire-king' pictures shots (UDL Grey Star, UDL Purple Bolt...) that none of its 1 record(s) fires (enemy:Heroic Lair Vampire King). They belong to: enemy:Lair Vampire King (2 of 2).",
+   "message": "RealmEye 'heroic-lair-vampire-king' pictures shots (UDL Grey Star, UDL Purple Bolt...) that the site's enemy:Heroic Lair Vampire King does not fire. They belong to: enemy:Lair Vampire King (2 of 2).",
    "at": "2026-11-16"
   },
   "enemy-attacks|heroic-lair-vampire|enemy:Heroic Lair Vampire": {
    "verdict": "ok",
    "note": "RealmEye's Heroic page repeats the normal Undead Lair creature's shots and life (reviewed 2026-11-16): the wiki is behind, the client record of that exact name is the right one.",
-   "message": "RealmEye 'heroic-lair-vampire' pictures shots (UDL Green Bolt, UDL Green Star...) that none of its 1 record(s) fires (enemy:Heroic Lair Vampire). They belong to: enemy:Lair Vampire (2 of 2).",
+   "message": "RealmEye 'heroic-lair-vampire' pictures shots (UDL Green Bolt, UDL Green Star...) that the site's enemy:Heroic Lair Vampire does not fire. They belong to: enemy:Lair Vampire (2 of 2).",
    "at": "2026-11-16"
   },
-  "enemy-attacks|ice-cube-blaster|enemy:Ice Cube Blaster": {
+  "enemy-attacks|ice-cube-blaster|enemy:Ice Cube Blaster#3D Blaster": {
    "verdict": "ok",
    "note": "RealmEye's 'Ice Cube Blaster' page (last updated May 2021) is the realm's winter reskin of the Cube Blaster, which the client no longer declares; the only client objects of that name are the Third Dimension's (reviewed 2026-11-16). Still open: the page should not be attached to them.",
-   "message": "RealmEye 'ice-cube-blaster' pictures shots (Cyan Magic, Green Star...) that none of its 4 record(s) fires (enemy:Ice Cube Blaster#3D Blaster [client id 3D Blaster]). They belong to: enemy:Test Chicken (2 of 2), enemy:Test Chicken Minions (2 of 2), enemy:Cube Blaster (2 of 2).",
+   "message": "RealmEye 'ice-cube-blaster' pictures shots (Cyan Magic, Green Star...) that the site's enemy:Ice Cube Blaster#3D Blaster [client id 3D Blaster] does not fire. They belong to: enemy:Test Chicken (2 of 2), enemy:Test Chicken Minions (2 of 2), enemy:Cube Blaster (2 of 2).",
    "at": "2026-11-16"
   }
  }

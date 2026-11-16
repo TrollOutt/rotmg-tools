@@ -253,6 +253,149 @@ class ClientDriftTest(unittest.TestCase):
         self.assertIn("client id 'Other'", found["Renamed"][3])
 
 
+class FoldedTargetPageTest(unittest.TestCase):
+    def src(self, relations):
+        return make([enemy("carrier", art="a1"), enemy("ghost", art="a2", folded="carrier")],
+                    enrichment_records={"x": {"relations": relations}})
+
+    def test_page_is_the_most_frequent_slug(self):
+        found = vs.check_folded_targets(self.src([
+            {"to": "ghost", "toRealmEye": "minor"}, {"to": "ghost", "toRealmEye": "major"},
+            {"to": "ghost", "toRealmEye": "major"}]))
+        self.assertEqual(found[0][4]["page"], "major")
+
+    def test_a_tie_is_broken_by_slug(self):
+        found = vs.check_folded_targets(self.src([
+            {"to": "ghost", "toRealmEye": "alpha"}, {"to": "ghost", "toRealmEye": "beta"}]))
+        self.assertEqual(found[0][4]["page"], "beta")   # max over (count, slug)
+
+    def test_no_slug_means_no_page(self):
+        found = vs.check_folded_targets(self.src([{"to": "ghost"}]))
+        self.assertNotIn("page", found[0][4])
+
+
+def art_src(arts, **kwargs):
+    """One page 'boss' joined to records r0, r1, ... with the given arts (None = no art)."""
+    records = [enemy(f"r{n}", **({"art": art} if art is not None else {})) for n, art in enumerate(arts)]
+    return make(records, {"boss": [r["id"] for r in records]}, **kwargs)
+
+
+class PagePicturesTest(unittest.TestCase):
+    def test_different_pictures_give_one_info_with_candidates(self):
+        src = art_src(["A", "B", "A", "C"])
+        found = vs.check_page_pictures(src)
+        self.assertEqual(len(found), 1)
+        level, check, key, _, data = found[0]
+        self.assertEqual((level, check, key), ("INFO", "page-pictures", "boss|r0"))
+        self.assertEqual(data, {"page": "boss", "shown": ["r0"], "candidates": ["r1", "r3"]})
+        self.assertTrue(any(note.startswith("page-pictures: 1 pages") for note in src.notes))
+
+    def test_identical_pictures_are_quiet(self):
+        src = art_src(["A", "A"])
+        self.assertEqual(vs.check_page_pictures(src), [])
+        self.assertTrue(any(note.startswith("page-pictures: 0 pages") for note in src.notes))
+
+    def test_a_single_record_is_quiet(self):
+        self.assertEqual(vs.check_page_pictures(art_src(["A"])), [])
+
+    def test_shown_record_without_art_is_quiet(self):
+        self.assertEqual(vs.check_page_pictures(art_src([None, "B"])), [])
+
+    def test_candidates_are_capped_at_six(self):
+        found = vs.check_page_pictures(art_src([str(n) for n in range(10)]))
+        self.assertEqual(found[0][4]["candidates"], [f"r{n}" for n in range(1, 7)])
+
+    def test_raised_and_picked_pages_are_skipped(self):
+        src = art_src(["A", "B"])
+        src.raised_pages.add("boss")
+        self.assertEqual(vs.check_page_pictures(src), [])
+        src = art_src(["A", "B"])
+        src.picks = {"boss": "r0"}
+        self.assertEqual(vs.check_page_pictures(src), [])
+
+    def test_kinds_are_judged_apart(self):
+        records = [enemy("e", art="A"), item("i", art="B")]
+        src = make(records, {"boss": ["e", "i"]})
+        self.assertEqual(vs.check_page_pictures(src), [])
+
+    def test_run_skips_a_page_an_earlier_check_raised(self):
+        records = [enemy("a", hp=1000, art="A"), enemy("twin", hp=1600, art="B", folded="c"), enemy("c", hp=1000, art="A")]
+        pages = {"boss": ["a", "twin"]}
+        archive = {"facts": {"boss": {"HP": ["1,600 DEF: 0"]}}, "attacks": {}}
+        with_archive = vs.run(make(records, pages, archive=archive))
+        self.assertEqual([f["check"] for f in with_archive], ["enemy-stats"])
+        without = vs.run(make(records, pages))
+        self.assertEqual([f["check"] for f in without], ["page-pictures"])
+
+
+class PicksTest(unittest.TestCase):
+    def test_picks_of_counts_only_complete_error_verdicts(self):
+        verdicts = {
+            "1": {"verdict": "error", "pick": "x", "page": "p1"},
+            "2": {"verdict": "ok", "pick": "x", "page": "p2"},
+            "3": {"verdict": "error", "page": "p3"},
+            "4": {"verdict": "error", "pick": "x"},
+            "5": {"verdict": "error", "pick": "", "page": "p5"},
+        }
+        self.assertEqual(vs.picks_of(verdicts), {"p1": "x"})
+        self.assertEqual(vs.picks_of(None), {})
+
+    @staticmethod
+    def pick(page, record):
+        return {"k": {"verdict": "error", "pick": record, "page": page}}
+
+    def picked(self, found):
+        return [f for f in found if f["key"].endswith("|picked")]
+
+    def test_a_pick_that_is_not_shown_is_an_error_not_for_review(self):
+        records = [enemy("r0", art="A"), enemy("r1", art="B", folded="r0")]
+        found = vs.run(make(records, {"boss": ["r0", "r1"]}), self.pick("boss", "r1"))
+        picked = self.picked(found)
+        self.assertEqual(len(picked), 1)
+        one = picked[0]
+        self.assertEqual((one["level"], one["check"], one["key"]), ("ERROR", "page-pictures", "boss|picked"))
+        self.assertFalse(one["review"])
+        self.assertEqual(one["data"], {"page": "boss", "shown": ["r0"], "candidates": ["r1"]})
+        # the page is no longer asked as an INFO picture check
+        self.assertEqual([f["level"] for f in found if f["key"] != "boss|picked"], [])
+
+    def test_a_pick_of_an_unknown_record_is_an_error(self):
+        found = vs.run(art_src(["A", "B"]), self.pick("boss", "ghost"))
+        picked = self.picked(found)
+        self.assertEqual([(f["level"], f["review"]) for f in picked], [("ERROR", False)])
+        self.assertEqual(picked[0]["data"]["candidates"], [])
+        self.assertIn("no longer holds", picked[0]["message"])
+
+    def test_a_pick_that_is_shown_gives_nothing(self):
+        src = art_src(["A", "B"])
+        shown = src.shown("boss", "enemy")[0]["id"]
+        self.assertEqual(self.picked(vs.run(src, self.pick("boss", shown))), [])
+
+    def test_a_pick_of_the_shown_records_fold_carrier_gives_nothing(self):
+        records = [enemy("a", art="A", folded="c"), enemy("c", art="A")]
+        relations = {"x": {"relations": [{"to": "a", "toRealmEye": "boss"}]}}
+        src = make(records, {"boss": ["a", "c"]}, enrichment_records=relations)
+        self.assertEqual([r["id"] for r in src.shown("boss", "enemy")], ["a"])
+        self.assertEqual(vs.run(src, self.pick("boss", "c")), [])
+
+    def test_review_flags(self):
+        found = vs.run(drift_src())
+        flags = {f["check"]: f["review"] for f in found}
+        self.assertTrue(flags["enemy-stats"])
+        self.assertFalse(flags["client-drift"])
+        for check in ("enemy-attacks", "item-stats", "folded-target", "page-pictures"):
+            self.assertIn(check, vs.REVIEWED)
+
+    def test_an_error_verdict_with_a_pick_copies_it_onto_the_finding(self):
+        key = "enemy-stats|boss|a"
+        message = {f["check"] + "|" + f["key"]: f for f in vs.run(drift_src())}[key]["message"]
+        verdicts = {key: {"verdict": "error", "pick": "twin", "page": "boss", "message": message}}
+        one = {f["check"] + "|" + f["key"]: f for f in vs.run(drift_src(), verdicts)}[key]
+        self.assertEqual(one["pick"], "twin")
+        self.assertEqual(one["level"], "ERROR")
+        self.assertTrue(one["review"])
+
+
 def drift_src():
     """One ERROR (twin agrees), one WARN (nobody agrees), one INFO (other build)."""
     records = [

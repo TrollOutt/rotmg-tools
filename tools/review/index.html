@@ -9,15 +9,15 @@
 <body>
 <header class="bar">
   <h1>Vérification des données</h1>
-  <p class="sub">RealmEye à gauche, le site à droite&nbsp;: le site est-il faux&nbsp;?</p>
+  <p class="sub">RealmEye à gauche, le site à droite&nbsp;: est-ce la même chose&nbsp;?</p>
   <div class="tally" id="tally"></div>
   <div class="tools">
     <label>Contrôle <select id="check"></select></label>
     <label>Statut
       <select id="status">
-        <option value="todo">À vérifier</option>
-        <option value="error">Erreurs confirmées</option>
-        <option value="ok">Sans erreur</option>
+        <option value="todo">À regarder</option>
+        <option value="error">Pas la même chose</option>
+        <option value="ok">Même chose</option>
         <option value="all">Tout</option>
       </select>
     </label>
@@ -42,12 +42,13 @@
       <p class="empty">Chargement…</p>
     </div>
     <form class="verdict" id="verdict">
-      <p class="question">Le site montre-t-il une erreur&nbsp;?</p>
+      <p class="question">L'image RealmEye et la fiche du site montrent-elles la même chose&nbsp;?</p>
       <div class="buttons">
-        <button type="button" class="is-error" data-verdict="error" title="Raccourci : E">✗ Erreur sur le site <kbd>E</kbd></button>
-        <button type="button" class="is-ok" data-verdict="ok" title="Raccourci : O">✓ Pas d'erreur <kbd>O</kbd></button>
+        <button type="button" class="is-ok" data-verdict="ok" title="Raccourci : O">✓ Même chose <kbd>O</kbd></button>
+        <button type="button" class="is-error" data-verdict="error" title="Raccourci : E">✗ Pas la même chose <kbd>E</kbd></button>
         <button type="button" class="quiet" data-verdict="skip" title="Raccourci : →">Passer</button>
       </div>
+      <div class="picker" id="picker" hidden></div>
       <input type="text" id="note" maxlength="500" placeholder="Note (facultative) : pourquoi ?" aria-label="Note">
       <p class="saved" id="saved" role="status"></p>
     </form>

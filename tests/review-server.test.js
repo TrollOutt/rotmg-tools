@@ -4,8 +4,9 @@
 const assert = require('assert');
 const http = require('http');
 const net = require('net');
+const fs = require('fs');
 const path = require('path');
-const { createServer, staticFile } = require('../tools/review-server.js');
+const { createServer, staticFile, paths } = require('../tools/review-server.js');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -92,6 +93,38 @@ async function testServer() {
     assert.strictEqual(res.status, 405);
     res = await request(port, 'POST', '/review/api/unknown', { ...json, Origin: own }, '{}');
     assert.strictEqual(res.status, 404);
+
+    // Any other Host name is refused (DNS rebinding), whatever the method or path.
+    res = await request(port, 'GET', '/review/', { Host: 'evil.example:' + port });
+    assert.strictEqual(res.status, 421);
+    res = await request(port, 'GET', '/review/', { Host: '127.0.0.1' });
+    assert.strictEqual(res.status, 421);
+    res = await request(port, 'POST', '/review/api/verdict', { ...json, Origin: own, Host: 'evil.example:' + port }, '{}');
+    assert.strictEqual(res.status, 421);
+    res = await request(port, 'GET', '/review/', { Host: 'localhost:' + port });
+    assert.strictEqual(res.status, 200);
+
+    // A pick is refused unless it is an "error" verdict naming a record the finding offers.
+    // Only refusals are sent, so the real verdicts file is never written.
+    if (!fs.existsSync(paths.REPORT)) {
+      console.log('review-server.test.js: ' + paths.REPORT + ' is missing; skipping the pick refusals');
+    } else {
+      const finding = JSON.parse(fs.readFileSync(paths.REPORT, 'utf8')).findings[0];
+      if (!finding) console.log('review-server.test.js: the report has no finding; skipping the pick refusals');
+      else {
+        const key = finding.check + '|' + finding.key;
+        const post = payload => request(port, 'POST', '/review/api/verdict',
+          { ...json, Origin: own, Host: '127.0.0.1:' + port }, JSON.stringify(payload));
+        res = await post({ key, verdict: 'ok', pick: 'anything' });
+        assert.strictEqual(res.status, 400, res.body);
+        res = await post({ key, verdict: 'error', pick: 'enemy:Not Offered' });
+        assert.strictEqual(res.status, 400, res.body);
+        res = await post({ key, verdict: null, pick: 'anything' });
+        assert.strictEqual(res.status, 400, res.body);
+        res = await post({ key: 'no-such|finding', verdict: 'error', pick: 'x' });
+        assert.strictEqual(res.status, 404);
+      }
+    }
   } finally {
     await new Promise(resolve => server.close(resolve));
   }

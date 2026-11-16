@@ -132,13 +132,20 @@ object matching them carry the row, and the wiki join sends the page there.
 Values shown stay the client's. Cases no name can settle go in
 `tools/reworked.json`.
 
+Which source is believed: the client, always, for what it declares (life,
+defence, tiers, bonuses, shots). RealmEye only where the client says nothing:
+drops, and retired content the client no longer ships. A RealmEye value that
+contradicts the client is never copied; it only hints that a page is joined
+to the wrong client object.
+
 After an update, `npm run validate` compares the Index with RealmEye and the
 client scrape (it ends `npm run scrape`, without failing it). `npm run review`
-opens each finding at http://127.0.0.1:5198/review/, RealmEye on the left and
-the site's card on the right, and records a person's verdict in
-`tools/validation-review.json`: "ok" quiets a finding, "error" keeps the
-validator failing until the data is fixed. A verdict is asked again when the
-finding changes.
+opens each finding at http://127.0.0.1:5198/review/: RealmEye's picture on the
+left, the site's card on the right. The person answers one question, by the
+pictures: same thing or not, and if not, which client object it is. Answers go
+to `tools/validation-review.json`; a pick makes that record carry the page's
+row and receive the page at the next data update, and the validator fails
+until it has. A verdict is asked again when the finding changes.
 
 For an ordinary client update, do not run a recursive/full-site RealmEye crawl.
 Fetch only exact pages justified by new or changed records unless the user
