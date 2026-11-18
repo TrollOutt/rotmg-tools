@@ -1,5 +1,5 @@
 {
- "built": "2026-11-16T09:40:34+00:00",
+ "built": "2026-11-18T07:43:25+00:00",
  "tool": "tools/database/export_realmeye_stats.py",
  "from": {
   "kind": "community",
@@ -972,6 +972,12 @@
     20
    ]
   ],
+  "Blue Coral Turret": [
+   [
+    7000,
+    100
+   ]
+  ],
   "Blue Drake": [
    [
     3500,
@@ -1578,6 +1584,12 @@
     35
    ]
   ],
+  "Coral Barrier": [
+   [
+    8000,
+    50
+   ]
+  ],
   "Coral Gift": [
    [
     17250,
@@ -2122,6 +2134,12 @@
     0
    ]
   ],
+  "Cyan Sea Slurp": [
+   [
+    1250,
+    0
+   ]
+  ],
   "Cyclops": [
    [
     150,
@@ -2436,8 +2454,8 @@
   ],
   "Deep Sea Beast": [
    [
-    10000,
-    20
+    4500,
+    55
    ]
   ],
   "Deep Sea Beast (Original)": [
@@ -3380,6 +3398,12 @@
     40
    ]
   ],
+  "Fishman Berserker": [
+   [
+    5000,
+    25
+   ]
+  ],
   "Fishman Warrior": [
    [
     5000,
@@ -3393,6 +3417,12 @@
    ]
   ],
   "Fishman Warrior (Original)": [
+   [
+    5000,
+    25
+   ]
+  ],
+  "Fishmancer": [
    [
     5000,
     25
@@ -3882,6 +3912,12 @@
     35
    ]
   ],
+  "Gigantic Clam": [
+   [
+    25000,
+    40
+   ]
+  ],
   "Gilded Fruit": [
    [
     2000,
@@ -4206,6 +4242,12 @@
     20
    ]
   ],
+  "Green Coral Turret": [
+   [
+    7000,
+    100
+   ]
+  ],
   "Green Den Spider Hatchling": [
    [
     50,
@@ -4286,8 +4328,8 @@
   ],
   "Grey Sea Slurp": [
    [
-    1000,
-    20
+    1250,
+    0
    ]
   ],
   "Grey Sea Slurp (Original)": [
@@ -6496,6 +6538,12 @@
     25
    ]
   ],
+  "Lime Sea Slurp": [
+   [
+    1250,
+    0
+   ]
+  ],
   "Limon Element (Original)": [
    [
     100000,
@@ -6640,6 +6688,24 @@
     10
    ]
   ],
+  "Lost Blue Cnidarian": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Lost Green Cnidarian": [
+   [
+    2500,
+    20
+   ]
+  ],
+  "Lost Pink Cnidarian": [
+   [
+    2500,
+    20
+   ]
+  ],
   "Lost Sentry": [
    [
     125000,
@@ -6748,6 +6814,12 @@
     0
    ]
   ],
+  "Magic Slurp Home": [
+   [
+    2000,
+    100
+   ]
+  ],
   "Magic Sprite": [
    [
     100,
@@ -6852,6 +6924,12 @@
    [
     54375,
     30
+   ]
+  ],
+  "Marlin": [
+   [
+    5550,
+    35
    ]
   ],
   "Mask Hunter": [
@@ -7338,6 +7416,12 @@
    [
     1000,
     6
+   ]
+  ],
+  "Native Hermit Minion": [
+   [
+    2000,
+    65
    ]
   ],
   "Native Ice Sprite": [
@@ -7884,6 +7968,12 @@
     3
    ]
   ],
+  "Offensive Slurp Home": [
+   [
+    2000,
+    100
+   ]
+  ],
   "Ogre King": [
    [
     700,
@@ -7936,6 +8026,12 @@
    [
     3500,
     30
+   ]
+  ],
+  "Orange Sea Slurp": [
+   [
+    1250,
+    0
    ]
   ],
   "Orange Turtle": [
@@ -8430,6 +8526,18 @@
     20
    ]
   ],
+  "Pink Coral Turret": [
+   [
+    7000,
+    100
+   ]
+  ],
+  "Pink Sea Slurp": [
+   [
+    1250,
+    0
+   ]
+  ],
   "Piranha": [
    [
     750,
@@ -8772,6 +8880,12 @@
     0
    ]
   ],
+  "Purple Sea Slurp": [
+   [
+    1250,
+    0
+   ]
+  ],
   "Purple Stone Guardian": [
    [
     55000,
@@ -8848,6 +8962,12 @@
    [
     350,
     0
+   ]
+  ],
+  "Quick Slurp Home": [
+   [
+    2000,
+    100
    ]
   ],
   "Quiet Wizard": [
@@ -9426,7 +9546,7 @@
   ],
   "Sea Horse": [
    [
-    1000,
+    800,
     20
    ]
   ],
@@ -10654,6 +10774,12 @@
     2
    ]
   ],
+  "Tanky Slurp Home": [
+   [
+    2000,
+    100
+   ]
+  ],
   "Tarul": [
    [
     30000,
@@ -10902,7 +11028,7 @@
   ],
   "Thessal the Mermaid Goddess": [
    [
-    51750,
+    55000,
     60
    ]
   ],
@@ -11836,6 +11962,12 @@
     50
    ]
   ],
+  "White Sea Slurp": [
+   [
+    1250,
+    0
+   ]
+  ],
   "Wind Vortex": [
    [
     99999,
@@ -11968,6 +12100,12 @@
     25
    ]
   ],
+  "Yellow Coral Turret": [
+   [
+    7000,
+    100
+   ]
+  ],
   "Yellow Drake": [
    [
     3500,
@@ -12002,6 +12140,12 @@
    [
     200,
     5
+   ]
+  ],
+  "Yellow Sea Slurp": [
+   [
+    1250,
+    0
    ]
   ],
   "Yellow Soldier Bee": [
