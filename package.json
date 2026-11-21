@@ -37,6 +37,7 @@
     "wiki-check": "python tools/database/check_realmeye_integration.py",
     "validate": "python tools/database/validate_sources.py",
     "review": "node tools/review-server.js",
+    "pr": "node tools/try-pr.js",
     "wiki-stats": "python tools/database/export_realmeye_stats.py",
     "wiki-sprites:audit": "python tools/audit-realmeye-sprites.py",
     "wiki-integrate": "npm run wiki-index && npm run wiki-availability && npm run build-index-db && npm run publish-index-db && npm run project-data && npm run wiki-publish && npm run wiki-check && npm run wiki-sprites:audit && npm run build",

@@ -1,0 +1,62 @@
+# Takes pictures of the pages a pull request changes, before and after.
+#
+# Runs the pull request's code, so it is triggered by pull_request (never
+# pull_request_target): a read-only token and no secret, like ci.yml. It only
+# uploads the pictures as an artifact; pr-preview-comment.yml, which runs from
+# main, checks them and posts them on the pull request.
+#
+# A first-time contributor's run waits for "Approve and run workflows", as the
+# tests do. The data watch's auto/update-* pull requests and Dependabot's are
+# skipped: they change no page.
+#
+# Each action is pinned to a full commit SHA, with its tag in a comment
+# (ROT-A-10); .github/dependabot.yml keeps the pins up to date.
+name: PR preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ['web/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pictures:
+    if: ${{ !startsWith(github.head_ref, 'auto/') && github.event.pull_request.user.login != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # The merge commit of the pull request into main; its first parent is
+      # main, checked out beside it as the "before" side.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: Check out main beside it
+        run: git worktree add --detach "$RUNNER_TEMP/before" HEAD^1
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+
+      # Only the library: the runner's own Google Chrome takes the pictures.
+      - name: Install Playwright
+        run: npm install --prefix "$RUNNER_TEMP/pw" --ignore-scripts --no-audit --no-fund playwright-core@1.59.1
+
+      - name: Take the pictures
+        run: node tools/pr-shots.js --before "$RUNNER_TEMP/before" --after . --out "$RUNNER_TEMP/shots" --pr "$PR_NUMBER"
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pr-preview
+          path: ${{ runner.temp }}/shots
+          retention-days: 7
