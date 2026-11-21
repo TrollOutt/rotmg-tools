@@ -154,7 +154,7 @@
   "static.include.limited.edition.equipment": "Medtag udstyr i begrænset udgave (markeret som Limited på RealmEye)",
   "static.include.non.set.equipment.without.a.tier": "Inkluder ikke-set udstyr uden et niveau. Trindelt gear er altid inkluderet.",
   "static.item.type": "Varetype",
-  "static.left.to.do": "Tilbage at gøre",
+  "static.hide.completed": "Skjul fuldførte",
   "static.legendary.3.slots": "Legendarisk - 3 slots",
   "static.life": "Livet",
   "static.limited": "Begrænset",

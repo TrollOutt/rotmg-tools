@@ -2062,8 +2062,9 @@ body.globe-wide .home-card-film { background-position-x: 45%; }
 .fame-totals { display: flex; gap: 18px; }
 .fame-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
 .fame-controls #fameSearch { flex: 1 1 180px; min-width: 140px; }
-.fame-sort { display: flex; gap: 4px; }
-.fame-sort .filter-chip { font-size: 12px; }
+.fame-controls select.fame-sort { flex: none; width: auto; background: rgb(var(--panel-rgb) / .9); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+.fame-controls select.fame-sort:focus-visible { border-color: var(--accent); }
+.fame-controls #fameHideDone { font-size: 12px; }
 
 /*
  * Every measurement in a tile comes off one number, so the whole grid can be

@@ -124,6 +124,7 @@ var FamePage = (function () {
     base: 0,
     search: '',
     sort: 'fame',
+    hideDone: false,      // a filter only: it never changes the order
     focus: new Set(),     // the collections being worked towards, if any
     // Dungeons the player has said they are not doing. Not ticked — refusing
     // one earns nothing — just never offered under "do this next" again.
@@ -469,20 +470,17 @@ var FamePage = (function () {
     const chosen = view.collections.filter(entry => state.focus.has(entry.id));
     const wanted = chosen.length ? new Set(chosen.flatMap(entry => entry.missing)) : null;
 
-    let rows = state.data.dungeons
+    const rows = state.data.dungeons
       .filter(dungeon => state.avail.has(dungeon.availability))
       .filter(dungeon => !term || dungeon.name.toLowerCase().includes(term)
-        || shown(dungeon.name).toLowerCase().includes(term));
+        || shown(dungeon.name).toLowerCase().includes(term))
+      .filter(dungeon => !state.hideDone || !state.done.has(dungeon.name));
     if (state.sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
     else if (state.sort === 'hard') {
       // RealmEye's 1-to-10 rating. Easiest first, because that is the order
       // you would actually do them in.
       rows.sort((a, b) => (difficultyOf(a.name) || 99) - (difficultyOf(b.name) || 99)
         || a.name.localeCompare(b.name));
-    }
-    else if (state.sort === 'todo') {
-      rows = rows.filter(dungeon => !state.done.has(dungeon.name));
-      rows.sort((a, b) => EnchantFame.firstCompletion(b) - EnchantFame.firstCompletion(a));
     } else {
       // By fame: the game's own ranking of how hard a dungeon is, near enough.
       rows.sort((a, b) => EnchantFame.firstCompletion(b) - EnchantFame.firstCompletion(a)
@@ -816,13 +814,14 @@ var FamePage = (function () {
       if (state.focus.has(id)) state.focus.delete(id); else state.focus.add(id);
       render();
     });
-    document.querySelector('.fame-sort').addEventListener('click', event => {
-      const button = event.target.closest('[data-sort]');
-      if (!button) return;
-      state.sort = button.dataset.sort;
-      for (const chip of document.querySelectorAll('.fame-sort [data-sort]')) {
-        chip.classList.toggle('on', chip === button);
-      }
+    $('fameSort').addEventListener('change', event => {
+      state.sort = event.target.value;
+      render();
+    });
+    $('fameHideDone').addEventListener('click', event => {
+      state.hideDone = !state.hideDone;
+      event.currentTarget.classList.toggle('on', state.hideDone);
+      event.currentTarget.setAttribute('aria-pressed', String(state.hideDone));
       render();
     });
     document.querySelector('#pageFame .fame-avail').addEventListener('click', event => {
