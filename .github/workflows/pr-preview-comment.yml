@@ -1,0 +1,53 @@
+# Posts the pictures taken by pr-preview.yml on the pull request.
+#
+# workflow_run always runs this file as it is on main, with a token that can
+# write, so nothing of the pull request runs here: the script comes from
+# main, and it believes nothing in the artifact it downloads (see
+# tools/pr-preview-comment.js). The pictures go to the pr-previews branch,
+# which holds pictures only; a push made with this token starts no workflow.
+#
+# Each action is pinned to a full commit SHA, with its tag in a comment
+# (ROT-A-10); .github/dependabot.yml keeps the pins up to date.
+name: PR preview comment
+
+on:
+  workflow_run:
+    workflows: [PR preview]
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: pr-preview-comment
+  cancel-in-progress: false
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read         # download the other run's artifact
+      contents: write       # commit the pictures to the pr-previews branch
+      pull-requests: write  # post the comment
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pr-preview
+          path: ${{ runner.temp }}/shots
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Post the pictures
+        run: node tools/pr-preview-comment.js "$RUNNER_TEMP/shots"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
