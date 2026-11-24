@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="fiches-c.css">
   <link rel="stylesheet" href="pet-fame.css">
+  <link rel="stylesheet" href="snake-board.css">
   <link rel="stylesheet" href="ui-style.css" data-ui-style>
   <!-- Theme UI (Halloween) switched off for now; uncomment here and at the end of the body to bring it back.
   <link rel="stylesheet" href="./theme-ui-test.css"> -->
@@ -134,6 +135,12 @@
     <button type="button" class="news-bell" data-go="news">
       <span class="news-bell-glyph" aria-hidden="true">🔔</span>
       <span class="news-bell-words"><span class="news-bell-kick"></span><span class="news-bell-text">What's New</span></span>
+      <span class="news-bell-dot" aria-hidden="true"></span>
+    </button>
+    <!-- The White Snake Invasion leaderboard, read live from DECA's sheet (snake-board.js). -->
+    <button type="button" class="news-bell snake-note" id="snakeNote" aria-haspopup="dialog" hidden>
+      <span class="news-bell-glyph" aria-hidden="true">🐍</span>
+      <span class="news-bell-words"><span class="news-bell-kick"></span><span class="news-bell-text">White Snake Leaderboard</span></span>
       <span class="news-bell-dot" aria-hidden="true"></span>
     </button>
     <!-- A free voucher while one is running: the code to copy and what it gives (voucher-note in app.js). -->
@@ -935,6 +942,7 @@
 <script src="app-data.js"></script>
 <script src="app.js"></script>
 <script src="home-snake.js"></script>
+<script src="snake-board.js"></script>
 <script src="fiches-data.js"></script>
 <script src="fiches-c.js"></script>
 <script src="ui-style.js"></script>
