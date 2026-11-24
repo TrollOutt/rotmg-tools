@@ -30,13 +30,18 @@
   const note = document.getElementById('snakeNote');
   if (!note) return;
 
+  /*
+   * The one remote origin this file reads. tools/build-standalone.js copies it
+   * into the published page's security policy (connect-src), so it
+   * must stay written exactly like this. The gviz route answers from this
+   * origin; the CSV export redirects to a googleusercontent.com host that the
+   * policy does not open, so it is not used.
+   */
+  const SHEET_ORIGIN = 'https://docs.google.com';
   const SHEET = '1abJ5b1rOG-dB-cDHUr11cADoeWqxT7WB0lo-CntcsE8';
   const GID = '0';
-  const VIEW = `https://docs.google.com/spreadsheets/d/${SHEET}/edit?gid=${GID}#gid=${GID}`;
-  const SOURCES = [
-    `https://docs.google.com/spreadsheets/d/${SHEET}/export?format=csv&gid=${GID}`,
-    `https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&gid=${GID}`
-  ];
+  const VIEW = `${SHEET_ORIGIN}/spreadsheets/d/${SHEET}/edit?gid=${GID}#gid=${GID}`;
+  const SOURCES = [`${SHEET_ORIGIN}/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&gid=${GID}`];
   const YEAR = 2026;
   /** @type {Info} */
   const FALLBACK = {
@@ -153,7 +158,11 @@
     const head = headAt < 0 ? [] : rows[headAt].map(c => c.trim().toLowerCase());
     /** @param {string} name */
     const col = name => head.indexOf(name);
-    const NAME = col('name'), POINTS = col('points'), RANK = col('rank');
+    const NAME = col('name');
+    /* gviz types a mostly numeric column as numbers and blanks its text
+       heading, so a missing heading falls back on the sheet's own order. */
+    const POINTS = col('points') >= 0 ? col('points') : NAME >= 0 ? NAME + 1 : -1;
+    const RANK = col('rank') >= 0 ? col('rank') : NAME >= 0 ? NAME + 2 : -1;
     const table = new Set([NAME, POINTS, RANK].filter(i => i >= 0));
     /** @type {string[]} */
     const notes = [];
