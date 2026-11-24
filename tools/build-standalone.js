@@ -461,6 +461,11 @@ const petDataSource = readWeb('pet-fame-data.js');
 const petPageSource = readWeb('pet-fame.js');
 const petCss = readWeb('pet-fame.css');
 const petStyleTag = '<link rel="stylesheet" href="pet-fame.css">';
+// The White Snake Invasion leaderboard on the home page: its look and the script that reads DECA's sheet.
+const snakeBoardCss = readWeb('snake-board.css');
+const snakeBoardSource = readWeb('snake-board.js');
+const snakeStyleTag = '<link rel="stylesheet" href="snake-board.css">';
+const snakeScriptTag = '<script src="snake-board.js"></script>';
 // Its two sheets of pictures. The kept copy carries them inside; the served page fetches them from assets/pets.
 const petImages = {
   pets: 'data:image/png;base64,' + fs.readFileSync(path.join(web, 'assets', 'pets', 'pets.png')).toString('base64'),
@@ -598,7 +603,8 @@ const styleTag = '<link rel="stylesheet" href="style.css">';
 const scriptTags = "<script src=\"locales.js\"></script>\n<script src=\"i18n.js\"></script>\n<script src=\"outline.js\"></script>\n<script src=\"sprite-animation.js\"></script>\n<script src=\"engine.js\"></script>\n<script src=\"items.js\"></script>\n<script src=\"fame.js\"></script>\n<script src=\"fame-page.js\"></script>\n<script src=\"whats-new.js\"></script>\n<script src=\"progression.js\"></script>\n<script data-lazy-src=\"theory-engine.js\"></script>\n<script data-lazy-src=\"theorycraft.js\"></script>\n<script data-lazy-src=\"index-search.js\"></script>\n<script data-lazy-src=\"index-filter.js\"></script>\n<script data-lazy-src=\"index-grouping.js\"></script>\n<script data-lazy-src=\"index-families.js\"></script>\n<script data-lazy-src=\"index-page.js\"></script>\n<script data-lazy-src=\"index-browse.js\"></script>\n<script data-lazy-src=\"pet-fame-engine.js\"></script>\n<script data-lazy-src=\"pet-fame-data.js\"></script>\n<script data-lazy-src=\"pet-fame.js\"></script>\n<script src=\"router-contract.js\"></script>\n<script src=\"app-data.js\"></script>\n<script src=\"app.js\"></script>\n<script src=\"home-snake.js\"></script>";
 if (!page.includes(styleTag) || !page.includes(scriptTags)
   || !page.includes(cardDataTag) || !page.includes(cardStyleTag) || !page.includes(cardScriptTag)
-  || !page.includes(lookStyleTag) || !page.includes(lookScriptTag) || !page.includes(petStyleTag)) {
+  || !page.includes(lookStyleTag) || !page.includes(lookScriptTag) || !page.includes(petStyleTag)
+  || !page.includes(snakeStyleTag) || !page.includes(snakeScriptTag)) {
   console.error('Build failed: web/index.html no longer contains the tags this script replaces.');
   process.exit(1);
 }
@@ -774,6 +780,8 @@ const dress = (bundleSources, { skins = true } = {}) =>
     ? cardCss.replace(/url\(([^)]+)\)/g, (whole, file) => cardImages[file] ? 'url(' + cardImages[file] + ')' : whole)
     : cardCss}\n</style>`)
   .replace(petStyleTag, () => `<style>\n${petCss}\n</style>`)
+  .replace(snakeStyleTag, () => `<style>\n${snakeBoardCss}\n</style>`)
+  .replace(snakeScriptTag, () => `<script>\n${safe(snakeBoardSource)}\n</script>`)
   .replace(cardDataTag, () => `<script>\n${safe(cardDataSource)}\n</script>`)
   .replace(cardScriptTag, () => `<script>\n${safe(cardSource)}\n</script>`)
   .replace(lookStyleTag, () => `<style data-ui-style>\n${lookCss}\n</style>`)

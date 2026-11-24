@@ -1,0 +1,134 @@
+/*
+ * The White Snake Invasion leaderboard (snake-board.js): a note beside the
+ * bell on the home page, and the panel it opens. The panel shares the
+ * voucher's veil and close button; everything else is its own.
+ */
+.snake-note[hidden] { display: none; }
+.snake-note { border-color: rgba(214,232,255,.4); }
+.snake-note:hover { background: rgba(214,232,255,.1); border-color: rgba(214,232,255,.6); }
+.snake-note .news-bell-glyph { animation: none; }
+.snake-note .news-bell-kick { color: #cfe2ff; }
+.snake-note .news-bell-dot { background: #cfe2ff; }
+.snake-note .news-bell-dot::after { background: rgba(207,226,255,.55); }
+.snake-note:not(.is-live) .news-bell-dot { visibility: hidden; }
+.snake-note.is-live .news-bell-kick { color: #8fe0a8; }
+.snake-note.is-live .news-bell-dot { background: #8fe0a8; }
+.snake-note.is-live .news-bell-dot::after { background: rgba(143,224,168,.55); }
+body.globe-wide .snake-note .news-bell-dot { visibility: hidden; }
+
+html.snake-open { overflow: hidden; }
+
+.snake-panel {
+  --snake-a: #ffcb70; --snake-b: #d4b0ff; --snake-c: #9cc8ff;
+  position: relative; display: flex; flex-direction: column;
+  width: min(940px, 100%); max-height: calc(100dvh - 32px);
+  border-radius: 14px; overflow: hidden;
+  background: rgb(var(--panel-rgb) / .98); color: var(--text);
+  border: 1px solid rgba(214,232,255,.32); box-shadow: 0 18px 50px rgb(0 0 0 / .6);
+}
+.snake-panel .voucher-x { z-index: 1; }
+
+.snake-head { flex: none; padding: 20px 52px 14px 22px; border-bottom: 1px solid var(--line); }
+.snake-kick { margin: 0 0 4px; font-family: var(--mono); font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: #cfe2ff; }
+.snake-head h2 { margin: 0 0 4px; font-size: 1.35rem; color: var(--title); }
+.snake-when { margin: 0; font-size: .86rem; color: var(--muted); }
+.snake-when b { font-weight: 600; color: var(--text); }
+.snake-when b.is-live { color: #8fe0a8; }
+
+.snake-body {
+  flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+}
+.snake-standings { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.snake-tools { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 22px 10px; }
+.snake-panel .snake-find {
+  flex: 1; min-width: 0; max-width: 300px; padding: 8px 12px;
+  font: inherit; font-size: .9rem; color: var(--text);
+  background: rgb(0 0 0 / .25); border: 1px solid var(--line); border-radius: 9px;
+}
+.snake-panel .snake-find:focus-visible { outline: 2px solid #cfe2ff; outline-offset: 1px; border-color: transparent; }
+.snake-count { margin-left: auto; font-family: var(--mono); font-size: .72rem; color: var(--dim); white-space: nowrap; }
+
+.snake-scroll { flex: 1; min-height: 220px; overflow-y: auto; padding: 0 12px 12px; }
+.snake-table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.snake-table[hidden] { display: none; }
+.snake-table th {
+  position: sticky; top: 0; z-index: 1; padding: 8px 10px; text-align: left;
+  font-family: var(--mono); font-size: .62rem; font-weight: 400; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dim); background: rgb(var(--panel-rgb));
+  border-bottom: 1px solid var(--line);
+}
+.snake-table td { padding: 7px 10px; border-bottom: 1px solid var(--line-soft, rgb(255 255 255 / .05)); }
+.snake-table tbody tr:hover { background: rgb(255 255 255 / .035); }
+.snake-table th:nth-child(1), .snake-rank { width: 4.5em; text-align: right; }
+.snake-table th:nth-child(3), .snake-pts { width: 6em; text-align: right; }
+.snake-table th:nth-child(4), .snake-t { width: 7.5em; text-align: right; }
+.snake-rank { font-family: var(--mono); color: var(--muted); }
+.snake-name { font-weight: 500; overflow-wrap: anywhere; }
+.snake-pts { font-weight: 600; color: var(--title); }
+.snake-p1 .snake-rank { color: var(--snake-a); font-weight: 700; }
+.snake-p2 .snake-rank { color: #dfe4ee; font-weight: 700; }
+.snake-p3 .snake-rank { color: #e0a274; font-weight: 700; }
+.snake-table .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.snake-empty { margin: 28px 10px; text-align: center; font-size: .9rem; line-height: 1.5; color: var(--muted); }
+.snake-veil.is-reading .snake-empty:not([hidden]) { opacity: .7; }
+
+.snake-tier {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  font-family: var(--mono); font-size: .64rem; font-weight: 700; letter-spacing: .06em; line-height: 1.5;
+  border: 1px solid currentColor;
+}
+.snake-tier-a { color: var(--snake-a); background: rgba(255,203,112,.12); }
+.snake-tier-b { color: var(--snake-b); background: rgba(212,176,255,.12); }
+.snake-tier-c { color: var(--snake-c); background: rgba(156,200,255,.12); }
+
+.snake-side { min-height: 0; overflow-y: auto; padding: 14px 20px 16px; border-left: 1px solid var(--line); background: rgb(0 0 0 / .14); }
+.snake-side h3 { margin: 0 0 8px; font-family: var(--mono); font-size: .64rem; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: #cfe2ff; }
+.snake-points { list-style: none; margin: 0 0 18px; padding: 0; font-size: .85rem; }
+.snake-points .snake-n { color: var(--title); }
+.snake-reward { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgb(0 0 0 / .18); }
+.snake-reward p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 6px; }
+.snake-plus { font-size: .74rem; color: var(--dim); }
+.snake-reward ul { list-style: none; margin: 0; padding: 0; font-size: .82rem; line-height: 1.35; }
+
+/* A reward or a dungeon: its picture, its name, and a link to its Index card (or RealmEye page). */
+.snake-thing {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  margin: 0 -6px; padding: 3px 6px; border-radius: 7px;
+  color: inherit; text-decoration: none; line-height: 1.3;
+}
+.snake-thing:hover, .snake-thing:focus-visible { background: rgba(214,232,255,.08); outline: none; }
+.snake-thing:hover .snake-what, .snake-thing:focus-visible .snake-what { color: var(--title); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: rgba(214,232,255,.45); }
+.snake-art { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: rgb(0 0 0 / .28); }
+.snake-art .ix-cell { width: 28px; height: 28px; }
+.snake-out { font-size: .72em; color: var(--dim); }
+.snake-n { font-family: var(--mono); font-weight: 600; color: var(--muted); white-space: nowrap; }
+.snake-small { margin: 4px 0 12px; font-size: .74rem; line-height: 1.4; color: var(--dim); }
+.snake-fine { font-size: .78rem; color: var(--muted); }
+.snake-fine[hidden] { display: none; }
+.snake-fine summary { cursor: pointer; color: var(--muted); }
+.snake-fine p { margin: 8px 0 0; line-height: 1.45; }
+
+.snake-foot {
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  padding: 10px 22px; border-top: 1px solid var(--line); font-size: .8rem;
+}
+.snake-stamp { margin-right: auto; color: var(--dim); }
+.snake-again, .snake-open {
+  padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line);
+  font: inherit; font-size: .8rem; color: var(--text); background: rgb(255 255 255 / .04);
+  cursor: pointer; text-decoration: none;
+}
+.snake-again:hover, .snake-open:hover { border-color: rgba(214,232,255,.55); background: rgba(214,232,255,.08); }
+.snake-again:disabled { opacity: .55; cursor: progress; }
+
+@media (max-width: 760px) {
+  .snake-body { display: block; overflow-y: auto; }
+  .snake-scroll { overflow: visible; min-height: 0; }
+  .snake-side { border-left: 0; border-top: 1px solid var(--line); }
+  .snake-head { padding: 16px 48px 12px 16px; }
+  .snake-tools { padding: 10px 16px 8px; }
+  .snake-scroll { padding: 0 4px 10px; }
+  .snake-table td, .snake-table th { padding-left: 6px; padding-right: 6px; }
+  .snake-table th:nth-child(4), .snake-t { width: auto; }
+  .snake-foot { padding: 10px 16px; }
+}
