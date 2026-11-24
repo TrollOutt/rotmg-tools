@@ -12,6 +12,21 @@
  * HIDE_AFTER pass: the button hides itself).
  */
 (() => {
+  /*
+   * The page itself. The type check runs without the DOM library
+   * (tsconfig.json), so the browser's objects are reached through globalThis
+   * and typed loosely; everything this file computes is typed below.
+   */
+  /** @type {any} */
+  const host = globalThis;
+  const document = host.document;
+
+  /** @typedef {{ pct: number, items: string[], above: boolean }} Tier */
+  /** @typedef {{ name: string, points: number, rank: number, tier: Tier | null }} Player */
+  /** @typedef {{ start: number, end: number, points: Array<[string, number]>, tiers: Tier[], fine: string[] }} Info */
+  /** @typedef {Info & { players: Player[] }} Board */
+  /** @typedef {{ id: string, art?: number[] }} IndexRecord */
+
   const note = document.getElementById('snakeNote');
   if (!note) return;
 
@@ -23,6 +38,7 @@
     `https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&gid=${GID}`
   ];
   const YEAR = 2026;
+  /** @type {Info} */
   const FALLBACK = {
     start: Date.UTC(YEAR, 10, 24, 9),
     end: Date.UTC(YEAR, 11, 1, 9),
@@ -31,21 +47,36 @@
       { pct: 5, items: ['2x Rare Epic Quest Chest', "3x Legend of the White Snake Mystery Chest", "1x Eden's Embrace", '1x Seasonal Vault Unlocker'], above: true },
       { pct: 15, items: ['1x Backpack Extender', '1x Medium Dust Selection Chest', '1x Paramount Sulphur', '3x The Mystery Chest'], above: true },
       { pct: 30, items: ['1x Lucky Clover', '1x Backpack', "1x Adventurer's Belt", '10x Mystery Stat Pot', "2x Legend of the White Snake Mystery Chest"], above: false }
-    ]
+    ],
+    fine: []
   };
   /* Rewards go out when the next season starts; the note stays until then. */
   const HIDE_AFTER = Date.UTC(YEAR, 11, 22);
   const REFRESH = 120e3, SHOWN = 1000;
   const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  /** @param {unknown} s */
+  const esc = s => String(s).replace(/[&<>"']/g, c => /** @type {Record<string, string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const store = {
-    get(k) { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
+    /** @param {string} k @returns {string} */
+    get(k) { try { return host.localStorage.getItem(k) || ''; } catch (_) { return ''; } },
+    /** @param {string} k @param {string} v */
+    set(k, v) { try { host.localStorage.setItem(k, v); } catch (_) {} }
   };
 
-  let board = null, readAt = 0, reading = null, failed = false, timer = 0, veil = null;
-  let records = null, recordsAsked = false;
+  /** @type {Board | null} */
+  let board = null;
+  /** @type {Promise<Board | null> | null} */
+  let reading = null;
+  /** @type {any} the panel, once built */
+  let veil = null;
+  /** @type {Map<string, IndexRecord> | null} */
+  let records = null;
+  /** @type {{ sheet: { wide: number, tall: number } } | null} the Index's picture sheet */
+  let itemArt = null;
+  let readAt = 0, failed = false, recordsAsked = false;
+  /** @type {unknown} */
+  let timer = 0;
   let query = store.get('snake-board-search');
 
   if (Date.now() > HIDE_AFTER) { note.remove(); return; }
@@ -53,8 +84,13 @@
 
   /* ---- reading the sheet ------------------------------------------------ */
 
+  /** @param {string} text @returns {string[][]} */
   function parseCsv(text) {
-    const rows = []; let row = [], cell = '', quoted = false;
+    /** @type {string[][]} */
+    const rows = [];
+    /** @type {string[]} */
+    let row = [];
+    let cell = '', quoted = false;
     for (let i = 0; i < text.length; i++) {
       const c = text[i];
       if (quoted) {
@@ -72,14 +108,18 @@
     return rows;
   }
 
+  /** @param {unknown} s */
   const number = s => { const n = Number(String(s).replace(/[^\d.-]/g, '')); return Number.isFinite(n) ? n : 0; };
 
+  /** @param {string} month @param {string} day @param {string} h @param {string} m */
   function stamp(month, day, h, m) {
     const at = MONTHS.indexOf(month.slice(0, 3).toLowerCase());
     return at < 0 ? NaN : Date.UTC(YEAR, at, +day, +h, +m);
   }
 
+  /** @param {string[]} notes @returns {Info} */
   function readNotes(notes) {
+    /** @type {Info} */
     const out = { start: FALLBACK.start, end: FALLBACK.end, points: [], tiers: [], fine: [] };
     for (const text of notes) {
       const dates = [...text.matchAll(/([A-Z][a-z]{2,8})\.?\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*\(UTC\)/g)]
@@ -106,20 +146,24 @@
     return out;
   }
 
+  /** @param {string} text @returns {Board} */
   function readBoard(text) {
     const rows = parseCsv(text);
     const headAt = rows.findIndex(r => r.some(c => c.trim().toLowerCase() === 'name'));
     const head = headAt < 0 ? [] : rows[headAt].map(c => c.trim().toLowerCase());
+    /** @param {string} name */
     const col = name => head.indexOf(name);
     const NAME = col('name'), POINTS = col('points'), RANK = col('rank');
     const table = new Set([NAME, POINTS, RANK].filter(i => i >= 0));
+    /** @type {string[]} */
     const notes = [];
     for (const row of rows) row.forEach((cell, i) => { if (!table.has(i) && cell.trim()) notes.push(cell); });
+    /** @type {Player[]} */
     const players = [];
     if (NAME >= 0) for (const row of rows.slice(headAt + 1)) {
       const name = (row[NAME] || '').trim();
       if (!name) continue;
-      players.push({ name, points: number(row[POINTS]), rank: RANK >= 0 ? number(row[RANK]) : 0 });
+      players.push({ name, points: number(row[POINTS]), rank: RANK >= 0 ? number(row[RANK]) : 0, tier: null });
     }
     if (players.some(p => !p.rank)) {
       players.sort((a, b) => b.points - a.points);
@@ -130,12 +174,13 @@
     return { players, ...info };
   }
 
+  /** @returns {Promise<Board | null>} */
   async function read() {
     if (reading) return reading;
     reading = (async () => {
       for (const url of SOURCES) {
         try {
-          const res = await fetch(url, { cache: 'no-store' });
+          const res = await host.fetch(url, { cache: 'no-store' });
           if (!res.ok) continue;
           board = readBoard(await res.text());
           readAt = Date.now(); failed = false;
@@ -157,29 +202,33 @@
     if (recordsAsked) return;
     recordsAsked = true;
     (async () => {
-      const shared = window.ROTMG_SHARED_DATA || (window.ROTMG_SHARED_DATA = {});
+      const shared = host.ROTMG_SHARED_DATA || (host.ROTMG_SHARED_DATA = {});
+      /** @type {{ records: IndexRecord[] } | null} */
       let said = shared.index || null;
       if (!said) {
-        let raw = window.ROTMG_BUNDLE && window.ROTMG_BUNDLE.sources && window.ROTMG_BUNDLE.sources.indexText;
-        if (!raw && typeof window.sharedIndexText === 'function') raw = await window.sharedIndexText().catch(() => '');
+        let raw = host.ROTMG_BUNDLE && host.ROTMG_BUNDLE.sources && host.ROTMG_BUNDLE.sources.indexText;
+        if (!raw && typeof host.sharedIndexText === 'function') raw = await host.sharedIndexText().catch(() => '');
         if (!raw) return;
-        said = JSON.parse(raw);
+        said = /** @type {{ records: IndexRecord[] }} */ (JSON.parse(raw));
         shared.index = said;
       }
-      if (typeof ensureItemArt === 'function') await ensureItemArt();
+      /* app.js's loader of the Index pictures, which answers with their sheet. */
+      if (typeof host.ensureItemArt === 'function') itemArt = await host.ensureItemArt();
       records = new Map(said.records.map(one => [one.id, one]));
       if (veil && !veil.hidden) paint();
     })().catch(() => { recordsAsked = false; });
   }
 
+  /** @param {string} name @param {string[]} kinds @returns {IndexRecord | null} */
   function recordFor(name, kinds) {
     if (!records) return null;
     for (const kind of kinds) { const one = records.get(kind + ':' + name); if (one) return one; }
     return null;
   }
 
+  /** @param {IndexRecord | null} one @param {number} side */
   function art(one, side) {
-    const sheet = typeof state !== 'undefined' && state.itemArt && state.itemArt.sheet;
+    const sheet = itemArt && itemArt.sheet;
     if (!one || !one.art || !sheet) return '';
     const [x, y, w, h] = one.art, zoom = side / Math.max(w, h);
     return `<span class="ix-cell"><span class="ix-art" style="width:${w * zoom}px;height:${h * zoom}px;`
@@ -194,19 +243,22 @@
    * The client has no "Rare" Epic Quest Chest; the Mystery Quest Chest gives a
    * random Epic Quest Chest, which is what the sheet means by it.
    */
+  /** @type {Record<string, string>} */
   const SAME_AS = {
     'Seasonal Vault Unlocker': 'Seasonal Vault Expansion',
     'Medium Dust Selection Chest': 'Medium Dust Chest',
     'Rare Epic Quest Chest': 'Mystery Quest Chest'
   };
+  /** @param {string} name */
   const realmeye = name => 'https://www.realmeye.com/wiki/'
     + name.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   /* One reward or dungeon: its picture, its name, and where it leads. */
+  /** @param {string} listed @param {string[]} kinds @param {string} [extra] */
   function thing(listed, kinds, extra) {
     const name = SAME_AS[listed] || listed;
     const one = recordFor(name, kinds);
-    const hash = one && window.RealmRoutes ? window.RealmRoutes.indexHash(one.id) : '';
+    const hash = one && host.RealmRoutes ? host.RealmRoutes.indexHash(one.id) : '';
     const said = name !== listed ? `${listed} in DECA's sheet · ` : '';
     const where = hash ? `href="#${esc(hash)}" title="${esc(said)}Open in the Index"`
       : `href="${esc(realmeye(name))}" target="_blank" rel="noopener" title="${esc(said)}Open on RealmEye"`;
@@ -217,6 +269,7 @@
 
   /* ---- time ------------------------------------------------------------- */
 
+  /** @param {number} ms */
   function span(ms) {
     const m = Math.max(0, Math.round(ms / 60e3));
     const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60), r = m % 60;
@@ -229,8 +282,11 @@
     if (now < end) return { kick: `Live · ${span(end - now)} left`, live: true };
     return { kick: 'Final standings', live: false };
   }
+  /** @param {number} t */
   const day = t => new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(t);
+  /** @param {number} t */
   const utc = t => new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(t);
+  /** @param {number} t */
   const clock = t => new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit' }).format(t);
 
   function paintNote() {
@@ -241,6 +297,7 @@
 
   /* ---- the panel -------------------------------------------------------- */
 
+  /** @param {Tier | null} t */
   const tierChip = t => t ? `<span class="snake-tier snake-tier-${t.pct <= 5 ? 'a' : t.pct <= 15 ? 'b' : 'c'}">Top ${t.pct}%</span>` : '';
 
   function build() {
@@ -283,11 +340,11 @@
     find.addEventListener('input', () => { query = find.value; store.set('snake-board-search', query); paintRows(); });
     veil.querySelector('.voucher-x').addEventListener('click', close);
     veil.querySelector('.snake-again').addEventListener('click', () => refresh(true));
-    veil.addEventListener('click', e => {
+    veil.addEventListener('click', /** @param {any} e */ e => {
       if (e.target === veil) close();
       else if (e.target.closest('a.snake-thing.is-index')) close(); // the hash takes it to the Index
     });
-    veil.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    veil.addEventListener('keydown', /** @param {any} e */ e => { if (e.key === 'Escape') close(); });
   }
 
   function paintRows() {
@@ -328,6 +385,7 @@
     paintRows();
   }
 
+  /** @param {boolean} force */
   async function refresh(force) {
     if (!force && board && Date.now() - readAt < 60e3) return paint();
     const again = veil.querySelector('.snake-again');
@@ -345,19 +403,19 @@
     paint();
     loadRecords();
     refresh(false);
-    clearInterval(timer);
-    timer = setInterval(() => refresh(true), REFRESH);
+    host.clearInterval(timer);
+    timer = host.setInterval(() => refresh(true), REFRESH);
     (query ? veil.querySelector('.snake-find') : veil.querySelector('.voucher-x')).focus();
   }
   function close() {
     if (!veil || veil.hidden) return;
     veil.hidden = true;
-    clearInterval(timer);
+    host.clearInterval(timer);
     document.documentElement.classList.remove('snake-open');
     note.focus();
   }
 
   note.addEventListener('click', open);
   paintNote();
-  setInterval(paintNote, 30e3);
+  host.setInterval(paintNote, 30e3);
 })();
