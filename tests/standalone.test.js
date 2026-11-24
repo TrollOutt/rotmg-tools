@@ -173,7 +173,8 @@ for (const version of [served, offline]) {
     assert(policy.includes(part), 'CSP keeps ' + part);
   }
   const connect = /connect-src ([^;]+)/.exec(policy)[1].split(' ');
-  assert.equal(connect.filter(source => source.startsWith('https://')).length, 2, 'CSP lets the page reach exactly two remote services');
+  assert.equal(connect.filter(source => source.startsWith('https://')).length, 3, 'CSP lets the page reach exactly three remote services');
+  assert(connect.includes('https://docs.google.com'), 'CSP lets the White Snake leaderboard read its Google Sheet');
   assert(!offline.html.includes('Content-Security-Policy'), 'the downloadable copy carries no CSP');
 }
 assert(JSON.parse(offline.data.sources.realmLootText).creatures, 'Biome loot evidence missing');

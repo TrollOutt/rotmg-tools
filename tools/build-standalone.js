@@ -753,6 +753,13 @@ if (remoteOrigins.length !== 2) {
   console.error('Build failed: expected the counter and the contact relay in web/app.js, found ' + remoteOrigins.join(', '));
   process.exit(1);
 }
+// The White Snake leaderboard reads DECA's Google Sheet from this one origin.
+const sheetOrigin = /const SHEET_ORIGIN = '(https:\/\/[^/']+)';/.exec(snakeBoardSource);
+if (!sheetOrigin) {
+  console.error('Build failed: web/snake-board.js no longer declares SHEET_ORIGIN for the Content-Security-Policy.');
+  process.exit(1);
+}
+remoteOrigins.push(sheetOrigin[1]);
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
