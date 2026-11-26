@@ -59,8 +59,17 @@ html.snake-open { overflow: hidden; }
 }
 .snake-table td { padding: 7px 10px; border-bottom: 1px solid var(--line-soft, rgb(255 255 255 / .05)); }
 .snake-table tbody tr:hover { background: rgb(255 255 255 / .035); }
-.snake-table th:nth-child(1), .snake-rank { width: 4.5em; text-align: right; }
-.snake-table th:nth-child(3), .snake-pts { width: 6em; text-align: right; }
+.snake-table th:nth-child(1), .snake-rank { width: 7.5em; text-align: right; white-space: nowrap; }
+.snake-table th:nth-child(3), .snake-pts { width: 8.5em; text-align: right; white-space: nowrap; }
+.snake-table th[title] { cursor: help; }
+/* The change since DECA's previous update, beside the figure it changed. */
+.snake-move, .snake-gain {
+  display: inline-block; min-width: 3.4em; margin-left: 6px; text-align: left;
+  font-family: var(--mono); font-size: .7rem; font-weight: 600;
+}
+.snake-move.is-up, .snake-gain { color: #8fe0a8; }
+.snake-move.is-down { color: #ff9a8a; }
+.snake-gain { min-width: 3.8em; }
 .snake-table th:nth-child(4), .snake-t { width: 7.5em; text-align: right; }
 .snake-rank { font-family: var(--mono); color: var(--muted); }
 .snake-name { font-weight: 500; overflow-wrap: anywhere; }
@@ -130,5 +139,7 @@ html.snake-open { overflow: hidden; }
   .snake-scroll { padding: 0 4px 10px; }
   .snake-table td, .snake-table th { padding-left: 6px; padding-right: 6px; }
   .snake-table th:nth-child(4), .snake-t { width: auto; }
+  .snake-table th:nth-child(1), .snake-rank, .snake-table th:nth-child(3), .snake-pts { width: auto; }
+  .snake-move, .snake-gain { display: block; min-width: 0; margin: 1px 0 0; text-align: right; }
   .snake-foot { padding: 10px 16px; }
 }
