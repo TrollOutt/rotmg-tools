@@ -22,7 +22,7 @@
   const document = host.document;
 
   /** @typedef {{ pct: number, items: string[], above: boolean }} Tier */
-  /** @typedef {{ name: string, points: number, rank: number, tier: Tier | null }} Player */
+  /** @typedef {{ name: string, points: number, gain: number, rank: number, move: number, tier: Tier | null }} Player */
   /** @typedef {{ start: number, end: number, points: Array<[string, number]>, tiers: Tier[], fine: string[] }} Info */
   /** @typedef {Info & { players: Player[] }} Board */
   /** @typedef {{ id: string, art?: number[] }} IndexRecord */
@@ -41,7 +41,9 @@
   const SHEET = '1abJ5b1rOG-dB-cDHUr11cADoeWqxT7WB0lo-CntcsE8';
   const GID = '0';
   const VIEW = `${SHEET_ORIGIN}/spreadsheets/d/${SHEET}/edit?gid=${GID}#gid=${GID}`;
-  const SOURCES = [`${SHEET_ORIGIN}/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&gid=${GID}`];
+  /* headers=0: left to guess, gviz folds the heading row into the first
+     player's row ("Name AnActualHorn") and the first two side notes into one. */
+  const SOURCES = [`${SHEET_ORIGIN}/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&headers=0&gid=${GID}`];
   const YEAR = 2026;
   /** @type {Info} */
   const FALLBACK = {
@@ -113,8 +115,20 @@
     return rows;
   }
 
-  /** @param {unknown} s */
-  const number = s => { const n = Number(String(s).replace(/[^\d.-]/g, '')); return Number.isFinite(n) ? n : 0; };
+  /*
+   * A cell of the board: its figure, and the change since DECA's previous
+   * update when the sheet writes one in brackets before it - "(+452)  593"
+   * is 593 points, 452 of them new; "(-3)  8" is rank 8, three places lost.
+   */
+  /** @param {unknown} s @returns {{ value: number, change: number }} */
+  function figure(s) {
+    const text = String(s == null ? '' : s);
+    const bracket = /\(\s*([+-]?\d[\d,]*)\s*\)/.exec(text);
+    const value = /\d[\d,]*/.exec(text.replace(/\([^)]*\)/g, ' '));
+    /** @param {string} n */
+    const read = n => Number(n.replace(/,/g, '')) || 0;
+    return { value: value ? read(value[0]) : 0, change: bracket ? read(bracket[1]) : 0 };
+  }
 
   /** @param {string} month @param {string} day @param {string} h @param {string} m */
   function stamp(month, day, h, m) {
@@ -126,12 +140,17 @@
   function readNotes(notes) {
     /** @type {Info} */
     const out = { start: FALLBACK.start, end: FALLBACK.end, points: [], tiers: [], fine: [] };
+    /* One note may carry several of these (the sheet's cells get merged and
+       rewritten), so each is looked for in every note rather than one each. */
     for (const text of notes) {
+      let used = false;
       const dates = [...text.matchAll(/([A-Z][a-z]{2,8})\.?\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*\(UTC\)/g)]
         .map(m => stamp(m[1], m[2], m[3], m[4]));
-      if (dates.length >= 2 && dates.every(Number.isFinite)) { [out.start, out.end] = dates; continue; }
-      const point = /^Each (.+?) completion equals to (\d+) points?/i.exec(text.trim());
-      if (point) { out.points.push([point[1], +point[2]]); continue; }
+      if (dates.length >= 2 && dates.every(Number.isFinite)) { [out.start, out.end] = dates; used = true; }
+      for (const point of text.matchAll(/Each (.+?) completion equals to (\d+) points?/gi)) {
+        if (!out.points.some(([run]) => run === point[1].trim())) out.points.push([point[1].trim(), +point[2]]);
+        used = true;
+      }
       if (/Top\s+\d+\s*%/i.test(text)) {
         for (const block of text.split(/\n\s*\n/)) {
           const lines = block.split('\n').map(s => s.trim()).filter(Boolean);
@@ -140,11 +159,12 @@
           const rest = lines.slice(1);
           out.tiers.push({ pct: +head[1], items: rest.filter(l => !/^\+\s*above/i.test(l)), above: rest.some(l => /^\+\s*above/i.test(l)) });
         }
-        continue;
+        used = true;
       }
-      if (/^disclaimer:?$/i.test(text.trim())) continue;
+      if (used || /^disclaimer:?$/i.test(text.trim())) continue;
       out.fine.push(...text.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean));
     }
+    out.points.sort((a, b) => a[1] - b[1]);
     if (!out.points.length) out.points = FALLBACK.points;
     if (!out.tiers.length) out.tiers = FALLBACK.tiers;
     out.tiers.sort((a, b) => a.pct - b.pct);
@@ -172,7 +192,8 @@
     if (NAME >= 0) for (const row of rows.slice(headAt + 1)) {
       const name = (row[NAME] || '').trim();
       if (!name) continue;
-      players.push({ name, points: number(row[POINTS]), rank: RANK >= 0 ? number(row[RANK]) : 0, tier: null });
+      const points = figure(row[POINTS]), rank = RANK >= 0 ? figure(row[RANK]) : { value: 0, change: 0 };
+      players.push({ name, points: points.value, gain: points.change, rank: rank.value, move: rank.change, tier: null });
     }
     if (players.some(p => !p.rank)) {
       players.sort((a, b) => b.points - a.points);
@@ -296,7 +317,8 @@
   /** @param {number} t */
   const utc = t => new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(t);
   /** @param {number} t */
-  const clock = t => new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit' }).format(t);
+  /* With seconds, so a Refresh that finds nothing new still visibly happened. */
+  const clock = t => new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(t);
 
   function paintNote() {
     const p = phase();
@@ -306,6 +328,9 @@
 
   /* ---- the panel -------------------------------------------------------- */
 
+  /** @param {number} n places climbed (negative: lost) since DECA's previous update */
+  const move = n => !n ? '<span class="snake-move"></span>'
+    : `<span class="snake-move ${n > 0 ? 'is-up' : 'is-down'}" aria-label="${n > 0 ? 'up' : 'down'} ${Math.abs(n)}">${n > 0 ? '▲' : '▼'}${Math.abs(n).toLocaleString('en')}</span>`;
   /** @param {Tier | null} t */
   const tierChip = t => t ? `<span class="snake-tier snake-tier-${t.pct <= 5 ? 'a' : t.pct <= 15 ? 'b' : 'c'}">Top ${t.pct}%</span>` : '';
 
@@ -326,14 +351,14 @@
             <span class="snake-count"></span>
           </div>
           <div class="snake-scroll"><table class="snake-table">
-            <thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Points</th><th scope="col"><span class="sr-only">Reward tier</span></th></tr></thead>
+            <thead><tr><th scope="col" title="Places moved since DECA's previous update">Rank</th><th scope="col">Player</th><th scope="col" title="Points gained since DECA's previous update">Points</th><th scope="col"><span class="sr-only">Reward tier</span></th></tr></thead>
             <tbody></tbody>
           </table><p class="snake-empty" hidden></p></div>
         </section>
         <aside class="snake-side">
           <h3>Points</h3><ul class="snake-points"></ul>
           <h3>Rewards</h3><div class="snake-rewards"></div>
-          <p class="snake-small">Tiers are worked out from each rank among the players listed; DECA's count decides.</p>
+          <p class="snake-small">▲▼ and + show the change since DECA's previous update of the sheet. Tiers are worked out from each rank among the players listed; DECA's count decides.</p>
           <details class="snake-fine"><summary>Disclaimer</summary><div></div></details>
         </aside>
       </div>
@@ -363,8 +388,9 @@
     const q = query.trim().toLowerCase();
     const hits = q ? players.filter(p => p.name.toLowerCase().includes(q)) : players;
     body.innerHTML = hits.slice(0, SHOWN).map(p => `<tr${p.rank <= 3 ? ` class="snake-podium snake-p${p.rank}"` : ''}>
-      <td class="snake-rank">${p.rank}</td><td class="snake-name">${esc(p.name)}</td>
-      <td class="snake-pts">${p.points.toLocaleString('en')}</td><td class="snake-t">${tierChip(p.tier)}</td></tr>`).join('');
+      <td class="snake-rank">${p.rank}${move(p.move)}</td><td class="snake-name">${esc(p.name)}</td>
+      <td class="snake-pts">${p.points.toLocaleString('en')}<span class="snake-gain">${p.gain > 0 ? '+' + p.gain.toLocaleString('en') : ''}</span></td>
+      <td class="snake-t">${tierChip(p.tier)}</td></tr>`).join('');
     count.textContent = !players.length ? '' : q ? `${hits.length} of ${players.length.toLocaleString('en')}`
       : `${players.length.toLocaleString('en')} player${players.length === 1 ? '' : 's'}`;
     empty.hidden = !!hits.length && !(hits.length > SHOWN);
